@@ -1,0 +1,87 @@
+// Copyright (c) 2017 Recluse Project.
+#pragma once
+
+
+#include "Core/Utility/Module.hpp"
+#include "Core/Utility/Vector.hpp"
+#include "Core/Types.hpp"
+#include "Core/Win32/Window.hpp"
+#include "Core/Math/Vector3.hpp"
+#include "Core/Math/Matrix4.hpp"
+
+#include "Core/Thread/Threading.hpp"
+//#include "RHI/VulkanRHI.hpp"
+
+
+namespace Recluse {
+
+
+class VulkanRHI;
+class Scene;
+class DirectionLight;
+class PointLight;
+class SpotLight;
+class LightProbe;
+class ReflectionProbe;
+class GraphicsPipeline;
+class ComputePipeline;
+class GpuParams;
+class UserParams;
+class Mesh;
+class CubeMap;
+class Camera;
+
+
+// Renderer, which will be responsible for rendering out the scene from a
+// camera's perspective.
+class Renderer : public EngineModule<Renderer> {
+public:
+  Renderer();
+  ~Renderer();
+
+  b8                Initialize(Window* window);
+  b8                Rendering() const { return mRendering; }
+  void              Configure(UserParams* params);
+  void              UpdateFromWindowChange();
+  void              CleanUp();
+  void              Render();
+
+  void              OnStartUp() override;
+  void              OnShutDown() override;
+  void              AsyncPushScene(Scene* scene);
+  void              PushScene(Scene* scene);
+  void              SetCamera(Camera* camera);
+
+  void              BeginFrame();
+  void              EndFrame();
+
+  Mesh*             CreateMesh();
+  DirectionLight*   CreateDirectionLight();
+  PointLight*       CreatePointLight();
+  SpotLight*        CreateSpotLight();
+
+  CubeMap*          BakeEnviromentMap(const Vector3& position);
+  LightProbe*       BakeLightProbe(const CubeMap* envmap);
+  Window*           WindowRef() { return mWindowHandle; }
+
+private:
+  Window*           mWindowHandle;
+  Scene*            mScene;
+  Camera*           mCamera;
+
+  // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
+  VulkanRHI*        mRHI;
+
+  // TODO(): We need to implement a pipeline map.
+  ComputePipeline*  mClusterForwardPipeline;  
+  GraphicsPipeline* mSHCoefficentPrefilter;
+  GraphicsPipeline* mGeometryPipeline;
+  GraphicsPipeline* mPreprocessPipeline;
+  GraphicsPipeline* mHDRGammaPipeline;
+  GraphicsPipeline* mPostProcessPipelne;
+
+  b8                mRendering;
+};
+
+Renderer&  gRenderer();
+} // Recluse
