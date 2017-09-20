@@ -86,6 +86,21 @@ VkPhysicalDeviceFeatures PhysicalDevice::GetFeatures()
 }
 
 
+u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags)
+{
+  VkPhysicalDeviceMemoryProperties memProperties;
+  vkGetPhysicalDeviceMemoryProperties(handle, &memProperties);
+  
+  for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
+    if ((filter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & flags) == flags) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+
 void PhysicalDevice::Initialize(VkPhysicalDevice device)
 {
   handle = device;

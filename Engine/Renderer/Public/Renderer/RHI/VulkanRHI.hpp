@@ -87,7 +87,9 @@ private:
   struct {
     std::vector<VkFramebuffer>  mSwapchainFramebuffers;
     VkRenderPass                mSwapchainRenderPass;
-    Texture*                    mDepthTexture;
+    VkImage                     mDepthAttachment;
+    VkImageView                 mDepthView;
+    VkDeviceMemory              mDepthMemory;
   } mSwapchainInfo;
 };
 } // Recluse

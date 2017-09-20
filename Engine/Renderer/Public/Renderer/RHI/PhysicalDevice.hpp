@@ -24,6 +24,7 @@ public:
 
   b8                                        FindQueueFamilies(VkSurfaceKHR surface,
                                               i32* presentation, i32* graphics, i32* compute);
+  u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags);
   VkPhysicalDeviceFeatures                  GetFeatures();
   void                                      Initialize(VkPhysicalDevice device);
   void                                      CleanUp();
