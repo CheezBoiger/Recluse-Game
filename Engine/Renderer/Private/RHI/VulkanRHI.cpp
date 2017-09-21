@@ -183,7 +183,7 @@ void VulkanRHI::QueryFromSwapchain()
     
     if (vkCreateFramebuffer(mLogicalDevice.Handle(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
-      R_DEBUG("ERROR: Failed to create framebuffer on swapchain image %d!\n", i);
+      R_DEBUG("ERROR: Failed to create framebuffer on swapchain image %d!\n", u32(i));
     }
   }
 }

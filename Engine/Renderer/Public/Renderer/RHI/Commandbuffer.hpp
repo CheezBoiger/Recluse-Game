@@ -11,16 +11,19 @@ namespace Recluse {
 class CommandBuffer : public VulkanHandle {
 public:
   CommandBuffer() 
-    : mHandle(VK_NULL_HANDLE) { }
+    : mHandle(VK_NULL_HANDLE)
+    , mPoolOwner(VK_NULL_HANDLE) { }
 
   ~CommandBuffer() { }
   
-  void            Allocate(const VkCommandBufferAllocateInfo& info);
-  void            CleanUp();
+  void            Allocate(const VkCommandPool& pool, VkCommandBufferLevel level);
+  void            Free();
   
   VkCommandBuffer Handle() { return mHandle; }
+  VkCommandPool   PoolOwner() { return mPoolOwner; }
 
 private:
   VkCommandBuffer mHandle;
+  VkCommandPool   mPoolOwner;
 };
 } // Recluse 
