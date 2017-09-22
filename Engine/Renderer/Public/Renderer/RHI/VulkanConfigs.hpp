@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once 
 
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -9,7 +9,10 @@ class VulkanHandle {
 public:
   VulkanHandle()
     : mOwner(VK_NULL_HANDLE) { }
-  virtual ~VulkanHandle() { }
 
-  VkDevice mOwner;
+  void      SetOwner(VkDevice owner) { mOwner = owner; }
+  VkDevice  Owner() { return mOwner; }
+
+protected:
+  VkDevice  mOwner;
 };

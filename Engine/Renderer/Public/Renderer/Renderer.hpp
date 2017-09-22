@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 
@@ -10,7 +10,8 @@
 #include "Core/Math/Matrix4.hpp"
 
 #include "Core/Thread/Threading.hpp"
-//#include "RHI/VulkanRHI.hpp"
+
+#include "Resources.hpp"
 
 
 namespace Recluse {
@@ -73,12 +74,12 @@ private:
   VulkanRHI*        mRHI;
 
   // TODO(): We need to implement a pipeline map.
-  ComputePipeline*  mClusterForwardPipeline;  
-  GraphicsPipeline* mSHCoefficentPrefilter;
-  GraphicsPipeline* mGeometryPipeline;
-  GraphicsPipeline* mPreprocessPipeline;
-  GraphicsPipeline* mHDRGammaPipeline;
-  GraphicsPipeline* mPostProcessPipelne;
+  resource_id_t mClusterForwardPipeline;  
+  resource_id_t mSHCoefficentPrefilter;
+  resource_id_t mGeometryPipeline;
+  resource_id_t mPreprocessPipeline;
+  resource_id_t mHDRGammaPipeline;
+  resource_id_t mPostProcessPipelne;
 
   b8                mRendering;
 };

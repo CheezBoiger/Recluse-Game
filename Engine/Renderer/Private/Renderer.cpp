@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Renderer.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "Core/Core.hpp"
@@ -59,7 +59,6 @@ void Renderer::Render()
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
   BeginFrame();
-
 
   EndFrame();
 }

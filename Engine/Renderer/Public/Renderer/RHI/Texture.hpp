@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 
@@ -9,6 +9,7 @@
 namespace Recluse {
 
 
+// Sampler Object, used for textures, cubemaps, and images.
 class Sampler : public VulkanHandle {
 public:
   Sampler()
@@ -24,6 +25,7 @@ private:
 };
 
 
+// Texture object.
 class Texture : public VulkanHandle {
 public:
   Texture()

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "RHI/PhysicalDevice.hpp"
 #include "Core/Exception.hpp"
 
@@ -17,7 +17,7 @@ std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhys
 
 
 b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
-    i32* presentation, i32* graphics, i32* compute)
+    i32* presentation, i32* graphics, i32* compute) const
 {
   if (!handle) {
     R_DEBUG("ERROR: No handle is set to query queue families from!\n");
@@ -50,7 +50,7 @@ b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
 }
 
 
-VkSurfaceCapabilitiesKHR PhysicalDevice::QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface)
+VkSurfaceCapabilitiesKHR PhysicalDevice::QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const
 {
   VkSurfaceCapabilitiesKHR capabilities;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle, surface, &capabilities);
@@ -58,7 +58,7 @@ VkSurfaceCapabilitiesKHR PhysicalDevice::QuerySwapchainSurfaceCapabilities(VkSur
 }
 
 
-std::vector<VkSurfaceFormatKHR> PhysicalDevice::QuerySwapchainSurfaceFormats(VkSurfaceKHR surface)
+std::vector<VkSurfaceFormatKHR> PhysicalDevice::QuerySwapchainSurfaceFormats(VkSurfaceKHR surface) const
 {
   std::vector<VkSurfaceFormatKHR> formats;
   u32 formatCount;
@@ -69,7 +69,7 @@ std::vector<VkSurfaceFormatKHR> PhysicalDevice::QuerySwapchainSurfaceFormats(VkS
 }
 
 
-std::vector<VkPresentModeKHR> PhysicalDevice::QuerySwapchainPresentModes(VkSurfaceKHR surface)
+std::vector<VkPresentModeKHR> PhysicalDevice::QuerySwapchainPresentModes(VkSurfaceKHR surface) const
 {
   std::vector<VkPresentModeKHR> presentModes;
   u32 presentCount;
@@ -80,19 +80,16 @@ std::vector<VkPresentModeKHR> PhysicalDevice::QuerySwapchainPresentModes(VkSurfa
 }
 
 
-VkPhysicalDeviceFeatures PhysicalDevice::GetFeatures()
+VkPhysicalDeviceFeatures PhysicalDevice::GetFeatures() const
 {
   return { };
 }
 
 
-u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags)
-{
-  VkPhysicalDeviceMemoryProperties memProperties;
-  vkGetPhysicalDeviceMemoryProperties(handle, &memProperties);
-  
-  for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
-    if ((filter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & flags) == flags) {
+u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const
+{ 
+  for (u32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
+    if ((filter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) {
       return i;
     }
   }
@@ -104,6 +101,7 @@ u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags)
 void PhysicalDevice::Initialize(VkPhysicalDevice device)
 {
   handle = device;
+  vkGetPhysicalDeviceMemoryProperties(handle, &memoryProperties);
 }
 
 

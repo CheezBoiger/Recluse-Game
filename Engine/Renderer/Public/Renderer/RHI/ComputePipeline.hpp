@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 
@@ -20,8 +20,8 @@ public:
                       const VkPipelineLayoutCreateInfo& layout);
   void              CleanUp();
 
-  VkPipeline        Pipeline() { return mPipeline; }
-  VkPipelineLayout  Layout() { return mLayout; }
+  VkPipeline        Pipeline() const { return mPipeline; }
+  VkPipelineLayout  Layout() const { return mLayout; }
 
 
 private:

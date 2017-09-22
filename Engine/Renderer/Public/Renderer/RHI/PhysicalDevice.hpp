@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 
@@ -18,19 +18,21 @@ public:
     : handle(VK_NULL_HANDLE) { }
 
   static std::vector<VkExtensionProperties> GetExtensionProperties(VkPhysicalDevice device);
-  VkSurfaceCapabilitiesKHR                  QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface);
-  std::vector<VkSurfaceFormatKHR>           QuerySwapchainSurfaceFormats(VkSurfaceKHR surface);
-  std::vector<VkPresentModeKHR>             QuerySwapchainPresentModes(VkSurfaceKHR surface);
+  VkSurfaceCapabilitiesKHR                  QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const;
+  std::vector<VkSurfaceFormatKHR>           QuerySwapchainSurfaceFormats(VkSurfaceKHR surface) const;
+  std::vector<VkPresentModeKHR>             QuerySwapchainPresentModes(VkSurfaceKHR surface) const;
 
   b8                                        FindQueueFamilies(VkSurfaceKHR surface,
-                                              i32* presentation, i32* graphics, i32* compute);
-  u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags);
-  VkPhysicalDeviceFeatures                  GetFeatures();
+                                              i32* presentation, i32* graphics, i32* compute) const;
+  u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
+  VkPhysicalDeviceFeatures                  GetFeatures() const;
+  VkPhysicalDeviceMemoryProperties          GetMemoryProperties() const { return memoryProperties; }
   void                                      Initialize(VkPhysicalDevice device);
   void                                      CleanUp();
   
-  VkPhysicalDevice                          Handle() { return handle; }
+  VkPhysicalDevice                          Handle() const { return handle; }
 private:
   VkPhysicalDevice                          handle;
+  VkPhysicalDeviceMemoryProperties          memoryProperties;
 };
 } // Recluse

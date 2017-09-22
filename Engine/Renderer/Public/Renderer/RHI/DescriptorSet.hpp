@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"
@@ -19,9 +19,9 @@ public:
   void                  Allocate(const VkDescriptorPool& pool, const VkDescriptorSetLayoutCreateInfo& createInfo);
   void                  Free();
 
-  VkDescriptorSet       Handle() { return mDescriptorSet; }
-  VkDescriptorSetLayout Layout() { return mLayout; }
-  VkDescriptorPool      PoolOwner() { return mPoolOwner; }
+  VkDescriptorSet       Handle() const { return mDescriptorSet; }
+  VkDescriptorSetLayout Layout() const { return mLayout; }
+  VkDescriptorPool      PoolOwner() const { return mPoolOwner; }
 
 private:
   VkDescriptorSet       mDescriptorSet;

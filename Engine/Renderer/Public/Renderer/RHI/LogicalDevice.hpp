@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once 
 
 #include "Core/Types.hpp"
@@ -20,7 +20,7 @@ public:
   b8              Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
   void            CleanUp();
 
-  VkDevice        Handle() { return handle; }
+  VkDevice        Handle() const { return handle; }
 
 private:
   VkDevice        handle;

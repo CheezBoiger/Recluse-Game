@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"
@@ -19,6 +19,7 @@ class Shader;
 class CommandBuffer;
 class Sampler;
 class Texture;
+class DescriptorSet;
 
 // Render Hardware Interface for Vulkan.
 class VulkanRHI {
@@ -46,23 +47,25 @@ public:
   // object.
   void                        CleanUp();
 
-  Buffer*                     CreateBuffer();
-  GraphicsPipeline*           CreateGraphicsPipeline();
-  ComputePipeline*            CreateComputePipeline();
-  FrameBuffer*                CreateFrameBuffer();
-  Sampler*                    CreateSampler();
-  Texture*                    CreateTexture();
-  Shader*                     CreateShader();
-  CommandBuffer*              CreateCommandBuffer();
+  Buffer                      CreateBuffer();
+  GraphicsPipeline            CreateGraphicsPipeline();
+  ComputePipeline             CreateComputePipeline();
+  FrameBuffer                 CreateFrameBuffer();
+  Sampler                     CreateSampler();
+  Texture                     CreateTexture();
+  Shader                      CreateShader();
+  CommandBuffer               CreateCommandBuffer();
+  DescriptorSet               CreateDescriptorSet();
 
-  void                        FreeBuffer(Buffer* buffer);
-  void                        FreeGraphicsPipeline(GraphicsPipeline* pipeline);
-  void                        FreeComputePipeline(ComputePipeline* pipeline);
-  void                        FreeFrameBuffer(FrameBuffer* buffer);
-  void                        FreeSampler(Sampler* sampler);
-  void                        FreeTexture(Texture* texture);
-  void                        FreeShader(Shader* shader);
-  void                        FreeCommandBuffer(CommandBuffer* buffer);
+  void                        FreeBuffer(Buffer& buffer);
+  void                        FreeGraphicsPipeline(GraphicsPipeline& pipeline);
+  void                        FreeComputePipeline(ComputePipeline& pipeline);
+  void                        FreeFrameBuffer(FrameBuffer& buffer);
+  void                        FreeSampler(Sampler& sampler);
+  void                        FreeTexture(Texture& texture);
+  void                        FreeShader(Shader& shader);
+  void                        FreeCommandBuffer(CommandBuffer& buffer);
+  void                        FreeDescriptorSet(DescriptorSet& set);
 
   LogicalDevice&              Device() { return mLogicalDevice; }
   Swapchain&                  SwapchainObject() { return mSwapchain; }
