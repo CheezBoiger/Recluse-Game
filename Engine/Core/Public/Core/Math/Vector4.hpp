@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 
@@ -15,5 +15,19 @@ struct Vector4 {
   Vector4(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 1.0f)
     : x(x), y(y), z(z), w(w) { }
 
+  Vector4 operator+(const Vector4& other) const;
+  Vector4 operator-(const Vector4& other) const;
+
+  Vector4 operator*(const r32 scaler) const;
+  Vector4 operator/(const r32 scaler) const;
+  
+  void    operator+=(const Vector4& other);
+  void    operator-=(const Vector4& other);
+
+  void    operator*=(const r32 scaler);
+  void    operator/=(const r32 scaler);
+  
+  r32     Magnitude() const;
+  r32     Dot(const Vector4& other) const;
 };
 } // Recluse

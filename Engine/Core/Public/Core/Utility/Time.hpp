@@ -1,8 +1,11 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"
 #include "Core/Utility/Module.hpp"
+
+
+#define SECONDS_PER_FRAME_TO_FPS(spf) (1.0 / (spf)) 
 
 namespace Recluse {
 

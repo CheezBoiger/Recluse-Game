@@ -1,4 +1,4 @@
-// Copyright (c) Recluse Project.
+// Copyright (c) Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"

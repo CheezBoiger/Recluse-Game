@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Utility/Time.hpp"
 #include "Win32/Win32Configs.hpp"
 
@@ -10,7 +10,7 @@ r64 currentTime = 0.0;
 r64 oldTime = 0.0;
 
 r64 Time::ScaleTime = 1.0;
-r64 Time::FixTime = 16.6 / 1000.0;
+r64 Time::FixTime = 16.6 / 1000.0; //< 60 fps
 r64 Time::DeltaTime = 0.0;
 
 static r64 Frequency = 0.0;

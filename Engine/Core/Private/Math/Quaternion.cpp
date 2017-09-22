@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Common.hpp"
 #include <cmath>

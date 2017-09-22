@@ -1,4 +1,4 @@
-﻿// Copyright (c) Recluse Project.
+﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Core/Core.hpp"
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Vector.hpp"
@@ -69,7 +69,7 @@ int main(int c, char* argv[])
     gCore().Sync();
     gRenderer().Render();
 
-    r64 fps = (1.0 / Time::DeltaTime);
+    r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
     printf("%f ms\t\t%d fps\t\t\r", timeAccumulator * 1000.0, u32(fps));
 

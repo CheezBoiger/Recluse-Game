@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Win32/Window.hpp"
 #include "Win32/Keyboard.hpp"
 #include "Win32/Mouse.hpp"

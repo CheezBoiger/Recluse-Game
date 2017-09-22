@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project.
+// Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Types.hpp"
 #include "Core/Win32/Win32Configs.hpp"
 
