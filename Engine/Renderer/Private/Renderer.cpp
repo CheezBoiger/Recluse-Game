@@ -21,11 +21,6 @@ Renderer::Renderer()
 }
 
 
-void SetUpDefault(CommandBuffer& cmdBuffer)
-{
-}
-
-
 Renderer::~Renderer()
 {
 }
@@ -91,7 +86,9 @@ b8 Renderer::Initialize(Window* window)
   mWindowHandle = window;
   mRhi->Initialize(window->Handle());
 
-  mRhi->SetSwapchainCmdBufferBuild(SetUpDefault);
+  mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer) -> void {
+    // Do stuff with the buffer.
+  });
 
   return true;
 }

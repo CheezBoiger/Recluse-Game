@@ -8,6 +8,8 @@
 #include "PhysicalDevice.hpp"
 #include "LogicalDevice.hpp"
 
+#include <functional>
+
 
 namespace Recluse {
 
@@ -24,7 +26,7 @@ class DescriptorSet;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
-typedef void (*SwapchainCmdBufferBuildFunc)(CommandBuffer& buffer);
+typedef std::function<void(CommandBuffer& cmdBuffer)> SwapchainCmdBufferBuildFunc;
 
 // Render Hardware Interface for Vulkan.
 class VulkanRHI {
