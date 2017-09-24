@@ -40,11 +40,14 @@ public:
 
   b8          FileExists(tchar* filepath);
   b8          DirectoryExists(tchar* directorypath);
+  tchar*      GetApplicationSourcePath();
+  tchar*      SetApplicationSourcePath(const std::string& srcPath);
 
   
 private:
   FileCache*  mCache;
   std::string mCurrentDirectoryPath;
+  std::string mAppSourcePath;
 };
 
 

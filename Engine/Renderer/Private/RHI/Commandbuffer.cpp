@@ -114,4 +114,19 @@ void CommandBuffer::BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipeline
   vkCmdBindDescriptorSets(mHandle, bindPoint, layout, firstSet, descriptorSetCount, descriptorSets, 
     dynamicOffsetCount, dynamicOffsets);
 }
+
+
+void CommandBuffer::CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
+  u32 regionCount, const VkBufferImageCopy* regions)
+{
+  ASSERT_RECORDING();
+  vkCmdCopyBufferToImage(mHandle, src, img, imgLayout, regionCount, regions);
+}
+
+
+void CommandBuffer::CopyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, const VkBufferCopy* regions)
+{
+  ASSERT_RECORDING();
+  vkCmdCopyBuffer(mHandle, src, dst, regionCount, regions);
+}
 } // Recluse

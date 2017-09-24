@@ -46,11 +46,13 @@ void Renderer::OnShutDown()
 
 void Renderer::BeginFrame()
 {
+  mRHI->AcquireNextImage();
 }
 
 
 void Renderer::EndFrame()
 {
+  mRHI->Present();
 }
 
 
@@ -58,7 +60,25 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
-  BeginFrame();
+  BeginFrame(); 
+
+    VkSemaphore signalSemaphores[] = { mRHI->SwapchainObject()->GraphicsFinishedSemaphore() };
+    VkSemaphore waitSemaphores[] = { mRHI->SwapchainObject()->ImageAvailableSemaphore() };
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+    VkSubmitInfo submitInfo = {};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 0;
+    submitInfo.pCommandBuffers = nullptr;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+    
+    mRHI->GraphicsSubmit(submitInfo);
+
+
 
   EndFrame();
 }

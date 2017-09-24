@@ -45,11 +45,28 @@ public:
   VkFormat                      SwapchainFormat() { return mSwapchainFormat; }
   VkExtent2D                    SwapchainExtent() { return mSwapchainExtent; }
 
+  VkQueue                       PresentQueue() { return mPresentationQueue; }
+  VkQueue                       GraphicsQueue() { return mGraphicsQueue; }
+  VkQueue                       ComputeQueue() { return mComputeQueue; }
+
+  i32                           PresentIndex() { return mPresentationQueueIndex; }
+  i32                           GraphicsIndex() { return mGraphicsQueueIndex; }
+  i32                           ComputeIndex() { return mComputeQueueIndex; }
+
+  VkSemaphore                   ImageAvailableSemaphore() { return mImageAvailableSemaphore; }
+  VkSemaphore                   GraphicsFinishedSemaphore() { return mGraphicsFinishedSemaphore; }
+  VkSemaphore                   ComputeFinishedSemaphore() { return mComputeFinishedSemaphore; }
+  
 private:
   void                          QuerySwapchainImages();
+  void                          CreateSemaphores();
 
   VkSwapchainKHR                mSwapchain;
-  VkSemaphore                   mSemaphore;
+
+  VkSemaphore                   mImageAvailableSemaphore;
+  VkSemaphore                   mGraphicsFinishedSemaphore;
+  VkSemaphore                   mComputeFinishedSemaphore;
+
   VkFormat                      mSwapchainFormat;
   VkExtent2D                    mSwapchainExtent;
 

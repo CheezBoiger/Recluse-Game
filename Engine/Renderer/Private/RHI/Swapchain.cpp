@@ -11,7 +11,8 @@ Swapchain::Swapchain()
   , mPresentationQueue(VK_NULL_HANDLE)
   , mGraphicsQueue(VK_NULL_HANDLE)
   , mComputeQueue(VK_NULL_HANDLE)
-  , mSemaphore(VK_NULL_HANDLE)
+  , mImageAvailableSemaphore(VK_NULL_HANDLE)
+  , mGraphicsFinishedSemaphore(VK_NULL_HANDLE)
   , mPresentationQueueIndex(-1)
   , mGraphicsQueueIndex(-1)
   , mComputeQueueIndex(-1)
@@ -36,6 +37,7 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   vkGetDeviceQueue(mOwner, mPresentationQueueIndex, 0, &mPresentationQueue);
   vkGetDeviceQueue(mOwner, computeIndex, 0, &mComputeQueue);
 
+  CreateSemaphores();
   ReCreate(surface, physical);
 }
 
@@ -94,15 +96,26 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical)
   mSwapchainFormat = formats[0].format;
 
   QuerySwapchainImages();
+ 
 }
 
 
 void Swapchain::CleanUp()
 {
   WaitOnQueues();
-  if (mSemaphore) {
-    vkDestroySemaphore(mOwner, mSemaphore, nullptr);
-    mSemaphore = VK_NULL_HANDLE;
+  if (mImageAvailableSemaphore) {
+    vkDestroySemaphore(mOwner, mImageAvailableSemaphore, nullptr);
+    mImageAvailableSemaphore = VK_NULL_HANDLE;
+  }
+
+  if (mGraphicsFinishedSemaphore) {
+    vkDestroySemaphore(mOwner, mGraphicsFinishedSemaphore, nullptr);
+    mGraphicsFinishedSemaphore = VK_NULL_HANDLE;
+  }
+
+  if (mComputeFinishedSemaphore) {
+    vkDestroySemaphore(mOwner, mComputeFinishedSemaphore, nullptr);
+    mComputeFinishedSemaphore = VK_NULL_HANDLE;
   }
 
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {
@@ -156,5 +169,24 @@ void Swapchain::WaitOnQueues()
   vkQueueWaitIdle(mGraphicsQueue);
   vkQueueWaitIdle(mPresentationQueue);
   vkQueueWaitIdle(mComputeQueue);
+}
+
+
+void Swapchain::CreateSemaphores()
+{
+  VkSemaphoreCreateInfo semaphoreCI = { };
+  semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mImageAvailableSemaphore) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+  }
+
+  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+  }
+
+  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mComputeFinishedSemaphore) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+  }
 }
 } // Recluse

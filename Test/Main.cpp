@@ -61,7 +61,6 @@ int main(int c, char* argv[])
     while (timeAccumulator > Time::FixTime) {
       // TODO(): Instead of sleeping, update the game state.
       gPhysics().UpdateState(Time::FixTime * Time::ScaleTime);
-      Sleep(DWORD(Time::FixTime * 1000.0));
       timeAccumulator -= Time::DeltaTime;
     }
 

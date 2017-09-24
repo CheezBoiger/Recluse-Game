@@ -26,7 +26,8 @@ std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 VulkanRHI::VulkanRHI()
   : mWindow(NULL)
   , mSurface(VK_NULL_HANDLE)
-  , mCommandPool(VK_NULL_HANDLE)
+  , mCmdPool(VK_NULL_HANDLE)
+  , mSecondaryCmdPool(VK_NULL_HANDLE)
 {
 }
 
@@ -82,6 +83,13 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 
 void VulkanRHI::Initialize(HWND windowHandle)
 {
+  if (!windowHandle) {
+    R_DEBUG("ERROR: Renderer can not initialize with a null window handle!\n");
+    return;
+  }
+  // Keep track of the window handle.
+  mWindow = windowHandle;
+
   mSurface = gContext.CreateSurface(windowHandle);
   i32 presentationIndex;
   i32 graphicsIndex;
@@ -125,8 +133,18 @@ void VulkanRHI::Initialize(HWND windowHandle)
   mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface,
     graphicsIndex, presentationIndex, computeIndex);
 
-  // Keep track of the window handle.
-  mWindow = windowHandle;
+  VkCommandPoolCreateInfo cmdPoolCI = { };
+  cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.GraphicsIndex());
+  cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  
+  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create primary command pool!\n");
+  } 
+
+  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mSecondaryCmdPool) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create secondary command pool!\n");
+  }
 
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
@@ -137,6 +155,14 @@ void VulkanRHI::Initialize(HWND windowHandle)
 void VulkanRHI::CleanUp()
 {
   mSwapchain.WaitOnQueues();
+
+  if (mCmdPool) {
+    vkDestroyCommandPool(mLogicalDevice.Handle(), mCmdPool, nullptr);
+  }
+
+  if (mSecondaryCmdPool) {
+    vkDestroyCommandPool(mLogicalDevice.Handle(), mSecondaryCmdPool, nullptr);
+  }
 
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
     vkDestroyFramebuffer(mLogicalDevice.Handle(), framebuffer, nullptr);
@@ -320,5 +346,58 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   if (vkCreateRenderPass(mLogicalDevice.Handle(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create swapchain renderpass!\n");
   }
+}
+
+
+void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
+{
+  if (vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Unsuccessful graphics queue submit!\n");
+  }
+}
+
+
+void VulkanRHI::AcquireNextImage()
+{
+  vkAcquireNextImageKHR(Device(), mSwapchain.Handle(), UINT_MAX,
+    mSwapchain.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
+}
+
+
+void VulkanRHI::Present()
+{
+  VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
+  VkSwapchainKHR swapchains[] = { mSwapchain.Handle() };
+
+  VkPresentInfoKHR presentInfo = { };
+  presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  presentInfo.pResults = nullptr;
+  presentInfo.swapchainCount = 1;
+  presentInfo.pSwapchains = swapchains;
+  presentInfo.waitSemaphoreCount = 1;
+  presentInfo.pWaitSemaphores = signalSemaphores;
+  presentInfo.pImageIndices = &mSwapchainInfo.mCurrentImageIndex;
+
+  if (vkQueuePresentKHR(mSwapchain.PresentQueue(), &presentInfo) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to present!\n");
+  }
+}
+
+
+void VulkanRHI::GraphicsWaitIdle()
+{
+  vkQueueWaitIdle(mSwapchain.GraphicsQueue());
+}
+
+
+void VulkanRHI::ComputeWaitIdle()
+{
+  vkQueueWaitIdle(mSwapchain.ComputeQueue());
+}
+
+
+void VulkanRHI::PresentWaitIdle()
+{
+  vkQueueWaitIdle(mSwapchain.PresentQueue());
 }
 } // Recluse

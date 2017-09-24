@@ -4,14 +4,15 @@
 
 #include "RHI/Buffer.hpp"
 #include "RHI/PhysicalDevice.hpp"
-
+#include "RHI/VulkanRHI.hpp"
 #include "Core/Exception.hpp"
 
 
 namespace Recluse {
 
 
-void Buffer::Initialize(const PhysicalDevice& physical, const VkBufferCreateInfo& info)
+void Buffer::Initialize(const VkBufferCreateInfo& info, 
+  VkMemoryPropertyFlags memFlags)
 {
   if (vkCreateBuffer(mOwner, &info, nullptr, &mBuffer) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create buffer object.\n");
@@ -24,8 +25,7 @@ void Buffer::Initialize(const PhysicalDevice& physical, const VkBufferCreateInfo
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memoryRequirements.size;
-  allocInfo.memoryTypeIndex = physical.FindMemoryType(memoryRequirements.memoryTypeBits, 
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.FindMemoryType(memoryRequirements.memoryTypeBits, memFlags);
   
   if (vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to allocate memory for buffer!\n");

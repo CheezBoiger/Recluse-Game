@@ -17,7 +17,8 @@ public:
     , mMemory(nullptr) { }
 
   void              CleanUp();
-  void              Initialize(const PhysicalDevice& physical, const VkBufferCreateInfo& info);
+  void              Initialize(const VkBufferCreateInfo& info, 
+                      VkMemoryPropertyFlags memFlags);
 
   // Map call which will map out the buffer in memory. Returns the pointer of the mapped
   // object. To get the mapped pointer, call Mapped().

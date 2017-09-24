@@ -14,7 +14,6 @@ endforeach()
 
 add_subdirectory(Renderer)
 add_subdirectory(Physics)
-add_subdirectory(Shader)
 add_subdirectory(UI)
 add_subdirectory(Game)
 add_subdirectory(Filesystem)

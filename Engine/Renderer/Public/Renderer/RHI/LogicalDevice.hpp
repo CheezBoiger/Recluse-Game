@@ -17,12 +17,14 @@ public:
     : handle(VK_NULL_HANDLE) { }
 
 
-  b8              Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
-  void            CleanUp();
+  b8                    Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
+  void                  CleanUp();
 
-  VkDevice        Handle() const { return handle; }
+  VkMemoryRequirements  GetImageMemoryRequirements(const VkImage& image);
+  VkMemoryRequirements  GetBufferMemoryRequirements(const VkBuffer& buffer);
+  VkDevice              Handle() const { return handle; }
 
 private:
-  VkDevice        handle;
+  VkDevice              handle;
 };
 } // Recluse

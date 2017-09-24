@@ -4,10 +4,15 @@
 
 #include "VulkanConfigs.hpp"
 #include "Core/Types.hpp"
+#include "Core/Utility/Image.hpp"
 
 
 namespace Recluse {
 
+
+class PhysicalDevice;
+class VulkanRHI;
+class CommandBuffer;
 
 // Sampler Object, used for textures, cubemaps, and images.
 class Sampler : public VulkanHandle {
@@ -34,8 +39,12 @@ public:
     , mMemory(VK_NULL_HANDLE) { }
 
   
-  void            Initialize(const VkImageCreateInfo& image, const VkImageViewCreateInfo& view,
-                    const VkMemoryAllocateInfo& memory);
+  void            Initialize(const VkImageCreateInfo& imageInfo, 
+                    const VkImageViewCreateInfo& viewInfo);
+
+  // Uploads the texture from cpu to gpu memory. CommandBuffer must already be
+  // allocated before calling this function!
+  void            Upload(VulkanRHI* rhi, Image& image);
   void            CleanUp();
 
   VkImageView     View() { return mView; }

@@ -47,15 +47,17 @@ public:
   // object.
   void                        CleanUp();
 
-  Buffer                      CreateBuffer();
-  GraphicsPipeline            CreateGraphicsPipeline();
-  ComputePipeline             CreateComputePipeline();
-  FrameBuffer                 CreateFrameBuffer();
-  Sampler                     CreateSampler();
-  Texture                     CreateTexture();
-  Shader                      CreateShader();
-  CommandBuffer               CreateCommandBuffer();
-  DescriptorSet               CreateDescriptorSet();
+  // TODO(): We need to allocate on a custom allocator to save time with
+  // memory management.
+  Buffer*                     CreateBuffer();
+  GraphicsPipeline*           CreateGraphicsPipeline();
+  ComputePipeline*            CreateComputePipeline();
+  FrameBuffer*                CreateFrameBuffer();
+  Sampler*                    CreateSampler();
+  Texture*                    CreateTexture();
+  Shader*                     CreateShader();
+  CommandBuffer*              CreateCommandBuffer();
+  DescriptorSet*              CreateDescriptorSet();
 
   void                        FreeBuffer(Buffer& buffer);
   void                        FreeGraphicsPipeline(GraphicsPipeline& pipeline);
@@ -67,12 +69,21 @@ public:
   void                        FreeCommandBuffer(CommandBuffer& buffer);
   void                        FreeDescriptorSet(DescriptorSet& set);
 
-  LogicalDevice&              Device() { return mLogicalDevice; }
-  Swapchain&                  SwapchainObject() { return mSwapchain; }
+  VkDevice                    Device() { return mLogicalDevice.Handle(); }
+  Swapchain*                  SwapchainObject() { return &mSwapchain; }
   VkSurfaceKHR                Surface() { return mSurface; }
+  VkCommandPool               PrimaryCmdPool() { return mCmdPool; }
+  VkCommandPool               SecondaryCmdPool() { return mSecondaryCmdPool; }
 
   void                        FlushCommands();
-  void                        Submit(const CommandBuffer& buffer);
+  // Returns the image index.
+  void                        AcquireNextImage();
+  void                        GraphicsSubmit(const VkSubmitInfo& submitInfo);
+  void                        GraphicsWaitIdle();
+  void                        ComputeWaitIdle();
+  void                        PresentWaitIdle();
+  void                        ComputeSubmit(const VkSubmitInfo& submitInfo);
+  void                        Present();
   void                        UpdateFromWindowChange();
 
 private:
@@ -84,7 +95,8 @@ private:
   Swapchain                   mSwapchain;
   LogicalDevice               mLogicalDevice;
   VkSurfaceKHR                mSurface;
-  VkCommandPool               mCommandPool;
+  VkCommandPool               mCmdPool;
+  VkCommandPool               mSecondaryCmdPool;
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {
@@ -93,6 +105,7 @@ private:
     VkImage                     mDepthAttachment;
     VkImageView                 mDepthView;
     VkDeviceMemory              mDepthMemory;
+    u32                         mCurrentImageIndex;
   } mSwapchainInfo;
 };
 } // Recluse
