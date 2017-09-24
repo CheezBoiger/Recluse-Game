@@ -18,7 +18,7 @@ namespace Recluse {
 
 
 class VulkanRHI;
-class Scene;
+class CmdList;
 class DirectionLight;
 class PointLight;
 class SpotLight;
@@ -30,7 +30,6 @@ class GpuParams;
 class UserParams;
 class Mesh;
 class CubeMap;
-class Camera;
 
 
 // Renderer, which will be responsible for rendering out the scene from a
@@ -49,9 +48,8 @@ public:
 
   void              OnStartUp() override;
   void              OnShutDown() override;
-  void              AsyncPushScene(Scene* scene);
-  void              PushScene(Scene* scene);
-  void              SetCamera(Camera* camera);
+  void              AsyncPushCmdList(CmdList* cmdList);
+  void              PushCmdList(CmdList* cmdList);
 
   void              BeginFrame();
   void              EndFrame();
@@ -61,17 +59,16 @@ public:
   PointLight*       CreatePointLight();
   SpotLight*        CreateSpotLight();
 
-  CubeMap*          BakeEnviromentMap(const Vector3& position);
+  CubeMap*          BakeEnvironmentMap(const Vector3& position);
   LightProbe*       BakeLightProbe(const CubeMap* envmap);
   Window*           WindowRef() { return mWindowHandle; }
 
 private:
   Window*           mWindowHandle;
-  Scene*            mScene;
-  Camera*           mCamera;
+  CmdList*          mCmdList;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
-  VulkanRHI*        mRHI;
+  VulkanRHI*        mRhi;
 
   // TODO(): We need to implement a pipeline map.
   resource_id_t mClusterForwardPipeline;  

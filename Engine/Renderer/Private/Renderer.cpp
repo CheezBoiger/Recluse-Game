@@ -1,6 +1,9 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Renderer.hpp"
+#include "CmdList.hpp"
+
 #include "RHI/VulkanRHI.hpp"
+#include "RHI/GraphicsPipeline.hpp"
 #include "Core/Core.hpp"
 #include "Core/Exception.hpp"
 
@@ -13,7 +16,12 @@ Renderer& gRenderer() {
 
 
 Renderer::Renderer()
-  : mRHI(nullptr)
+  : mRhi(nullptr)
+{
+}
+
+
+void SetUpDefault(CommandBuffer& cmdBuffer)
 {
 }
 
@@ -30,7 +38,7 @@ void Renderer::OnStartUp()
   }
   VulkanRHI::CreateContext();
   VulkanRHI::FindPhysicalDevice();
-  if (!mRHI) mRHI = new VulkanRHI();
+  if (!mRhi) mRhi = new VulkanRHI();
 }
 
 
@@ -46,13 +54,13 @@ void Renderer::OnShutDown()
 
 void Renderer::BeginFrame()
 {
-  mRHI->AcquireNextImage();
+  mRhi->AcquireNextImage();
 }
 
 
 void Renderer::EndFrame()
 {
-  mRHI->Present();
+  mRhi->Present();
 }
 
 
@@ -60,36 +68,18 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
-  BeginFrame(); 
-
-    VkSemaphore signalSemaphores[] = { mRHI->SwapchainObject()->GraphicsFinishedSemaphore() };
-    VkSemaphore waitSemaphores[] = { mRHI->SwapchainObject()->ImageAvailableSemaphore() };
-    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-
-    VkSubmitInfo submitInfo = {};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 0;
-    submitInfo.pCommandBuffers = nullptr;
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    
-    mRHI->GraphicsSubmit(submitInfo);
-
-
-
+  BeginFrame();
+    mRhi->SubmitCurrSwapchainCmdBuffer();
   EndFrame();
 }
 
 
 void Renderer::CleanUp()
 {
-  if (mRHI) {
-    mRHI->CleanUp();
-    delete mRHI;
-    mRHI = nullptr;
+  if (mRhi) {
+    mRhi->CleanUp();
+    delete mRhi;
+    mRhi = nullptr;
   }
 }
 
@@ -99,8 +89,15 @@ b8 Renderer::Initialize(Window* window)
   if (!window) return false;
   
   mWindowHandle = window;
-  mRHI->Initialize(window->Handle());
+  mRhi->Initialize(window->Handle());
+
+  mRhi->SetSwapchainCmdBufferBuild(SetUpDefault);
 
   return true;
+}
+
+
+void Renderer::PushCmdList(CmdList* scene)
+{
 }
 } // Recluse

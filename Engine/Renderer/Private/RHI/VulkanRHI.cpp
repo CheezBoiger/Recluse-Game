@@ -28,6 +28,7 @@ VulkanRHI::VulkanRHI()
   , mSurface(VK_NULL_HANDLE)
   , mCmdPool(VK_NULL_HANDLE)
   , mSecondaryCmdPool(VK_NULL_HANDLE)
+  , mSwapchainCmdBufferBuild(nullptr)
 {
 }
 
@@ -149,12 +150,18 @@ void VulkanRHI::Initialize(HWND windowHandle)
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
   QueryFromSwapchain();
+  CreateSwapchainCommandBuffers();
 }
 
 
 void VulkanRHI::CleanUp()
 {
   mSwapchain.WaitOnQueues();
+
+  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
+    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
+    cmdBuffer.Free();
+  }
 
   if (mCmdPool) {
     vkDestroyCommandPool(mLogicalDevice.Handle(), mCmdPool, nullptr);
@@ -364,6 +371,27 @@ void VulkanRHI::AcquireNextImage()
 }
 
 
+void VulkanRHI::SubmitCurrSwapchainCmdBuffer()
+{
+  VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
+  VkSemaphore waitSemaphores[] = { mSwapchain.ImageAvailableSemaphore() };
+  VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+  VkCommandBuffer cmdBuffer[] = { mSwapchainInfo.mSwapchainCmdBuffers[mSwapchainInfo.mCurrentImageIndex].Handle() };
+
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = cmdBuffer;
+  submitInfo.signalSemaphoreCount = 1;
+  submitInfo.pSignalSemaphores = signalSemaphores;
+  submitInfo.waitSemaphoreCount = 1;
+  submitInfo.pWaitSemaphores = waitSemaphores;
+  submitInfo.pWaitDstStageMask = waitStages;
+
+  GraphicsSubmit(submitInfo);
+}
+
+
 void VulkanRHI::Present()
 {
   VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
@@ -399,5 +427,50 @@ void VulkanRHI::ComputeWaitIdle()
 void VulkanRHI::PresentWaitIdle()
 {
   vkQueueWaitIdle(mSwapchain.PresentQueue());
+}
+
+
+void VulkanRHI::CreateSwapchainCommandBuffers()
+{
+  mSwapchainInfo.mSwapchainCmdBuffers.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
+  
+  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
+    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
+    cmdBuffer.SetOwner(mLogicalDevice.Handle());
+    cmdBuffer.Allocate(mCmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    
+    VkCommandBufferBeginInfo cmdBufferBI = { };
+    cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmdBufferBI.flags= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+    cmdBuffer.Begin(cmdBufferBI);
+      VkRenderPassBeginInfo rpBI = {};
+      VkClearValue clearValues[2];
+
+      clearValues[0].color = { 1.0f, 0.1f, 0.1f, 1.0f };
+      clearValues[1].depthStencil = { 1.0f, 0 };
+
+      rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+      rpBI.framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
+      rpBI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
+      rpBI.renderArea.extent = mSwapchain.SwapchainExtent();
+      rpBI.renderArea.offset = { 0, 0 };
+      rpBI.clearValueCount = 2;
+      rpBI.pClearValues = clearValues;
+
+      cmdBuffer.BeginRenderPass(rpBI, VK_SUBPASS_CONTENTS_INLINE);
+
+        if (mSwapchainCmdBufferBuild) { 
+          mSwapchainCmdBufferBuild(cmdBuffer);
+        }
+
+      cmdBuffer.EndRenderPass();
+    cmdBuffer.End();
+  }
+}
+
+
+void VulkanRHI::UpdateFromWindowChange()
+{
 }
 } // Recluse
