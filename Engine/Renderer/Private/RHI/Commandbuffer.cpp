@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/Commandbuffer.hpp"
+#include "RHI/CommandBuffer.hpp"
 #include "Core/Exception.hpp"
 
 #define ASSERT_RECORDING() if (!mRecording) { R_DEBUG("ERROR: CommandBuffer not recording! Aborting cmd call.\n"); return; }

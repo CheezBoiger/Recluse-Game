@@ -66,6 +66,15 @@ void Renderer::Render()
   BeginFrame();
     mRhi->SubmitCurrSwapchainCmdBuffer();
   EndFrame();
+
+  VkSubmitInfo computeSubmit = { };
+  computeSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  computeSubmit.commandBufferCount = 0;
+  computeSubmit.pCommandBuffers = nullptr;
+  computeSubmit.signalSemaphoreCount = 0;
+  computeSubmit.waitSemaphoreCount = 0;
+
+  mRhi->ComputeSubmit(computeSubmit);
 }
 
 
@@ -86,9 +95,13 @@ b8 Renderer::Initialize(Window* window)
   mWindowHandle = window;
   mRhi->Initialize(window->Handle());
 
-  mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer) -> void {
+  mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
+    cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer.EndRenderPass();
   });
+
+  mRhi->RebuildCommandBuffers();
 
   return true;
 }
@@ -97,6 +110,9 @@ b8 Renderer::Initialize(Window* window)
 void Renderer::PushCmdList(CmdList* scene)
 {
   mCmdList = scene;
+
+  // Rebuild commandbuffers here.
+
   mRhi->RebuildCommandBuffers();
 }
 } // Recluse

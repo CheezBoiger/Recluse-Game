@@ -17,7 +17,6 @@ class Buffer;
 class GraphicsPipeline;
 class ComputePipeline;
 class FrameBuffer;
-class Rendertarget;
 class Shader;
 class CommandBuffer;
 class Sampler;
@@ -26,7 +25,8 @@ class DescriptorSet;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
-typedef std::function<void(CommandBuffer& cmdBuffer)> SwapchainCmdBufferBuildFunc;
+// Also passes the default renderpass begin info to render onscreen.
+typedef std::function<void(CommandBuffer&, VkRenderPassBeginInfo&)> SwapchainCmdBufferBuildFunc;
 
 // Render Hardware Interface for Vulkan.
 class VulkanRHI {
@@ -51,7 +51,8 @@ public:
   void                          Initialize(HWND windowHandle);
 
   // Clean up this object. This must be called once done with this RHI
-  // object.
+  // object. BE SURE TO FREE UP ANY OBJECTS CREATED FROM THIS RHI OBJECT BEFORE
+  // CALLING THIS FUNCTION.
   void                          CleanUp();
 
   // TODO(): We need to allocate on a custom allocator to save time with
@@ -66,15 +67,16 @@ public:
   CommandBuffer*                CreateCommandBuffer();
   DescriptorSet*                CreateDescriptorSet();
 
-  void                          FreeBuffer(Buffer& buffer);
-  void                          FreeGraphicsPipeline(GraphicsPipeline& pipeline);
-  void                          FreeComputePipeline(ComputePipeline& pipeline);
-  void                          FreeFrameBuffer(FrameBuffer& buffer);
-  void                          FreeSampler(Sampler& sampler);
-  void                          FreeTexture(Texture& texture);
-  void                          FreeShader(Shader& shader);
-  void                          FreeCommandBuffer(CommandBuffer& buffer);
-  void                          FreeDescriptorSet(DescriptorSet& set);
+  void                          FreeBuffer(Buffer* buffer);
+  void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
+  void                          FreeComputePipeline(ComputePipeline* pipeline);
+  void                          FreeFrameBuffer(FrameBuffer* buffer);
+  void                          FreeSampler(Sampler* sampler);
+  void                          FreeTexture(Texture* texture);
+  void                          FreeShader(Shader* shader);
+  void                          FreeCommandBuffer(CommandBuffer* buffer);
+  void                          FreeDescriptorSet(DescriptorSet* set);
+
   void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
   void                          RebuildCommandBuffers();
 
@@ -82,7 +84,7 @@ public:
   Swapchain*                    SwapchainObject() { return &mSwapchain; }
   VkSurfaceKHR                  Surface() { return mSurface; }
   VkCommandPool                 PrimaryCmdPool() { return mCmdPool; }
-  VkCommandPool                 SecondaryCmdPool() { return mSecondaryCmdPool; }
+  VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
 
   void                          FlushCommands();
   // Returns the image index.
@@ -107,7 +109,7 @@ private:
   LogicalDevice                 mLogicalDevice;
   VkSurfaceKHR                  mSurface;
   VkCommandPool                 mCmdPool;
-  VkCommandPool                 mSecondaryCmdPool;
+  VkCommandPool                 mComputeCmdPool;
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {

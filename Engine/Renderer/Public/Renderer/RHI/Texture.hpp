@@ -42,8 +42,8 @@ public:
   void            Initialize(const VkImageCreateInfo& imageInfo, 
                     const VkImageViewCreateInfo& viewInfo);
 
-  // Uploads the texture from cpu to gpu memory. CommandBuffer must already be
-  // allocated before calling this function!
+  // Uploads the texture from cpu to gpu memory. Can be used to stream texture data for 
+  // updates.
   void            Upload(VulkanRHI* rhi, Image& image);
   void            CleanUp();
 

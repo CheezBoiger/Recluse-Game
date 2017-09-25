@@ -38,6 +38,7 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   vkGetDeviceQueue(mOwner, computeIndex, 0, &mComputeQueue);
 
   CreateSemaphores();
+  CreateComputeFence();
   ReCreate(surface, physical);
 }
 

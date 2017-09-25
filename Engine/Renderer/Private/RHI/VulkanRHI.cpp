@@ -1,12 +1,11 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/Buffer.hpp"
-#include "RHI/Commandbuffer.hpp"
+#include "RHI/CommandBuffer.hpp"
 #include "RHI/ComputePipeline.hpp"
 #include "RHI/GraphicsPipeline.hpp"
-#include "RHI/Framebuffer.hpp"
+#include "RHI/FrameBuffer.hpp"
 #include "RHI/Texture.hpp"
-#include "RHI/Rendertarget.hpp"
 #include "RHI/Shader.hpp"
 
 #include "Core/Utility/Vector.hpp"
@@ -27,7 +26,7 @@ VulkanRHI::VulkanRHI()
   : mWindow(NULL)
   , mSurface(VK_NULL_HANDLE)
   , mCmdPool(VK_NULL_HANDLE)
-  , mSecondaryCmdPool(VK_NULL_HANDLE)
+  , mComputeCmdPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
 {
 }
@@ -40,6 +39,7 @@ VulkanRHI::~VulkanRHI()
 
 b8 VulkanRHI::CreateContext()
 {
+// Enable debug mode, should we decide to enable validation layers.
 #if _DEBUG
   gContext.EnableDebugMode();
 #endif
@@ -143,14 +143,15 @@ void VulkanRHI::Initialize(HWND windowHandle)
     R_DEBUG("ERROR: Failed to create primary command pool!\n");
   } 
 
-  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mSecondaryCmdPool) != VK_SUCCESS) {
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.ComputeIndex());
+
+  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create secondary command pool!\n");
   }
 
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
   QueryFromSwapchain();
-  CreateSwapchainCommandBuffers();
 }
 
 
@@ -167,8 +168,8 @@ void VulkanRHI::CleanUp()
     vkDestroyCommandPool(mLogicalDevice.Handle(), mCmdPool, nullptr);
   }
 
-  if (mSecondaryCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Handle(), mSecondaryCmdPool, nullptr);
+  if (mComputeCmdPool) {
+    vkDestroyCommandPool(mLogicalDevice.Handle(), mComputeCmdPool, nullptr);
   }
 
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
@@ -470,13 +471,9 @@ void VulkanRHI::CreateSwapchainCommandBuffers()
       rpBI.clearValueCount = 2;
       rpBI.pClearValues = clearValues;
 
-      cmdBuffer.BeginRenderPass(rpBI, VK_SUBPASS_CONTENTS_INLINE);
-
-        if (mSwapchainCmdBufferBuild) { 
-          mSwapchainCmdBufferBuild(cmdBuffer);
-        }
-
-      cmdBuffer.EndRenderPass();
+      if (mSwapchainCmdBufferBuild) { 
+        mSwapchainCmdBufferBuild(cmdBuffer, rpBI);
+      }
     cmdBuffer.End();
   }
 }
