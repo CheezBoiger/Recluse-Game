@@ -412,6 +412,18 @@ void VulkanRHI::Present()
 }
 
 
+void VulkanRHI::ComputeSubmit(const VkSubmitInfo& submitInfo)
+{
+  VkFence fence = mSwapchain.ComputeFence();
+  vkWaitForFences(mLogicalDevice.Handle(), 1, &fence, VK_TRUE, UINT64_MAX);
+  vkResetFences(mLogicalDevice.Handle(), 1, &fence);
+
+  if (vkQueueSubmit(mSwapchain.ComputeQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Compute failed to submit task!\n");
+  }
+}
+
+
 void VulkanRHI::GraphicsWaitIdle()
 {
   vkQueueWaitIdle(mSwapchain.GraphicsQueue());
@@ -467,6 +479,17 @@ void VulkanRHI::CreateSwapchainCommandBuffers()
       cmdBuffer.EndRenderPass();
     cmdBuffer.End();
   }
+}
+
+
+void VulkanRHI::RebuildCommandBuffers()
+{
+  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
+    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
+    cmdBuffer.Free();
+  }
+
+  CreateSwapchainCommandBuffers();
 }
 
 

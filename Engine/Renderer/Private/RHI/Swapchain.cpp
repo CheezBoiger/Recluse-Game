@@ -113,9 +113,9 @@ void Swapchain::CleanUp()
     mGraphicsFinishedSemaphore = VK_NULL_HANDLE;
   }
 
-  if (mComputeFinishedSemaphore) {
-    vkDestroySemaphore(mOwner, mComputeFinishedSemaphore, nullptr);
-    mComputeFinishedSemaphore = VK_NULL_HANDLE;
+  if (mComputeFence) {
+    vkDestroyFence(mOwner, mComputeFence, nullptr);
+    mComputeFence = VK_NULL_HANDLE;
   }
 
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {
@@ -184,8 +184,16 @@ void Swapchain::CreateSemaphores()
   if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create a semaphore!\n");
   }
+}
 
-  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mComputeFinishedSemaphore) != VK_SUCCESS) {
+
+void Swapchain::CreateComputeFence()
+{
+  VkFenceCreateInfo fenceCI = { };
+  fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+  if (vkCreateFence(mOwner, &fenceCI, nullptr, &mComputeFence) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create a semaphore!\n");
   }
 }

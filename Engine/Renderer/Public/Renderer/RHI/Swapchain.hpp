@@ -55,17 +55,18 @@ public:
 
   VkSemaphore                   ImageAvailableSemaphore() { return mImageAvailableSemaphore; }
   VkSemaphore                   GraphicsFinishedSemaphore() { return mGraphicsFinishedSemaphore; }
-  VkSemaphore                   ComputeFinishedSemaphore() { return mComputeFinishedSemaphore; }
+  VkFence                       ComputeFence() { return mComputeFence; }
   
 private:
   void                          QuerySwapchainImages();
   void                          CreateSemaphores();
+  void                          CreateComputeFence();
 
   VkSwapchainKHR                mSwapchain;
 
   VkSemaphore                   mImageAvailableSemaphore;
   VkSemaphore                   mGraphicsFinishedSemaphore;
-  VkSemaphore                   mComputeFinishedSemaphore;
+  VkFence                       mComputeFence;
 
   VkFormat                      mSwapchainFormat;
   VkExtent2D                    mSwapchainExtent;

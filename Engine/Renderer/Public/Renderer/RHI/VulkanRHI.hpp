@@ -76,6 +76,7 @@ public:
   void                          FreeCommandBuffer(CommandBuffer& buffer);
   void                          FreeDescriptorSet(DescriptorSet& set);
   void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
+  void                          RebuildCommandBuffers();
 
   VkDevice                      Device() { return mLogicalDevice.Handle(); }
   Swapchain*                    SwapchainObject() { return &mSwapchain; }

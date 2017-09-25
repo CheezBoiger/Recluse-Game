@@ -96,5 +96,7 @@ b8 Renderer::Initialize(Window* window)
 
 void Renderer::PushCmdList(CmdList* scene)
 {
+  mCmdList = scene;
+  mRhi->RebuildCommandBuffers();
 }
 } // Recluse

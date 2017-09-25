@@ -71,12 +71,12 @@ private:
   VulkanRHI*        mRhi;
 
   // TODO(): We need to implement a pipeline map.
-  resource_id_t mClusterForwardPipeline;  
-  resource_id_t mSHCoefficentPrefilter;
-  resource_id_t mGeometryPipeline;
-  resource_id_t mPreprocessPipeline;
-  resource_id_t mHDRGammaPipeline;
-  resource_id_t mPostProcessPipelne;
+  resource_id_t     mClusterForwardPipeline;  
+  resource_id_t     mSHCoefficentPrefilter;
+  resource_id_t     mGeometryPipeline;
+  resource_id_t     mPreprocessPipeline;
+  resource_id_t     mHDRGammaPipeline;
+  resource_id_t     mPostProcessPipelne;
 
   b8                mRendering;
 };
