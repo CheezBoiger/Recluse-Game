@@ -12,8 +12,10 @@ struct Matrix4;
 struct Vector4 {
   struct { r32 x, y, z, w; };
 
-  Vector4(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 1.0f)
+  Vector4(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 0.0f)
     : x(x), y(y), z(z), w(w) { }
+
+  Vector4 Normalize() const;
 
   Vector4 operator+(const Vector4& other) const;
   Vector4 operator-(const Vector4& other) const;
