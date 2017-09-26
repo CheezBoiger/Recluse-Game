@@ -3,9 +3,13 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-layout (location = 0) in vec4 fragPos;
-layout (location = 1) in vec4 fragNormal;
-layout (location = 2) in vec2 fragTexCoord;
+in FRAG_IN {
+  vec4 position;
+  vec4 normal;
+  vec2 texcoord0;
+  vec2 texcoord1;
+  vec4 color;
+} frag_in;
 
 #define MAX_BONES             64
 #define MAX_LIGHTS            512
@@ -61,12 +65,12 @@ layout (location = 0) out vec4 OutColor;
 
 void main()
 {
-  vec4 fragAlbedo = texture(albedo, fragTexCoord);
-  vec4 fragMetallic = texture(metallic, fragTexCoord);
-  vec4 fragRoughness = texture(roughness, fragTexCoord);
+  vec4 fragAlbedo = texture(albedo, frag_in.texcoord0);
+  vec4 fragMetallic = texture(metallic, frag_in.texcoord0);
+  vec4 fragRoughness = texture(roughness, frag_in.texcoord0);
   
-  vec4 V = normalize(gWorldBuffer.cameraPos - fragPos);
-  vec4 N = normalize(fragNormal);
+  vec4 V = normalize(gWorldBuffer.cameraPos - frag_in.position);
+  vec4 N = normalize(frag_in.normal);
   
   OutColor = vec4(0.0, 0.0, 0.0, 1.0);
 }

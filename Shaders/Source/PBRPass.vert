@@ -5,9 +5,11 @@
 
 layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
-layout (location = 2) in vec2   texcoord;
-layout (location = 3) in vec4   boneWeights;
-layout (location = 4) in ivec4  boneIDs;
+layout (location = 2) in vec2   texcoord0;
+layout (location = 3) in vec2   texcoord1;
+layout (location = 4) in vec4   color;
+layout (location = 5) in vec4   boneWeights;
+layout (location = 6) in ivec4  boneIDs;
 
 
 #define MAX_BONES     64
@@ -38,6 +40,15 @@ layout (location = 1) out vec4 fragNormal;
 layout (location = 2) out vec2 fragTexCoord;
 
 
+out FRAG_IN {
+  vec4 position;
+  vec4 normal;
+  vec2 texcoord0;
+  vec2 texcoord1;
+  vec4 color;
+} frag_in;
+
+
 void main()
 {
   // Compute the bone transform 
@@ -47,9 +58,12 @@ void main()
   boneTransform      += gWorldBuffer.bones[boneIDs[3]] * boneWeights[3];
   
   vec4 worldPosition = gWorldBuffer.model * boneTransform * position;
-  fragPos = worldPosition;
-  fragNormal = gWorldBuffer.inverseNormalMatrix * normal;
-  fragTexCoord = texcoord;
+  
+  frag_in.position = worldPosition;
+  frag_in.normal = gWorldBuffer.inverseNormalMatrix * normal;
+  frag_in.texcoord0 = texcoord0;
+  frag_in.texcoord1 = texcoord1;
+  frag_in.color = color;
   
   gl_Position = gWorldBuffer.modelViewProj * position;
 }
