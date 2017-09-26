@@ -1,0 +1,31 @@
+Vulkan:
+  Vulkan RHI is almost done, we need to extract signal semaphores from submitSwapchainCmdBuffers
+  to allow renderer to define them instead. 
+
+  Compute CommandBuffers need their own create function.
+
+  Need to set up Rebuilding of Swapchain and framebuffers, as well as cmdbuffers if window resizes.
+
+Renderer:
+
+  Start defining upper level CmdList, which is what the scene graph will degrade to. For
+  CmdList extraction, we will be reading and loading onto gpu friendly commandbuffers. This
+  needs to be multithreaded.
+
+  Light definitions are needed. Light probes needed, implementing spherical harmonics.
+
+  Need to define our skybox and day/night cycles. This will require a separate pipeline
+  RenderPass.
+
+  Current Rendering Pipeline:
+  Rendering Technique: Clustered Forward (deferred if we are adding gbuffers, optional).
+    - Pre process: Light Culling process.
+      Input: 
+      Output: light grid shader storage buffer.
+    - Process: Clustered Forward PBR Rendering 
+      Input: (Any gbuffers needed?)
+              lightGrid shader storage buffer.
+      Output: 1 RenderTexture
+    - Post Process: 
+      Input: 1 RenderTexture
+      Output: FinalTexture 

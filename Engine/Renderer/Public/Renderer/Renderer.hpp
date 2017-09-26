@@ -64,6 +64,11 @@ public:
   Window*           WindowRef() { return mWindowHandle; }
 
 private:
+  void              SetUpFrameBuffers();
+  void              SetUpGraphicsPipelines();
+  void              CleanUpGraphicsPipelines();
+  void              CleanUpFrameBuffers();
+
   Window*           mWindowHandle;
   CmdList*          mCmdList;
 
@@ -71,7 +76,8 @@ private:
   VulkanRHI*        mRhi;
 
   // TODO(): We need to implement a pipeline map.
-  resource_id_t     mClusterForwardPipeline;  
+  resource_id_t     mPbrFrameBuffer;
+  resource_id_t     mPbrForwardPipeline;  
   resource_id_t     mSHCoefficentPrefilter;
   resource_id_t     mGeometryPipeline;
   resource_id_t     mPreprocessPipeline;

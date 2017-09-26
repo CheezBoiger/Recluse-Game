@@ -3,6 +3,7 @@
 
 #include "RHI/ComputePipeline.hpp"
 #include "RHI/GraphicsPipeline.hpp"
+#include "RHI/FrameBuffer.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -12,12 +13,13 @@
 
 namespace Recluse {
 
+
 std::unordered_map<resource_id_t, GraphicsPipeline* > GraphicsPipelineMap;
 std::unordered_map<resource_id_t, ComputePipeline* >  ComputePipelineMap;
+std::unordered_map<resource_id_t, FrameBuffer* > FrameBuffers;
 
 
-
-Resources& Resources::Global()
+Resources& gResources()
 {
   static Resources resources;
   return resources;
@@ -51,6 +53,19 @@ resource_id_t Resources::RegisterComputePipeline(std::string name, ComputePipeli
 }
 
 
+resource_id_t Resources::RegisterFrameBuffer(std::string name, FrameBuffer* framebuffer)
+{
+  resource_id_t uid = std::hash<std::string>()(name);
+  if (FrameBuffers.find(uid) == FrameBuffers.end()) {
+    FrameBuffers[uid] = framebuffer;
+  } else {
+    uid = 0;
+  }
+
+  return uid;
+}
+
+
 GraphicsPipeline* Resources::GetGraphicsPipeline(resource_id_t uid)
 {
   if (GraphicsPipelineMap.find(uid) != GraphicsPipelineMap.end()) {
@@ -68,5 +83,52 @@ ComputePipeline* Resources::GetComputePipeline(resource_id_t uid)
   } 
 
   return nullptr;
+}
+
+
+FrameBuffer* Resources::GetFrameBuffer(resource_id_t uid)
+{
+  if (FrameBuffers.find(uid) != FrameBuffers.end()) {
+    return FrameBuffers[uid];
+  }
+  return nullptr;
+}
+
+
+GraphicsPipeline* Resources::UnregisterGraphicsPipeline(resource_id_t uid)
+{
+  GraphicsPipeline* pipeline = nullptr;
+
+  if (GraphicsPipelineMap.find(uid) != GraphicsPipelineMap.end()) {
+    pipeline = GraphicsPipelineMap[uid];
+    GraphicsPipelineMap.erase(uid);
+  }
+  
+  return pipeline;
+}
+
+
+ComputePipeline* Resources::UnregisterComputePipeline(resource_id_t uid)
+{
+  ComputePipeline* pipeline = nullptr;
+  if (ComputePipelineMap.find(uid) != ComputePipelineMap.end()) {
+    pipeline = ComputePipelineMap[uid];
+    ComputePipelineMap.erase(uid);
+  }
+
+  return pipeline;
+}
+
+
+FrameBuffer* Resources::UnregisterFrameBuffer(resource_id_t uid)
+{
+  FrameBuffer* framebuffer = nullptr;
+  
+  if (FrameBuffers.find(uid) != FrameBuffers.end()) {
+    framebuffer = FrameBuffers[uid];
+    FrameBuffers.erase(uid);
+  }  
+
+  return framebuffer;
 }
 } // Recluse

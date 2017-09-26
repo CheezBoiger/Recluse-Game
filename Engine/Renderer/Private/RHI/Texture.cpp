@@ -95,7 +95,7 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image& image)
 
   CommandBuffer buffer;
   buffer.SetOwner(mOwner);
-  buffer.Allocate(rhi->PrimaryCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.Allocate(rhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = { };
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

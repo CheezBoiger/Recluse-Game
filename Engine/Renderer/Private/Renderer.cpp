@@ -80,6 +80,9 @@ void Renderer::Render()
 
 void Renderer::CleanUp()
 {
+  CleanUpGraphicsPipelines();
+  CleanUpFrameBuffers();
+
   if (mRhi) {
     mRhi->CleanUp();
     delete mRhi;
@@ -94,6 +97,9 @@ b8 Renderer::Initialize(Window* window)
   
   mWindowHandle = window;
   mRhi->Initialize(window->Handle());
+
+  SetUpFrameBuffers();
+  SetUpGraphicsPipelines();
 
   mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -114,5 +120,38 @@ void Renderer::PushCmdList(CmdList* scene)
   // Rebuild commandbuffers here.
 
   mRhi->RebuildCommandBuffers();
+}
+
+
+
+void Renderer::SetUpFrameBuffers()
+{
+  FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
+  mPbrFrameBuffer = gResources().RegisterFrameBuffer("PbrFrameBuffer", pbrFrameBuffer);
+}
+
+
+void Renderer::SetUpGraphicsPipelines()
+{
+  GraphicsPipeline* mPbrForward = mRhi->CreateGraphicsPipeline();
+
+  VkGraphicsPipelineCreateInfo graphicsPipeline = { };
+  graphicsPipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+  mPbrForwardPipeline = gResources().RegisterGraphicsPipeline("PbrForward", mPbrForward);
+}
+
+
+void Renderer::CleanUpGraphicsPipelines()
+{
+  GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline(mPbrForwardPipeline);
+  mRhi->FreeGraphicsPipeline(pbrPipeline);
+}
+
+
+void Renderer::CleanUpFrameBuffers()
+{
+  FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer(mPbrFrameBuffer);
+  mRhi->FreeFrameBuffer(pbrFrameBuffer);
 }
 } // Recluse

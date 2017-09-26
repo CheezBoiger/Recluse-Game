@@ -83,7 +83,7 @@ public:
   VkDevice                      Device() { return mLogicalDevice.Handle(); }
   Swapchain*                    SwapchainObject() { return &mSwapchain; }
   VkSurfaceKHR                  Surface() { return mSurface; }
-  VkCommandPool                 PrimaryCmdPool() { return mCmdPool; }
+  VkCommandPool                 GraphicsCmdPool() { return mCmdPool; }
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
 
   void                          FlushCommands();

@@ -7,6 +7,7 @@
 #include "RHI/FrameBuffer.hpp"
 #include "RHI/Texture.hpp"
 #include "RHI/Shader.hpp"
+#include "RHI//DescriptorSet.hpp"
 
 #include "Core/Utility/Vector.hpp"
 
@@ -374,6 +375,8 @@ void VulkanRHI::AcquireNextImage()
 
 void VulkanRHI::SubmitCurrSwapchainCmdBuffer()
 {
+  // TODO(): This must be set outside in the renderer scope, instead of in here. 
+  // more freedom for offscreen rendering that way.
   VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
   VkSemaphore waitSemaphores[] = { mSwapchain.ImageAvailableSemaphore() };
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -492,5 +495,149 @@ void VulkanRHI::RebuildCommandBuffers()
 
 void VulkanRHI::UpdateFromWindowChange()
 {
+}
+
+
+Buffer* VulkanRHI::CreateBuffer()
+{ 
+  Buffer* buffer = new Buffer();
+  buffer->SetOwner(mLogicalDevice.Handle());
+
+  return buffer;
+}
+
+
+void VulkanRHI::FreeBuffer(Buffer* buffer)
+{
+  buffer->CleanUp();
+
+  delete buffer;
+  buffer = nullptr;
+}
+
+
+GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
+{
+  GraphicsPipeline* pipeline = new GraphicsPipeline();
+  pipeline->SetOwner(mLogicalDevice.Handle());
+  return pipeline;
+}
+
+
+void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
+{
+  pipeline->CleanUp();
+ 
+  delete pipeline;
+  pipeline = nullptr;
+}
+
+
+
+Shader* VulkanRHI::CreateShader()
+{
+  Shader* shader = new Shader();
+  shader->SetOwner(mLogicalDevice.Handle());
+  
+  return shader;
+}
+
+
+void VulkanRHI::FreeShader(Shader* shader)
+{
+  shader->CleanUp();
+  
+  delete shader;
+  shader = nullptr;
+}
+
+
+DescriptorSet* VulkanRHI::CreateDescriptorSet()
+{
+  DescriptorSet* dset = new DescriptorSet();
+  dset->SetOwner(mLogicalDevice.Handle());
+  
+  return dset;
+}
+
+
+void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
+{
+  dset->Free();
+  
+  delete dset;
+  dset = nullptr;
+}
+
+
+Sampler* VulkanRHI::CreateSampler()
+{
+  Sampler* sampler = new Sampler();
+  sampler->SetOwner(mLogicalDevice.Handle());
+  
+  return sampler;
+}
+
+
+void VulkanRHI::FreeSampler(Sampler* sampler)
+{
+  sampler->CleanUp();
+  
+  delete sampler;
+  sampler = nullptr;
+}
+
+
+Texture* VulkanRHI::CreateTexture()
+{
+  Texture* texture = new Texture();
+  texture->SetOwner(mLogicalDevice.Handle());
+  
+  return texture;
+}
+
+
+void VulkanRHI::FreeTexture(Texture* texture)
+{
+  texture->CleanUp();
+  
+  delete texture;
+  texture = nullptr;
+}
+
+
+FrameBuffer* VulkanRHI::CreateFrameBuffer()
+{
+  FrameBuffer* framebuffer = new FrameBuffer();
+  framebuffer->SetOwner(mLogicalDevice.Handle());
+
+  return framebuffer;
+}
+
+
+void VulkanRHI::FreeFrameBuffer(FrameBuffer* framebuffer)
+{
+  framebuffer->CleanUp();
+  
+  delete framebuffer;
+  framebuffer = nullptr;
+}
+
+
+CommandBuffer* VulkanRHI::CreateCommandBuffer()
+{
+  CommandBuffer* buffer = new CommandBuffer();
+  buffer->SetOwner(mLogicalDevice.Handle());
+  
+  return buffer;
+}
+
+
+void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
+{
+  buffer->Free();
+  
+  delete buffer;
+  buffer = nullptr;
 }
 } // Recluse
