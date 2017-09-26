@@ -10,6 +10,7 @@ layout (location = 1) in vec2 texcoord;
 layout (location = 1) out vec2 fragTexCoord;
 
 
+// Render to a quad.
 void main() 
 {
   gl_Position = vec4(position, 0.0, 1.0);

@@ -11,7 +11,6 @@ in FRAG_IN {
   vec4 color;
 } frag_in;
 
-#define MAX_BONES             64
 #define MAX_LIGHTS            512
 
 struct DirectionLight {
@@ -28,35 +27,30 @@ struct PointLight {
 };
 
 
-layout (binding = 0) uniform GlobalBuffer {
-  mat4  model;
+// Global const buffer ALWAYS bound to descriptor set 0, or the 
+// first descriptor set.
+layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
-  mat4  modelViewProj;
-  mat4  inverseNormalMatrix;
   mat4  cameraView;
   mat4  cameraProj;
-  mat4  bones[MAX_BONES];
   vec4  cameraPos;
-  float hasAlbedo;
-  float hasMetallic;
-  float hasRoughness;
-  float pad0;
   float coffSH[9];
   float pad1[3];
 } gWorldBuffer;
 
 
-layout (binding = 1) uniform LightBuffer {
+layout (set = 1, binding = 2) uniform sampler2D albedo;
+layout (set = 1, binding = 3) uniform sampler2D metallic;
+layout (set = 1, binding = 4) uniform sampler2D roughness; 
+
+
+layout (set = 2, binding = 0) uniform LightBuffer {
   DirectionLight  primaryLight;
   PointLight      pointLights[MAX_LIGHTS];
-};
+} gLightBuffer;
 
-
-layout (binding = 2) uniform sampler2D albedo;
-layout (binding = 3) uniform sampler2D metallic;
-layout (binding = 4) uniform sampler2D roughness; 
 
 // TODO(): Need to addin gridLights buffer, for light culling, too.
 

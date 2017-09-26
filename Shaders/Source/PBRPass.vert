@@ -15,24 +15,33 @@ layout (location = 6) in ivec4  boneIDs;
 #define MAX_BONES     64
 
 
-layout (binding = 0) uniform GlobalBuffer {
-  mat4  model;
+// Global const buffer ALWAYS bound to descriptor set 0, or the 
+// first descriptor set.
+layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
-  mat4  modelViewProj;
-  mat4  inverseNormalMatrix;
   mat4  cameraView;
   mat4  cameraProj;
-  mat4  bones[MAX_BONES];
   vec4  cameraPos;
-  float hasAlbedo;
-  float hasMetallic;
-  float hasRoughness;
-  float pad0;
   float coffSH[9];
   float pad1[3];
 } gWorldBuffer;
+
+
+layout (set = 1, binding = 0) uniform ObjectBuffer {
+  mat4  model;
+  mat4  inverseNormalMatrix;
+  bool  hasAlbedo;
+  bool  hasMetallic;
+  bool  hasRoughness;
+  bool  hasBones;
+} objBuffer;
+
+
+layout (set = 1, binding = 1) uniform BonesBuffer {
+  mat4 bones[MAX_BONES];
+} boneBuffer;
 
 
 layout (location = 0) out vec4 fragPos;
@@ -51,19 +60,25 @@ out FRAG_IN {
 
 void main()
 {
+  vec4 worldPosition = position;
+ 
   // Compute the bone transform 
-  mat4 boneTransform  = gWorldBuffer.bones[boneIDs[0]] * boneWeights[0];
-  boneTransform      += gWorldBuffer.bones[boneIDs[1]] * boneWeights[1];
-  boneTransform      += gWorldBuffer.bones[boneIDs[2]] * boneWeights[2];
-  boneTransform      += gWorldBuffer.bones[boneIDs[3]] * boneWeights[3];
+  if (objBuffer.hasBones) {
+    mat4 boneTransform  = boneBuffer.bones[boneIDs[0]] * boneWeights[0];
+    boneTransform      += boneBuffer.bones[boneIDs[1]] * boneWeights[1];
+    boneTransform      += boneBuffer.bones[boneIDs[2]] * boneWeights[2];
+    boneTransform      += boneBuffer.bones[boneIDs[3]] * boneWeights[3];
+    
+    worldPosition = boneTransform * worldPosition;
+  }
   
-  vec4 worldPosition = gWorldBuffer.model * boneTransform * position;
+  worldPosition = objBuffer.model * worldPosition;
   
   frag_in.position = worldPosition;
-  frag_in.normal = gWorldBuffer.inverseNormalMatrix * normal;
+  frag_in.normal = objBuffer.inverseNormalMatrix * normal;
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
   frag_in.color = color;
   
-  gl_Position = gWorldBuffer.modelViewProj * position;
+  gl_Position = gWorldBuffer.viewProj * worldPosition;
 }
