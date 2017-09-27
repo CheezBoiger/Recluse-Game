@@ -6,20 +6,21 @@
 namespace Recluse {
 
 
-void FrameBuffer::Finalize(const VkFramebufferCreateInfo& info,
+void FrameBuffer::Finalize(VkFramebufferCreateInfo& info,
   const VkRenderPassCreateInfo& renderpass)
 {
-  VkResult result = vkCreateFramebuffer(mOwner, &info, nullptr, &mHandle);
+  VkResult result = vkCreateRenderPass(mOwner, &renderpass, nullptr, &mRenderPass);
+  if (result != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create underlying renderpass for framebuffer!\n");
+  }
+
+  info.renderPass = mRenderPass;
+
+  result = vkCreateFramebuffer(mOwner, &info, nullptr, &mHandle);
   if (result != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create framebuffer!\n");
     return;
   }
-
-  result = vkCreateRenderPass(mOwner, &renderpass, nullptr, &mRenderPass);
-  if (result != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create underlying renderpass for framebuffer!\n");  
-  }
-  
 }
 
 

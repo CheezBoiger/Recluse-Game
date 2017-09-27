@@ -40,7 +40,7 @@ public:
 
   
   void            Initialize(const VkImageCreateInfo& imageInfo, 
-                    const VkImageViewCreateInfo& viewInfo);
+                    VkImageViewCreateInfo& viewInfo);
 
   // Uploads the texture from cpu to gpu memory. Can be used to stream texture data for 
   // updates.

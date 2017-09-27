@@ -32,7 +32,7 @@ void Sampler::CleanUp()
 
 
 void Texture::Initialize(const VkImageCreateInfo& imageInfo, 
-  const VkImageViewCreateInfo& viewInfo)
+  VkImageViewCreateInfo& viewInfo)
 {
   if (vkCreateImage(mOwner, &imageInfo, nullptr, &mImage) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create image!\n");
@@ -53,6 +53,11 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   }
 
   vkBindImageMemory(mOwner, mImage, mMemory, 0);
+
+  viewInfo.image = mImage;
+  if (vkCreateImageView(mOwner, &viewInfo, nullptr, &mView) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create image view!\n");
+  }
 }
 
 

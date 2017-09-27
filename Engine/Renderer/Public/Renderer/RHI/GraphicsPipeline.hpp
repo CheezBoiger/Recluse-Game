@@ -16,7 +16,7 @@ public:
     : mPipeline(VK_NULL_HANDLE)
     , mLayout(VK_NULL_HANDLE) { }
 
-  void              Initialize(const VkGraphicsPipelineCreateInfo& info,
+  void              Initialize(VkGraphicsPipelineCreateInfo& info,
                       const VkPipelineLayoutCreateInfo& layout);
   void              CleanUp();
 

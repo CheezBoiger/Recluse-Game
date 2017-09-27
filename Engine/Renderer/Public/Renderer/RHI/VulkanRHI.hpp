@@ -22,6 +22,7 @@ class CommandBuffer;
 class Sampler;
 class Texture;
 class DescriptorSet;
+class DescriptorSetLayout;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
@@ -66,6 +67,7 @@ public:
   Shader*                       CreateShader();
   CommandBuffer*                CreateCommandBuffer();
   DescriptorSet*                CreateDescriptorSet();
+  DescriptorSetLayout*          CreateDescriptorSetLayout();
 
   void                          FreeBuffer(Buffer* buffer);
   void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
@@ -76,6 +78,7 @@ public:
   void                          FreeShader(Shader* shader);
   void                          FreeCommandBuffer(CommandBuffer* buffer);
   void                          FreeDescriptorSet(DescriptorSet* set);
+  void                          FreeDescriptorSetLayout(DescriptorSetLayout* layout);
 
   void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
   void                          RebuildCommandBuffers();

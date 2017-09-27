@@ -6,16 +6,18 @@
 namespace Recluse {
 
 
-void GraphicsPipeline::Initialize(const VkGraphicsPipelineCreateInfo& info,
+void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
   const VkPipelineLayoutCreateInfo& layout)
 {
+  if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create pipeline layout!");
+  }
+
+  info.layout = mLayout;
+
   if (vkCreateGraphicsPipelines(mOwner, VK_NULL_HANDLE, 1, &info, nullptr, &mPipeline) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create pipeline!\n");
     return;
-  }
-
-  if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create pipeline layout!");
   }
 }
 

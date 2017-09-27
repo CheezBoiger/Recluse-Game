@@ -16,7 +16,7 @@ public:
     : mHandle(VK_NULL_HANDLE)
     , mRenderPass(VK_NULL_HANDLE) { }
   void          CleanUp();
-  void          Finalize(const VkFramebufferCreateInfo& info, const VkRenderPassCreateInfo& renderpass);
+  void          Finalize(VkFramebufferCreateInfo& info, const VkRenderPassCreateInfo& renderpass);
 
   VkRenderPass  RenderPass() { return mRenderPass; } 
   VkFramebuffer Handle() { return mHandle; }

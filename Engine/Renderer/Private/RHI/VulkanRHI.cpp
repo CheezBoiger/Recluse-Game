@@ -640,4 +640,21 @@ void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
   delete buffer;
   buffer = nullptr;
 }
+
+
+DescriptorSetLayout* VulkanRHI::CreateDescriptorSetLayout()
+{
+  DescriptorSetLayout* layout = new DescriptorSetLayout();
+  layout->SetOwner(mLogicalDevice.Handle());
+  return layout;
+}
+
+
+void VulkanRHI::FreeDescriptorSetLayout(DescriptorSetLayout* layout)
+{
+  layout->CleanUp();
+
+  delete layout;
+  layout = nullptr;
+}
 } // Recluse

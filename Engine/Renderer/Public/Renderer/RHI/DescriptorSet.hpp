@@ -8,24 +8,35 @@
 namespace Recluse {
 
 
+class DescriptorSetLayout : public VulkanHandle {
+public:
+  DescriptorSetLayout()
+    : mLayout(VK_NULL_HANDLE) { }
+
+  void                      Initialize(const VkDescriptorSetLayoutCreateInfo& info);
+  void                      CleanUp();
+
+  VkDescriptorSetLayout     Layout() const { return mLayout; }
+private:
+  VkDescriptorSetLayout     mLayout;
+};
+
+
 class DescriptorSet : public VulkanHandle {
 public:
   DescriptorSet()
     : mDescriptorSet(VK_NULL_HANDLE)
-    , mLayout(VK_NULL_HANDLE)
     , mPoolOwner(VK_NULL_HANDLE) { }
 
 
-  void                  Allocate(const VkDescriptorPool& pool, const VkDescriptorSetLayoutCreateInfo& createInfo);
+  void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout& layout);
   void                  Free();
 
   VkDescriptorSet       Handle() const { return mDescriptorSet; }
-  VkDescriptorSetLayout Layout() const { return mLayout; }
   VkDescriptorPool      PoolOwner() const { return mPoolOwner; }
 
 private:
   VkDescriptorSet       mDescriptorSet;
-  VkDescriptorSetLayout mLayout;
   VkDescriptorPool      mPoolOwner;
 };
 } // Recluse
