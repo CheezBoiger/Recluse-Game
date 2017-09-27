@@ -31,11 +31,15 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
-  mat4  inverseNormalMatrix;
+  mat3  inverseNormalMatrix;
+  float pad0[3];
   bool  hasAlbedo;
   bool  hasMetallic;
   bool  hasRoughness;
+  bool  hasNormal;
+  bool  hasAO;
   bool  hasBones;
+  bool  pad1[10];
 } objBuffer;
 
 
@@ -50,11 +54,13 @@ layout (location = 2) out vec2 fragTexCoord;
 
 
 out FRAG_IN {
-  vec4 position;
-  vec4 normal;
-  vec2 texcoord0;
-  vec2 texcoord1;
-  vec4 color;
+  vec3  position;
+  float pad0;
+  vec3  normal;
+  float pad1;
+  vec2  texcoord0;
+  vec2  texcoord1;
+  vec4  color;
 } frag_in;
 
 
@@ -74,11 +80,11 @@ void main()
   
   worldPosition = objBuffer.model * worldPosition;
   
-  frag_in.position = worldPosition;
-  frag_in.normal = objBuffer.inverseNormalMatrix * normal;
+  frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
   frag_in.color = color;
+  frag_in.normal = normalize(objBuffer.inverseNormalMatrix * normal.xyz);
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 }
