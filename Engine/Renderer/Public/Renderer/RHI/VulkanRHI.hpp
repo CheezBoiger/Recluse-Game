@@ -88,6 +88,7 @@ public:
   VkSurfaceKHR                  Surface() { return mSurface; }
   VkCommandPool                 GraphicsCmdPool() { return mCmdPool; }
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
+  VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
 
   void                          FlushCommands();
   // Returns the image index.
@@ -113,6 +114,8 @@ private:
   VkSurfaceKHR                  mSurface;
   VkCommandPool                 mCmdPool;
   VkCommandPool                 mComputeCmdPool;
+  VkDescriptorPool              mDescriptorPool;
+
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {

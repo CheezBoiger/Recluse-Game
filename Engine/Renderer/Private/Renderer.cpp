@@ -88,6 +88,10 @@ void Renderer::Render()
 
 void Renderer::CleanUp()
 {
+  // Must wait for all command buffers to finish before cleaning up.
+  mRhi->GraphicsWaitIdle();
+  mRhi->ComputeWaitIdle();
+
   mScreenQuad.CleanUp();
 
   CleanUpGraphicsPipelines();
@@ -116,7 +120,18 @@ b8 Renderer::Initialize(Window* window)
 
   mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
+    GraphicsPipeline* pbr = gResources().GetGraphicsPipeline(pbrPass.pipelineId);
+    VkViewport viewport = { };
+    viewport.height = (r32) mWindowHandle->Height();
+    viewport.width = (r32) mWindowHandle->Width();
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer.SetViewPorts(0, 1, &viewport);
+      cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr->Pipeline());
     cmdBuffer.EndRenderPass();
   });
 
@@ -384,7 +399,7 @@ void Renderer::SetUpGraphicsPipelines()
   graphicsPipeline.pVertexInputState = &vertexCI;
   graphicsPipeline.pViewportState = &viewportCI;
   graphicsPipeline.pTessellationState = nullptr;
-  graphicsPipeline.pDynamicState = nullptr;
+  graphicsPipeline.pDynamicState = &dynamicCI;
   graphicsPipeline.subpass = 0;
 
   Shader* mVertPBR = mRhi->CreateShader();

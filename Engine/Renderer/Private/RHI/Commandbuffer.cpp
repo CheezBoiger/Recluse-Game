@@ -129,4 +129,11 @@ void CommandBuffer::CopyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, cons
   ASSERT_RECORDING();
   vkCmdCopyBuffer(mHandle, src, dst, regionCount, regions);
 }
+
+
+void CommandBuffer::SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports)
+{
+  ASSERT_RECORDING(); 
+  vkCmdSetViewport(mHandle, firstViewPort, viewPortCount, viewports);
+}
 } // Recluse

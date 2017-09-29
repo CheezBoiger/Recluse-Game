@@ -45,7 +45,7 @@ public:
   void            BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipelineLayout layout, u32 firstSet, u32 descriptorSetCount,
                     const VkDescriptorSet* descriptorSets, u32 dynamicOffsetCount, const u32* dynamicOffsets);
 
-  
+  void            SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports);
 
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }

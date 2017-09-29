@@ -28,6 +28,7 @@ VulkanRHI::VulkanRHI()
   , mSurface(VK_NULL_HANDLE)
   , mCmdPool(VK_NULL_HANDLE)
   , mComputeCmdPool(VK_NULL_HANDLE)
+  , mDescriptorPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
 {
 }
