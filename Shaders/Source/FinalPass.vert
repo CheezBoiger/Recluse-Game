@@ -7,12 +7,13 @@ layout (location = 0) in vec2 position;
 layout (location = 1) in vec2 texcoord;
 
 
-layout (location = 1) out vec2 fragTexCoord;
-
+out FRAG_IN {
+  vec2 texcoord;
+} frag_in;
 
 // Render to a quad.
 void main() 
 {
   gl_Position = vec4(position, 0.0, 1.0);
-  fragTexCoord  = texcoord;
+  frag_in.texcoord = texcoord;
 }

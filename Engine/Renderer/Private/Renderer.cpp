@@ -2,6 +2,7 @@
 #include "Renderer.hpp"
 #include "CmdList.hpp"
 #include "Vertex.hpp"
+#include "ScreenQuad.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -54,12 +55,14 @@ void Renderer::OnShutDown()
 
 void Renderer::BeginFrame()
 {
+  mRendering = true;
   mRhi->AcquireNextImage();
 }
 
 
 void Renderer::EndFrame()
 {
+  mRendering = false;
   mRhi->Present();
 }
 
@@ -85,6 +88,8 @@ void Renderer::Render()
 
 void Renderer::CleanUp()
 {
+  mScreenQuad.CleanUp();
+
   CleanUpGraphicsPipelines();
   CleanUpFrameBuffers();
   CleanUpRenderTextures();
@@ -107,6 +112,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpRenderTextures();
   SetUpFrameBuffers();
   SetUpGraphicsPipelines();
+  mScreenQuad.Initialize(mRhi);
 
   mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -498,7 +504,7 @@ void Renderer::SetUpGraphicsPipelines()
   d2->Initialize(layout2);
 
   pbrPass.globaBufferLayout = gResources().RegisterDescriptorSetLayout(d0);
-  pbrPass.objBufferLayout = gResources().RegisterDescriptorSetLayout(d1);  
+  pbrPass.materialLayout = gResources().RegisterDescriptorSetLayout(d1);  
   pbrPass.lightBufferLayout= gResources().RegisterDescriptorSetLayout(d2);
 
 
@@ -528,7 +534,7 @@ void Renderer::CleanUpGraphicsPipelines()
 {
 
   DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout(pbrPass.globaBufferLayout);
-  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout(pbrPass.objBufferLayout);
+  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout(pbrPass.materialLayout);
   DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout(pbrPass.lightBufferLayout);
 
   mRhi->FreeDescriptorSetLayout(d0);

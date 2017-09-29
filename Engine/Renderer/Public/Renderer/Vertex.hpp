@@ -7,18 +7,19 @@ namespace Recluse {
 
 
 struct Vertex {
-  r32 position    [4];
-  r32 normal      [4];
-  r32 texcoord    [2];
-  r32 padding     [2];
-  r32 color       [4];
+  r32 position      [4];
+  r32 normal        [4];
+  r32 texcoord      [2];
+  r32 padding       [2];
+  r32 color         [4];
 };
 
 
 struct QuadVertex {
-  r32 position [2];
-  r32 padding  [2];
-  r32 texcoord [4];
+  r32 position      [2];
+  r32 padding0      [2];
+  r32 texcoord      [2];
+  r32 padding1      [2];
 };
 
 

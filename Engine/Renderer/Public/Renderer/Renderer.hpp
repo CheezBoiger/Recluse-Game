@@ -7,11 +7,10 @@
 #include "Core/Types.hpp"
 #include "Core/Win32/Window.hpp"
 #include "Core/Math/Vector3.hpp"
-#include "Core/Math/Matrix4.hpp"
-
 #include "Core/Thread/Threading.hpp"
 
 #include "Resources.hpp"
+#include "ScreenQuad.hpp"
 
 
 namespace Recluse {
@@ -91,9 +90,11 @@ private:
     resource_id_t   depthId;
     resource_id_t   samplerId;  
     resource_id_t   globaBufferLayout;
-    resource_id_t   objBufferLayout;
+    resource_id_t   materialLayout;
     resource_id_t   lightBufferLayout;
   } pbrPass;
+
+  ScreenQuad        mScreenQuad;
 
   b8                mRendering;
 };
