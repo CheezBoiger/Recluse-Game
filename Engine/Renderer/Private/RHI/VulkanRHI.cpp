@@ -447,6 +447,12 @@ void VulkanRHI::PresentWaitIdle()
 }
 
 
+void VulkanRHI::DeviceWaitIdle()
+{
+  vkDeviceWaitIdle(mLogicalDevice.Handle());
+}
+
+
 void VulkanRHI::CreateSwapchainCommandBuffers()
 {
   mSwapchainInfo.mSwapchainCmdBuffers.resize(mSwapchainInfo.mSwapchainFramebuffers.size());

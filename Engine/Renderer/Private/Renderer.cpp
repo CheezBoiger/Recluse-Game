@@ -56,6 +56,7 @@ void Renderer::OnShutDown()
 void Renderer::BeginFrame()
 {
   mRendering = true;
+  mRhi->PresentWaitIdle();
   mRhi->AcquireNextImage();
 }
 
@@ -89,8 +90,7 @@ void Renderer::Render()
 void Renderer::CleanUp()
 {
   // Must wait for all command buffers to finish before cleaning up.
-  mRhi->GraphicsWaitIdle();
-  mRhi->ComputeWaitIdle();
+  mRhi->DeviceWaitIdle();
 
   mScreenQuad.CleanUp();
 

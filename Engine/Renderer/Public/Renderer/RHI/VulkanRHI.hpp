@@ -97,6 +97,7 @@ public:
   void                          GraphicsWaitIdle();
   void                          ComputeWaitIdle();
   void                          PresentWaitIdle();
+  void                          DeviceWaitIdle();
   void                          ComputeSubmit(const VkSubmitInfo& submitInfo);
   void                          SubmitCurrSwapchainCmdBuffer();
   void                          Present();
