@@ -22,6 +22,7 @@ class DirectionLight;
 class PointLight;
 class SpotLight;
 class LightProbe;
+class CommandBuffer;
 class ReflectionProbe;
 class GraphicsPipeline;
 class ComputePipeline;
@@ -29,6 +30,7 @@ class GpuParams;
 class UserParams;
 class Mesh;
 class CubeMap;
+class Semaphore;
 
 
 // Renderer, which will be responsible for rendering out the scene from a
@@ -68,7 +70,9 @@ private:
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
   void              CleanUpRenderTextures();
+  void              CleanUpOffscreen();
   void              SetUpRenderTextures();
+  void              SetUpOffscreen();
 
   Window*           mWindowHandle;
   CmdList*          mCmdList;
@@ -93,6 +97,12 @@ private:
     resource_id_t   materialLayout;
     resource_id_t   lightBufferLayout;
   } pbrPass;
+
+
+  struct {
+    CommandBuffer*  cmdBuffer;
+    Semaphore*      semaphore;
+  } mOffscreen; 
 
   ScreenQuad        mScreenQuad;
 

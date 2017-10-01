@@ -23,7 +23,7 @@ void ScreenQuad::Initialize(VulkanRHI* rhi)
   vertices[3] = { { 1.0f, 1.0f }, { 0.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f } };
 
   std::array<u32, 6> indices = {
-    0, 1, 2, 2, 3, 0 
+    0, 1, 2, 2, 3, 0
   };
 
   quad.Initialize(rhi, vertices.size(), vertices.data());

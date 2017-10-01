@@ -29,6 +29,22 @@ class DescriptorSetLayout;
 // Also passes the default renderpass begin info to render onscreen.
 typedef std::function<void(CommandBuffer&, VkRenderPassBeginInfo&)> SwapchainCmdBufferBuildFunc;
 
+
+class Semaphore : public VulkanHandle {
+public:
+  Semaphore()
+    : mSema(VK_NULL_HANDLE) { }
+
+  void          Initialize(const VkSemaphoreCreateInfo& info);
+  void          CleanUp();
+
+  VkSemaphore   Handle() { return mSema; }
+
+private:
+  VkSemaphore   mSema;
+};
+
+
 // Render Hardware Interface for Vulkan.
 class VulkanRHI {
 public:
@@ -89,7 +105,9 @@ public:
   VkCommandPool                 GraphicsCmdPool() { return mCmdPool; }
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
   VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
+  Semaphore*                    CreateVkSemaphore();
 
+  void                          FreeVkSemaphore(Semaphore* semaphore);
   void                          FlushCommands();
   // Returns the image index.
   void                          AcquireNextImage();
@@ -99,7 +117,7 @@ public:
   void                          PresentWaitIdle();
   void                          DeviceWaitIdle();
   void                          ComputeSubmit(const VkSubmitInfo& submitInfo);
-  void                          SubmitCurrSwapchainCmdBuffer();
+  void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores);
   void                          Present();
   void                          UpdateFromWindowChange();
 

@@ -3,6 +3,7 @@
 #include "CmdList.hpp"
 #include "Vertex.hpp"
 #include "ScreenQuad.hpp"
+#include "Mesh.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -10,7 +11,9 @@
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Shader.hpp"
 #include "RHI/Texture.hpp"
+
 #include "Core/Core.hpp"
+#include "Filesystem/Filesystem.hpp"
 #include "Core/Exception.hpp"
 
 namespace Recluse {
@@ -73,9 +76,13 @@ void Renderer::Render()
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
   BeginFrame();
-    mRhi->SubmitCurrSwapchainCmdBuffer();
+
+
+    VkSemaphore waitSemaphores[] = { mRhi->SwapchainObject()->ImageAvailableSemaphore() };
+    mRhi->SubmitCurrSwapchainCmdBuffer(1, waitSemaphores);
   EndFrame();
 
+  // Compute pipeline render.
   VkSubmitInfo computeSubmit = { };
   computeSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   computeSubmit.commandBufferCount = 0;
@@ -93,7 +100,7 @@ void Renderer::CleanUp()
   mRhi->DeviceWaitIdle();
 
   mScreenQuad.CleanUp();
-
+  CleanUpOffscreen();
   CleanUpGraphicsPipelines();
   CleanUpFrameBuffers();
   CleanUpRenderTextures();
@@ -116,6 +123,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpRenderTextures();
   SetUpFrameBuffers();
   SetUpGraphicsPipelines();
+  SetUpOffscreen();
   mScreenQuad.Initialize(mRhi);
 
   mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
@@ -364,13 +372,13 @@ void Renderer::SetUpGraphicsPipelines()
   pbrAttributes[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   pbrAttributes[4].offset = offset;
   offset += sizeof(r32) * 4;
-
+  
   pbrAttributes[5].binding = 0;
   pbrAttributes[5].location = 5;
   pbrAttributes[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;    
   pbrAttributes[5].offset = offset;
   offset += sizeof(r32) * 4;
-  
+
   pbrAttributes[6].binding = 0;
   pbrAttributes[6].location = 6;
   pbrAttributes[6].format = VK_FORMAT_R32G32B32A32_SINT;
@@ -627,5 +635,30 @@ void Renderer::CleanUpRenderTextures()
   mRhi->FreeTexture(pbrColor);
   mRhi->FreeTexture(pbrDepth);
   mRhi->FreeSampler(pbrSampler);
+}
+
+
+void Renderer::SetUpOffscreen()
+{
+  mOffscreen.semaphore = mRhi->CreateVkSemaphore();
+  VkSemaphoreCreateInfo semaCI = { };
+  semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  mOffscreen.semaphore->Initialize(semaCI);
+
+  mOffscreen.cmdBuffer = mRhi->CreateCommandBuffer();
+  mOffscreen.cmdBuffer->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+}
+
+
+void Renderer::CleanUpOffscreen()
+{
+  mRhi->FreeVkSemaphore(mOffscreen.semaphore);
+  mRhi->FreeCommandBuffer(mOffscreen.cmdBuffer);
+}
+
+
+Mesh* Renderer::CreateMesh()
+{
+  return nullptr;
 }
 } // Recluse

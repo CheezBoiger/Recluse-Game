@@ -23,6 +23,24 @@ Context                       VulkanRHI::gContext;
 PhysicalDevice                VulkanRHI::gPhysicalDevice;
 std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
+
+void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
+{
+  if (vkCreateSemaphore(mOwner, &info, nullptr, &mSema) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create semaphore!\n");
+  }
+}
+
+
+void Semaphore::CleanUp()
+{
+  if (mSema) {
+    vkDestroySemaphore(mOwner, mSema, nullptr);
+    mSema = VK_NULL_HANDLE;
+  }
+}
+
+
 VulkanRHI::VulkanRHI()
   : mWindow(NULL)
   , mSurface(VK_NULL_HANDLE)
@@ -374,12 +392,11 @@ void VulkanRHI::AcquireNextImage()
 }
 
 
-void VulkanRHI::SubmitCurrSwapchainCmdBuffer()
+void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores)
 {
   // TODO(): This must be set outside in the renderer scope, instead of in here. 
   // more freedom for offscreen rendering that way.
   VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
-  VkSemaphore waitSemaphores[] = { mSwapchain.ImageAvailableSemaphore() };
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
   VkCommandBuffer cmdBuffer[] = { mSwapchainInfo.mSwapchainCmdBuffers[mSwapchainInfo.mCurrentImageIndex].Handle() };
 
@@ -389,7 +406,7 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer()
   submitInfo.pCommandBuffers = cmdBuffer;
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
-  submitInfo.waitSemaphoreCount = 1;
+  submitInfo.waitSemaphoreCount = waitSemaphoreCount;
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
 
@@ -519,7 +536,6 @@ void VulkanRHI::FreeBuffer(Buffer* buffer)
   buffer->CleanUp();
 
   delete buffer;
-  buffer = nullptr;
 }
 
 
@@ -536,7 +552,6 @@ void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
   pipeline->CleanUp();
  
   delete pipeline;
-  pipeline = nullptr;
 }
 
 
@@ -555,7 +570,6 @@ void VulkanRHI::FreeShader(Shader* shader)
   shader->CleanUp();
   
   delete shader;
-  shader = nullptr;
 }
 
 
@@ -573,7 +587,6 @@ void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
   dset->Free();
   
   delete dset;
-  dset = nullptr;
 }
 
 
@@ -591,7 +604,6 @@ void VulkanRHI::FreeSampler(Sampler* sampler)
   sampler->CleanUp();
   
   delete sampler;
-  sampler = nullptr;
 }
 
 
@@ -609,7 +621,6 @@ void VulkanRHI::FreeTexture(Texture* texture)
   texture->CleanUp();
   
   delete texture;
-  texture = nullptr;
 }
 
 
@@ -627,7 +638,6 @@ void VulkanRHI::FreeFrameBuffer(FrameBuffer* framebuffer)
   framebuffer->CleanUp();
   
   delete framebuffer;
-  framebuffer = nullptr;
 }
 
 
@@ -643,9 +653,6 @@ CommandBuffer* VulkanRHI::CreateCommandBuffer()
 void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
 {
   buffer->Free();
-  
-  delete buffer;
-  buffer = nullptr;
 }
 
 
@@ -662,6 +669,39 @@ void VulkanRHI::FreeDescriptorSetLayout(DescriptorSetLayout* layout)
   layout->CleanUp();
 
   delete layout;
-  layout = nullptr;
+}
+
+
+ComputePipeline* VulkanRHI::CreateComputePipeline()
+{
+  ComputePipeline* pipeline = new ComputePipeline();
+  pipeline->SetOwner(mLogicalDevice.Handle());
+
+  return pipeline;
+}
+
+
+void VulkanRHI::FreeComputePipeline(ComputePipeline* pipeline)
+{
+  pipeline->CleanUp();
+
+  delete pipeline;
+}
+
+
+Semaphore* VulkanRHI::CreateVkSemaphore()
+{
+  Semaphore* semaphore = new Semaphore();
+  semaphore->SetOwner(mLogicalDevice.Handle());
+  
+  return semaphore;
+}
+
+
+void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
+{
+  semaphore->CleanUp();
+    
+  delete semaphore;
 }
 } // Recluse
