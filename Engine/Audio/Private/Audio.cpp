@@ -28,7 +28,7 @@ void Audio::OnShutDown()
 }
 
 
-void Audio::UpdateState()
+void Audio::UpdateState(r64 dt)
 {
 }
 } // Recluse

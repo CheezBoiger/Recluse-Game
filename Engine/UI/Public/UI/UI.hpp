@@ -16,7 +16,7 @@ public:
   void          OnStartUp() override;
   void          OnShutDown() override;
 
-  void          UpdateState();
+  void          UpdateState(r64 dt);
 };
 
 

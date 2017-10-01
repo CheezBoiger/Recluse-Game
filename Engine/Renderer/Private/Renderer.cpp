@@ -4,6 +4,7 @@
 #include "Vertex.hpp"
 #include "ScreenQuad.hpp"
 #include "Mesh.hpp"
+#include "CmdList.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -75,12 +76,37 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
+  VkCommandBuffer offscreenCmd = mOffscreen.cmdBuffer->Handle();
+  VkSemaphore waitSemas[] = { mRhi->SwapchainObject()->ImageAvailableSemaphore() };
+  VkSemaphore signalSemas[] = { mOffscreen.semaphore->Handle() };
+  VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+  VkSubmitInfo offscreenSI = {};
+  offscreenSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  offscreenSI.pCommandBuffers = &offscreenCmd;
+  offscreenSI.commandBufferCount = 1;
+  offscreenSI.signalSemaphoreCount = 1;
+  offscreenSI.pSignalSemaphores = signalSemas;
+  offscreenSI.waitSemaphoreCount = 1;
+  offscreenSI.pWaitSemaphores = waitSemas;
+  offscreenSI.pWaitDstStageMask = waitFlags;
+
+
+
+  // begin frame
   BeginFrame();
+    
+    mRhi->GraphicsSubmit(offscreenSI);
 
-
-    VkSemaphore waitSemaphores[] = { mRhi->SwapchainObject()->ImageAvailableSemaphore() };
+    // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
+    // ssent our signal to our swapchain cmd buffers.
+    VkSemaphore waitSemaphores[] = { mOffscreen.semaphore->Handle() };
     mRhi->SubmitCurrSwapchainCmdBuffer(1, waitSemaphores);
+
   EndFrame();
+
+
+
 
   // Compute pipeline render.
   VkSubmitInfo computeSubmit = { };
@@ -128,7 +154,6 @@ b8 Renderer::Initialize(Window* window)
 
   mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
-    GraphicsPipeline* pbr = gResources().GetGraphicsPipeline(pbrPass.pipelineId);
     VkViewport viewport = { };
     viewport.height = (r32) mWindowHandle->Height();
     viewport.width = (r32) mWindowHandle->Width();
@@ -139,25 +164,11 @@ b8 Renderer::Initialize(Window* window)
 
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
-      cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr->Pipeline());
     cmdBuffer.EndRenderPass();
   });
 
-  mRhi->RebuildCommandBuffers();
-
   return true;
 }
-
-
-void Renderer::PushCmdList(CmdList* scene)
-{
-  mCmdList = scene;
-
-  // Rebuild commandbuffers here.
-
-  mRhi->RebuildCommandBuffers();
-}
-
 
 
 void Renderer::SetUpFrameBuffers()
@@ -550,6 +561,18 @@ void Renderer::SetUpGraphicsPipelines()
 
   mRhi->FreeShader(mVertPBR);
   mRhi->FreeShader(mFragPBR);  
+
+  GraphicsPipeline* quadPipeline = mRhi->CreateGraphicsPipeline();
+  quadPass.pipelineId = gResources().RegisterGraphicsPipeline(quadPipeline);
+
+  Shader* quadVert = mRhi->CreateShader();
+  Shader* quadFrag = mRhi->CreateShader();
+  
+  quadVert->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/FinalPass.vert.spv");
+  quadFrag->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/FinalPass.frag.spv");
+
+  mRhi->FreeShader(quadVert);
+  mRhi->FreeShader(quadFrag);
 }
 
 
@@ -566,6 +589,9 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline(pbrPass.pipelineId);
   mRhi->FreeGraphicsPipeline(pbrPipeline);
+
+  GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline(quadPass.pipelineId);
+  mRhi->FreeGraphicsPipeline(quadPipeline);
 }
 
 
@@ -654,6 +680,45 @@ void Renderer::CleanUpOffscreen()
 {
   mRhi->FreeVkSemaphore(mOffscreen.semaphore);
   mRhi->FreeCommandBuffer(mOffscreen.cmdBuffer);
+}
+
+
+void Renderer::Build()
+{
+
+  FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(pbrPass.frameBufferId);
+  GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(pbrPass.pipelineId);
+
+  // TODO(): Build offscreen cmd buffer, then call this function.
+  if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
+    mOffscreen.cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  }
+
+  CommandBuffer* cmdBuffer = mOffscreen.cmdBuffer;
+
+  VkCommandBufferBeginInfo beginInfo = { };
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+  VkClearValue clearValues[2];
+  clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
+  clearValues[1].depthStencil = { 1.0f, 0 };
+
+  VkRenderPassBeginInfo pbrRenderPassInfo = { };
+  pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  pbrRenderPassInfo.framebuffer = pbrBuffer->Handle();
+  pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
+  pbrRenderPassInfo.pClearValues = clearValues;
+  pbrRenderPassInfo.clearValueCount = 2;
+  pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  pbrRenderPassInfo.renderArea.offset = { 0, 0 };
+
+  cmdBuffer->Begin(beginInfo);
+    cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->EndRenderPass();
+  cmdBuffer->End();
+
+  mRhi->RebuildCommandBuffers();
 }
 
 

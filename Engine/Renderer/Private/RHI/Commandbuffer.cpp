@@ -33,6 +33,12 @@ void CommandBuffer::Free()
 }
 
 
+void CommandBuffer::Reset(const VkCommandBufferResetFlags flags)
+{
+  vkResetCommandBuffer(mHandle, flags);
+}
+
+
 void CommandBuffer::Begin(const VkCommandBufferBeginInfo& beginInfo)
 {
   vkBeginCommandBuffer(mHandle, &beginInfo);

@@ -25,7 +25,7 @@ void UI::OnShutDown()
 }
 
 
-void UI::UpdateState()
+void UI::UpdateState(r64 dt)
 {
 }
 } // Recluse

@@ -32,8 +32,12 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Utility/Image.hpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Window.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Win32Time.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Keyboard.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Mouse.cpp
   ${RECLUSE_CORE_PUB_DIR}/Win32/Window.hpp
   ${RECLUSE_CORE_PUB_DIR}/Win32/Win32Configs.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Win32/Keyboard.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Win32/Mouse.hpp
   ${RECLUSE_CORE_PUB_DIR}/Core.hpp
 
   ${RECLUSE_CORE_PUB_DIR}/Logging/Log.hpp

@@ -49,8 +49,10 @@ public:
 
   void              OnStartUp() override;
   void              OnShutDown() override;
-  void              AsyncPushCmdList(CmdList* cmdList);
-  void              PushCmdList(CmdList* cmdList);
+  void              PushCmdList(CmdList* cmdList) { mCmdList = cmdList; }
+  void              PushDeferredCmdList(CmdList* cmdList) { mDeferredCmdList = cmdList; }
+  void              Build();
+  void              BuildAsync();
 
   void              BeginFrame();
   void              EndFrame();
@@ -76,6 +78,7 @@ private:
 
   Window*           mWindowHandle;
   CmdList*          mCmdList;
+  CmdList*          mDeferredCmdList;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
   VulkanRHI*        mRhi;
@@ -100,6 +103,11 @@ private:
 
 
   struct {
+    resource_id_t   pipelineId;
+  } quadPass;
+
+
+  struct {
     CommandBuffer*  cmdBuffer;
     Semaphore*      semaphore;
   } mOffscreen; 
@@ -109,5 +117,5 @@ private:
   b8                mRendering;
 };
 
-Renderer&  gRenderer();
+Renderer&           gRenderer();
 } // Recluse

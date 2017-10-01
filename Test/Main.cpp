@@ -3,10 +3,12 @@
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Vector.hpp"
 #include "Core/Math/Matrix4.hpp"
+#include "Core/Win32/Keyboard.hpp"
 #include "Core/Math/Quaternion.hpp"
 #include "Renderer/Renderer.hpp"
 #include "Physics/Physics.hpp"
 #include "Filesystem/Filesystem.hpp"
+#include "Animation/Animation.hpp"
 #include "Audio/Audio.hpp"
 #include "UI/UI.hpp"
 
@@ -17,13 +19,12 @@ using namespace Recluse;
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   static i32 keys[256];
-  
   keys[key] = action; 
   
-  if (keys[0x41] == WM_KEYDOWN) window->SetToFullScreen();
-  if (keys[0x42] == WM_KEYDOWN) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (keys[0x43] == WM_KEYDOWN) { window->SetToWindowed(1200, 800, true); window->Show(); }
-  if (keys[VK_ESCAPE] == WM_KEYDOWN) window->Close();
+  if (keys[KEY_CODE_D] == KEY_DOWN) window->SetToFullScreen();
+  if (keys[KEY_CODE_A] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
+  if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(1200, 800, true); window->Show(); }
+  if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) window->Close();
 }
 
 
@@ -35,6 +36,7 @@ int main(int c, char* argv[])
   gRenderer().StartUp();
   gPhysics().StartUp();
   gAudio().StartUp();
+  gAnimation().StartUp();
   gUI().StartUp();
 
   Window::SetKeyboardCallback(KeyCallback);
@@ -46,22 +48,27 @@ int main(int c, char* argv[])
   window.Show();    
 
   gRenderer().Initialize(&window);
+  gRenderer().Build();
   r64 timeAccumulator = 0.0;
+
 
   // Game loop...
   while (!window.ShouldClose()) {
     Time::Update();
 
     timeAccumulator += Time::DeltaTime;
+    r64 dt = Time::DeltaTime * Time::ScaleTime;
 
     // Render out the scene.
-    gAudio().UpdateState();
-    gUI().UpdateState();
+    gAnimation().UpdateState(dt);
+    gAudio().UpdateState(dt);
+    gUI().UpdateState(dt);
 
+    // TODO(): needs to be on separate thread.
     while (timeAccumulator > Time::FixTime) {
       // TODO(): Instead of sleeping, update the game state.
-      gPhysics().UpdateState(Time::FixTime * Time::ScaleTime);
-      timeAccumulator -= Time::DeltaTime;
+      gPhysics().UpdateState(dt);
+      timeAccumulator -= Time::FixTime;
     }
 
     // Syncronize engine modules, as they run on threads.
@@ -76,6 +83,7 @@ int main(int c, char* argv[])
   }
   
   gUI().ShutDown();
+  gAnimation().ShutDown();
   gAudio().ShutDown();
   gRenderer().ShutDown();
   gPhysics().ShutDown();

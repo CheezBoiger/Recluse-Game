@@ -9,6 +9,9 @@
 namespace Recluse {
 
 
+class Mesh;
+
+
 struct RenderCmd {
   enum RenderCmdType {
     RENDER_CMD_NONE,
@@ -19,18 +22,13 @@ struct RenderCmd {
     RENDER_CMD_SPOTLIGHT
   };
 
-  RenderCmd(RenderCmdType type)
-    : Type(type) { }
+  RenderCmd(RenderCmdType type = RENDER_CMD_NONE)
+    : type(type) { }
 
-  RenderCmdType     Type;
-};
+  RenderCmdType     Type() const { return type; }
 
-
-
-struct MeshCmd : public RenderCmd {
-  MeshCmd()
-    : RenderCmd(RENDER_CMD_MESH) { }
-
+private:
+  RenderCmdType     type;
 };
 
 
@@ -38,9 +36,9 @@ struct TransformCmd : public RenderCmd {
   TransformCmd()
     : RenderCmd(RENDER_CMD_TRANSFORM) { }
    
-  Quaternion  Rotation;
-  Vector3     Position;
-  Vector3     Scale;
+  Quaternion  rotation;
+  Vector3     position;
+  Vector3     scale;
 };
 
 
@@ -48,7 +46,36 @@ struct DirectionlightCmd : public RenderCmd {
   DirectionlightCmd()
     : RenderCmd(RENDER_CMD_DIRECTIONLIGHT) { }
 
-  Vector3 Direction;
-  Vector4 Color;
+  Vector4 color;
+  Vector3 direction;
+  r32     intensity;
+};
+
+
+struct PointLightCmd : public RenderCmd {
+  PointLightCmd()
+    : RenderCmd(RENDER_CMD_POINTLIGHT) { }
+
+  Vector4 color;
+  Vector3 position;
+  r32     radius;
+  r32     intensity;  
+};
+
+
+struct SpotLightCmd : public RenderCmd {
+  SpotLightCmd()
+    : RenderCmd(RENDER_CMD_SPOTLIGHT) { }
+  
+  Vector4 color;
+  Vector3 position;
+};
+
+
+struct MeshCmd : public RenderCmd {
+  MeshCmd()
+    : RenderCmd(RENDER_CMD_MESH) { }
+  
+  Mesh*   meshId;
 };
 } // Recluse
