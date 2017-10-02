@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-class RenderCmd;
+struct RenderCmd;
 
 
 typedef bool (*RenderCmdCompareFunc)(const RenderCmd& cmd1, const RenderCmd& cmd2);
@@ -17,16 +17,19 @@ typedef bool (*RenderCmdCompareFunc)(const RenderCmd& cmd1, const RenderCmd& cmd
 class CmdList {
 public:
   CmdList(size_t size = 1024)
-    : mRenderList(size) { }
+    : mRenderList(size) { } 
 
   size_t                  Size() const { return mRenderList.size(); }
   RenderCmd*              operator[](size_t i) { return mRenderList[i]; }
+  RenderCmd*              Get(size_t i) { return mRenderList[i]; }
 
   void                    Resize(size_t newSize) { mRenderList.resize(newSize); }
   void                    SetSortFunc(RenderCmdCompareFunc compare) { mCompare = compare; }
-  void                    Sort();
+  void                    Sort();  
+
 private:
   std::vector<RenderCmd*> mRenderList;
   RenderCmdCompareFunc    mCompare;
+  b8                      mDirty;
 };
 } // Recluse

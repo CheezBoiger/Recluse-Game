@@ -29,6 +29,7 @@ class ComputePipeline;
 class GpuParams;
 class UserParams;
 class Mesh;
+class Material;
 class CubeMap;
 class Semaphore;
 
@@ -58,6 +59,7 @@ public:
   void              EndFrame();
 
   Mesh*             CreateMesh();
+  Material*         CreateMaterial();
   DirectionLight*   CreateDirectionLight();
   PointLight*       CreatePointLight();
   SpotLight*        CreateSpotLight();
@@ -75,6 +77,7 @@ private:
   void              CleanUpOffscreen();
   void              SetUpRenderTextures();
   void              SetUpOffscreen();
+  void              UpdateMaterials();
 
   Window*           mWindowHandle;
   CmdList*          mCmdList;

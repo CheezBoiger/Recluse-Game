@@ -48,6 +48,9 @@ int main(int c, char* argv[])
   window.Show();    
 
   gRenderer().Initialize(&window);
+  
+  // build the scene for the render. Should our cmd list be updated, you need to call
+  // this function to update the scene.
   gRenderer().Build();
   r64 timeAccumulator = 0.0;
 

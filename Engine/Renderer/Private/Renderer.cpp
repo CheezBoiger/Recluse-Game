@@ -5,6 +5,8 @@
 #include "ScreenQuad.hpp"
 #include "Mesh.hpp"
 #include "CmdList.hpp"
+#include "RenderCmd.hpp"
+#include "Material.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -12,12 +14,16 @@
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Shader.hpp"
 #include "RHI/Texture.hpp"
+#include "RHI/Buffer.hpp"
 
 #include "Core/Core.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Core/Exception.hpp"
 
 namespace Recluse {
+
+
+std::vector<Material*> MaterialCache;
 
 
 Renderer& gRenderer() { 
@@ -27,6 +33,9 @@ Renderer& gRenderer() {
 
 Renderer::Renderer()
   : mRhi(nullptr)
+  , mCmdList(nullptr)
+  , mDeferredCmdList(nullptr)
+  , mRendering(false)
 {
 }
 
@@ -91,11 +100,13 @@ void Renderer::Render()
   offscreenSI.pWaitSemaphores = waitSemas;
   offscreenSI.pWaitDstStageMask = waitFlags;
 
-
+  // Update materials before rendering the frame.
+  UpdateMaterials();
 
   // begin frame
   BeginFrame();
-    
+    while (mOffscreen.cmdBuffer->Recording()) { }
+
     mRhi->GraphicsSubmit(offscreenSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
@@ -685,13 +696,14 @@ void Renderer::CleanUpOffscreen()
 
 void Renderer::Build()
 {
-
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(pbrPass.frameBufferId);
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(pbrPass.pipelineId);
 
   // TODO(): Build offscreen cmd buffer, then call this function.
   if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
+    mRhi->DeviceWaitIdle();
     mOffscreen.cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    MaterialCache.resize(0);
   }
 
   CommandBuffer* cmdBuffer = mOffscreen.cmdBuffer;
@@ -715,6 +727,46 @@ void Renderer::Build()
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
+      if (mCmdList) {
+        for (size_t i = 0; i < mCmdList->Size(); ++i) {
+          RenderCmd* renderCmd = mCmdList->Get(i);
+
+          // Extract material info. This is optional.
+          if (renderCmd->materialId) {
+            MaterialCache.push_back(renderCmd->materialId);
+
+            if (renderCmd->meshId) {
+              Material* mat = renderCmd->materialId;
+              VkDescriptorSet descriptorSets[] = { 
+                mat->GlobalBufferSet()->Handle(), 
+                mat->ObjectBufferSet()->Handle(), 
+                mat->LightBufferSet()->Handle() 
+              };
+
+              cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0, 
+                3, descriptorSets, 0, nullptr);
+            }
+          }
+
+          // Extract Mesh info. This is optional. 
+          if (renderCmd->meshId && renderCmd->meshId->Renderable() && renderCmd->meshId->Visible()) {
+            VertexBuffer* vertexBuffer = renderCmd->meshId->GetVertexBuffer();
+            IndexBuffer* indexBuffer = renderCmd->meshId->GetIndexBuffer();
+            VkBuffer vb = vertexBuffer->Handle()->Handle();
+            VkBuffer ib = indexBuffer->Handle()->Handle();
+
+            cmdBuffer->BindVertexBuffers(0, 1, &vb, 0);
+            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT16);
+          }
+        }
+      }
+
+      if (mDeferredCmdList) {
+        for (size_t i = 0; i < mDeferredCmdList->Size(); ++i) {
+          
+        }
+      }
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 
@@ -725,5 +777,22 @@ void Renderer::Build()
 Mesh* Renderer::CreateMesh()
 {
   return nullptr;
+}
+
+
+void Renderer::UpdateMaterials()
+{
+  for (size_t i = 0; i < MaterialCache.size(); ++i) {
+    Material* mat = MaterialCache[i];
+    mat->Update();
+
+    VkWriteDescriptorSet writeInfo = { };
+    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    
+     // TODO(): We will hold off on this until we implement material.
+    // We are going to need to store uniform buffers and samplers to our
+    // material.
+    //mat->ObjectBufferSet()->Update(writeInfo);
+  }
 }
 } // Recluse

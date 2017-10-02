@@ -12,6 +12,8 @@ class FrameBuffer;
 class Texture;
 class Sampler;
 class DescriptorSetLayout;
+class Material;
+class Mesh;
 
 typedef size_t resource_id_t;
 

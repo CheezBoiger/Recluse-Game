@@ -48,4 +48,12 @@ void DescriptorSet::Free()
     mDescriptorSet = VK_NULL_HANDLE;
   }
 }
+
+
+void DescriptorSet::Update(VkWriteDescriptorSet& writeDescriptorSet)
+{
+  writeDescriptorSet.dstSet = mDescriptorSet;
+
+  vkUpdateDescriptorSets(mOwner, 1, &writeDescriptorSet, 0, nullptr);
+}
 } // Recluse
