@@ -48,8 +48,8 @@ set(RECLUSE_CORE_FILES
 
   ${RECLUSE_CORE_PUB_DIR}/Thread/CoreThread.hpp
   ${RECLUSE_CORE_PUB_DIR}/Thread/Threading.hpp
-  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.h
-  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.c
+  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.hpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Image.cpp
   ${RECLUSE_CORE_PUB_DIR}/Types.hpp
   
