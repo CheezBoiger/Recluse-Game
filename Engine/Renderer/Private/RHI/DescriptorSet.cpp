@@ -50,10 +50,11 @@ void DescriptorSet::Free()
 }
 
 
-void DescriptorSet::Update(VkWriteDescriptorSet& writeDescriptorSet)
+void DescriptorSet::Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets)
 {
-  writeDescriptorSet.dstSet = mDescriptorSet;
-
-  vkUpdateDescriptorSets(mOwner, 1, &writeDescriptorSet, 0, nullptr);
+  for (u32 i = 0; i < count; ++i) {
+    writeDescriptorSets[i].dstSet = Handle();
+  }
+  vkUpdateDescriptorSets(mOwner, count, writeDescriptorSets, 0, nullptr);
 }
 } // Recluse

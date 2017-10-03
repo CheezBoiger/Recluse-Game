@@ -490,36 +490,42 @@ void Renderer::SetUpGraphicsPipelines()
   bindings[1].pImmutableSamplers = nullptr;
   bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
   
+  // albedo
   bindings[2].binding = 2;
   bindings[2].descriptorCount = 1;
   bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[2].pImmutableSamplers = nullptr;
   bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
   
+  // metallic
   bindings[3].binding = 3;
   bindings[3].descriptorCount = 1;
   bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[3].pImmutableSamplers = nullptr;
   bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+  // roughness
   bindings[4].binding = 4;
   bindings[4].descriptorCount = 1;
   bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[4].pImmutableSamplers = nullptr;
   bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+  // normal
   bindings[5].binding = 5;
   bindings[5].descriptorCount = 1;
   bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[5].pImmutableSamplers = nullptr;
   bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+  // ao
   bindings[6].binding = 6;
   bindings[6].descriptorCount = 1;
   bindings[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[6].pImmutableSamplers = nullptr;
   bindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+  // emissive
   bindings[7].binding = 7;
   bindings[7].descriptorCount = 1;
   bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

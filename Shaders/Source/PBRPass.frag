@@ -62,7 +62,7 @@ layout (set = 1, binding = 3) uniform sampler2D metallic;
 layout (set = 1, binding = 4) uniform sampler2D roughness;
 layout (set = 1, binding = 5) uniform sampler2D normal;
 layout (set = 1, binding = 6) uniform sampler2D ao;
-layout (set = 1, binding = 7) uniform sampler2D transparency;
+layout (set = 1, binding = 7) uniform sampler2D emissive;
 
 
 layout (set = 2, binding = 0) uniform LightBuffer {
@@ -78,9 +78,9 @@ layout (location = 0) out vec4 OutColor;
 
 ////////////////////////////////////////////////////////////////////
 // Light BRDFs
-// Lighting model goes as:
+// Lighting model goes as: Cook-Torrance
 //
-// f = fDiffuse + fSpecular
+// f = fEmissive + fDiffuse + fSpecular
 //
 ////////////////////////////////////////////////////////////////////
 

@@ -31,7 +31,7 @@ public:
 
   void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout& layout);
   void                  Free();
-  void                  Update(VkWriteDescriptorSet& writeDescriptorSet);
+  void                  Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
  
   VkDescriptorSet       Handle() const { return mDescriptorSet; }
   VkDescriptorPool      PoolOwner() const { return mPoolOwner; }
