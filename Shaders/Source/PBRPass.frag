@@ -18,6 +18,8 @@ in FRAG_IN {
 struct DirectionLight {
   vec4 direction;
   vec4 color;
+  bool enable;
+  bool pad[15];
 };
 
 
@@ -26,6 +28,8 @@ struct PointLight {
   vec4  color;
   float range;
   float pad0[3];
+  bool enable;
+  bool pad1[15];
 };
 
 

@@ -129,4 +129,43 @@ void Material::Update()
 
   mObjectBufferSetRef->Update(u32(writeSets.size()), writeSets.data());
 }
+
+
+void GlobalMaterial::Update()
+{
+  VkDescriptorBufferInfo globalBufferInfo = { };
+  globalBufferInfo.buffer = mGlobalBuffer->Handle();
+  globalBufferInfo.offset = 0;
+  globalBufferInfo.range = sizeof(GlobalBuffer);
+  
+
+  std::array<VkWriteDescriptorSet, 1> writeSets;
+  writeSets[0].descriptorCount = 1;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writeSets[0].dstBinding = 0;
+  writeSets[0].dstArrayElement = 0;
+  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[0].pBufferInfo = &globalBufferInfo;
+
+  mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+}
+
+
+void LightMaterial::Update()
+{
+  VkDescriptorBufferInfo lightBufferInfo = { };
+  lightBufferInfo.buffer = mLightBuffer->Handle();
+  lightBufferInfo.offset = 0;
+  lightBufferInfo.range = sizeof(LightBuffer);
+
+  std::array<VkWriteDescriptorSet, 1> writeSets;
+  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[0].descriptorCount = 1;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writeSets[0].dstArrayElement = 0;
+  writeSets[0].pBufferInfo = &lightBufferInfo;
+  writeSets[0].dstBinding = 0;
+
+  mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+}
 } // Recluse

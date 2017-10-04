@@ -533,6 +533,11 @@ Buffer* VulkanRHI::CreateBuffer()
 
 void VulkanRHI::FreeBuffer(Buffer* buffer)
 {
+  if (buffer->Owner() != mLogicalDevice.Handle()) {
+    R_DEBUG("NOTIFY: Unable to free buffer. Device is not same as this vulkan rhi!\n");
+    return;
+  }
+
   buffer->CleanUp();
 
   delete buffer;
@@ -549,6 +554,10 @@ GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
 
 void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
 {
+  if (pipeline->Owner() != mLogicalDevice.Handle()) {
+    R_DEBUG("NOTIFY: Unable to free pipeline. Device is not same as this vulkan rhi!\n");
+    return;
+  }
   pipeline->CleanUp();
  
   delete pipeline;
@@ -567,6 +576,10 @@ Shader* VulkanRHI::CreateShader()
 
 void VulkanRHI::FreeShader(Shader* shader)
 {
+  if (shader->Owner() != mLogicalDevice.Handle()) {
+    R_DEBUG("NOTIFY: Unable to free shader. Device is not same as this vulkan rhi!\n");
+    return;
+  }
   shader->CleanUp();
   
   delete shader;

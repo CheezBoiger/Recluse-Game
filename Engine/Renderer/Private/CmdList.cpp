@@ -6,5 +6,7 @@
 namespace Recluse {
 
 
-
+void CmdList::Sort()
+{
+}
 } // Recluse

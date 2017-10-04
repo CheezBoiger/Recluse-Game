@@ -30,6 +30,8 @@ class GpuParams;
 class UserParams;
 class Mesh;
 class Material;
+class LightMaterial;
+class GlobalMaterial;
 class CubeMap;
 class Semaphore;
 
@@ -60,6 +62,8 @@ public:
 
   Mesh*             CreateMesh();
   Material*         CreateMaterial();
+  GlobalMaterial*   CreateGlobalMaterial();
+  LightMaterial*    CreateLightMaterial();
   DirectionLight*   CreateDirectionLight();
   PointLight*       CreatePointLight();
   SpotLight*        CreateSpotLight();

@@ -32,10 +32,13 @@ public:
     r32             pad0  [3];
   };
 
+  void              Update();
   DescriptorSet*    Set() { return mDescriptorSet; }
 
+  GlobalBuffer*     Data() { return &mGlobal; }
 private:
   DescriptorSet*    mDescriptorSet;
+  Buffer*           mGlobalBuffer;
   GlobalBuffer      mGlobal;
 };
 
@@ -46,6 +49,8 @@ public:
   struct DirectionalLight {
     Vector4 direction;
     Vector4 color;
+    b8      enable;
+    b8      pad[15];
   };
 
   struct PointLight {
@@ -53,6 +58,8 @@ public:
     Vector4 color;
     r32     range;
     r32     pad0  [3];
+    b8      enable;
+    b8      pad1  [15];
   };
   
   struct LightBuffer {
@@ -60,9 +67,12 @@ public:
     PointLight        pointLights[512];
   };
 
+  void              Update();
+  LightBuffer*      Data() { return &mLights; }
   DescriptorSet*    Set() { return mDescriptorSet; }
 private:
   DescriptorSet*    mDescriptorSet;
+  Buffer*           mLightBuffer;
   LightBuffer       mLights;
 };
 
