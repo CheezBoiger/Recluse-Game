@@ -255,13 +255,16 @@ Matrix4 Matrix4::Translate(const Matrix4& mat, const Vector3& position)
 }
 
 
-Matrix4 Matrix4::Rotate(const Matrix4& begin, const r32 radians, const Vector3& axis)
+Matrix4 Matrix4::Rotate(const Matrix4& begin, const r32 radians, const Vector3& ax)
 {
   r32 oneMinusCosine = 1.0f - cosf(radians);
   r32 cosine = cosf(radians);
   r32 sine = sinf(radians);
+
+  Vector3 axis = ax.Normalize();
+
   Matrix4 rotator(
-    cosine + (axis.x * axis.x) * oneMinusCosine,      axis.y * axis.x * oneMinusCosine + axis.z * sine, axis.z * axis.x * oneMinusCosine - axis.y * sine, 0,
+    cosine + (axis.x * axis.x) * oneMinusCosine,      oneMinusCosine * axis.y * axis.x + axis.z * sine, axis.z * axis.x * oneMinusCosine - axis.y * sine, 0,
     axis.x * axis.y * oneMinusCosine - axis.z * sine, cosine + (axis.y * axis.y) * oneMinusCosine,      axis.z * axis.y * oneMinusCosine + axis.x * sine, 0,
     axis.x * axis.z * oneMinusCosine + axis.y * sine, axis.y * axis.z * oneMinusCosine - axis.x * sine, cosine + (axis.z * axis.z) * oneMinusCosine,      0,
     0,                                                0,                                                0,                                                1
@@ -273,10 +276,12 @@ Matrix4 Matrix4::Rotate(const Matrix4& begin, const r32 radians, const Vector3& 
 
 Matrix4 Matrix4::Scale(const Matrix4& begin, const Vector3& scale)
 {
-  Matrix4 matrix = begin;
-  matrix[0][0] *= scale.x;
-  matrix[1][1] *= scale.y;
-  matrix[2][2] *= scale.z;
-  return matrix;
+  Matrix4 scaler(
+    scale.x,  0.0f,     0.0f,     0.0f,
+    0.0f,     scale.y,  0.0f,     0.0f,
+    0.0f,     0.0f,     scale.z,  0.0f,
+    0.0f,     0.0f,     0.0f,     1.0f
+  );
+  return scaler * begin;
 }
 } // Recluse
