@@ -25,4 +25,6 @@ Renderer:
       Output: 1 RenderTexture
     - Post Process: 
       Input: 1 RenderTexture
+        Add bloom and HDR effects onto scene texture.
+        UI overlay pass, render on top of scene the UI, use Blending!
       Output: FinalTexture 

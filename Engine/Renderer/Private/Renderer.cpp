@@ -114,6 +114,9 @@ void Renderer::Render()
     VkSemaphore waitSemaphores[] = { mOffscreen.semaphore->Handle() };
     mRhi->SubmitCurrSwapchainCmdBuffer(1, waitSemaphores);
 
+    // Render the Overlay.
+    mUI.Render();
+
   EndFrame();
 
 
@@ -800,5 +803,14 @@ void Renderer::UpdateMaterials()
     // material.
     //mat->ObjectBufferSet()->Update(writeInfo);
   }
+}
+
+
+void Renderer::UIOverlay::Render()
+{
+  // Ignore if no reference to the rhi.
+  if (!mRhiRef) return;
+
+  // Render the overlay.
 }
 } // Recluse

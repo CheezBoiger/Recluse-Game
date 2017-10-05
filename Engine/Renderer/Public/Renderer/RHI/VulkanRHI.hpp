@@ -121,6 +121,12 @@ public:
   void                          Present();
   void                          UpdateFromWindowChange();
 
+  u32                           CurrentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
+
+  VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
+  size_t                        NumOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
+  VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
+
 private:
   void                          SetUpSwapchainRenderPass();
   void                          QueryFromSwapchain();

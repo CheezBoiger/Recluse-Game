@@ -12,7 +12,6 @@
 #include "Resources.hpp"
 #include "ScreenQuad.hpp"
 
-
 namespace Recluse {
 
 
@@ -40,6 +39,16 @@ class Semaphore;
 // camera's perspective.
 class Renderer : public EngineModule<Renderer> {
 public:
+  // Definition of the UI Overlay for which to render onto.
+  struct UIOverlay {
+    VulkanRHI*      mRhiRef;
+    
+    
+  protected:
+    void            Render();
+    friend Renderer;
+  };
+
   Renderer();
   ~Renderer();
 
@@ -71,6 +80,7 @@ public:
   CubeMap*          BakeEnvironmentMap(const Vector3& position);
   LightProbe*       BakeLightProbe(const CubeMap* envmap);
   Window*           WindowRef() { return mWindowHandle; }
+  UIOverlay*        Overlay() { return &mUI; }  
 
 private:
   void              SetUpFrameBuffers();
@@ -82,6 +92,7 @@ private:
   void              SetUpRenderTextures();
   void              SetUpOffscreen();
   void              UpdateMaterials();
+  void              RenderOverlay();
 
   Window*           mWindowHandle;
   CmdList*          mCmdList;
@@ -120,7 +131,7 @@ private:
   } mOffscreen; 
 
   ScreenQuad        mScreenQuad;
-
+  UIOverlay         mUI;
   b8                mRendering;
 };
 
