@@ -28,3 +28,13 @@ Renderer:
         Add bloom and HDR effects onto scene texture.
         UI overlay pass, render on top of scene the UI, use Blending!
       Output: FinalTexture 
+
+FrontEnd:
+
+- Game Scene Graph
+  - Break down to Mesh grid, light grid, camera grid, transparency grid, audio, animation, 
+     rigid bodies, trigger events, and ui canvases. Renderables go to cmdlist!
+  - each of these are handled by engine module.
+
+- Occlusion culling handled by spatial partition -> ktree?
+-> Handle script events -> Upper level portion of game objects?

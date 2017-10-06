@@ -33,12 +33,16 @@ public:
   };
 
   void              Update();
+  void              Initialize(VulkanRHI* rhi);
+  void              CleanUp();  
+
   DescriptorSet*    Set() { return mDescriptorSet; }
 
   GlobalBuffer*     Data() { return &mGlobal; }
 private:
   DescriptorSet*    mDescriptorSet;
   Buffer*           mGlobalBuffer;
+  VulkanRHI*        mRhi;
   GlobalBuffer      mGlobal;
 };
 
@@ -68,12 +72,17 @@ public:
   };
 
   void              Update();
+  void              Initialize(VulkanRHI* rhi);
+  void              CleanUp();  
+
   LightBuffer*      Data() { return &mLights; }
   DescriptorSet*    Set() { return mDescriptorSet; }
+
 private:
   DescriptorSet*    mDescriptorSet;
   Buffer*           mLightBuffer;
   LightBuffer       mLights;
+  VulkanRHI*        mRhi;
 };
 
 

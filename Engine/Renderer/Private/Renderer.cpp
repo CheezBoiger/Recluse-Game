@@ -103,7 +103,7 @@ void Renderer::Render()
   // Update materials before rendering the frame.
   UpdateMaterials();
 
-  // begin frame
+  // begin frame. This is where we start our render process per frame.
   BeginFrame();
     while (mOffscreen.cmdBuffer->Recording()) { }
 
@@ -115,7 +115,7 @@ void Renderer::Render()
     mRhi->SubmitCurrSwapchainCmdBuffer(1, waitSemaphores);
 
     // Render the Overlay.
-    mUI.Render();
+    RenderOverlay();
 
   EndFrame();
 
@@ -187,11 +187,11 @@ b8 Renderer::Initialize(Window* window)
 
 void Renderer::SetUpFrameBuffers()
 {
-  Texture* pbrColor = gResources().GetRenderTexture(pbrPass.colorId);
-  Texture* pbrDepth = gResources().GetRenderTexture(pbrPass.depthId);
+  Texture* pbrColor = gResources().GetRenderTexture("PBRColor");
+  Texture* pbrDepth = gResources().GetRenderTexture("PBRDepth");
 
   FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
-  pbrPass.frameBufferId = gResources().RegisterFrameBuffer(pbrFrameBuffer);
+  gResources().RegisterFrameBuffer("PBRFrameBuffer", pbrFrameBuffer);
 
 
   VkAttachmentDescription attachmentDescriptions[2];
@@ -419,7 +419,7 @@ void Renderer::SetUpGraphicsPipelines()
 
   // PbrForward Pipeline Creation.
   GraphicsPipeline* pbrForwardPipeline = mRhi->CreateGraphicsPipeline();
-  FrameBuffer* pbrFrameBuffer = gResources().GetFrameBuffer(pbrPass.frameBufferId);
+  FrameBuffer* pbrFrameBuffer = gResources().GetFrameBuffer("PBRFrameBuffer");
 
   VkGraphicsPipelineCreateInfo graphicsPipeline = {};
   graphicsPipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -557,9 +557,9 @@ void Renderer::SetUpGraphicsPipelines()
   DescriptorSetLayout* d2 = mRhi->CreateDescriptorSetLayout();
   d2->Initialize(layout2);
 
-  pbrPass.globaBufferLayout = gResources().RegisterDescriptorSetLayout(d0);
-  pbrPass.materialLayout = gResources().RegisterDescriptorSetLayout(d1);  
-  pbrPass.lightBufferLayout= gResources().RegisterDescriptorSetLayout(d2);
+  gResources().RegisterDescriptorSetLayout("PBRGlobalMaterialLayout", d0);
+  gResources().RegisterDescriptorSetLayout("PBRObjectMaterialLayout", d1);  
+  gResources().RegisterDescriptorSetLayout("PBRLightMaterialLayout",  d2);
 
 
   VkDescriptorSetLayout dLayouts[3];
@@ -577,13 +577,13 @@ void Renderer::SetUpGraphicsPipelines()
   // Initialize pbr forward pipeline.
   pbrForwardPipeline->Initialize(graphicsPipeline, pipelineLayout);
   
-  pbrPass.pipelineId = gResources().RegisterGraphicsPipeline(pbrForwardPipeline);
+  gResources().RegisterGraphicsPipeline("PBRPipeline", pbrForwardPipeline);
 
   mRhi->FreeShader(mVertPBR);
   mRhi->FreeShader(mFragPBR);  
 
   GraphicsPipeline* quadPipeline = mRhi->CreateGraphicsPipeline();
-  quadPass.pipelineId = gResources().RegisterGraphicsPipeline(quadPipeline);
+  gResources().RegisterGraphicsPipeline("FinalPassPipeline", quadPipeline);
 
   Shader* quadVert = mRhi->CreateShader();
   Shader* quadFrag = mRhi->CreateShader();
@@ -599,25 +599,25 @@ void Renderer::SetUpGraphicsPipelines()
 void Renderer::CleanUpGraphicsPipelines()
 {
 
-  DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout(pbrPass.globaBufferLayout);
-  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout(pbrPass.materialLayout);
-  DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout(pbrPass.lightBufferLayout);
+  DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout("PBRGlobalMaterialLayout");
+  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout("PBRObjectMaterialLayout");
+  DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout("PBRLightMaterialLayout");
 
   mRhi->FreeDescriptorSetLayout(d0);
   mRhi->FreeDescriptorSetLayout(d1);
   mRhi->FreeDescriptorSetLayout(d2);
 
-  GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline(pbrPass.pipelineId);
+  GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline("PBRPipeline");
   mRhi->FreeGraphicsPipeline(pbrPipeline);
 
-  GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline(quadPass.pipelineId);
+  GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline("FinalPassPipeline");
   mRhi->FreeGraphicsPipeline(quadPipeline);
 }
 
 
 void Renderer::CleanUpFrameBuffers()
 {
-  FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer(pbrPass.frameBufferId);
+  FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer("PBRFrameBuffer");
   mRhi->FreeFrameBuffer(pbrFrameBuffer);
 }
 
@@ -628,9 +628,9 @@ void Renderer::SetUpRenderTextures()
   Texture* pbrDepth = mRhi->CreateTexture();
   Sampler* pbrSampler = mRhi->CreateSampler();
 
-  pbrPass.colorId = gResources().RegisterRenderTexture(pbrColor);
-  pbrPass.depthId = gResources().RegisterRenderTexture(pbrDepth);
-  pbrPass.samplerId = gResources().RegisterSampler(pbrSampler);
+  gResources().RegisterRenderTexture("PBRColor", pbrColor);
+  gResources().RegisterRenderTexture("PBRDepth", pbrDepth);
+  gResources().RegisterSampler("PBRSampler", pbrSampler);
   
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
@@ -674,9 +674,9 @@ void Renderer::SetUpRenderTextures()
 
 void Renderer::CleanUpRenderTextures()
 {
-  Texture* pbrColor = gResources().UnregisterRenderTexture(pbrPass.colorId);
-  Texture* pbrDepth = gResources().UnregisterRenderTexture(pbrPass.depthId);
-  Sampler* pbrSampler = gResources().UnregisterSampler(pbrPass.samplerId);
+  Texture* pbrColor = gResources().UnregisterRenderTexture("PBRColor");
+  Texture* pbrDepth = gResources().UnregisterRenderTexture("PBRDepth");
+  Sampler* pbrSampler = gResources().UnregisterSampler("PBRSampler");
 
   mRhi->FreeTexture(pbrColor);
   mRhi->FreeTexture(pbrDepth);
@@ -705,8 +705,8 @@ void Renderer::CleanUpOffscreen()
 
 void Renderer::Build()
 {
-  FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(pbrPass.frameBufferId);
-  GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(pbrPass.pipelineId);
+  FrameBuffer* pbrBuffer = gResources().GetFrameBuffer("PBRFrameBuffer");
+  GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline("PBRPipeline");
 
   // TODO(): Build offscreen cmd buffer, then call this function.
   if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
@@ -803,6 +803,12 @@ void Renderer::UpdateMaterials()
     // material.
     //mat->ObjectBufferSet()->Update(writeInfo);
   }
+}
+
+
+void Renderer::RenderOverlay()
+{
+  mUI.Render();
 }
 
 

@@ -66,6 +66,9 @@ public:
   void              Build();
   void              BuildAsync();
 
+  void              SetGlobalMaterial(GlobalMaterial* material);
+  void              SetLightMaterial(LightMaterial*   material);
+
   void              BeginFrame();
   void              EndFrame();
 
@@ -100,30 +103,6 @@ private:
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
   VulkanRHI*        mRhi;
-
-  // TODO(): We need to implement a pipeline map. 
-  resource_id_t     mSHCoefficentPrefilter;
-  resource_id_t     mGeometryPipeline;
-  resource_id_t     mPreprocessPipeline;
-  resource_id_t     mHDRGammaPipeline;
-  resource_id_t     mPostProcessPipelne;
-
-  struct {
-    resource_id_t   frameBufferId;
-    resource_id_t   pipelineId;
-    resource_id_t   colorId;
-    resource_id_t   depthId;
-    resource_id_t   samplerId;  
-    resource_id_t   globaBufferLayout;
-    resource_id_t   materialLayout;
-    resource_id_t   lightBufferLayout;
-  } pbrPass;
-
-
-  struct {
-    resource_id_t   pipelineId;
-  } quadPass;
-
 
   struct {
     CommandBuffer*  cmdBuffer;
