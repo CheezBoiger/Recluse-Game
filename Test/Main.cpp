@@ -37,7 +37,7 @@ int main(int c, char* argv[])
   window.Show();    
 
   gRenderer().Initialize(&window);
-  
+  printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
   // build the scene for the render. Should our cmd list be updated, you need to call
   // this function to update the scene.
   gRenderer().Build();

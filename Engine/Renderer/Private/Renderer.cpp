@@ -438,10 +438,9 @@ void Renderer::SetUpGraphicsPipelines()
   Shader* mVertPBR = mRhi->CreateShader();
   Shader* mFragPBR = mRhi->CreateShader();
 
-  // TODO(): These must not be hardcoded into the pipeline. Use FileSystem object to 
-  // get the path instead!
-  mVertPBR->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/PBRPass.vert.spv");
-  mFragPBR->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/PBRPass.frag.spv");
+  std::string filepath = gFilesystem().CurrentAppDirectory();
+  mVertPBR->Initialize(filepath + "/Shaders/PBRPass.vert.spv");
+  mFragPBR->Initialize(filepath + "/Shaders/PBRPass.frag.spv");
 
   VkPipelineShaderStageCreateInfo pbrShaders[2];
   pbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -587,9 +586,9 @@ void Renderer::SetUpGraphicsPipelines()
 
   Shader* quadVert = mRhi->CreateShader();
   Shader* quadFrag = mRhi->CreateShader();
-  
-  quadVert->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/FinalPass.vert.spv");
-  quadFrag->Initialize("D:/Users/Magarcia/Github/Recluse/Shaders/Bin/FinalPass.frag.spv");
+
+  quadVert->Initialize(filepath + "/Shaders/FinalPass.vert.spv");
+  quadFrag->Initialize(filepath + "/Shaders/FinalPass.frag.spv");
 
   mRhi->FreeShader(quadVert);
   mRhi->FreeShader(quadFrag);

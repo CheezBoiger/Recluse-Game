@@ -25,23 +25,23 @@ public:
     : mCache(nullptr) { }
 
 
-  void        OnStartUp() override;
-  void        OnShutDown() override;
-  void        SetCurrentAppDirectory(tchar* applicationPath);
-  void        SaveFileAsync(File* file);
+  void          OnStartUp() override;
+  void          OnShutDown() override;
+  void          SetCurrentAppDirectory(tchar* applicationPath);
+  void          SaveFileAsync(File* file);
 
-  b8          SaveFile(File* file, tchar* path = nullptr);
-  File*       LoadFile(tchar* filepath);
-  File*       CreateFile(tchar* filename);
+  b8            SaveFile(File* file, tchar* path = nullptr);
+  File*         LoadFile(tchar* filepath);
+  File*         CreateFile(tchar* filename);
 
-  AsyncFile*  LoadFileAsync(tchar* filepath);
+  AsyncFile*    LoadFileAsync(tchar* filepath);
 
-  tchar*      CurrentAppDirectory();
+  const tchar*  CurrentAppDirectory();
 
-  b8          FileExists(tchar* filepath);
-  b8          DirectoryExists(tchar* directorypath);
-  tchar*      GetApplicationSourcePath();
-  tchar*      SetApplicationSourcePath(const std::string& srcPath);
+  b8            FileExists(tchar* filepath);
+  b8            DirectoryExists(tchar* directorypath);
+  tchar*        GetApplicationSourcePath();
+  tchar*        SetApplicationSourcePath(const std::string& srcPath);
 
   
 private:
