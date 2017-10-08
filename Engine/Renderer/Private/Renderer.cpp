@@ -138,6 +138,7 @@ void Renderer::CleanUp()
 {
   // Must wait for all command buffers to finish before cleaning up.
   mRhi->DeviceWaitIdle();
+  mUI.CleanUp();
 
   mScreenQuad.CleanUp();
   CleanUpOffscreen();
@@ -181,6 +182,7 @@ b8 Renderer::Initialize(Window* window)
     cmdBuffer.EndRenderPass();
   });
 
+  mUI.Initialize(mRhi);
   return true;
 }
 
@@ -747,9 +749,9 @@ void Renderer::Build()
             if (renderCmd->meshId) {
               Material* mat = renderCmd->materialId;
               VkDescriptorSet descriptorSets[] = { 
-                mat->GlobalBufferSet()->Handle(), 
-                mat->ObjectBufferSet()->Handle(), 
-                mat->LightBufferSet()->Handle() 
+                mGlobalMat->Set()->Handle(), 
+                mat->Set()->Handle(), 
+                mLightMat->Set()->Handle()
               };
 
               cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0, 
@@ -817,5 +819,19 @@ void Renderer::UIOverlay::Render()
   if (!mRhiRef) return;
 
   // Render the overlay.
+}
+
+
+void Renderer::UIOverlay::Initialize(VulkanRHI* rhi)
+{
+  mRhiRef = rhi;
+
+  
+}
+
+
+void Renderer::UIOverlay::CleanUp()
+{
+  
 }
 } // Recluse

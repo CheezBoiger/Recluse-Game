@@ -2,21 +2,22 @@ cmake_minimum_required(VERSION 3.0)
 project("Recluse")
 
 
-set(RECLUSE_NAME         "Recluse")
-set(RECLUSE_EXE          ${RECLUSE_NAME})
-set(RECLUSE_ENGINE       "Engine")
+set(RECLUSE_NAME            "Recluse")
+set(RECLUSE_EXE             ${RECLUSE_NAME})
+set(RECLUSE_ENGINE          "Engine")
 
-set(RECLUSE_LIB_DIR      ${CMAKE_SOURCE_DIR}/Libs)
-set(RECLUSE_SOURCE_DIR   ${CMAKE_SOURCE_DIR}/Engine)
-set(RECLUSE_TEST_DIR     ${CMAKE_SOURCE_DIR}/Test)
+set(RECLUSE_LIB_DIR         ${CMAKE_SOURCE_DIR}/Libs)
+set(RECLUSE_SOURCE_DIR      ${CMAKE_SOURCE_DIR}/Engine)
+set(RECLUSE_TEST_DIR        ${CMAKE_SOURCE_DIR}/Test)
+set(RECLUSE_REGRESSIONS_DIR ${CMAKE_SOURCE_DIR}/Regression)
 
-set(RECLUSE_ASSIMP__DIR  ${RECLUSE_LIB_DIR}/Assimp)
-set(RECLUSE_OZZ_DIR      ${RECLUSE_LIB_DIR}/Ozz)
-set(RECLUSE_FREETYPE_DIR ${RECLUSE_LIB_DIR}/FreeType)
+set(RECLUSE_ASSIMP__DIR     ${RECLUSE_LIB_DIR}/Assimp)
+set(RECLUSE_OZZ_DIR         ${RECLUSE_LIB_DIR}/Ozz)
+set(RECLUSE_FREETYPE_DIR    ${RECLUSE_LIB_DIR}/FreeType)
 
 # Libraries that REQUIRE enviroment variables set up.
-set(RECLUSE_PHYSX_DIR    $ENV{PHYSXDIR})
-set(RECLUSE_WWISE_DIR    $ENV{WWISESDK})
+set(RECLUSE_PHYSX_DIR       $ENV{PHYSXDIR})
+set(RECLUSE_WWISE_DIR       $ENV{WWISESDK})
 
 set(RECLUSE_THIRDPARTY_INCLUDE_DIRS
   ${RECLUSE_FREETYPE_DIR}/include

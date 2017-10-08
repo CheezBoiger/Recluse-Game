@@ -41,11 +41,14 @@ class Renderer : public EngineModule<Renderer> {
 public:
   // Definition of the UI Overlay for which to render onto.
   struct UIOverlay {
-    VulkanRHI*      mRhiRef;
-    
     
   protected:
-    void            Render();
+    VulkanRHI*                  mRhiRef;
+
+    void                        Initialize(VulkanRHI* rhi);
+    void                        CleanUp();
+    void                        Render();
+    std::vector<CommandBuffer*> cmdBuffers;
     friend Renderer;
   };
 
@@ -66,8 +69,8 @@ public:
   void              Build();
   void              BuildAsync();
 
-  void              SetGlobalMaterial(GlobalMaterial* material);
-  void              SetLightMaterial(LightMaterial*   material);
+  void              SetGlobalMaterial(GlobalMaterial* material) { mGlobalMat = material; }
+  void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
 
   void              BeginFrame();
   void              EndFrame();
@@ -100,6 +103,8 @@ private:
   Window*           mWindowHandle;
   CmdList*          mCmdList;
   CmdList*          mDeferredCmdList;
+  GlobalMaterial*   mGlobalMat;
+  LightMaterial*    mLightMat;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
   VulkanRHI*        mRhi;

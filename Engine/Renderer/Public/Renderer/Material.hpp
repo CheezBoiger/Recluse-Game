@@ -108,10 +108,6 @@ public:
   };
 
   Material();
-  
-  void            SetObjectBufferRef(DescriptorSet* obj) { mObjectBufferSetRef = obj; }
-  void            SetGlobalBufferRef(DescriptorSet* glob) { mGlobalBufferSetRef = glob; }
-  void            SetLightBufferRef(DescriptorSet* light) { mLightBufferSetRef = light; }
 
   void            SetSampler(Sampler* sampler) { mSampler = sampler; }
   void            SetAlbedo(Texture* albedo) { mAlbedo = albedo; }
@@ -124,19 +120,17 @@ public:
   ObjectBuffer*   ObjectData() { return &mObjectData; }
   BonesBuffer*    BonesData() { return &mBonesData; }
 
-  DescriptorSet*  ObjectBufferSet() { return mObjectBufferSetRef; }
-  DescriptorSet*  GlobalBufferSet() { return mGlobalBufferSetRef; }
-  DescriptorSet*  LightBufferSet() { return mLightBufferSetRef; }
+  DescriptorSet*  Set() { return mObjectBufferSetRef; }
 
+  void            Initialize(VulkanRHI* rhi);
+  void            CleanUp();
   void            Update();
 
 private:
   ObjectBuffer    mObjectData;
   BonesBuffer     mBonesData;
 
-  DescriptorSet*  mGlobalBufferSetRef;
   DescriptorSet*  mObjectBufferSetRef;
-  DescriptorSet*  mLightBufferSetRef;
 
   Buffer*         mObjectBuffer;
   Buffer*         mBonesBuffer;
@@ -148,5 +142,6 @@ private:
   Texture*        mEmissive;
 
   Sampler*        mSampler;
+  VulkanRHI*      mRhi;
 };
 } // Recluse
