@@ -17,17 +17,17 @@ namespace Recluse {
 void ScreenQuad::Initialize(VulkanRHI* rhi)
 {
   std::array<QuadVertex, 4> vertices;
-  vertices[0] = { { 1.0f, 1.0f }, { 1.0f, 1.0f } };
-  vertices[1] = { { 0.0f, 1.0f }, { 0.0f, 1.0f } };
-  vertices[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
-  vertices[3] = { { 1.0f, 1.0f }, { 1.0f, 1.0f } };
+  vertices[0] = { { -1.0f, -1.0f }, { 1.0f, 1.0f } };
+  vertices[1] = { { -1.0f,  1.0f }, { 0.0f, 1.0f } };
+  vertices[2] = { {  1.0f,  1.0f }, { 0.0f, 0.0f } };
+  vertices[3] = { {  1.0f, -1.0f }, { 1.0f, 1.0f } };
 
   std::array<u32, 6> indices = {
     0, 1, 2, 2, 3, 0
   };
 
-  quad.Initialize(rhi, vertices.size(), vertices.data());
-  index.Initialize(rhi, indices.size(), indices.data());
+  quad.Initialize(rhi, vertices.size(), sizeof(QuadVertex), vertices.data());
+  index.Initialize(rhi, indices.size(), sizeof(u32), indices.data());
 }
 
 

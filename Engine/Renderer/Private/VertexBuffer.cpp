@@ -9,29 +9,30 @@
 namespace Recluse {
 
 
-void VertexBuffer::Initialize(VulkanRHI* rhi, size_t size, void* data, Type type)
+void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeType, void* data, Type type)
 {
   mRhi = rhi;
   mBuffer = rhi->CreateBuffer();
+  mVertexCount = static_cast<u32>(vertexCount);
   Buffer* stagingBuffer = rhi->CreateBuffer();
 
   {
     VkBufferCreateInfo stagingCI = {};
     stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    stagingCI.size = size;
+    stagingCI.size = sizeType * vertexCount;
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBuffer->Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
     stagingBuffer->Map();
-      memcpy(stagingBuffer->Mapped(), data, (size_t)size);
+      memcpy(stagingBuffer->Mapped(), data, (size_t)stagingCI.size);
     stagingBuffer->UnMap();
   }
 
   VkBufferCreateInfo bufferCI = { };
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  bufferCI.size = size;
+  bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferCI.size = vertexCount;
   bufferCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
   mBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -44,7 +45,7 @@ void VertexBuffer::Initialize(VulkanRHI* rhi, size_t size, void* data, Type type
   
   cmdBuffer->Begin(beginInfo);
     VkBufferCopy region = { };
-    region.size = size;
+    region.size = sizeType * vertexCount;
     region.srcOffset = 0;
     region.dstOffset = 0;
     cmdBuffer->CopyBuffer(stagingBuffer->Handle(), mBuffer->Handle(), 1, &region);

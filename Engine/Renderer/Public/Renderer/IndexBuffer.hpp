@@ -15,15 +15,18 @@ class IndexBuffer {
 public:
   IndexBuffer()
     : mBuffer(nullptr)
-    , mRhi(nullptr) { }
+    , mRhi(nullptr)
+    , mIndexCount(0) { }
 
-  void        Initialize(VulkanRHI* rhi, size_t size, void* data);
+  void        Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType, void* data);
   void        CleanUp();
 
   Buffer*     Handle() { return mBuffer; }
+  u32         IndexCount() { return mIndexCount; }
 
 private:
   VulkanRHI*  mRhi;
   Buffer*     mBuffer;
+  u32         mIndexCount;
 };
 } // Recluse

@@ -167,7 +167,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpOffscreen();
   mScreenQuad.Initialize(mRhi);
 
-  mRhi->SetSwapchainCmdBufferBuild([=] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
+  mRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
     VkViewport viewport = { };
     viewport.height = (r32) mWindowHandle->Height();
@@ -181,7 +181,16 @@ b8 Renderer::Initialize(Window* window)
 
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
-      //cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
+      cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
+
+      VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
+      VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
+      VkDeviceSize offsets[] = { 0 };
+
+      cmdBuffer.BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer.BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+
+      cmdBuffer.DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer.EndRenderPass();
   });
 
@@ -278,7 +287,7 @@ void Renderer::SetUpGraphicsPipelines()
 {
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-  assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+  assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
   assemblyCI.primitiveRestartEnable = VK_FALSE;
 
   VkViewport viewport = { };
@@ -595,6 +604,7 @@ void Renderer::SetUpGraphicsPipelines()
   graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
+  rasterizerCI.cullMode = VK_CULL_MODE_NONE;
 
   Shader* quadVert = mRhi->CreateShader();
   Shader* quadFrag = mRhi->CreateShader();

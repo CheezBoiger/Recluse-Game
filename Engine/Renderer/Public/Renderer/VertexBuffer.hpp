@@ -19,15 +19,18 @@ public:
   
   VertexBuffer()
     : mBuffer(nullptr)
-    , mRhi(nullptr) { }
+    , mRhi(nullptr)
+    , mVertexCount(0) { }
 
-  void          Initialize(VulkanRHI* rhi, size_t size, void* data, Type type = STATIC_BUFFER);
+  void          Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeType, void* data, Type type = STATIC_BUFFER);
   void          CleanUp();
 
   Buffer*       Handle() { return mBuffer; }
-
+  u32           VertexCount() { return mVertexCount; }
+  
 private:
   VulkanRHI*    mRhi;
   Buffer*       mBuffer;
+  u32           mVertexCount;
 };
 } // Recluse
