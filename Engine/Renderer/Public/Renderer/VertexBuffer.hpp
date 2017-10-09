@@ -21,11 +21,10 @@ public:
     : mBuffer(nullptr)
     , mRhi(nullptr) { }
 
-  void Initialize(VulkanRHI* rhi, size_t size, void* data, Type type = STATIC_BUFFER);
-  void CleanUp();
+  void          Initialize(VulkanRHI* rhi, size_t size, void* data, Type type = STATIC_BUFFER);
+  void          CleanUp();
 
-
-  Buffer* Handle() { return mBuffer; }
+  Buffer*       Handle() { return mBuffer; }
 
 private:
   VulkanRHI*    mRhi;

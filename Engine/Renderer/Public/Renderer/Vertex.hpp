@@ -17,9 +17,7 @@ struct Vertex {
 
 struct QuadVertex {
   r32 position      [2];
-  r32 padding0      [2];
   r32 texcoord      [2];
-  r32 padding1      [2];
 };
 
 

@@ -17,10 +17,12 @@ class Material;
 struct RenderCmd {
   RenderCmd()
     : meshId(nullptr)
-    , materialId(nullptr) { }
+    , materialId(nullptr)
+    , debug(false) { }
 
 
   Mesh*     meshId;
   Material* materialId;
+  b8        debug;
 };
 } // Recluse

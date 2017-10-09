@@ -41,7 +41,6 @@ class Renderer : public EngineModule<Renderer> {
 public:
   // Definition of the UI Overlay for which to render onto.
   struct UIOverlay {
-    
   protected:
     VulkanRHI*                  mRhiRef;
 
@@ -91,6 +90,8 @@ public:
 private:
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();
+  void              SetUpDescriptorSets();
+  void              CleanUpDescriptorSets();
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
   void              CleanUpRenderTextures();

@@ -176,9 +176,12 @@ b8 Renderer::Initialize(Window* window)
     viewport.maxDepth = 1.0f;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
+    
+    GraphicsPipeline* finalPipeline = gResources().GetGraphicsPipeline("FinalPassPipeline");
 
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
+      //cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
     cmdBuffer.EndRenderPass();
   });
 
@@ -583,14 +586,84 @@ void Renderer::SetUpGraphicsPipelines()
   mRhi->FreeShader(mVertPBR);
   mRhi->FreeShader(mFragPBR);  
 
+  // TODO(): Need to structure all of this into more manageable modules.
+  //
   GraphicsPipeline* quadPipeline = mRhi->CreateGraphicsPipeline();
   gResources().RegisterGraphicsPipeline("FinalPassPipeline", quadPipeline);
+
+  // Set to default renderpass.
+  graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
+  depthStencilCI.depthTestEnable = VK_FALSE;
+  depthStencilCI.stencilTestEnable = VK_FALSE;
 
   Shader* quadVert = mRhi->CreateShader();
   Shader* quadFrag = mRhi->CreateShader();
 
   quadVert->Initialize(filepath + "/Shaders/FinalPass.vert.spv");
   quadFrag->Initialize(filepath + "/Shaders/FinalPass.frag.spv");
+
+  VkPipelineShaderStageCreateInfo finalShaders[2];
+  finalShaders[0].flags = 0;
+  finalShaders[0].module = quadVert->Handle();
+  finalShaders[0].pName = "main";
+  finalShaders[0].pNext = nullptr;
+  finalShaders[0].pSpecializationInfo = nullptr;
+  finalShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  finalShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  finalShaders[1].flags = 0;
+  finalShaders[1].module = quadFrag->Handle();
+  finalShaders[1].pName = "main";
+  finalShaders[1].pNext = nullptr;
+  finalShaders[1].pSpecializationInfo = nullptr;
+  finalShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  finalShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  graphicsPipeline.stageCount = 2;
+  graphicsPipeline.pStages = finalShaders;
+
+  VkVertexInputAttributeDescription finalAttribs[2];
+  finalAttribs[0].binding = 0;
+  finalAttribs[0].format = VK_FORMAT_R32G32_SFLOAT;
+  finalAttribs[0].location = 0;
+  finalAttribs[0].offset = 0;
+  
+  finalAttribs[1].binding = 0;
+  finalAttribs[1].format = VK_FORMAT_R32G32_SFLOAT;
+  finalAttribs[1].location = 1;
+  finalAttribs[1].offset = sizeof(r32) * 2;
+
+  vertBindingDesc.binding = 0;
+  vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+  vertBindingDesc.stride = sizeof(QuadVertex);
+
+  vertexCI.vertexAttributeDescriptionCount = 2;
+  vertexCI.pVertexAttributeDescriptions = finalAttribs;
+
+  DescriptorSetLayout* finalSetLayout = mRhi->CreateDescriptorSetLayout();
+  gResources().RegisterDescriptorSetLayout("FinalSetLayout", finalSetLayout);
+  
+  VkDescriptorSetLayoutBinding finalTextureSample = { };
+  finalTextureSample.binding = 0;
+  finalTextureSample.descriptorCount = 1;
+  finalTextureSample.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  finalTextureSample.pImmutableSamplers = nullptr;
+  finalTextureSample.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; 
+
+  VkDescriptorSetLayoutCreateInfo finalLayoutInfo = { };
+  finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  finalLayoutInfo.bindingCount = 1;
+  finalLayoutInfo.pBindings = &finalTextureSample;
+
+  finalSetLayout->Initialize(finalLayoutInfo);
+
+  VkPipelineLayoutCreateInfo finalLayout = {};
+  finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  finalLayout.setLayoutCount = 1;
+  VkDescriptorSetLayout finalL = finalSetLayout->Layout();
+  finalLayout.pSetLayouts = &finalL;
+
+  quadPipeline->Initialize(graphicsPipeline, finalLayout);
 
   mRhi->FreeShader(quadVert);
   mRhi->FreeShader(quadFrag);
@@ -611,8 +684,12 @@ void Renderer::CleanUpGraphicsPipelines()
   GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline("PBRPipeline");
   mRhi->FreeGraphicsPipeline(pbrPipeline);
 
+  DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout("FinalSetLayout");
+  mRhi->FreeDescriptorSetLayout(finalSetLayout);
+
   GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline("FinalPassPipeline");
   mRhi->FreeGraphicsPipeline(quadPipeline);
+
 }
 
 
@@ -735,8 +812,17 @@ void Renderer::Build()
   pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   pbrRenderPassInfo.renderArea.offset = { 0, 0 };
 
+  VkViewport viewport = {};
+  viewport.height = (r32)mWindowHandle->Height();
+  viewport.width = (r32)mWindowHandle->Width();
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
       if (mCmdList) {
         for (size_t i = 0; i < mCmdList->Size(); ++i) {
