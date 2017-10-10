@@ -85,6 +85,7 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical)
   sInfo.preTransform = capabilities.currentTransform;
   sInfo.minImageCount = capabilities.minImageCount;
   sInfo.clipped = VK_TRUE;
+  sInfo.oldSwapchain = oldSwapChain;
   
   if (vkCreateSwapchainKHR(mOwner, &sInfo, nullptr, &mSwapchain) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create swapchain!\n");
@@ -95,6 +96,10 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical)
   // Storing data of swapchains and querying images.
   mSwapchainExtent = capabilities.currentExtent;
   mSwapchainFormat = formats[0].format;
+
+  if (oldSwapChain) {
+    vkDestroySwapchainKHR(mOwner, oldSwapChain, nullptr);
+  }
 
   QuerySwapchainImages();
  
@@ -135,8 +140,15 @@ void Swapchain::QuerySwapchainImages()
 {
   u32 imageCount;
   vkGetSwapchainImagesKHR(mOwner, mSwapchain, &imageCount, nullptr);
+
   std::vector<VkImage> images(imageCount);
   vkGetSwapchainImagesKHR(mOwner, mSwapchain, &imageCount, images.data());
+
+  if (!SwapchainImages.empty()) {
+    for (size_t i = 0; i < SwapchainImages.size(); ++i) {
+      vkDestroyImageView(mOwner, SwapchainImages[i].View, nullptr);  
+    }
+  }
 
   SwapchainImages.resize(images.size());
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {

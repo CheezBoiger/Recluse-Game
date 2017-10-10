@@ -96,15 +96,32 @@ public:
   void                          FreeDescriptorSet(DescriptorSet* set);
   void                          FreeDescriptorSetLayout(DescriptorSetLayout* layout);
 
+  // Set the default swapchain command buffers, which is defined by the programmer of the renderer.
   void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
+
+  // Rebuild the swapchain commandbuffers with using the function provided from SetSwapchainCmdBufferBuild.
+  // This will build the swapchain command buffers.
   void                          RebuildCommandBuffers();
 
+  // Get the logical device.
   VkDevice                      Device() { return mLogicalDevice.Handle(); }
+
+  // Get the Swapchain handle.
   Swapchain*                    SwapchainObject() { return &mSwapchain; }
+
+  // Get the window surface that is used to render onto.
   VkSurfaceKHR                  Surface() { return mSurface; }
+
+  // Get the command pool on the graphics side.
   VkCommandPool                 GraphicsCmdPool() { return mCmdPool; }
+
+  // Get the command pool on the compute side.
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
+
+  // Get the descriptor pool that is used to create our descriptor sets.
   VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
+
+  // Create a semaphore object.
   Semaphore*                    CreateVkSemaphore();
 
   void                          FreeVkSemaphore(Semaphore* semaphore);
@@ -119,8 +136,14 @@ public:
   void                          ComputeSubmit(const VkSubmitInfo& submitInfo);
   void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores);
   void                          Present();
-  void                          UpdateFromWindowChange();
 
+  // Updates the renderer pipeline as a result of window resizing. This will effectively
+  // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
+  // requery their resources as they have been recreated!
+  void                          UpdateFromWindowChange(i32 width, i32 height);
+
+  // Get the current image index that is used during rendering, the current image from the 
+  // swapchain that we are rendering onto.
   u32                           CurrentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
 
   VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }

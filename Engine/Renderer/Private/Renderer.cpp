@@ -36,6 +36,7 @@ Renderer::Renderer()
   , mCmdList(nullptr)
   , mDeferredCmdList(nullptr)
   , mRendering(false)
+  , mInitialized(false)
 {
 }
 
@@ -151,6 +152,7 @@ void Renderer::CleanUp()
     delete mRhi;
     mRhi = nullptr;
   }
+  mInitialized = false;
 }
 
 
@@ -195,6 +197,7 @@ b8 Renderer::Initialize(Window* window)
   });
 
   mUI.Initialize(mRhi);
+  mInitialized = true;
   return true;
 }
 
@@ -906,6 +909,33 @@ void Renderer::UpdateMaterials()
 void Renderer::RenderOverlay()
 {
   mUI.Render();
+}
+
+
+void Renderer::UpdateFromWindowChange()
+{
+  mRhi->DeviceWaitIdle();
+
+  if (mWindowHandle->Width() <= 0 || mWindowHandle <= 0) return;
+
+  mRhi->UpdateFromWindowChange(mWindowHandle->Width(), mWindowHandle->Height());
+
+  mUI.CleanUp();
+
+  CleanUpOffscreen();
+  CleanUpGraphicsPipelines();
+  CleanUpFrameBuffers();
+  CleanUpRenderTextures();
+
+  SetUpRenderTextures();
+  SetUpFrameBuffers();
+  SetUpGraphicsPipelines();
+  SetUpOffscreen();
+
+  mUI.Initialize(mRhi);
+
+  mRhi->RebuildCommandBuffers();
+  Build();
 }
 
 

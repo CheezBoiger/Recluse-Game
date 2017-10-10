@@ -517,8 +517,26 @@ void VulkanRHI::RebuildCommandBuffers()
 }
 
 
-void VulkanRHI::UpdateFromWindowChange()
+void VulkanRHI::UpdateFromWindowChange(i32 width, i32 height)
 {
+  if (width <= 0 || height <= 0) return;
+
+  for (size_t i = 0; i < mSwapchainInfo.mSwapchainFramebuffers.size(); ++i) {
+    VkFramebuffer framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
+    vkDestroyFramebuffer(mLogicalDevice.Handle(), framebuffer, nullptr);
+  }
+
+  vkDestroyRenderPass(mLogicalDevice.Handle(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
+
+  vkDestroyImageView(mLogicalDevice.Handle(), mSwapchainInfo.mDepthView, nullptr);
+  vkDestroyImage(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, nullptr);
+  vkFreeMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthMemory, nullptr);
+
+  mSwapchain.ReCreate(mSurface, gPhysicalDevice);
+  
+  CreateDepthAttachment();
+  SetUpSwapchainRenderPass();
+  QueryFromSwapchain();
 }
 
 

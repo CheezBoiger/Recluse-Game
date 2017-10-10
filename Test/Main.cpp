@@ -12,8 +12,16 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   
   if (keys[KEY_CODE_D] == KEY_DOWN) window->SetToFullScreen();
   if (keys[KEY_CODE_A] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(1200, 800, true); window->Show(); }
+  if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
   if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) window->Close();
+}
+
+
+void WindowResized(Window* window, i32 width, i32 height)
+{
+  if (gRenderer().IsActive() && gRenderer().Initialized()) {
+    gRenderer().UpdateFromWindowChange();
+  }
 }
 
 
@@ -29,6 +37,7 @@ int main(int c, char* argv[])
   gUI().StartUp();
 
   Window::SetKeyboardCallback(KeyCallback);
+  Window::SetWindowResizeCallback(WindowResized);
 
   Window window;
   window.Create(RTEXT("私は猫が大好き"), 800, 600); 

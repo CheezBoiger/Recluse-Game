@@ -86,7 +86,7 @@ public:
   LightProbe*       BakeLightProbe(const CubeMap* envmap);
   Window*           WindowRef() { return mWindowHandle; }
   UIOverlay*        Overlay() { return &mUI; }  
-
+  b8                Initialized() { return mInitialized; }
 private:
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();
@@ -118,6 +118,7 @@ private:
   ScreenQuad        mScreenQuad;
   UIOverlay         mUI;
   b8                mRendering;
+  b8                mInitialized;
 };
 
 Renderer&           gRenderer();
