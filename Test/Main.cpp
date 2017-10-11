@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
+#include "Renderer/UserParams.hpp"
 
 #include <stdio.h>
 
@@ -20,7 +21,8 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 void WindowResized(Window* window, i32 width, i32 height)
 {
   if (gRenderer().IsActive() && gRenderer().Initialized()) {
-    gRenderer().UpdateFromWindowChange();
+    UserParams params;
+    gRenderer().UpdateRendererConfigs(&params);
   }
 }
 

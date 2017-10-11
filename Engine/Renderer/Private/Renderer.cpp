@@ -7,6 +7,7 @@
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 #include "Material.hpp"
+#include "UserParams.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -912,13 +913,14 @@ void Renderer::RenderOverlay()
 }
 
 
-void Renderer::UpdateFromWindowChange()
+void Renderer::UpdateRendererConfigs(UserParams* params)
 {
   mRhi->DeviceWaitIdle();
 
   if (mWindowHandle->Width() <= 0 || mWindowHandle <= 0) return;
 
-  mRhi->UpdateFromWindowChange(mWindowHandle->Width(), mWindowHandle->Height());
+  // Triple buffering atm, we will need to use user params to switch this.
+  mRhi->ReConfigure(VK_PRESENT_MODE_MAILBOX_KHR, mWindowHandle->Width(), mWindowHandle->Height());
 
   mUI.CleanUp();
 

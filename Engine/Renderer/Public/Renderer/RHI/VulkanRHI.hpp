@@ -23,6 +23,7 @@ class Sampler;
 class Texture;
 class DescriptorSet;
 class DescriptorSetLayout;
+class UserParams;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
@@ -140,7 +141,7 @@ public:
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
   // requery their resources as they have been recreated!
-  void                          UpdateFromWindowChange(i32 width, i32 height);
+  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.

@@ -40,7 +40,8 @@ public:
   SwapchainImage&               Get(const size_t index) { return SwapchainImages[index]; }
   SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }
   
-  void                          ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical);
+  void                          ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
+                                  VkSurfaceCapabilitiesKHR capabilities);
 
   VkFormat                      SwapchainFormat() { return mSwapchainFormat; }
   VkExtent2D                    SwapchainExtent() { return mSwapchainExtent; }

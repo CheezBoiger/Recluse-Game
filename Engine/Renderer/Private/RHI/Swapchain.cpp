@@ -39,43 +39,42 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
 
   CreateSemaphores();
   CreateComputeFence();
-  ReCreate(surface, physical);
+  
+  std::vector<VkPresentModeKHR> presentModes = physical.QuerySwapchainPresentModes(surface);
+  std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.QuerySwapchainSurfaceFormats(surface);
+  VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
+
+  VkPresentModeKHR desiredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+  for (VkPresentModeKHR mode : presentModes) {
+    if (mode == VK_PRESENT_MODE_FIFO_KHR) {
+      desiredPresentMode = mode;
+    }
+    
+    if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+      desiredPresentMode = mode;
+      break;
+    }
+  }
+
+  ReCreate(surface, surfaceFormats[0], desiredPresentMode, capabilities);
 }
 
 
-void Swapchain::ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical)
+void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, 
+  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities)
 {
   VkSwapchainKHR oldSwapChain = mSwapchain;
-
-  // TODO(): Begin swap chain querying for proper formats and whatnot.
-  std::vector<VkSurfaceFormatKHR> formats = physical.QuerySwapchainSurfaceFormats(surface);
-  std::vector<VkPresentModeKHR> presentModes = physical.QuerySwapchainPresentModes(surface);
-  VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
 
   u32 imageCount = capabilities.minImageCount + 1;
   if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
     imageCount = capabilities.maxImageCount;
   }
 
-
-  VkPresentModeKHR presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-  for (const auto& availableMode : presentModes) {
-    // Triple Buffering availability.
-    if (availableMode == VK_PRESENT_MODE_FIFO_KHR) {
-      presentMode = availableMode;
-    }
-
-    if (availableMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-      presentMode = availableMode;
-      break;
-    }
-  }
-
   VkSwapchainCreateInfoKHR sInfo = {};
   sInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   sInfo.surface = surface;
-  sInfo.imageFormat = formats[0].format;
-  sInfo.imageColorSpace = formats[0].colorSpace;
+  sInfo.imageFormat = surfaceFormat.format;
+  sInfo.imageColorSpace = surfaceFormat.colorSpace;
   sInfo.imageArrayLayers = 1;
   sInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   sInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -95,7 +94,7 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, PhysicalDevice& physical)
 
   // Storing data of swapchains and querying images.
   mSwapchainExtent = capabilities.currentExtent;
-  mSwapchainFormat = formats[0].format;
+  mSwapchainFormat = surfaceFormat.format;
 
   if (oldSwapChain) {
     vkDestroySwapchainKHR(mOwner, oldSwapChain, nullptr);

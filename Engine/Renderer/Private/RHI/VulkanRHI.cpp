@@ -517,7 +517,7 @@ void VulkanRHI::RebuildCommandBuffers()
 }
 
 
-void VulkanRHI::UpdateFromWindowChange(i32 width, i32 height)
+void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
 {
   if (width <= 0 || height <= 0) return;
 
@@ -532,7 +532,10 @@ void VulkanRHI::UpdateFromWindowChange(i32 width, i32 height)
   vkDestroyImage(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, nullptr);
   vkFreeMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthMemory, nullptr);
 
-  mSwapchain.ReCreate(mSurface, gPhysicalDevice);
+  std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
+  VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
+
+  mSwapchain.ReCreate(mSurface, surfaceFormats[0], VK_PRESENT_MODE_MAILBOX_KHR, capabilities);
   
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();

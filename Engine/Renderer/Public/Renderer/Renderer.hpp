@@ -57,7 +57,7 @@ public:
   b8                Initialize(Window* window);
   b8                Rendering() const { return mRendering; }
   void              Configure(UserParams* params);
-  void              UpdateFromWindowChange();
+  void              UpdateRendererConfigs(UserParams* params);
   void              CleanUp();
   void              Render();
 
