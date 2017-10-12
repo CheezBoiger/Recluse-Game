@@ -155,7 +155,12 @@ private:
   void                          SetUpSwapchainRenderPass();
   void                          QueryFromSwapchain();
   void                          CreateDepthAttachment();
-  void                          CreateSwapchainCommandBuffers();
+  void                          CreateSwapchainCommandBuffers();  
+
+  // Builds the descriptor pool for materials. WARNING: Recalling this function will
+  // destroy old descriptor pool and replace with a new one, be sure to destroy all
+  // descriptor sets previously allocated from old pool before recalling!
+  void                          BuildDescriptorPool(u32 maxCount, u32 maxSets);
 
   HWND                          mWindow;
   Swapchain                     mSwapchain;

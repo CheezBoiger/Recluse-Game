@@ -29,7 +29,7 @@ public:
     , mPoolOwner(VK_NULL_HANDLE) { }
 
 
-  void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout& layout);
+  void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout);
   void                  Free();
   void                  Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
  

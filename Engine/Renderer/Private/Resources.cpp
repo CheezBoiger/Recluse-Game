@@ -22,6 +22,7 @@ std::unordered_map<std::string, FrameBuffer* > FrameBuffers;
 std::unordered_map<std::string, Texture*> RenderTextureMap;
 std::unordered_map<std::string, Sampler*> SamplerMap;
 std::unordered_map<std::string, DescriptorSetLayout*> DescriptorSetLayoutMap;
+std::unordered_map<std::string, DescriptorSet* > DescriptorSetMap;
 
 resource_id_t Resources::idCount = 0;
 
@@ -104,6 +105,16 @@ b8 Resources::RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* 
 }
 
 
+b8 Resources::RegisterDescriptorSet(std::string str, DescriptorSet* set)
+{
+  if (DescriptorSetMap.find(str) == DescriptorSetMap.end()) {
+    DescriptorSetMap[str] = set;
+    return true;
+  }
+  return false;
+}
+
+
 GraphicsPipeline* Resources::GetGraphicsPipeline(std::string str)
 {
   if (GraphicsPipelineMap.find(str) != GraphicsPipelineMap.end()) {
@@ -155,6 +166,15 @@ DescriptorSetLayout* Resources::GetDescriptorSetLayout(std::string str)
 {
   if (DescriptorSetLayoutMap.find(str) != DescriptorSetLayoutMap.end()) {
     return DescriptorSetLayoutMap[str];
+  }
+  return nullptr;
+}
+
+
+DescriptorSet* Resources::GetDescriptorSet(std::string str)
+{
+  if (DescriptorSetMap.find(str) != DescriptorSetMap.end()) {
+    return DescriptorSetMap[str];
   }
   return nullptr;
 }
@@ -234,5 +254,18 @@ DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(std::string str)
   }
 
   return layout;
+}
+
+
+DescriptorSet* Resources::UnregisterDescriptorSet(std::string str)
+{
+  DescriptorSet* set = nullptr;
+
+  if (DescriptorSetMap.find(str) != DescriptorSetMap.end()) {
+    set = DescriptorSetMap[str];
+    DescriptorSetMap.erase(str);
+  }
+
+  return set;
 }
 } // Recluse

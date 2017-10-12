@@ -169,6 +169,8 @@ void VulkanRHI::Initialize(HWND windowHandle)
     R_DEBUG("ERROR: Failed to create secondary command pool!\n");
   }
 
+  BuildDescriptorPool(UINT16_MAX, 5);
+
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
   QueryFromSwapchain();
@@ -190,6 +192,11 @@ void VulkanRHI::CleanUp()
 
   if (mComputeCmdPool) {
     vkDestroyCommandPool(mLogicalDevice.Handle(), mComputeCmdPool, nullptr);
+  }
+
+  if (mDescriptorPool) {
+    vkDestroyDescriptorPool(Device(), mDescriptorPool, nullptr);
+    mDescriptorPool = VK_NULL_HANDLE;
   }
 
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
@@ -228,7 +235,7 @@ void VulkanRHI::QueryFromSwapchain()
     VkExtent2D& extent = mSwapchain.SwapchainExtent();
 
     framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferCI.width = extent.width;
+    framebufferCI. width = extent.width;
     framebufferCI.height = extent.height;
     framebufferCI.attachmentCount = static_cast<u32>(attachments.size());
     framebufferCI.pAttachments = attachments.data();
@@ -737,5 +744,36 @@ void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
   semaphore->CleanUp();
     
   delete semaphore;
+}
+
+
+void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
+{
+  if (mDescriptorPool) {
+    vkDestroyDescriptorPool(Device(), mDescriptorPool, nullptr);
+    mDescriptorPool = VK_NULL_HANDLE;
+  }
+
+  std::array<VkDescriptorPoolSize, 3> poolSizes;
+  poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSizes[0].descriptorCount = maxCount;
+  
+  poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  poolSizes[1].descriptorCount = maxCount;
+
+  poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  poolSizes[2].descriptorCount = maxCount;
+
+  VkDescriptorPoolCreateInfo descriptorPoolCI = { };
+  descriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  descriptorPoolCI.poolSizeCount = static_cast<u32>(poolSizes.size());
+  descriptorPoolCI.pPoolSizes = poolSizes.data();
+  descriptorPoolCI.maxSets = maxSets;
+  descriptorPoolCI.pNext = nullptr;
+  descriptorPoolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+  if (vkCreateDescriptorPool(Device(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to created descriptor pool!");
+  }
 }
 } // Recluse

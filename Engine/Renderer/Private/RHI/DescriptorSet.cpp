@@ -24,10 +24,10 @@ void DescriptorSetLayout::CleanUp()
 }
 
 
-void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout& layout)
+void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout)
 {
   mPoolOwner = pool;
-  VkDescriptorSetLayout layoutRef = layout.Layout();
+  VkDescriptorSetLayout layoutRef = layout->Layout();
   VkDescriptorSetAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = pool;

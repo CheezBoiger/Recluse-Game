@@ -12,6 +12,7 @@ class FrameBuffer;
 class Texture;
 class Sampler;
 class DescriptorSetLayout;
+class DescriptorSet;
 class Material;
 class Mesh;
 
@@ -32,6 +33,7 @@ public:
   Texture*              GetRenderTexture(std::string str);
   Sampler*              GetSampler(std::string str);
   DescriptorSetLayout*  GetDescriptorSetLayout(std::string str);
+  DescriptorSet*        GetDescriptorSet(std::string str);
 
   b8                    RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline);
   b8                    RegisterComputePipeline(std::string str, ComputePipeline* pipeline);
@@ -39,6 +41,7 @@ public:
   b8                    RegisterRenderTexture(std::string str, Texture* texture);
   b8                    RegisterSampler(std::string str, Sampler* sampler);
   b8                    RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout);
+  b8                    RegisterDescriptorSet(std::string str, DescriptorSet* set);
   
   GraphicsPipeline*     UnregisterGraphicsPipeline(std::string str);
   ComputePipeline*      UnregisterComputePipeline(std::string str);
@@ -46,6 +49,7 @@ public:
   Texture*              UnregisterRenderTexture(std::string str);
   Sampler*              UnregisterSampler(std::string str);
   DescriptorSetLayout*  UnregisterDescriptorSetLayout(std::string str);
+  DescriptorSet*        UnregisterDescriptorSet(std::string str);
 };
 
 

@@ -181,11 +181,14 @@ b8 Renderer::Initialize(Window* window)
     viewport.y = 0.0f;
     
     GraphicsPipeline* finalPipeline = gResources().GetGraphicsPipeline("FinalPassPipeline");
+    DescriptorSet* finalRenderTexture = gResources().GetDescriptorSet("OffscreenDescriptorSet");
 
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
       cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
+      VkDescriptorSet finalDescriptorSet = finalRenderTexture->Handle();    
 
+      cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Layout(), 0, 1, &finalDescriptorSet, 0, nullptr);
       VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
       VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
       VkDeviceSize offsets[] = { 0 };
@@ -681,6 +684,32 @@ void Renderer::SetUpGraphicsPipelines()
 
   mRhi->FreeShader(quadVert);
   mRhi->FreeShader(quadFrag);
+
+  DescriptorSet* offscreenImageDescriptor = mRhi->CreateDescriptorSet();
+  offscreenImageDescriptor->Allocate(mRhi->DescriptorPool(), finalSetLayout);
+
+  Texture* pbrColor = gResources().GetRenderTexture("PBRColor");
+  Sampler* pbrSampler = gResources().GetSampler("PBRSampler");
+
+  VkDescriptorImageInfo renderTextureFinal = { };
+  renderTextureFinal.sampler = pbrSampler->Handle();
+  renderTextureFinal.imageView = pbrColor->View();
+  renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  VkWriteDescriptorSet writeInfo = { };
+  writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo.descriptorCount = 1;
+  writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo.dstBinding = 0;
+  writeInfo.pImageInfo = &renderTextureFinal;
+  writeInfo.pBufferInfo = nullptr;
+  writeInfo.pTexelBufferView = nullptr;
+  writeInfo.dstArrayElement = 0;
+  
+
+  offscreenImageDescriptor->Update(1, &writeInfo);
+
+  gResources().RegisterDescriptorSet("OffscreenDescriptorSet", offscreenImageDescriptor);
 }
 
 
@@ -695,11 +724,15 @@ void Renderer::CleanUpGraphicsPipelines()
   mRhi->FreeDescriptorSetLayout(d1);
   mRhi->FreeDescriptorSetLayout(d2);
 
+
   GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline("PBRPipeline");
   mRhi->FreeGraphicsPipeline(pbrPipeline);
 
   DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout("FinalSetLayout");
   mRhi->FreeDescriptorSetLayout(finalSetLayout);
+  
+  DescriptorSet* offscreenDescriptorSet = gResources().UnregisterDescriptorSet("OffscreenDescriptorSet");
+  mRhi->FreeDescriptorSet(offscreenDescriptorSet);
 
   GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline("FinalPassPipeline");
   mRhi->FreeGraphicsPipeline(quadPipeline);
@@ -761,6 +794,22 @@ void Renderer::SetUpRenderTextures()
   cViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 
   pbrDepth->Initialize(cImageInfo, cViewInfo);
+
+  VkSamplerCreateInfo samplerCI = { };
+  samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  samplerCI.magFilter = VK_FILTER_LINEAR;
+  samplerCI.minFilter = VK_FILTER_LINEAR;
+  samplerCI.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  samplerCI.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+  samplerCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCI.mipLodBias = 0.0f;
+  samplerCI.maxAnisotropy = 1.0f;
+  samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  samplerCI.maxLod = 1.0f;
+  samplerCI.minLod = 0.0f;
+
+  pbrSampler->Initialize(samplerCI);
 }
 
 
@@ -814,7 +863,7 @@ void Renderer::Build()
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   VkClearValue clearValues[2];
-  clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
+  clearValues[0].color = { 0.5f, 0.0f, 0.0f, 1.0f };
   clearValues[1].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo pbrRenderPassInfo = { };
