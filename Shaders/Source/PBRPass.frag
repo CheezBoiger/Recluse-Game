@@ -49,8 +49,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
-  mat3  inverseNormalMatrix;
-  float pad0[3];
+  mat4  inverseNormalMatrix;
   bool  hasAlbedo;
   bool  hasMetallic;
   bool  hasRoughness;

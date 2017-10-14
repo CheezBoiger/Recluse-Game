@@ -31,8 +31,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
-  mat3  inverseNormalMatrix;
-  float pad0[3];
+  mat4  normalMatrix;
   bool  hasAlbedo;
   bool  hasMetallic;
   bool  hasRoughness;
@@ -84,7 +83,7 @@ void main()
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
   frag_in.color = color;
-  frag_in.normal = normalize(objBuffer.inverseNormalMatrix * normal.xyz);
+  frag_in.normal = normalize(objBuffer.normalMatrix * normal).xyz;
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 }

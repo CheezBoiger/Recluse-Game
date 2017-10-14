@@ -92,8 +92,7 @@ class Material {
 public:
   struct ObjectBuffer {
     Matrix4 model;
-    Matrix3 inverseNormalMatrix;
-    r32     pad0[3];
+    Matrix4 normalMatrix;
     b8      hasAlbedo;
     b8      hasMetallic;
     b8      hasRoughness;
@@ -122,7 +121,7 @@ public:
 
   DescriptorSet*  Set() { return mObjectBufferSetRef; }
 
-  void            Initialize(VulkanRHI* rhi);
+  void            Initialize(VulkanRHI* rhi, b8 isStatic = true);
   void            CleanUp();
   void            Update();
 
