@@ -9,7 +9,7 @@ set(RECLUSE_ENGINE          "Engine")
 set(RECLUSE_LIB_DIR         ${CMAKE_SOURCE_DIR}/Libs)
 set(RECLUSE_SOURCE_DIR      ${CMAKE_SOURCE_DIR}/Engine)
 set(RECLUSE_TEST_DIR        ${CMAKE_SOURCE_DIR}/Test)
-set(RECLUSE_REGRESSIONS_DIR ${CMAKE_SOURCE_DIR}/Regression)
+set(RECLUSE_REGRESSION_DIR  ${CMAKE_SOURCE_DIR}/Regression)
 
 set(RECLUSE_ASSIMP__DIR     ${RECLUSE_LIB_DIR}/Assimp)
 set(RECLUSE_OZZ_DIR         ${RECLUSE_LIB_DIR}/Ozz)
@@ -76,3 +76,4 @@ find_package(Vulkan)
 # Add directory.
 add_subdirectory(${RECLUSE_SOURCE_DIR})
 add_subdirectory(${RECLUSE_TEST_DIR})
+add_subdirectory(${RECLUSE_REGRESSION_DIR})
