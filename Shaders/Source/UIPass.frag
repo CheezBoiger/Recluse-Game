@@ -5,9 +5,8 @@
 
 
 in FRAG_IN {
-  vec4 position;
+  vec2 position;
   vec2 uv;
-  float pat[2];
 } frag_in;
 
 
