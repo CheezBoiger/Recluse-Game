@@ -125,17 +125,38 @@ public:
   // Create a semaphore object.
   Semaphore*                    CreateVkSemaphore();
 
+  // Free a semaphore that was created by this RHI.
   void                          FreeVkSemaphore(Semaphore* semaphore);
+
+  // Flush out commands that are on hold.
   void                          FlushCommands();
-  // Returns the image index.
+
+  // Returns the image index to the current swapchain surface to render onto.
   void                          AcquireNextImage();
+
+  // Submit a command buffer to the graphics queue.
   void                          GraphicsSubmit(const VkSubmitInfo& submitInfo);
+
+  // Wait until the graphics queue has completely finished all submittals.
   void                          GraphicsWaitIdle();
+
+  // Wait until compute queue has completely finished all submittals.
   void                          ComputeWaitIdle();
+
+  // Wait until present queue has completely finished presenting onto the screen.
   void                          PresentWaitIdle();
+
+  // Wait for the device to finished its submittals.
   void                          DeviceWaitIdle();
+
+  // Submit a command buffer to the compute queue.
   void                          ComputeSubmit(const VkSubmitInfo& submitInfo);
+
+  // Submit the current swapchain command buffer to the gpu. This will essentially be the 
+  // call to the default render pass, which specifies the swapchain surface to render onto.
   void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores);
+  
+  // Present the rendered surface.
   void                          Present();
 
   // Updates the renderer pipeline as a result of window resizing. This will effectively
@@ -150,6 +171,7 @@ public:
   VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
   size_t                        NumOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
   VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
+  VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceLimits; }
 
 private:
   void                          SetUpSwapchainRenderPass();
@@ -169,6 +191,7 @@ private:
   VkCommandPool                 mCmdPool;
   VkCommandPool                 mComputeCmdPool;
   VkDescriptorPool              mDescriptorPool;
+  VkPhysicalDeviceLimits        mPhysicalDeviceLimits;
 
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.

@@ -29,7 +29,8 @@ public:
     Matrix4         cameraProj;
     Vector4         cameraPos;
     r32             coffSH[9];
-    r32             pad0  [3];
+    i32             screenSize[2];
+    i32             pad;
   };
 
   void              Update();

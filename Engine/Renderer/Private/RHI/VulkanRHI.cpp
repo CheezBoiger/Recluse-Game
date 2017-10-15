@@ -72,11 +72,8 @@ b8 VulkanRHI::FindPhysicalDevice()
   std::vector<VkPhysicalDevice>& devices = gContext.EnumerateGpus();
   for (const auto& device : devices) {
     if (SuitableDevice(device)) {
-      VkPhysicalDeviceProperties properties = { };
-      vkGetPhysicalDeviceProperties(device, &properties); 
-      R_DEBUG("GPU: %s\n", properties.deviceName);
-      R_DEBUG("Vendor ID: %d\n", properties.vendorID);
       gPhysicalDevice.Initialize(device);
+      VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
       break;
     }
   }
@@ -103,7 +100,9 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 
 
 void VulkanRHI::Initialize(HWND windowHandle)
-{
+{ 
+  VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
+  mPhysicalDeviceLimits = props.limits;
   if (!windowHandle) {
     R_DEBUG("ERROR: Renderer can not initialize with a null window handle!\n");
     return;

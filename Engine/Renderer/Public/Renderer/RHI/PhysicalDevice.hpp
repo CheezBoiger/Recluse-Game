@@ -26,6 +26,7 @@ public:
                                               i32* presentation, i32* graphics, i32* compute) const;
   u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
   VkPhysicalDeviceFeatures                  GetFeatures() const;
+  VkPhysicalDeviceProperties                GetDeviceProperties() const { return properties; }
   VkPhysicalDeviceMemoryProperties          GetMemoryProperties() const { return memoryProperties; }
   void                                      Initialize(VkPhysicalDevice device);
   void                                      CleanUp();
@@ -34,5 +35,6 @@ public:
 private:
   VkPhysicalDevice                          handle;
   VkPhysicalDeviceMemoryProperties          memoryProperties;
+  VkPhysicalDeviceProperties                properties;
 };
 } // Recluse

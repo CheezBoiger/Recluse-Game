@@ -102,6 +102,7 @@ void PhysicalDevice::Initialize(VkPhysicalDevice device)
 {
   handle = device;
   vkGetPhysicalDeviceMemoryProperties(handle, &memoryProperties);
+  vkGetPhysicalDeviceProperties(handle, &properties);
 }
 
 

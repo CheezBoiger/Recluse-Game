@@ -9,45 +9,48 @@
 namespace Recluse {
 
 
-class FileCache;
-class File;
-class AsyncFile;
-
 // Filesystem module, intended to hold onto files lulz.
 class Filesystem : public EngineModule<Filesystem> {
 public:
+  class FileHandle {
+    u64   size;
+    u8*   buffer;
+  };
+
+  class AsyncFileHandle {
+    b8    finished;
+
+    u64   size;
+    u8*   buffer;
+  };
+
   enum FilePathType {
     Absolute,
     Relative
   };
 
-  Filesystem() 
-    : mCache(nullptr) { }
+  Filesystem() { }
 
 
-  void          OnStartUp() override;
-  void          OnShutDown() override;
-  void          SetCurrentAppDirectory(tchar* applicationPath);
-  void          SaveFileAsync(File* file);
+  void                      OnStartUp() override;
+  void                      OnShutDown() override;
+  void                      SetCurrentAppDirectory(tchar* applicationPath);
+  void                      AppendSearchPath(tchar* path);
 
-  b8            SaveFile(File* file, tchar* path = nullptr);
-  File*         LoadFile(tchar* filepath);
-  File*         CreateFile(tchar* filename);
+  // Current application directory of the executable.
+  const tchar*              CurrentAppDirectory();
 
-  AsyncFile*    LoadFileAsync(tchar* filepath);
+  b8                        FileExists(tchar* filepath);
+  b8                        DirectoryExists(tchar* directorypath);
+  tchar*                    GetApplicationSourcePath();
+  tchar*                    SetApplicationSourcePath(const tchar* srcPath);
+  std::vector<std::string>  DirectoryContents(std::string& path);
+  std::vector<std::string>  SearchPaths() { return mSearchPath; }  
 
-  const tchar*  CurrentAppDirectory();
-
-  b8            FileExists(tchar* filepath);
-  b8            DirectoryExists(tchar* directorypath);
-  tchar*        GetApplicationSourcePath();
-  tchar*        SetApplicationSourcePath(const std::string& srcPath);
-
-  
 private:
-  FileCache*  mCache;
-  std::string mCurrentDirectoryPath;
-  std::string mAppSourcePath;
+  std::string               mCurrentDirectoryPath;
+  std::string               mAppSourcePath;
+  std::vector<std::string>  mSearchPath;
 };
 
 

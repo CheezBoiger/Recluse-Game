@@ -1,0 +1,68 @@
+// Copyright (c) 2017 Recluse Project. All rights reserved.
+#version 430
+#extension GL_ARB_separate_shader_objects   : enable
+#extension GL_ARB_shading_language_420pack  : enable
+#extension GL_ARB_compute_shader            : enable
+
+
+struct PointLight {
+  vec4  position;
+  vec4  color;
+  float range;
+  float pad0[3];
+  bool enable;
+  bool pad1[15];
+};
+
+
+struct LightGridInfo {
+  // info.x = offset
+  // info.y = count
+  vec2 info;
+  vec2 pad;
+};
+
+
+#define WORKGROUP_SIZE        1024
+#define MAX_LIGHTS            512
+
+
+layout (set = 0, binding = 0) uniform GlobalBuffer {
+  mat4  view;
+  mat4  proj;
+  mat4  viewProj;
+  mat4  cameraView;
+  mat4  cameraProj;
+  vec4  cameraPos;
+  float coffSH[9];
+  ivec2 screenSize;
+  int  pad;
+} gWorldBuffer;
+
+
+layout (set = 0, binding = 0) buffer LightGrid {
+  LightGridInfo light_grid[];
+};
+
+
+layout (set = 0, binding = 1) buffer LightIndices {
+  vec4 light_indices[];
+};
+
+
+layout (set = 0, binding = 2) buffer Lights {
+  PointLight light_lookup[MAX_LIGHTS];
+};
+
+
+layout (set = 0, binding = 3) uniform sampler2D depth;
+
+
+layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 64) in;
+
+
+void main()
+{
+  ivec3 tex_coord = ivec3(gWorldBuffer.screenSize.xy, 0.0);
+  
+}

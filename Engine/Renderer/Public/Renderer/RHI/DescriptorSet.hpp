@@ -31,6 +31,9 @@ public:
 
   void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout);
   void                  Free();
+
+  // Updates the descriptor set with the given info. This also automatically sets the
+  // dstSet parameter with each decriptor set write info.
   void                  Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
  
   VkDescriptorSet       Handle() const { return mDescriptorSet; }
