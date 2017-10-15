@@ -6,6 +6,7 @@ Equilibrium
 
 Futuristic
 Dark
+Epic
 Emotional
 Lone
 Power
@@ -37,3 +38,7 @@ law and order. Company loses hold on its own technology as it begins to increase
 its own goal and gain by inadvertely tasking its own force of androids to target both terrorist and
 police organizations. Secret is kept within the company, but it is at this time that we begin our story,
 in which the company is about to lose complete control of its own technology.
+
+You are a machine, only built to follow orders. Your ultimate features involve using your sensors to detect lies 
+and emotion against suspects and potentials. You posses human interaction the likes of which no android task force 
+has achieved, and is your creator's greatest weapon. 

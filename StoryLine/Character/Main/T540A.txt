@@ -4,4 +4,19 @@ Special Tactics v540 (Elise) Alpha edition
 Newest and most highly skilled android task force focused on the most severe of crimes.
 The name Elise derives from one of Ludwig Van Beethoven's most popular compositions "Fur Elise",
 or "For Elise." Believed to be a miscorrection, the identity of elise is not known, but it struck
-a feeling of beauty and power, something one of the designers had done
+a feeling of beauty and power, something one of the designers had believed when listening to the 
+classical work while figuring out the architecture of the alpha android layout.
+
+You are T540A.03, one of 5 T540A android task forces in your group. You are within the only task force
+current built, and the most highly advanced in terms of technology. Vivia Technologies has bestowed its
+most power tool, human emotion detection, allowing you and your squad to quickly detect lies and possible
+hints that may lead to a suspect's hidden secrets. You are capable of understanding humans, while also 
+figuring out what they mean. This leads you to wonder if these emotion that you can understand, can you 
+emit the same actions as a human?
+
+
+Personal Challenge: 
+	You question your creation, your purpose. Are you not human too? 
+	Of course not, but you wonder why you do not posses the ability decide whether an order from your 
+	creators are justified, or not. Your tasks, do they justify the cause of action, or are they just
+	a blatant attemp at order and power? Is it something more sinister?
