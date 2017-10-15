@@ -5,7 +5,7 @@
 
 struct FRAG_IN {
   vec2 position;
-  vec2 uv
+  vec2 uv;
 } frag_in;
 
 
@@ -21,17 +21,16 @@ layout (set = 0, binding = 1) uniform HDR {
 
 layout (location = 0) out vec4 fragColor;
 
-
 void main()
 {
   // Reference: https://github.com/JoeyDeVries/LearnOpenGL/blob/master/src/5.advanced_lighting/7.bloom/7.bloom_final.fs
   //
-  vec3 color = texture(surfaceSurface, uv).rgb;
-  vec3 bloom = texture(bloomSurface, uv).rgb;
+  vec3 color = texture(sceneSurface, frag_in.uv).rgb;
+  vec3 bloom = texture(bloomSurface, frag_in.uv).rgb;
   
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (bloomEnabled) { color += bloom; }
+  if (hdr.bloomEnabled) { color += bloom; }
   
   // Extended exposure pass with Reinhard tone mapping. Gamma correction
   // is also enabled.
