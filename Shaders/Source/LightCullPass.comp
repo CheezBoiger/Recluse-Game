@@ -40,22 +40,22 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
-layout (set = 0, binding = 0) buffer LightGrid {
+layout (set = 1, binding = 0) buffer LightGrid {
   LightGridInfo light_grid[];
 };
 
 
-layout (set = 0, binding = 1) buffer LightIndices {
+layout (set = 1, binding = 1) buffer LightIndices {
   vec4 light_indices[];
 };
 
 
-layout (set = 0, binding = 2) buffer Lights {
+layout (set = 1, binding = 2) buffer Lights {
   PointLight light_lookup[MAX_LIGHTS];
 };
 
 
-layout (set = 0, binding = 3) uniform sampler2D depth;
+layout (set = 1, binding = 3) uniform sampler2D depth;
 
 
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 64) in;
