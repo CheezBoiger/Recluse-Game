@@ -49,6 +49,7 @@ VulkanRHI::VulkanRHI()
   , mDescriptorPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
 {
+  mSwapchainInfo.mComplete = false;
 }
 
 
@@ -479,7 +480,7 @@ void VulkanRHI::DeviceWaitIdle()
 void VulkanRHI::CreateSwapchainCommandBuffers()
 {
   mSwapchainInfo.mSwapchainCmdBuffers.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
-  
+
   for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
     CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
     cmdBuffer.SetOwner(mLogicalDevice.Handle());
@@ -509,6 +510,7 @@ void VulkanRHI::CreateSwapchainCommandBuffers()
       }
     cmdBuffer.End();
   }
+  mSwapchainInfo.mComplete = true;
 }
 
 
@@ -518,7 +520,7 @@ void VulkanRHI::RebuildCommandBuffers()
     CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
     cmdBuffer.Free();
   }
-
+  mSwapchainInfo.mComplete = false;
   CreateSwapchainCommandBuffers();
 }
 

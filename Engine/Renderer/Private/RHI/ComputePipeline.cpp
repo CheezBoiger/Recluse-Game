@@ -6,15 +6,30 @@
 namespace Recluse {
 
 
-void ComputePipeline::Initialize(const VkComputePipelineCreateInfo& info,
+void ComputePipeline::Initialize(VkComputePipelineCreateInfo& info,
     const VkPipelineLayoutCreateInfo& layout)
 {
-  
+  if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create compute pipeline layout!\n");
+    return;
+  }
+
+  info.layout = mLayout;
+
+  if (vkCreateComputePipelines(mOwner, VK_NULL_HANDLE, 1, &info, nullptr, &mPipeline) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to create compute pipeline!\n");
+  }
 }
 
 
 void ComputePipeline::CleanUp()
 {
-  
+  if (mLayout) {
+    vkDestroyPipelineLayout(mOwner, mLayout, nullptr);
+  }
+
+  if (mPipeline) {
+    vkDestroyPipeline(mOwner, mPipeline, nullptr);
+  }
 }
 } // Recluse

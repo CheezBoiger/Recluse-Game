@@ -173,6 +173,7 @@ public:
   VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
   VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceLimits; }
 
+  b8                            CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
 private:
   void                          SetUpSwapchainRenderPass();
   void                          QueryFromSwapchain();
@@ -198,6 +199,7 @@ private:
   struct {
     std::vector<VkFramebuffer>  mSwapchainFramebuffers;
     std::vector<CommandBuffer>  mSwapchainCmdBuffers;
+    b8                          mComplete;
     VkRenderPass                mSwapchainRenderPass;
     VkImage                     mDepthAttachment;
     VkImageView                 mDepthView;

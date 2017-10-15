@@ -107,7 +107,7 @@ void Renderer::Render()
 
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-    while (mOffscreen.cmdBuffer->Recording()) { }
+  while (mOffscreen.cmdBuffer->Recording() || !mRhi->CmdBuffersComplete()) {}
 
     mRhi->GraphicsSubmit(offscreenSI);
 
@@ -863,7 +863,7 @@ void Renderer::Build()
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   VkClearValue clearValues[2];
-  clearValues[0].color = { 0.5f, 0.0f, 0.0f, 1.0f };
+  clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
   clearValues[1].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo pbrRenderPassInfo = { };
@@ -990,6 +990,14 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
 }
 
 
+void Renderer::BuildAsync()
+{
+  // TODO(): building the command buffers asyncronously requires us
+  // to allocate temp commandbuffers, build them, and then swap them with
+  // the previous commandbuffers.
+}
+
+
 void Renderer::UIOverlay::Render()
 {
   // Ignore if no reference to the rhi.
@@ -1009,6 +1017,6 @@ void Renderer::UIOverlay::Initialize(VulkanRHI* rhi)
 
 void Renderer::UIOverlay::CleanUp()
 {
-  
 }
+
 } // Recluse
