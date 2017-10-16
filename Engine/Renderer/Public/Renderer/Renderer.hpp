@@ -74,19 +74,47 @@ public:
   void              BeginFrame();
   void              EndFrame();
 
+  // Creates a mesh object of which to submit to render.
+  // Be sure to call FreeMesh() if done with this mesh object.
   Mesh*             CreateMesh();
+
+  // Creates a material object to submit material samples of which to render a
+  // Mesh. Be sure to call FreeMaterial() if done with this material object.
   Material*         CreateMaterial();
+
   GlobalMaterial*   CreateGlobalMaterial();
   LightMaterial*    CreateLightMaterial();
   DirectionLight*   CreateDirectionLight();
   PointLight*       CreatePointLight();
   SpotLight*        CreateSpotLight();
 
+  // Frees up the allocated mesh object.
+  void              FreeMesh(Mesh* mesh);
+
+  // Frees up the allocated material object.
+  void              FreeMaterial(Material* material);
+
+  // Frees up the allocated global material object.
+  void              FreeGlobalMaterial(GlobalMaterial* material);
+
+  // Offline enviroment cube map baking. This is used for the surrounding 
+  // scene around the mesh surface we are rendering.
   CubeMap*          BakeEnvironmentMap(const Vector3& position);
+
+  // Offline light probe baking. We can effectively then use this probe in the scene
+  // to render our mesh object with fast global illumination.
   LightProbe*       BakeLightProbe(const CubeMap* envmap);
+
+  // Window reference.
   Window*           WindowRef() { return mWindowHandle; }
   UIOverlay*        Overlay() { return &mUI; }  
+
+  // Check if this renderer is initialized with the window reference given.
   b8                Initialized() { return mInitialized; }
+
+  // Get the rendering hardware interface used in this renderer.
+  VulkanRHI*        RHI() { return mRhi; }
+
 private:
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();

@@ -9,12 +9,14 @@
 namespace Recluse {
 
 
+class VulkanRHI;
+
 class Mesh {
 public:
   Mesh() { }
 
-  void          Initialize(size_t elementCount, void* data, 
-                  size_t indexCount = 0, void* indices = nullptr);
+  void          Initialize(size_t elementCount, size_t sizeType, void* data, 
+                  b8 isStatic, size_t indexCount = 0, void* indices = nullptr);
   void          CleanUp();
 
   VertexBuffer* GetVertexBuffer() { return &mVertexBuffer; }
@@ -29,6 +31,7 @@ public:
   b8            Renderable() const { return mRenderable; }
   b8            Transparent() const { return mTransparent; }
   b8            Translucent() const { return mTranslucent; }
+  b8            Static() const { return mStatic; }
 
 private:
   VertexBuffer  mVertexBuffer;
@@ -39,5 +42,10 @@ private:
 
   b8            mTransparent;
   b8            mTranslucent;
+  b8            mStatic;
+  
+  VulkanRHI*    mRhi;
+  
+  friend class Renderer;
 };
 } // Recluse

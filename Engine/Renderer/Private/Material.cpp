@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Material.hpp"
+#include "Resources.hpp"
 
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Buffer.hpp"
@@ -28,11 +29,10 @@ Material::Material()
 }
 
 
-void Material::Initialize(VulkanRHI* rhi, b8 isStatic)
+void Material::Initialize(b8 isStatic)
 {
-  mRhi = rhi;
-  
-  mObjectBuffer = rhi->CreateBuffer();
+  // Create the render buffer for the object.
+  mObjectBuffer = mRhi->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
   VkBufferCreateInfo objectCI = { };
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -41,6 +41,11 @@ void Material::Initialize(VulkanRHI* rhi, b8 isStatic)
 
   mObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
+  // Now create the set to update to.
+  mObjectBufferSet = mRhi->CreateDescriptorSet();
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRObjectMaterialLayout");
+  mObjectBufferSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
+
   if (!isStatic) {
     VkBufferCreateInfo bonesCI = { };
     VkDeviceSize bonesSize = sizeof(BonesBuffer);
@@ -48,7 +53,7 @@ void Material::Initialize(VulkanRHI* rhi, b8 isStatic)
     bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bonesCI.size = bonesSize;    
 
-    mBonesBuffer = rhi->CreateBuffer();
+    mBonesBuffer = mRhi->CreateBuffer();
     mBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     mObjectData.hasBones = true;
   }
@@ -59,6 +64,10 @@ void Material::CleanUp()
 {
   if (mObjectBuffer) {
     mRhi->FreeBuffer(mObjectBuffer);
+  }
+
+  if (mObjectBufferSet) {
+    mRhi->FreeDescriptorSet(mObjectBufferSet);
   }
 
   if (mBonesBuffer) {
@@ -169,7 +178,36 @@ void Material::Update()
     writeSets[7].descriptorCount = 1;
   }
 
-  mObjectBufferSetRef->Update((mBonesBuffer ? u32(writeSets.size()) : u32(writeSets.size()) - 1), writeSets.data());
+  if (!mObjectBufferSet) {
+    R_DEBUG("ERROR: Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!");
+    return;
+  } 
+
+  mObjectBufferSet->Update((mBonesBuffer ? u32(writeSets.size()) : u32(writeSets.size()) - 1), writeSets.data());
+}
+
+
+void GlobalMaterial::Initialize()
+{
+  // TODO
+}
+
+
+void LightMaterial::Initialize()
+{
+  // TODO
+}
+
+
+void GlobalMaterial::CleanUp()
+{
+  // TODO
+}
+
+
+void LightMaterial::CleanUp()
+{
+  // TODO
 }
 
 

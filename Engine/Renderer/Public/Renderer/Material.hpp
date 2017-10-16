@@ -34,7 +34,7 @@ public:
   };
 
   void              Update();
-  void              Initialize(VulkanRHI* rhi);
+  void              Initialize();
   void              CleanUp();  
 
   DescriptorSet*    Set() { return mDescriptorSet; }
@@ -45,6 +45,8 @@ private:
   Buffer*           mGlobalBuffer;
   VulkanRHI*        mRhi;
   GlobalBuffer      mGlobal;
+
+  friend class Renderer;
 };
 
 
@@ -72,18 +74,26 @@ public:
     PointLight        pointLights[512];
   };
 
+  void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
+  void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
   void              Update();
-  void              Initialize(VulkanRHI* rhi);
+  void              Initialize();
   void              CleanUp();  
 
   LightBuffer*      Data() { return &mLights; }
   DescriptorSet*    Set() { return mDescriptorSet; }
 
+  Texture*          ShadowMap() { return mShadowMap; }
+  Sampler*          ShadowSampler() { return mShadowSampler; }
 private:
   DescriptorSet*    mDescriptorSet;
   Buffer*           mLightBuffer;
+  Texture*          mShadowMap;
+  Sampler*          mShadowSampler;
   LightBuffer       mLights;
   VulkanRHI*        mRhi;
+
+  friend class Renderer;
 };
 
 
@@ -120,9 +130,9 @@ public:
   ObjectBuffer*   ObjectData() { return &mObjectData; }
   BonesBuffer*    BonesData() { return &mBonesData; }
 
-  DescriptorSet*  Set() { return mObjectBufferSetRef; }
+  DescriptorSet*  Set() { return mObjectBufferSet; }
 
-  void            Initialize(VulkanRHI* rhi, b8 isStatic = true);
+  void            Initialize(b8 isStatic = true);
   void            CleanUp();
   void            Update();
 
@@ -130,7 +140,7 @@ private:
   ObjectBuffer    mObjectData;
   BonesBuffer     mBonesData;
 
-  DescriptorSet*  mObjectBufferSetRef;
+  DescriptorSet*  mObjectBufferSet;
 
   Buffer*         mObjectBuffer;
   Buffer*         mBonesBuffer;
@@ -143,5 +153,7 @@ private:
 
   Sampler*        mSampler;
   VulkanRHI*      mRhi;
+
+  friend class Renderer;
 };
 } // Recluse

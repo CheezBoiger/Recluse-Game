@@ -7,6 +7,7 @@
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 #include "Material.hpp"
+#include "Mesh.hpp"
 #include "UserParams.hpp"
 
 #include "RHI/VulkanRHI.hpp"
@@ -20,6 +21,8 @@
 #include "Core/Core.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Core/Exception.hpp"
+
+#include <array>
 
 namespace Recluse {
 
@@ -485,16 +488,17 @@ void Renderer::SetUpGraphicsPipelines()
 
   graphicsPipeline.basePipelineHandle = VK_NULL_HANDLE;
 
-  VkDescriptorSetLayoutBinding layoutBinding0 = { };
-  layoutBinding0.binding = 0;
-  layoutBinding0.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  layoutBinding0.descriptorCount = 1;
-  layoutBinding0.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  std::array<VkDescriptorSetLayoutBinding, 1> objLayoutBindings;
+  objLayoutBindings[0].binding = 0;
+  objLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  objLayoutBindings[0].descriptorCount = 1;
+  objLayoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  objLayoutBindings[0].pImmutableSamplers = nullptr;
 
   VkDescriptorSetLayoutCreateInfo layout0 = { };
   layout0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;  
-  layout0.bindingCount = 1;
-  layout0.pBindings = &layoutBinding0;
+  layout0.bindingCount = static_cast<u32>(objLayoutBindings.size());
+  layout0.pBindings = objLayoutBindings.data();
 
   DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
   d0->Initialize(layout0);
@@ -563,16 +567,23 @@ void Renderer::SetUpGraphicsPipelines()
   DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
   d1->Initialize(layout1);
 
-  VkDescriptorSetLayoutBinding bind2 = { };
-  bind2.binding = 0;
-  bind2.descriptorCount = 1;
-  bind2.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  bind2.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  std::array<VkDescriptorSetLayoutBinding, 2> lightLayoutBindings;
+  lightLayoutBindings[0].binding = 0;
+  lightLayoutBindings[0].descriptorCount = 1;
+  lightLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  lightLayoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  lightLayoutBindings[0].pImmutableSamplers = nullptr;
+
+  lightLayoutBindings[1].binding = 1;
+  lightLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  lightLayoutBindings[1].descriptorCount = 1;
+  lightLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  lightLayoutBindings[1].pImmutableSamplers = nullptr;
 
   VkDescriptorSetLayoutCreateInfo layout2 = { };
   layout2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout2.bindingCount = 1;
-  layout2.pBindings = &bind2;
+  layout2.bindingCount = static_cast<u32>(lightLayoutBindings.size());
+  layout2.pBindings = lightLayoutBindings.data();
 
   DescriptorSetLayout* d2 = mRhi->CreateDescriptorSetLayout();
   d2->Initialize(layout2);
@@ -935,7 +946,23 @@ void Renderer::Build()
 
 Mesh* Renderer::CreateMesh()
 {
-  return nullptr;
+  Mesh* mesh = new Mesh();
+  mesh->mRhi = mRhi;
+  return mesh;
+}
+
+
+void Renderer::FreeMesh(Mesh* mesh)
+{
+  mesh->CleanUp();
+  delete mesh;
+}
+
+
+void Renderer::FreeMaterial(Material* material)
+{
+  material->CleanUp();
+  delete material;
 }
 
 
@@ -995,6 +1022,30 @@ void Renderer::BuildAsync()
   // TODO(): building the command buffers asyncronously requires us
   // to allocate temp commandbuffers, build them, and then swap them with
   // the previous commandbuffers.
+}
+
+
+Material* Renderer::CreateMaterial()
+{
+  Material* material = new Material();
+  material->mRhi = mRhi;
+  return material;
+}
+
+
+GlobalMaterial* Renderer::CreateGlobalMaterial()
+{
+  GlobalMaterial* gMat = new GlobalMaterial();
+  gMat->mRhi = mRhi;
+
+  return gMat;
+}
+
+
+void Renderer::FreeGlobalMaterial(GlobalMaterial* material)
+{
+  material->CleanUp();
+  delete material;
 }
 
 

@@ -74,6 +74,8 @@ layout (set = 2, binding = 0) uniform LightBuffer {
   PointLight      pointLights[MAX_LIGHTS];
 } gLightBuffer;
 
+layout (set = 2, binding = 1) uniform sampler2D globalShadow;
+
 
 // TODO(): Need to addin gridLights buffer, for light culling, too.
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
 #include "Renderer/UserParams.hpp"
+#include "Renderer/CmdList.hpp"
 
 #include <stdio.h>
 
