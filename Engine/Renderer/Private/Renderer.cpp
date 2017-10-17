@@ -900,14 +900,14 @@ void Renderer::Build()
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
       if (mCmdList) {
         for (size_t i = 0; i < mCmdList->Size(); ++i) {
-          RenderCmd* renderCmd = mCmdList->Get(i);
+          RenderCmd& renderCmd = mCmdList->Get(i);
 
           // Extract material info. This is optional.
-          if (renderCmd->materialId) {
-            MaterialCache.push_back(renderCmd->materialId);
+          if (renderCmd.materialId) {
+            MaterialCache.push_back(renderCmd.materialId);
 
-            if (renderCmd->meshId) {
-              Material* mat = renderCmd->materialId;
+            if (renderCmd.meshId) {
+              Material* mat = renderCmd.materialId;
               VkDescriptorSet descriptorSets[] = { 
                 mGlobalMat->Set()->Handle(), 
                 mat->Set()->Handle(), 
@@ -920,9 +920,9 @@ void Renderer::Build()
           }
 
           // Extract Mesh info. This is optional. 
-          if (renderCmd->meshId && renderCmd->meshId->Renderable() && renderCmd->meshId->Visible()) {
-            VertexBuffer* vertexBuffer = renderCmd->meshId->GetVertexBuffer();
-            IndexBuffer* indexBuffer = renderCmd->meshId->GetIndexBuffer();
+          if (renderCmd.meshId && renderCmd.meshId->Renderable() && renderCmd.meshId->Visible()) {
+            VertexBuffer* vertexBuffer = renderCmd.meshId->GetVertexBuffer();
+            IndexBuffer* indexBuffer = renderCmd.meshId->GetIndexBuffer();
             VkBuffer vb = vertexBuffer->Handle()->Handle();
             VkBuffer ib = indexBuffer->Handle()->Handle();
 
@@ -994,9 +994,18 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   mRhi->DeviceWaitIdle();
 
   if (mWindowHandle->Width() <= 0 || mWindowHandle <= 0) return;
+  VkPresentModeKHR presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+
+  if (params) {
+    switch (params->presentMode) {
+      case SINGLE_BUFFERING: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
+      case DOUBLE_BUFFERING: presentMode = VK_PRESENT_MODE_FIFO_KHR; break;
+      case TRIPLE_BUFFERING: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
+    }
+  }
 
   // Triple buffering atm, we will need to use user params to switch this.
-  mRhi->ReConfigure(VK_PRESENT_MODE_MAILBOX_KHR, mWindowHandle->Width(), mWindowHandle->Height());
+  mRhi->ReConfigure(presentMode, mWindowHandle->Width(), mWindowHandle->Height());
 
   mUI.CleanUp();
 

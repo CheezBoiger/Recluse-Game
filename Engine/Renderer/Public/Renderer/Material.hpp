@@ -108,9 +108,10 @@ public:
     b8      hasMetallic;
     b8      hasRoughness;
     b8      hasNormal;
+    b8      hasEmissive;
     b8      hasAO;
     b8      hasBones;
-    b8      pad1[10];
+    b8      pad1[9];
   };
 
   struct BonesBuffer {

@@ -55,9 +55,10 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   bool  hasMetallic;
   bool  hasRoughness;
   bool  hasNormal;
+  bool  hasEmissive;
   bool  hasAO;
   bool  hasBones;
-  bool  pad1[10];
+  bool  pad1[9];
 } objBuffer;
 
 
@@ -166,6 +167,7 @@ void main()
 {
   vec3 fragAlbedo = vec3(0.0);
   vec3 fragNormal = vec3(0.0);
+  vec4 fragEmissive = vec4(0.0);
   
   float fragMetallic = 0.0;
   float fragRoughness = 0.0;
@@ -190,6 +192,10 @@ void main()
   } else {
     fragNormal = frag_in.normal;
   }
+  
+  if (objBuffer.hasEmissive) {
+    fragEmissive = texture(emissive, frag_in.texcoord0);
+  } 
   
   if (objBuffer.hasAO) {
     fragAO = texture(ao, frag_in.texcoord0).r;

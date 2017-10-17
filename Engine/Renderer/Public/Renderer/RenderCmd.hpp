@@ -23,6 +23,7 @@ struct RenderCmd {
 
   Mesh*     meshId;
   Material* materialId;
+
   b8        debug;
 };
 } // Recluse

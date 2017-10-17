@@ -37,9 +37,10 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   bool  hasMetallic;
   bool  hasRoughness;
   bool  hasNormal;
+  bool  hasEmissive;
   bool  hasAO;
   bool  hasBones; 
-  bool  pad1[10];
+  bool  pad1[9];
 } objBuffer;
 
 

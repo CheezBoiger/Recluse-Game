@@ -1,7 +1,13 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
+#include "Game/Geometry/Cube.hpp"
+
+#include "Renderer/Vertex.hpp"
 #include "Renderer/UserParams.hpp"
 #include "Renderer/CmdList.hpp"
+#include "Renderer/RenderCmd.hpp"
+#include "Renderer/Mesh.hpp"
+#include "Renderer/Material.hpp"
 
 #include <stdio.h>
 
@@ -27,6 +33,7 @@ void WindowResized(Window* window, i32 width, i32 height)
   }
 }
 
+SkinnedVertex cube[36];
 
 int main(int c, char* argv[])
 {
@@ -50,13 +57,43 @@ int main(int c, char* argv[])
 
   gRenderer().Initialize(&window);
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
+  ///////////////////////////////////////////////////////////////////////////////////////
   // build the scene for the render. Should our cmd list be updated, you need to call
-  // this function to update the scene.
+  // this function to update the scene. This is usually not hardcoded like this, as it 
+  // is supposed to demonstrate how you can build a mesh and material outside the game 
+  // loop.
+  ///////////////////////////////////////////////////////////////////////////////////////
+  auto cubeData = Cube::MeshInstance();
+  auto cubeIndices = Cube::IndicesInstance();
+  Mesh* cubeMesh = gRenderer().CreateMesh();
+  cubeMesh->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
+ 
+  Material* cubeMaterial = gRenderer().CreateMaterial();
+  Material::ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
+  cubeInfo->hasAlbedo = false;
+  cubeInfo->hasBones = false;
+  cubeInfo->hasNormal = false;
+  cubeInfo->hasMetallic = false;
+  cubeInfo->hasRoughness = false;
+  cubeInfo->hasAO = false;
+  cubeInfo->hasEmissive = false;
+  cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, -2.0f));
+
+  cubeMaterial->Initialize();
+  cubeMaterial->Update();
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  CmdList list;
+  list.Resize(1);
+
+  gRenderer().PushCmdList(&list);
   gRenderer().Build();
   r64 timeAccumulator = 0.0;
 
-
+  ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
+  ///////////////////////////////////////////////////////////////////////////////////////
   while (!window.ShouldClose()) {
     Time::Update();
 
@@ -85,6 +122,13 @@ int main(int c, char* argv[])
 
     Window::PollEvents();
   }
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+
+  // Free up resources that were allocated.
+  gRenderer().FreeMaterial(cubeMaterial);
+  gRenderer().FreeMesh(cubeMesh);
   
   gUI().ShutDown();
   gAnimation().ShutDown();

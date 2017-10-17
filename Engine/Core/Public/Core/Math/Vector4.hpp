@@ -28,7 +28,7 @@ struct Vector4 {
 
   void    operator*=(const r32 scaler);
   void    operator/=(const r32 scaler);
-  
+
   r32     Magnitude() const;
   r32     Dot(const Vector4& other) const;
 };
