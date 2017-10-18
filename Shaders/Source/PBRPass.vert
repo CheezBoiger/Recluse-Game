@@ -21,8 +21,6 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
-  mat4  cameraView;
-  mat4  cameraProj;
   vec4  cameraPos;
   float coffSH[9];
   ivec2 screenSize;
@@ -33,14 +31,14 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
-  bool  hasAlbedo;
-  bool  hasMetallic;
-  bool  hasRoughness;
-  bool  hasNormal;
-  bool  hasEmissive;
-  bool  hasAO;
-  bool  hasBones; 
-  bool  pad1[9];
+  int   hasAlbedo;
+  int   hasMetallic;
+  int   hasRoughness;
+  int   hasNormal;
+  int   hasEmissive;
+  int   hasAO;
+  int   hasBones; 
+  int   pad;
 } objBuffer;
 
 
@@ -70,7 +68,7 @@ void main()
   vec4 worldPosition = position;
  
   // Compute the bone transform 
-  if (objBuffer.hasBones) {
+  if (objBuffer.hasBones >= 1) {
     mat4 boneTransform  = boneBuffer.bones[boneIDs[0]] * boneWeights[0];
     boneTransform      += boneBuffer.bones[boneIDs[1]] * boneWeights[1];
     boneTransform      += boneBuffer.bones[boneIDs[2]] * boneWeights[2];

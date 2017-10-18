@@ -39,8 +39,6 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
-  mat4  cameraView;
-  mat4  cameraProj;
   vec4  cameraPos;
   float coffSH[9];
   ivec2 screenSize;
@@ -50,15 +48,15 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
-  mat4  inverseNormalMatrix;
-  bool  hasAlbedo;
-  bool  hasMetallic;
-  bool  hasRoughness;
-  bool  hasNormal;
-  bool  hasEmissive;
-  bool  hasAO;
-  bool  hasBones;
-  bool  pad1[9];
+  mat4  normalMatrix;
+  int   hasAlbedo;
+  int   hasMetallic;
+  int   hasRoughness;
+  int   hasNormal;
+  int   hasEmissive;
+  int   hasAO;
+  int   hasBones; 
+  int   pad;
 } objBuffer;
 
 
@@ -173,31 +171,31 @@ void main()
   float fragRoughness = 0.0;
   float fragAO = 0.0;
   
-  if (objBuffer.hasAlbedo) {
+  if (objBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0).rgb, vec3(2.2));
   } else {
     fragAlbedo = frag_in.color.rgb;
   }
     
-  if (objBuffer.hasMetallic) {
+  if (objBuffer.hasMetallic >= 1) {
     fragMetallic = texture(metallic, frag_in.texcoord0).r;
   }
   
-  if (objBuffer.hasRoughness) {
+  if (objBuffer.hasRoughness >= 1) {
     fragRoughness = texture(roughness, frag_in.texcoord0).r;
   }
   
-  if (objBuffer.hasNormal) {
+  if (objBuffer.hasNormal >= 1) {
     fragNormal = GetNormal(frag_in.normal, frag_in.position, frag_in.texcoord0);
   } else {
     fragNormal = frag_in.normal;
   }
   
-  if (objBuffer.hasEmissive) {
+  if (objBuffer.hasEmissive >= 1) {
     fragEmissive = texture(emissive, frag_in.texcoord0);
   } 
   
-  if (objBuffer.hasAO) {
+  if (objBuffer.hasAO >= 1) {
     fragAO = texture(ao, frag_in.texcoord0).r;
   }
     

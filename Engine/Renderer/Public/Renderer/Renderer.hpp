@@ -73,6 +73,7 @@ public:
 
   void              BeginFrame();
   void              EndFrame();
+  void              WaitIdle();
 
   // Creates a mesh object of which to submit to render.
   // Be sure to call FreeMesh() if done with this mesh object.
@@ -96,6 +97,9 @@ public:
 
   // Frees up the allocated global material object.
   void              FreeGlobalMaterial(GlobalMaterial* material);
+
+  // Frees up the allocated light material object.
+  void              FreeLightMaterial(LightMaterial* material);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.

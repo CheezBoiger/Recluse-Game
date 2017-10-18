@@ -33,8 +33,6 @@ void WindowResized(Window* window, i32 width, i32 height)
   }
 }
 
-SkinnedVertex cube[36];
-
 int main(int c, char* argv[])
 {
   // NOTE(): Always start up the core first, before starting anything else up.
@@ -63,6 +61,20 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
+  GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
+  GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
+  // TODO(): Some inconsistencies in the math!
+  gBuffer->cameraPos = Vector4(0.0f, 1.0f, 1.0f, 1.0f);
+  gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
+  gBuffer->view = Matrix4::LookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, -1.0f), Vector3::UP);
+  gBuffer->viewProj = gBuffer->view * gBuffer->proj;
+  globalMat->Initialize();
+  globalMat->Update();
+
+  LightMaterial* lightMat = gRenderer().CreateLightMaterial();
+  lightMat->Initialize();
+  lightMat->Update();
+
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   Mesh* cubeMesh = gRenderer().CreateMesh();
@@ -78,17 +90,27 @@ int main(int c, char* argv[])
   cubeInfo->hasAO = false;
   cubeInfo->hasEmissive = false;
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, -2.0f));
+  cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
+  cubeInfo->normalMatrix[3][0] = 0.0f;
+  cubeInfo->normalMatrix[3][1] = 0.0f;
+  cubeInfo->normalMatrix[3][2] = 0.0f;
+  cubeInfo->normalMatrix[3][3] = 1.0f;
 
   cubeMaterial->Initialize();
-  cubeMaterial->Update();
+  cubeMaterial->Update();     // 0x42
 
   ///////////////////////////////////////////////////////////////////////////////////////
 
   CmdList list;
   list.Resize(1);
+  list[0].materialId = cubeMaterial;
+  list[0].meshId = cubeMesh;
 
   gRenderer().PushCmdList(&list);
+  gRenderer().SetGlobalMaterial(globalMat);
+  gRenderer().SetLightMaterial(lightMat);
   gRenderer().Build();
+
   r64 timeAccumulator = 0.0;
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +133,12 @@ int main(int c, char* argv[])
       gPhysics().UpdateState(dt);
       timeAccumulator -= Time::FixTime;
     }
-
+    cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0, Time::CurrentTime() * 0.5, -3.0f));
+    cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
+    cubeInfo->normalMatrix[3][0] = 0.0f;
+    cubeInfo->normalMatrix[3][1] = 0.0f;
+    cubeInfo->normalMatrix[3][2] = 0.0f;
+    cubeInfo->normalMatrix[3][3] = 1.0f;
     // Syncronize engine modules, as they run on threads.
     gCore().Sync();
     gRenderer().Render();
@@ -123,13 +150,18 @@ int main(int c, char* argv[])
     Window::PollEvents();
   }
 
+  gRenderer().WaitIdle();
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
 
-
-  // Free up resources that were allocated.
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);
-  
+
+  gRenderer().FreeLightMaterial(lightMat);
+  gRenderer().FreeGlobalMaterial(globalMat);
+
+  ///////////////////////////////////////////////////////////////////////////////////////  
   gUI().ShutDown();
   gAnimation().ShutDown();
   gAudio().ShutDown();

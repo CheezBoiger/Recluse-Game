@@ -32,7 +32,7 @@ void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
   VkBufferCreateInfo bufferCI = { };
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  bufferCI.size = vertexCount;
+  bufferCI.size = sizeType * vertexCount;
   bufferCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
   mBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 

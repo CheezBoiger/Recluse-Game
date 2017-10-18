@@ -31,8 +31,6 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
-  mat4  cameraView;
-  mat4  cameraProj;
   vec4  cameraPos;
   float coffSH[9];
   ivec2 screenSize;

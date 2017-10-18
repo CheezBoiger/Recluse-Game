@@ -25,8 +25,6 @@ public:
     Matrix4         view;
     Matrix4         proj;
     Matrix4         viewProj;
-    Matrix4         cameraView;
-    Matrix4         cameraProj;
     Vector4         cameraPos;
     r32             coffSH[9];
     i32             screenSize[2];
@@ -104,14 +102,14 @@ public:
   struct ObjectBuffer {
     Matrix4 model;
     Matrix4 normalMatrix;
-    b8      hasAlbedo;
-    b8      hasMetallic;
-    b8      hasRoughness;
-    b8      hasNormal;
-    b8      hasEmissive;
-    b8      hasAO;
-    b8      hasBones;
-    b8      pad1[9];
+    u32     hasAlbedo;
+    u32     hasMetallic;
+    u32     hasRoughness;
+    u32     hasNormal;
+    u32     hasEmissive;
+    u32     hasAO;
+    u32     hasBones;
+    u32     pad;
   };
 
   struct BonesBuffer {

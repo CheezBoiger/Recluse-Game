@@ -31,6 +31,10 @@ Material::Material()
 
 void Material::Initialize(b8 isStatic)
 {
+  Sampler* sampler = gResources().GetSampler("DefaultSampler");
+  if (mSampler) sampler = mSampler;
+
+  Texture* defaultTexture = gResources().GetRenderTexture("DefaultTexture");
   // Create the render buffer for the object.
   mObjectBuffer = mRhi->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
@@ -38,6 +42,7 @@ void Material::Initialize(b8 isStatic)
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   objectCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   objectCI.size = objectSize;
+  objectCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
   mObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
@@ -46,94 +51,89 @@ void Material::Initialize(b8 isStatic)
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRObjectMaterialLayout");
   mObjectBufferSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
-  if (!isStatic) {
-    VkBufferCreateInfo bonesCI = { };
-    VkDeviceSize bonesSize = sizeof(BonesBuffer);
-    bonesCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    bonesCI.size = bonesSize;    
+  VkBufferCreateInfo bonesCI = { };
+  VkDeviceSize bonesSize = sizeof(BonesBuffer);
+  bonesCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  bonesCI.size = bonesSize;    
 
-    mBonesBuffer = mRhi->CreateBuffer();
-    mBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    mObjectData.hasBones = true;
-  }
-}
+  mBonesBuffer = mRhi->CreateBuffer();
+  mBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-
-void Material::CleanUp()
-{
-  if (mObjectBuffer) {
-    mRhi->FreeBuffer(mObjectBuffer);
-  }
-
-  if (mObjectBufferSet) {
-    mRhi->FreeDescriptorSet(mObjectBufferSet);
-  }
-
-  if (mBonesBuffer) {
-    mRhi->FreeBuffer(mBonesBuffer);
-  }
-}
-
-
-void Material::Update() 
-{
   std::array<VkWriteDescriptorSet, 8> writeSets;
 
   size_t count = 0;
-  VkDescriptorBufferInfo objBufferInfo = { };
+  VkDescriptorBufferInfo objBufferInfo = {};
   objBufferInfo.buffer = mObjectBuffer->Handle();
   objBufferInfo.offset = 0;
   objBufferInfo.range = sizeof(ObjectBuffer);
 
-  VkDescriptorBufferInfo boneBufferInfo = { };
+  VkDescriptorBufferInfo boneBufferInfo = {};
   if (mBonesBuffer) {
     boneBufferInfo.buffer = mBonesBuffer->Handle();
     boneBufferInfo.offset = 0;
     boneBufferInfo.range = sizeof(BonesBuffer);
   }
 
-  VkDescriptorImageInfo albedoInfo = { };
+  VkDescriptorImageInfo albedoInfo = {};
+  albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mAlbedo) {
     albedoInfo.imageView = mAlbedo->View();
-    albedoInfo.sampler = mSampler->Handle();
-    albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   }
+  else {
+    albedoInfo.imageView = defaultTexture->View();
+  }
+  albedoInfo.sampler = sampler->Handle();
 
-  VkDescriptorImageInfo metallicInfo = { };
+  VkDescriptorImageInfo metallicInfo = {};
+  metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mMetallic) {
-    metallicInfo.sampler = mSampler->Handle();
-    metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     metallicInfo.imageView = mMetallic->View();
   }
+  else {
+    metallicInfo.imageView = defaultTexture->View();
+  }
+  metallicInfo.sampler = sampler->Handle();
 
-  VkDescriptorImageInfo roughInfo = { };
+  VkDescriptorImageInfo roughInfo = {};
+  roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mRoughness) {
-    roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    roughInfo.sampler = mSampler->Handle();
     roughInfo.imageView = mRoughness->View();
   }
+  else {
+    roughInfo.imageView = defaultTexture->View();
+  }
+  roughInfo.sampler = sampler->Handle();
 
-  VkDescriptorImageInfo normalInfo = { };
+  VkDescriptorImageInfo normalInfo = {};
+  normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mNormal) {
-    normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    normalInfo.sampler = mSampler->Handle();
     normalInfo.imageView = mNormal->View();
   }
+  else {
+    normalInfo.imageView = defaultTexture->View();
+  }
+  normalInfo.sampler = sampler->Handle();
 
-  VkDescriptorImageInfo aoInfo = { };
+  VkDescriptorImageInfo aoInfo = {};
+  aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mAo) {
-    aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     aoInfo.imageView = mAo->View();
-    aoInfo.sampler = mSampler->Handle();
   }
+  else {
+    aoInfo.imageView = defaultTexture->View();
+  }
+  aoInfo.sampler = sampler->Handle();
 
-  VkDescriptorImageInfo emissiveInfo = { };
+  VkDescriptorImageInfo emissiveInfo = {};
+  emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mEmissive) {
-    emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     emissiveInfo.imageView = mEmissive->View();
-    emissiveInfo.sampler = mSampler->Handle();
   }
+  else {
+    emissiveInfo.imageView = defaultTexture->View();
+  }
+  emissiveInfo.sampler = sampler->Handle();
 
   writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -144,123 +144,132 @@ void Material::Update()
   writeSets[count].pNext = nullptr;
   count++;
 
-  if (mObjectData.hasAlbedo) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 2;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &albedoInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
- 
-  if (mObjectData.hasMetallic) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 3;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &metallicInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
-  
-  if (mObjectData.hasRoughness) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 4;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &roughInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
-  
-  if (mObjectData.hasNormal) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 5;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &normalInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 2;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &albedoInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
 
-  if (mObjectData.hasAO) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 6;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &aoInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 3;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &metallicInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
 
-  if (mObjectData.hasEmissive) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].dstBinding = 7;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeSets[count].pImageInfo = &emissiveInfo;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 4;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &roughInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
 
-  if (mBonesBuffer) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    writeSets[count].dstBinding = 1;
-    writeSets[count].pBufferInfo = &boneBufferInfo;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].pNext = nullptr;
-    count++;
-  }
+
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 5;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &normalInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
+
+
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 6;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &aoInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
+
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].dstBinding = 7;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[count].pImageInfo = &emissiveInfo;
+  writeSets[count].pNext = nullptr;
+  count++;
+
+  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writeSets[count].dstBinding = 1;
+  writeSets[count].pBufferInfo = &boneBufferInfo;
+  writeSets[count].dstArrayElement = 0;
+  writeSets[count].descriptorCount = 1;
+  writeSets[count].pNext = nullptr;
+  count++;
 
   if (!mObjectBufferSet) {
-    R_DEBUG("ERROR: Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!");
+    R_DEBUG("ERROR: Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!\n");
     return;
-  } 
+  }
 
   mObjectBufferSet->Update(static_cast<u32>(count), writeSets.data());
 }
 
 
+void Material::CleanUp()
+{
+  if (mObjectBuffer) {
+    mRhi->FreeBuffer(mObjectBuffer);
+    mObjectBuffer = nullptr;
+  }
+
+  if (mObjectBufferSet) {
+    mRhi->FreeDescriptorSet(mObjectBufferSet);
+    mObjectBufferSet = nullptr;
+  }
+
+  if (mBonesBuffer) {
+    mRhi->FreeBuffer(mBonesBuffer);
+    mBonesBuffer = nullptr;
+  }
+}
+
+
+void Material::Update() 
+{
+  mObjectBuffer->Map();
+    memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
+  mObjectBuffer->UnMap();
+}
+
+
 void GlobalMaterial::Initialize()
 {
-  // TODO
-}
+  if (!mRhi) {
+    R_DEBUG("ERROR: No RHI owner set in this Global Material upon initialization!\n");
+    return;
+  }
 
+  mGlobalBuffer = mRhi->CreateBuffer();
+  VkDeviceSize dSize = sizeof(GlobalBuffer);
+  VkBufferCreateInfo bufferCI = { };
+  bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferCI.size = dSize;
+  bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-void LightMaterial::Initialize()
-{
-  // TODO
-}
+  mGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRGlobalMaterialLayout");
 
+  mDescriptorSet = mRhi->CreateDescriptorSet();
+  mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
-void GlobalMaterial::CleanUp()
-{
-  // TODO
-}
-
-
-void LightMaterial::CleanUp()
-{
-  // TODO
-}
-
-
-void GlobalMaterial::Update()
-{
-  VkDescriptorBufferInfo globalBufferInfo = { };
+  VkDescriptorBufferInfo globalBufferInfo = {};
   globalBufferInfo.buffer = mGlobalBuffer->Handle();
   globalBufferInfo.offset = 0;
   globalBufferInfo.range = sizeof(GlobalBuffer);
-  
 
   std::array<VkWriteDescriptorSet, 1> writeSets;
   writeSets[0].descriptorCount = 1;
@@ -268,15 +277,36 @@ void GlobalMaterial::Update()
   writeSets[0].dstBinding = 0;
   writeSets[0].dstArrayElement = 0;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[0].pNext = nullptr;
   writeSets[0].pBufferInfo = &globalBufferInfo;
 
   mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
 }
 
 
-void LightMaterial::Update()
+void LightMaterial::Initialize()
 {
-  VkDescriptorBufferInfo lightBufferInfo = { };
+  // TODO
+  if (!mRhi) {
+    R_DEBUG("ERROR: RHI owner not set for light material upon initialization!\n");
+    return;
+  }
+
+  mLightBuffer = mRhi->CreateBuffer();
+  VkBufferCreateInfo bufferCI = { };
+  VkDeviceSize dSize = sizeof(LightBuffer);
+  bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferCI.size = dSize;
+  bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  
+  mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRLightMaterialLayout");
+  mDescriptorSet = mRhi->CreateDescriptorSet();
+  mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
+
+  VkDescriptorBufferInfo lightBufferInfo = {};
   lightBufferInfo.buffer = mLightBuffer->Handle();
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
@@ -287,8 +317,55 @@ void LightMaterial::Update()
   writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   writeSets[0].dstArrayElement = 0;
   writeSets[0].pBufferInfo = &lightBufferInfo;
+  writeSets[0].pNext = nullptr;
   writeSets[0].dstBinding = 0;
 
   mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+}
+
+
+void GlobalMaterial::CleanUp()
+{
+  // TODO
+  if (mDescriptorSet) {
+    mRhi->FreeDescriptorSet(mDescriptorSet);
+    mDescriptorSet = nullptr;
+  }
+
+  if (mGlobalBuffer) {
+    mRhi->FreeBuffer(mGlobalBuffer);
+    mGlobalBuffer = nullptr;
+  }
+}
+
+
+void LightMaterial::CleanUp()
+{
+  // TODO
+  if (mDescriptorSet) {
+    mRhi->FreeDescriptorSet(mDescriptorSet);
+    mDescriptorSet = nullptr;
+  }
+
+  if (mLightBuffer) {
+    mRhi->FreeBuffer(mLightBuffer);
+    mLightBuffer = nullptr;
+  }
+}
+
+
+void GlobalMaterial::Update()
+{
+  mGlobalBuffer->Map();
+    memcpy(mGlobalBuffer->Mapped(), &mGlobal, sizeof(GlobalBuffer));
+  mGlobalBuffer->UnMap();
+}
+
+
+void LightMaterial::Update()
+{
+  mLightBuffer->Map();
+    memcpy(mLightBuffer->Mapped(), &mLights, sizeof(LightBuffer));
+  mLightBuffer->UnMap();
 }
 } // Recluse

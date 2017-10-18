@@ -185,7 +185,7 @@ b8 Renderer::Initialize(Window* window)
     
     GraphicsPipeline* finalPipeline = gResources().GetGraphicsPipeline("FinalPassPipeline");
     DescriptorSet* finalRenderTexture = gResources().GetDescriptorSet("OffscreenDescriptorSet");
-
+    
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
       cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
@@ -206,6 +206,12 @@ b8 Renderer::Initialize(Window* window)
   mUI.Initialize(mRhi);
   mInitialized = true;
   return true;
+}
+
+
+void Renderer::WaitIdle()
+{
+  mRhi->DeviceWaitIdle();
 }
 
 
@@ -821,6 +827,43 @@ void Renderer::SetUpRenderTextures()
   samplerCI.minLod = 0.0f;
 
   pbrSampler->Initialize(samplerCI);
+
+  Sampler* defaultSampler = mRhi->CreateSampler();
+  defaultSampler->Initialize(samplerCI);
+  gResources().RegisterSampler("DefaultSampler", defaultSampler);
+
+  VkImageCreateInfo dImageInfo = {};
+  VkImageViewCreateInfo dViewInfo = {};
+
+  dImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  dImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  dImageInfo.imageType = VK_IMAGE_TYPE_2D;
+  dImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  dImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  dImageInfo.mipLevels = 1;
+  dImageInfo.extent.depth = 1;
+  dImageInfo.arrayLayers = 1;
+  dImageInfo.extent.width = mWindowHandle->Width();
+  dImageInfo.extent.height = mWindowHandle->Height();
+  dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+  dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+
+  dViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  dViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  dViewInfo.image = nullptr; // No need to set the image, texture handles this for us.
+  dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  dViewInfo.subresourceRange = {};
+  dViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  dViewInfo.subresourceRange.baseArrayLayer = 0;
+  dViewInfo.subresourceRange.baseMipLevel = 0;
+  dViewInfo.subresourceRange.layerCount = 1;
+  dViewInfo.subresourceRange.levelCount = 1;
+
+  Texture* defaultTexture = mRhi->CreateTexture();
+
+  defaultTexture->Initialize(dImageInfo, dViewInfo);
+  gResources().RegisterRenderTexture("DefaultTexture", defaultTexture);
 }
 
 
@@ -830,9 +873,15 @@ void Renderer::CleanUpRenderTextures()
   Texture* pbrDepth = gResources().UnregisterRenderTexture("PBRDepth");
   Sampler* pbrSampler = gResources().UnregisterSampler("PBRSampler");
 
+  Texture* defaultTexture = gResources().UnregisterRenderTexture("DefaultTexture");
+  Sampler* defaultSampler = gResources().UnregisterSampler("DefaultSampler");
+
   mRhi->FreeTexture(pbrColor);
   mRhi->FreeTexture(pbrDepth);
   mRhi->FreeSampler(pbrSampler);
+
+  mRhi->FreeTexture(defaultTexture);
+  mRhi->FreeSampler(defaultSampler);
 }
 
 
@@ -914,6 +963,7 @@ void Renderer::Build()
                 mLightMat->Set()->Handle()
               };
 
+              
               cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0, 
                 3, descriptorSets, 0, nullptr);
             }
@@ -925,9 +975,11 @@ void Renderer::Build()
             IndexBuffer* indexBuffer = renderCmd.meshId->GetIndexBuffer();
             VkBuffer vb = vertexBuffer->Handle()->Handle();
             VkBuffer ib = indexBuffer->Handle()->Handle();
-
-            cmdBuffer->BindVertexBuffers(0, 1, &vb, 0);
-            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT16);
+            VkDeviceSize offsets[] = { 0 };
+            cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
+            //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
           }
         }
       }
@@ -968,17 +1020,17 @@ void Renderer::FreeMaterial(Material* material)
 
 void Renderer::UpdateMaterials()
 {
+  if (mGlobalMat) {
+    mGlobalMat->Update();
+  }
+
+  if (mLightMat) {
+    mLightMat->Update();
+  }
+
   for (size_t i = 0; i < MaterialCache.size(); ++i) {
     Material* mat = MaterialCache[i];
     mat->Update();
-
-    VkWriteDescriptorSet writeInfo = { };
-    writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    
-     // TODO(): We will hold off on this until we implement material.
-    // We are going to need to store uniform buffers and samplers to our
-    // material.
-    //mat->ObjectBufferSet()->Update(writeInfo);
   }
 }
 
@@ -1046,12 +1098,27 @@ GlobalMaterial* Renderer::CreateGlobalMaterial()
 {
   GlobalMaterial* gMat = new GlobalMaterial();
   gMat->mRhi = mRhi;
-
   return gMat;
 }
 
 
 void Renderer::FreeGlobalMaterial(GlobalMaterial* material)
+{
+  material->CleanUp();
+  delete material;
+}
+
+
+LightMaterial* Renderer::CreateLightMaterial()
+{
+  LightMaterial* lMat = new LightMaterial();
+  lMat->mRhi = mRhi;
+
+  return lMat;
+}
+
+
+void Renderer::FreeLightMaterial(LightMaterial* material)
 {
   material->CleanUp();
   delete material;
