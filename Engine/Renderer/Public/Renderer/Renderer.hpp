@@ -31,9 +31,12 @@ class Mesh;
 class Material;
 class LightMaterial;
 class GlobalMaterial;
-class CubeMap;
+class TextureCube;
 class Semaphore;
-
+class Texture1D;
+class Texture2D;
+class Texture3D;
+class Texture2DArray;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective.
@@ -83,6 +86,12 @@ public:
   // Mesh. Be sure to call FreeMaterial() if done with this material object.
   Material*         CreateMaterial();
 
+  Texture1D*        CreateTexture1D();
+  Texture2D*        CreateTexture2D();
+  Texture2DArray*   CreateTexture2DArray();
+  Texture3D*        CreateTexture3D();
+  TextureCube*      CreateTextureCube();
+
   GlobalMaterial*   CreateGlobalMaterial();
   LightMaterial*    CreateLightMaterial();
   DirectionLight*   CreateDirectionLight();
@@ -103,11 +112,11 @@ public:
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
-  CubeMap*          BakeEnvironmentMap(const Vector3& position);
+  TextureCube*      BakeEnvironmentMap(const Vector3& position);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
   // to render our mesh object with fast global illumination.
-  LightProbe*       BakeLightProbe(const CubeMap* envmap);
+  LightProbe*       BakeLightProbe(const TextureCube* envmap);
 
   // Window reference.
   Window*           WindowRef() { return mWindowHandle; }

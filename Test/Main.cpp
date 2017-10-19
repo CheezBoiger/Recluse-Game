@@ -84,7 +84,7 @@ int main(int c, char* argv[])
  
   Material* cubeMaterial = gRenderer().CreateMaterial();
   Material::ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
-  cubeInfo->hasAlbedo = false;
+  cubeInfo->hasAlbedo = true;
   cubeInfo->hasBones = false;
   cubeInfo->hasNormal = false;
   cubeInfo->hasMetallic = false;
@@ -100,7 +100,7 @@ int main(int c, char* argv[])
 
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
   Material::ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
-  cubeInfo2->hasAlbedo = false;
+  cubeInfo2->hasAlbedo = true;
   cubeInfo2->hasBones = false;
   cubeInfo2->hasNormal = false;
   cubeInfo2->hasMetallic = false;
