@@ -66,7 +66,7 @@ int main(int c, char* argv[])
   // TODO(): Some inconsistencies in the math!
   gBuffer->cameraPos = Vector4(0.0f, 1.0f, 1.0f, 1.0f);
   gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
-  gBuffer->view = Matrix4::LookAt(Vector3(0.0f, 0.0f, 0.0f), Vector3(0.0f, 0.0f, -1.0f), Vector3::UP);
+  gBuffer->view = Matrix4::LookAt(Vector3(-4.0f, -4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
   gBuffer->viewProj = gBuffer->view * gBuffer->proj;
   globalMat->Initialize();
   globalMat->Update();
@@ -89,7 +89,7 @@ int main(int c, char* argv[])
   cubeInfo->hasRoughness = false;
   cubeInfo->hasAO = false;
   cubeInfo->hasEmissive = false;
-  cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, -2.0f));
+  cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo->normalMatrix[3][0] = 0.0f;
   cubeInfo->normalMatrix[3][1] = 0.0f;
@@ -133,7 +133,7 @@ int main(int c, char* argv[])
       gPhysics().UpdateState(dt);
       timeAccumulator -= Time::FixTime;
     }
-    cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0, Time::CurrentTime() * 0.5, -3.0f));
+    cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
     cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
     cubeInfo->normalMatrix[3][0] = 0.0f;
     cubeInfo->normalMatrix[3][1] = 0.0f;

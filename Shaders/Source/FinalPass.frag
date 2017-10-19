@@ -16,6 +16,6 @@ layout (binding = 0) uniform sampler2D finalTexture;
 
 void main()
 {
-  vec3 color = texture(finalTexture, frag_in.texcoord).rgb;
-  fragColor = vec4(color, 1.0);
+  vec4 color = texture(finalTexture, frag_in.texcoord);
+  fragColor = color;
 }

@@ -240,7 +240,7 @@ Matrix4 Matrix4::LookAt(const Vector3& eye, const Vector3& center, const Vector3
     right.x,          u.x,          front.x,        0.0f,
     right.y,          u.y,          front.y,        0.0f,
     right.z,          u.z,          front.z,        0.0f,
-    -right.Dot(eye),  -u.Dot(eye),  front.Dot(eye), 1.0f
+   -right.Dot(eye),  -u.Dot(eye),  -front.Dot(eye), 1.0f
   );
 }
 

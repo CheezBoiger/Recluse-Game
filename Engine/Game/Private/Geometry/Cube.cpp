@@ -35,47 +35,47 @@ namespace Recluse {
 
 std::array<Vector4, 36> positions = {
   // Front
-  Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, 1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f, 1.0f, 1.0f),
   Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, 1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
   // Back
-  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
   Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
   Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
   // Up
-  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
   Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f,  1.0f, 1.0f),
   Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
   // Down
-  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
   Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
-  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
   Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
   // Right
-  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),  
   Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
   Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
   // Left
-  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
   Vector4(-1.0f,  1.0f,  1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
   Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
-  Vector4(-1.0f, -1.0f,  1.0f, 1.0f)
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f)
 };
 
 

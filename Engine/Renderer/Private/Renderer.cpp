@@ -1073,7 +1073,6 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
 
   mUI.Initialize(mRhi);
 
-  mRhi->RebuildCommandBuffers();
   Build();
 }
 
