@@ -695,6 +695,7 @@ CommandBuffer* VulkanRHI::CreateCommandBuffer()
 void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
 {
   buffer->Free();
+  delete buffer;
 }
 
 

@@ -3,6 +3,7 @@
 
 
 #include "Core/Types.hpp"
+#include "Vector3.hpp"
 
 namespace Recluse {
 
@@ -14,6 +15,8 @@ struct Vector4 {
 
   Vector4(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 0.0f)
     : x(x), y(y), z(z), w(w) { }
+  Vector4(const Vector3& other, r32 w = 0.0f)
+    : Vector4(other.x, other.y, other.z, w)  { }
 
   Vector4 Normalize() const;
 

@@ -8,6 +8,7 @@
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/Mesh.hpp"
 #include "Renderer/Material.hpp"
+#include "Core/Utility/Image.hpp"
 
 #include <stdio.h>
 
@@ -63,10 +64,11 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
   GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
+  Vector3 camPosition = Vector3(-4.0f, -4.0f, -4.0f);
   // TODO(): Some inconsistencies in the math!
-  gBuffer->cameraPos = Vector4(0.0f, 1.0f, 1.0f, 1.0f);
+  gBuffer->cameraPos = Vector4(camPosition, 1.0f);
   gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
-  gBuffer->view = Matrix4::LookAt(Vector3(-4.0f, -4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+  gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
   gBuffer->viewProj = gBuffer->view * gBuffer->proj;
   globalMat->Initialize();
   globalMat->Update();
@@ -96,15 +98,37 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
 
+  Material* cubeMaterial2 = gRenderer().CreateMaterial();
+  Material::ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
+  cubeInfo2->hasAlbedo = false;
+  cubeInfo2->hasBones = false;
+  cubeInfo2->hasNormal = false;
+  cubeInfo2->hasMetallic = false;
+  cubeInfo2->hasRoughness = false;
+  cubeInfo2->hasAO = false;
+  cubeInfo2->hasEmissive = false;
+  cubeInfo2->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 3.0f));
+  cubeInfo2->normalMatrix = cubeInfo->model.Inverse().Transpose();
+  cubeInfo2->normalMatrix[3][0] = 0.0f;
+  cubeInfo2->normalMatrix[3][1] = 0.0f;
+  cubeInfo2->normalMatrix[3][2] = 0.0f;
+  cubeInfo2->normalMatrix[3][3] = 1.0f;
+
   cubeMaterial->Initialize();
   cubeMaterial->Update();     // 0x42
+
+  cubeMaterial2->Initialize();
+  cubeMaterial2->Update();
 
   ///////////////////////////////////////////////////////////////////////////////////////
 
   CmdList list;
-  list.Resize(1);
+  list.Resize(2);
   list[0].materialId = cubeMaterial;
   list[0].meshId = cubeMesh;
+
+  list[1].materialId = cubeMaterial2;
+  list[1].meshId = cubeMesh;
 
   gRenderer().PushCmdList(&list);
   gRenderer().SetGlobalMaterial(globalMat);
@@ -133,6 +157,14 @@ int main(int c, char* argv[])
       gPhysics().UpdateState(dt);
       timeAccumulator -= Time::FixTime;
     }
+
+    // NOTE(): Update game state... This is hardcoded though.
+    camPosition = Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 4.0f, -4.0f, -4.0f);
+    gBuffer->cameraPos = camPosition;
+    gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
+    gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+    gBuffer->viewProj = gBuffer->view * gBuffer->proj;
+
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
     cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
     cubeInfo->normalMatrix[3][0] = 0.0f;
@@ -154,7 +186,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
-
+  gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);
 

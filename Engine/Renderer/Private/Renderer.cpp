@@ -147,6 +147,7 @@ void Renderer::CleanUp()
 
   mScreenQuad.CleanUp();
   CleanUpOffscreen();
+  CleanUpDescriptorSets(true);
   CleanUpGraphicsPipelines();
   CleanUpFrameBuffers();
   CleanUpRenderTextures();
@@ -169,6 +170,7 @@ b8 Renderer::Initialize(Window* window)
 
   SetUpRenderTextures();
   SetUpFrameBuffers();
+  SetUpDescriptorSets(true);
   SetUpGraphicsPipelines();
   SetUpOffscreen();
   mScreenQuad.Initialize(mRhi);
@@ -206,6 +208,178 @@ b8 Renderer::Initialize(Window* window)
   mUI.Initialize(mRhi);
   mInitialized = true;
   return true;
+}
+
+
+void Renderer::SetUpDescriptorSets(b8 fullSetup)
+{
+  if (fullSetup) {
+    std::array<VkDescriptorSetLayoutBinding, 1> objLayoutBindings;
+    objLayoutBindings[0].binding = 0;
+    objLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    objLayoutBindings[0].descriptorCount = 1;
+    objLayoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    objLayoutBindings[0].pImmutableSamplers = nullptr;
+
+    VkDescriptorSetLayoutCreateInfo layout0 = {};
+    layout0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout0.bindingCount = static_cast<u32>(objLayoutBindings.size());
+    layout0.pBindings = objLayoutBindings.data();
+
+    DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
+    d0->Initialize(layout0);
+
+    VkDescriptorSetLayoutBinding bindings[8];
+    bindings[0].binding = 0;
+    bindings[0].descriptorCount = 1;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[0].pImmutableSamplers = nullptr;
+    bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    bindings[1].binding = 1;
+    bindings[1].descriptorCount = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[1].pImmutableSamplers = nullptr;
+    bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    // albedo
+    bindings[2].binding = 2;
+    bindings[2].descriptorCount = 1;
+    bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[2].pImmutableSamplers = nullptr;
+    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // metallic
+    bindings[3].binding = 3;
+    bindings[3].descriptorCount = 1;
+    bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[3].pImmutableSamplers = nullptr;
+    bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // roughness
+    bindings[4].binding = 4;
+    bindings[4].descriptorCount = 1;
+    bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[4].pImmutableSamplers = nullptr;
+    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // normal
+    bindings[5].binding = 5;
+    bindings[5].descriptorCount = 1;
+    bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[5].pImmutableSamplers = nullptr;
+    bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // ao
+    bindings[6].binding = 6;
+    bindings[6].descriptorCount = 1;
+    bindings[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[6].pImmutableSamplers = nullptr;
+    bindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // emissive
+    bindings[7].binding = 7;
+    bindings[7].descriptorCount = 1;
+    bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[7].pImmutableSamplers = nullptr;
+    bindings[7].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    VkDescriptorSetLayoutCreateInfo layout1 = {};
+    layout1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout1.bindingCount = 8;
+    layout1.pBindings = bindings;
+
+    DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
+    d1->Initialize(layout1);
+
+    std::array<VkDescriptorSetLayoutBinding, 2> lightLayoutBindings;
+    lightLayoutBindings[0].binding = 0;
+    lightLayoutBindings[0].descriptorCount = 1;
+    lightLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    lightLayoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    lightLayoutBindings[0].pImmutableSamplers = nullptr;
+
+    lightLayoutBindings[1].binding = 1;
+    lightLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    lightLayoutBindings[1].descriptorCount = 1;
+    lightLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    lightLayoutBindings[1].pImmutableSamplers = nullptr;
+
+    VkDescriptorSetLayoutCreateInfo layout2 = {};
+    layout2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layout2.bindingCount = static_cast<u32>(lightLayoutBindings.size());
+    layout2.pBindings = lightLayoutBindings.data();
+
+    DescriptorSetLayout* d2 = mRhi->CreateDescriptorSetLayout();
+    d2->Initialize(layout2);
+
+    gResources().RegisterDescriptorSetLayout("PBRGlobalMaterialLayout", d0);
+    gResources().RegisterDescriptorSetLayout("PBRObjectMaterialLayout", d1);
+    gResources().RegisterDescriptorSetLayout("PBRLightMaterialLayout", d2);
+  }
+
+  DescriptorSetLayout* finalSetLayout = mRhi->CreateDescriptorSetLayout();
+  gResources().RegisterDescriptorSetLayout("FinalSetLayout", finalSetLayout);
+
+  VkDescriptorSetLayoutBinding finalTextureSample = {};
+  finalTextureSample.binding = 0;
+  finalTextureSample.descriptorCount = 1;
+  finalTextureSample.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  finalTextureSample.pImmutableSamplers = nullptr;
+  finalTextureSample.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo finalLayoutInfo = {};
+  finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  finalLayoutInfo.bindingCount = 1;
+  finalLayoutInfo.pBindings = &finalTextureSample;
+
+  finalSetLayout->Initialize(finalLayoutInfo);
+
+  DescriptorSet* offscreenImageDescriptor = mRhi->CreateDescriptorSet();
+  offscreenImageDescriptor->Allocate(mRhi->DescriptorPool(), finalSetLayout);
+
+  Texture* pbrColor = gResources().GetRenderTexture("PBRColor");
+  Sampler* pbrSampler = gResources().GetSampler("PBRSampler");
+
+  VkDescriptorImageInfo renderTextureFinal = {};
+  renderTextureFinal.sampler = pbrSampler->Handle();
+  renderTextureFinal.imageView = pbrColor->View();
+  renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  VkWriteDescriptorSet writeInfo = {};
+  writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo.descriptorCount = 1;
+  writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo.dstBinding = 0;
+  writeInfo.pImageInfo = &renderTextureFinal;
+  writeInfo.pBufferInfo = nullptr;
+  writeInfo.pTexelBufferView = nullptr;
+  writeInfo.dstArrayElement = 0;
+
+
+  offscreenImageDescriptor->Update(1, &writeInfo);
+
+  gResources().RegisterDescriptorSet("OffscreenDescriptorSet", offscreenImageDescriptor);
+}
+
+
+void Renderer::CleanUpDescriptorSets(b8 fullCleanup)
+{
+  if (fullCleanup) {
+    DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout("PBRGlobalMaterialLayout");
+    DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout("PBRObjectMaterialLayout");
+    DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout("PBRLightMaterialLayout");
+
+    mRhi->FreeDescriptorSetLayout(d0);
+    mRhi->FreeDescriptorSetLayout(d1);
+    mRhi->FreeDescriptorSetLayout(d2);
+  }
+
+  DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout("FinalSetLayout");
+  mRhi->FreeDescriptorSetLayout(finalSetLayout);
+
+  DescriptorSet* offscreenDescriptorSet = gResources().UnregisterDescriptorSet("OffscreenDescriptorSet");
+  mRhi->FreeDescriptorSet(offscreenDescriptorSet);
 }
 
 
@@ -494,115 +668,11 @@ void Renderer::SetUpGraphicsPipelines()
 
   graphicsPipeline.basePipelineHandle = VK_NULL_HANDLE;
 
-  std::array<VkDescriptorSetLayoutBinding, 1> objLayoutBindings;
-  objLayoutBindings[0].binding = 0;
-  objLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  objLayoutBindings[0].descriptorCount = 1;
-  objLayoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  objLayoutBindings[0].pImmutableSamplers = nullptr;
-
-  VkDescriptorSetLayoutCreateInfo layout0 = { };
-  layout0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;  
-  layout0.bindingCount = static_cast<u32>(objLayoutBindings.size());
-  layout0.pBindings = objLayoutBindings.data();
-
-  DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
-  d0->Initialize(layout0);
-
-
-  VkDescriptorSetLayoutBinding bindings[8];
-  bindings[0].binding = 0;
-  bindings[0].descriptorCount = 1;
-  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
-  bindings[0].pImmutableSamplers = nullptr;
-  bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  
-  bindings[1].binding = 1;
-  bindings[1].descriptorCount = 1;
-  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  bindings[1].pImmutableSamplers = nullptr;
-  bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-  
-  // albedo
-  bindings[2].binding = 2;
-  bindings[2].descriptorCount = 1;
-  bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[2].pImmutableSamplers = nullptr;
-  bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  
-  // metallic
-  bindings[3].binding = 3;
-  bindings[3].descriptorCount = 1;
-  bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[3].pImmutableSamplers = nullptr;
-  bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  // roughness
-  bindings[4].binding = 4;
-  bindings[4].descriptorCount = 1;
-  bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[4].pImmutableSamplers = nullptr;
-  bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  // normal
-  bindings[5].binding = 5;
-  bindings[5].descriptorCount = 1;
-  bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[5].pImmutableSamplers = nullptr;
-  bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  // ao
-  bindings[6].binding = 6;
-  bindings[6].descriptorCount = 1;
-  bindings[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[6].pImmutableSamplers = nullptr;
-  bindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  // emissive
-  bindings[7].binding = 7;
-  bindings[7].descriptorCount = 1;
-  bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[7].pImmutableSamplers = nullptr;
-  bindings[7].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  VkDescriptorSetLayoutCreateInfo layout1 = { };
-  layout1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout1.bindingCount = 8;
-  layout1.pBindings = bindings;
-  
-  DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
-  d1->Initialize(layout1);
-
-  std::array<VkDescriptorSetLayoutBinding, 2> lightLayoutBindings;
-  lightLayoutBindings[0].binding = 0;
-  lightLayoutBindings[0].descriptorCount = 1;
-  lightLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  lightLayoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  lightLayoutBindings[0].pImmutableSamplers = nullptr;
-
-  lightLayoutBindings[1].binding = 1;
-  lightLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  lightLayoutBindings[1].descriptorCount = 1;
-  lightLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  lightLayoutBindings[1].pImmutableSamplers = nullptr;
-
-  VkDescriptorSetLayoutCreateInfo layout2 = { };
-  layout2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout2.bindingCount = static_cast<u32>(lightLayoutBindings.size());
-  layout2.pBindings = lightLayoutBindings.data();
-
-  DescriptorSetLayout* d2 = mRhi->CreateDescriptorSetLayout();
-  d2->Initialize(layout2);
-
-  gResources().RegisterDescriptorSetLayout("PBRGlobalMaterialLayout", d0);
-  gResources().RegisterDescriptorSetLayout("PBRObjectMaterialLayout", d1);  
-  gResources().RegisterDescriptorSetLayout("PBRLightMaterialLayout",  d2);
-
 
   VkDescriptorSetLayout dLayouts[3];
-  dLayouts[0] = d0->Layout();
-  dLayouts[1] = d1->Layout();
-  dLayouts[2] = d2->Layout();
+  dLayouts[0] = gResources().GetDescriptorSetLayout("PBRGlobalMaterialLayout")->Layout();
+  dLayouts[1] = gResources().GetDescriptorSetLayout("PBRObjectMaterialLayout")->Layout();
+  dLayouts[2] = gResources().GetDescriptorSetLayout("PBRLightMaterialLayout")->Layout();
 
   VkPipelineLayoutCreateInfo pipelineLayout = { };
   pipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -674,86 +744,26 @@ void Renderer::SetUpGraphicsPipelines()
   vertexCI.vertexAttributeDescriptionCount = 2;
   vertexCI.pVertexAttributeDescriptions = finalAttribs;
 
-  DescriptorSetLayout* finalSetLayout = mRhi->CreateDescriptorSetLayout();
-  gResources().RegisterDescriptorSetLayout("FinalSetLayout", finalSetLayout);
-  
-  VkDescriptorSetLayoutBinding finalTextureSample = { };
-  finalTextureSample.binding = 0;
-  finalTextureSample.descriptorCount = 1;
-  finalTextureSample.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  finalTextureSample.pImmutableSamplers = nullptr;
-  finalTextureSample.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT; 
-
-  VkDescriptorSetLayoutCreateInfo finalLayoutInfo = { };
-  finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  finalLayoutInfo.bindingCount = 1;
-  finalLayoutInfo.pBindings = &finalTextureSample;
-
-  finalSetLayout->Initialize(finalLayoutInfo);
-
   VkPipelineLayoutCreateInfo finalLayout = {};
   finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   finalLayout.setLayoutCount = 1;
-  VkDescriptorSetLayout finalL = finalSetLayout->Layout();
+  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout("FinalSetLayout")->Layout();
   finalLayout.pSetLayouts = &finalL;
 
   quadPipeline->Initialize(graphicsPipeline, finalLayout);
 
   mRhi->FreeShader(quadVert);
   mRhi->FreeShader(quadFrag);
-
-  DescriptorSet* offscreenImageDescriptor = mRhi->CreateDescriptorSet();
-  offscreenImageDescriptor->Allocate(mRhi->DescriptorPool(), finalSetLayout);
-
-  Texture* pbrColor = gResources().GetRenderTexture("PBRColor");
-  Sampler* pbrSampler = gResources().GetSampler("PBRSampler");
-
-  VkDescriptorImageInfo renderTextureFinal = { };
-  renderTextureFinal.sampler = pbrSampler->Handle();
-  renderTextureFinal.imageView = pbrColor->View();
-  renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-  VkWriteDescriptorSet writeInfo = { };
-  writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo.descriptorCount = 1;
-  writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo.dstBinding = 0;
-  writeInfo.pImageInfo = &renderTextureFinal;
-  writeInfo.pBufferInfo = nullptr;
-  writeInfo.pTexelBufferView = nullptr;
-  writeInfo.dstArrayElement = 0;
-  
-
-  offscreenImageDescriptor->Update(1, &writeInfo);
-
-  gResources().RegisterDescriptorSet("OffscreenDescriptorSet", offscreenImageDescriptor);
 }
 
 
 void Renderer::CleanUpGraphicsPipelines()
 {
-
-  DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout("PBRGlobalMaterialLayout");
-  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout("PBRObjectMaterialLayout");
-  DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout("PBRLightMaterialLayout");
-
-  mRhi->FreeDescriptorSetLayout(d0);
-  mRhi->FreeDescriptorSetLayout(d1);
-  mRhi->FreeDescriptorSetLayout(d2);
-
-
   GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline("PBRPipeline");
   mRhi->FreeGraphicsPipeline(pbrPipeline);
 
-  DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout("FinalSetLayout");
-  mRhi->FreeDescriptorSetLayout(finalSetLayout);
-  
-  DescriptorSet* offscreenDescriptorSet = gResources().UnregisterDescriptorSet("OffscreenDescriptorSet");
-  mRhi->FreeDescriptorSet(offscreenDescriptorSet);
-
   GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline("FinalPassPipeline");
   mRhi->FreeGraphicsPipeline(quadPipeline);
-
 }
 
 
@@ -909,10 +919,22 @@ void Renderer::Build()
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer("PBRFrameBuffer");
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline("PBRPipeline");
 
-  // TODO(): Build offscreen cmd buffer, then call this function.
   if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
     mRhi->DeviceWaitIdle();
     mOffscreen.cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    // We are only worried about the buffers in the gpu, which need to be recreated
+    // in order to update the window resolutions and whatnot. Since the pipeline is recreated,
+    // our mats need to be recreated as well.
+    if (mGlobalMat) {
+      mGlobalMat->CleanUp();
+      mGlobalMat->Initialize();
+    }
+
+    for (size_t i = 0; i < MaterialCache.size(); ++i) {
+      Material* mat = MaterialCache[i];
+      mat->CleanUp();
+      mat->Initialize();
+    }
     MaterialCache.resize(0);
   }
 
@@ -962,7 +984,6 @@ void Renderer::Build()
                 mat->Set()->Handle(), 
                 mLightMat->Set()->Handle()
               };
-
               
               cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0, 
                 3, descriptorSets, 0, nullptr);
@@ -1061,15 +1082,15 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
 
   mUI.CleanUp();
 
-  CleanUpOffscreen();
   CleanUpGraphicsPipelines();
+  CleanUpDescriptorSets(false);
   CleanUpFrameBuffers();
   CleanUpRenderTextures();
 
   SetUpRenderTextures();
   SetUpFrameBuffers();
+  SetUpDescriptorSets(false);
   SetUpGraphicsPipelines();
-  SetUpOffscreen();
 
   mUI.Initialize(mRhi);
 

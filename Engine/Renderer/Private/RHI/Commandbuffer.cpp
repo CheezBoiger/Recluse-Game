@@ -35,7 +35,9 @@ void CommandBuffer::Free()
 
 void CommandBuffer::Reset(const VkCommandBufferResetFlags flags)
 {
-  vkResetCommandBuffer(mHandle, flags);
+  if (vkResetCommandBuffer(mHandle, flags) != VK_SUCCESS) {
+    R_DEBUG("WARNING: unsuccessful command buffer reset.\n");
+  }
 }
 
 

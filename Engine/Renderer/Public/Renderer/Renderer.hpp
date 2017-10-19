@@ -122,8 +122,8 @@ public:
 private:
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();
-  void              SetUpDescriptorSets();
-  void              CleanUpDescriptorSets();
+  void              SetUpDescriptorSets(b8 fullSetup);
+  void              CleanUpDescriptorSets(b8 fullCleanup);
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
   void              CleanUpRenderTextures();

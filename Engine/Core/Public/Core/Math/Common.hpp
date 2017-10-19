@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Core/Types.hpp"
-
+#include <math.h>
 
 #define CONST_PI      3.141592653589793238462643383279502884197169399375
 #define Radians(deg) (deg * (static_cast<r32>(CONST_PI) / 180.0f))
