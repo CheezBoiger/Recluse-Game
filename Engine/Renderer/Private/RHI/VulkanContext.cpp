@@ -33,7 +33,7 @@ b8 Context::CreateInstance()
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.apiVersion = VK_API_VERSION_1_0;
+  appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.pApplicationName = "Recluse";

@@ -37,6 +37,7 @@ class Texture1D;
 class Texture2D;
 class Texture3D;
 class Texture2DArray;
+class TextureSampler;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective.
@@ -91,11 +92,23 @@ public:
   Texture2DArray*   CreateTexture2DArray();
   Texture3D*        CreateTexture3D();
   TextureCube*      CreateTextureCube();
+  TextureSampler*   CreateTextureSampler();
 
+  // Create a global material object. This holds view, projection, SH coefficients
+  // and other things that may affect the global aspect of the scene.
   GlobalMaterial*   CreateGlobalMaterial();
+  
+  // Create a light material object, which holds all lights that affect this 
+  // scene. This will then be used for the light culling method of the renderer.
   LightMaterial*    CreateLightMaterial();
+
+  // Create a directional light.
   DirectionLight*   CreateDirectionLight();
+
+  // Create a point light.
   PointLight*       CreatePointLight();
+
+  // Create a spotlight.
   SpotLight*        CreateSpotLight();
 
   // Frees up the allocated mesh object.
@@ -109,6 +122,24 @@ public:
 
   // Frees up the allocated light material object.
   void              FreeLightMaterial(LightMaterial* material);
+
+  //  Frees up the allocated texture1d object.
+  void              FreeTexture1D(Texture1D* texture);
+
+  // Frees up the allocated texture2d object.
+  void              FreeTexture2D(Texture2D* texture);
+
+  // Frees up the allocated texture2darray object.
+  void              FreeTexture2DArray(Texture2DArray* texture);
+
+  // Frees up the allocated texture3d object.
+  void              FreeTexture3D(Texture3D* texture);
+
+  // Frees up the cubemap texture object.
+  void              FreeTextureCube(TextureCube* texture);
+
+  // Frees up the texture sampler object.
+  void              FreeTextureSampler(TextureSampler* sampler);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.

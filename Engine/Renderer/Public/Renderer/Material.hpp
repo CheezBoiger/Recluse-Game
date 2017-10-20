@@ -10,12 +10,20 @@
 
 namespace Recluse {
 
-
+//
+// TODO(): Replace Texture and Sampler with Texture2D and TextureSampler!
+//
 class VulkanRHI;
 class DescriptorSet;
 class Buffer;
 class Texture;
 class Sampler;
+class Texture2D;
+class TextureSampler;
+class Texture3D;
+class Texture1D;
+class Texture2DArray;
+class TextureCube;
 
 
 // Global Material.

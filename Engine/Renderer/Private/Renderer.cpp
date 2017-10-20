@@ -9,6 +9,7 @@
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "UserParams.hpp"
+#include "TextureType.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -1142,6 +1143,40 @@ void Renderer::FreeLightMaterial(LightMaterial* material)
 {
   material->CleanUp();
   delete material;
+}
+
+
+Texture1D* Renderer::CreateTexture1D()
+{
+  Texture1D* texture = new Texture1D();
+  
+  return texture;
+}
+
+
+void Renderer::FreeTexture1D(Texture1D* texture)
+{
+  delete texture;
+}
+
+
+Texture2D* Renderer::CreateTexture2D()
+{
+  Texture2D* texture = new Texture2D();
+  return texture;
+}
+
+
+void Renderer::FreeTexture2D(Texture2D* texture)
+{
+  delete texture;
+}
+
+
+Texture2DArray* Renderer::CreateTexture2DArray()
+{
+  Texture2DArray* texture = new Texture2DArray();
+  return texture;
 }
 
 
