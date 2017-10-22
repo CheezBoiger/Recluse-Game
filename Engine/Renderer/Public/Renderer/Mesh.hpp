@@ -13,7 +13,12 @@ class VulkanRHI;
 
 class Mesh {
 public:
-  Mesh() { }
+  Mesh()
+    : mVisible(true)
+    , mRenderable(true)
+    , mTransparent(false)
+    , mTranslucent(false)
+    , mStatic(true) { }
 
   void          Initialize(size_t elementCount, size_t sizeType, void* data, 
                   b8 isStatic, size_t indexCount = 0, void* indices = nullptr);

@@ -24,6 +24,7 @@
 #include "Core/Exception.hpp"
 
 #include <array>
+#include <cassert>
 
 namespace Recluse {
 
