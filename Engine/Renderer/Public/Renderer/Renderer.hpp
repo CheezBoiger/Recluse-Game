@@ -40,7 +40,9 @@ class Texture2DArray;
 class TextureSampler;
 
 // Renderer, which will be responsible for rendering out the scene from a
-// camera's perspective.
+// camera's perspective. Renderer is a module in charge of drawing and displaying
+// onto a window surface. This module is important as it is the only way to see 
+// stuff on screen, and to display pretty graphics!
 class Renderer : public EngineModule<Renderer> {
 public:
   // Definition of the UI Overlay for which to render onto.
@@ -60,23 +62,52 @@ public:
 
   b8                Initialize(Window* window);
   b8                Rendering() const { return mRendering; }
-  void              Configure(UserParams* params);
+
+  // Configure the renderer, resulting either add/removing features of the renderer such as 
+  // certain pipelines like shadowing, or quality of the display.
   void              UpdateRendererConfigs(UserParams* params);
+
+  // Clean up the renderer. This will "render" the renderer inactive.
   void              CleanUp();
+
+  // Perform rendering of the display, you must call this function for each iteration in
+  // the game loop!
   void              Render();
 
+  // Callback used for EngineModule<> set up.
   void              OnStartUp() override;
+
+  // Callback used for EngineModule<> set up.
   void              OnShutDown() override;
+
+  // Push the command list into the renderer. This is the list used to figure out what 
+  // renderable objects to draw and texture on the screen.
   void              PushCmdList(CmdList* cmdList) { mCmdList = cmdList; }
+
+  // Push the deferred list into the renderer, this is the list used for commands to be called
+  // after gbuffer offscreen rendering. This is mainly used for UI overlay rendering.
   void              PushDeferredCmdList(CmdList* cmdList) { mDeferredCmdList = cmdList; }
+
+  // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
+  // a full update on the scene as a result of application change, such as a window change. 
+  // This will effectively stall the gpu if called too often. If you need to constantly update 
+  // the scene, use BuildAsync() instead.
   void              Build();
+  
+  // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process
+  // by using temporary commandbuffers and building them instead. When done, they will replace old 
+  // commandbuffers. Use only if you need to update the scene as a result of dynamic objects being
+  // added/removed to/from the scene. Do not use this call if there is a window change or 
+  // application change, as it will result in a potential crash of the renderer!
   void              BuildAsync();
 
+  // Set the global material for the renderer. This is the data used to specify  the world 
+  // scene, which contains data about the current virtual camera, and global info of the world.
   void              SetGlobalMaterial(GlobalMaterial* material) { mGlobalMat = material; }
-  void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
 
-  void              BeginFrame();
-  void              EndFrame();
+  // Set the light material for this renderer. This will set the lights that are in the world
+  // scene. 
+  void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
   void              WaitIdle();
 
   // Creates a mesh object of which to submit to render.
@@ -158,6 +189,15 @@ public:
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return mRhi; }
+
+protected:
+  // Start rendering onto a frame. This effectively querys for an available frame
+  // to render onto.
+  void              BeginFrame();
+
+  // Once frame rendering is done, call this function to submit back to the swapchain 
+  // for presenting to the window.
+  void              EndFrame();
 
 private:
   void              SetUpFrameBuffers();

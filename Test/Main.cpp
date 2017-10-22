@@ -174,7 +174,7 @@ int main(int c, char* argv[])
     camPosition = Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 4.0f, 4.0f, -4.0f);
     gBuffer->cameraPos = camPosition;
     gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
-   gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+    gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
     gBuffer->viewProj = gBuffer->view * gBuffer->proj;
 
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));

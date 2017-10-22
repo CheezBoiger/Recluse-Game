@@ -918,8 +918,14 @@ void Renderer::CleanUpOffscreen()
 
 void Renderer::Build()
 {
+  mRhi->GraphicsWaitIdle();
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer("PBRFrameBuffer");
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline("PBRPipeline");
+  
+  if (mGlobalMat) {
+    mGlobalMat->CleanUp();
+    mGlobalMat->Initialize();
+  }
 
   if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
     mRhi->DeviceWaitIdle();
@@ -927,16 +933,6 @@ void Renderer::Build()
     // We are only worried about the buffers in the gpu, which need to be recreated
     // in order to update the window resolutions and whatnot. Since the pipeline is recreated,
     // our mats need to be recreated as well.
-    if (mGlobalMat) {
-      mGlobalMat->CleanUp();
-      mGlobalMat->Initialize();
-    }
-
-    for (size_t i = 0; i < MaterialCache.size(); ++i) {
-      Material* mat = MaterialCache[i];
-      mat->CleanUp();
-      mat->Initialize();
-    }
     MaterialCache.resize(0);
   }
 
@@ -981,6 +977,10 @@ void Renderer::Build()
 
             if (renderCmd.meshId) {
               Material* mat = renderCmd.materialId;
+              // Screen must be updated.
+              mat->CleanUp();
+              mat->Initialize();
+
               VkDescriptorSet descriptorSets[] = { 
                 mGlobalMat->Set()->Handle(), 
                 mat->Set()->Handle(), 
