@@ -40,11 +40,11 @@ public:
 
   
   void            Initialize(const VkImageCreateInfo& imageInfo, 
-                    VkImageViewCreateInfo& viewInfo);
+                    VkImageViewCreateInfo& viewInfo, b8 stream = false);
 
   // Uploads the texture from cpu to gpu memory. Can be used to stream texture data for 
   // updates.
-  void            Upload(VulkanRHI* rhi, Image& image);
+  void            Upload(VulkanRHI* rhi, Image const& image);
   void            CleanUp();
 
   VkImageView     View() { return mView; }

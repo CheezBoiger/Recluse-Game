@@ -14,7 +14,7 @@ Image::~Image()
 
 b8 Image::Load(const tchar* imgpath)
 {
-  mData = stbi_load(imgpath, &mWidth, &mHeight, &mChannels, 0);
+  mData = stbi_load(imgpath, &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
   if (!mData) return false;
 
   return true;

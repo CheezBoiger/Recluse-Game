@@ -8,17 +8,22 @@
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/Mesh.hpp"
 #include "Renderer/Material.hpp"
+#include "Renderer/TextureType.hpp"
 #include "Core/Utility/Image.hpp"
 
 #include <stdio.h>
 
 using namespace Recluse;
+bool noAlbedo2 = false;
+bool noAlbedo = false;
 
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   static i32 keys[256];
   keys[key] = action; 
   
+  if (keys[KEY_CODE_B] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
+  if (keys[KEY_CODE_N] == KEY_DOWN) { noAlbedo = !noAlbedo; }
   if (keys[KEY_CODE_D] == KEY_DOWN) window->SetToFullScreen();
   if (keys[KEY_CODE_A] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
   if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
@@ -65,7 +70,6 @@ int main(int c, char* argv[])
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
   GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
   Vector3 camPosition = Vector3(-4.0f, -4.0f, -4.0f);
-  // TODO(): Some inconsistencies in the math!
   gBuffer->cameraPos = Vector4(camPosition, 1.0f);
   gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
   gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
@@ -77,14 +81,21 @@ int main(int c, char* argv[])
   lightMat->Initialize();
   lightMat->Update();
 
+  Image img;
+  img.Load("box.jpg");
+  Texture2D* albedo = gRenderer().CreateTexture2D();
+  albedo->Initialize(img);
+  img.CleanUp();
+
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   Mesh* cubeMesh = gRenderer().CreateMesh();
   cubeMesh->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
  
   Material* cubeMaterial = gRenderer().CreateMaterial();
+  cubeMaterial->SetAlbedo(albedo);
   Material::ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
-  cubeInfo->hasAlbedo = true;
+  cubeInfo->hasAlbedo = false;
   cubeInfo->hasBones = false;
   cubeInfo->hasNormal = false;
   cubeInfo->hasMetallic = false;
@@ -99,8 +110,9 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][3] = 1.0f;
 
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
+  cubeMaterial2->SetAlbedo(albedo);
   Material::ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
-  cubeInfo2->hasAlbedo = true;
+  cubeInfo2->hasAlbedo = false;
   cubeInfo2->hasBones = false;
   cubeInfo2->hasNormal = false;
   cubeInfo2->hasMetallic = false;
@@ -171,6 +183,8 @@ int main(int c, char* argv[])
     cubeInfo->normalMatrix[3][1] = 0.0f;
     cubeInfo->normalMatrix[3][2] = 0.0f;
     cubeInfo->normalMatrix[3][3] = 1.0f;
+    if (noAlbedo2) { cubeMaterial2->ObjectData()->hasAlbedo = false; } else { cubeMaterial2->ObjectData()->hasAlbedo = true; }
+    if (noAlbedo) { cubeMaterial->ObjectData()->hasAlbedo = false; } else { cubeMaterial->ObjectData()->hasAlbedo = true; }
     // Syncronize engine modules, as they run on threads.
     gCore().Sync();
     gRenderer().Render();
@@ -186,6 +200,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
+  gRenderer().FreeTexture2D(albedo);
   gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);

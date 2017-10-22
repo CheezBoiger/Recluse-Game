@@ -32,7 +32,7 @@ void Sampler::CleanUp()
 
 
 void Texture::Initialize(const VkImageCreateInfo& imageInfo, 
-  VkImageViewCreateInfo& viewInfo)
+  VkImageViewCreateInfo& viewInfo, b8 stream)
 {
   if (vkCreateImage(mOwner, &imageInfo, nullptr, &mImage) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create image!\n");
@@ -80,7 +80,7 @@ void Texture::CleanUp()
 }
 
 
-void Texture::Upload(VulkanRHI* rhi, Recluse::Image& image)
+void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
 {
   VkDeviceSize imageSize = image.Width() * image.Height() * 4;
   Buffer stagingBuffer;
@@ -108,6 +108,58 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image& image)
 
   // TODO(): Copy buffer to image stream.
   buffer.Begin(beginInfo);
+    VkImageMemoryBarrier imgBarrier = { };
+    imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgBarrier.image = mImage;
+    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgBarrier.srcAccessMask = 0;
+    imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    imgBarrier.subresourceRange.baseArrayLayer = 0;
+    imgBarrier.subresourceRange.baseMipLevel = 0;
+    imgBarrier.subresourceRange.layerCount = 1;
+    imgBarrier.subresourceRange.levelCount = 1;
+
+    // Image memory barrier.
+    buffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 
+      0,  
+      0, nullptr, 
+      0, nullptr, 
+      1, &imgBarrier
+    );
+    
+    VkBufferImageCopy region = { };
+    region.bufferOffset = 0;
+    region.bufferImageHeight = 0;
+    region.bufferRowLength = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageSubresource.mipLevel = 0;
+    region.imageExtent.width = image.Width();
+    region.imageExtent.height = image.Height();
+    region.imageExtent.depth = 1;
+
+    // Send buffer image copy cmd.
+    buffer.CopyBufferToImage(stagingBuffer.Handle(), mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL , 1, &region);
+
+    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    buffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgBarrier
+    );
+  
   buffer.End();
 
   // TODO(): Submit it to graphics queue!

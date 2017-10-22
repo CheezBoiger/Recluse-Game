@@ -400,7 +400,7 @@ void Renderer::SetUpFrameBuffers()
 
 
   VkAttachmentDescription attachmentDescriptions[2];
-  attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
+  attachmentDescriptions[0].format = VK_FORMAT_R16G16B16A16_SFLOAT;
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -791,7 +791,7 @@ void Renderer::SetUpRenderTextures()
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -803,7 +803,7 @@ void Renderer::SetUpRenderTextures()
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cViewInfo.image = nullptr; // No need to set the image, texture handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -829,7 +829,7 @@ void Renderer::SetUpRenderTextures()
   samplerCI.minFilter = VK_FILTER_LINEAR;
   samplerCI.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
   samplerCI.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-  samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; 
+  samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.mipLodBias = 0.0f;
   samplerCI.maxAnisotropy = 1.0f;
@@ -1149,7 +1149,6 @@ void Renderer::FreeLightMaterial(LightMaterial* material)
 Texture1D* Renderer::CreateTexture1D()
 {
   Texture1D* texture = new Texture1D();
-  
   return texture;
 }
 
@@ -1163,12 +1162,16 @@ void Renderer::FreeTexture1D(Texture1D* texture)
 Texture2D* Renderer::CreateTexture2D()
 {
   Texture2D* texture = new Texture2D();
+  texture->mRhi = mRhi;
+
   return texture;
 }
 
 
 void Renderer::FreeTexture2D(Texture2D* texture)
 {
+  texture->CleanUp();
+
   delete texture;
 }
 

@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Material.hpp"
 #include "Resources.hpp"
+#include "TextureType.hpp"
 
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Buffer.hpp"
@@ -32,7 +33,7 @@ Material::Material()
 void Material::Initialize(b8 isStatic)
 {
   Sampler* sampler = gResources().GetSampler("DefaultSampler");
-  if (mSampler) sampler = mSampler;
+  if (mSampler) sampler = mSampler->Handle();
 
   Texture* defaultTexture = gResources().GetRenderTexture("DefaultTexture");
   // Create the render buffer for the object.
@@ -78,7 +79,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo albedoInfo = {};
   albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mAlbedo) {
-    albedoInfo.imageView = mAlbedo->View();
+    albedoInfo.imageView = mAlbedo->Handle()->View();
   }
   else {
     albedoInfo.imageView = defaultTexture->View();
@@ -88,7 +89,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo metallicInfo = {};
   metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mMetallic) {
-    metallicInfo.imageView = mMetallic->View();
+    metallicInfo.imageView = mMetallic->Handle()->View();
   }
   else {
     metallicInfo.imageView = defaultTexture->View();
@@ -98,7 +99,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo roughInfo = {};
   roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mRoughness) {
-    roughInfo.imageView = mRoughness->View();
+    roughInfo.imageView = mRoughness->Handle()->View();
   }
   else {
     roughInfo.imageView = defaultTexture->View();
@@ -108,7 +109,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo normalInfo = {};
   normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mNormal) {
-    normalInfo.imageView = mNormal->View();
+    normalInfo.imageView = mNormal->Handle()->View();
   }
   else {
     normalInfo.imageView = defaultTexture->View();
@@ -118,7 +119,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo aoInfo = {};
   aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mAo) {
-    aoInfo.imageView = mAo->View();
+    aoInfo.imageView = mAo->Handle()->View();
   }
   else {
     aoInfo.imageView = defaultTexture->View();
@@ -128,7 +129,7 @@ void Material::Initialize(b8 isStatic)
   VkDescriptorImageInfo emissiveInfo = {};
   emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   if (mEmissive) {
-    emissiveInfo.imageView = mEmissive->View();
+    emissiveInfo.imageView = mEmissive->Handle()->View();
   }
   else {
     emissiveInfo.imageView = defaultTexture->View();

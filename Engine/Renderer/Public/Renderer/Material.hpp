@@ -126,13 +126,13 @@ public:
 
   Material();
 
-  void            SetSampler(Sampler* sampler) { mSampler = sampler; }
-  void            SetAlbedo(Texture* albedo) { mAlbedo = albedo; }
-  void            SetMetallic(Texture* metallic) { mMetallic = metallic; }
-  void            SetRoughness(Texture* roughness) { mRoughness = roughness; }
-  void            SetNormal(Texture* normal) { mNormal = normal; }
-  void            SetAo(Texture* ao) { mAo = ao; }
-  void            SetEmissive(Texture* emissive) { mEmissive = emissive; }
+  void            SetSampler(TextureSampler* sampler) { mSampler = sampler; }
+  void            SetAlbedo(Texture2D* albedo) { mAlbedo = albedo; }
+  void            SetMetallic(Texture2D* metallic) { mMetallic = metallic; }
+  void            SetRoughness(Texture2D* roughness) { mRoughness = roughness; }
+  void            SetNormal(Texture2D* normal) { mNormal = normal; }
+  void            SetAo(Texture2D* ao) { mAo = ao; }
+  void            SetEmissive(Texture2D* emissive) { mEmissive = emissive; }
 
   ObjectBuffer*   ObjectData() { return &mObjectData; }
   BonesBuffer*    BonesData() { return &mBonesData; }
@@ -151,14 +151,14 @@ private:
 
   Buffer*         mObjectBuffer;
   Buffer*         mBonesBuffer;
-  Texture*        mAlbedo;
-  Texture*        mMetallic;
-  Texture*        mRoughness;
-  Texture*        mNormal;
-  Texture*        mAo;
-  Texture*        mEmissive;
+  Texture2D*      mAlbedo;
+  Texture2D*      mMetallic;
+  Texture2D*      mRoughness;
+  Texture2D*      mNormal;
+  Texture2D*      mAo;
+  Texture2D*      mEmissive;
 
-  Sampler*        mSampler;
+  TextureSampler* mSampler;
   VulkanRHI*      mRhi;
 
   friend class Renderer;
