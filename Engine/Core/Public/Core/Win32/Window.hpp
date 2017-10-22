@@ -13,6 +13,7 @@ typedef void(*WindowResizeCallback)(Window* window, i32 width, i32 height);
 typedef void(*KeyboardCallback)(Window* window, i32 key, i32 scanCode, i32 action, i32 mods);
 typedef void(*MouseButtonCallback)(Window* window, i32  button, i32 action, i32 mods);
 typedef void(*MousePositionCallback)(Window* window, r64 x, r64 y);
+typedef void(*WindowInactiveCallack)(Window* window);
 
 
 // Window Class. Uses Win32 API for window creation. Sadly, this is will
@@ -23,6 +24,7 @@ class Window {
   static KeyboardCallback       gKeyboardCallback;
   static MouseButtonCallback    gMouseButtonCallback;
   static MousePositionCallback  gMousePositionCallback;
+  static WindowInactiveCallack  gWindowInactiveCallback;
 
 public:
   // Initialize the Window API before creating windows!
@@ -34,6 +36,7 @@ public:
   static void                   SetKeyboardCallback(KeyboardCallback callback);
   static void                   SetMouseButtonCallback(MouseButtonCallback callback);
   static void                   SetMousePositionCallback(MousePositionCallback callback);
+  static void                   SetWindowInactiveCallback(WindowInactiveCallack callback);
 
   Window()
     : mHandle(NULL)

@@ -17,6 +17,8 @@ WindowResizeCallback      Window::gWindowResizeCallback = nullptr;
 KeyboardCallback          Window::gKeyboardCallback = nullptr;
 MouseButtonCallback       Window::gMouseButtonCallback = nullptr;
 MousePositionCallback     Window::gMousePositionCallback = nullptr;
+WindowInactiveCallack     Window::gWindowInactiveCallback = nullptr;
+
 
 b8 Window::Initialized()
 {
@@ -45,6 +47,12 @@ void Window::SetMouseButtonCallback(MouseButtonCallback callback)
 void Window::SetMousePositionCallback(MousePositionCallback callback)
 {
   gMousePositionCallback = callback;
+}
+
+
+void Window::SetWindowInactiveCallback(WindowInactiveCallack callback)
+{
+  gWindowInactiveCallback = callback;
 }
 
 b8    gFullScreenAltTab = false;

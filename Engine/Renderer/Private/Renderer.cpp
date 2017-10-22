@@ -833,7 +833,7 @@ void Renderer::SetUpRenderTextures()
   samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.mipLodBias = 0.0f;
-  samplerCI.maxAnisotropy = 1.0f;
+  samplerCI.maxAnisotropy = 16.0f;
   samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
   samplerCI.maxLod = 1.0f;
   samplerCI.minLod = 0.0f;
