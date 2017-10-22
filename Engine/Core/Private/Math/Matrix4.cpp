@@ -222,7 +222,7 @@ Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
   Matrix4 perspective = Matrix4::Identity();
   perspective[3][3] = 0.0f;
   perspective[0][0] = 1.0f / (aspect * tanHalfFov);
-  perspective[1][1] = 1.0f / tanHalfFov;
+  perspective[1][1] = -(1.0f / tanHalfFov);
   perspective[2][3] = 1.0f;
   
   perspective[2][2] = (zFar + zNear) / (zFar - zNear);
