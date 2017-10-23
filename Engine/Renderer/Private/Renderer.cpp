@@ -44,6 +44,9 @@ Renderer::Renderer()
   , mRendering(false)
   , mInitialized(false)
 {
+  mHDR.data.gamma = 2.2f;
+  mHDR.data.bloomEnabled = false;
+  mHDR.data.exposure = 1.0f;
 }
 
 
@@ -107,6 +110,14 @@ void Renderer::Render()
   offscreenSI.pWaitSemaphores = waitSemas;
   offscreenSI.pWaitDstStageMask = waitFlags;
 
+  VkSubmitInfo hdrSI = offscreenSI;
+  VkSemaphore hdrWaits[] = { mOffscreen.semaphore->Handle() };
+  VkSemaphore hdrSignal[] = { mHDR.semaphore->Handle() };
+  VkCommandBuffer hdrCmd = mHDR.cmdBuffer->Handle();
+  hdrSI.pCommandBuffers = &hdrCmd;
+  hdrSI.pSignalSemaphores = hdrSignal;
+  hdrSI.pWaitSemaphores = hdrWaits;
+
   // Update materials before rendering the frame.
   UpdateMaterials();
 
@@ -114,11 +125,15 @@ void Renderer::Render()
   BeginFrame();
   while (mOffscreen.cmdBuffer->Recording() || !mRhi->CmdBuffersComplete()) {}
 
+    // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
+
+    // High Dynamic Range and Gamma Pass.
+    mRhi->GraphicsSubmit(hdrSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
     // ssent our signal to our swapchain cmd buffers.
-    VkSemaphore waitSemaphores[] = { mOffscreen.semaphore->Handle() };
+    VkSemaphore waitSemaphores[] = { mHDR.semaphore->Handle() };
     mRhi->SubmitCurrSwapchainCmdBuffer(1, waitSemaphores);
 
     // Render the Overlay.
@@ -148,6 +163,7 @@ void Renderer::CleanUp()
   mUI.CleanUp();
 
   mScreenQuad.CleanUp();
+  CleanUpHDR(true);
   CleanUpOffscreen();
   CleanUpDescriptorSets(true);
   CleanUpGraphicsPipelines();
@@ -175,6 +191,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpDescriptorSets(true);
   SetUpGraphicsPipelines();
   SetUpOffscreen();
+  SetUpHDR(true);
   mScreenQuad.Initialize(mRhi);
 
   mRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
@@ -340,12 +357,13 @@ void Renderer::SetUpDescriptorSets(b8 fullSetup)
   DescriptorSet* offscreenImageDescriptor = mRhi->CreateDescriptorSet();
   offscreenImageDescriptor->Allocate(mRhi->DescriptorPool(), finalSetLayout);
 
-  Texture* pbrColor = gResources().GetRenderTexture("PBRColor");
-  Sampler* pbrSampler = gResources().GetSampler("PBRSampler");
+  Texture* hdrColor = gResources().GetRenderTexture("HDRGammaTexture");
+  Sampler* hdrSampler = gResources().GetSampler("HDRGammaSampler");
 
+  // TODO(): Final texture must be the hdr post process texture instead!
   VkDescriptorImageInfo renderTextureFinal = {};
-  renderTextureFinal.sampler = pbrSampler->Handle();
-  renderTextureFinal.imageView = pbrColor->View();
+  renderTextureFinal.sampler = hdrSampler->Handle();
+  renderTextureFinal.imageView = hdrColor->View();
   renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkWriteDescriptorSet writeInfo = {};
@@ -362,6 +380,35 @@ void Renderer::SetUpDescriptorSets(b8 fullSetup)
   offscreenImageDescriptor->Update(1, &writeInfo);
 
   gResources().RegisterDescriptorSet("OffscreenDescriptorSet", offscreenImageDescriptor);
+
+  // HDR Layout pass.
+  DescriptorSetLayout* hdrSetLayout = mRhi->CreateDescriptorSetLayout();
+  gResources().RegisterDescriptorSetLayout("HDRGammaLayout", hdrSetLayout);
+  VkDescriptorSetLayoutBinding hdrBindings[3];
+  hdrBindings[0].binding = 0;
+  hdrBindings[0].descriptorCount = 1;
+  hdrBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  hdrBindings[0].pImmutableSamplers = nullptr;
+  hdrBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  
+  hdrBindings[1].binding = 1;
+  hdrBindings[1].descriptorCount = 1;
+  hdrBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  hdrBindings[1].pImmutableSamplers = nullptr;
+  hdrBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  
+  hdrBindings[2].binding = 2;
+  hdrBindings[2].descriptorCount = 1;
+  hdrBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  hdrBindings[2].pImmutableSamplers = nullptr;
+  hdrBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo hdrLayoutCi = {};
+  hdrLayoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  hdrLayoutCi.bindingCount = 3;
+  hdrLayoutCi.pBindings = hdrBindings;
+  
+  hdrSetLayout->Initialize(hdrLayoutCi);
 }
 
 
@@ -382,6 +429,9 @@ void Renderer::CleanUpDescriptorSets(b8 fullCleanup)
 
   DescriptorSet* offscreenDescriptorSet = gResources().UnregisterDescriptorSet("OffscreenDescriptorSet");
   mRhi->FreeDescriptorSet(offscreenDescriptorSet);
+
+  DescriptorSetLayout* hdrSetLayout = gResources().UnregisterDescriptorSetLayout("HDRGammaLayout");
+  mRhi->FreeDescriptorSetLayout(hdrSetLayout);
 }
 
 
@@ -398,6 +448,9 @@ void Renderer::SetUpFrameBuffers()
 
   FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer("PBRFrameBuffer", pbrFrameBuffer);
+
+  FrameBuffer* hdrFrameBuffer = mRhi->CreateFrameBuffer();
+  gResources().RegisterFrameBuffer("HDRGammaFrameBuffer", hdrFrameBuffer);
 
 
   VkAttachmentDescription attachmentDescriptions[2];
@@ -472,6 +525,15 @@ void Renderer::SetUpFrameBuffers()
 
   pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
   
+  // No need to render any depth, as we are only writing on a 2d surface.
+  subpass.pDepthStencilAttachment = nullptr;
+  attachments[0] = gResources().GetRenderTexture("HDRGammaTexture")->View();
+  attachments[1] = nullptr;
+  framebufferCI.attachmentCount = 1;
+  attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
+  renderpassCI.attachmentCount = 1;
+
+  hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
 }
 
 
@@ -756,6 +818,33 @@ void Renderer::SetUpGraphicsPipelines()
 
   mRhi->FreeShader(quadVert);
   mRhi->FreeShader(quadFrag);
+
+  // HDR Pipeline initialization.
+  GraphicsPipeline* hdrPipeline = mRhi->CreateGraphicsPipeline();
+  VkPipelineLayoutCreateInfo hdrLayout = { };
+  VkDescriptorSetLayout hdrSetLayout = gResources().GetDescriptorSetLayout("HDRGammaLayout")->Layout();
+
+  Shader* hdrFrag = mRhi->CreateShader();
+  Shader* hdrVert = mRhi->CreateShader();
+
+  hdrFrag->Initialize(filepath + "/Shaders/HDRGammaPass.frag.spv");
+  hdrVert->Initialize(filepath + "/Shaders/HDRGammaPass.vert.spv");
+
+  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer("HDRGammaFrameBuffer");
+  graphicsPipeline.renderPass = hdrBuffer->RenderPass();
+
+  finalShaders[0].module = hdrVert->Handle();
+  finalShaders[1].module = hdrFrag->Handle();
+
+  hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  hdrLayout.setLayoutCount = 1;
+  hdrLayout.pSetLayouts = &hdrSetLayout;
+
+  hdrPipeline->Initialize(graphicsPipeline, hdrLayout);
+
+  mRhi->FreeShader(hdrFrag);
+  mRhi->FreeShader(hdrVert);
+  gResources().RegisterGraphicsPipeline("HDRGammaPipeline", hdrPipeline);
 }
 
 
@@ -766,6 +855,9 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline("FinalPassPipeline");
   mRhi->FreeGraphicsPipeline(quadPipeline);
+
+  GraphicsPipeline* hdrPipeline = gResources().UnregisterGraphicsPipeline("HDRGammaPipeline");
+  mRhi->FreeGraphicsPipeline(hdrPipeline);
 }
 
 
@@ -773,6 +865,10 @@ void Renderer::CleanUpFrameBuffers()
 {
   FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer("PBRFrameBuffer");
   mRhi->FreeFrameBuffer(pbrFrameBuffer);
+
+
+  FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer("HDRGammaFrameBuffer");
+  mRhi->FreeFrameBuffer(hdrFrameBuffer);
 }
 
 
@@ -781,7 +877,11 @@ void Renderer::SetUpRenderTextures()
   Texture* pbrColor = mRhi->CreateTexture();
   Texture* pbrDepth = mRhi->CreateTexture();
   Sampler* pbrSampler = mRhi->CreateSampler();
+  Texture* hdrTexture = mRhi->CreateTexture();
+  Sampler* hdrSampler = mRhi->CreateSampler();
 
+  gResources().RegisterSampler("HDRGammaSampler", hdrSampler);
+  gResources().RegisterRenderTexture("HDRGammaTexture", hdrTexture);
   gResources().RegisterRenderTexture("PBRColor", pbrColor);
   gResources().RegisterRenderTexture("PBRDepth", pbrDepth);
   gResources().RegisterSampler("PBRSampler", pbrSampler);
@@ -816,6 +916,10 @@ void Renderer::SetUpRenderTextures()
 
   pbrColor->Initialize(cImageInfo, cViewInfo);
 
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  hdrTexture->Initialize(cImageInfo, cViewInfo);
+
   cImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
 
@@ -839,6 +943,7 @@ void Renderer::SetUpRenderTextures()
   samplerCI.minLod = 0.0f;
 
   pbrSampler->Initialize(samplerCI);
+  hdrSampler->Initialize(samplerCI);
 
   Sampler* defaultSampler = mRhi->CreateSampler();
   defaultSampler->Initialize(samplerCI);
@@ -885,6 +990,12 @@ void Renderer::CleanUpRenderTextures()
   Texture* pbrDepth = gResources().UnregisterRenderTexture("PBRDepth");
   Sampler* pbrSampler = gResources().UnregisterSampler("PBRSampler");
 
+  Texture* hdrTexture = gResources().UnregisterRenderTexture("HDRGammaTexture");
+  Sampler* hdrSampler = gResources().UnregisterSampler("HDRGammaSampler");
+  
+  mRhi->FreeTexture(hdrTexture);
+  mRhi->FreeSampler(hdrSampler);
+
   Texture* defaultTexture = gResources().UnregisterRenderTexture("DefaultTexture");
   Sampler* defaultSampler = gResources().UnregisterSampler("DefaultSampler");
 
@@ -913,6 +1024,101 @@ void Renderer::CleanUpOffscreen()
 {
   mRhi->FreeVkSemaphore(mOffscreen.semaphore);
   mRhi->FreeCommandBuffer(mOffscreen.cmdBuffer);
+}
+
+
+void Renderer::SetUpHDR(b8 fullSetUp)
+{
+  if (fullSetUp) {
+    mHDR.hdrBuffer = mRhi->CreateBuffer();
+    VkBufferCreateInfo bufferCi = { };
+    bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferCi.size = sizeof(mHDR.data);
+    bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    mHDR.hdrBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    mHDR.hdrBuffer->Map();
+      memcpy(mHDR.hdrBuffer->Mapped(), &mHDR.data, sizeof(mHDR.data));
+    mHDR.hdrBuffer->UnMap();
+ 
+    mHDR.cmdBuffer = mRhi->CreateCommandBuffer();
+    mHDR.cmdBuffer->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+    mHDR.semaphore = mRhi->CreateVkSemaphore();
+    VkSemaphoreCreateInfo semaCi = { };
+    semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    mHDR.semaphore->Initialize(semaCi);
+  }
+
+  DescriptorSet* hdrSet = mRhi->CreateDescriptorSet();
+  gResources().RegisterDescriptorSet("HDRGammaSet", hdrSet);
+  VkWriteDescriptorSet hdrWrites[3];
+  VkDescriptorBufferInfo hdrBufferInfo = {};
+  hdrBufferInfo.offset = 0;
+  hdrBufferInfo.range = sizeof(mHDR.data);
+  hdrBufferInfo.buffer = mHDR.hdrBuffer->Handle();
+
+  VkDescriptorImageInfo pbrImageInfo = { };
+  pbrImageInfo.sampler = gResources().GetSampler("PBRSampler")->Handle();
+  pbrImageInfo.imageView = gResources().GetRenderTexture("PBRColor")->View();
+  pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
+  VkDescriptorImageInfo bloomImageInfo = { };
+  bloomImageInfo.sampler = gResources().GetSampler("PBRSampler")->Handle();
+  bloomImageInfo.imageView = gResources().GetRenderTexture("PBRColor")->View();
+  bloomImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  hdrWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  hdrWrites[0].descriptorCount = 1;
+  hdrWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  hdrWrites[0].dstArrayElement = 0;
+  hdrWrites[0].dstBinding = 0;
+  hdrWrites[0].pImageInfo = &pbrImageInfo; 
+  hdrWrites[0].pBufferInfo = nullptr;
+  hdrWrites[0].pTexelBufferView = nullptr;
+  hdrWrites[0].pNext = nullptr;
+
+  hdrWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  hdrWrites[1].descriptorCount = 1;
+  hdrWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  hdrWrites[1].dstArrayElement = 0;
+  hdrWrites[1].dstBinding = 1;
+  hdrWrites[1].pImageInfo = &bloomImageInfo; //
+  hdrWrites[1].pBufferInfo = nullptr;
+  hdrWrites[1].pTexelBufferView = nullptr;
+  hdrWrites[1].pNext = nullptr;
+
+  hdrWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  hdrWrites[2].descriptorCount = 1;
+  hdrWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  hdrWrites[2].dstArrayElement = 0;
+  hdrWrites[2].dstBinding = 2;
+  hdrWrites[2].pImageInfo = nullptr; //
+  hdrWrites[2].pBufferInfo = &hdrBufferInfo;
+  hdrWrites[2].pTexelBufferView = nullptr;
+  hdrWrites[2].pNext = nullptr;
+
+  // Allocate and update the hdr buffer.
+  hdrSet->Allocate(mRhi->DescriptorPool(), gResources().GetDescriptorSetLayout("HDRGammaLayout"));
+  hdrSet->Update(3, hdrWrites);
+}
+
+
+void Renderer::CleanUpHDR(b8 fullCleanUp)
+{
+  if (fullCleanUp) {
+    mRhi->FreeBuffer(mHDR.hdrBuffer);
+    mRhi->FreeCommandBuffer(mHDR.cmdBuffer);
+    mRhi->FreeVkSemaphore(mHDR.semaphore);
+
+    mHDR.cmdBuffer = nullptr;
+    mHDR.semaphore = nullptr;
+  }
+
+  DescriptorSet* hdrSet = gResources().UnregisterDescriptorSet("HDRGammaSet");
+  mRhi->FreeDescriptorSet(hdrSet);
 }
 
 
@@ -1015,7 +1221,75 @@ void Renderer::Build()
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 
+  BuildHDRCmdBuffer();
   mRhi->RebuildCommandBuffers();
+}
+
+
+void Renderer::BuildHDRCmdBuffer()
+{
+  CommandBuffer* cmdBuffer = mHDR.cmdBuffer;
+  if (!cmdBuffer) return;
+
+  GraphicsPipeline* hdrPipeline = gResources().GetGraphicsPipeline("HDRGammaPipeline");
+  FrameBuffer* hdrFrameBuffer = gResources().GetFrameBuffer("HDRGammaFrameBuffer");
+  DescriptorSet* hdrSet = gResources().GetDescriptorSet("HDRGammaSet");
+  
+
+  cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  VkCommandBufferBeginInfo cmdBi = { };
+  cmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;  
+
+  VkClearValue clearVal = { };
+  clearVal.color = { 0.2f, 0.2f, 0.2f, 1.0f };
+
+  cmdBuffer->Begin(cmdBi);
+    VkRenderPassBeginInfo renderpassInfo = { };
+    renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderpassInfo.framebuffer = hdrFrameBuffer->Handle();
+    renderpassInfo.clearValueCount = 1;
+    renderpassInfo.pClearValues =  &clearVal;
+    renderpassInfo.renderPass = hdrFrameBuffer->RenderPass(); 
+    renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
+    renderpassInfo.renderArea.offset = { 0, 0 };
+
+    cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    VkViewport viewport = {};
+    // After rendering onto the pipeline, pbr framebuffer scales by half! Need to adjust.
+    viewport.height = (r32)mWindowHandle->Height() * 2.0f;
+    viewport.width = (r32)mWindowHandle->Width() * 2.0f;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    viewport.x = -(r32)mWindowHandle->Width();
+    viewport.y = -(r32)mWindowHandle->Height();
+
+    cmdBuffer->SetViewPorts(0, 1, &viewport);
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
+    VkDescriptorSet dSet = hdrSet->Handle();
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
+    VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
+    VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
+    VkDeviceSize offsets[] = { 0 };
+
+    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+  cmdBuffer->End();
+}
+
+
+void Renderer::SetExposure(r32 e)
+{
+  mHDR.data.exposure = e;
+}
+
+
+void Renderer::SetGamma(r32 g)
+{
+  mHDR.data.gamma = g;
 }
 
 
@@ -1055,6 +1329,11 @@ void Renderer::UpdateMaterials()
     Material* mat = MaterialCache[i];
     mat->Update();
   }
+
+  Buffer* hdr = mHDR.hdrBuffer;
+  hdr->Map();
+    memcpy(hdr->Mapped(), &mHDR.data, sizeof(mHDR.data));
+  hdr->UnMap();
 }
 
 
@@ -1084,6 +1363,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
 
   mUI.CleanUp();
 
+  CleanUpHDR(false);
   CleanUpGraphicsPipelines();
   CleanUpDescriptorSets(false);
   CleanUpFrameBuffers();
@@ -1093,6 +1373,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpFrameBuffers();
   SetUpDescriptorSets(false);
   SetUpGraphicsPipelines();
+  SetUpHDR(false);
 
   mUI.Initialize(mRhi);
 

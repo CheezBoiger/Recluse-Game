@@ -201,7 +201,7 @@ void main()
     
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 N = normalize(fragNormal);
-  
+
   
   OutColor = vec4(fragAlbedo, 1.0);
 }

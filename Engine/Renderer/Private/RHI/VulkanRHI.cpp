@@ -170,7 +170,7 @@ void VulkanRHI::Initialize(HWND windowHandle)
     R_DEBUG("ERROR: Failed to create secondary command pool!\n");
   }
 
-  BuildDescriptorPool(UINT16_MAX, 5);
+  BuildDescriptorPool(UINT16_MAX, UINT16_MAX);
 
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();

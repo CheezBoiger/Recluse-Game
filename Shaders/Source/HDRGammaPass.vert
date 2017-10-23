@@ -4,9 +4,9 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (location = 0) in vec2 position;
-layout (location = 0) in vec2 uv;
+layout (location = 1) in vec2 uv;
 
-struct FRAG_IN {
+out FRAG_IN {
   vec2 position;
   vec2 uv;
 } frag_in;

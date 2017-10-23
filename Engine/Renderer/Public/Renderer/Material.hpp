@@ -37,6 +37,7 @@ public:
     r32             coffSH[9];
     i32             screenSize[2];
     i32             pad;
+ 
   };
 
   void              Update();
@@ -64,6 +65,9 @@ public:
     Vector4 color;
     b8      enable;
     b8      pad[15];
+    
+    DirectionalLight()
+      : enable(false) { }
   };
 
   struct PointLight {
@@ -73,6 +77,9 @@ public:
     r32     pad0  [3];
     b8      enable;
     b8      pad1  [15];
+
+    PointLight()
+      : enable(false), range(1.0f) { }
   };
   
   struct LightBuffer {

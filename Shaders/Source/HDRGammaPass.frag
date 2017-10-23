@@ -3,7 +3,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-struct FRAG_IN {
+in FRAG_IN {
   vec2 position;
   vec2 uv;
 } frag_in;
@@ -12,11 +12,12 @@ struct FRAG_IN {
 layout (set = 0, binding = 0) uniform sampler2D sceneSurface;
 layout (set = 0, binding = 1) uniform sampler2D bloomSurface;
 
-layout (set = 0, binding = 1) uniform HDR {
+layout (set = 0, binding = 2) uniform HDR {
   float gamma;
   float exposure;
-  bool  bloomEnabled;
-  bool  pad[7];
+  float pad0[2];
+  int   bloomEnabled;
+  int   pad1[3];
 } hdr;
 
 layout (location = 0) out vec4 fragColor;
@@ -30,7 +31,7 @@ void main()
   
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (hdr.bloomEnabled) { color += bloom; }
+  if (hdr.bloomEnabled >= 1) { color += bloom; }
   
   // Extended exposure pass with Reinhard tone mapping. Gamma correction
   // is also enabled.

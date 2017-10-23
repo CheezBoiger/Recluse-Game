@@ -26,7 +26,7 @@
 }
 
 #define null_bones(m) { \
-  m.boneWeights[0] = 0.0f; m.boneWeights[1] = 0.0f; m.boneWeights[2] = 0.0f; m.boneWeights[3] = 0.0f; \
+  m.boneWeights.x = 0.0f; m.boneWeights.y = 0.0f; m.boneWeights.z = 0.0f; m.boneWeights.w = 0.0f; \
   m.boneIds[0] = 0; m.boneIds[1] = 0; m.boneIds[2]; m.boneIds[3] = 0; \
 }
 
@@ -236,11 +236,11 @@ std::vector<SkinnedVertex> Cube::MeshInstance()
   std::vector<SkinnedVertex> cube(36);
 
   for (size_t i = 0; i < cube.size(); ++i) {
-    load_position_v4(cube[i], positions[i]);
-    load_normal_v4(cube[i], normals[i]);
-    load_texcoords(cube[i], texcoords[i]);
+    cube[i].position = positions[i];
+    cube[i].normal = normals[i];
+    cube[i].texcoord0 = Vector2(texcoords[i].x, texcoords[i].y);
     null_bones(cube[i]);
-    load_color(cube[i], colors[i]);
+    cube[i].color = colors[i];
   }
   return cube;
 }

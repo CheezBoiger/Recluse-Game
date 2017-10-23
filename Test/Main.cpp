@@ -22,9 +22,18 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   static i32 keys[256];
   keys[key] = action; 
   
+  // Test albedo enabling.
   if (keys[KEY_CODE_B] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
   if (keys[KEY_CODE_N] == KEY_DOWN) { noAlbedo = !noAlbedo; }
-  if (keys[KEY_CODE_D] == KEY_DOWN) window->SetToFullScreen();
+
+  // Test Gamma correction
+  if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  // Test HDR Reinhard exposure.
+  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(5.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(5.0 * Time::DeltaTime)); }
+  // Window changing sets.
+  if (keys[KEY_CODE_D] == KEY_DOWN) { window->SetToFullScreen(); }
   if (keys[KEY_CODE_A] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
   if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
   if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) window->Close();
@@ -39,6 +48,12 @@ void WindowResized(Window* window, i32 width, i32 height)
   }
 }
 
+
+void MousePositionMove(Window* window, r64 x, r64 y)
+{
+}
+
+
 int main(int c, char* argv[])
 {
   // NOTE(): Always start up the core first, before starting anything else up.
@@ -52,6 +67,7 @@ int main(int c, char* argv[])
 
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);
+  Window::SetMousePositionCallback(MousePositionMove);
 
   Window window;
   window.Create(RTEXT("私は猫が大好き"), 800, 600); 
@@ -119,7 +135,7 @@ int main(int c, char* argv[])
   cubeInfo2->hasRoughness = false;
   cubeInfo2->hasAO = false;
   cubeInfo2->hasEmissive = false;
-  cubeInfo2->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 3.0f));
+  cubeInfo2->model = Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f));
   cubeInfo2->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
   cubeInfo2->normalMatrix[3][1] = 0.0f;
@@ -171,7 +187,7 @@ int main(int c, char* argv[])
     }
 
     // NOTE(): Update game state... This is hardcoded though.
-    camPosition = Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 4.0f, 4.0f, -4.0f);
+    camPosition = Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f);
     gBuffer->cameraPos = camPosition;
     gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
     gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);

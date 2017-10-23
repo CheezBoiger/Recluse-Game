@@ -2,32 +2,35 @@
 #pragma once
 
 #include "Core/Types.hpp"
+#include "Core/Math/Vector4.hpp"
+#include "Core/Math/Vector3.hpp"
+#include "Core/Math/Vector2.hpp"
 
 namespace Recluse {
 
 
 struct Vertex {
-  r32 position      [4];
-  r32 normal        [4];
-  r32 texcoord      [2];
-  r32 padding       [2];
-  r32 color         [4];
+  Vector4 position;
+  Vector4 normal;
+  Vector2 texcoord;
+  Vector2 padding;
+  Vector4 color;
 };
 
 
 struct QuadVertex {
-  r32 position      [2];  
-  r32 texcoord      [2];
+  Vector2 position;  
+  Vector2 texcoord;
 };
 
 
 struct SkinnedVertex {
-  r32 position      [4];
-  r32 normal        [4];
-  r32 texcoord0     [2];
-  r32 texcoord1     [2];
-  r32 color         [4];
-  r32 boneWeights   [4];
-  i32 boneIds       [4];
+  Vector4 position;
+  Vector4 normal;
+  Vector2 texcoord0;
+  Vector2 texcoord1;
+  Vector4 color;
+  Vector4 boneWeights;
+  i32     boneIds       [4];
 };
 } // Recluse

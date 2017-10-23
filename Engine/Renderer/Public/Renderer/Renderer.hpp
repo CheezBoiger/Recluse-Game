@@ -190,6 +190,11 @@ public:
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return mRhi; }
 
+  void              SetGamma(r32 gamma);
+  void              SetExposure(r32 exposure);
+  r32               Gamma() const { return mHDR.data.gamma; }
+  r32               Exposure() const { return mHDR.data.exposure; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -210,6 +215,9 @@ private:
   void              CleanUpOffscreen();
   void              SetUpRenderTextures();
   void              SetUpOffscreen();
+  void              BuildHDRCmdBuffer();
+  void              SetUpHDR(b8 fullSetup);
+  void              CleanUpHDR(b8 fullCleanup);
   void              UpdateMaterials();
   void              RenderOverlay();
 
@@ -226,6 +234,21 @@ private:
     CommandBuffer*  cmdBuffer;
     Semaphore*      semaphore;
   } mOffscreen; 
+
+  struct HDRBuffer {
+    r32       gamma;
+    r32       exposure;
+    r32       pad0[2];
+    i32       bloomEnabled;
+    i32       pad1[3];
+  };
+
+  struct {
+    CommandBuffer*  cmdBuffer;
+    Semaphore*      semaphore;
+    Buffer*         hdrBuffer;
+    HDRBuffer       data;
+  } mHDR;
 
   ScreenQuad        mScreenQuad;
   UIOverlay         mUI;
