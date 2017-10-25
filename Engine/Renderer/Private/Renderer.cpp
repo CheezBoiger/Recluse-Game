@@ -905,7 +905,7 @@ void Renderer::SetUpRenderTextures()
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  cViewInfo.image = nullptr; // No need to set the image, texture handles this for us.
+  cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
   cViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -936,11 +936,13 @@ void Renderer::SetUpRenderTextures()
   samplerCI.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCI.compareEnable = VK_FALSE;
   samplerCI.mipLodBias = 0.0f;
   samplerCI.maxAnisotropy = 16.0f;
   samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
   samplerCI.maxLod = 1.0f;
   samplerCI.minLod = 0.0f;
+  samplerCI.unnormalizedCoordinates = VK_FALSE;
 
   pbrSampler->Initialize(samplerCI);
   hdrSampler->Initialize(samplerCI);
@@ -1257,13 +1259,12 @@ void Renderer::BuildHDRCmdBuffer()
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     VkViewport viewport = {};
-    // After rendering onto the pipeline, pbr framebuffer scales by half! Need to adjust.
-    viewport.height = (r32)mWindowHandle->Height() * 2.0f;
-    viewport.width = (r32)mWindowHandle->Width() * 2.0f;
+    viewport.height = (r32)mWindowHandle->Height();
+    viewport.width = (r32)mWindowHandle->Width();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    viewport.x = -(r32)mWindowHandle->Width();
-    viewport.y = -(r32)mWindowHandle->Height();
+    viewport.x = 0.0f; 
+    viewport.y = 0.0f; 
 
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
@@ -1272,9 +1273,8 @@ void Renderer::BuildHDRCmdBuffer()
     VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
     VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
     VkDeviceSize offsets[] = { 0 };
-
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     cmdBuffer->DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();

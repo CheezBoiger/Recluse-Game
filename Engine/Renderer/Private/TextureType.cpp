@@ -42,6 +42,7 @@ void Texture2D::Initialize(Image const& image)
   imgViewCI.subresourceRange.baseMipLevel = 0;
   imgViewCI.subresourceRange.layerCount = 1;
   imgViewCI.subresourceRange.levelCount = 1;
+  imgViewCI.components = { };
   imgViewCI.format = VK_FORMAT_R8G8B8A8_UNORM;
   
   texture->Initialize(imgCI, imgViewCI);

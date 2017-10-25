@@ -52,7 +52,10 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
     return;
   }
 
-  vkBindImageMemory(mOwner, mImage, mMemory, 0);
+  if (vkBindImageMemory(mOwner, mImage, mMemory, 0) != VK_SUCCESS) {
+    R_DEBUG("ERROR: Failed to bind memory to image!\n");
+    return;
+  }
 
   viewInfo.image = mImage;
   if (vkCreateImageView(mOwner, &viewInfo, nullptr, &mView) != VK_SUCCESS) {
@@ -94,7 +97,7 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
 
   stagingBuffer.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   
-  VkResult result = stagingBuffer.Map(imageSize, 0);
+  VkResult result = stagingBuffer.Map();
     memcpy(stagingBuffer.Mapped(), image.Data(), imageSize);
   stagingBuffer.UnMap();
 
@@ -143,6 +146,7 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
     region.imageExtent.width = image.Width();
     region.imageExtent.height = image.Height();
     region.imageExtent.depth = 1;
+    region.imageOffset = { 0, 0, 0 };
 
     // Send buffer image copy cmd.
     buffer.CopyBufferToImage(stagingBuffer.Handle(), mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL , 1, &region);
