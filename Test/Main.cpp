@@ -94,6 +94,20 @@ int main(int c, char* argv[])
   globalMat->Update();
 
   LightMaterial* lightMat = gRenderer().CreateLightMaterial();
+
+  LightMaterial::LightBuffer* lights = lightMat->Data();
+  Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
+  lights->primaryLight.direction = Vector4(-1.0f, 0.0f, 0.0f, 1.0f);
+  lights->primaryLight.enable = 1;
+  lights->pointLights[0].enable = true;
+  lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
+  lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->pointLights[0].range = 90.0f;
+
+  lights->pointLights[1].enable = true;
+  lights->pointLights[1].position = Vector4(3.0f, 2.0f, -4.0f, 1.0f);
+  lights->pointLights[1].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->pointLights[1].range = 30.0f;
   lightMat->Initialize();
   lightMat->Update();
 
@@ -142,21 +156,45 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
 
+  Material* cubeMaterial3 = gRenderer().CreateMaterial();
+  cubeMaterial3->SetAlbedo(albedo);
+  Material::ObjectBuffer* cubeInfo3 = cubeMaterial3->ObjectData();
+  cubeInfo3->hasAlbedo = false;
+  cubeInfo3->hasBones = false;
+  cubeInfo3->hasNormal = false;
+  cubeInfo3->hasMetallic = false;
+  cubeInfo3->hasRoughness = false;
+  cubeInfo3->hasAO = false;
+  cubeInfo3->hasEmissive = false;
+  cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
+  cubeInfo3->normalMatrix = cubeInfo->model.Inverse().Transpose();
+  cubeInfo3->normalMatrix[3][0] = 0.0f;
+  cubeInfo3->normalMatrix[3][1] = 0.0f;
+  cubeInfo3->normalMatrix[3][2] = 0.0f;
+  cubeInfo3->normalMatrix[3][3] = 1.0f;
+
   cubeMaterial->Initialize();
   cubeMaterial->Update();     // 0x42
 
   cubeMaterial2->Initialize();
   cubeMaterial2->Update();
 
+  cubeMaterial3->Initialize();
+  cubeMaterial3->Update();
+
   ///////////////////////////////////////////////////////////////////////////////////////
 
+  /* Create the cmd list to send to the renderer. */
   CmdList list;
-  list.Resize(2);
+  list.Resize(3);
   list[0].materialId = cubeMaterial;
   list[0].meshId = cubeMesh;
 
   list[1].materialId = cubeMaterial2;
   list[1].meshId = cubeMesh;
+
+  list[2].materialId = cubeMaterial3;
+  list[2].meshId = cubeMesh;
 
   gRenderer().PushCmdList(&list);
   gRenderer().SetGlobalMaterial(globalMat);
@@ -199,8 +237,18 @@ int main(int c, char* argv[])
     cubeInfo->normalMatrix[3][1] = 0.0f;
     cubeInfo->normalMatrix[3][2] = 0.0f;
     cubeInfo->normalMatrix[3][3] = 1.0f;
+
+    light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -3.0f, 2.0f, 0.0f);
+    lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
+    cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
+
     if (noAlbedo2) { cubeMaterial2->ObjectData()->hasAlbedo = false; } else { cubeMaterial2->ObjectData()->hasAlbedo = true; }
     if (noAlbedo) { cubeMaterial->ObjectData()->hasAlbedo = false; } else { cubeMaterial->ObjectData()->hasAlbedo = true; }
+
+    // //////////
+    // End updates.
+    // //////////
+
     // Syncronize engine modules, as they run on threads.
     gCore().Sync();
     gRenderer().Render();
@@ -217,6 +265,7 @@ int main(int c, char* argv[])
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
+  gRenderer().FreeMaterial(cubeMaterial3);
   gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);

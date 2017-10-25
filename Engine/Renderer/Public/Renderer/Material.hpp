@@ -63,8 +63,8 @@ public:
   struct DirectionalLight {
     Vector4 direction;
     Vector4 color;
-    b8      enable;
-    b8      pad[15];
+    i32     pad[3];
+    i32     enable;
     
     DirectionalLight()
       : enable(false) { }
@@ -74,9 +74,8 @@ public:
     Vector4 position;
     Vector4 color;
     r32     range;
-    r32     pad0  [3];
-    b8      enable;
-    b8      pad1  [15];
+    i32     enable;
+    i32     pad[2];
 
     PointLight()
       : enable(false), range(1.0f) { }
@@ -84,9 +83,9 @@ public:
   
   struct LightBuffer {
     DirectionalLight  primaryLight;
-    PointLight        pointLights[512];
+    PointLight        pointLights[128];
   };
-
+  LightMaterial();
   void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
   void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
   void              Update();

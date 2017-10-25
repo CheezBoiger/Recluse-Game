@@ -13,13 +13,13 @@ in FRAG_IN {
   vec4  color;
 } frag_in;
 
-#define MAX_LIGHTS            512
+#define MAX_LIGHTS            128
 
 struct DirectionLight {
   vec4 direction;
   vec4 color;
-  bool enable;
-  bool pad[15];
+  ivec3 pad;
+  int enable;
 };
 
 
@@ -27,9 +27,8 @@ struct PointLight {
   vec4  position;
   vec4  color;
   float range;
-  float pad0[3];
-  bool enable;
-  bool pad1[15];
+  int enable;
+  ivec2 pad;
 };
 
 
@@ -122,16 +121,50 @@ vec3 FSchlick(float cosTheta, vec3 F0, float roughness)
 
 
 // Lambert Diffuse for our diffuse partial of our equation.
-vec3 LambertDiffuse(float kD, vec3 albedoFrag)
+vec3 LambertDiffuse(vec3 kD, vec3 albedoFrag)
 {
   return kD * albedoFrag / PI;
 }
 
 
 // TODO():
-vec3 CookTorrBRDF()
+vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metallic)
 {
-  return vec3(0.0);
+  vec3 L = light.position.xyz - frag_in.position;
+  vec3 nV = normalize(V);
+  vec3 nL = normalize(L);
+  vec3 nN = normalize(N);
+  
+  vec3 H = normalize(nV + nL);
+  
+  float dotNL = clamp(dot(nN, nL), 0.0, 1.0);
+  float dotNV = clamp(dot(nN, nV), 0.0, 1.0);
+  float dotLH = clamp(dot(nL, H), 0.0, 1.0);
+  float dotNH = clamp(dot(nN, H), 0.0, 1.0);
+  
+  vec3 color = vec3(0.0);
+  vec3 F0 = vec3(0.04);
+  
+  F0 = mix(F0, albedoFrag, metallic);
+  
+  float distance = length(L);
+  float attenuation = light.range / ((distance * distance) + 1.0);
+  vec3 radiance = light.color.xyz * attenuation;
+  
+  if (dotNL > 0.0) {
+    float D = DGGX(dotNH, roughness);
+    float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
+    
+    vec3 F = FSchlick(dotNV, F0, roughness);
+    vec3 brdf = D * F * G / (4 * dotNL * dotNV);
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+    
+    color += (LambertDiffuse(kD, albedoFrag) + brdf) * radiance * dotNL;
+  }
+  
+  return color;
 }
 
 
@@ -202,6 +235,15 @@ void main()
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 N = normalize(fragNormal);
 
+  // Brute force lights for now.
+  vec3 outColor = vec3(0.0);
+  for (int i = 0; i < MAX_LIGHTS; ++i) {
+    PointLight light = gLightBuffer.pointLights[i];
+    if (light.enable <= 0) { continue; }
+    outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    
+  }
   
-  OutColor = vec4(fragAlbedo, 1.0);
+  // We might wanna set a debug param here...
+  OutColor = vec4(outColor, 1.0);
 }

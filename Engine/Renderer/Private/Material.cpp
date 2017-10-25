@@ -285,6 +285,22 @@ void GlobalMaterial::Initialize()
 }
 
 
+LightMaterial::LightMaterial()
+{
+  mLights.primaryLight.pad[0] = 0;
+  mLights.primaryLight.pad[1] = 0;
+  mLights.primaryLight.pad[2] = 0;
+  for (size_t i = 0; i < 128; ++i) {
+    mLights.pointLights[i].position = Vector4();
+    mLights.pointLights[i].color = Vector4();
+    mLights.pointLights[i].range = 0.0f;
+    mLights.pointLights[i].enable = false;
+    mLights.pointLights[i].pad[0] = 0;
+    mLights.pointLights[i].pad[1] = 0;
+  }
+}
+
+
 void LightMaterial::Initialize()
 {
   // TODO
@@ -300,7 +316,7 @@ void LightMaterial::Initialize()
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCI.size = dSize;
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-  
+
   mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRLightMaterialLayout");

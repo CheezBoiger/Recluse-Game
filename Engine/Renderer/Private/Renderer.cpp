@@ -1263,8 +1263,8 @@ void Renderer::BuildHDRCmdBuffer()
     viewport.width = (r32)mWindowHandle->Width();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    viewport.x = 0.0f; 
-    viewport.y = 0.0f; 
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
 
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
