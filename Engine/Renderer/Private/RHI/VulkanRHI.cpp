@@ -544,7 +544,7 @@ void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
 
-  mSwapchain.ReCreate(mSurface, surfaceFormats[0], VK_PRESENT_MODE_MAILBOX_KHR, capabilities);
+  mSwapchain.ReCreate(mSurface, surfaceFormats[0], presentMode, capabilities);
   
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();

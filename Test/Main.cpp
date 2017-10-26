@@ -60,8 +60,6 @@ int main(int c, char* argv[])
   gCore().StartUp();
   gFilesystem().StartUp();
   gRenderer().StartUp();
-  gPhysics().StartUp();
-  gAudio().StartUp();
   gAnimation().StartUp();
   gUI().StartUp();
 
@@ -149,8 +147,8 @@ int main(int c, char* argv[])
   cubeInfo2->hasRoughness = false;
   cubeInfo2->hasAO = false;
   cubeInfo2->hasEmissive = false;
-  cubeInfo2->model = Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f));
-  cubeInfo2->normalMatrix = cubeInfo->model.Inverse().Transpose();
+  cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
+  cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
@@ -167,7 +165,7 @@ int main(int c, char* argv[])
   cubeInfo3->hasAO = false;
   cubeInfo3->hasEmissive = false;
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
-  cubeInfo3->normalMatrix = cubeInfo->model.Inverse().Transpose();
+  cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
   cubeInfo3->normalMatrix[3][1] = 0.0f;
   cubeInfo3->normalMatrix[3][2] = 0.0f;
@@ -214,13 +212,11 @@ int main(int c, char* argv[])
 
     // Render out the scene.
     gAnimation().UpdateState(dt);
-    gAudio().UpdateState(dt);
     gUI().UpdateState(dt);
 
     // TODO(): needs to be on separate thread.
     while (timeAccumulator > Time::FixTime) {
       // TODO(): Instead of sleeping, update the game state.
-      gPhysics().UpdateState(dt);
       timeAccumulator -= Time::FixTime;
     }
 
@@ -276,9 +272,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////  
   gUI().ShutDown();
   gAnimation().ShutDown();
-  gAudio().ShutDown();
   gRenderer().ShutDown();
-  gPhysics().ShutDown();
   gFilesystem().ShutDown();
   gCore().ShutDown();
 #if (_DEBUG)
