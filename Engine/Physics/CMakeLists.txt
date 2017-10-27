@@ -4,6 +4,12 @@ project("Physics")
 set(PHYSICS_PUBLIC_DIR     Public/Physics)
 set(PHYSICS_PRIVATE_DIR    Private)
 
+if (${RECLUSE_PHYSX_DIR} STREQUAL "")
+  message(ERROR_FATAL "PhysX dir is not valid! Need to specify PHYSXSDK in system enviroment variables!")
+endif()
+
+message("Searching PhysX directory: ${RECLUSE_PHYSX_DIR}")
+
 string(REPLACE "\\" "/" RECLUSE_PHYSX_DIR  ${RECLUSE_PHYSX_DIR})
 set(PHYSX_LIB_DIR            ${RECLUSE_PHYSX_DIR}/PhysX_3.4/Lib/vc14win64)
 set(PHYSX_FOUNDATION_LIB_DIR ${RECLUSE_PHYSX_DIR}/PxShared/lib/vc14win64)
@@ -81,7 +87,7 @@ target_link_libraries(${RECLUSE_PHYSICS}
   ${PHYSX_LIBS}
 )
 
-
+message("PhysX libraries found.")
 
 if (MSVC)
   foreach(source IN LISTS PHYSICS_FILES)
