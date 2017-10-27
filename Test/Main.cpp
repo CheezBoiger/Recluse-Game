@@ -115,6 +115,12 @@ int main(int c, char* argv[])
   albedo->Initialize(img);
   img.CleanUp();
 
+  Image tom;
+  tom.Load("tom.jpg");
+  Texture2D* tomImg = gRenderer().CreateTexture2D();
+  tomImg->Initialize(tom);
+  tom.CleanUp();
+
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   Mesh* cubeMesh = gRenderer().CreateMesh();
@@ -200,7 +206,6 @@ int main(int c, char* argv[])
   gRenderer().Build();
 
   r64 timeAccumulator = 0.0;
-
   ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -261,6 +266,7 @@ int main(int c, char* argv[])
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
+  gRenderer().FreeTexture2D(tomImg);
   gRenderer().FreeMaterial(cubeMaterial3);
   gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);

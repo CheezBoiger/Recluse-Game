@@ -96,7 +96,7 @@ public:
   
   // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process
   // by using temporary commandbuffers and building them instead. When done, they will replace old 
-  // commandbuffers. Use only if you need to update the scene as a result of dynamic objects being
+  // commandbuffers. Use only if you need to update the scene as a result of dynamic objects/materials being
   // added/removed to/from the scene. Do not use this call if there is a window change or 
   // application change, as it will result in a potential crash of the renderer!
   void              BuildAsync();

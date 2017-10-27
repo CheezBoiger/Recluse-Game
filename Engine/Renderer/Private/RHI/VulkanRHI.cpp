@@ -50,6 +50,8 @@ VulkanRHI::VulkanRHI()
   , mSwapchainCmdBufferBuild(nullptr)
 {
   mSwapchainInfo.mComplete = false;
+  mSwapchainInfo.mCmdBufferSet = 0;
+  mSwapchainInfo.mCmdBufferSets.resize(2);
 }
 
 
@@ -182,9 +184,12 @@ void VulkanRHI::CleanUp()
 {
   mSwapchain.WaitOnQueues();
 
-  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
-    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
-    cmdBuffer.Free();
+  for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
+    auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[i];
+    for (size_t j = 0; j < cmdBufferSet.size(); ++j) {
+      CommandBuffer& cmdBuffer = cmdBufferSet[i];
+      cmdBuffer.Free();
+    }
   }
 
   if (mCmdPool) {
@@ -387,7 +392,12 @@ void VulkanRHI::SetUpSwapchainRenderPass()
 
 void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
 {
-  if (vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+  if (result != VK_SUCCESS) {
+    if (result == VK_ERROR_DEVICE_LOST)  {
+      R_DEBUG("WARNING: Vulkan ignoring queue submission! Window possibly minimized?\n");
+      return;
+    }
     R_DEBUG("ERROR: Unsuccessful graphics queue submit!\n");
   }
 }
@@ -406,7 +416,10 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   // more freedom for offscreen rendering that way.
   VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-  VkCommandBuffer cmdBuffer[] = { mSwapchainInfo.mSwapchainCmdBuffers[mSwapchainInfo.mCurrentImageIndex].Handle() };
+  
+  VkCommandBuffer cmdBuffer[] = { 
+    mSwapchainInfo.mCmdBufferSets[CurrentSwapchainCmdBufferSet()][mSwapchainInfo.mCurrentImageIndex].Handle() 
+  };
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -478,12 +491,13 @@ void VulkanRHI::DeviceWaitIdle()
 }
 
 
-void VulkanRHI::CreateSwapchainCommandBuffers()
+void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
 {
-  mSwapchainInfo.mSwapchainCmdBuffers.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
+  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
+  cmdBufferSet.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
 
-  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
-    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
+  for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
+    CommandBuffer& cmdBuffer = cmdBufferSet[i];
     cmdBuffer.SetOwner(mLogicalDevice.Handle());
     cmdBuffer.Allocate(mCmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     
@@ -515,14 +529,15 @@ void VulkanRHI::CreateSwapchainCommandBuffers()
 }
 
 
-void VulkanRHI::RebuildCommandBuffers()
+void VulkanRHI::RebuildCurrentCommandBuffers()
 {
-  for (size_t i = 0; i < mSwapchainInfo.mSwapchainCmdBuffers.size(); ++i) {
-    CommandBuffer& cmdBuffer = mSwapchainInfo.mSwapchainCmdBuffers[i];
+  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[CurrentSwapchainCmdBufferSet()];
+  for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
+    CommandBuffer& cmdBuffer = cmdBufferSet[i];
     cmdBuffer.Free();
   }
   mSwapchainInfo.mComplete = false;
-  CreateSwapchainCommandBuffers();
+  CreateSwapchainCommandBuffers(CurrentSwapchainCmdBufferSet());
 }
 
 

@@ -61,9 +61,49 @@ void Material::Initialize(b8 isStatic)
   mBonesBuffer = mRhi->CreateBuffer();
   mBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-  std::array<VkWriteDescriptorSet, 8> writeSets;
+  UpdateDescriptorSet(true);
+}
 
+
+void Material::CleanUp()
+{
+  if (mObjectBuffer) {
+    mRhi->FreeBuffer(mObjectBuffer);
+    mObjectBuffer = nullptr;
+  }
+
+  if (mObjectBufferSet) {
+    mRhi->FreeDescriptorSet(mObjectBufferSet);
+    mObjectBufferSet = nullptr;
+  }
+
+  if (mBonesBuffer) {
+    mRhi->FreeBuffer(mBonesBuffer);
+    mBonesBuffer = nullptr;
+  }
+}
+
+
+void Material::Update() 
+{
+  mObjectBuffer->Map();
+    memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
+  mObjectBuffer->UnMap();
+
+  UpdateDescriptorSet(false);
+}
+
+
+void Material::UpdateDescriptorSet(b8 includeBufferUpdate)
+{
+  std::array<VkWriteDescriptorSet, 8> writeSets;
   size_t count = 0;
+
+  Sampler* sampler = gResources().GetSampler("DefaultSampler");
+  if (mSampler) sampler = mSampler->Handle();
+
+  Texture* defaultTexture = gResources().GetRenderTexture("DefaultTexture");
+
   VkDescriptorBufferInfo objBufferInfo = {};
   objBufferInfo.buffer = mObjectBuffer->Handle();
   objBufferInfo.offset = 0;
@@ -136,14 +176,6 @@ void Material::Initialize(b8 isStatic)
   }
   emissiveInfo.sampler = sampler->Handle();
 
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  writeSets[count].dstBinding = 0;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].pBufferInfo = &objBufferInfo;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].pNext = nullptr;
-  count++;
 
   writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[count].dstBinding = 2;
@@ -182,7 +214,6 @@ void Material::Initialize(b8 isStatic)
   writeSets[count].pNext = nullptr;
   count++;
 
-
   writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[count].dstBinding = 6;
   writeSets[count].descriptorCount = 1;
@@ -201,14 +232,27 @@ void Material::Initialize(b8 isStatic)
   writeSets[count].pNext = nullptr;
   count++;
 
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  writeSets[count].dstBinding = 1;
-  writeSets[count].pBufferInfo = &boneBufferInfo;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].pNext = nullptr;
-  count++;
+  // Include uniform buffer update if these have changed internally, which 
+  // is not really going to happen.
+  if (includeBufferUpdate) {
+    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeSets[count].dstBinding = 0;
+    writeSets[count].dstArrayElement = 0;
+    writeSets[count].pBufferInfo = &objBufferInfo;
+    writeSets[count].descriptorCount = 1;
+    writeSets[count].pNext = nullptr;
+    count++;
+
+    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeSets[count].dstBinding = 1;
+    writeSets[count].pBufferInfo = &boneBufferInfo;
+    writeSets[count].dstArrayElement = 0;
+    writeSets[count].descriptorCount = 1;
+    writeSets[count].pNext = nullptr;
+    count++;
+  }
 
   if (!mObjectBufferSet) {
     R_DEBUG("ERROR: Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!\n");
@@ -216,33 +260,6 @@ void Material::Initialize(b8 isStatic)
   }
 
   mObjectBufferSet->Update(static_cast<u32>(count), writeSets.data());
-}
-
-
-void Material::CleanUp()
-{
-  if (mObjectBuffer) {
-    mRhi->FreeBuffer(mObjectBuffer);
-    mObjectBuffer = nullptr;
-  }
-
-  if (mObjectBufferSet) {
-    mRhi->FreeDescriptorSet(mObjectBufferSet);
-    mObjectBufferSet = nullptr;
-  }
-
-  if (mBonesBuffer) {
-    mRhi->FreeBuffer(mBonesBuffer);
-    mBonesBuffer = nullptr;
-  }
-}
-
-
-void Material::Update() 
-{
-  mObjectBuffer->Map();
-    memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
-  mObjectBuffer->UnMap();
 }
 
 

@@ -102,7 +102,7 @@ public:
 
   // Rebuild the swapchain commandbuffers with using the function provided from SetSwapchainCmdBufferBuild.
   // This will build the swapchain command buffers.
-  void                          RebuildCommandBuffers();
+  void                          RebuildCurrentCommandBuffers();
 
   // Get the logical device.
   VkDevice                      Device() { return mLogicalDevice.Handle(); }
@@ -168,6 +168,9 @@ public:
   // swapchain that we are rendering onto.
   u32                           CurrentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
 
+  // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
+  // set we shouldn't rebuild, while the gpu is using them!
+  u32                           CurrentSwapchainCmdBufferSet() const { return mSwapchainInfo.mCmdBufferSet; }
   VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
   size_t                        NumOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
   VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
@@ -178,7 +181,7 @@ private:
   void                          SetUpSwapchainRenderPass();
   void                          QueryFromSwapchain();
   void                          CreateDepthAttachment();
-  void                          CreateSwapchainCommandBuffers();  
+  void                          CreateSwapchainCommandBuffers(u32 swapSet);  
 
   // Builds the descriptor pool for materials. WARNING: Recalling this function will
   // destroy old descriptor pool and replace with a new one, be sure to destroy all
@@ -197,14 +200,16 @@ private:
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {
-    std::vector<VkFramebuffer>  mSwapchainFramebuffers;
-    std::vector<CommandBuffer>  mSwapchainCmdBuffers;
-    b8                          mComplete;
-    VkRenderPass                mSwapchainRenderPass;
-    VkImage                     mDepthAttachment;
-    VkImageView                 mDepthView;
-    VkDeviceMemory              mDepthMemory;
-    u32                         mCurrentImageIndex;
+    std::vector<VkFramebuffer>                mSwapchainFramebuffers;
+    //std::vector<CommandBuffer>                mSwapchainCmdBuffers;
+    std::vector<std::vector<CommandBuffer> >  mCmdBufferSets;
+    b8                                        mComplete;
+    VkRenderPass                              mSwapchainRenderPass;
+    VkImage                                   mDepthAttachment;
+    VkImageView                               mDepthView;
+    VkDeviceMemory                            mDepthMemory;
+    u32                                       mCurrentImageIndex;
+    i32                                       mCmdBufferSet;
   } mSwapchainInfo;
 
   SwapchainCmdBufferBuildFunc   mSwapchainCmdBufferBuild;

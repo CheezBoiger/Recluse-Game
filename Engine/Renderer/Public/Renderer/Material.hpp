@@ -150,6 +150,8 @@ public:
   void            Update();
 
 private:
+  void            UpdateDescriptorSet(b8 includeBufferUpdate);
+
   ObjectBuffer    mObjectData;
   BonesBuffer     mBonesData;
 

@@ -1224,7 +1224,7 @@ void Renderer::Build()
   cmdBuffer->End();
 
   BuildHDRCmdBuffer();
-  mRhi->RebuildCommandBuffers();
+  mRhi->RebuildCurrentCommandBuffers();
 }
 
 

@@ -237,6 +237,8 @@ b8 Window::Create(std::string title, i32 width, i32 height)
     ltitle, (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX), 
     xPos, yPos, mWidth, mHeight, NULL, NULL, GetModuleHandle(NULL), NULL);
 
+  delete[] ltitle;
+
   if (!mHandle) {
     R_DEBUG("ERROR: Failed to create window!\n");
     return false;
