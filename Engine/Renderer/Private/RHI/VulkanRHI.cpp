@@ -184,6 +184,7 @@ void VulkanRHI::CleanUp()
 {
   mSwapchain.WaitOnQueues();
 
+  // Clean up all cmd buffers used for swapchain rendering.
   for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
     auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[i];
     for (size_t j = 0; j < cmdBufferSet.size(); ++j) {
@@ -218,7 +219,7 @@ void VulkanRHI::CleanUp()
   mSwapchain.CleanUp();
 
   if (mSurface != VK_NULL_HANDLE) {
-    vkDestroySurfaceKHR(gContext.CurrentInstance(), mSurface, nullptr);
+    gContext.DestroySurface(mSurface);
     mSurface = VK_NULL_HANDLE;
   }
 

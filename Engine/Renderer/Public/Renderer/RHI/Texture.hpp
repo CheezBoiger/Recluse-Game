@@ -39,21 +39,29 @@ public:
     , mMemory(VK_NULL_HANDLE) { }
 
   
-  void            Initialize(const VkImageCreateInfo& imageInfo, 
-                    VkImageViewCreateInfo& viewInfo, b8 stream = false);
+  void                  Initialize(const VkImageCreateInfo& imageInfo, 
+                          VkImageViewCreateInfo& viewInfo, b8 stream = false);
 
   // Uploads the texture from cpu to gpu memory. Can be used to stream texture data for 
   // updates.
-  void            Upload(VulkanRHI* rhi, Image const& image);
-  void            CleanUp();
+  void                  Upload(VulkanRHI* rhi, Image const& image);
+  void                  CleanUp();
 
-  VkImageView     View() { return mView; }
-  VkImage         Image() { return mImage; }
-  VkDeviceMemory  Memory() { return mMemory; }
+  VkImageView           View() { return mView; }
+  VkImage               Image() { return mImage; }
+  VkDeviceMemory        Memory() { return mMemory; }
+  VkFormat              Format() const { return mFormat; }
+  u32                   Width() const { return mWidth; }
+  u32                   Height() const { return mHeight; }
+  VkSampleCountFlagBits Samples() const { return mSamples; }
 
 private:
-  VkImageView     mView;
-  VkImage         mImage;
-  VkDeviceMemory  mMemory;
+  VkImageView           mView;
+  VkImage               mImage;
+  VkDeviceMemory        mMemory;
+  VkFormat              mFormat;
+  VkSampleCountFlagBits mSamples;
+  u32                   mWidth;
+  u32                   mHeight;
 };
 } // Recluse

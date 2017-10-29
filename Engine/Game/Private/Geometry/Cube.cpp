@@ -234,7 +234,6 @@ std::array<u32, 36> indices = {
 std::vector<SkinnedVertex> Cube::MeshInstance()
 {
   std::vector<SkinnedVertex> cube(36);
-
   for (size_t i = 0; i < cube.size(); ++i) {
     cube[i].position = positions[i];
     cube[i].normal = normals[i];

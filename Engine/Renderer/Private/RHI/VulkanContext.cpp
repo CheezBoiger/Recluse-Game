@@ -119,6 +119,12 @@ VkSurfaceKHR Context::CreateSurface(HWND handle)
 }
 
 
+void Context::DestroySurface(VkSurfaceKHR surface)
+{
+  vkDestroySurfaceKHR(mInstance, surface, nullptr);
+}
+
+
 void Context::EnableDebugMode()
 {
   u32 count;

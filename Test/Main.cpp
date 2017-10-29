@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
 #include "Game/Geometry/Cube.hpp"
+#include "Game/Camera.hpp"
+#include "Core/Logging/Log.hpp"
 
 #include "Renderer/Vertex.hpp"
 #include "Renderer/UserParams.hpp"
@@ -14,6 +16,7 @@
 #include <stdio.h>
 
 using namespace Recluse;
+
 bool noAlbedo2 = false;
 bool noAlbedo = false;
 
@@ -23,8 +26,8 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   keys[key] = action; 
   
   // Test albedo enabling.
-  if (keys[KEY_CODE_B] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
-  if (keys[KEY_CODE_N] == KEY_DOWN) { noAlbedo = !noAlbedo; }
+  if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
+  if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
 
   // Test Gamma correction
   if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
@@ -33,9 +36,9 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(5.0 * Time::DeltaTime)); }
   if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(5.0 * Time::DeltaTime)); }
   // Window changing sets.
-  if (keys[KEY_CODE_D] == KEY_DOWN) { window->SetToFullScreen(); }
-  if (keys[KEY_CODE_A] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (keys[KEY_CODE_W] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
+  if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
+  if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
+  if (keys[KEY_CODE_B] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
   if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) window->Close();
 }
 
@@ -81,12 +84,14 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
+  Camera gCamera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f, 
+    Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
   GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
-  Vector3 camPosition = Vector3(-4.0f, 4.0f, -4.0f);
-  gBuffer->cameraPos = Vector4(camPosition, 1.0f);
-  gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
-  gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+  gBuffer->cameraPos = Vector4(gCamera.Position(), 1.0f);
+  gBuffer->proj = gCamera.Projection();
+  gBuffer->view = gCamera.View();
   gBuffer->viewProj = gBuffer->view * gBuffer->proj;
   globalMat->Initialize();
   globalMat->Update();
@@ -115,12 +120,6 @@ int main(int c, char* argv[])
   albedo->Initialize(img);
   img.CleanUp();
 
-  Image tom;
-  tom.Load("tom.jpg");
-  Texture2D* tomImg = gRenderer().CreateTexture2D();
-  tomImg->Initialize(tom);
-  tom.CleanUp();
-
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   Mesh* cubeMesh = gRenderer().CreateMesh();
@@ -129,13 +128,6 @@ int main(int c, char* argv[])
   Material* cubeMaterial = gRenderer().CreateMaterial();
   cubeMaterial->SetAlbedo(albedo);
   Material::ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
-  cubeInfo->hasAlbedo = false;
-  cubeInfo->hasBones = false;
-  cubeInfo->hasNormal = false;
-  cubeInfo->hasMetallic = false;
-  cubeInfo->hasRoughness = false;
-  cubeInfo->hasAO = false;
-  cubeInfo->hasEmissive = false;
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo->normalMatrix[3][0] = 0.0f;
@@ -146,13 +138,6 @@ int main(int c, char* argv[])
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
   cubeMaterial2->SetAlbedo(albedo);
   Material::ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
-  cubeInfo2->hasAlbedo = false;
-  cubeInfo2->hasBones = false;
-  cubeInfo2->hasNormal = false;
-  cubeInfo2->hasMetallic = false;
-  cubeInfo2->hasRoughness = false;
-  cubeInfo2->hasAO = false;
-  cubeInfo2->hasEmissive = false;
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
@@ -163,13 +148,6 @@ int main(int c, char* argv[])
   Material* cubeMaterial3 = gRenderer().CreateMaterial();
   cubeMaterial3->SetAlbedo(albedo);
   Material::ObjectBuffer* cubeInfo3 = cubeMaterial3->ObjectData();
-  cubeInfo3->hasAlbedo = false;
-  cubeInfo3->hasBones = false;
-  cubeInfo3->hasNormal = false;
-  cubeInfo3->hasMetallic = false;
-  cubeInfo3->hasRoughness = false;
-  cubeInfo3->hasAO = false;
-  cubeInfo3->hasEmissive = false;
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
@@ -226,10 +204,11 @@ int main(int c, char* argv[])
     }
 
     // NOTE(): Update game state... This is hardcoded though.
-    camPosition = Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f);
-    gBuffer->cameraPos = camPosition;
-    gBuffer->proj = Matrix4::Perspective(Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f);
-    gBuffer->view = Matrix4::LookAt(camPosition, Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+    gCamera.SetAspect(((r32)window.Width() / (r32)window.Height()));
+    gCamera.SetPosition(Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f));
+    gBuffer->cameraPos = gCamera.Position();
+    gBuffer->proj = gCamera.Projection();
+    gBuffer->view = gCamera.View();
     gBuffer->viewProj = gBuffer->view * gBuffer->proj;
 
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
@@ -256,7 +235,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    printf("%f ms\t\t%d fps\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
 
     Window::PollEvents();
   }
@@ -266,7 +245,6 @@ int main(int c, char* argv[])
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
-  gRenderer().FreeTexture2D(tomImg);
   gRenderer().FreeMaterial(cubeMaterial3);
   gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);

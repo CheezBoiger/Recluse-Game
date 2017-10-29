@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Common.hpp"
+#include "Exception.hpp"
 #include <cmath>
 
 namespace Recluse {
@@ -123,12 +124,13 @@ Quaternion Quaternion::Normalize() const
 
 Quaternion Quaternion::AngleAxis(const r32 radians, const Vector3& axis)
 {
-  r32 sineHalf = sinf(radians / 2.0f);
+  r32 radHalf = radians * 0.5f;
+  r32 sineHalf = sinf(radHalf);
   return Quaternion(
     axis.x * sineHalf,
     axis.y * sineHalf,
     axis.z * sineHalf,
-    cosf(radians / 2.0f)
+    cosf(radHalf)
   );
 }
 
@@ -171,6 +173,13 @@ Vector3 Quaternion::ToEulerAngles() const
   eulerAngles.z = atan2f(t3, t4);
 
   return eulerAngles;
+}
+
+
+Quaternion Quaternion::Matrix4ToQuaternion(const Matrix4& rot)
+{
+  R_DEBUG("ERROR: %s Not implemented.\n", __FUNCTION__);
+  return Quaternion();
 }
 
 

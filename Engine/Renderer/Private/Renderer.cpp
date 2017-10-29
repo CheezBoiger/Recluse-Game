@@ -10,6 +10,7 @@
 #include "Mesh.hpp"
 #include "UserParams.hpp"
 #include "TextureType.hpp"
+#include "UIOverlay.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -22,6 +23,7 @@
 #include "Core/Core.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Core/Exception.hpp"
+#include "Core/Logging/Log.hpp"
 
 #include <array>
 #include <cassert>
@@ -47,6 +49,12 @@ Renderer::Renderer()
   mHDR.data.gamma = 2.2f;
   mHDR.data.bloomEnabled = false;
   mHDR.data.exposure = 1.0f;
+  
+  mOffscreen.cmdBuffers.resize(2);
+  mOffscreen.currCmdBufferIndex = 0;
+
+  mHDR.cmdBuffers.resize(2);
+  mOffscreen.currCmdBufferIndex = 0;
 }
 
 
@@ -95,7 +103,7 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
-  VkCommandBuffer offscreenCmd = mOffscreen.cmdBuffer->Handle();
+  VkCommandBuffer offscreenCmd = mOffscreen.cmdBuffers[mOffscreen.currCmdBufferIndex]->Handle();
   VkSemaphore waitSemas[] = { mRhi->SwapchainObject()->ImageAvailableSemaphore() };
   VkSemaphore signalSemas[] = { mOffscreen.semaphore->Handle() };
   VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -113,7 +121,7 @@ void Renderer::Render()
   VkSubmitInfo hdrSI = offscreenSI;
   VkSemaphore hdrWaits[] = { mOffscreen.semaphore->Handle() };
   VkSemaphore hdrSignal[] = { mHDR.semaphore->Handle() };
-  VkCommandBuffer hdrCmd = mHDR.cmdBuffer->Handle();
+  VkCommandBuffer hdrCmd = mHDR.cmdBuffers[mHDR.currCmdBufferIndex]->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
   hdrSI.pSignalSemaphores = hdrSignal;
   hdrSI.pWaitSemaphores = hdrWaits;
@@ -123,7 +131,7 @@ void Renderer::Render()
 
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-  while (mOffscreen.cmdBuffer->Recording() || !mRhi->CmdBuffersComplete()) {}
+  while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
 
     // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
@@ -142,8 +150,6 @@ void Renderer::Render()
   EndFrame();
 
 
-
-
   // Compute pipeline render.
   VkSubmitInfo computeSubmit = { };
   computeSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -160,7 +166,12 @@ void Renderer::CleanUp()
 {
   // Must wait for all command buffers to finish before cleaning up.
   mRhi->DeviceWaitIdle();
-  mUI.CleanUp();
+
+  if (mUI) {
+    mUI->CleanUp();
+    delete mUI;
+    mUI = nullptr;
+  }
 
   mScreenQuad.CleanUp();
   CleanUpHDR(true);
@@ -182,6 +193,7 @@ void Renderer::CleanUp()
 b8 Renderer::Initialize(Window* window)
 {
   if (!window) return false;
+  if (mInitialized) return true;
   
   mWindowHandle = window;
   mRhi->Initialize(window->Handle());
@@ -224,7 +236,11 @@ b8 Renderer::Initialize(Window* window)
     cmdBuffer.EndRenderPass();
   });
 
-  mUI.Initialize(mRhi);
+  if (!mUI) {
+    mUI = new UIOverlay();
+    mUI->Initialize(mRhi);
+  }
+
   mInitialized = true;
   return true;
 }
@@ -454,24 +470,24 @@ void Renderer::SetUpFrameBuffers()
 
 
   VkAttachmentDescription attachmentDescriptions[2];
-  attachmentDescriptions[0].format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  attachmentDescriptions[0].format = pbrColor->Format();
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+  attachmentDescriptions[0].samples = pbrColor->Samples();
   attachmentDescriptions[0].flags = 0;
   
-  attachmentDescriptions[1].format = VK_FORMAT_D24_UNORM_S8_UINT;
+  attachmentDescriptions[1].format = pbrDepth->Format();
   attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
   attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+  attachmentDescriptions[1].samples = pbrDepth->Samples();
   attachmentDescriptions[1].flags = 0;   
 
   VkSubpassDependency dependencies[2];
@@ -526,11 +542,13 @@ void Renderer::SetUpFrameBuffers()
   pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
   
   // No need to render any depth, as we are only writing on a 2d surface.
+  Texture* hdrColor = gResources().GetRenderTexture("HDRGammaTexture");
   subpass.pDepthStencilAttachment = nullptr;
-  attachments[0] = gResources().GetRenderTexture("HDRGammaTexture")->View();
+  attachments[0] = hdrColor->View();
   attachments[1] = nullptr;
   framebufferCI.attachmentCount = 1;
-  attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
+  attachmentDescriptions[0].format = hdrColor->Format();
+  attachmentDescriptions[0].samples = hdrColor->Samples();
   renderpassCI.attachmentCount = 1;
 
   hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
@@ -596,7 +614,6 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.stencilTestEnable = VK_FALSE;
   depthStencilCI.back = { };
   depthStencilCI.front = { };
-  
 
   VkPipelineColorBlendAttachmentState colorBlendAttachment = { };
   colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -1017,15 +1034,19 @@ void Renderer::SetUpOffscreen()
   semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   mOffscreen.semaphore->Initialize(semaCI);
 
-  mOffscreen.cmdBuffer = mRhi->CreateCommandBuffer();
-  mOffscreen.cmdBuffer->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  for (size_t i = 0; i < mOffscreen.cmdBuffers.size(); ++i) {
+    mOffscreen.cmdBuffers[i] = mRhi->CreateCommandBuffer();
+    mOffscreen.cmdBuffers[i]->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  }
 }
 
 
 void Renderer::CleanUpOffscreen()
 {
   mRhi->FreeVkSemaphore(mOffscreen.semaphore);
-  mRhi->FreeCommandBuffer(mOffscreen.cmdBuffer);
+  for (size_t i = 0; i < mOffscreen.cmdBuffers.size(); ++i) {
+    mRhi->FreeCommandBuffer(mOffscreen.cmdBuffers[i]);
+  }
 }
 
 
@@ -1044,9 +1065,10 @@ void Renderer::SetUpHDR(b8 fullSetUp)
       memcpy(mHDR.hdrBuffer->Mapped(), &mHDR.data, sizeof(mHDR.data));
     mHDR.hdrBuffer->UnMap();
  
-    mHDR.cmdBuffer = mRhi->CreateCommandBuffer();
-    mHDR.cmdBuffer->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-
+    for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
+      mHDR.cmdBuffers[i] = mRhi->CreateCommandBuffer();
+      mHDR.cmdBuffers[i]->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    }
     mHDR.semaphore = mRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCi = { };
     semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1112,11 +1134,15 @@ void Renderer::CleanUpHDR(b8 fullCleanUp)
 {
   if (fullCleanUp) {
     mRhi->FreeBuffer(mHDR.hdrBuffer);
-    mRhi->FreeCommandBuffer(mHDR.cmdBuffer);
     mRhi->FreeVkSemaphore(mHDR.semaphore);
 
-    mHDR.cmdBuffer = nullptr;
+    for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
+      mRhi->FreeCommandBuffer(mHDR.cmdBuffers[i]);
+      mHDR.cmdBuffers[i] = nullptr;
+    }
+
     mHDR.semaphore = nullptr;
+    mHDR.hdrBuffer = nullptr;
   }
 
   DescriptorSet* hdrSet = gResources().UnregisterDescriptorSet("HDRGammaSet");
@@ -1127,26 +1153,40 @@ void Renderer::CleanUpHDR(b8 fullCleanUp)
 void Renderer::Build()
 {
   mRhi->GraphicsWaitIdle();
+
+  BuildOffScreenBuffer(mOffscreen.currCmdBufferIndex);
+  BuildHDRCmdBuffer(mHDR.currCmdBufferIndex);
+  mRhi->RebuildCurrentCommandBuffers();
+}
+
+
+void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
+{
+  if (cmdBufferIndex >= mOffscreen.cmdBuffers.size()) { 
+    R_DEBUG("ERROR: Attempted to build offscreen cmd buffer. Index out of bounds!\n");
+    return; 
+  }
+
+  CommandBuffer* cmdBuffer = mOffscreen.cmdBuffers[cmdBufferIndex];
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer("PBRFrameBuffer");
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline("PBRPipeline");
-  
+
   if (mGlobalMat) {
     mGlobalMat->CleanUp();
     mGlobalMat->Initialize();
   }
 
-  if (mOffscreen.cmdBuffer && !mOffscreen.cmdBuffer->Recording()) {
+  if (cmdBuffer && !cmdBuffer->Recording()) {
+
     mRhi->DeviceWaitIdle();
-    mOffscreen.cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     // We are only worried about the buffers in the gpu, which need to be recreated
     // in order to update the window resolutions and whatnot. Since the pipeline is recreated,
     // our mats need to be recreated as well.
     MaterialCache.resize(0);
   }
 
-  CommandBuffer* cmdBuffer = mOffscreen.cmdBuffer;
-
-  VkCommandBufferBeginInfo beginInfo = { };
+  VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
@@ -1154,7 +1194,7 @@ void Renderer::Build()
   clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
   clearValues[1].depthStencil = { 1.0f, 0 };
 
-  VkRenderPassBeginInfo pbrRenderPassInfo = { };
+  VkRenderPassBeginInfo pbrRenderPassInfo = {};
   pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   pbrRenderPassInfo.framebuffer = pbrBuffer->Handle();
   pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
@@ -1168,69 +1208,71 @@ void Renderer::Build()
   viewport.width = (r32)mWindowHandle->Width();
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.x = 0.0f;
   viewport.y = 0.0f;
+  viewport.x = 0.0f;
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
-      if (mCmdList) {
-        for (size_t i = 0; i < mCmdList->Size(); ++i) {
-          RenderCmd& renderCmd = mCmdList->Get(i);
+    cmdBuffer->SetViewPorts(0, 1, &viewport);
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
+    if (mCmdList) {
+      for (size_t i = 0; i < mCmdList->Size(); ++i) {
+        RenderCmd& renderCmd = mCmdList->Get(i);
 
-          // Extract material info. This is optional.
-          if (renderCmd.materialId) {
-            MaterialCache.push_back(renderCmd.materialId);
+        // Extract material info. This is optional.
+        if (renderCmd.materialId) {
+          MaterialCache.push_back(renderCmd.materialId);
 
-            if (renderCmd.meshId) {
-              Material* mat = renderCmd.materialId;
-              // Screen must be updated.
-              mat->CleanUp();
-              mat->Initialize();
+          if (renderCmd.meshId) {
+            Material* mat = renderCmd.materialId;
+            // Screen must be updated.
+            mat->CleanUp();
+            mat->Initialize();
 
-              VkDescriptorSet descriptorSets[] = { 
-                mGlobalMat->Set()->Handle(), 
-                mat->Set()->Handle(), 
-                mLightMat->Set()->Handle()
-              };
-              
-              cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0, 
-                3, descriptorSets, 0, nullptr);
-            }
-          }
+            VkDescriptorSet descriptorSets[] = {
+              mGlobalMat->Set()->Handle(),
+              mat->Set()->Handle(),
+              mLightMat->Set()->Handle()
+            };
 
-          // Extract Mesh info. This is optional. 
-          if (renderCmd.meshId && renderCmd.meshId->Renderable() && renderCmd.meshId->Visible()) {
-            VertexBuffer* vertexBuffer = renderCmd.meshId->GetVertexBuffer();
-            IndexBuffer* indexBuffer = renderCmd.meshId->GetIndexBuffer();
-            VkBuffer vb = vertexBuffer->Handle()->Handle();
-            VkBuffer ib = indexBuffer->Handle()->Handle();
-            VkDeviceSize offsets[] = { 0 };
-            cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
-            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
-            //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
+            cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
+              3, descriptorSets, 0, nullptr);
           }
         }
-      }
 
-      if (mDeferredCmdList) {
-        for (size_t i = 0; i < mDeferredCmdList->Size(); ++i) {
-          
+        // Extract Mesh info. This is optional. 
+        if (renderCmd.meshId && renderCmd.meshId->Renderable() && renderCmd.meshId->Visible()) {
+          VertexBuffer* vertexBuffer = renderCmd.meshId->GetVertexBuffer();
+          IndexBuffer* indexBuffer = renderCmd.meshId->GetIndexBuffer();
+          VkBuffer vb = vertexBuffer->Handle()->Handle();
+          VkBuffer ib = indexBuffer->Handle()->Handle();
+          VkDeviceSize offsets[] = { 0 };
+          cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
+          //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
         }
       }
-    cmdBuffer->EndRenderPass();
+    }
+
+    if (mDeferredCmdList) {
+      for (size_t i = 0; i < mDeferredCmdList->Size(); ++i) {
+
+      }
+    }
+  cmdBuffer->EndRenderPass();
   cmdBuffer->End();
-
-  BuildHDRCmdBuffer();
-  mRhi->RebuildCurrentCommandBuffers();
 }
 
 
-void Renderer::BuildHDRCmdBuffer()
+void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 {
-  CommandBuffer* cmdBuffer = mHDR.cmdBuffer;
+  if (cmdBufferIndex >= mHDR.cmdBuffers.size()) {
+    R_DEBUG("ERROR: Attempted to build HDR cmd buffer. Index out of bounds!\n");
+    return;
+  }
+
+  CommandBuffer* cmdBuffer = mHDR.cmdBuffers[cmdBufferIndex];
   if (!cmdBuffer) return;
 
   GraphicsPipeline* hdrPipeline = gResources().GetGraphicsPipeline("HDRGammaPipeline");
@@ -1259,12 +1301,14 @@ void Renderer::BuildHDRCmdBuffer()
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     VkViewport viewport = {};
-    viewport.height = (r32)mWindowHandle->Height();
-    viewport.width = (r32)mWindowHandle->Width();
+    // TODO(): Something is definitely not correct about the HDR graphics pipeline.
+    // in that the output image ends up scaling 25% of the screen...
+    viewport.height = (r32)mWindowHandle->Height(); // * 2.0f;
+    viewport.width = (r32)mWindowHandle->Width(); // * 2.0f;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
+    viewport.y = 0.0f; //-(r32)mWindowHandle->Height();
+    viewport.x = 0.0f; //-(r32)mWindowHandle->Width();
 
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
@@ -1339,7 +1383,7 @@ void Renderer::UpdateMaterials()
 
 void Renderer::RenderOverlay()
 {
-  mUI.Render();
+  mUI->Render();
 }
 
 
@@ -1362,7 +1406,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   // Triple buffering atm, we will need to use user params to switch this.
   mRhi->ReConfigure(presentMode, mWindowHandle->Width(), mWindowHandle->Height());
 
-  mUI.CleanUp();
+  mUI->CleanUp();
 
   CleanUpHDR(false);
   CleanUpGraphicsPipelines();
@@ -1376,7 +1420,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpGraphicsPipelines();
   SetUpHDR(false);
 
-  mUI.Initialize(mRhi);
+  mUI->Initialize(mRhi);
 
   Build();
 }
@@ -1384,9 +1428,20 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
 
 void Renderer::BuildAsync()
 {
+  static b8 inProgress = false;
   // TODO(): building the command buffers asyncronously requires us
   // to allocate temp commandbuffers, build them, and then swap them with
   // the previous commandbuffers.
+  std::thread async([] () -> void {
+    if (inProgress) { return; }
+
+    inProgress = true;
+
+
+    
+
+    inProgress = false;
+  });
 }
 
 
@@ -1464,27 +1519,4 @@ Texture2DArray* Renderer::CreateTexture2DArray()
   Texture2DArray* texture = new Texture2DArray();
   return texture;
 }
-
-
-void Renderer::UIOverlay::Render()
-{
-  // Ignore if no reference to the rhi.
-  if (!mRhiRef) return;
-
-  // Render the overlay.
-}
-
-
-void Renderer::UIOverlay::Initialize(VulkanRHI* rhi)
-{
-  mRhiRef = rhi;
-
-  
-}
-
-
-void Renderer::UIOverlay::CleanUp()
-{
-}
-
 } // Recluse

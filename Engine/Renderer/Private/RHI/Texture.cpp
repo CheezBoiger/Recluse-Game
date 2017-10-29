@@ -61,6 +61,11 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   if (vkCreateImageView(mOwner, &viewInfo, nullptr, &mView) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create image view!\n");
   }
+
+  mFormat = imageInfo.format;
+  mWidth = imageInfo.extent.width;
+  mHeight = imageInfo.extent.height;
+  mSamples = imageInfo.samples;
 }
 
 

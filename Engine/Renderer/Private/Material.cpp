@@ -27,6 +27,13 @@ Material::Material()
   , mBonesBuffer(nullptr)
   , mSampler(nullptr)
 {
+  mObjectData.hasAlbedo = false;
+  mObjectData.hasAO = false;
+  mObjectData.hasBones = false;
+  mObjectData.hasEmissive = false;
+  mObjectData.hasMetallic = false;
+  mObjectData.hasNormal = false;
+  mObjectData.hasRoughness = false;
 }
 
 

@@ -38,6 +38,7 @@ class Texture2D;
 class Texture3D;
 class Texture2DArray;
 class TextureSampler;
+class UIOverlay;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -46,16 +47,6 @@ class TextureSampler;
 class Renderer : public EngineModule<Renderer> {
 public:
   // Definition of the UI Overlay for which to render onto.
-  struct UIOverlay {
-  protected:
-    VulkanRHI*                  mRhiRef;
-
-    void                        Initialize(VulkanRHI* rhi);
-    void                        CleanUp();
-    void                        Render();
-    std::vector<CommandBuffer*> cmdBuffers;
-    friend Renderer;
-  };
 
   Renderer();
   ~Renderer();
@@ -182,7 +173,7 @@ public:
 
   // Window reference.
   Window*           WindowRef() { return mWindowHandle; }
-  UIOverlay*        Overlay() { return &mUI; }  
+  UIOverlay*        Overlay() { return mUI; }  
 
   // Check if this renderer is initialized with the window reference given.
   b8                Initialized() { return mInitialized; }
@@ -215,7 +206,8 @@ private:
   void              CleanUpOffscreen();
   void              SetUpRenderTextures();
   void              SetUpOffscreen();
-  void              BuildHDRCmdBuffer();
+  void              BuildOffScreenBuffer(u32 cmdBufferIndex);
+  void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
   void              UpdateMaterials();
@@ -231,8 +223,9 @@ private:
   VulkanRHI*        mRhi;
 
   struct {
-    CommandBuffer*  cmdBuffer;
-    Semaphore*      semaphore;
+    std::vector<CommandBuffer*>   cmdBuffers;
+    u32                           currCmdBufferIndex;
+    Semaphore*                    semaphore;
   } mOffscreen; 
 
   struct HDRBuffer {
@@ -244,14 +237,15 @@ private:
   };
 
   struct {
-    CommandBuffer*  cmdBuffer;
-    Semaphore*      semaphore;
-    Buffer*         hdrBuffer;
-    HDRBuffer       data;
+    std::vector<CommandBuffer*>   cmdBuffers;
+    u32                           currCmdBufferIndex;
+    Semaphore*                    semaphore;
+    Buffer*                       hdrBuffer;
+    HDRBuffer                     data;
   } mHDR;
 
   ScreenQuad        mScreenQuad;
-  UIOverlay         mUI;
+  UIOverlay*        mUI;
   b8                mRendering;
   b8                mInitialized;
 };

@@ -218,7 +218,7 @@ Matrix4 Matrix4::Inverse() const
 
 Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
 {
-  r32 tanHalfFov = tanf(fovy / 2.0f);
+  r32 tanHalfFov = tanf(fovy * 0.5f);
   Matrix4 perspective = Matrix4::Identity();
   perspective[3][3] = 0.0f;
   perspective[0][0] = 1.0f / (aspect * tanHalfFov);

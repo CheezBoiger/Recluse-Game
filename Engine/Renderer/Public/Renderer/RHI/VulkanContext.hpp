@@ -20,6 +20,7 @@ public:
   VkInstance                      CurrentInstance() { return mInstance; }
   VkSurfaceKHR                    CreateSurface(HWND handle);
 
+  void                            DestroySurface(VkSurfaceKHR surface);
   void                            EnableDebugMode();
   void                            CleanUp();
   

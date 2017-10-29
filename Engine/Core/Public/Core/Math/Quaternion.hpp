@@ -18,7 +18,7 @@ struct Quaternion {
   static Quaternion AngleAxis(const r32 radians, const Vector3& axis);
   static Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);
   static Quaternion EulerAnglesToQuaternion(const Vector3& euler);
-  
+  static Quaternion Matrix4ToQuaternion(const Matrix4& rot);  
   
   Quaternion        operator+(const Quaternion& other) const;
   Quaternion        operator-(const Quaternion& other) const;
