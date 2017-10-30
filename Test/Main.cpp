@@ -29,6 +29,16 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
   if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
 
+  if (keys[KEY_CODE_0] == KEY_DOWN) {
+    gRenderer().EnableHDR(false);
+    gRenderer().UpdateRendererConfigs(nullptr);
+  }
+
+  if (keys[KEY_CODE_1] == KEY_DOWN) {
+    gRenderer().EnableHDR(true);
+    gRenderer().UpdateRendererConfigs(nullptr);
+  }
+
   // Test Gamma correction
   if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
   if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }

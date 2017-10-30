@@ -186,6 +186,8 @@ public:
   r32               Gamma() const { return mHDR.data.gamma; }
   r32               Exposure() const { return mHDR.data.exposure; }
 
+  void              EnableHDR(b8 enable) { mHDR.enabled = enable; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -198,14 +200,16 @@ protected:
 private:
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();
-  void              SetUpDescriptorSets(b8 fullSetup);
-  void              CleanUpDescriptorSets(b8 fullCleanup);
+  void              SetUpDescriptorSetLayouts();
+  void              CleanUpDescriptorSetLayouts();
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
   void              CleanUpRenderTextures();
-  void              CleanUpOffscreen();
+  void              CleanUpOffscreen(b8 fullCleanup);
+  void              CleanUpFinalOutputs();
+  void              SetUpFinalOutputs();
   void              SetUpRenderTextures();
-  void              SetUpOffscreen();
+  void              SetUpOffscreen(b8 fullSetup);
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
   void              SetUpHDR(b8 fullSetup);
@@ -238,10 +242,11 @@ private:
 
   struct {
     std::vector<CommandBuffer*>   cmdBuffers;
+    HDRBuffer                     data;
     u32                           currCmdBufferIndex;
     Semaphore*                    semaphore;
     Buffer*                       hdrBuffer;
-    HDRBuffer                     data;
+    b8                            enabled;
   } mHDR;
 
   ScreenQuad        mScreenQuad;

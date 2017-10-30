@@ -11,6 +11,7 @@ namespace Recluse {
 
 class VulkanRHI;
 
+// TODO(): Structure this object to generate submeshes when needed.
 class Mesh {
 public:
   Mesh()
