@@ -95,6 +95,7 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat,
   // Storing data of swapchains and querying images.
   mSwapchainExtent = capabilities.currentExtent;
   mSwapchainFormat = surfaceFormat.format;
+  mCurrentPresentMode = presentMode;
 
   if (oldSwapChain) {
     vkDestroySwapchainKHR(mOwner, oldSwapChain, nullptr);

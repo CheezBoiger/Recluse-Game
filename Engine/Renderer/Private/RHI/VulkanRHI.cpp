@@ -104,8 +104,6 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 
 void VulkanRHI::Initialize(HWND windowHandle)
 { 
-  VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
-  mPhysicalDeviceLimits = props.limits;
   if (!windowHandle) {
     R_DEBUG("ERROR: Renderer can not initialize with a null window handle!\n");
     return;
@@ -171,6 +169,9 @@ void VulkanRHI::Initialize(HWND windowHandle)
   if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG("ERROR: Failed to create secondary command pool!\n");
   }
+
+  VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
+  mPhysicalDeviceProperties = props;
 
   BuildDescriptorPool(UINT16_MAX, UINT16_MAX);
 

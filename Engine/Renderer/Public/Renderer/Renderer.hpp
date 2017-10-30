@@ -55,7 +55,8 @@ public:
   b8                Rendering() const { return mRendering; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
-  // certain pipelines like shadowing, or quality of the display.
+  // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
+  // just plain recreate the renderer scene.
   void              UpdateRendererConfigs(UserParams* params);
 
   // Clean up the renderer. This will "render" the renderer inactive.
@@ -186,7 +187,7 @@ public:
   r32               Gamma() const { return mHDR.data.gamma; }
   r32               Exposure() const { return mHDR.data.exposure; }
 
-  void              EnableHDR(b8 enable) { mHDR.enabled = enable; }
+  void              EnableHDR(b8 enable);
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame

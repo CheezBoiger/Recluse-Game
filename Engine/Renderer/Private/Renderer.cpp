@@ -1271,13 +1271,21 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
     VkViewport viewport = {};
     // TODO(): Something is definitely not correct about the HDR graphics pipeline.
-    // in that the output image ends up scaling 25% of the screen...
+    // in that the output image ends up scaling 25% of the screen on Nvidia devices...
     viewport.height = (r32)mWindowHandle->Height(); // * 2.0f;
     viewport.width = (r32)mWindowHandle->Width(); // * 2.0f;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     viewport.y = 0.0f; //-(r32)mWindowHandle->Height();
     viewport.x = 0.0f; //-(r32)mWindowHandle->Width();
+
+    // Why Nvidia!?!?!
+    if (mRhi->VendorID() == NVIDIA_VENDOR_ID) { 
+      viewport.y = -(r32)mWindowHandle->Height();
+      viewport.x = -(r32)mWindowHandle->Width();
+      viewport.height *= 2.0f;
+      viewport.width *= 2.0f;
+    }
 
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
@@ -1286,6 +1294,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
     VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
     VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
     VkDeviceSize offsets[] = { 0 };
+
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
     cmdBuffer->DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
@@ -1406,7 +1415,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   mRhi->DeviceWaitIdle();
 
   if (mWindowHandle->Width() <= 0 || mWindowHandle <= 0) return;
-  VkPresentModeKHR presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+  VkPresentModeKHR presentMode = mRhi->SwapchainObject()->CurrentPresentMode();
 
   if (params) {
     switch (params->presentMode) {
@@ -1540,5 +1549,14 @@ Texture2DArray* Renderer::CreateTexture2DArray()
 {
   Texture2DArray* texture = new Texture2DArray();
   return texture;
+}
+
+
+void Renderer::EnableHDR(b8 enable)
+{
+  if (mHDR.enabled != enable) {
+    mHDR.enabled = enable;
+    UpdateRendererConfigs(nullptr);
+  }
 }
 } // Recluse

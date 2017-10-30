@@ -174,9 +174,12 @@ public:
   VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
   size_t                        NumOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
   VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
-  VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceLimits; }
-
+  VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
+  u32                           VendorID() { return mPhysicalDeviceProperties.vendorID; }
+  
   b8                            CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
+  const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
+
 private:
   void                          SetUpSwapchainRenderPass();
   void                          QueryFromSwapchain();
@@ -195,7 +198,7 @@ private:
   VkCommandPool                 mCmdPool;
   VkCommandPool                 mComputeCmdPool;
   VkDescriptorPool              mDescriptorPool;
-  VkPhysicalDeviceLimits        mPhysicalDeviceLimits;
+  VkPhysicalDeviceProperties    mPhysicalDeviceProperties;
 
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.

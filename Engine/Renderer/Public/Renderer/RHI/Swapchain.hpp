@@ -45,6 +45,7 @@ public:
 
   VkFormat                      SwapchainFormat() { return mSwapchainFormat; }
   VkExtent2D                    SwapchainExtent() { return mSwapchainExtent; }
+  VkPresentModeKHR              CurrentPresentMode() { return mCurrentPresentMode; }
 
   VkQueue                       PresentQueue() { return mPresentationQueue; }
   VkQueue                       GraphicsQueue() { return mGraphicsQueue; }
@@ -71,6 +72,7 @@ private:
 
   VkFormat                      mSwapchainFormat;
   VkExtent2D                    mSwapchainExtent;
+  VkPresentModeKHR              mCurrentPresentMode;
 
   VkQueue                       mPresentationQueue;
   VkQueue                       mGraphicsQueue;

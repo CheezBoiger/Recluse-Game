@@ -5,6 +5,10 @@
 #include <vulkan/vulkan.h>
 
 
+#define NVIDIA_VENDOR_ID        0x10DE
+#define INTEL_VENDOR_ID         0x1F96
+#define AMD_VENDOR_ID           0x1022
+
 class VulkanHandle {
 public:
   VulkanHandle()
