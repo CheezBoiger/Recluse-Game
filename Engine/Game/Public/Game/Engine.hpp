@@ -31,7 +31,9 @@ public:
   Engine();
   ~Engine();
 
-  // Start up the engine with an initial window size.
+  // Start up the engine with an initial window size. As the window is initialized 
+  // along with the start up, be sure to manually call the Show() function from the 
+  // window in order to see something!
   void      StartUp(std::string appName, i32 width, i32 height);
   void      CleanUp();
 

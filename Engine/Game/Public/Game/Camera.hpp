@@ -7,6 +7,8 @@
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Ray.hpp"
 
+#include "Core/Utility/Vector.hpp"
+
 
 namespace Recluse {
 
@@ -68,7 +70,8 @@ protected:
 };
 
 
-// First person camera.
+// First person camera. This camera affects the movement of how the 
+// player sees the world around them.
 class FirstPersonCamera : public Camera {
 public:
   static r32      MAX_YAW;
@@ -87,5 +90,26 @@ protected:
 
   r32             mYaw;
   r32             mPitch;  
+};
+
+
+// Fly view camera, for other cool effects such as cutscenes and crap.
+class FlyViewCamera : public Camera {
+public:
+  FlyViewCamera();
+
+  // Add a transition to the camera.
+  void                    AddTransition(Vector3 p0, Vector3 p1, r64 t);
+  void                    ClearCurrentTransitions();
+  void                    Start(u32 index);
+private:
+  // Define a camera transition.
+  struct Transition {
+    Vector3 p0;
+    Vector3 p1;
+    r64     transitionTime;
+  };
+
+  std::vector<Transition> mTransitions;
 };
 } // Recluse
