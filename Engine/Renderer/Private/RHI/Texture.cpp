@@ -148,8 +148,8 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
     region.imageSubresource.mipLevel = 0;
-    region.imageExtent.width = image.Width();
-    region.imageExtent.height = image.Height();
+    region.imageExtent.width = mWidth;
+    region.imageExtent.height = mHeight;
     region.imageExtent.depth = 1;
     region.imageOffset = { 0, 0, 0 };
 

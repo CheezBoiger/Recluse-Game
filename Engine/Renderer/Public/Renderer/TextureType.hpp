@@ -18,7 +18,7 @@ public:
     : texture(nullptr)
     , mRhi(nullptr) { }
 
-  void        Initialize();
+  void        Initialize(u32 width);
   void        CleanUp();
 private:
   Texture*    texture;
@@ -32,7 +32,11 @@ public:
     : texture(nullptr)
     , mRhi(nullptr) { }
 
-  void        Initialize(Image const& image);
+  // Initializes the texture object with fixed width and height.
+  // All images that are uploaded to this texture must then be the 
+  // same width and height in order to render properly. To write 
+  // texture over to this object, call Update() after this call.
+  void        Initialize(u32 width, u32 height);
 
   // Update texture with a new image to be written over.
   void        Update(Image const& image);

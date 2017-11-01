@@ -11,7 +11,7 @@
 namespace Recluse {
 
 
-void Texture2D::Initialize(Image const& image)
+void Texture2D::Initialize(u32 width, u32 height)
 {
   if (texture) return;
 
@@ -29,8 +29,8 @@ void Texture2D::Initialize(Image const& image)
   imgCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   imgCI.samples = VK_SAMPLE_COUNT_1_BIT;
   imgCI.tiling = VK_IMAGE_TILING_OPTIMAL;
-  imgCI.extent.width = image.Width();
-  imgCI.extent.height = image.Height();
+  imgCI.extent.width = width;
+  imgCI.extent.height = height;
   imgCI.extent.depth = 1;
   imgCI.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
@@ -46,7 +46,6 @@ void Texture2D::Initialize(Image const& image)
   imgViewCI.format = VK_FORMAT_R8G8B8A8_UNORM;
   
   texture->Initialize(imgCI, imgViewCI);
-  texture->Upload(mRhi, image);
 }
 
 

@@ -120,7 +120,8 @@ int main(int c, char* argv[])
   Image img;
   img.Load("box.jpg");
   Texture2D* albedo = gRenderer().CreateTexture2D();
-  albedo->Initialize(img);
+  albedo->Initialize(img.Width(), img.Height());
+  albedo->Update(img);
   img.CleanUp();
 
   auto cubeData = Cube::MeshInstance();

@@ -96,8 +96,6 @@ void Material::Update()
   mObjectBuffer->Map();
     memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
   mObjectBuffer->UnMap();
-
-  UpdateDescriptorSet(false);
 }
 
 

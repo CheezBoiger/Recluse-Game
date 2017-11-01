@@ -135,7 +135,7 @@ void Renderer::Render()
 
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-  while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
+    while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
 
     // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
@@ -438,7 +438,7 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].format = pbrColor->Format();
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; 
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -609,7 +609,6 @@ void Renderer::SetUpGraphicsPipelines()
   dynamicCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
   dynamicCI.dynamicStateCount = 1;
   dynamicCI.pDynamicStates = dynamicStates;
-
   
   VkVertexInputBindingDescription vertBindingDesc = { };
   vertBindingDesc.binding = 0;
@@ -1172,7 +1171,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   pbrRenderPassInfo.renderArea.offset = { 0, 0 };
 
-  VkViewport viewport = {};
+  VkViewport viewport =  { };
   viewport.height = (r32)mWindowHandle->Height();
   viewport.width = (r32)mWindowHandle->Width();
   viewport.minDepth = 0.0f;
@@ -1182,8 +1181,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
+    cmdBuffer->SetViewPorts(0, 1, &viewport);
     if (mCmdList) {
       for (size_t i = 0; i < mCmdList->Size(); ++i) {
         RenderCmd& renderCmd = mCmdList->Get(i);
@@ -1281,8 +1280,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
     // Why Nvidia!?!?!
     if (mRhi->VendorID() == NVIDIA_VENDOR_ID) { 
-      viewport.y = -(r32)mWindowHandle->Height();
-      viewport.x = -(r32)mWindowHandle->Width();
+      viewport.y += -(r32)mWindowHandle->Height();
+      viewport.x += -(r32)mWindowHandle->Width();
       viewport.height *= 2.0f;
       viewport.width *= 2.0f;
     }
