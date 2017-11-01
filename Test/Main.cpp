@@ -1,8 +1,5 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
-#include "Game/Geometry/Cube.hpp"
-#include "Game/Camera.hpp"
-#include "Core/Logging/Log.hpp"
 
 #include "Renderer/Vertex.hpp"
 #include "Renderer/UserParams.hpp"
@@ -57,29 +54,26 @@ void WindowResized(Window* window, i32 width, i32 height)
 
 void MousePositionMove(Window* window, r64 x, r64 y)
 {
+  Camera* camera = gEngine().GetCamera();
+  if (camera) {
+    camera->Look(x, y);
+  }
 }
 
 
 int main(int c, char* argv[])
 {
-  // NOTE(): Always start up the core first, before starting anything else up.
-  gCore().StartUp();
-  gFilesystem().StartUp();
-  gRenderer().StartUp();
-  gAnimation().StartUp();
-  gUI().StartUp();
+  gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
 
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);
   Window::SetMousePositionCallback(MousePositionMove);
 
-  Window window;
-  window.Create(RTEXT("私は猫が大好き"), 800, 600); 
-  window.SetToWindowed(1200, 800);
-  window.SetToCenter();
-  window.Show();    
+  Window* window = gEngine().GetWindow(); 
+  window->SetToWindowed(1200, 800);
+  window->SetToCenter();
+  window->Show();    
 
-  gRenderer().Initialize(&window);
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
   ///////////////////////////////////////////////////////////////////////////////////////
   // build the scene for the render. Should our cmd list be updated, you need to call
@@ -87,8 +81,9 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera gCamera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window.Width() / (r32)window.Height()), 0.0001f, 1000.0f, 
+  Camera gCamera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+  gEngine().SetCamera(&gCamera);
 
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
   GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
@@ -191,7 +186,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
   ///////////////////////////////////////////////////////////////////////////////////////
-  while (!window.ShouldClose()) {
+  while (!window->ShouldClose()) {
     Time::Update();
 
     timeAccumulator += Time::DeltaTime;
@@ -208,7 +203,7 @@ int main(int c, char* argv[])
     }
 
     // NOTE(): Update game state... This is hardcoded though.
-    gCamera.SetAspect(((r32)window.Width() / (r32)window.Height()));
+    gCamera.SetAspect(((r32)window->Width() / (r32)window->Height()));
     gCamera.SetPosition(Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f));
     gBuffer->cameraPos = gCamera.Position();
     gBuffer->proj = gCamera.Projection();
@@ -258,11 +253,7 @@ int main(int c, char* argv[])
   gRenderer().FreeGlobalMaterial(globalMat);
 
   ///////////////////////////////////////////////////////////////////////////////////////  
-  gUI().ShutDown();
-  gAnimation().ShutDown();
-  gRenderer().ShutDown();
-  gFilesystem().ShutDown();
-  gCore().ShutDown();
+  gEngine().CleanUp();
 #if (_DEBUG)
   printf("\nEngine modules cleaned up, Press Enter to continue...\n");
   getchar();

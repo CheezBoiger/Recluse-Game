@@ -5,6 +5,7 @@
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Quaternion.hpp"
+#include "Core/Math/Ray.hpp"
 
 
 namespace Recluse {
@@ -32,9 +33,18 @@ public:
   void                SetAspect(r32 aspect) { mAspect = aspect; }
   void                SetFoV(r32 fov) { mFov = fov; }
 
+  virtual void        Look(r64 x, r64 y) { }
+
   Vector3             Position() const { return mPosition; }
   Vector3             LookPosition() const { return mLookAt; }
   Quaternion          Rotation() const { return mRotation; }
+  
+  Ray                 GetDirectionRay() {  
+    Ray camRay;
+    camRay.Origin = mPosition;
+    camRay.Direction = mLookAt - mPosition;
+    return camRay;
+  }
 
   r32                 Aspect() const { return mAspect; }
   r32                 FoV() const { return mFov; }
@@ -68,7 +78,7 @@ public:
   virtual Matrix4 View() override;
   virtual Matrix4 Projection() override;
 
-  void            Look(r64 x, r64 y);
+  void            Look(r64 x, r64 y) override;
   r32             Yaw() const { return mYaw; }
   r32             Pitch() const { return mPitch; }
 
