@@ -1269,22 +1269,12 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     VkViewport viewport = {};
-    // TODO(): Something is definitely not correct about the HDR graphics pipeline.
-    // in that the output image ends up scaling 25% of the screen on Nvidia devices...
-    viewport.height = (r32)mWindowHandle->Height(); // * 2.0f;
-    viewport.width = (r32)mWindowHandle->Width(); // * 2.0f;
+    viewport.height = (r32)mWindowHandle->Height();
+    viewport.width = (r32)mWindowHandle->Width();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    viewport.y = 0.0f; //-(r32)mWindowHandle->Height();
-    viewport.x = 0.0f; //-(r32)mWindowHandle->Width();
-
-    // Why Nvidia!?!?!
-    if (mRhi->VendorID() == NVIDIA_VENDOR_ID) { 
-      viewport.y += -(r32)mWindowHandle->Height();
-      viewport.x += -(r32)mWindowHandle->Width();
-      viewport.height *= 2.0f;
-      viewport.width *= 2.0f;
-    }
+    viewport.y = 0.0f;
+    viewport.x = 0.0f;
 
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());

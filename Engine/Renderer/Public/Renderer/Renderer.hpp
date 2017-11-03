@@ -236,9 +236,8 @@ private:
   struct HDRBuffer {
     r32       gamma;
     r32       exposure;
-    r32       pad0[2];
     i32       bloomEnabled;
-    i32       pad1[3];
+    i32       pad1;
   };
 
   struct {
