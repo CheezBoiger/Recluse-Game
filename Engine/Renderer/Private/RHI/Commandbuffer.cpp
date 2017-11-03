@@ -2,7 +2,7 @@
 #include "RHI/CommandBuffer.hpp"
 #include "Core/Exception.hpp"
 
-#define ASSERT_RECORDING() if (!mRecording) { R_DEBUG("ERROR: CommandBuffer not recording! Aborting cmd call.\n"); return; }
+#define ASSERT_RECORDING() if (!mRecording) { R_DEBUG(rError, "CommandBuffer not recording! Aborting cmd call."); return; }
 
 namespace Recluse {
 
@@ -19,7 +19,7 @@ void CommandBuffer::Allocate(const VkCommandPool& pool, VkCommandBufferLevel lev
   info.level = level;
 
   if (vkAllocateCommandBuffers(mOwner, &info, &mHandle) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to allocate commandbuffer!");
+    R_DEBUG(rError, "Failed to allocate commandbuffer!");
   }
 }
 
@@ -36,7 +36,7 @@ void CommandBuffer::Free()
 void CommandBuffer::Reset(const VkCommandBufferResetFlags flags)
 {
   if (vkResetCommandBuffer(mHandle, flags) != VK_SUCCESS) {
-    R_DEBUG("WARNING: unsuccessful command buffer reset.\n");
+    R_DEBUG(rWarning, "Unsuccessful command buffer reset.");
   }
 }
 

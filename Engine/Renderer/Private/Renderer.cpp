@@ -26,7 +26,6 @@
 #include "Core/Logging/Log.hpp"
 
 #include <array>
-#include <cassert>
 
 namespace Recluse {
 
@@ -66,7 +65,7 @@ Renderer::~Renderer()
 void Renderer::OnStartUp()
 {
   if (!gCore().IsActive()) {
-    R_DEBUG("ERROR: Core is not active! Start up the core first!\n");
+    R_DEBUG(rError, "Core is not active! Start up the core first!");
     return;
   }
   VulkanRHI::CreateContext();
@@ -1131,7 +1130,7 @@ void Renderer::Build()
 void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 {
   if (cmdBufferIndex >= mOffscreen.cmdBuffers.size()) { 
-    R_DEBUG("ERROR: Attempted to build offscreen cmd buffer. Index out of bounds!\n");
+    R_DEBUG(rError, "Attempted to build offscreen cmd buffer. Index out of bounds!");
     return; 
   }
 
@@ -1236,7 +1235,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 {
   if (cmdBufferIndex >= mHDR.cmdBuffers.size()) {
-    R_DEBUG("ERROR: Attempted to build HDR cmd buffer. Index out of bounds!\n");
+    R_DEBUG(rError, "Attempted to build HDR cmd buffer. Index out of bounds!");
     return;
   }
 

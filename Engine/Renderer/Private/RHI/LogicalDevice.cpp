@@ -10,10 +10,10 @@ b8 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCrea
 {
   VkResult Result = vkCreateDevice(physical, &info, nullptr, &handle);
   if (Result != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create device!\n");
+    R_DEBUG(rError, "Failed to create device!");
     return false;
   }
-  R_DEBUG("NOTIFY: Logical device successfully created.\n");
+  R_DEBUG(rNotify, "Logical device successfully created.");
   return true;
 }
 

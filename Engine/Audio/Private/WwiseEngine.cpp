@@ -15,7 +15,7 @@ b8 WwiseEngine::Initialize()
   memSettings.uMaxNumPools = 20;
 
   if (AK::MemoryMgr::Init(&memSettings) != AK_Success) {
-    R_DEBUG("ERROR: Could not initialize AK memory manager!\n");
+    R_DEBUG(rError, "Could not initialize AK memory manager!");
     return false;
   }
 
@@ -23,7 +23,7 @@ b8 WwiseEngine::Initialize()
   AK::StreamMgr::GetDefaultSettings(stmSettings);
 
   if (!AK::StreamMgr::Create(stmSettings)) {
-    R_DEBUG("ERROR: Failed to create audio stream manager!\n");
+    R_DEBUG(rError, "Failed to create audio stream manager!");
     return false;
   }
 
@@ -32,7 +32,7 @@ b8 WwiseEngine::Initialize()
 
   // NOTE(): Perhaps one day, we can do some customizations to our streaming device...
   if (mLowLevelFilePackage.Init(deviceSettings) != AK_Success) {
-    R_DEBUG("ERROR: Failed to create streaming device and low level I/O system.\n");
+    R_DEBUG(rError, "Failed to create streaming device and low level I/O system.");
     return false;
   }
 
@@ -42,7 +42,7 @@ b8 WwiseEngine::Initialize()
   AK::SoundEngine::GetDefaultPlatformInitSettings(platformInitSettings);
 
   if (AK::SoundEngine::Init(&initSettings, &platformInitSettings) != AK_Success) {
-    R_DEBUG("ERROR: Failed to initialize wwise sound engine!\n");
+    R_DEBUG(rError, "Failed to initialize wwise sound engine!");
     return false;
   }
 
@@ -50,11 +50,11 @@ b8 WwiseEngine::Initialize()
   AkMusicSettings musicSettings;
   AK::MusicEngine::GetDefaultInitSettings(musicSettings);
   if (AK::MusicEngine::Init(&musicSettings) != AK_Success) {
-    R_DEBUG("ERROR: Failed to initialize wwise music engine!\n");
+    R_DEBUG(rError, "Failed to initialize wwise music engine!");
     return false;
   }
 
-  R_DEBUG("NOTIFY: Audio has been initialized.\n");
+  R_DEBUG(rNotify, "Audio has been initialized.");
   return true;
 }
 

@@ -21,7 +21,7 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   static i32 keys[256];
   keys[key] = action; 
-  
+
   // Test albedo enabling.
   if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
   if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }

@@ -27,7 +27,7 @@ std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
 {
   if (vkCreateSemaphore(mOwner, &info, nullptr, &mSema) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create semaphore!\n");
+    R_DEBUG(rError, "Failed to create semaphore!");
   }
 }
 
@@ -82,11 +82,11 @@ b8 VulkanRHI::FindPhysicalDevice()
   }
 
   if (gPhysicalDevice.Handle() == VK_NULL_HANDLE) {
-    R_DEBUG("ERROR: Failed to find suitable vulkan device!\n");
+    R_DEBUG(rError, "Failed to find suitable vulkan device!");
     return false;
   }
 
-  R_DEBUG("NOTIFY: Vulkan Physical Device found...\n");
+  R_DEBUG(rNotify, "Vulkan Physical Device found...");
   return true;
 }
 
@@ -105,7 +105,7 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 void VulkanRHI::Initialize(HWND windowHandle)
 { 
   if (!windowHandle) {
-    R_DEBUG("ERROR: Renderer can not initialize with a null window handle!\n");
+    R_DEBUG(rError, "Renderer can not initialize with a null window handle!");
     return;
   }
   // Keep track of the window handle.
@@ -119,7 +119,7 @@ void VulkanRHI::Initialize(HWND windowHandle)
     &presentationIndex, &graphicsIndex, &computeIndex);
   
   if (!result) {
-    R_DEBUG("ERROR: Failed to find proper queue families in vulkan context!\n");
+    R_DEBUG(rError, "Failed to find proper queue families in vulkan context!");
     return;
   } 
   
@@ -148,7 +148,7 @@ void VulkanRHI::Initialize(HWND windowHandle)
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
   if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate)) {
-    R_DEBUG("ERROR: Vulkan logical device failed to create.\n");
+    R_DEBUG(rError, "Vulkan logical device failed to create.");
     return;
   }
   
@@ -161,13 +161,13 @@ void VulkanRHI::Initialize(HWND windowHandle)
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
   if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create primary command pool!\n");
+    R_DEBUG(rError, "Failed to create primary command pool!");
   } 
 
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.ComputeIndex());
 
   if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create secondary command pool!\n");
+    R_DEBUG(rError, "Failed to create secondary command pool!");
   }
 
   VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
@@ -231,7 +231,7 @@ void VulkanRHI::CleanUp()
 void VulkanRHI::QueryFromSwapchain()
 {
   if (!mSwapchain.Handle()) {
-    R_DEBUG("ERROR: Swapchain failed to initialize! Cannot query images!\n");
+    R_DEBUG(rError, "Swapchain failed to initialize! Cannot query images!");
     return;
   }
   
@@ -252,7 +252,8 @@ void VulkanRHI::QueryFromSwapchain()
     
     if (vkCreateFramebuffer(mLogicalDevice.Handle(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
-      R_DEBUG("ERROR: Failed to create framebuffer on swapchain image %d!\n", u32(i));
+      R_DEBUG(rError, "Failed to create framebuffer on swapchain image " 
+        + std::to_string(u32(i)) + "!");
     }
   }
 }
@@ -276,7 +277,7 @@ void VulkanRHI::CreateDepthAttachment()
   imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
   if (vkCreateImage(mLogicalDevice.Handle(), &imageCI, nullptr, &mSwapchainInfo.mDepthAttachment) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create depth image!\n");
+    R_DEBUG(rError, "Failed to create depth image!");
     return;
   }
 
@@ -289,7 +290,7 @@ void VulkanRHI::CreateDepthAttachment()
   allocInfo.memoryTypeIndex = gPhysicalDevice.FindMemoryType(mem.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   
   if (vkAllocateMemory(mLogicalDevice.Handle(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Depth memory was not allocated!\n");
+    R_DEBUG(rError, "Depth memory was not allocated!");
     return;
   }
   vkBindImageMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, mSwapchainInfo.mDepthMemory, 0);
@@ -307,7 +308,7 @@ void VulkanRHI::CreateDepthAttachment()
   ivCI.subresourceRange.levelCount = 1;
   
   if (vkCreateImageView(mLogicalDevice.Handle(), &ivCI, nullptr, &mSwapchainInfo.mDepthView) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Depth view not created!\n");
+    R_DEBUG(rError, "Depth view not created!");
   }
  
   
@@ -387,7 +388,7 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   renderpassCI.pDependencies = dependencies.data();
 
   if (vkCreateRenderPass(mLogicalDevice.Handle(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create swapchain renderpass!\n");
+    R_DEBUG(rError, "Failed to create swapchain renderpass!");
   }
 }
 
@@ -397,10 +398,10 @@ void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
   VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
   if (result != VK_SUCCESS) {
     if (result == VK_ERROR_DEVICE_LOST)  {
-      R_DEBUG("WARNING: Vulkan ignoring queue submission! Window possibly minimized?\n");
+      R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?");
       return;
     }
-    R_DEBUG("ERROR: Unsuccessful graphics queue submit!\n");
+    R_DEBUG(rError, "Unsuccessful graphics queue submit!");
   }
 }
 
@@ -452,7 +453,7 @@ void VulkanRHI::Present()
   presentInfo.pImageIndices = &mSwapchainInfo.mCurrentImageIndex;
 
   if (vkQueuePresentKHR(mSwapchain.PresentQueue(), &presentInfo) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to present!\n");
+    R_DEBUG(rError, "Failed to present!");
   }
 }
 
@@ -464,7 +465,7 @@ void VulkanRHI::ComputeSubmit(const VkSubmitInfo& submitInfo)
   vkResetFences(mLogicalDevice.Handle(), 1, &fence);
 
   if (vkQueueSubmit(mSwapchain.ComputeQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Compute failed to submit task!\n");
+    R_DEBUG(rError, "Compute failed to submit task!");
   }
 }
 
@@ -581,7 +582,7 @@ Buffer* VulkanRHI::CreateBuffer()
 void VulkanRHI::FreeBuffer(Buffer* buffer)
 {
   if (buffer->Owner() != mLogicalDevice.Handle()) {
-    R_DEBUG("NOTIFY: Unable to free buffer. Device is not same as this vulkan rhi!\n");
+    R_DEBUG(rNotify, "Unable to free buffer. Device is not same as this vulkan rhi!");
     return;
   }
 
@@ -602,7 +603,7 @@ GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
 void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
 {
   if (pipeline->Owner() != mLogicalDevice.Handle()) {
-    R_DEBUG("NOTIFY: Unable to free pipeline. Device is not same as this vulkan rhi!\n");
+    R_DEBUG(rNotify, "Unable to free pipeline. Device is not same as this vulkan rhi!");
     return;
   }
   pipeline->CleanUp();
@@ -624,7 +625,7 @@ Shader* VulkanRHI::CreateShader()
 void VulkanRHI::FreeShader(Shader* shader)
 {
   if (shader->Owner() != mLogicalDevice.Handle()) {
-    R_DEBUG("NOTIFY: Unable to free shader. Device is not same as this vulkan rhi!\n");
+    R_DEBUG(rNotify, "Unable to free shader. Device is not same as this vulkan rhi!");
     return;
   }
   shader->CleanUp();
@@ -793,7 +794,7 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   descriptorPoolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
   if (vkCreateDescriptorPool(Device(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to created descriptor pool!");
+    R_DEBUG(rError, "Failed to created descriptor pool!");
   }
 }
 } // Recluse

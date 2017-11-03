@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #pragma once
 #include "Core/Types.hpp"
-#include <ostream>
+#include <iostream>
 
 namespace Recluse {
 
@@ -37,7 +37,7 @@ public:
       case rDebug: std::cout << "Debug: "; break;
       default: break;
     }
-    std::cout << val;
+    std::cout << val << "\n";
     return (*this);
   }
 private:

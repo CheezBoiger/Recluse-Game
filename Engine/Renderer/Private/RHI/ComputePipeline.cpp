@@ -10,14 +10,14 @@ void ComputePipeline::Initialize(VkComputePipelineCreateInfo& info,
     const VkPipelineLayoutCreateInfo& layout)
 {
   if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create compute pipeline layout!\n");
+    R_DEBUG(rError, "Failed to create compute pipeline layout!");
     return;
   }
 
   info.layout = mLayout;
 
   if (vkCreateComputePipelines(mOwner, VK_NULL_HANDLE, 1, &info, nullptr, &mPipeline) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create compute pipeline!\n");
+    R_DEBUG(rError, "Failed to create compute pipeline!");
   }
 }
 

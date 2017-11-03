@@ -87,10 +87,10 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat,
   sInfo.oldSwapchain = oldSwapChain;
   
   if (vkCreateSwapchainKHR(mOwner, &sInfo, nullptr, &mSwapchain) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create swapchain!\n");
+    R_DEBUG(rError, "Failed to create swapchain!");
   }
 
-  R_DEBUG("NOTIFY: Swapchain creation succeeded.\n");
+  R_DEBUG(rNotify, "Swapchain creation succeeded.");
 
   // Storing data of swapchains and querying images.
   mSwapchainExtent = capabilities.currentExtent;
@@ -168,7 +168,7 @@ void Swapchain::QuerySwapchainImages()
     ivInfo.subresourceRange.levelCount = 1;
     
     if (vkCreateImageView(mOwner, &ivInfo, nullptr, &SwapchainImages[i].View) != VK_SUCCESS) {
-      R_DEBUG("ERROR: Failed to create swapchain image!\n");
+      R_DEBUG(rError, "Failed to create swapchain image!");
       return;
     }
     SwapchainImages[i].Image = images[i];
@@ -191,11 +191,11 @@ void Swapchain::CreateSemaphores()
   semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
   if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mImageAvailableSemaphore) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+    R_DEBUG(rError, "Failed to create a semaphore!");
   }
 
   if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+    R_DEBUG(rError, "Failed to create a semaphore!");
   }
 }
 
@@ -207,7 +207,7 @@ void Swapchain::CreateComputeFence()
   fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   if (vkCreateFence(mOwner, &fenceCI, nullptr, &mComputeFence) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create a semaphore!\n");
+    R_DEBUG(rError, "Failed to create a semaphore!");
   }
 }
 } // Recluse

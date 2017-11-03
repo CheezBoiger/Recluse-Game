@@ -178,7 +178,7 @@ Vector3 Quaternion::ToEulerAngles() const
 
 Quaternion Quaternion::Matrix4ToQuaternion(const Matrix4& rot)
 {
-  R_DEBUG("ERROR: %s Not implemented.\n", __FUNCTION__);
+  R_DEBUG(rError, __FUNCTION__ "Not implemented.\n");
   return Quaternion();
 }
 

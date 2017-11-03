@@ -58,13 +58,13 @@ b8 Context::CreateInstance()
   VkResult result = vkCreateInstance(&instCreateInfo, nullptr, &mInstance);
 
   if (result != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create Vulkan instance!\n");
+    R_DEBUG(rError, "Failed to create Vulkan instance!");
     return false;
   }
 
   if (mDebugEnabled) SetUpDebugCallback();
 
-  R_DEBUG("NOTIFY: Vulkan Instance created...\n");
+  R_DEBUG(rNotify, "Vulkan Instance created...");
   return true;
 }
 
@@ -105,16 +105,16 @@ VkSurfaceKHR Context::CreateSurface(HWND handle)
     vkGetInstanceProcAddr(mInstance, "vkCreateWin32SurfaceKHR");
 
   if (!vkCreateWin32SurfaceKHR) {
-    R_DEBUG("ERROR: Failed to proc address for vkCreateWin32SurfaceKHR.\n");
+    R_DEBUG(rError, "Failed to proc address for vkCreateWin32SurfaceKHR.");
     return VK_NULL_HANDLE;
   }
 
   if (vkCreateWin32SurfaceKHR(mInstance, &cInfo, nullptr, &surface) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create win32 surface...\n");
+    R_DEBUG(rError, "Failed to create win32 surface...");
     return VK_NULL_HANDLE;
   } 
 
-  R_DEBUG("NOTIFY: Win32 surface successfully created and attached...\n");
+  R_DEBUG(rNotify, "Win32 surface successfully created and attached...");
   return surface;
 }
 
@@ -142,7 +142,7 @@ void Context::EnableDebugMode()
       }
     }
     if (!layerFound) {
-      R_DEBUG("WARNING: A validation layer was not found!");
+      R_DEBUG(rWarning, "A validation layer was not found!");
     }
   }
 }
@@ -158,12 +158,12 @@ void Context::SetUpDebugCallback()
   auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT) 
     vkGetInstanceProcAddr(mInstance, "vkCreateDebugReportCallbackEXT");
   if (vkCreateDebugReportCallbackEXT == nullptr) {
-    R_DEBUG("ERROR: Failed to find debug report callback function create!\n");
+    R_DEBUG(rError, "Failed to find debug report callback function create!");
     return;
   }
 
   if (vkCreateDebugReportCallbackEXT(mInstance, &ci, nullptr, &mDebugReportCallback) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create debug report callback.\n");
+    R_DEBUG(rError, "Failed to create debug report callback.");
     return;
   }
 }
@@ -174,7 +174,7 @@ void Context::CleanUpDebugCallback()
   auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)
     vkGetInstanceProcAddr(mInstance, "vkDestroyDebugReportCallbackEXT");
   if (vkDestroyDebugReportCallbackEXT == nullptr) {
-    R_DEBUG("ERROR: Failed to find vkDestroyDebugReportCallbackEXT!\n");
+    R_DEBUG(rError, "Failed to find vkDestroyDebugReportCallbackEXT!");
     return;
   }
 

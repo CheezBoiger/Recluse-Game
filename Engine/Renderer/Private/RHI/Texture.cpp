@@ -17,7 +17,7 @@ namespace Recluse {
 void Sampler::Initialize(VkSamplerCreateInfo& info)
 {
   if (vkCreateSampler(mOwner, &info, nullptr, &mSampler) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Sampler failed to initialize!\n");
+    R_DEBUG(rError, "Sampler failed to initialize!");
   }
 }
 
@@ -35,7 +35,7 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   VkImageViewCreateInfo& viewInfo, b8 stream)
 {
   if (vkCreateImage(mOwner, &imageInfo, nullptr, &mImage) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create image!\n");
+    R_DEBUG(rError, "Failed to create image!");
     return;
   }
 
@@ -48,18 +48,18 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   
   if (vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to allocate host memory for image!\n");
+    R_DEBUG(rError, "Failed to allocate host memory for image!");
     return;
   }
 
   if (vkBindImageMemory(mOwner, mImage, mMemory, 0) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to bind memory to image!\n");
+    R_DEBUG(rError, "Failed to bind memory to image!");
     return;
   }
 
   viewInfo.image = mImage;
   if (vkCreateImageView(mOwner, &viewInfo, nullptr, &mView) != VK_SUCCESS) {
-    R_DEBUG("ERROR: Failed to create image view!\n");
+    R_DEBUG(rError, "Failed to create image view!");
   }
 
   mFormat = imageInfo.format;
