@@ -82,7 +82,9 @@ std::vector<VkPresentModeKHR> PhysicalDevice::QuerySwapchainPresentModes(VkSurfa
 
 VkPhysicalDeviceFeatures PhysicalDevice::GetFeatures() const
 {
-  return { };
+  VkPhysicalDeviceFeatures features;
+  vkGetPhysicalDeviceFeatures(handle, &features);
+  return features;
 }
 
 

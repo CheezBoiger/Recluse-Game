@@ -137,6 +137,8 @@ void VulkanRHI::Initialize(HWND windowHandle)
 
   VkPhysicalDeviceFeatures features = gPhysicalDevice.GetFeatures();
   features.samplerAnisotropy = VK_TRUE;
+  features.multiViewport = VK_TRUE;
+  features.geometryShader = VK_TRUE;
 
   VkDeviceCreateInfo deviceCreate = {};
   deviceCreate.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

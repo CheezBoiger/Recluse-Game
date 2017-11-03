@@ -34,11 +34,12 @@ public:
     Matrix4         proj;
     Matrix4         viewProj;
     Vector4         cameraPos;
-    r32             coffSH[9];
     i32             screenSize[2];
-    i32             pad;
+    i32             pad[2];
  
   };
+
+  GlobalMaterial();
 
   void              Update();
   void              Initialize();
@@ -63,8 +64,9 @@ public:
   struct DirectionalLight {
     Vector4 direction;
     Vector4 color;
-    i32     pad[3];
+    r32     intensity;
     i32     enable;
+    i32     pad[2];
     
     DirectionalLight()
       : enable(false) { }
@@ -76,6 +78,7 @@ public:
     r32     range;
     i32     enable;
     i32     pad[2];
+
 
     PointLight()
       : enable(false), range(1.0f) { }

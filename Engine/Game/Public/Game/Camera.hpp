@@ -99,15 +99,17 @@ public:
   FlyViewCamera();
 
   // Add a transition to the camera.
-  void                    AddTransition(Vector3 p0, Vector3 p1, r64 t);
+  void                    AddTransition(Vector3 p0, Quaternion q0, Vector3 p1, Quaternion q1, r64 t);
   void                    ClearCurrentTransitions();
   void                    Start(u32 index);
 private:
   // Define a camera transition.
   struct Transition {
-    Vector3 p0;
-    Vector3 p1;
-    r64     transitionTime;
+    Vector3       p0;
+    Vector3       p1;
+    Quaternion    q0;
+    Quaternion    q1;
+    r64           transitionTime;
   };
 
   std::vector<Transition> mTransitions;

@@ -26,7 +26,8 @@ Material::Material()
   , mObjectBuffer(nullptr)
   , mBonesBuffer(nullptr)
   , mSampler(nullptr)
-{
+{ 
+  mObjectData.pad = false;
   mObjectData.hasAlbedo = false;
   mObjectData.hasAO = false;
   mObjectData.hasBones = false;
@@ -268,6 +269,15 @@ void Material::UpdateDescriptorSet(b8 includeBufferUpdate)
 }
 
 
+GlobalMaterial::GlobalMaterial()
+{
+  mGlobal.screenSize[0] = 0;
+  mGlobal.screenSize[1] = 0;
+  mGlobal.pad[0] = 0;
+  mGlobal.pad[1] = 0;
+}
+
+
 void GlobalMaterial::Initialize()
 {
   if (!mRhi) {
@@ -309,16 +319,18 @@ void GlobalMaterial::Initialize()
 
 LightMaterial::LightMaterial()
 {
-  mLights.primaryLight.pad[0] = 0;
-  mLights.primaryLight.pad[1] = 0;
-  mLights.primaryLight.pad[2] = 0;
+  mLights.primaryLight.enable = false;
+  //mLights.primaryLight.pad[0] = 0;
+  //mLights.primaryLight.pad[1] = 0;
+  //mLights.primaryLight.pad[2] = 0;
   for (size_t i = 0; i < 128; ++i) {
     mLights.pointLights[i].position = Vector4();
     mLights.pointLights[i].color = Vector4();
     mLights.pointLights[i].range = 0.0f;
     mLights.pointLights[i].enable = false;
-    mLights.pointLights[i].pad[0] = 0;
-    mLights.pointLights[i].pad[1] = 0;
+    //mLights.pointLights[i].pad[0] = 0.0f;
+    //mLights.pointLights[i].pad[1] = 0.0f;
+    //mLights.pointLights[i].pad[2] = 0.0f;
   }
 }
 
