@@ -11,6 +11,7 @@
 #include "UserParams.hpp"
 #include "TextureType.hpp"
 #include "UIOverlay.hpp"
+#include "RendererData.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -900,11 +901,11 @@ void Renderer::SetUpRenderTextures()
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   hdrTexture->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  cImageInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
+  cImageInfo.usage = mRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
+  cImageInfo.format = mRhi->DepthFormat();
 
-  cViewInfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
-  cViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+  cViewInfo.format = mRhi->DepthFormat();
+  cViewInfo.subresourceRange.aspectMask = mRhi->DepthAspectFlags();
 
   pbrDepth->Initialize(cImageInfo, cViewInfo);
 

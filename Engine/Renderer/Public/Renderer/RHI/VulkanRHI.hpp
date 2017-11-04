@@ -177,6 +177,9 @@ public:
   VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
   u32                           VendorID() { return mPhysicalDeviceProperties.vendorID; }
   
+  VkFormat                      DepthFormat() const { return mSwapchainInfo.mDepthFormat; }
+  VkImageAspectFlags            DepthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
+  VkImageUsageFlags             DepthUsageFlags() const { return mSwapchainInfo.mDepthUsageFlags; }
   b8                            CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
   const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
 
@@ -211,6 +214,9 @@ private:
     VkImage                                   mDepthAttachment;
     VkImageView                               mDepthView;
     VkDeviceMemory                            mDepthMemory;
+    VkFormat                                  mDepthFormat;
+    VkImageAspectFlags                        mDepthAspectFlags;
+    VkImageUsageFlags                         mDepthUsageFlags;
     u32                                       mCurrentImageIndex;
     i32                                       mCmdBufferSet;
   } mSwapchainInfo;

@@ -263,6 +263,10 @@ void VulkanRHI::QueryFromSwapchain()
 
 void VulkanRHI::CreateDepthAttachment()
 {
+  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
+  mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+  mSwapchainInfo.mDepthUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
   VkImageCreateInfo imageCI = { };
   imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imageCI.extent.width = mSwapchain.SwapchainExtent().width;
@@ -273,8 +277,8 @@ void VulkanRHI::CreateDepthAttachment()
   imageCI.arrayLayers = 1;
   imageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
   imageCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  imageCI.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-  imageCI.format = VK_FORMAT_D24_UNORM_S8_UINT;
+  imageCI.usage = DepthUsageFlags();
+  imageCI.format = DepthFormat();
   imageCI.imageType = VK_IMAGE_TYPE_2D;
   imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
@@ -300,10 +304,10 @@ void VulkanRHI::CreateDepthAttachment()
   // Now create the depth view.
   VkImageViewCreateInfo ivCI = {};
   ivCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  ivCI.format = VK_FORMAT_D24_UNORM_S8_UINT;
+  ivCI.format = DepthFormat();
   ivCI.image = mSwapchainInfo.mDepthAttachment;
   ivCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  ivCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+  ivCI.subresourceRange.aspectMask = DepthAspectFlags();
   ivCI.subresourceRange.baseArrayLayer = 0;
   ivCI.subresourceRange.baseMipLevel = 0;
   ivCI.subresourceRange.layerCount = 1;
@@ -336,7 +340,7 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   // Depth description.
   aDs[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   aDs[1].samples = VK_SAMPLE_COUNT_1_BIT;
-  aDs[1].format = VK_FORMAT_D24_UNORM_S8_UINT;
+  aDs[1].format = DepthFormat();
   aDs[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   aDs[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;  
   aDs[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;

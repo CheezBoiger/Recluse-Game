@@ -43,9 +43,9 @@ public:
   void                          ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
                                   VkSurfaceCapabilitiesKHR capabilities);
 
-  VkFormat                      SwapchainFormat() { return mSwapchainFormat; }
-  VkExtent2D                    SwapchainExtent() { return mSwapchainExtent; }
-  VkPresentModeKHR              CurrentPresentMode() { return mCurrentPresentMode; }
+  VkFormat                      SwapchainFormat() const { return mSwapchainFormat; }
+  VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }
+  VkPresentModeKHR              CurrentPresentMode() const { return mCurrentPresentMode; }
 
   VkQueue                       PresentQueue() { return mPresentationQueue; }
   VkQueue                       GraphicsQueue() { return mGraphicsQueue; }
