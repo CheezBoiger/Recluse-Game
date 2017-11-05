@@ -11,14 +11,14 @@ void FrameBuffer::Finalize(VkFramebufferCreateInfo& info,
 {
   VkResult result = vkCreateRenderPass(mOwner, &renderpass, nullptr, &mRenderPass);
   if (result != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create underlying renderpass for framebuffer!");
+    R_DEBUG(rError, "Failed to create underlying renderpass for framebuffer!\n");
   }
 
   info.renderPass = mRenderPass;
 
   result = vkCreateFramebuffer(mOwner, &info, nullptr, &mHandle);
   if (result != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create framebuffer!");
+    R_DEBUG(rError, "Failed to create framebuffer!\n");
     return;
   }
 }

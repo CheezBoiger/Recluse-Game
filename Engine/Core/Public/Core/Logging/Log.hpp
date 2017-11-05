@@ -16,31 +16,40 @@ enum Verbosity {
 };
 
 
+// TODO(): Log should be reading into a file for keeping history of events happening in the engine.
 class Log {
 public:
   static b8     Disable(Verbosity verbose);
   static b8     Enable(Verbosity verbose);
 
-  Log(Verbosity verbosity = rNormal) : mType(verbosity) { }
+  Log(Verbosity verbosity = rNormal) : Type(verbosity) { }
 
 
   void          StoreOutput();
 
-  // Logging system overload for the logger.
-  template<typename Type>
-  Log&          operator<<(Type val) {
-    switch (mType) {
-      case rError: std::cout << "Error: "; break;
-      case rWarning: std::cout << "Warning: "; break;
-      case rVerbose: std::cout << "Verbose: "; break;
-      case rNotify: std::cout << "Notify: "; break;
-      case rDebug: std::cout << "Debug: "; break;
-      default: break;
-    }
-    std::cout << val << "\n";
-    return (*this);
-  }
-private:
-  Verbosity     mType;
+  Verbosity     Type;
 };
+
+
+// Generic Modifier for debugging and printing onto the screen.
+template<typename Type>
+Log& operator<<(Log& log, Type val) {
+  switch (log.Type) {
+    case rError: std::cout << "Error: "; break;
+    case rWarning: std::cout << "Warning: "; break;
+    case rVerbose: std::cout << "Verbose: "; break;
+    case rNotify: std::cout << "Notify: "; break;
+    case rDebug: std::cout << "Debug: "; break;
+    default: break;
+  }
+
+  // Set back to normal to prevent redundant logging.
+  log.Type = rNormal;
+
+  std::cout << val;
+  return log;
+}
+
+
+Log& operator<<(Log& log, Verbosity verbosity);
 } // Recluse

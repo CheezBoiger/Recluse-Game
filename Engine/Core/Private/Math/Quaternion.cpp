@@ -1,6 +1,8 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Common.hpp"
+
+#include "Logging/Log.hpp"
 #include "Exception.hpp"
 #include <cmath>
 
@@ -218,5 +220,12 @@ Quaternion Quaternion::Slerp(const Quaternion& q0, const Quaternion& q1, const r
   v2 = v2.Normalize();
 
   return q0*cosf(theta) + v2*sinf(theta);
+}
+
+
+Log& operator<<(Log& log, const Quaternion& quat)
+{
+  log << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z << ")";
+  return log;
 }
 } // Recluse

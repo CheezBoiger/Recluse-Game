@@ -240,7 +240,7 @@ b8 Window::Create(std::string title, i32 width, i32 height)
   delete[] ltitle;
 
   if (!mHandle) {
-    R_DEBUG(rError, "Failed to create window!");
+    R_DEBUG(rError, "Failed to create window!\n");
     return false;
   }
   

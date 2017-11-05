@@ -15,7 +15,7 @@ void Buffer::Initialize(const VkBufferCreateInfo& info,
   VkMemoryPropertyFlags memFlags)
 {
   if (vkCreateBuffer(mOwner, &info, nullptr, &mBuffer) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create buffer object.");
+    R_DEBUG(rError, "Failed to create buffer object.\n");
     return;
   }
 
@@ -28,7 +28,7 @@ void Buffer::Initialize(const VkBufferCreateInfo& info,
   allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.FindMemoryType(memoryRequirements.memoryTypeBits, memFlags);
   
   if (vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to allocate memory for buffer!");
+    R_DEBUG(rError, "Failed to allocate memory for buffer!\n");
     return;
   }
 

@@ -20,7 +20,7 @@ b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
     i32* presentation, i32* graphics, i32* compute) const
 {
   if (!handle) {
-    R_DEBUG(rError, "No handle is set to query queue families from!");
+    R_DEBUG(rError, "No handle is set to query queue families from!\n");
     return false;
   }
   u32 familyCount = 0;

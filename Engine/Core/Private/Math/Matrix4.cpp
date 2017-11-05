@@ -1,5 +1,9 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Matrix4.hpp"
+#include "Logging/Log.hpp"
+
+#include <iomanip>
+#include <fstream>
 #include <cmath>
 
 // This define is supposed to give some leaway when comparing matrices
@@ -283,5 +287,17 @@ Matrix4 Matrix4::Scale(const Matrix4& begin, const Vector3& scale)
     0.0f,     0.0f,     0.0f,     1.0f
   );
   return scaler * begin;
+}
+
+
+Log& operator<<(Log& log, const Matrix4& mat4)
+{
+  for (size_t row = 0; row < 4; ++row) {
+    for (size_t col = 0; col < 4; ++col) {
+      log << std::setw(7) << mat4(row, col);
+    }
+    log << "\n";
+  }
+  return log;
 }
 } // Recluse

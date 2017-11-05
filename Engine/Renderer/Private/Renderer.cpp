@@ -66,7 +66,7 @@ Renderer::~Renderer()
 void Renderer::OnStartUp()
 {
   if (!gCore().IsActive()) {
-    R_DEBUG(rError, "Core is not active! Start up the core first!");
+    R_DEBUG(rError, "Core is not active! Start up the core first!\n");
     return;
   }
   VulkanRHI::CreateContext();
@@ -1149,7 +1149,7 @@ void Renderer::Build()
 void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 {
   if (cmdBufferIndex >= mOffscreen.cmdBuffers.size()) { 
-    R_DEBUG(rError, "Attempted to build offscreen cmd buffer. Index out of bounds!");
+    R_DEBUG(rError, "Attempted to build offscreen cmd buffer. Index out of bounds!\n");
     return; 
   }
 
@@ -1254,7 +1254,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 {
   if (cmdBufferIndex >= mHDR.cmdBuffers.size()) {
-    R_DEBUG(rError, "Attempted to build HDR cmd buffer. Index out of bounds!");
+    R_DEBUG(rError, "Attempted to build HDR cmd buffer. Index out of bounds!\n");
     return;
   }
 

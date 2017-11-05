@@ -10,13 +10,13 @@ void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
   const VkPipelineLayoutCreateInfo& layout)
 {
   if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create pipeline layout!");
+    R_DEBUG(rError, "Failed to create pipeline layout!\n");
   }
 
   info.layout = mLayout;
 
   if (vkCreateGraphicsPipelines(mOwner, VK_NULL_HANDLE, 1, &info, nullptr, &mPipeline) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create pipeline!");
+    R_DEBUG(rError, "Failed to create pipeline!\n");
     return;
   }
 }

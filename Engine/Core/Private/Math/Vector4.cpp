@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector4.hpp"
+#include "Logging/Log.hpp"
 #include <math.h>
 
 
@@ -90,5 +91,12 @@ Vector4 Vector4::Normalize() const
 {
   r32 magnitude = Magnitude();
   return (*this) / magnitude;
+}
+
+
+Log& operator<<(Log& log, const Vector4& vec4)
+{
+  log << "(" << vec4.x << ", " << vec4.y << ", " << vec4.z << ", " << vec4.w << ")";
+  return log;
 }
 } // Recluse

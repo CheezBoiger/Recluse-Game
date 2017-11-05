@@ -20,16 +20,16 @@ void FontManager::OnStartUp()
 {
   mFreeType = new FreeType();
   if (!mFreeType->Initialize()) {
-    R_DEBUG(rError, "Freetype not initialized. Stopping font manager initialization.");
+    R_DEBUG(rError, "Freetype not initialized. Stopping font manager initialization.\n");
     return;
   }
 
 
   mRenderer = &gRenderer();
-  R_DEBUG(rNotify, "FreeType library successfully initialized.");
+  R_DEBUG(rNotify, "FreeType library successfully initialized.\n");
 
   if (!mRenderer->IsActive()) {
-    R_DEBUG(rWarning, "Global Renderer is not active! Be sure to start up the global renderer before using the FontManager!");
+    R_DEBUG(rWarning, "Global Renderer is not active! Be sure to start up the global renderer before using the FontManager!\n");
   }
 }
 

@@ -9,6 +9,7 @@ namespace Recluse {
 
 
 struct Matrix4;
+class Log;
 
 struct Vector4 {
   struct { r32 x, y, z, w; };
@@ -35,4 +36,7 @@ struct Vector4 {
   r32     Magnitude() const;
   r32     Dot(const Vector4& other) const;
 };
+
+
+Log&  operator<<(Log& log, const Vector4& vec4);
 } // Recluse

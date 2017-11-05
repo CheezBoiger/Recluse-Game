@@ -262,7 +262,7 @@ void Material::UpdateDescriptorSet(b8 includeBufferUpdate)
   }
 
   if (!mObjectBufferSet) {
-    R_DEBUG(rError, "Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!");
+    R_DEBUG(rError, "Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!\n");
     return;
   }
 
@@ -282,7 +282,7 @@ GlobalMaterial::GlobalMaterial()
 void GlobalMaterial::Initialize()
 {
   if (!mRhi) {
-    R_DEBUG(rError, "No RHI owner set in this Global Material upon initialization!");
+    R_DEBUG(rError, "No RHI owner set in this Global Material upon initialization!\n");
     return;
   }
 
@@ -340,7 +340,7 @@ void LightMaterial::Initialize()
 {
   // TODO
   if (!mRhi) {
-    R_DEBUG(rError, "RHI owner not set for light material upon initialization!");
+    R_DEBUG(rError, "RHI owner not set for light material upon initialization!\n");
     return;
   }
 

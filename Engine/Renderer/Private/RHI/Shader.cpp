@@ -14,7 +14,7 @@ b8 Shader::Initialize(const std::string& binaryPath)
   
   std::ifstream file(binaryPath, std::ios::ate | std::ios::binary);
   if (!file.is_open()) {
-    R_DEBUG(rError, "Could not find compiled shader file! Aborting shader creation.");
+    R_DEBUG(rError, "Could not find compiled shader file! Aborting shader creation.\n");
     return false;
   }
   
@@ -31,7 +31,7 @@ b8 Shader::Initialize(const std::string& binaryPath)
   info.pCode = reinterpret_cast<const u32*>(buf.data());
   
   if (vkCreateShaderModule(mOwner, &info, nullptr, &mModule) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create our shader module!");
+    R_DEBUG(rError, "Failed to create our shader module!\n");
     return false;
   }
 

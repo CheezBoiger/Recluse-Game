@@ -19,7 +19,7 @@ Filesystem& gFilesystem()
 void Filesystem::OnStartUp()
 {
   if (!gCore().IsActive()) {
-    R_DEBUG(rError, "Core is not active! Activate first!");
+    R_DEBUG(rError, "Core is not active! Activate first!\n");
     return;
   }
 

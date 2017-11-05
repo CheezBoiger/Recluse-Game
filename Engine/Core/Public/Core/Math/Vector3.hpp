@@ -5,6 +5,7 @@
 
 namespace Recluse {
 
+class Log;
 
 struct Vector3 {
   struct { r32 x, y, z; };
@@ -39,4 +40,7 @@ struct Vector3 {
 
   r32             Magnitude() const;
 };
+
+// Overload to let Log take in vector3 values.
+Log&              operator<<(Log& log, const Vector3& vec3);
 } // Recluse

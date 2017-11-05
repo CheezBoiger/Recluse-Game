@@ -9,6 +9,7 @@
 
 namespace Recluse {
 
+class Log;
 
 // All matrices are row major, which is implemented by DirectX. Vulkan 
 // Attempts to be essentially the same...
@@ -69,6 +70,10 @@ struct Matrix4 {
 
   r32*                    Raw() { return Data[0]; }
   r32*                    operator[](const size_t i);
+  r32                     Get(const size_t row, const size_t col) const { return Data[row][col]; }
+  r32                     operator()(const size_t row, const size_t col) const { return Get(row, col); }
 };
 
+
+Log&                      operator<<(Log& log, const Matrix4& mat4);
 } // Recluse

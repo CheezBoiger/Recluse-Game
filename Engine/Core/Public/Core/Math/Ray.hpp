@@ -7,6 +7,7 @@
 
 namespace Recluse {
 
+class Log;
 
 struct Ray {
   Vector3     Origin;
@@ -22,4 +23,7 @@ struct Ray {
     return Origin + Direction * t;
   }
 };
+
+
+Log& operator<<(Log& log, const Ray& ray);
 } // Recluse 

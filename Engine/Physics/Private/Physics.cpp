@@ -17,15 +17,15 @@ Physics& gPhysics()
 void Physics::OnStartUp()
 {
   if (!gRenderer().IsActive()) {
-    R_DEBUG(rWarning, "Renderer is not active! Physics will carry on however...");
+    R_DEBUG(rWarning, "Renderer is not active! Physics will carry on however...\n");
   }
   mDevice = new PhysX();
   if (!mDevice->Initialize()) {
-    R_DEBUG(rError, "Failed to initialize PhysX device!");
+    R_DEBUG(rError, "Failed to initialize PhysX device!\n");
     return;
   }
 
-  R_DEBUG(rNotify, "PhysX Device is successfully initialized.");
+  R_DEBUG(rNotify, "PhysX Device is successfully initialized.\n");
 }
 
 

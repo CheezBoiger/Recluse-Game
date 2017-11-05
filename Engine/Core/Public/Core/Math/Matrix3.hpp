@@ -7,6 +7,7 @@
 
 namespace Recluse {
 
+class Log;
 
 struct Matrix3 {
   r32         Data[3][3];
@@ -24,7 +25,6 @@ struct Matrix3 {
     Data[2][0] = a20; Data[2][1] = a21; Data[2][2] = a22;
   }
 
-
   r32         Determinant() const;
   Matrix3     Transpose() const;
   Matrix3     Inverse() const;
@@ -37,8 +37,12 @@ struct Matrix3 {
 
   r32*        Raw() { return Data[0]; }
   r32*        operator[](const size_t i);
+  r32         Get(const size_t row, const size_t col) const { return Data[row][col]; }
+  r32         operator()(const size_t row, const size_t col) const { return Get(row, col); }
 
   b8          operator==(const Matrix3& other) const;
   b8          operator!=(const Matrix3& other) const;
 };
+
+Log&          operator<<(Log& log, const Matrix3& mat3);
 } // Recluse

@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector2.hpp"
+#include "Logging/Log.hpp"
 
 
 namespace Recluse {
@@ -84,5 +85,12 @@ r32 Vector2::Magnitude() const
 r32 Vector2::Dot(const Vector2& other) const
 {
   return ((x*other.x) + (y*other.y));
+}
+
+
+Log& operator<<(Log& log, const Vector2& vec2)
+{
+  log << "(" << vec2.x << ", " << vec2.y << ")";
+  return log;
 }
 } // Recluse

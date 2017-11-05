@@ -1,5 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector3.hpp"
+#include "Math/Ray.hpp"
+#include "Logging/Log.hpp"
 #include <cmath>
 
 namespace Recluse {
@@ -120,5 +122,20 @@ void Vector3::operator/=(const r32 scaler)
   x /= scaler;
   y /= scaler;
   z /= scaler;
+}
+
+
+Log& operator<<(Log& log, const Vector3& vec3)
+{
+  log << "(" << vec3.x << ", " << vec3.y << ", " << vec3.z << ")";
+  return log;
+}
+
+
+Log& operator<<(Log& log, const Ray& ray)
+{
+  log << "Origin:    " << ray.Origin << "\n"
+      << "Direction: " << ray.Direction; 
+  return log;
 }
 } // Recluse

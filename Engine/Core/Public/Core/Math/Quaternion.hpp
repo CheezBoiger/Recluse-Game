@@ -8,6 +8,9 @@
 namespace Recluse {
 
 
+class Log;
+
+// Quaternion mathematical object.
 struct Quaternion {
   struct { r32 x, y, z, w; };
 
@@ -44,4 +47,8 @@ struct Quaternion {
 
   r32               Norm() const;
 };
+
+
+// Quaternions are read as (w, x, y, z).
+Log&                operator<<(Log& log, const Quaternion& quat);
 } // Recluse

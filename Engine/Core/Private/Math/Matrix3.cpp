@@ -1,5 +1,8 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Matrix3.hpp"
+#include "Logging/Log.hpp"
+
+#include <iomanip>
 
 namespace Recluse {
 
@@ -99,5 +102,17 @@ b8 Matrix3::operator==(const Matrix3& other) const
 b8 Matrix3::operator!=(const Matrix3& other) const
 {
   return !(*this == other);
+}
+
+
+Log& operator<<(Log& log, const Matrix3& mat3)
+{
+  for (size_t row = 0; row < 3; ++row) {
+    for (size_t col = 0; col < 3; ++col) {
+      log << std::setw(7) << mat3(row, col);
+    }
+    log << "\n";
+  }
+  return log;
 }
 } // Recluse

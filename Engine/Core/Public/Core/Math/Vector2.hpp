@@ -7,6 +7,7 @@
 
 namespace Recluse {
 
+class Log;
 
 // 2 component vector object.
 struct Vector2 {
@@ -31,4 +32,7 @@ struct Vector2 {
   r32     Magnitude() const;
   r32     Dot(const Vector2& other) const;
 };
+
+
+Log&      operator<<(Log& log, const Vector2& vec2);
 } // Recluse

@@ -9,7 +9,7 @@ namespace Recluse {
 void DescriptorSetLayout::Initialize(const VkDescriptorSetLayoutCreateInfo& info)
 {
   if (vkCreateDescriptorSetLayout(mOwner, &info, nullptr, &mLayout) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create descriptor layout! Aborting descriptor set allocation.");
+    R_DEBUG(rError, "Failed to create descriptor layout! Aborting descriptor set allocation.\n");
     return;
   }
 }
@@ -36,7 +36,7 @@ void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLa
   allocInfo.pSetLayouts = &layoutRef;
 
   if (vkAllocateDescriptorSets(mOwner, &allocInfo, &mDescriptorSet) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to allocate descriptor set!");
+    R_DEBUG(rError, "Failed to allocate descriptor set!\n");
   }
 }
 
