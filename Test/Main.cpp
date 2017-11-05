@@ -83,6 +83,8 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   Camera gCamera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+
+  Log(rVerbose) << "Global camera created, attaching to engine.\n";
   gEngine().SetCamera(&gCamera);
 
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
@@ -189,6 +191,8 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
   ///////////////////////////////////////////////////////////////////////////////////////
+  Log(rVerbose) << "Entering game loop...\n";
+
   while (!window->ShouldClose()) {
     Time::Update();
 
