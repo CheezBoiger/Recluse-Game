@@ -33,8 +33,8 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
   if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
   // Test HDR Reinhard exposure.
-  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(5.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(5.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
   // Window changing sets.
   if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
   if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
@@ -215,6 +215,7 @@ int main(int c, char* argv[])
     gBuffer->screenSize[0] = window->Width();
     gBuffer->screenSize[1] = window->Height();
 
+    // box 1 transforming.
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
     cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
     cubeInfo->normalMatrix[3][0] = 0.0f;
@@ -222,9 +223,18 @@ int main(int c, char* argv[])
     cubeInfo->normalMatrix[3][2] = 0.0f;
     cubeInfo->normalMatrix[3][3] = 1.0f;
 
+    // light cube transforming.
     light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -3.0f, 2.0f, 0.0f);
     lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
-    cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
+    cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
+      Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
+      Matrix4::Translate(Matrix4::Identity(), light0Pos);
+
+    cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
+    cubeInfo3->normalMatrix[3][0] = 0.0f;
+    cubeInfo3->normalMatrix[3][1] = 0.0f;
+    cubeInfo3->normalMatrix[3][2] = 0.0f;
+    cubeInfo3->normalMatrix[3][3] = 1.0f;
 
     if (noAlbedo2) { cubeMaterial2->ObjectData()->hasAlbedo = false; } else { cubeMaterial2->ObjectData()->hasAlbedo = true; }
     if (noAlbedo) { cubeMaterial->ObjectData()->hasAlbedo = false; } else { cubeMaterial->ObjectData()->hasAlbedo = true; }

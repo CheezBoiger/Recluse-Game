@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Material.hpp"
 #include "Resources.hpp"
+#include "RendererData.hpp"
 #include "TextureType.hpp"
 
 #include "RHI/DescriptorSet.hpp"
@@ -40,10 +41,10 @@ Material::Material()
 
 void Material::Initialize(b8 isStatic)
 {
-  Sampler* sampler = gResources().GetSampler("DefaultSampler");
+  Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
   if (mSampler) sampler = mSampler->Handle();
 
-  Texture* defaultTexture = gResources().GetRenderTexture("DefaultTexture");
+  Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
   // Create the render buffer for the object.
   mObjectBuffer = mRhi->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
@@ -57,7 +58,7 @@ void Material::Initialize(b8 isStatic)
 
   // Now create the set to update to.
   mObjectBufferSet = mRhi->CreateDescriptorSet();
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRObjectMaterialLayout");
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr);
   mObjectBufferSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
   VkBufferCreateInfo bonesCI = { };
@@ -105,10 +106,10 @@ void Material::UpdateDescriptorSet(b8 includeBufferUpdate)
   std::array<VkWriteDescriptorSet, 8> writeSets;
   size_t count = 0;
 
-  Sampler* sampler = gResources().GetSampler("DefaultSampler");
+  Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
   if (mSampler) sampler = mSampler->Handle();
 
-  Texture* defaultTexture = gResources().GetRenderTexture("DefaultTexture");
+  Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
 
   VkDescriptorBufferInfo objBufferInfo = {};
   objBufferInfo.buffer = mObjectBuffer->Handle();
@@ -294,7 +295,7 @@ void GlobalMaterial::Initialize()
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
   mGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRGlobalMaterialLayout");
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRGlobalMatLayoutStr);
 
   mDescriptorSet = mRhi->CreateDescriptorSet();
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
@@ -353,7 +354,7 @@ void LightMaterial::Initialize()
 
   mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout("PBRLightMaterialLayout");
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr);
   mDescriptorSet = mRhi->CreateDescriptorSet();
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
