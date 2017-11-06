@@ -42,7 +42,7 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
   vertices.push_back(topVertex);
 
   float phiStep = r32(CONST_PI) / stackCount;
-  float thetaStep = r32(2.0 * CONST_PI) / sliceCount;
+  float thetaStep = 2.0f * r32(CONST_PI) / sliceCount;
 
   // Compute vertices for each stack ring (do not count the poles as rings).
   for (u32 i = 1; i <= stackCount - 1; ++i)
@@ -67,9 +67,7 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
       Vector3 p = Vector3(v.position.x, v.position.y, v.position.z);
       v.normal = Vector4(p.Normalize(), 1.0f);
   
-      // TODO(): Figure out what is going on with texcoords. They don't seem to be 
-      // working properly with uv textures.
-      v.texcoord0.x = theta / r32(CONST_PI_2);
+      v.texcoord0.x = theta / r32(CONST_2_PI);
       v.texcoord0.y = phi / r32(CONST_PI);
       v.texcoord1 = v.texcoord0;
 

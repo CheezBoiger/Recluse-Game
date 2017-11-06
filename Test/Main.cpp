@@ -180,7 +180,7 @@ int main(int c, char* argv[])
   CmdList list;
   list.Resize(3);
   list[0].materialId = cubeMaterial;
-  list[0].meshId = sphereMesh;
+  list[0].meshId = cubeMesh;
 
   list[1].materialId = cubeMaterial2;
   list[1].meshId = cubeMesh;
