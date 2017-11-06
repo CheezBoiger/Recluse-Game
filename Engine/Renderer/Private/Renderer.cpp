@@ -796,9 +796,10 @@ void Renderer::SetUpGraphicsPipelines()
   vertBindingDesc.binding = 0;
   vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
   vertBindingDesc.stride = sizeof(QuadVertex);
-
+  
   vertexCI.vertexAttributeDescriptionCount = 2;
   vertexCI.pVertexAttributeDescriptions = finalAttribs;
+  //vertexCI.pNext
 
   VkPipelineLayoutCreateInfo finalLayout = {};
   finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -806,7 +807,7 @@ void Renderer::SetUpGraphicsPipelines()
   VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr)->Layout();
   finalLayout.pSetLayouts = &finalL;
   finalLayout.pushConstantRangeCount = 0;
-  finalLayout.pPushConstantRanges = 0;
+  finalLayout.pPushConstantRanges = nullptr;
 
   quadPipeline->Initialize(graphicsPipeline, finalLayout);
 

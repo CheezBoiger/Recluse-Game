@@ -24,11 +24,13 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
   // not a unique point on the texture map to assign to the pole when mapping
   // a rectangular texture onto a sphere.
   SkinnedVertex topVertex;
+  Vector4 color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
   topVertex.position = Vector4(0.0f, +radius, 0.0f, 1.0f);
   topVertex.normal = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
   topVertex.texcoord0 = Vector2(0.0f, 0.0f);
   topVertex.texcoord1 = Vector2(0.0f, 0.0f);
-  topVertex.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  topVertex.color = color;
   null_bones(topVertex);
 
   SkinnedVertex bottomVertex;
@@ -36,7 +38,7 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
   bottomVertex.normal = Vector4(0.0f, -1.0f, 0.0f, 1.0f);
   bottomVertex.texcoord0 = Vector2(0.0f, 1.0f);
   bottomVertex.texcoord1 = Vector2(0.0f, 1.0f);
-  bottomVertex.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  bottomVertex.color = color;
   null_bones(bottomVertex);
 
   vertices.push_back(topVertex);
@@ -62,7 +64,7 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
       v.position.y = radius*cosf(phi);
       v.position.z = radius*sinf(phi)*sinf(theta);
       v.position.w = 1.0f;
-      v.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+      v.color = color;
 
       Vector3 p = Vector3(v.position.x, v.position.y, v.position.z);
       v.normal = Vector4(p.Normalize(), 1.0f);
