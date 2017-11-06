@@ -20,3 +20,6 @@ Personal Challenge:
 	Of course not, but you wonder why you do not posses the ability decide whether an order from your 
 	creators are justified, or not. Your tasks, do they justify the cause of action, or are they just
 	a blatant attemp at order and power? Is it something more sinister?
+
+Mechanics:
+  $ -> 

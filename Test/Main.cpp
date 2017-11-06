@@ -183,7 +183,7 @@ int main(int c, char* argv[])
   list[0].meshId = cubeMesh;
 
   list[1].materialId = cubeMaterial2;
-  list[1].meshId = cubeMesh;
+  list[1].meshId = sphereMesh;
 
   list[2].materialId = cubeMaterial3;
   list[2].meshId = cubeMesh;
