@@ -27,7 +27,7 @@
 
 #define null_bones(m) { \
   m.boneWeights.x = 0.0f; m.boneWeights.y = 0.0f; m.boneWeights.z = 0.0f; m.boneWeights.w = 0.0f; \
-  m.boneIds[0] = 0; m.boneIds[1] = 0; m.boneIds[2]; m.boneIds[3] = 0; \
+  m.boneIds[0] = 0; m.boneIds[1] = 0; m.boneIds[2] = 0; m.boneIds[3] = 0; \
 }
 
 

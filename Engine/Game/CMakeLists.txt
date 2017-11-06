@@ -27,8 +27,10 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/Engine.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
+  ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp
 
   ${GEOMETRY_PRIVATE_DIR}/Cube.cpp
+  ${GEOMETRY_PRIVATE_DIR}/UVSphere.cpp
 )
 
 

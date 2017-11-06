@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
-
+#include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/Vertex.hpp"
 #include "Renderer/UserParams.hpp"
 #include "Renderer/CmdList.hpp"
@@ -124,6 +124,11 @@ int main(int c, char* argv[])
   albedo->Update(img);
   img.CleanUp();
 
+  auto sphereData = UVSphere::MeshInstance(1.0f, 60, 60);
+  auto sphereIndices = UVSphere::InstanceInstance((u32)sphereData.size(), 60, 60);
+  Mesh* sphereMesh = gRenderer().CreateMesh();
+  sphereMesh->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
+
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   Mesh* cubeMesh = gRenderer().CreateMesh();
@@ -138,6 +143,7 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][1] = 0.0f;
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
+  
 
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
   cubeMaterial2->SetAlbedo(albedo);
@@ -174,7 +180,7 @@ int main(int c, char* argv[])
   CmdList list;
   list.Resize(3);
   list[0].materialId = cubeMaterial;
-  list[0].meshId = cubeMesh;
+  list[0].meshId = sphereMesh;
 
   list[1].materialId = cubeMaterial2;
   list[1].meshId = cubeMesh;
@@ -267,6 +273,7 @@ int main(int c, char* argv[])
   gRenderer().FreeMaterial(cubeMaterial2);
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);
+  gRenderer().FreeMesh(sphereMesh);
 
   gRenderer().FreeLightMaterial(lightMat);
   gRenderer().FreeGlobalMaterial(globalMat);

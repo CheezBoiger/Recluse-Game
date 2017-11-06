@@ -196,7 +196,7 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 albedoFrag, vec3 V, vec3
     float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
     
     vec3 F = FSchlick(dotNV, F0, roughness);
-    vec3 brdf = D * F * G / (4 * dotNL * dotNV);
+    vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
@@ -277,7 +277,7 @@ void main()
 
   // Brute force lights for now.
   vec3 outColor = vec3(0.0);
-  
+
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);   
@@ -289,7 +289,7 @@ void main()
     outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
     
   }
-  
+
   // We might wanna set a debug param here...
   OutColor = vec4(outColor, 1.0);
 }
