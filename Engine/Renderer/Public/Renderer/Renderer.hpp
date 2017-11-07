@@ -90,7 +90,7 @@ public:
   // by using temporary commandbuffers and building them instead. When done, they will replace old 
   // commandbuffers. Use only if you need to update the scene as a result of dynamic objects/materials being
   // added/removed to/from the scene. Do not use this call if there is a window change or 
-  // application change, as it will result in a potential crash of the renderer!
+  // application change, as it will result warnings from the renderer!
   void              BuildAsync();
 
   // Set the global material for the renderer. This is the data used to specify  the world 
