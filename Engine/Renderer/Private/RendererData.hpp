@@ -15,6 +15,7 @@ extern std::string DefaultSamplerStr;
 extern std::string PBRPipelineStr;
 extern std::string PBRLayoutStr;
 extern std::string PBRColorAttachStr;
+extern std::string PBRNormalAttachStr;
 extern std::string PBRSamplerStr;
 extern std::string PBRDepthAttachStr;
 extern std::string PBRFrameBufferStr;

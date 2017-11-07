@@ -12,6 +12,7 @@ std::string DefaultSamplerStr         = "DefaultSampler";
 std::string PBRPipelineStr            = "PBRPipeline";
 std::string PBRLayoutStr              = "PBRLayout";
 std::string PBRColorAttachStr         = "PBRColor";
+std::string PBRNormalAttachStr        = "PBRNormal";
 std::string PBRDepthAttachStr         = "PBRDepth";
 std::string PBRSamplerStr             = "PBRSampler";
 std::string PBRFrameBufferStr         = "PBRFrameBuffer";

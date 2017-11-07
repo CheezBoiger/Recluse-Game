@@ -77,7 +77,8 @@ layout (set = 2, binding = 1) uniform sampler2D globalShadow;
 
 // TODO(): Need to addin gridLights buffer, for light culling, too.
 
-layout (location = 0) out vec4 OutColor;
+layout (location = 0) out vec4 finalColor;
+layout (location = 1) out vec4 normalColor;
 
 
 ////////////////////////////////////////////////////////////////////
@@ -264,6 +265,8 @@ void main()
     fragNormal = frag_in.normal;
   }
   
+  normalColor = vec4(fragNormal, 1.0);
+  
   if (objBuffer.hasEmissive >= 1) {
     fragEmissive = texture(emissive, frag_in.texcoord0);
   } 
@@ -291,5 +294,5 @@ void main()
   }
 
   // We might wanna set a debug param here...
-  OutColor = vec4(outColor, 1.0);
+  finalColor = vec4(outColor, 1.0);
 }

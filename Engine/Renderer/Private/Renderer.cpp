@@ -425,6 +425,7 @@ void Renderer::CleanUpDescriptorSetLayouts()
 void Renderer::SetUpFrameBuffers()
 {
   Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
+  Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
   Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
 
   FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
@@ -433,8 +434,7 @@ void Renderer::SetUpFrameBuffers()
   FrameBuffer* hdrFrameBuffer = mRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
-
-  VkAttachmentDescription attachmentDescriptions[2];
+  VkAttachmentDescription attachmentDescriptions[3];
   attachmentDescriptions[0].format = pbrColor->Format();
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -444,16 +444,26 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   attachmentDescriptions[0].samples = pbrColor->Samples();
   attachmentDescriptions[0].flags = 0;
-  
-  attachmentDescriptions[1].format = pbrDepth->Format();
+
+  attachmentDescriptions[1].format = pbrNormal->Format();
   attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-  attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[1].samples = pbrDepth->Samples();
-  attachmentDescriptions[1].flags = 0;   
+  attachmentDescriptions[1].samples = pbrNormal->Samples();
+  attachmentDescriptions[1].flags = 0;  
+
+  attachmentDescriptions[2].format = pbrDepth->Format();
+  attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  attachmentDescriptions[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachmentDescriptions[2].samples = pbrDepth->Samples();
+  attachmentDescriptions[2].flags = 0;   
 
   VkSubpassDependency dependencies[2];
   dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -472,18 +482,23 @@ void Renderer::SetUpFrameBuffers()
   dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
   dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-  VkAttachmentReference attachmentColorRef = { 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
-  VkAttachmentReference attachmentDepthRef = { 1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  VkAttachmentReference attachmentColors[2];
+  VkAttachmentReference attachmentDepthRef = { 2, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  attachmentColors[0].attachment = 0;
+  attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[1].attachment = 1;
+  attachmentColors[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = 1;
-  subpass.pColorAttachments = &attachmentColorRef;
+  subpass.colorAttachmentCount = 2;
+  subpass.pColorAttachments = attachmentColors;
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
   
   VkRenderPassCreateInfo renderpassCI = { };
   renderpassCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderpassCI.attachmentCount = 2;
+  renderpassCI.attachmentCount = 3;
   renderpassCI.pAttachments = attachmentDescriptions;
   renderpassCI.subpassCount = 1;
   renderpassCI.pSubpasses = &subpass;
@@ -491,9 +506,10 @@ void Renderer::SetUpFrameBuffers()
   renderpassCI.pDependencies = dependencies;
 
 
-  VkImageView attachments[2];
+  VkImageView attachments[3];
   attachments[0] = pbrColor->View();
-  attachments[1] = pbrDepth->View();
+  attachments[1] = pbrNormal->View();
+  attachments[2] = pbrDepth->View();
 
   VkFramebufferCreateInfo framebufferCI = {};
   framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -501,21 +517,19 @@ void Renderer::SetUpFrameBuffers()
   framebufferCI.width = mWindowHandle->Width();
   framebufferCI.renderPass = nullptr; // The finalize call handles this for us.
   framebufferCI.layers = 1;
-  framebufferCI.attachmentCount = 2;
+  framebufferCI.attachmentCount = 3;
   framebufferCI.pAttachments = attachments;
-
   pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
   
   // No need to render any depth, as we are only writing on a 2d surface.
   Texture* hdrColor = gResources().GetRenderTexture(HDRGammaColorAttachStr);
   subpass.pDepthStencilAttachment = nullptr;
   attachments[0] = hdrColor->View();
-  attachments[1] = nullptr;
   framebufferCI.attachmentCount = 1;
   attachmentDescriptions[0].format = hdrColor->Format();
   attachmentDescriptions[0].samples = hdrColor->Samples();
   renderpassCI.attachmentCount = 1;
-
+  subpass.colorAttachmentCount = 1;
   hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
 }
 
@@ -580,20 +594,31 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.back = { };
   depthStencilCI.front = { };
 
-  VkPipelineColorBlendAttachmentState colorBlendAttachment = { };
-  colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachment.blendEnable = VK_FALSE;
-  colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-  colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-  colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+  VkPipelineColorBlendAttachmentState colorBlendAttachments[2];
+  colorBlendAttachments[0] = { };
+  colorBlendAttachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+  colorBlendAttachments[0].blendEnable = VK_FALSE;
+  colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
+  colorBlendAttachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
+
+  colorBlendAttachments[1] = { };
+  colorBlendAttachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+  colorBlendAttachments[1].blendEnable = VK_FALSE;
+  colorBlendAttachments[1].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  colorBlendAttachments[1].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachments[1].colorBlendOp = VK_BLEND_OP_ADD;
+  colorBlendAttachments[1].alphaBlendOp = VK_BLEND_OP_ADD;
 
   VkPipelineColorBlendStateCreateInfo colorBlendCI = { };
   colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO; 
-  colorBlendCI.attachmentCount = 1;
-  colorBlendCI.pAttachments = &colorBlendAttachment;
+  colorBlendCI.attachmentCount = 2;
+  colorBlendCI.pAttachments = colorBlendAttachments;
   colorBlendCI.logicOpEnable = VK_FALSE;
   colorBlendCI.logicOp = VK_LOGIC_OP_COPY;
   colorBlendCI.blendConstants[0] = 0.0f;
@@ -749,6 +774,7 @@ void Renderer::SetUpGraphicsPipelines()
   graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
+  colorBlendCI.attachmentCount = 1;
   rasterizerCI.cullMode = VK_CULL_MODE_NONE;
 
   Shader* quadVert = mRhi->CreateShader();
@@ -875,6 +901,7 @@ void Renderer::CleanUpFrameBuffers()
 void Renderer::SetUpRenderTextures()
 {
   Texture* pbrColor = mRhi->CreateTexture();
+  Texture* pbrNormal = mRhi->CreateTexture();
   Texture* pbrDepth = mRhi->CreateTexture();
   Sampler* pbrSampler = mRhi->CreateSampler();
   Texture* hdrTexture = mRhi->CreateTexture();
@@ -883,6 +910,7 @@ void Renderer::SetUpRenderTextures()
   gResources().RegisterSampler(HDRGammaSamplerStr, hdrSampler);
   gResources().RegisterRenderTexture(HDRGammaColorAttachStr, hdrTexture);
   gResources().RegisterRenderTexture(PBRColorAttachStr, pbrColor);
+  gResources().RegisterRenderTexture(PBRNormalAttachStr, pbrNormal);
   gResources().RegisterRenderTexture(PBRDepthAttachStr, pbrDepth);
   gResources().RegisterSampler(PBRSamplerStr, pbrSampler);
   
@@ -915,6 +943,7 @@ void Renderer::SetUpRenderTextures()
   cViewInfo.subresourceRange.levelCount = 1;
 
   pbrColor->Initialize(cImageInfo, cViewInfo);
+  pbrNormal->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -989,6 +1018,7 @@ void Renderer::SetUpRenderTextures()
 void Renderer::CleanUpRenderTextures()
 {
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
+  Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
   Texture* pbrDepth = gResources().UnregisterRenderTexture(PBRDepthAttachStr);
   Sampler* pbrSampler = gResources().UnregisterSampler(PBRSamplerStr);
 
@@ -1002,6 +1032,7 @@ void Renderer::CleanUpRenderTextures()
   Sampler* defaultSampler = gResources().UnregisterSampler(DefaultSamplerStr);
 
   mRhi->FreeTexture(pbrColor);
+  mRhi->FreeTexture(pbrNormal);
   mRhi->FreeTexture(pbrDepth);
   mRhi->FreeSampler(pbrSampler);
 
@@ -1177,16 +1208,17 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-  VkClearValue clearValues[2];
+  VkClearValue clearValues[3];
   clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
-  clearValues[1].depthStencil = { 1.0f, 0 };
+  clearValues[1].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+  clearValues[2].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo pbrRenderPassInfo = {};
   pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   pbrRenderPassInfo.framebuffer = pbrBuffer->Handle();
   pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
   pbrRenderPassInfo.pClearValues = clearValues;
-  pbrRenderPassInfo.clearValueCount = 2;
+  pbrRenderPassInfo.clearValueCount = 3;
   pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   pbrRenderPassInfo.renderArea.offset = { 0, 0 };
 
