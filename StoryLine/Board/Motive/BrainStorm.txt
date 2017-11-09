@@ -48,3 +48,8 @@ You are a machine, built by this technology, served only built to follow orders.
 involve using your sensors to detect lies and emotion against suspects and potentials. You posses human interaction 
 the likes of which no android task force has achieved, and is your creator's greatest weapon. Although used for the 
 greater good, it technology does not know moral, and it is up to you to uncover it's true purpose, and it's corruption.
+
+Awoken from a cell regeneration pod, you are immediately given assignment to a police task force whom require your
+assistance in taking down a suspected drug ring. Slightly confused, you still remember that your objectives are to always
+obey your creators moral principles and orders above all, despite your transportation, and contract ownership to the 
+assigned task force. 

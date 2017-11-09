@@ -36,6 +36,7 @@ public:
   // window in order to see something!
   void      StartUp(std::string appName, i32 width, i32 height);
   void      CleanUp();
+  void      ProcessInput();
 
   Camera*   GetCamera() { return mCamera; }
   Window*   GetWindow() { return &mWindow; }

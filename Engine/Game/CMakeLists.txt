@@ -22,7 +22,9 @@ include_directories(
 set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/Camera.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/Engine.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/GameObject.hpp
 
+  ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Engine.cpp
 

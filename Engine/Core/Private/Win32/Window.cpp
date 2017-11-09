@@ -149,10 +149,11 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   case WM_MOUSEMOVE:
   {
     POINT point;
-    if (window && GetCursorPos(&point)) {
+    if (window) {
       ScreenToClient(window->mHandle, &point);
-
-      if (gMousePositionCallback) gMousePositionCallback(window, r64(point.x), r64(point.y));
+      const int x = LOWORD(lParam);
+      const int y = HIWORD(lParam);
+      if (gMousePositionCallback) gMousePositionCallback(window, (r64)x, (r64)y);
     }
   } break;
   case WM_LBUTTONDOWN:
@@ -166,6 +167,11 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_RBUTTONUP:
   {
+  } break;
+  case WM_INPUT:
+  {
+    // TODO(): 
+    // Need to add in unlimited movement. This will require disabling the cursor.
   } break;
   default: break;
   }

@@ -16,12 +16,11 @@ using namespace Recluse;
 
 bool noAlbedo2 = false;
 bool noAlbedo = false;
+static i32 keys[256];
 
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
-  static i32 keys[256];
-  keys[key] = action; 
-
+  keys[key] = action;
   // Test albedo enabling.
   if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
   if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
@@ -29,12 +28,6 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   if (keys[KEY_CODE_0] == KEY_DOWN) { gRenderer().EnableHDR(false); }
   if (keys[KEY_CODE_1] == KEY_DOWN) { gRenderer().EnableHDR(true); }
 
-  // Test Gamma correction
-  if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
-  // Test HDR Reinhard exposure.
-  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
   // Window changing sets.
   if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
   if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
@@ -61,6 +54,25 @@ void MousePositionMove(Window* window, r64 x, r64 y)
 }
 
 
+// TODO(): This needs to go into the engine as a member function, or it might be 
+// better off a global?
+void ProcessInput()
+{
+  Camera* camera = gEngine().GetCamera();
+  if (keys[KEY_CODE_W] == KEY_DOWN) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
+  if (keys[KEY_CODE_S] == KEY_DOWN) { camera->Move(Camera::BACK, Time::DeltaTime); }
+  if (keys[KEY_CODE_D] == KEY_DOWN) { camera->Move(Camera::LEFT, Time::DeltaTime); }
+  if (keys[KEY_CODE_A] == KEY_DOWN) { camera->Move(Camera::RIGHT, Time::DeltaTime); }
+
+  // Test Gamma correction
+  if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  // Test HDR Reinhard exposure.
+  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
+}
+
+
 int main(int c, char* argv[])
 {
   gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
@@ -81,17 +93,21 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera gCamera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
 
+  FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
+    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f), Vector3::UP);
+
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
-  gEngine().SetCamera(&gCamera);
+  gEngine().SetCamera(&fpsCamera);
+  Camera* gCamera = gEngine().GetCamera();
 
   GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
   GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
-  gBuffer->cameraPos = Vector4(gCamera.Position(), 1.0f);
-  gBuffer->proj = gCamera.Projection();
-  gBuffer->view = gCamera.View();
+  gBuffer->cameraPos = Vector4(gCamera->Position(), 1.0f);
+  gBuffer->proj = gCamera->Projection();
+  gBuffer->view = gCamera->View();
   gBuffer->viewProj = gBuffer->view * gBuffer->proj;
   globalMat->Initialize();
   globalMat->Update();
@@ -215,12 +231,13 @@ int main(int c, char* argv[])
       timeAccumulator -= Time::FixTime;
     }
 
+    gCamera->Update();
     // NOTE(): Update game state... This is hardcoded though.
-    gCamera.SetAspect(((r32)window->Width() / (r32)window->Height()));
-    gCamera.SetPosition(Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f));
-    gBuffer->cameraPos = gCamera.Position();
-    gBuffer->proj = gCamera.Projection();
-    gBuffer->view = gCamera.View();
+    gCamera->SetAspect(((r32)window->Width() / (r32)window->Height()));
+    //gCamera.SetPosition(Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f));
+    gBuffer->cameraPos = gCamera->Position();
+    gBuffer->proj = gCamera->Projection();
+    gBuffer->view = gCamera->View();
     gBuffer->viewProj = gBuffer->view * gBuffer->proj;
     gBuffer->screenSize[0] = window->Width();
     gBuffer->screenSize[1] = window->Height();
@@ -252,6 +269,7 @@ int main(int c, char* argv[])
     // //////////
     // End updates.
     // //////////
+    //Log(rDebug) << gCamera->Front() << "\n";
 
     // Syncronize engine modules, as they run on threads.
     gCore().Sync();
@@ -262,6 +280,7 @@ int main(int c, char* argv[])
     printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
 
     Window::PollEvents();
+    ProcessInput();
   }
 
   gRenderer().WaitIdle();
