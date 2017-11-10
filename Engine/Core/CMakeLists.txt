@@ -32,6 +32,8 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Utility/Module.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Time.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Image.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Utility/Archive.hpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Archive.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Window.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Win32Time.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Keyboard.cpp
@@ -40,6 +42,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Win32/Win32Configs.hpp
   ${RECLUSE_CORE_PUB_DIR}/Win32/Keyboard.hpp
   ${RECLUSE_CORE_PUB_DIR}/Win32/Mouse.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Serialize.hpp
   ${RECLUSE_CORE_PUB_DIR}/Core.hpp
 
   ${RECLUSE_CORE_PUB_DIR}/Logging/Log.hpp

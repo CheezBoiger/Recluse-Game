@@ -93,7 +93,7 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
@@ -141,7 +141,7 @@ int main(int c, char* argv[])
   img.CleanUp();
 
   auto sphereData = UVSphere::MeshInstance(1.0f, 60, 60);
-  auto sphereIndices = UVSphere::InstanceInstance((u32)sphereData.size(), 60, 60);
+  auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 60, 60);
   Mesh* sphereMesh = gRenderer().CreateMesh();
   sphereMesh->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
 
@@ -159,7 +159,6 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][1] = 0.0f;
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
-  
 
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
   cubeMaterial2->SetAlbedo(albedo);

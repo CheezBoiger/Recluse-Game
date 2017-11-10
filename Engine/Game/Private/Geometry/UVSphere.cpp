@@ -83,7 +83,7 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
 }
 
 
-std::vector<u32> UVSphere::InstanceInstance(u32 verticesCnt, u32 sliceCount, u32 stackCount)
+std::vector<u32> UVSphere::IndicesInstance(u32 verticesCnt, u32 sliceCount, u32 stackCount)
 {
   std::vector<u32> indices;
   //
