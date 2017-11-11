@@ -319,6 +319,11 @@ void GlobalMaterial::Initialize()
 
 
 LightMaterial::LightMaterial()
+  : mShadowMap(nullptr)
+  , mShadowSampler(nullptr)
+  , mRhi(nullptr)
+  , mDescriptorSet(nullptr)
+  , mLightBuffer(nullptr)
 {
   mLights.primaryLight.enable = false;
   //mLights.primaryLight.pad[0] = 0;
@@ -344,6 +349,9 @@ void LightMaterial::Initialize()
     return;
   }
 
+  // This class has already been initialized.
+  if (mLightBuffer || mDescriptorSet)  return; 
+
   mLightBuffer = mRhi->CreateBuffer();
   VkBufferCreateInfo bufferCI = { };
   VkDeviceSize dSize = sizeof(LightBuffer);
@@ -354,6 +362,17 @@ void LightMaterial::Initialize()
 
   mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   
+  if (!mShadowMap) {
+    mShadowMap = mRhi->CreateTexture();
+
+    VkImageCreateInfo imageCi = { };
+    imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  }
+
+  if (!mShadowSampler) {
+    mShadowSampler = mRhi->CreateSampler();
+  }
+
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr);
   mDescriptorSet = mRhi->CreateDescriptorSet();
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
@@ -393,6 +412,16 @@ void GlobalMaterial::CleanUp()
 
 void LightMaterial::CleanUp()
 {
+  if (mShadowMap) {
+    mRhi->FreeTexture(mShadowMap);
+    mShadowMap = nullptr;
+  }
+
+  if (mShadowSampler) {
+    mRhi->FreeSampler(mShadowSampler);
+    mShadowSampler = nullptr;
+  }
+
   // TODO
   if (mDescriptorSet) {
     mRhi->FreeDescriptorSet(mDescriptorSet);

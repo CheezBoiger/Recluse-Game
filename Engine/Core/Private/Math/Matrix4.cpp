@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Matrix4.hpp"
 #include "Logging/Log.hpp"
+#include "Exception.hpp"
 
 #include <iomanip>
 #include <fstream>
@@ -246,6 +247,13 @@ Matrix4 Matrix4::LookAt(const Vector3& eye, const Vector3& center, const Vector3
     right.z,          u.z,          front.z,        0.0f,
    -right.Dot(eye),  -u.Dot(eye),  -front.Dot(eye), 1.0f
   );
+}
+
+
+Matrix4 Matrix4::Ortho(r32 left, r32 right, r32 bottom, r32 top, r32 zNear, r32 zFar)
+{
+  R_ASSERT(false, "Not implemented.");
+  return Matrix4();
 }
 
 

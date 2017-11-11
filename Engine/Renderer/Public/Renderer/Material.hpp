@@ -29,6 +29,8 @@ class TextureCube;
 // Global Material.
 class GlobalMaterial {
 public:
+  // TODO(): Need to add more information like mouse input,
+  // Possible SunDir(?), fog amount (?), and others.
   struct GlobalBuffer {
     Matrix4         view;
     Matrix4         proj;
@@ -85,14 +87,21 @@ public:
   };
   
   struct LightBuffer {
+    // NOTE(): Do we want more directional lights? This can be done if needed.
     DirectionalLight  primaryLight;
     PointLight        pointLights[128];
   };
   LightMaterial();
   void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
   void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
+
+  // Update the light information on the gpu, for use in our shaders.
   void              Update();
+
+  // Initialize. 
   void              Initialize();
+
+  // Cleanup.
   void              CleanUp();  
 
   LightBuffer*      Data() { return &mLights; }
@@ -100,12 +109,27 @@ public:
 
   Texture*          ShadowMap() { return mShadowMap; }
   Sampler*          ShadowSampler() { return mShadowSampler; }
+
 private:
+  // Descriptor Set.
   DescriptorSet*    mDescriptorSet;
+
+  // Light list is this!
   Buffer*           mLightBuffer;
+
+  // After computing the clusters to shade our lights, we store them in here!
+  Buffer*           mLightGrid;
+  
+  // Shadow map, this is mainly for our directional light, the primary light.
   Texture*          mShadowMap;
+
+  // Shadow map sampler.
   Sampler*          mShadowSampler;
+
+  // Information of our lights, to which we use this to modify light sources.
   LightBuffer       mLights;
+  
+  // Vulkan Rhi.
   VulkanRHI*        mRhi;
 
   friend class Renderer;

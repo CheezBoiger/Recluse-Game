@@ -12,6 +12,9 @@ extern std::string ShadersPath;
 extern std::string DefaultTextureStr;
 extern std::string DefaultSamplerStr;
 
+extern std::string ShadowMapPipelineStr;
+extern std::string ShadowMapFrameBufferStr;
+
 extern std::string PBRPipelineStr;
 extern std::string PBRLayoutStr;
 extern std::string PBRColorAttachStr;
@@ -24,6 +27,13 @@ extern std::string PBRLightMatLayoutStr;
 extern std::string PBRObjMatLayoutStr;
 extern std::string PBRVertFileStr;
 extern std::string PBRFragFileStr;
+
+extern std::string ScaledSamplerStr;
+extern std::string RenderTarget2xScaledStr;
+extern std::string RenderTarget4xScaledStr;
+extern std::string RenderTarget8xScaledStr;
+
+extern std::string RenderTargetVelocityStr;
 
 extern std::string HDRGammaPipelineStr;
 extern std::string HDRGammaColorAttachStr;

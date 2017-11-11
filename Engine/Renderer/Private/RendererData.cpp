@@ -9,6 +9,9 @@ std::string ShadersPath               = "Shaders";
 std::string DefaultTextureStr         = "DefaultTexture";
 std::string DefaultSamplerStr         = "DefaultSampler";
 
+std::string ShadowMapPipelineStr      = "ShadowMapPipeline";
+std::string ShadowMapFrameBufferStr   = "ShadowMapFrameBuffer";
+
 std::string PBRPipelineStr            = "PBRPipeline";
 std::string PBRLayoutStr              = "PBRLayout";
 std::string PBRColorAttachStr         = "PBRColor";
@@ -21,6 +24,13 @@ std::string PBRLightMatLayoutStr      = "PBRLightMaterialLayout";
 std::string PBRObjMatLayoutStr        = "PBRObjectMaterialLayout";
 std::string PBRVertFileStr            = "PBRPass.vert.spv";
 std::string PBRFragFileStr            = "PBRPass.frag.spv";
+
+std::string ScaledSamplerStr          = "ScaledSampler";
+std::string RenderTarget2xScaledStr   = "RenderTarget2x";
+std::string RenderTarget4xScaledStr   = "RenderTarget4x";
+std::string RenderTarget8xScaledStr   = "RenderTarget8x";
+
+std::string RenderTargetVelocityStr   = "VelocityMap";
 
 std::string HDRGammaPipelineStr       = "HDRGammaPipeline";
 std::string HDRGammaColorAttachStr    = "HDRGammaColor";
