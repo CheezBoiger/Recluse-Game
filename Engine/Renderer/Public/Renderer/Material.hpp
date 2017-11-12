@@ -36,9 +36,14 @@ public:
     Matrix4         proj;
     Matrix4         viewProj;
     Vector4         cameraPos;
+    Vector4         lPlane;
+    Vector4         rPlane;
+    Vector4         tPlane;
+    Vector4         bPlane;
+    Vector4         nPlane;
+    Vector4         fPlane;
     i32             screenSize[2];
     i32             pad[2];
- 
   };
 
   GlobalMaterial();

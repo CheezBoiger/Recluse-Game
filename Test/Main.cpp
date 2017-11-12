@@ -66,7 +66,7 @@ void ProcessInput()
 
   // Test Gamma correction
   if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() <= 0.0f ? 0.1f : gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
   // Test HDR Reinhard exposure.
   if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
   if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }

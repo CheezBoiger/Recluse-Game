@@ -7,6 +7,9 @@
 namespace Recluse {
 
 
+// Interface archive for serializing data into a storage unit.
+// This is mainly used to store data into a file for use from the game
+// object.
 class IArchive {
 public:
   virtual ~IArchive() { }
@@ -19,7 +22,5 @@ public:
   virtual IArchive& operator<<(i32 val) = 0;
   virtual IArchive& operator<<(u64 val) = 0;
   virtual IArchive& operator<<(i64 val) = 0;
-
-  
 };
 } // Recluse
