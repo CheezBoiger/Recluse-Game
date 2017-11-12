@@ -5,7 +5,7 @@
 
 in FRAG_IN {
   vec3  position;
-  float pad0;
+  float lodBias;
   vec3  normal;
   float pad1;
   vec2  texcoord0;
@@ -54,6 +54,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  float levelOfDetail;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -61,7 +62,6 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasEmissive;
   int   hasAO;
   int   hasBones; 
-  int   pad;
 } objBuffer;
 
 

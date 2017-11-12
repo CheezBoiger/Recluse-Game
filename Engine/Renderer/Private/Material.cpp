@@ -28,7 +28,7 @@ Material::Material()
   , mBonesBuffer(nullptr)
   , mSampler(nullptr)
 { 
-  mObjectData.pad = false;
+  mObjectData.lodBias = 0.0f;
   mObjectData.hasAlbedo = false;
   mObjectData.hasAO = false;
   mObjectData.hasBones = false;

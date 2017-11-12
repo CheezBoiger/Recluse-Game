@@ -148,6 +148,7 @@ public:
   struct ObjectBuffer {
     Matrix4 model;
     Matrix4 normalMatrix;
+    r32     lodBias;
     u32     hasAlbedo;
     u32     hasMetallic;
     u32     hasRoughness;
@@ -155,7 +156,6 @@ public:
     u32     hasEmissive;
     u32     hasAO;
     u32     hasBones;
-    u32     pad;
   };
 
   struct BonesBuffer {
