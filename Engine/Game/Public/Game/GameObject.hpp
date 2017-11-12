@@ -5,15 +5,14 @@
 #include "Core/Serialize.hpp"
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Vector.hpp"
+
 #include "Component.hpp"
 
 #include <unordered_map>
 
 namespace Recluse {
 
-
-class Component;
-class Behavior;
+class CBehavior;
 
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
@@ -42,6 +41,7 @@ public:
   }
 
   void                      Serialize(IArchive& archive) override;
+
   void                      Deserialize(IArchive& archive) override;
 
   GameObject*               GetParent() { return mParent; }
@@ -60,9 +60,6 @@ private:
 
   // List of associated children.
   std::vector<GameObject*>  mChildren;
-
-  // Behaviors of this game object.
-  std::vector<Behavior*>    mBehaviors;
 
   // Possible parent.
   GameObject*               mParent;
