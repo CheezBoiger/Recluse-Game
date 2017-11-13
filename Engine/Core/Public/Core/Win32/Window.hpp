@@ -72,7 +72,7 @@ public:
   b8            Showing() const { return mShowing; }
   b8            Minimized() const { return mMinimized; }
 private:
-
+  void          InputMousePos(i32 x, i32 y);
   static LRESULT WindowProc(HWND hwnd, UINT, WPARAM, LPARAM);
 
   HWND          mHandle;

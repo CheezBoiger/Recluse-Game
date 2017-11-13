@@ -18,9 +18,12 @@ enum Verbosity {
 
 // TODO(): Log should be reading into a file for keeping history of events happening in the engine.
 class Log {
+  static b8     display;
 public:
+  static b8     DisplayingToConsole();
   static b8     Disable(Verbosity verbose);
   static b8     Enable(Verbosity verbose);
+  static void   DisplayToConsole(b8 enable);
 
   Log(Verbosity verbosity = rNormal) : Type(verbosity) { }
 
@@ -34,19 +37,20 @@ public:
 // Generic Modifier for debugging and printing onto the screen.
 template<typename Type>
 Log& operator<<(Log& log, Type val) {
-  switch (log.Type) {
-    case rError: std::cout << "Error: "; break;
-    case rWarning: std::cout << "Warning: "; break;
-    case rVerbose: std::cout << "Verbose: "; break;
-    case rNotify: std::cout << "Notify: "; break;
-    case rDebug: std::cout << "Debug: "; break;
-    default: break;
+  if (Log::DisplayingToConsole()) {
+    switch (log.Type) {
+      case rError: std::cout << "Error: "; break;
+      case rWarning: std::cout << "Warning: "; break;
+      case rVerbose: std::cout << "Verbose: "; break;
+      case rNotify: std::cout << "Notify: "; break;
+      case rDebug: std::cout << "Debug: "; break;
+      default: break;
+    }
+  
+    std::cout << val;
   }
-
   // Set back to normal to prevent redundant logging.
   log.Type = rNormal;
-
-  std::cout << val;
   return log;
 }
 

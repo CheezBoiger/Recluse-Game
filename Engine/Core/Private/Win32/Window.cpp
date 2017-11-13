@@ -156,7 +156,8 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
 
       const int x = GET_X_LPARAM(lParam);
       const int y = GET_Y_LPARAM(lParam);
-      if (gMousePositionCallback) gMousePositionCallback(window, (r64)x, (r64)y);
+      window->InputMousePos(x, y);
+      
     }
   } break;
   case WM_LBUTTONDOWN:
@@ -180,7 +181,36 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
     // TODO(): 
     // Need to add in unlimited movement. This will require disabling the cursor.
     if (window && !Mouse::Enabled()) {
-      Log() << "Mouse is raw, still WIP!\n"; 
+      i32 dx, dy;
+      UINT dwSize
+;
+      GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+
+      LPBYTE lpb = new BYTE[dwSize];
+      if (!lpb) {
+        break;
+      }
+      
+      if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
+        Log(rWarning) << "Raw input is not returning correct size.\n";
+      }
+      RAWINPUT* raw = (RAWINPUT*)lpb;
+
+      if (raw->header.dwType == RIM_TYPEMOUSE) {
+        if (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) {
+          dx = raw->data.mouse.lLastX - (i32)Mouse::LastXPos;
+          dy = raw->data.mouse.lLastY - (i32)Mouse::LastYPos;
+        } else {
+          dx = raw->data.mouse.lLastX;
+          dy = raw->data.mouse.lLastY;
+        }
+      }
+
+      window->InputMousePos((i32)Mouse::XPos + dx, (i32)Mouse::YPos + dy);
+
+      Mouse::LastXPos += (r64)dx;
+      Mouse::LastYPos += (r64)dy;
+      delete[] lpb;
     }
   } break;
   default: break;
@@ -382,6 +412,19 @@ void Window::Close()
   if (mFullScreen && gHooked) {
     UnhookWindowsHookEx(gFullScreenHook);
     gHooked = false;
+  }
+}
+
+
+void Window::InputMousePos(i32 x, i32 y)
+{
+  if (Mouse::XPos == x && Mouse::YPos == y) return;
+
+  Mouse::XPos = (r64)x;
+  Mouse::YPos = (r64)y;
+
+  if (gMousePositionCallback) {
+    gMousePositionCallback(this, (r64)x, (r64)y);
   }
 }
 } // Recluse 

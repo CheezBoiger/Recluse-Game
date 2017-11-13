@@ -7,10 +7,10 @@ namespace Recluse {
 
 
 b8 Mouse::mouseEnabled = true;
-u32 Mouse::XPos = 0;
-u32 Mouse ::YPos = 0;
-u32 Mouse::LastXPos = 0;
-u32 Mouse::LastYPos = 0;
+r64 Mouse::XPos = 0;
+r64 Mouse ::YPos = 0;
+r64 Mouse::LastXPos = 0;
+r64 Mouse::LastYPos = 0;
 HCURSOR Mouse::cursor = NULL;
 
 

@@ -15,11 +15,11 @@ public:
   static b8 Enabled() { return mouseEnabled; }
 
 
-  static u32      XPos;
-  static u32      YPos;
+  static r64      XPos;
+  static r64      YPos;
 
-  static u32      LastXPos;
-  static u32      LastYPos;
+  static r64      LastXPos;
+  static r64      LastYPos;
 
 private:
   static b8       mouseEnabled;

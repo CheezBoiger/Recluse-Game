@@ -75,6 +75,7 @@ void ProcessInput()
 
 int main(int c, char* argv[])
 {
+  Log::DisplayToConsole(true);
   //Mouse::EnableMouse(false);
   gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
   Window::SetKeyboardCallback(KeyCallback);
@@ -277,7 +278,6 @@ int main(int c, char* argv[])
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
     printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
-
     Window::PollEvents();
     ProcessInput();
   }
