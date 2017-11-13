@@ -2,7 +2,7 @@
 #include "Win32/Window.hpp"
 #include "Win32/Keyboard.hpp"
 #include "Win32/Mouse.hpp"
-
+#include "Logging/Log.hpp"
 #include "Exception.hpp"
 
 #define RECLUSE_WINDOW_CLASS_NAME   L"RecluseWin32Window"
