@@ -6,10 +6,8 @@
 namespace Test {
 
 
-void BasicVectorMath();
-void BasicMatrixMath();
-void BasicRayMath();
-void BasicQuaternionMath();
-
-
+b8 BasicVectorMath();
+b8 BasicMatrixMath();
+b8 BasicRayMath();
+b8 BasicQuaternionMath();
 } // Test

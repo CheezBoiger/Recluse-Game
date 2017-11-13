@@ -587,6 +587,8 @@ Buffer* VulkanRHI::CreateBuffer()
 
 void VulkanRHI::FreeBuffer(Buffer* buffer)
 {
+  if (!buffer) return;
+
   if (buffer->Owner() != mLogicalDevice.Handle()) {
     R_DEBUG(rNotify, "Unable to free buffer. Device is not same as this vulkan rhi!\n");
     return;
@@ -608,6 +610,8 @@ GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
 
 void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
 {
+  if (!pipeline) return ;
+
   if (pipeline->Owner() != mLogicalDevice.Handle()) {
     R_DEBUG(rNotify, "Unable to free pipeline. Device is not same as this vulkan rhi!\n");
     return;
@@ -630,10 +634,13 @@ Shader* VulkanRHI::CreateShader()
 
 void VulkanRHI::FreeShader(Shader* shader)
 {
+  if (!shader) return;
+
   if (shader->Owner() != mLogicalDevice.Handle()) {
     R_DEBUG(rNotify, "Unable to free shader. Device is not same as this vulkan rhi!\n");
     return;
   }
+
   shader->CleanUp();
   
   delete shader;
@@ -651,6 +658,8 @@ DescriptorSet* VulkanRHI::CreateDescriptorSet()
 
 void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
 {
+  if (!dset) return;
+
   dset->Free();
   
   delete dset;
@@ -668,6 +677,8 @@ Sampler* VulkanRHI::CreateSampler()
 
 void VulkanRHI::FreeSampler(Sampler* sampler)
 {
+  if (!sampler) return;
+
   sampler->CleanUp();
   
   delete sampler;
@@ -685,6 +696,8 @@ Texture* VulkanRHI::CreateTexture()
 
 void VulkanRHI::FreeTexture(Texture* texture)
 {
+  if (!texture) return;
+
   texture->CleanUp();
   
   delete texture;
@@ -702,6 +715,8 @@ FrameBuffer* VulkanRHI::CreateFrameBuffer()
 
 void VulkanRHI::FreeFrameBuffer(FrameBuffer* framebuffer)
 {
+  if (!framebuffer) return;
+
   framebuffer->CleanUp();
   
   delete framebuffer;
@@ -719,6 +734,8 @@ CommandBuffer* VulkanRHI::CreateCommandBuffer()
 
 void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
 {
+  if (!buffer) return;
+
   buffer->Free();
   delete buffer;
 }
@@ -734,6 +751,8 @@ DescriptorSetLayout* VulkanRHI::CreateDescriptorSetLayout()
 
 void VulkanRHI::FreeDescriptorSetLayout(DescriptorSetLayout* layout)
 {
+  if (!layout) return;
+
   layout->CleanUp();
 
   delete layout;
@@ -751,6 +770,8 @@ ComputePipeline* VulkanRHI::CreateComputePipeline()
 
 void VulkanRHI::FreeComputePipeline(ComputePipeline* pipeline)
 {
+  if (!pipeline) return;
+
   pipeline->CleanUp();
 
   delete pipeline;
@@ -768,6 +789,8 @@ Semaphore* VulkanRHI::CreateVkSemaphore()
 
 void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
 {
+  if (!semaphore) return;
+
   semaphore->CleanUp();
     
   delete semaphore;

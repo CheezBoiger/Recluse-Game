@@ -15,6 +15,7 @@ set(REGRESSIONS_MATH_FILES
 )
 
 set(REGRESSIONS_FILES
+  Tester.hpp
   Main.cpp
   ${REGRESSIONS_MATH_FILES}
 )

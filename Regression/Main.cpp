@@ -2,7 +2,18 @@
 #include "Core/Logging/Log.hpp"
 #include "Math/TestMath.hpp"
 
+#include "Tester.hpp"
+
+#include <iomanip>
+
 using namespace Recluse;
+
+u32 Tester::TestsFailed = 0;
+u32 Tester::TestsPassed = 0;
+
+std::vector<Tester::TestFunc> test = {
+  Test::BasicVectorMath 
+};
 
 int main()
 {
@@ -10,7 +21,12 @@ int main()
               << "Initializing testing data cache...\n";
 
   // TODO(): Add more regressions.
-  Test::BasicVectorMath();
+  Tester::RunAllTests(test);
+
+  Log() << "Tests Passed: " <<  std::setw(10)
+        << Tester::GetTestsPassed() << "\n"
+        << "Tests Failed: " << std::setw(10)
+        << Tester::GetTestsFailed() << "\n";
 
   Log() << "All done!\n"
         << "Press Enter to continue...\n";

@@ -10,7 +10,7 @@ namespace Test {
 
 
 
-void BasicVectorMath()
+b8 BasicVectorMath()
 {
   Log() << "Vector Math\n";
 
@@ -29,17 +29,19 @@ void BasicVectorMath()
 
   if (c3.x > ex + CONST_TOLERANCE || c3.x < ex - CONST_TOLERANCE) {
     Log() << "Vector addition failed!\n";
-    return;
+    return false;
   }
 
   if (c3.y > ey + CONST_TOLERANCE || c3.y < ey - CONST_TOLERANCE) {
     Log() << "Vector addition failed!\n";
-    return;
+    return false;
   }
 
   if (c3.z > ez + CONST_TOLERANCE || c3.z < ez - CONST_TOLERANCE) {
     Log() << "Vector addition failed!\n";
-    return;
+    return false;
   }
+
+  return true;
 }
 } // Test

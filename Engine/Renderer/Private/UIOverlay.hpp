@@ -9,6 +9,8 @@ namespace Recluse {
 
 class VulkanRHI;
 class CommandBuffer;
+class FrameBuffer;
+class Texture;
 class Renderer;
 
 // User Interface overlay, used to render out images, text, and/or
@@ -22,7 +24,10 @@ public:
 
 private:
   VulkanRHI*                  mRhiRef;
-  std::vector<CommandBuffer*> cmdBuffers;
+  Texture*                    mColorTarget;
+  Texture*                    mDepthTarget;
+  std::vector<CommandBuffer*> mCmdBuffers;
+  std::vector<FrameBuffer*>   mFrameBuffers;
   friend Renderer;
 };
 } // Recluse

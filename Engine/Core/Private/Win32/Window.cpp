@@ -5,7 +5,6 @@
 
 #include "Exception.hpp"
 
-
 #define RECLUSE_WINDOW_CLASS_NAME   L"RecluseWin32Window"
 #define RECLUSE_WINDOW_PROP_NAME    L"RecluseWin32Prop"
 
@@ -148,30 +147,41 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_MOUSEMOVE:
   {
-    POINT point;
-    if (window) {
-      ScreenToClient(window->mHandle, &point);
-      const int x = LOWORD(lParam);
-      const int y = HIWORD(lParam);
+    if (window && Mouse::Enabled()) {
+      RECT rect;
+      GetClientRect(window->mHandle, &rect);
+      ClientToScreen(window->mHandle, (POINT* )&rect.left);
+      ClientToScreen(window->mHandle, (POINT* )&rect.right);
+      ClipCursor(&rect);
+
+      const int x = GET_X_LPARAM(lParam);
+      const int y = GET_Y_LPARAM(lParam);
       if (gMousePositionCallback) gMousePositionCallback(window, (r64)x, (r64)y);
     }
   } break;
   case WM_LBUTTONDOWN:
   {
+    Log() << "Left mouse button down.\n";
   } break;
   case WM_LBUTTONUP:
   {
+    Log() << "Left mouse button up.\n";
   } break;
   case WM_RBUTTONDOWN:
   {
+    Log() << "Right mouse button down.\n";
   } break;
   case WM_RBUTTONUP:
   {
+    Log() << "Right mouse button up.\n";
   } break;
   case WM_INPUT:
   {
     // TODO(): 
     // Need to add in unlimited movement. This will require disabling the cursor.
+    if (window && !Mouse::Enabled()) {
+      Log() << "Mouse is raw, still WIP!\n"; 
+    }
   } break;
   default: break;
   }
@@ -256,6 +266,12 @@ b8 Window::Create(std::string title, i32 width, i32 height)
   AdjustWindowRect(&windowRect, WS_CAPTION, GetMenu(mHandle) != NULL);
   MoveWindow(mHandle, 0, 0,
     windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, FALSE);
+
+  // Register the raw input device, for when we disable the mouse cursor.
+  RAWINPUTDEVICE rid = { 0x01, 0x02, 0, mHandle };
+  if (!RegisterRawInputDevices(&rid, 1, sizeof(rid))) {
+    Log(rError) << "Could not register mouse device!\n";
+  }
 
   UpdateWindow(mHandle);
   return true;

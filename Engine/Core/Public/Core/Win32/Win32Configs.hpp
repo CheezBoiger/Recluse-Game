@@ -4,6 +4,8 @@
 
 #if defined(_WIN32)
  #include <Windows.h>
+ #include <windowsx.h>
  #define RECLUSE_OS_WIN32      "win32"
-
+#else
+ #error "This Engine only works on Win32 systems! No other operating system is supported!"
 #endif
