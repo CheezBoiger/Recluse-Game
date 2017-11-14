@@ -10,7 +10,8 @@ std::string DefaultTextureStr         = "DefaultTexture";
 std::string DefaultSamplerStr         = "DefaultSampler";
 
 std::string ShadowMapPipelineStr      = "ShadowMapPipeline";
-std::string ShadowMapFrameBufferStr   = "ShadowMapFrameBuffer";
+std::string ShadowMapVertFileStr      = "ShadowMapping.vert.spv";
+std::string ShadowMapFragFileStr      = "ShadowMapping.frag.spv";
 
 std::string PBRPipelineStr            = "PBRPipeline";
 std::string PBRLayoutStr              = "PBRLayout";

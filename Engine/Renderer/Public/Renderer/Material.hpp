@@ -24,6 +24,7 @@ class Texture3D;
 class Texture1D;
 class Texture2DArray;
 class TextureCube;
+class FrameBuffer;
 
 
 // Global Material.
@@ -129,7 +130,12 @@ private:
   Texture*          mShadowMap;
 
   // Shadow map sampler.
-  Sampler*          mShadowSampler;
+  Sampler*          mShadowSampler; 
+  
+  // Framebuffer object used for command buffer pass through. Shadow mapping can't be
+  // statically stored into the renderer pipeline. Only possibility is to create this 
+  // outside.
+  FrameBuffer*      mFrameBuffer;
 
   // Information of our lights, to which we use this to modify light sources.
   LightBuffer       mLights;

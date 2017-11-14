@@ -76,7 +76,7 @@ void ProcessInput()
 int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
-  //Mouse::EnableMouse(false);
+  Mouse::EnableMouse(false);
   gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);

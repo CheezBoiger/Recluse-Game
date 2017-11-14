@@ -76,4 +76,13 @@ enum KeyAction {
   KEY_DOWN = WM_KEYDOWN,
   KEY_UP = WM_KEYUP
 };
+
+
+// Keyboard map. Used for mapping stuff.
+class Keyboard {
+  static KeyAction keys[256];
+public:
+  static b8 KeyPressed(KeyCode keycode);
+  static b8 KeyReleased(KeyCode keycode);
+};
 } // Recluse

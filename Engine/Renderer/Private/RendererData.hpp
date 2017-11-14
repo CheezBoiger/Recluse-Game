@@ -13,7 +13,8 @@ extern std::string DefaultTextureStr;
 extern std::string DefaultSamplerStr;
 
 extern std::string ShadowMapPipelineStr;
-extern std::string ShadowMapFrameBufferStr;
+extern std::string ShadowMapVertFileStr;
+extern std::string ShadowMapFragFileStr;
 
 extern std::string PBRPipelineStr;
 extern std::string PBRLayoutStr;

@@ -13,16 +13,17 @@ layout (set = 0, binding = 0) uniform LightSpace {
 } light_space;
 
 
-layout (set = 0, binding = 1) uniform ObjectBuffer {
+layout (set = 0, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
-  bool  hasAlbedo;
-  bool  hasMetallic;
-  bool  hasRoughness;
-  bool  hasNormal;
-  bool  hasAO;
-  bool  hasBones; 
-  bool  pad1[10];
+  float levelOfDetail;
+  int   hasAlbedo;
+  int   hasMetallic;
+  int   hasRoughness;
+  int   hasNormal;
+  int   hasEmissive;
+  int   hasAO;
+  int   hasBones; 
 } obj_buffer;
 
 

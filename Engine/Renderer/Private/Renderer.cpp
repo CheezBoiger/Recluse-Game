@@ -597,7 +597,7 @@ void Renderer::SetUpGraphicsPipelines()
   VkPipelineColorBlendAttachmentState colorBlendAttachments[2];
   colorBlendAttachments[0] = { };
   colorBlendAttachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachments[0].blendEnable = VK_FALSE;
+  colorBlendAttachments[0].blendEnable = VK_TRUE;
   colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
   colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -772,6 +772,7 @@ void Renderer::SetUpGraphicsPipelines()
 
   // Set to default renderpass.
   graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
+  colorBlendAttachments[0].blendEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
   colorBlendCI.attachmentCount = 1;
@@ -871,6 +872,26 @@ void Renderer::SetUpGraphicsPipelines()
   mRhi->FreeShader(hdrFrag);
   mRhi->FreeShader(hdrVert);
   gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
+
+  // ShadowMapping shader.
+  // TODO(): Shadow mapping MUST be deferred until downsampling and glow buffers have finished!
+  // This will prevent blurry shadows.
+  Shader* smVert = mRhi->CreateShader();
+  Shader* smFrag = mRhi->CreateShader();
+
+  if (!smVert->Initialize(filepath + "/" + ShadersPath + "/" + ShadowMapVertFileStr)) {
+    Log(rError) << "Could not find " + ShadowMapVertFileStr + "!\n";
+  }
+
+  if (!smFrag->Initialize(filepath + "/" + ShadersPath + "/" + ShadowMapFragFileStr)) {
+    Log(rError) << "Could not find " + ShadowMapFragFileStr + "!\n";
+  }
+
+  smVert->CleanUp();
+  smFrag->CleanUp();
+
+  // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
+  // pass. 
 }
 
 
@@ -1209,7 +1230,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   VkClearValue clearValues[3];
-  clearValues[0].color = { 0.1f, 0.1f, 0.1f, 1.0f };
+  clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 0.0f };
   clearValues[2].depthStencil = { 1.0f, 0 };
 
@@ -1305,7 +1326,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;  
 
   VkClearValue clearVal = { };
-  clearVal.color = { 0.2f, 0.2f, 0.2f, 1.0f };
+  clearVal.color = { 0.1f, 0.1f, 0.1f, 0.0f };
 
   cmdBuffer->Begin(cmdBi);
     VkRenderPassBeginInfo renderpassInfo = { };
