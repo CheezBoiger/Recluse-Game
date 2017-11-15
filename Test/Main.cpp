@@ -77,6 +77,7 @@ int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
   Mouse::EnableMouse(false);
+
   gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);
@@ -104,18 +105,8 @@ int main(int c, char* argv[])
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
 
-  GlobalMaterial* globalMat = gRenderer().CreateGlobalMaterial(); 
-  GlobalMaterial::GlobalBuffer* gBuffer = globalMat->Data();
-  gBuffer->cameraPos = Vector4(gCamera->Position(), 1.0f);
-  gBuffer->proj = gCamera->Projection();
-  gBuffer->view = gCamera->View();
-  gBuffer->viewProj = gBuffer->view * gBuffer->proj;
-  globalMat->Initialize();
-  globalMat->Update();
-
-  LightMaterial* lightMat = gRenderer().CreateLightMaterial();
-
-  LightMaterial::LightBuffer* lights = lightMat->Data();
+  // Only thing we worry about is setting up lights.
+  LightBuffer* lights = gEngine().LightData();
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
   lights->primaryLight.intensity = 0.5f;
@@ -131,8 +122,6 @@ int main(int c, char* argv[])
   lights->pointLights[1].position = Vector4(3.0f, 2.0f, -4.0f, 1.0f);
   lights->pointLights[1].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->pointLights[1].range = 30.0f;
-  lightMat->Initialize();
-  lightMat->Update();
 
   Image img;
   img.Load("box.jpg");
@@ -193,6 +182,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
 
   /* Create the cmd list to send to the renderer. */
+  // TODO(): This part should be something our engine worries about, not the user.
   CmdList list;
   list.Resize(3);
   list[0].materialId = cubeMaterial;
@@ -205,8 +195,6 @@ int main(int c, char* argv[])
   list[2].meshId = cubeMesh;
 
   gRenderer().PushCmdList(&list);
-  gRenderer().SetGlobalMaterial(globalMat);
-  gRenderer().SetLightMaterial(lightMat);
   gRenderer().Build();
 
   r64 timeAccumulator = 0.0;
@@ -231,16 +219,7 @@ int main(int c, char* argv[])
       timeAccumulator -= Time::FixTime;
     }
 
-    gCamera->Update();
-    // NOTE(): Update game state... This is hardcoded though.
-    gCamera->SetAspect(((r32)window->Width() / (r32)window->Height()));
-    //gCamera.SetPosition(Vector3(sinf((r32)Time::CurrentTime() * 0.5f) * 5.0f, 4.0f, -4.0f));
-    gBuffer->cameraPos = gCamera->Position();
-    gBuffer->proj = gCamera->Projection();
-    gBuffer->view = gCamera->View();
-    gBuffer->viewProj = gBuffer->view * gBuffer->proj;
-    gBuffer->screenSize[0] = window->Width();
-    gBuffer->screenSize[1] = window->Height();
+    gEngine().Update(dt);
 
     // box 1 transforming.
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
@@ -292,10 +271,6 @@ int main(int c, char* argv[])
   gRenderer().FreeMaterial(cubeMaterial);
   gRenderer().FreeMesh(cubeMesh);
   gRenderer().FreeMesh(sphereMesh);
-
-  gRenderer().FreeLightMaterial(lightMat);
-  gRenderer().FreeGlobalMaterial(globalMat);
-
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

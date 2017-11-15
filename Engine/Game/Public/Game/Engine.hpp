@@ -14,6 +14,8 @@
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
+#include "Renderer/Material.hpp"
+
 #include "Physics/Physics.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Animation/Animation.hpp"
@@ -34,19 +36,28 @@ public:
   // Start up the engine with an initial window size. As the window is initialized 
   // along with the start up, be sure to manually call the Show() function from the 
   // window in order to see something!
-  void      StartUp(std::string appName, i32 width, i32 height);
-  void      CleanUp();
-  void      ProcessInput();
+  void                          StartUp(std::string appName, i32 width, i32 height);
+  void                          CleanUp();
+  void                          ProcessInput();
 
-  Camera*   GetCamera() { return mCamera; }
-  Window*   GetWindow() { return &mWindow; }
+  Camera*                       GetCamera() { return mCamera; }
+  Window*                       GetWindow() { return &mWindow; }
 
-  void      Update(r64 dt);
-  void      SetCamera(Camera* camera) { mCamera = camera; }
+  void                          Update(r64 dt);
+  void                          SetCamera(Camera* camera) { mCamera = camera; }
+
+  LightBuffer*   LightData() { return mLightMat->Data(); }
+  GlobalBuffer* GlobalData() { return mCamMat->Data(); }
+
+  // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
+  // renderer. This will need to be done by swapping old light material with new and 
+  // rebuilding...
 
 private:
-  Camera*   mCamera;
-  Window    mWindow;
+  GlobalMaterial*               mCamMat;
+  LightMaterial*                mLightMat;
+  Camera*                       mCamera;
+  Window                        mWindow;
 };
 
 

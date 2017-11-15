@@ -17,9 +17,6 @@ namespace Recluse {
 
 class VulkanRHI;
 class CmdList;
-class DirectionLight;
-class PointLight;
-class SpotLight;
 class LightProbe;
 class CommandBuffer;
 class ReflectionProbe;
@@ -39,6 +36,10 @@ class Texture3D;
 class Texture2DArray;
 class TextureSampler;
 class UIOverlay;
+
+struct DirectionLight;
+struct PointLight;
+struct SpotLight;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying

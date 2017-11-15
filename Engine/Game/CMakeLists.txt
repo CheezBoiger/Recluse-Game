@@ -33,9 +33,11 @@ set(GAME_FILES
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp
+  ${GEOMETRY_PUBLIC_DIR}/GeoSphere.hpp
 
   ${GEOMETRY_PRIVATE_DIR}/Cube.cpp
   ${GEOMETRY_PRIVATE_DIR}/UVSphere.cpp
+  ${GEOMETRY_PRIVATE_DIR}/GeoSphere.cpp
   
   ${SCENE_PUBLIC_DIR}/Scene.hpp
   ${SCENE_PUBLIC_DIR}/SceneCache.hpp

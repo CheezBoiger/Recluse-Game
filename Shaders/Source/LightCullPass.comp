@@ -6,12 +6,11 @@
 
 
 struct PointLight {
-  vec4  position;
-  vec4  color;
-  float range;
-  float pad0[3];
-  bool enable;
-  bool pad1[15];
+  vec4    position;
+  vec4    color;
+  float   range;
+  int     enable;
+  ivec2   pad;
 };
 
 
@@ -24,7 +23,7 @@ struct LightGridInfo {
 
 
 #define WORKGROUP_SIZE        1024
-#define MAX_LIGHTS            512
+#define MAX_LIGHTS            128
 
 
 layout (set = 0, binding = 0) uniform GlobalBuffer {

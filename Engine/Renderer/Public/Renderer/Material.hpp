@@ -27,26 +27,27 @@ class TextureCube;
 class FrameBuffer;
 
 
+// TODO(): Need to add more information like mouse input,
+// Possible SunDir(?), fog amount (?), and others.
+struct GlobalBuffer {
+  Matrix4         view;
+  Matrix4         proj;
+  Matrix4         viewProj;
+  Vector4         cameraPos;
+  Vector4         lPlane;
+  Vector4         rPlane;
+  Vector4         tPlane;
+  Vector4         bPlane;
+  Vector4         nPlane;
+  Vector4         fPlane;
+  i32             screenSize[2];
+  i32             pad[2];
+};
+
+
 // Global Material.
 class GlobalMaterial {
 public:
-  // TODO(): Need to add more information like mouse input,
-  // Possible SunDir(?), fog amount (?), and others.
-  struct GlobalBuffer {
-    Matrix4         view;
-    Matrix4         proj;
-    Matrix4         viewProj;
-    Vector4         cameraPos;
-    Vector4         lPlane;
-    Vector4         rPlane;
-    Vector4         tPlane;
-    Vector4         bPlane;
-    Vector4         nPlane;
-    Vector4         fPlane;
-    i32             screenSize[2];
-    i32             pad[2];
-  };
-
   GlobalMaterial();
 
   void              Update();
@@ -66,37 +67,40 @@ private:
 };
 
 
+struct DirectionalLight {
+  Vector4 direction;
+  Vector4 color;
+  r32     intensity;
+  i32     enable;
+  i32     pad[2];
+
+  DirectionalLight()
+    : enable(false) { }
+};
+
+struct PointLight {
+  Vector4 position;
+  Vector4 color;
+  r32     range;
+  i32     enable;
+  i32     pad[2];
+
+
+  PointLight()
+    : enable(false), range(1.0f) { }
+};
+
+struct LightBuffer {
+  // NOTE(): Do we want more directional lights? This can be done if needed.
+  DirectionalLight  primaryLight;
+  PointLight        pointLights[128];
+};
+
+
 // Light material.
 class LightMaterial {
 public:
-  struct DirectionalLight {
-    Vector4 direction;
-    Vector4 color;
-    r32     intensity;
-    i32     enable;
-    i32     pad[2];
-    
-    DirectionalLight()
-      : enable(false) { }
-  };
 
-  struct PointLight {
-    Vector4 position;
-    Vector4 color;
-    r32     range;
-    i32     enable;
-    i32     pad[2];
-
-
-    PointLight()
-      : enable(false), range(1.0f) { }
-  };
-  
-  struct LightBuffer {
-    // NOTE(): Do we want more directional lights? This can be done if needed.
-    DirectionalLight  primaryLight;
-    PointLight        pointLights[128];
-  };
   LightMaterial();
   void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
   void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
