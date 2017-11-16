@@ -9,8 +9,9 @@
 #include "Core/Win32/Keyboard.hpp"
 #include "Core/Math/Quaternion.hpp"
 
-#include "Game/Geometry/Cube.hpp"
-#include "Game/Camera.hpp"
+#include "Geometry/Cube.hpp"
+#include "Camera.hpp"
+#include "GameObject.hpp"
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
@@ -32,6 +33,7 @@ namespace Recluse {
 // Scene graph to push into the engine.
 class Scene;
 
+
 // First person engine.
 class Engine {
 public:
@@ -41,7 +43,7 @@ public:
   // Start up the engine with an initial window size. As the window is initialized 
   // along with the start up, be sure to manually call the Show() function from the 
   // window in order to see something!
-  void                          StartUp(std::string appName, i32 width, i32 height);
+  void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600);
   void                          CleanUp();
   void                          ProcessInput();
 
@@ -57,6 +59,8 @@ public:
 
   LightBuffer*                  LightData() { return mLightMat->Data(); }
   GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
+
+  CmdList&                      RenderCommandList() { return mRenderCmdList; }
 
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 

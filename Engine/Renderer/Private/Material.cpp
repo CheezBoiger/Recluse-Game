@@ -382,7 +382,12 @@ void LightMaterial::Initialize()
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
 
-  std::array<VkWriteDescriptorSet, 1> writeSets;
+  VkDescriptorImageInfo globalShadowInfo = {};
+  globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalShadowInfo.imageView = gResources().GetRenderTexture(DefaultTextureStr)->View();
+  globalShadowInfo.sampler = gResources().GetSampler(DefaultSamplerStr)->Handle();
+
+  std::array<VkWriteDescriptorSet, 2> writeSets;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[0].descriptorCount = 1;
   writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -390,6 +395,14 @@ void LightMaterial::Initialize()
   writeSets[0].pBufferInfo = &lightBufferInfo;
   writeSets[0].pNext = nullptr;
   writeSets[0].dstBinding = 0;
+
+  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[1].descriptorCount = 1;
+  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[1].dstArrayElement = 0;
+  writeSets[1].pNext = nullptr;
+  writeSets[1].pImageInfo = &globalShadowInfo;
+  writeSets[1].dstBinding = 1;
 
   mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
 }

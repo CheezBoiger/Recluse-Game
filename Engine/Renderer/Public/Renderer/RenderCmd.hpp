@@ -21,7 +21,11 @@ struct RenderCmd {
     , debug(false) { }
 
 
+  // Mesh id to render onto the screen.
   Mesh*     meshId;
+
+  // Material by which to wrap our mesh with. This tells the renderer how to 
+  // draw the mesh. If no material is defined, mesh will not render appropriately.
   Material* materialId;
 
   b8        debug;

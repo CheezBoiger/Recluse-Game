@@ -28,7 +28,7 @@ Engine::~Engine()
 }
 
 
-void Engine::StartUp(std::string appName, i32 width, i32 height)
+void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 {
   // NOTE(): Always start up the core first, before starting anything else up.
   gCore().StartUp();
@@ -52,6 +52,15 @@ void Engine::StartUp(std::string appName, i32 width, i32 height)
 
   gRenderer().SetGlobalMaterial(mCamMat);
   gRenderer().SetLightMaterial(mLightMat);
+  gRenderer().PushCmdList(&mRenderCmdList);
+
+  if (fullscreen) {
+    mWindow.SetToFullScreen();
+    mWindow.Show();
+  } else {
+    mWindow.SetToCenter();
+    mWindow.Show();
+  }
 }
 
 
@@ -93,6 +102,14 @@ void Engine::Update(r64 dt)
 
   if (mLightMat) {
     mLightMat->Update();
+  }
+
+  for (u32 i = 0; i < mRenderCmdList.Size(); ++i) {
+    RenderCmd& cmd = mRenderCmdList[i];
+    Material* mat = cmd.materialId;
+    if (mat) {
+      mat->Update();
+    }
   }
 }
 

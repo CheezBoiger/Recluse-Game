@@ -31,9 +31,6 @@
 namespace Recluse {
 
 
-std::vector<Material*> MaterialCache;
-
-
 Renderer& gRenderer() { 
   return Renderer::Instance();
 }
@@ -186,7 +183,7 @@ void Renderer::CleanUp()
   CleanUpDescriptorSetLayouts();
   CleanUpGraphicsPipelines();
   CleanUpFrameBuffers();
-  CleanUpRenderTextures();
+  CleanUpRenderTextures(true);
 
   if (mRhi) {
     mRhi->CleanUp();
@@ -205,7 +202,7 @@ b8 Renderer::Initialize(Window* window)
   mWindowHandle = window;
   mRhi->Initialize(window->Handle());
 
-  SetUpRenderTextures();
+  SetUpRenderTextures(true);
   SetUpFrameBuffers();
   SetUpDescriptorSetLayouts();
   SetUpGraphicsPipelines();
@@ -954,7 +951,7 @@ void Renderer::CleanUpFrameBuffers()
 }
 
 
-void Renderer::SetUpRenderTextures()
+void Renderer::SetUpRenderTextures(b8 fullSetup)
 {
   Texture* renderTarget2xScaled = mRhi->CreateTexture();
   Texture* renderTarget4xScaled = mRhi->CreateTexture();
@@ -1054,47 +1051,48 @@ void Renderer::SetUpRenderTextures()
 
   pbrSampler->Initialize(samplerCI);
   hdrSampler->Initialize(samplerCI);
+  if (fullSetup) {
+    Sampler* defaultSampler = mRhi->CreateSampler();
+    defaultSampler->Initialize(samplerCI);
+    gResources().RegisterSampler(DefaultSamplerStr, defaultSampler);
 
-  Sampler* defaultSampler = mRhi->CreateSampler();
-  defaultSampler->Initialize(samplerCI);
-  gResources().RegisterSampler(DefaultSamplerStr, defaultSampler);
+    VkImageCreateInfo dImageInfo = {};
+    VkImageViewCreateInfo dViewInfo = {};
 
-  VkImageCreateInfo dImageInfo = {};
-  VkImageViewCreateInfo dViewInfo = {};
+    dImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    dImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    dImageInfo.imageType = VK_IMAGE_TYPE_2D;
+    dImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+    dImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    dImageInfo.mipLevels = 1;
+    dImageInfo.extent.depth = 1;
+    dImageInfo.arrayLayers = 1;
+    dImageInfo.extent.width = mWindowHandle->Width();
+    dImageInfo.extent.height = mWindowHandle->Height();
+    dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-  dImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  dImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  dImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  dImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-  dImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  dImageInfo.mipLevels = 1;
-  dImageInfo.extent.depth = 1;
-  dImageInfo.arrayLayers = 1;
-  dImageInfo.extent.width = mWindowHandle->Width();
-  dImageInfo.extent.height = mWindowHandle->Height();
-  dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-  dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    dViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    dViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+    dViewInfo.image = nullptr; // No need to set the image, texture handles this for us.
+    dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    dViewInfo.subresourceRange = {};
+    dViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    dViewInfo.subresourceRange.baseArrayLayer = 0;
+    dViewInfo.subresourceRange.baseMipLevel = 0;
+    dViewInfo.subresourceRange.layerCount = 1;
+    dViewInfo.subresourceRange.levelCount = 1;
 
-  dViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  dViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-  dViewInfo.image = nullptr; // No need to set the image, texture handles this for us.
-  dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  dViewInfo.subresourceRange = {};
-  dViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  dViewInfo.subresourceRange.baseArrayLayer = 0;
-  dViewInfo.subresourceRange.baseMipLevel = 0;
-  dViewInfo.subresourceRange.layerCount = 1;
-  dViewInfo.subresourceRange.levelCount = 1;
+    Texture* defaultTexture = mRhi->CreateTexture();
 
-  Texture* defaultTexture = mRhi->CreateTexture();
-
-  defaultTexture->Initialize(dImageInfo, dViewInfo);
-  gResources().RegisterRenderTexture(DefaultTextureStr, defaultTexture);
+    defaultTexture->Initialize(dImageInfo, dViewInfo);
+    gResources().RegisterRenderTexture(DefaultTextureStr, defaultTexture);
+  }
 }
 
 
-void Renderer::CleanUpRenderTextures()
+void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 {
   Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xScaledStr);
   Texture* renderTarget4xScaled = gResources().UnregisterRenderTexture(RenderTarget4xScaledStr);
@@ -1115,16 +1113,18 @@ void Renderer::CleanUpRenderTextures()
   mRhi->FreeTexture(hdrTexture);
   mRhi->FreeSampler(hdrSampler);
 
-  Texture* defaultTexture = gResources().UnregisterRenderTexture(DefaultTextureStr);
-  Sampler* defaultSampler = gResources().UnregisterSampler(DefaultSamplerStr);
-
   mRhi->FreeTexture(pbrColor);
   mRhi->FreeTexture(pbrNormal);
   mRhi->FreeTexture(pbrDepth);
   mRhi->FreeSampler(pbrSampler);
 
-  mRhi->FreeTexture(defaultTexture);
-  mRhi->FreeSampler(defaultSampler);
+  if (fullCleanup) {
+    Texture* defaultTexture = gResources().UnregisterRenderTexture(DefaultTextureStr);
+    Sampler* defaultSampler = gResources().UnregisterSampler(DefaultSamplerStr);
+
+    mRhi->FreeTexture(defaultTexture);
+    mRhi->FreeSampler(defaultSampler);
+  }
 }
 
 
@@ -1276,19 +1276,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(PBRPipelineStr);
 
-  if (mGlobalMat) {
-    mGlobalMat->CleanUp();
-    mGlobalMat->Initialize();
-  }
-
   if (cmdBuffer && !cmdBuffer->Recording()) {
 
     mRhi->DeviceWaitIdle();
     cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    // We are only worried about the buffers in the gpu, which need to be recreated
-    // in order to update the window resolutions and whatnot. Since the pipeline is recreated,
-    // our mats need to be recreated as well.
-    MaterialCache.resize(0);
   }
 
   VkCommandBufferBeginInfo beginInfo = {};
@@ -1327,13 +1318,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
         // Extract material info. This is optional.
         if (renderCmd.materialId) {
-          MaterialCache.push_back(renderCmd.materialId);
-
           if (renderCmd.meshId) {
             Material* mat = renderCmd.materialId;
-            // Screen must be updated.
-            mat->CleanUp();
-            mat->Initialize();
 
             VkDescriptorSet descriptorSets[] = {
               mGlobalMat->Set()->Handle(),
@@ -1511,13 +1497,6 @@ void Renderer::FreeMaterial(Material* material)
 
 void Renderer::UpdateMaterials()
 {
-  // TODO(): Engine should be responsible for updating mesh materials.
-  // Put this in engine update instead.
-  for (size_t i = 0; i < MaterialCache.size(); ++i) {
-    Material* mat = MaterialCache[i];
-    mat->Update();
-  }
-
   Buffer* hdr = mHDR.hdrBuffer;
   hdr->Map();
     memcpy(hdr->Mapped(), &mHDR.data, sizeof(mHDR.data));
@@ -1557,9 +1536,9 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   CleanUpFinalOutputs();
   CleanUpGraphicsPipelines();
   CleanUpFrameBuffers();
-  CleanUpRenderTextures();
+  CleanUpRenderTextures(false);
 
-  SetUpRenderTextures();
+  SetUpRenderTextures(false);
   SetUpFrameBuffers();
   SetUpGraphicsPipelines();
   SetUpFinalOutputs();
@@ -1567,7 +1546,6 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpHDR(false);
 
   mUI->Initialize(mRhi);
-
   Build();
 }
 

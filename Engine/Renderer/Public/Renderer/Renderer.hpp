@@ -206,11 +206,11 @@ private:
   void              CleanUpDescriptorSetLayouts();
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
-  void              CleanUpRenderTextures();
+  void              CleanUpRenderTextures(b8 fullCleanup);
   void              CleanUpOffscreen(b8 fullCleanup);
   void              CleanUpFinalOutputs();
   void              SetUpFinalOutputs();
-  void              SetUpRenderTextures();
+  void              SetUpRenderTextures(b8 fullSetup);
   void              SetUpOffscreen(b8 fullSetup);
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);

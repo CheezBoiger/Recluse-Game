@@ -21,18 +21,6 @@ static i32 keys[256];
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   keys[key] = action;
-  // Test albedo enabling.
-  if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
-  if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
-
-  if (keys[KEY_CODE_0] == KEY_DOWN) { gRenderer().EnableHDR(false); }
-  if (keys[KEY_CODE_1] == KEY_DOWN) { gRenderer().EnableHDR(true); }
-
-  // Window changing sets.
-  if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
-  if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (keys[KEY_CODE_B] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
-  if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) window->Close();
 }
 
 
@@ -59,6 +47,8 @@ void MousePositionMove(Window* window, r64 x, r64 y)
 void ProcessInput()
 {
   Camera* camera = gEngine().GetCamera();
+  Window* window = gEngine().GetWindow();
+
   if (keys[KEY_CODE_W] == KEY_DOWN) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
   if (keys[KEY_CODE_S] == KEY_DOWN) { camera->Move(Camera::BACK, Time::DeltaTime); }
   if (keys[KEY_CODE_D] == KEY_DOWN) { camera->Move(Camera::LEFT, Time::DeltaTime); }
@@ -70,6 +60,18 @@ void ProcessInput()
   // Test HDR Reinhard exposure.
   if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
   if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
+  // Test albedo enabling.
+  if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
+  if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
+
+  if (keys[KEY_CODE_0] == KEY_DOWN) { gRenderer().EnableHDR(false); }
+  if (keys[KEY_CODE_1] == KEY_DOWN) { gRenderer().EnableHDR(true); }
+
+  // Window changing sets.
+  if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
+  if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
+  if (keys[KEY_CODE_B] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
+  if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) { window->Close(); }
 }
 
 
@@ -78,7 +80,7 @@ int main(int c, char* argv[])
   Log::DisplayToConsole(true);
   Mouse::EnableMouse(false);
 
-  gEngine().StartUp(RTEXT("私は猫が大好き"), 800, 600);
+  gEngine().StartUp(RTEXT("私は猫が大好き"), false, 1200, 800);
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);
   Window::SetMousePositionCallback(MousePositionMove);
@@ -142,7 +144,7 @@ int main(int c, char* argv[])
  
   Material* cubeMaterial = gRenderer().CreateMaterial();
   cubeMaterial->SetAlbedo(albedo);
-  Material::ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
+  ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo->normalMatrix[3][0] = 0.0f;
@@ -152,7 +154,7 @@ int main(int c, char* argv[])
 
   Material* cubeMaterial2 = gRenderer().CreateMaterial();
   cubeMaterial2->SetAlbedo(albedo);
-  Material::ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
+  ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
@@ -162,7 +164,7 @@ int main(int c, char* argv[])
 
   Material* cubeMaterial3 = gRenderer().CreateMaterial();
   cubeMaterial3->SetAlbedo(albedo);
-  Material::ObjectBuffer* cubeInfo3 = cubeMaterial3->ObjectData();
+  ObjectBuffer* cubeInfo3 = cubeMaterial3->ObjectData();
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
@@ -171,19 +173,16 @@ int main(int c, char* argv[])
   cubeInfo3->normalMatrix[3][3] = 1.0f;
 
   cubeMaterial->Initialize();
-  cubeMaterial->Update();     // 0x42
-
   cubeMaterial2->Initialize();
-  cubeMaterial2->Update();
-
   cubeMaterial3->Initialize();
-  cubeMaterial3->Update();
 
   ///////////////////////////////////////////////////////////////////////////////////////
 
   /* Create the cmd list to send to the renderer. */
   // TODO(): This part should be something our engine worries about, not the user.
-  CmdList list;
+  // Plan: Create Game Objects from Engine, this will give engine handle to all objects
+  // in game.
+  CmdList& list = gEngine().RenderCommandList();
   list.Resize(3);
   list[0].materialId = cubeMaterial;
   list[0].meshId = cubeMesh;
@@ -194,7 +193,6 @@ int main(int c, char* argv[])
   list[2].materialId = cubeMaterial3;
   list[2].meshId = cubeMesh;
 
-  gRenderer().PushCmdList(&list);
   gRenderer().Build();
 
   r64 timeAccumulator = 0.0;

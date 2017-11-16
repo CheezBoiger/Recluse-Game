@@ -6,7 +6,7 @@
 #include "RHI/Commandbuffer.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "Core/Exception.hpp"
-
+#include "Core/Logging/Log.hpp"
 #include <stdlib.h>
 
 

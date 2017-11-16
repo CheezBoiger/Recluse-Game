@@ -151,26 +151,29 @@ private:
 };
 
 
+struct ObjectBuffer {
+  Matrix4 model;
+  Matrix4 normalMatrix;
+  r32     lodBias;
+  u32     hasAlbedo;
+  u32     hasMetallic;
+  u32     hasRoughness;
+  u32     hasNormal;
+  u32     hasEmissive;
+  u32     hasAO;
+  u32     hasBones;
+};
+
+
+struct BonesBuffer {
+  Matrix4 bones[64];
+};
+
+
 // Physically based material layout that our renderer uses as material for 
 // meshes.
 class Material {
 public:
-  struct ObjectBuffer {
-    Matrix4 model;
-    Matrix4 normalMatrix;
-    r32     lodBias;
-    u32     hasAlbedo;
-    u32     hasMetallic;
-    u32     hasRoughness;
-    u32     hasNormal;
-    u32     hasEmissive;
-    u32     hasAO;
-    u32     hasBones;
-  };
-
-  struct BonesBuffer {
-    Matrix4 bones[64];
-  };
 
   Material();
 
