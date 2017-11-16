@@ -30,6 +30,12 @@ std::string ScaledSamplerStr          = "ScaledSampler";
 std::string RenderTarget2xScaledStr   = "RenderTarget2x";
 std::string RenderTarget4xScaledStr   = "RenderTarget4x";
 std::string RenderTarget8xScaledStr   = "RenderTarget8x";
+std::string FrameBuffer2xStr          = "FrameBuffer2x";
+std::string FrameBuffer4xStr          = "FrameBuffer4x";
+std::string FrameBuffer8xStr          = "FrameBuffer8x";
+std::string DownscaleBlurPipelineStr  = "DownscaleBlurPipeline";
+std::string DownscaleBlurVertFileStr  = "DownscaleBlurPass.vert.spv";
+std::string DownscaleBlurFragFileStr  = "DownscaleBlurPass.frag.spv";
 
 std::string RenderTargetVelocityStr   = "VelocityMap";
 

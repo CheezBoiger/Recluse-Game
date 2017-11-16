@@ -219,8 +219,6 @@ int main(int c, char* argv[])
       timeAccumulator -= Time::FixTime;
     }
 
-    gEngine().Update(dt);
-
     // box 1 transforming.
     cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
     cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
@@ -251,6 +249,7 @@ int main(int c, char* argv[])
     //Log(rDebug) << gCamera->Front() << "\n";
 
     // Syncronize engine modules, as they run on threads.
+    gEngine().Update(dt);
     gCore().Sync();
     gRenderer().Render();
 

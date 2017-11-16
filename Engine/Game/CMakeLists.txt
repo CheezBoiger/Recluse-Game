@@ -26,10 +26,12 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/Component.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/CameraViewFrustum.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/Character.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/RenderComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Engine.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/RenderComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

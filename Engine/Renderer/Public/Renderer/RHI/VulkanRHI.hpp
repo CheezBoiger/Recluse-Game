@@ -102,7 +102,7 @@ public:
 
   // Rebuild the swapchain commandbuffers with using the function provided from SetSwapchainCmdBufferBuild.
   // This will build the swapchain command buffers.
-  void                          RebuildCurrentCommandBuffers();
+  void                          RebuildCommandBuffers(u32 set);
 
   // Get the logical device.
   VkDevice                      Device() { return mLogicalDevice.Handle(); }

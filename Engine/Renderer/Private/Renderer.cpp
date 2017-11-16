@@ -140,6 +140,9 @@ void Renderer::Render()
     // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
 
+    // Offscreen downsampling.
+    // mRhi->GraphicsSubmit(downsampleSI);
+
     // High Dynamic Range and Gamma Pass.
     if (mHDR.enabled) mRhi->GraphicsSubmit(hdrSI);
 
@@ -531,6 +534,19 @@ void Renderer::SetUpFrameBuffers()
   renderpassCI.attachmentCount = 1;
   subpass.colorAttachmentCount = 1;
   hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
+
+  Texture* rtDownScale2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
+  Texture* rtDownScale4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
+  Texture* rtDownScale8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
+
+  FrameBuffer* DownScaleFB2x = mRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB4x = mRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB8x = mRhi->CreateFrameBuffer();
+  gResources().RegisterFrameBuffer(FrameBuffer2xStr, DownScaleFB2x);
+  gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x);
+  gResources().RegisterFrameBuffer(FrameBuffer8xStr, DownScaleFB8x);
+
+  
 }
 
 
@@ -873,6 +889,21 @@ void Renderer::SetUpGraphicsPipelines()
   mRhi->FreeShader(hdrVert);
   gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
 
+  // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
+  // pass. 
+  Shader* dbVert = mRhi->CreateShader();
+  Shader* dbFrag = mRhi->CreateShader();
+  if (!dbVert->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
+    Log(rError) << "Could not find " + DownscaleBlurVertFileStr + "!\n";
+  }
+
+  if (!dbFrag->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
+    Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
+  }
+
+  mRhi->FreeShader(dbVert);
+  mRhi->FreeShader(dbFrag);
+
   // ShadowMapping shader.
   // TODO(): Shadow mapping MUST be deferred until downsampling and glow buffers have finished!
   // This will prevent blurry shadows.
@@ -887,11 +918,8 @@ void Renderer::SetUpGraphicsPipelines()
     Log(rError) << "Could not find " + ShadowMapFragFileStr + "!\n";
   }
 
-  smVert->CleanUp();
-  smFrag->CleanUp();
-
-  // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
-  // pass. 
+  mRhi->FreeShader(smVert);
+  mRhi->FreeShader(smFrag);
 }
 
 
@@ -916,11 +944,22 @@ void Renderer::CleanUpFrameBuffers()
 
   FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer(HDRGammaFrameBufferStr);
   mRhi->FreeFrameBuffer(hdrFrameBuffer);
+
+  FrameBuffer* DownScaleFB2x = gResources().UnregisterFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer* DownScaleFB4x = gResources().UnregisterFrameBuffer(FrameBuffer4xStr);
+  FrameBuffer* DownScaleFB8x = gResources().UnregisterFrameBuffer(FrameBuffer8xStr);
+  mRhi->FreeFrameBuffer(DownScaleFB2x);
+  mRhi->FreeFrameBuffer(DownScaleFB4x);
+  mRhi->FreeFrameBuffer(DownScaleFB8x);
 }
 
 
 void Renderer::SetUpRenderTextures()
 {
+  Texture* renderTarget2xScaled = mRhi->CreateTexture();
+  Texture* renderTarget4xScaled = mRhi->CreateTexture();
+  Texture* renderTarget8xScaled = mRhi->CreateTexture();
+
   Texture* pbrColor = mRhi->CreateTexture();
   Texture* pbrNormal = mRhi->CreateTexture();
   Texture* pbrDepth = mRhi->CreateTexture();
@@ -933,6 +972,9 @@ void Renderer::SetUpRenderTextures()
   gResources().RegisterRenderTexture(PBRColorAttachStr, pbrColor);
   gResources().RegisterRenderTexture(PBRNormalAttachStr, pbrNormal);
   gResources().RegisterRenderTexture(PBRDepthAttachStr, pbrDepth);
+  gResources().RegisterRenderTexture(RenderTarget2xScaledStr, renderTarget2xScaled);
+  gResources().RegisterRenderTexture(RenderTarget4xScaledStr, renderTarget4xScaled);
+  gResources().RegisterRenderTexture(RenderTarget8xScaledStr, renderTarget8xScaled);
   gResources().RegisterSampler(PBRSamplerStr, pbrSampler);
   
   VkImageCreateInfo cImageInfo = { };
@@ -966,7 +1008,23 @@ void Renderer::SetUpRenderTextures()
   pbrColor->Initialize(cImageInfo, cViewInfo);
   pbrNormal->Initialize(cImageInfo, cViewInfo);
 
+  // Initialize downscaled render textures.
+  cImageInfo.extent.width = mWindowHandle->Width() / 2;
+  cImageInfo.extent.height = mWindowHandle->Height() / 2;
+  renderTarget2xScaled->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.extent.width = mWindowHandle->Width() / 4;
+  cImageInfo.extent.height = mWindowHandle->Height() / 4;
+  renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.extent.width = mWindowHandle->Width() / 8;
+  cImageInfo.extent.height = mWindowHandle->Height()/ 8;
+  renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
+
+  // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cImageInfo.extent.width = mWindowHandle->Width();
+  cImageInfo.extent.height = mWindowHandle->Height();
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   hdrTexture->Initialize(cImageInfo, cViewInfo);
 
@@ -1038,6 +1096,14 @@ void Renderer::SetUpRenderTextures()
 
 void Renderer::CleanUpRenderTextures()
 {
+  Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xScaledStr);
+  Texture* renderTarget4xScaled = gResources().UnregisterRenderTexture(RenderTarget4xScaledStr);
+  Texture* renderTarget8xScaled = gResources().UnregisterRenderTexture(RenderTarget8xScaledStr);
+
+  mRhi->FreeTexture(renderTarget2xScaled);
+  mRhi->FreeTexture(renderTarget4xScaled);
+  mRhi->FreeTexture(renderTarget8xScaled);
+
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
   Texture* pbrDepth = gResources().UnregisterRenderTexture(PBRDepthAttachStr);
@@ -1195,7 +1261,7 @@ void Renderer::Build()
 
   BuildOffScreenBuffer(mOffscreen.currCmdBufferIndex);
   BuildHDRCmdBuffer(mHDR.currCmdBufferIndex);
-  mRhi->RebuildCurrentCommandBuffers();
+  mRhi->RebuildCommandBuffers(mRhi->CurrentSwapchainCmdBufferSet());
 }
 
 
@@ -1445,14 +1511,8 @@ void Renderer::FreeMaterial(Material* material)
 
 void Renderer::UpdateMaterials()
 {
-  if (mGlobalMat) {
-    mGlobalMat->Update();
-  }
-
-  if (mLightMat) {
-    mLightMat->Update();
-  }
-
+  // TODO(): Engine should be responsible for updating mesh materials.
+  // Put this in engine update instead.
   for (size_t i = 0; i < MaterialCache.size(); ++i) {
     Material* mat = MaterialCache[i];
     mat->Update();

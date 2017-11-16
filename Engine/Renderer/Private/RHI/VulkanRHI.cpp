@@ -518,7 +518,7 @@ void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
       VkRenderPassBeginInfo rpBI = {};
       VkClearValue clearValues[2];
 
-      clearValues[0].color = { 0.1f, 0.1f, 0.1f, 0.0f };
+      clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
       clearValues[1].depthStencil = { 1.0f, 0 };
 
       rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -538,15 +538,15 @@ void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::RebuildCurrentCommandBuffers()
+void VulkanRHI::RebuildCommandBuffers(u32 set)
 {
-  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[CurrentSwapchainCmdBufferSet()];
+  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
     CommandBuffer& cmdBuffer = cmdBufferSet[i];
     cmdBuffer.Free();
   }
   mSwapchainInfo.mComplete = false;
-  CreateSwapchainCommandBuffers(CurrentSwapchainCmdBufferSet());
+  CreateSwapchainCommandBuffers(set);
 }
 
 

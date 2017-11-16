@@ -33,6 +33,12 @@ extern std::string ScaledSamplerStr;
 extern std::string RenderTarget2xScaledStr;
 extern std::string RenderTarget4xScaledStr;
 extern std::string RenderTarget8xScaledStr;
+extern std::string FrameBuffer2xStr;
+extern std::string FrameBuffer4xStr;
+extern std::string FrameBuffer8xStr;
+extern std::string DownscaleBlurPipelineStr;
+extern std::string DownscaleBlurVertFileStr;
+extern std::string DownscaleBlurFragFileStr;
 
 extern std::string RenderTargetVelocityStr;
 

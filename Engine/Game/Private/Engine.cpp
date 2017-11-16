@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Engine.hpp"
+#include "Scene/Scene.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -84,6 +85,14 @@ void Engine::Update(r64 dt)
     gCamBuffer->viewProj = gCamBuffer->view * gCamBuffer->proj;
     gCamBuffer->screenSize[0] = mWindow.Width();
     gCamBuffer->screenSize[1] = mWindow.Height();
+  }
+
+  if (mCamMat) {
+    mCamMat->Update();
+  }
+
+  if (mLightMat) {
+    mLightMat->Update();
   }
 }
 

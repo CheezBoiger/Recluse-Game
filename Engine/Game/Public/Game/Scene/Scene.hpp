@@ -3,8 +3,20 @@
 
 
 #include "Core/Types.hpp"
+#include "Core/Utility/Vector.hpp"
+
 
 namespace Recluse {
+
+
+class GameObject;
+
+
+struct SceneNode {
+  std::vector<SceneNode*> m_Children;
+  SceneNode*              m_Parent;
+  GameObject*             m_GameObject;
+};
 
 
 // Scene graph, used for storing, keeping track off, and 

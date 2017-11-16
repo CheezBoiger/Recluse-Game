@@ -15,6 +15,8 @@
 
 #include "Renderer/Renderer.hpp"
 #include "Renderer/Material.hpp"
+#include "Renderer/RenderCmd.hpp"
+#include "Renderer/CmdList.hpp"
 
 #include "Physics/Physics.hpp"
 #include "Filesystem/Filesystem.hpp"
@@ -26,6 +28,9 @@
 
 namespace Recluse {
 
+
+// Scene graph to push into the engine.
+class Scene;
 
 // First person engine.
 class Engine {
@@ -46,8 +51,12 @@ public:
   void                          Update(r64 dt);
   void                          SetCamera(Camera* camera) { mCamera = camera; }
 
-  LightBuffer*   LightData() { return mLightMat->Data(); }
-  GlobalBuffer* GlobalData() { return mCamMat->Data(); }
+  // Push the new scene to into this engine for extraction.
+  void                          PushScene(Scene* scene);
+  void                          LoadSceneTransition();
+
+  LightBuffer*                  LightData() { return mLightMat->Data(); }
+  GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
 
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
@@ -57,7 +66,11 @@ private:
   GlobalMaterial*               mCamMat;
   LightMaterial*                mLightMat;
   Camera*                       mCamera;
+  Scene*                        mPushedScene;
+
   Window                        mWindow;
+  CmdList                       mRenderCmdList;
+  CmdList                       mDeferredCmdList;
 };
 
 
