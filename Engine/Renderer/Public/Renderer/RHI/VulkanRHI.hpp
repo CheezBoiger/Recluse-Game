@@ -168,6 +168,9 @@ public:
   // swapchain that we are rendering onto.
   u32                           CurrentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
 
+  // Swap commandbuffer sets within this vulkan rhi. Be sure that the set is already built!
+  void                          SwapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
+
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!
   u32                           CurrentSwapchainCmdBufferSet() const { return mSwapchainInfo.mCmdBufferSet; }
