@@ -362,6 +362,7 @@ void LightMaterial::Initialize()
 
   mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   
+  // Create our shadow map texture.
   if (!mShadowMap) {
     mShadowMap = mRhi->CreateTexture();
 
@@ -382,6 +383,7 @@ void LightMaterial::Initialize()
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
 
+  // TODO(): Once we create our shadow map, we will add it here.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalShadowInfo.imageView = gResources().GetRenderTexture(DefaultTextureStr)->View();

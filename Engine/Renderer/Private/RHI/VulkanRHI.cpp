@@ -63,7 +63,7 @@ VulkanRHI::~VulkanRHI()
 b8 VulkanRHI::CreateContext()
 {
 // Enable debug mode, should we decide to enable validation layers.
-#if _DEBUG
+#if defined(_DEBUG) || defined(_NDEBUG)
   gContext.EnableDebugMode();
 #endif
   return gContext.CreateInstance();

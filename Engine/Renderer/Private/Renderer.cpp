@@ -435,52 +435,60 @@ void Renderer::SetUpFrameBuffers()
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
   VkAttachmentDescription attachmentDescriptions[3];
-  attachmentDescriptions[0].format = pbrColor->Format();
-  attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; 
-  attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-  attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-  attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[0].samples = pbrColor->Samples();
-  attachmentDescriptions[0].flags = 0;
-
-  attachmentDescriptions[1].format = pbrNormal->Format();
-  attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-  attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-  attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-  attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[1].samples = pbrNormal->Samples();
-  attachmentDescriptions[1].flags = 0;  
-
-  attachmentDescriptions[2].format = pbrDepth->Format();
-  attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[2].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-  attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-  attachmentDescriptions[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  attachmentDescriptions[2].samples = pbrDepth->Samples();
-  attachmentDescriptions[2].flags = 0;   
-
   VkSubpassDependency dependencies[2];
-  dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-  dependencies[0].dstSubpass = 0;
-  dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-  dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-  dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-  dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;  
 
-  dependencies[1].srcSubpass = 0;
-  dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-  dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-  dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-  dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-  dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+  attachmentDescriptions[0] = CreateAttachmentDescription(
+    pbrColor->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrColor->Samples()
+  );
+
+  attachmentDescriptions[1] = CreateAttachmentDescription(
+    pbrNormal->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrNormal->Samples()
+  );
+
+  attachmentDescriptions[2] = CreateAttachmentDescription(
+    pbrDepth->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrDepth->Samples()
+  );
+
+  dependencies[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL, 
+    VK_ACCESS_MEMORY_READ_BIT, 
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    0, 
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependencies[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
 
   VkAttachmentReference attachmentColors[2];
   VkAttachmentReference attachmentDepthRef = { 2, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };

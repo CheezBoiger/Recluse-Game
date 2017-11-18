@@ -85,6 +85,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 }
 
 
+static void AdjustClientViewRect(HWND handle)
+{
+  if (!handle) return;
+
+  RECT rect;
+  GetClientRect(handle, &rect);
+  ClientToScreen(handle, (POINT*)&rect.left);
+  ClientToScreen(handle, (POINT*)&rect.right);
+  ClipCursor(&rect);
+}
+
+
 LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   UINT   uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -148,11 +160,7 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   case WM_MOUSEMOVE:
   {
     if (window && Mouse::Enabled()) {
-      RECT rect;
-      GetClientRect(window->mHandle, &rect);
-      ClientToScreen(window->mHandle, (POINT* )&rect.left);
-      ClientToScreen(window->mHandle, (POINT* )&rect.right);
-      ClipCursor(&rect);
+      AdjustClientViewRect(window->mHandle);
 
       const int x = GET_X_LPARAM(lParam);
       const int y = GET_Y_LPARAM(lParam);
@@ -182,8 +190,10 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
     // Need to add in unlimited movement. This will require disabling the cursor.
     if (window && !Mouse::Enabled()) {
       i32 dx, dy;
-      UINT dwSize
-;
+      UINT dwSize;
+
+      AdjustClientViewRect(window->mHandle);
+
       GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
 
       LPBYTE lpb = new BYTE[dwSize];

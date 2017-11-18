@@ -21,6 +21,8 @@ static i32 keys[256];
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   keys[key] = action;
+
+  if (keys[KEY_CODE_2] == KEY_DOWN) Mouse::EnableMouse(!Mouse::Enabled());
 }
 
 

@@ -144,4 +144,18 @@ void CommandBuffer::SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkV
   ASSERT_RECORDING(); 
   vkCmdSetViewport(mHandle, firstViewPort, viewPortCount, viewports);
 }
+
+
+void CommandBuffer::BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags)
+{
+  ASSERT_RECORDING();
+  vkCmdBeginQuery(mHandle, queryPool, query, flags);
+}
+
+
+void CommandBuffer::EndQuery(VkQueryPool queryPool, u32 query)
+{
+  ASSERT_RECORDING();
+  vkCmdEndQuery(mHandle, queryPool, query);
+}
 } // Recluse

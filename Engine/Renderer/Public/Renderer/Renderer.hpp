@@ -179,6 +179,8 @@ public:
 
   // Check if this renderer is initialized with the window reference given.
   b8                Initialized() { return mInitialized; }
+  b8                EnabledHDR() const { return mHDR.enabled; }
+  b8                EnabledBloom() const { return mHDR.data.bloomEnabled; }
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return mRhi; }
@@ -189,6 +191,7 @@ public:
   r32               Exposure() const { return mHDR.data.exposure; }
 
   void              EnableHDR(b8 enable);
+  void              EnableBloom(b8 enable);
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame

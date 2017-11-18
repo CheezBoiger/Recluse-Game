@@ -47,6 +47,9 @@ public:
 
   void            SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports);
 
+  void            BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags);
+  void            EndQuery(VkQueryPool queryPool, u32 query);
+
   void            Reset(const VkCommandBufferResetFlags flags);
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }
