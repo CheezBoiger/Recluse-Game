@@ -19,8 +19,8 @@ using namespace Recluse;
 bool noAlbedo2 = false;
 bool noAlbedo = false;
 
-// TODO(): This needs to go into the engine as a member function, or it might be 
-// better off a global?
+// TODO(): This just demonstrates key input. Normally you would use it for,
+// say, moving a character and such.
 void ProcessInput()
 {
   Camera* camera = gEngine().GetCamera();
