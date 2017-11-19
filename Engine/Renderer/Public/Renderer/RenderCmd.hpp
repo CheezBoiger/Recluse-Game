@@ -12,22 +12,16 @@ namespace Recluse {
 
 class Mesh;
 class Material;
+class RenderObject;
 
 
 struct RenderCmd {
   RenderCmd()
-    : meshId(nullptr)
-    , materialId(nullptr)
+    : target(nullptr)
     , debug(false) { }
 
 
-  // Mesh id to render onto the screen.
-  Mesh*     meshId;
-
-  // Material by which to wrap our mesh with. This tells the renderer how to 
-  // draw the mesh. If no material is defined, mesh will not render appropriately.
-  Material* materialId;
-
-  b8        debug;
+  RenderObject*     target;
+  b8                debug;
 };
 } // Recluse

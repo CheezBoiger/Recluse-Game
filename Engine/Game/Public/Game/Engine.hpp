@@ -57,6 +57,8 @@ public:
   void                          PushScene(Scene* scene);
   void                          LoadSceneTransition();
 
+  // TODO(): Should we have this data be stored in the scene instead? It would be more probable, 
+  // rather than on the engine... we need to save this data!
   LightBuffer*                  LightData() { return mLightMat->Data(); }
   GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
 

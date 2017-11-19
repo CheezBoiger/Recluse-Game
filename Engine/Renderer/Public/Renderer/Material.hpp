@@ -151,25 +151,6 @@ private:
 };
 
 
-struct ObjectBuffer {
-  Matrix4 model;
-  Matrix4 normalMatrix;
-  r32     lodBias;
-  u32     hasAlbedo;
-  u32     hasMetallic;
-  u32     hasRoughness;
-  u32     hasNormal;
-  u32     hasEmissive;
-  u32     hasAO;
-  u32     hasBones;
-};
-
-
-struct BonesBuffer {
-  Matrix4 bones[64];
-};
-
-
 // Physically based material layout that our renderer uses as material for 
 // meshes.
 class Material {
@@ -185,25 +166,17 @@ public:
   void            SetAo(Texture2D* ao) { mAo = ao; }
   void            SetEmissive(Texture2D* emissive) { mEmissive = emissive; }
 
-  ObjectBuffer*   ObjectData() { return &mObjectData; }
-  BonesBuffer*    BonesData() { return &mBonesData; }
+  Texture2D*      Albedo() { return mAlbedo; }
+  Texture2D*      Metallic() { return mMetallic; }
+  Texture2D*      Roughness() { return mRoughness; }
+  Texture2D*      Normal() { return mNormal; }
+  Texture2D*      Ao() { return mAo; }
+  Texture2D*      Emissive() { return mEmissive; }
 
-  DescriptorSet*  Set() { return mObjectBufferSet; }
-
-  void            Initialize(b8 isStatic = true);
-  void            CleanUp();
-  void            Update();
+  TextureSampler* Sampler() { return mSampler; }
 
 private:
-  void            UpdateDescriptorSet(b8 includeBufferUpdate);
 
-  ObjectBuffer    mObjectData;
-  BonesBuffer     mBonesData;
-
-  DescriptorSet*  mObjectBufferSet;
-
-  Buffer*         mObjectBuffer;
-  Buffer*         mBonesBuffer;
   Texture2D*      mAlbedo;
   Texture2D*      mMetallic;
   Texture2D*      mRoughness;
@@ -212,7 +185,6 @@ private:
   Texture2D*      mEmissive;
 
   TextureSampler* mSampler;
-  VulkanRHI*      mRhi;
 
   friend class Renderer;
 };

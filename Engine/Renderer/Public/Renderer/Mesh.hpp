@@ -4,34 +4,54 @@
 #include "Core/Types.hpp"
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
-
+#include "Core/Math/Common.hpp"
+#include "Core/Math/Matrix4.hpp"
 
 namespace Recluse {
 
+class Buffer;
+class Renderer;
+class MeshData;
 
-class VulkanRHI;
+
+struct ObjectBuffer {
+  Matrix4 model;
+  Matrix4 normalMatrix;
+  r32     lodBias;
+  u32     hasAlbedo;
+  u32     hasMetallic;
+  u32     hasRoughness;
+  u32     hasNormal;
+  u32     hasEmissive;
+  u32     hasAO;
+  u32     hasBones;
+};
+
+
+struct BonesBuffer {
+  Matrix4 bones[64];
+};
 
 // TODO(): Structure this object to generate submeshes when needed.
 class Mesh {
 public:
-  Mesh()
-    : mVisible(true)
-    , mRenderable(true)
-    , mTransparent(false)
-    , mTranslucent(false)
-    , mStatic(true) { }
+  Mesh();
+  virtual ~Mesh() { }
 
-  void          Initialize(size_t elementCount, size_t sizeType, void* data, 
-                  b8 isStatic, size_t indexCount = 0, void* indices = nullptr);
-  void          CleanUp();
+  virtual void  Initialize(Renderer* renderer, MeshData* data);
+  virtual void  CleanUp();
+  
+  MeshData*     Data() { return mMeshData; }
 
-  VertexBuffer* GetVertexBuffer() { return &mVertexBuffer; }
-  IndexBuffer*  GetIndexBuffer() { return &mIndexBuffer; }
+  virtual void  Update();
 
   void          SetVisible(b8 enable) { mVisible = enable; }
   void          SetRenderable(b8 enable) { mRenderable = enable; }
   void          SetTransparent(b8 enable) { mTransparent = enable; }
   void          SetTranslucent(b8 enable) { mTranslucent = enable; }
+
+  ObjectBuffer* ObjectData() { return &mObjectData; }
+
 
   b8            Visible() const { return mVisible; }
   b8            Renderable() const { return mRenderable; }
@@ -39,9 +59,13 @@ public:
   b8            Translucent() const { return mTranslucent; }
   b8            Static() const { return mStatic; }
 
-private:
-  VertexBuffer  mVertexBuffer;
-  IndexBuffer   mIndexBuffer;
+  Buffer*       NativeObjectBuffer() { return mObjectBuffer; }
+
+protected:
+  ObjectBuffer  mObjectData;
+
+  MeshData*     mMeshData;
+  Buffer*       mObjectBuffer;
 
   b8            mVisible;
   b8            mRenderable;
@@ -50,8 +74,26 @@ private:
   b8            mTranslucent;
   b8            mStatic;
   
-  VulkanRHI*    mRhi;
+  Renderer*     mRenderer;
   
   friend class Renderer;
+};
+
+
+class SkinnedMesh : public Mesh {
+public:
+  SkinnedMesh();
+  
+  virtual void  Initialize(Renderer* renderer, MeshData* data) override;
+  virtual void  CleanUp() override;
+  virtual void  Update() override;
+
+  BonesBuffer*  BonesData() { return &mBonesData; }
+  Buffer*       NativeBoneBuffer() { return mBonesBuffer; }
+
+private:
+  BonesBuffer   mBonesData;
+  Buffer*       mBonesBuffer;
+  friend class  Renderer;
 };
 } // Recluse

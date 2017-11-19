@@ -5,7 +5,9 @@
 #include "Renderer/UserParams.hpp"
 #include "Renderer/CmdList.hpp"
 #include "Renderer/RenderCmd.hpp"
+#include "Renderer/RenderObject.hpp"
 #include "Renderer/Mesh.hpp"
+#include "Renderer/MeshData.hpp"
 #include "Renderer/Material.hpp"
 #include "Renderer/TextureType.hpp"
 #include "Core/Utility/Image.hpp"
@@ -136,17 +138,19 @@ int main(int c, char* argv[])
 
   auto sphereData = UVSphere::MeshInstance(1.0f, 60, 60);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 60, 60);
-  Mesh* sphereMesh = gRenderer().CreateMesh();
-  sphereMesh->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
+  MeshData* sphereMeshDat = gRenderer().CreateMeshData();
+  sphereMeshDat->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
 
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
-  Mesh* cubeMesh = gRenderer().CreateMesh();
-  cubeMesh->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
+  MeshData* cubeMeshDat = gRenderer().CreateMeshData();
+  cubeMeshDat->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
  
-  Material* cubeMaterial = gRenderer().CreateMaterial();
-  cubeMaterial->SetAlbedo(albedo);
-  ObjectBuffer* cubeInfo = cubeMaterial->ObjectData();
+  Material cubeMaterial;
+  SkinnedMesh cubeMesh;
+  cubeMesh.Initialize(&gRenderer(), cubeMeshDat);
+  cubeMaterial.SetAlbedo(albedo);
+  ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo->normalMatrix[3][0] = 0.0f;
@@ -154,9 +158,11 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
 
-  Material* cubeMaterial2 = gRenderer().CreateMaterial();
-  cubeMaterial2->SetAlbedo(albedo);
-  ObjectBuffer* cubeInfo2 = cubeMaterial2->ObjectData();
+  Material cubeMaterial2;
+  SkinnedMesh cubeMesh2;
+  cubeMesh2.Initialize(&gRenderer(), sphereMeshDat);
+  cubeMaterial2.SetAlbedo(albedo);
+  ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
@@ -164,9 +170,11 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
 
-  Material* cubeMaterial3 = gRenderer().CreateMaterial();
-  cubeMaterial3->SetAlbedo(albedo);
-  ObjectBuffer* cubeInfo3 = cubeMaterial3->ObjectData();
+  Material cubeMaterial3;
+  SkinnedMesh cubeMesh3;
+  cubeMesh3.Initialize(&gRenderer(), cubeMeshDat);
+  cubeMaterial3.SetAlbedo(albedo);
+  ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
@@ -174,9 +182,26 @@ int main(int c, char* argv[])
   cubeInfo3->normalMatrix[3][2] = 0.0f;
   cubeInfo3->normalMatrix[3][3] = 1.0f;
 
-  cubeMaterial->Initialize();
-  cubeMaterial2->Initialize();
-  cubeMaterial3->Initialize();
+
+  RenderObject* obj1 = gRenderer().CreateRenderObject();
+  RenderObject* obj2 = gRenderer().CreateRenderObject();
+  RenderObject* obj3 = gRenderer().CreateRenderObject();
+
+  obj1->materialId = &cubeMaterial;
+  obj1->meshId = &cubeMesh;
+  obj1->skinned = true;
+
+  obj2->materialId = &cubeMaterial2;
+  obj2->meshId = &cubeMesh2;
+  obj2->skinned = true;
+
+  obj3->materialId = &cubeMaterial3;
+  obj3->meshId = &cubeMesh3;
+  obj3->skinned = true;
+
+  obj1->Initialize();
+  obj2->Initialize();
+  obj3->Initialize();
 
   ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,14 +211,9 @@ int main(int c, char* argv[])
   // in game.
   CmdList& list = gEngine().RenderCommandList();
   list.Resize(3);
-  list[0].materialId = cubeMaterial;
-  list[0].meshId = cubeMesh;
-
-  list[1].materialId = cubeMaterial2;
-  list[1].meshId = sphereMesh;
-
-  list[2].materialId = cubeMaterial3;
-  list[2].meshId = cubeMesh;
+  list[0].target = obj1;
+  list[1].target = obj2;
+  list[2].target = obj3;
 
   gRenderer().Build();
 
@@ -240,8 +260,8 @@ int main(int c, char* argv[])
     cubeInfo3->normalMatrix[3][2] = 0.0f;
     cubeInfo3->normalMatrix[3][3] = 1.0f;
 
-    if (noAlbedo2) { cubeMaterial2->ObjectData()->hasAlbedo = false; } else { cubeMaterial2->ObjectData()->hasAlbedo = true; }
-    if (noAlbedo) { cubeMaterial->ObjectData()->hasAlbedo = false; } else { cubeMaterial->ObjectData()->hasAlbedo = true; }
+    if (noAlbedo2) { cubeMesh2.ObjectData()->hasAlbedo = false; } else { cubeMesh2.ObjectData()->hasAlbedo = true; }
+    if (noAlbedo) { cubeMesh.ObjectData()->hasAlbedo = false; } else { cubeMesh.ObjectData()->hasAlbedo = true; }
 
     // //////////
     // End updates.
@@ -265,11 +285,15 @@ int main(int c, char* argv[])
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
-  gRenderer().FreeMaterial(cubeMaterial3);
-  gRenderer().FreeMaterial(cubeMaterial2);
-  gRenderer().FreeMaterial(cubeMaterial);
-  gRenderer().FreeMesh(cubeMesh);
-  gRenderer().FreeMesh(sphereMesh);
+  gRenderer().FreeRenderObject(obj1);
+  gRenderer().FreeRenderObject(obj2);
+  gRenderer().FreeRenderObject(obj3);
+  gRenderer().FreeMeshData(cubeMeshDat);
+  gRenderer().FreeMeshData(sphereMeshDat);
+
+  cubeMesh.CleanUp();
+  cubeMesh2.CleanUp();
+  cubeMesh3.CleanUp();
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

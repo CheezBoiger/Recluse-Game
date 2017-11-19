@@ -30,38 +30,38 @@ public:
   // Get a component from this game object. Components are usually retrieved via a 
   // hashed value, which matches their uid.
   template<typename Obj>
-  Obj                      GetComponent() {
+  Obj                                 GetComponent() {
     static_assert(std::is_pointer<Obj>::value, "Must be a pointer type!"); 
     return nullptr; 
   }
 
   // Add a component to this game object.
   template<typename Obj>
-  void                      AddComponent() {
+  void                                AddComponent() {
   }
 
-  void                      Serialize(IArchive& archive) override;
+  void                                Serialize(IArchive& archive) override;
 
-  void                      Deserialize(IArchive& archive) override;
+  void                                Deserialize(IArchive& archive) override;
 
-  GameObject*               GetParent() { return mParent; }
+  GameObject*                         GetParent() { return mParent; }
 
-  GameObject*               GetChild(std::string id);
-  GameObject*               GetChild(size_t idx);
+  GameObject*                         GetChild(std::string id);
+  GameObject*                         GetChild(size_t idx);
 
-  Transform*                GetTransform() { return &mTransform; }
+  Transform*                          GetTransform() { return &mTransform; }
 
 private:
   // Mandatory to have a transform for all game objects.
-  Transform                 mTransform;
+  Transform                           mTransform;
 
   // The components associated with this game object.
-  std::unordered_map<u64, Component>    mComponents;
+  std::unordered_map<u64, Component>  mComponents;
 
   // List of associated children.
-  std::vector<GameObject*>  mChildren;
+  std::vector<GameObject*>            mChildren;
 
   // Possible parent.
-  GameObject*               mParent;
+  GameObject*                         mParent;
 };
 } // Recluse

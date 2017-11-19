@@ -24,7 +24,7 @@ class GraphicsPipeline;
 class ComputePipeline;
 class GpuParams;
 class UserParams;
-class Mesh;
+class MeshData;
 class Material;
 class LightMaterial;
 class GlobalMaterial;
@@ -36,7 +36,7 @@ class Texture3D;
 class Texture2DArray;
 class TextureSampler;
 class UIOverlay;
-
+class RenderObject;
 struct DirectionLight;
 struct PointLight;
 struct SpotLight;
@@ -104,12 +104,8 @@ public:
   void              WaitIdle();
 
   // Creates a mesh object of which to submit to render.
-  // Be sure to call FreeMesh() if done with this mesh object.
-  Mesh*             CreateMesh();
-
-  // Creates a material object to submit material samples of which to render a
-  // Mesh. Be sure to call FreeMaterial() if done with this material object.
-  Material*         CreateMaterial();
+  // Be sure to call FreeMeshData() if done with this mesh object.
+  MeshData*         CreateMeshData();
 
   Texture1D*        CreateTexture1D();
   Texture2D*        CreateTexture2D();
@@ -135,11 +131,14 @@ public:
   // Create a spotlight.
   SpotLight*        CreateSpotLight();
 
-  // Frees up the allocated mesh object.
-  void              FreeMesh(Mesh* mesh);
+  // Create a render object for the renderer to render?
+  RenderObject*     CreateRenderObject();
 
-  // Frees up the allocated material object.
-  void              FreeMaterial(Material* material);
+  // Frees the render object.
+  void              FreeRenderObject(RenderObject* renderObject);
+
+  // Frees up the allocated mesh data object.
+  void              FreeMeshData(MeshData* mesh);
 
   // Frees up the allocated global material object.
   void              FreeGlobalMaterial(GlobalMaterial* material);

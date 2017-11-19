@@ -12,6 +12,8 @@
 #include "TextureType.hpp"
 #include "UIOverlay.hpp"
 #include "RendererData.hpp"
+#include "RenderObject.hpp"
+#include "MeshData.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -1323,35 +1325,30 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
     if (mCmdList) {
       for (size_t i = 0; i < mCmdList->Size(); ++i) {
         RenderCmd& renderCmd = mCmdList->Get(i);
+        // Need to notify that this render command does not have a render object.
+        if (!renderCmd.target) continue;
 
-        // Extract material info. This is optional.
-        if (renderCmd.materialId) {
-          if (renderCmd.meshId) {
-            Material* mat = renderCmd.materialId;
+        RenderObject* renderObj = renderCmd.target;
+        Material* mat = renderObj->materialId;
 
-            VkDescriptorSet descriptorSets[] = {
-              mGlobalMat->Set()->Handle(),
-              mat->Set()->Handle(),
-              mLightMat->Set()->Handle()
-            };
+        VkDescriptorSet descriptorSets[] = {
+          mGlobalMat->Set()->Handle(),
+          renderObj->Set()->Handle(),
+          mLightMat->Set()->Handle()
+        };
 
-            cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
-              3, descriptorSets, 0, nullptr);
-          }
-        }
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
+          3, descriptorSets, 0, nullptr);
 
-        // Extract Mesh info. This is optional. 
-        if (renderCmd.meshId && renderCmd.meshId->Renderable() && renderCmd.meshId->Visible()) {
-          VertexBuffer* vertexBuffer = renderCmd.meshId->GetVertexBuffer();
-          IndexBuffer* indexBuffer = renderCmd.meshId->GetIndexBuffer();
-          VkBuffer vb = vertexBuffer->Handle()->Handle();
-          VkBuffer ib = indexBuffer->Handle()->Handle();
-          VkDeviceSize offsets[] = { 0 };
-          cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
-          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
-          //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
-        }
+        VertexBuffer* vertexBuffer = renderObj->meshId->Data()->VertexData();
+        IndexBuffer* indexBuffer = renderObj->meshId->Data()->IndexData();
+        VkBuffer vb = vertexBuffer->Handle()->Handle();
+        VkBuffer ib = indexBuffer->Handle()->Handle();
+        VkDeviceSize offsets[] = { 0 };
+        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+        cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+        cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
+        //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
       }
     }
 
@@ -1481,25 +1478,34 @@ void Renderer::SetGamma(r32 g)
 }
 
 
-Mesh* Renderer::CreateMesh()
+MeshData* Renderer::CreateMeshData()
 {
-  Mesh* mesh = new Mesh();
+  MeshData* mesh = new MeshData();
   mesh->mRhi = mRhi;
   return mesh;
 }
 
 
-void Renderer::FreeMesh(Mesh* mesh)
+void Renderer::FreeMeshData(MeshData* mesh)
 {
   mesh->CleanUp();
   delete mesh;
 }
 
 
-void Renderer::FreeMaterial(Material* material)
+RenderObject* Renderer::CreateRenderObject()
 {
-  material->CleanUp();
-  delete material;
+  RenderObject* obj = new RenderObject(nullptr, nullptr);
+  obj->mRhi = mRhi;
+  return obj;
+}
+
+
+void Renderer::FreeRenderObject(RenderObject* obj)
+{
+  if (!obj) return;
+  obj->CleanUp();
+  delete obj;
 }
 
 
@@ -1580,14 +1586,6 @@ void Renderer::BuildAsync()
 void Renderer::WaitIdle()
 {
   mRhi->DeviceWaitIdle();
-}
-
-
-Material* Renderer::CreateMaterial()
-{
-  Material* material = new Material();
-  material->mRhi = mRhi;
-  return material;
 }
 
 

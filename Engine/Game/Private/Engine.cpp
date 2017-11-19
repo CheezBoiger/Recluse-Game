@@ -1,8 +1,12 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Engine.hpp"
 #include "Scene/Scene.hpp"
+#include "Core/Thread/CoreThread.hpp"
 
 #include "Core/Exception.hpp"
+#include "Renderer/RenderObject.hpp"
+#include "Renderer/Mesh.hpp"
+#include "Renderer/Material.hpp"
 
 
 namespace Recluse {
@@ -104,12 +108,12 @@ void Engine::Update(r64 dt)
     mLightMat->Update();
   }
 
+  // TODO(): RenderObject updated, We need to use RenderObject Now.
   for (u32 i = 0; i < mRenderCmdList.Size(); ++i) {
     RenderCmd& cmd = mRenderCmdList[i];
-    Material* mat = cmd.materialId;
-    if (mat) {
-      mat->Update();
-    }
+    RenderObject* obj = cmd.target;
+
+    obj->meshId->Update();
   }
 }
 
