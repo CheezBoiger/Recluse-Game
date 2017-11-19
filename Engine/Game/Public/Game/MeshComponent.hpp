@@ -4,6 +4,9 @@
 #include "Core/Types.hpp"
 #include "Component.hpp"
 
+#include "Renderer/Mesh.hpp"
+#include "Renderer/Material.hpp"
+
 
 namespace Recluse {
 
@@ -15,13 +18,11 @@ class Mesh;
 
 class MeshComponent : public Component {
 public:
-  MeshComponent()
-    : m_Material(nullptr)
-    , m_Mesh(nullptr) { }
-
-  Material*   m_Material;
-  Mesh*       m_Mesh;
+  MeshComponent() { }
+  Material      m_Material;
+  Mesh          m_Mesh;
 
 private:
+  RenderObject* mRenderObj;
 };
 } // Recluse

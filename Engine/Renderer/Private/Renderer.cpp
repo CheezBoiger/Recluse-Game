@@ -1282,6 +1282,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
     return; 
   }
 
+  if (!mLightMat || !mGlobalMat) {  
+    Log(rWarning) << "Can not build commandbuffers without light or global data! One of them is null!";
+  } 
+
   CommandBuffer* cmdBuffer = mOffscreen.cmdBuffers[cmdBufferIndex];
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(PBRPipelineStr);
@@ -1563,7 +1567,9 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpHDR(false);
 
   mUI->Initialize(mRhi);
-  Build();
+  if (mCmdList->Size() > 0) {
+    Build();
+  }
 }
 
 

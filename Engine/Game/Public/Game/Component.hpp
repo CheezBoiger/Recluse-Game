@@ -14,6 +14,10 @@ class GameObject;
 
 class Component : public ISerializable {
 public:
+  Component() 
+    : mGameObjectOwner(nullptr) { }
+  virtual ~Component() { }
+
   GameObject*   GetOwner() { return mGameObjectOwner; }
 
   virtual void  Update() { }

@@ -19,7 +19,7 @@ typedef std::function<bool(RenderCmd& cmd1, RenderCmd& cmd2)> RenderCmdCompareFu
 
 class CmdList {
 public:
-  CmdList(size_t size = 1024)
+  CmdList(size_t size = 0)
     : mRenderList(size)
     , mCompare(nullptr) { } 
 

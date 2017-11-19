@@ -18,33 +18,6 @@ using namespace Recluse;
 
 bool noAlbedo2 = false;
 bool noAlbedo = false;
-static i32 keys[256];
-
-void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
-{
-  keys[key] = action;
-
-  if (keys[KEY_CODE_2] == KEY_DOWN) Mouse::EnableMouse(!Mouse::Enabled());
-}
-
-
-void WindowResized(Window* window, i32 width, i32 height)
-{
-  if (gRenderer().IsActive() && gRenderer().Initialized()) {
-    UserParams params;
-    gRenderer().UpdateRendererConfigs(&params);
-  }
-}
-
-
-void MousePositionMove(Window* window, r64 x, r64 y)
-{
-  Camera* camera = gEngine().GetCamera();
-  if (camera) {
-    camera->Look(x, y);
-  }
-}
-
 
 // TODO(): This needs to go into the engine as a member function, or it might be 
 // better off a global?
@@ -53,29 +26,29 @@ void ProcessInput()
   Camera* camera = gEngine().GetCamera();
   Window* window = gEngine().GetWindow();
 
-  if (keys[KEY_CODE_W] == KEY_DOWN) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
-  if (keys[KEY_CODE_S] == KEY_DOWN) { camera->Move(Camera::BACK, Time::DeltaTime); }
-  if (keys[KEY_CODE_D] == KEY_DOWN) { camera->Move(Camera::LEFT, Time::DeltaTime); }
-  if (keys[KEY_CODE_A] == KEY_DOWN) { camera->Move(Camera::RIGHT, Time::DeltaTime); }
+  if (Keyboard::KeyPressed(KEY_CODE_W)) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
+  if (Keyboard::KeyPressed(KEY_CODE_S)) { camera->Move(Camera::BACK, Time::DeltaTime); }
+  if (Keyboard::KeyPressed(KEY_CODE_D)) { camera->Move(Camera::LEFT, Time::DeltaTime); }
+  if (Keyboard::KeyPressed(KEY_CODE_A)) { camera->Move(Camera::RIGHT, Time::DeltaTime); }
 
   // Test Gamma correction
-  if (keys[KEY_CODE_G] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_H] == KEY_DOWN) { gRenderer().SetGamma(gRenderer().Gamma() <= 0.0f ? 0.1f : gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_G)) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_H)) { gRenderer().SetGamma(gRenderer().Gamma() <= 0.0f ? 0.1f : gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
   // Test HDR Reinhard exposure.
-  if (keys[KEY_CODE_E] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
-  if (keys[KEY_CODE_R] == KEY_DOWN) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_E)) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_R)) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
   // Test albedo enabling.
-  if (keys[KEY_CODE_V] == KEY_DOWN) { noAlbedo2 = !noAlbedo2; }
-  if (keys[KEY_CODE_C] == KEY_DOWN) { noAlbedo = !noAlbedo; }
+  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
+  if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
 
-  if (keys[KEY_CODE_0] == KEY_DOWN) { gRenderer().EnableHDR(false); }
-  if (keys[KEY_CODE_1] == KEY_DOWN) { gRenderer().EnableHDR(true); }
+  if (Keyboard::KeyPressed(KEY_CODE_0)) { gRenderer().EnableHDR(false); }
+  if (Keyboard::KeyPressed(KEY_CODE_1)) { gRenderer().EnableHDR(true); }
 
   // Window changing sets.
-  if (keys[KEY_CODE_M] == KEY_DOWN) { window->SetToFullScreen(); }
-  if (keys[KEY_CODE_N] == KEY_DOWN) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (keys[KEY_CODE_B] == KEY_DOWN) { window->SetToWindowed(800, 600, true); window->Show(); }
-  if (keys[KEY_CODE_ESCAPE] == KEY_DOWN) { window->Close(); }
+  if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
+  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->Show(); }
+  if (Keyboard::KeyPressed(KEY_CODE_B)) { window->SetToWindowed(800, 600, true); window->Show(); }
+  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { window->Close(); }
 }
 
 
@@ -85,9 +58,6 @@ int main(int c, char* argv[])
   Mouse::EnableMouse(false);
 
   gEngine().StartUp(RTEXT("私は猫が大好き"), false, 1200, 800);
-  Window::SetKeyboardCallback(KeyCallback);
-  Window::SetWindowResizeCallback(WindowResized);
-  Window::SetMousePositionCallback(MousePositionMove);
 
   Window* window = gEngine().GetWindow(); 
   window->SetToWindowed(1200, 800);
@@ -112,7 +82,13 @@ int main(int c, char* argv[])
   Camera* gCamera = gEngine().GetCamera();
 
   // Only thing we worry about is setting up lights.
-  LightBuffer* lights = gEngine().LightData();
+  LightMaterial* lightMat = gRenderer().CreateLightMaterial();
+  lightMat->Initialize();
+
+  gEngine().SetLightData(lightMat);
+
+  LightBuffer* lights = lightMat->Data();
+  
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
   lights->primaryLight.intensity = 0.5f;
@@ -130,7 +106,7 @@ int main(int c, char* argv[])
   lights->pointLights[1].range = 30.0f;
 
   Image img;
-  img.Load("box.jpg");
+  img.Load("albedo.jpg");
   Texture2D* albedo = gRenderer().CreateTexture2D();
   albedo->Initialize(img.Width(), img.Height());
   albedo->Update(img);
@@ -297,6 +273,7 @@ int main(int c, char* argv[])
   cubeMesh.CleanUp();
   cubeMesh2.CleanUp();
   cubeMesh3.CleanUp();
+  gRenderer().FreeLightMaterial(lightMat);
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

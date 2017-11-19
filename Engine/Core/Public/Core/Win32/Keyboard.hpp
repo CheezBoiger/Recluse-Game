@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Core/Types.hpp"
+#include "Core/Win32/Win32Configs.hpp"
 
 namespace Recluse {
 
@@ -80,8 +81,8 @@ enum KeyAction {
 
 // Keyboard map. Used for mapping stuff.
 class Keyboard {
-  static KeyAction keys[256];
 public:
+  static KeyAction keys[256];
   static b8 KeyPressed(KeyCode keycode);
   static b8 KeyReleased(KeyCode keycode);
 };

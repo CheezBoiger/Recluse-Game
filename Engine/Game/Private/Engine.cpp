@@ -2,14 +2,41 @@
 #include "Engine.hpp"
 #include "Scene/Scene.hpp"
 #include "Core/Thread/CoreThread.hpp"
-
+#include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/Mesh.hpp"
 #include "Renderer/Material.hpp"
+#include "Renderer/UserParams.hpp"
 
 
 namespace Recluse {
+
+
+void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
+{
+  Keyboard::keys[key] = (KeyAction)action;
+
+  if (Keyboard::KeyPressed(KEY_CODE_2)) Mouse::EnableMouse(!Mouse::Enabled());
+}
+
+
+void WindowResized(Window* window, i32 width, i32 height)
+{
+  if (gRenderer().IsActive() && gRenderer().Initialized()) {
+    UserParams params;
+    gRenderer().UpdateRendererConfigs(&params);
+  }
+}
+
+
+void MousePositionMove(Window* window, r64 x, r64 y)
+{
+  Camera* camera = gEngine().GetCamera();
+  if (camera) {
+    camera->Look(x, y);
+  }
+}
 
 
 Engine& gEngine()
@@ -41,6 +68,10 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   gAnimation().StartUp();
   gUI().StartUp();
 
+  Window::SetKeyboardCallback(KeyCallback);
+  Window::SetWindowResizeCallback(WindowResized);
+  Window::SetMousePositionCallback(MousePositionMove);
+
   mWindow.Create(appName, width, height);
 
   gRenderer().Initialize(&mWindow);
@@ -51,11 +82,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   mCamMat->Initialize();
   mCamMat->Update();
 
-  mLightMat->Initialize();
-  mLightMat->Update();
-
   gRenderer().SetGlobalMaterial(mCamMat);
-  gRenderer().SetLightMaterial(mLightMat);
   gRenderer().PushCmdList(&mRenderCmdList);
 
   if (fullscreen) {
@@ -71,7 +98,6 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 void Engine::CleanUp()
 {
   gRenderer().FreeGlobalMaterial(mCamMat);
-  gRenderer().FreeLightMaterial(mLightMat);
 
   mCamMat = nullptr;
   mLightMat = nullptr;
@@ -116,6 +142,17 @@ void Engine::Update(r64 dt)
     if (obj && obj->meshId) {
       obj->meshId->Update();
     }
+  }
+}
+
+
+void Engine::SetLightData(LightMaterial* lights)
+{
+  if (lights) {
+    gRenderer().SetLightMaterial(lights);
+    mLightMat = lights;
+  } else {
+    Log(rError) << "Null lights passed... using previous light data.";
   }
 }
 

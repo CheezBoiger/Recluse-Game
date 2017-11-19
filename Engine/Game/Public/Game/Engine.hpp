@@ -59,6 +59,8 @@ public:
 
   // TODO(): Should we have this data be stored in the scene instead? It would be more probable, 
   // rather than on the engine... we need to save this data!
+  void                          SetLightData(LightMaterial* lights);
+
   LightBuffer*                  LightData() { return mLightMat->Data(); }
   GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
 
