@@ -12,6 +12,9 @@ class Material;
 class DescriptorSet;
 class VulkanRHI;
 
+// A Render object is the forfront of rendering an object on the screen.
+// This object tells the renderer how to draw something, so a material 
+// and Mesh object are required.
 class RenderObject {
 public:
   RenderObject(Mesh* mesh, Material* material);
@@ -19,6 +22,10 @@ public:
 
   void              Initialize();
   void              CleanUp();
+
+  // Updates the descriptor set of this object. Calling this will require 
+  // rebuilding of the commandbuffers in the renderer. If you have rebuilt
+  // 
   void              Update();
 
   DescriptorSet*    Set() { return mDescriptorSet; }

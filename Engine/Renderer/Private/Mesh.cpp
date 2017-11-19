@@ -28,10 +28,9 @@ Mesh::Mesh()
 }
 
 
-void Mesh::Initialize(Renderer* renderer, MeshData* data)
+void Mesh::Initialize(Renderer* renderer)
 {
   mRenderer = renderer;
-  mMeshData = data;
 
   // Create the render buffer for the object.
   mObjectBuffer = mRenderer->RHI()->CreateBuffer();
@@ -70,9 +69,9 @@ SkinnedMesh::SkinnedMesh()
 }
 
 
-void SkinnedMesh::Initialize(Renderer* renderer, MeshData* data)
+void SkinnedMesh::Initialize(Renderer* renderer)
 {
-  Mesh::Initialize(renderer, data);
+  Mesh::Initialize(renderer);
 
   VkBufferCreateInfo bonesCI = {};
   VkDeviceSize bonesSize = sizeof(BonesBuffer);

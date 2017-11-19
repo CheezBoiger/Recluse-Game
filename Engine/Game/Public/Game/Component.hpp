@@ -16,6 +16,8 @@ class Component : public ISerializable {
 public:
   GameObject*   GetOwner() { return mGameObjectOwner; }
 
+  virtual void  Update() { }
+
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
 

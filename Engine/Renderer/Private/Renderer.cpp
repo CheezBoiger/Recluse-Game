@@ -1340,8 +1340,11 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
           3, descriptorSets, 0, nullptr);
 
-        VertexBuffer* vertexBuffer = renderObj->meshId->Data()->VertexData();
-        IndexBuffer* indexBuffer = renderObj->meshId->Data()->IndexData();
+        MeshData* data = renderObj->meshId->Data();
+        if (!data) continue;
+
+        VertexBuffer* vertexBuffer = data->VertexData();
+        IndexBuffer* indexBuffer = data->IndexData();
         VkBuffer vb = vertexBuffer->Handle()->Handle();
         VkBuffer ib = indexBuffer->Handle()->Handle();
         VkDeviceSize offsets[] = { 0 };

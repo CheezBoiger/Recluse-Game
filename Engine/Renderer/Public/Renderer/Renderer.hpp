@@ -82,9 +82,9 @@ public:
   void              PushDeferredCmdList(CmdList* cmdList) { mDeferredCmdList = cmdList; }
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
-  // a full update on the scene as a result of application change, such as a window change. 
-  // This will effectively stall the gpu if called too often. If you need to constantly update 
-  // the scene, use BuildAsync() instead.
+  // a full update on the scene as a result of an application change, such as a window change. 
+  // This will effectively stall the gpu if called too often. If you are adding/removing objects 
+  // into a scene, use BuildAsync() instead.
   void              Build();
   
   // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process

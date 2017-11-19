@@ -33,18 +33,22 @@ struct BonesBuffer {
 };
 
 // TODO(): Structure this object to generate submeshes when needed.
+// Mesh is an object that defines how to render an object. This is needed in order
+// to show something on display, as the renderer relies heavily on this object for
+// command buffer creation. 
 class Mesh {
 public:
   Mesh();
   virtual ~Mesh() { }
 
-  virtual void  Initialize(Renderer* renderer, MeshData* data);
+  virtual void  Initialize(Renderer* renderer);
   virtual void  CleanUp();
   
   MeshData*     Data() { return mMeshData; }
 
   virtual void  Update();
 
+  void          SetMeshData(MeshData* meshData) { mMeshData = meshData; }
   void          SetVisible(b8 enable) { mVisible = enable; }
   void          SetRenderable(b8 enable) { mRenderable = enable; }
   void          SetTransparent(b8 enable) { mTransparent = enable; }
@@ -84,7 +88,7 @@ class SkinnedMesh : public Mesh {
 public:
   SkinnedMesh();
   
-  virtual void  Initialize(Renderer* renderer, MeshData* data) override;
+  virtual void  Initialize(Renderer* renderer) override;
   virtual void  CleanUp() override;
   virtual void  Update() override;
 

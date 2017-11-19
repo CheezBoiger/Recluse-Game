@@ -3,29 +3,25 @@
 
 #include "Core/Types.hpp"
 #include "Component.hpp"
-#include "Renderer/Mesh.hpp"
-#include "Renderer/Material.hpp"
 
 
 namespace Recluse {
 
 
-class RenderComponent : public Component {
+class RenderObject;
+class Material;
+class Mesh;
+
+
+class MeshComponent : public Component {
 public:
-  RenderComponent()
+  MeshComponent()
     : m_Material(nullptr)
     , m_Mesh(nullptr) { }
 
-
   Material*   m_Material;
   Mesh*       m_Mesh;
-};
 
-
-class SkinnedRenderComponent : public RenderComponent {
-public:
-  SkinnedRenderComponent()
-    : RenderComponent() { }
-
+private:
 };
 } // Recluse

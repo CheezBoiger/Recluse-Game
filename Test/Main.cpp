@@ -148,7 +148,8 @@ int main(int c, char* argv[])
  
   Material cubeMaterial;
   SkinnedMesh cubeMesh;
-  cubeMesh.Initialize(&gRenderer(), cubeMeshDat);
+  cubeMesh.Initialize(&gRenderer());
+  cubeMesh.SetMeshData(cubeMeshDat);
   cubeMaterial.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
@@ -160,7 +161,8 @@ int main(int c, char* argv[])
 
   Material cubeMaterial2;
   SkinnedMesh cubeMesh2;
-  cubeMesh2.Initialize(&gRenderer(), sphereMeshDat);
+  cubeMesh2.Initialize(&gRenderer());
+  cubeMesh2.SetMeshData(sphereMeshDat);
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
@@ -172,7 +174,8 @@ int main(int c, char* argv[])
 
   Material cubeMaterial3;
   SkinnedMesh cubeMesh3;
-  cubeMesh3.Initialize(&gRenderer(), cubeMeshDat);
+  cubeMesh3.Initialize(&gRenderer());
+  cubeMesh3.SetMeshData(cubeMeshDat);
   cubeMaterial3.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
@@ -216,8 +219,8 @@ int main(int c, char* argv[])
   list[2].target = obj3;
 
   gRenderer().Build();
-
   r64 timeAccumulator = 0.0;
+
   ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
   ///////////////////////////////////////////////////////////////////////////////////////

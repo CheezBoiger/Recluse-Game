@@ -12,8 +12,8 @@ namespace Recluse {
 struct Vertex {
   Vector4 position;
   Vector4 normal;
-  Vector2 texcoord;
-  Vector2 padding;
+  Vector2 texcoord0;
+  Vector2 texcoord1;
   Vector4 color;
 };
 
