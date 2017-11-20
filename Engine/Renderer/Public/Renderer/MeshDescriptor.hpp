@@ -32,23 +32,21 @@ struct BonesBuffer {
   Matrix4 bones[64];
 };
 
-// TODO(): Structure this object to generate submeshes when needed.
-// Mesh is an object that defines how to render an object. This is needed in order
+
+// MeshDesciptor is a descriptor that defines how to render an object. This is needed in order
 // to show something on display, as the renderer relies heavily on this object for
-// command buffer creation. 
-class Mesh {
+// command buffer creation. It basically defines the transform of the meshdata to render, as well
+// as whether that meshdata is defined as transparent, translucent, visible, and/or renderable.
+class MeshDescriptor {
 public:
-  Mesh();
-  virtual ~Mesh() { }
+  MeshDescriptor();
+  virtual ~MeshDescriptor();
 
   virtual void  Initialize(Renderer* renderer);
   virtual void  CleanUp();
-  
-  MeshData*     Data() { return mMeshData; }
 
   virtual void  Update();
 
-  void          SetMeshData(MeshData* meshData) { mMeshData = meshData; }
   void          SetVisible(b8 enable) { mVisible = enable; }
   void          SetRenderable(b8 enable) { mRenderable = enable; }
   void          SetTransparent(b8 enable) { mTransparent = enable; }
@@ -67,8 +65,6 @@ public:
 
 protected:
   ObjectBuffer  mObjectData;
-
-  MeshData*     mMeshData;
   Buffer*       mObjectBuffer;
 
   b8            mVisible;
@@ -84,9 +80,10 @@ protected:
 };
 
 
-class SkinnedMesh : public Mesh {
+class SkinnedMeshDescriptor : public MeshDescriptor {
 public:
-  SkinnedMesh();
+  SkinnedMeshDescriptor();
+  virtual ~SkinnedMeshDescriptor();
   
   virtual void  Initialize(Renderer* renderer) override;
   virtual void  CleanUp() override;

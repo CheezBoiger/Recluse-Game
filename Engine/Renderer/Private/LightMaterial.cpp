@@ -39,6 +39,18 @@ LightMaterial::LightMaterial()
 }
 
 
+LightMaterial::~LightMaterial()
+{
+  if (mLightBuffer) {
+    R_DEBUG(rWarning, "Light buffer was not cleaned up!\n");
+  }
+
+  if (mDescriptorSet) {
+    R_DEBUG(rWarning, "Light Material descriptor set was not properly cleaned up!\n");
+  }
+}
+
+
 void LightMaterial::Initialize()
 {
   // TODO
@@ -80,7 +92,7 @@ void LightMaterial::Initialize()
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
   VkDescriptorBufferInfo lightBufferInfo = {};
-  lightBufferInfo.buffer = mLightBuffer->Handle();
+  lightBufferInfo.buffer = mLightBuffer->NativeBuffer();
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
 

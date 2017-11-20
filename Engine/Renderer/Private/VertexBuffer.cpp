@@ -53,7 +53,10 @@ void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
     region.size = sizeType * vertexCount;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    cmdBuffer->CopyBuffer(stagingBuffer->Handle(), mBuffer->Handle(), 1, &region);
+    cmdBuffer->CopyBuffer(stagingBuffer->NativeBuffer(), 
+                          mBuffer->NativeBuffer(), 
+                          1, 
+                          &region);
   cmdBuffer->End();
 
   VkCommandBuffer cmd = cmdBuffer->Handle();

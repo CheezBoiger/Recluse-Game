@@ -5,7 +5,7 @@
 #include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
 #include "Renderer/RenderObject.hpp"
-#include "Renderer/Mesh.hpp"
+#include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/Material.hpp"
 #include "Renderer/UserParams.hpp"
 
@@ -139,8 +139,8 @@ void Engine::Update(r64 dt)
     RenderCmd& cmd = mRenderCmdList[i];
     RenderObject* obj = cmd.target;
 
-    if (obj && obj->meshId) {
-      obj->meshId->Update();
+    if (obj && obj->meshDescriptorId) {
+      obj->meshDescriptorId->Update();
     }
   }
 }

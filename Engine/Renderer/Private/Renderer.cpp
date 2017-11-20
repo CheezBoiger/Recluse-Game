@@ -2,12 +2,11 @@
 #include "Renderer.hpp"
 #include "CmdList.hpp"
 #include "Vertex.hpp"
-#include "ScreenQuad.hpp"
-#include "Mesh.hpp"
+#include "RenderQuad.hpp"
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 #include "Material.hpp"
-#include "Mesh.hpp"
+#include "MeshDescriptor.hpp"
 #include "UserParams.hpp"
 #include "TextureType.hpp"
 #include "UIOverlay.hpp"
@@ -180,7 +179,7 @@ void Renderer::CleanUp()
     mUI = nullptr;
   }
 
-  mScreenQuad.CleanUp();
+  mRenderQuad.CleanUp();
   CleanUpHDR(true);
   CleanUpOffscreen(true);
   CleanUpFinalOutputs();
@@ -213,7 +212,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpHDR(true);
-  mScreenQuad.Initialize(mRhi);
+  mRenderQuad.Initialize(mRhi);
 
   mRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -234,14 +233,14 @@ b8 Renderer::Initialize(Window* window)
       VkDescriptorSet finalDescriptorSet = finalSet->Handle();    
 
       cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Layout(), 0, 1, &finalDescriptorSet, 0, nullptr);
-      VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
-      VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
+      VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
+      VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
       cmdBuffer.BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer.BindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
-      cmdBuffer.DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer.DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer.EndRenderPass();
   });
 
@@ -1198,7 +1197,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
   hdrBufferInfo.range = sizeof(mHDR.data);
-  hdrBufferInfo.buffer = mHDR.hdrBuffer->Handle();
+  hdrBufferInfo.buffer = mHDR.hdrBuffer->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
   pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
@@ -1343,21 +1342,30 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
           mLightMat->Set()->Handle()
         };
 
+        // Bind materials.
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
           3, descriptorSets, 0, nullptr);
+  
+        // Set up the render group.
+        for (size_t idx = 0; idx < renderObj->Size(); ++idx) {
+          MeshData* data = (*renderObj)[idx];
 
-        MeshData* data = renderObj->meshId->Data();
-        if (!data) continue;
+          if (!data) {
+            R_DEBUG(rWarning, "Null data in render object group!, skipping...\n");
+            continue;
+          }
 
-        VertexBuffer* vertexBuffer = data->VertexData();
-        IndexBuffer* indexBuffer = data->IndexData();
-        VkBuffer vb = vertexBuffer->Handle()->Handle();
-        VkBuffer ib = indexBuffer->Handle()->Handle();
-        VkDeviceSize offsets[] = { 0 };
-        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
-        cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-        cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
-        //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
+          VertexBuffer* vertexBuffer = data->VertexData();
+          IndexBuffer* indexBuffer = data->IndexData();
+          VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
+          VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
+
+          VkDeviceSize offsets[] = { 0 };
+          cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
+          //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
+        }
       }
     }
 
@@ -1418,13 +1426,13 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
     VkDescriptorSet dSet = hdrSet->Handle();
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
-    VkBuffer vertexBuffer = mScreenQuad.Quad()->Handle()->Handle();
-    VkBuffer indexBuffer = mScreenQuad.Indices()->Handle()->Handle();
+    VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
+    VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
     VkDeviceSize offsets[] = { 0 };
 
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    cmdBuffer->DrawIndexed(mScreenQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }

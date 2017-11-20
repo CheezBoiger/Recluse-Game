@@ -10,7 +10,7 @@
 #include "Core/Thread/Threading.hpp"
 
 #include "Resources.hpp"
-#include "ScreenQuad.hpp"
+#include "RenderQuad.hpp"
 
 namespace Recluse {
 
@@ -252,7 +252,7 @@ private:
     b8                            enabled;
   } mHDR;
 
-  ScreenQuad        mScreenQuad;
+  RenderQuad        mRenderQuad;
   UIOverlay*        mUI;
   b8                mRendering      : 1;
   b8                mInitialized    : 1;

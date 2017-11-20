@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "ScreenQuad.hpp"
+#include "RenderQuad.hpp"
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
 #include "Vertex.hpp"
@@ -14,7 +14,7 @@
 namespace Recluse {
 
 
-void ScreenQuad::Initialize(VulkanRHI* rhi)
+void RenderQuad::Initialize(VulkanRHI* rhi)
 {
   std::array<QuadVertex, 4> vertices;
   vertices[0] = { { -1.0f, -1.0f }, { 0.0f, 0.0f } };
@@ -31,7 +31,7 @@ void ScreenQuad::Initialize(VulkanRHI* rhi)
 }
 
 
-void ScreenQuad::CleanUp()
+void RenderQuad::CleanUp()
 {
   quad.CleanUp();
   index.CleanUp();

@@ -154,7 +154,7 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
     region.imageOffset = { 0, 0, 0 };
 
     // Send buffer image copy cmd.
-    buffer.CopyBufferToImage(stagingBuffer.Handle(), mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL , 1, &region);
+    buffer.CopyBufferToImage(stagingBuffer.NativeBuffer(), mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL , 1, &region);
 
     imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

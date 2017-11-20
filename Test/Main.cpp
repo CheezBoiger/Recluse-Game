@@ -6,7 +6,7 @@
 #include "Renderer/CmdList.hpp"
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/RenderObject.hpp"
-#include "Renderer/Mesh.hpp"
+#include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/MeshData.hpp"
 #include "Renderer/Material.hpp"
 #include "Renderer/TextureType.hpp"
@@ -112,7 +112,7 @@ int main(int c, char* argv[])
   albedo->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(1.0f, 60, 60);
+  auto sphereData = UVSphere::MeshInstance(5.0f, 60, 60);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 60, 60);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
@@ -123,9 +123,8 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
  
   Material cubeMaterial;
-  SkinnedMesh cubeMesh;
+  SkinnedMeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
-  cubeMesh.SetMeshData(cubeMeshDat);
   cubeMaterial.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
   cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
@@ -136,9 +135,8 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][3] = 1.0f;
 
   Material cubeMaterial2;
-  SkinnedMesh cubeMesh2;
+  SkinnedMeshDescriptor cubeMesh2;
   cubeMesh2.Initialize(&gRenderer());
-  cubeMesh2.SetMeshData(sphereMeshDat);
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
@@ -149,12 +147,12 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][3] = 1.0f;
 
   Material cubeMaterial3;
-  SkinnedMesh cubeMesh3;
+  SkinnedMeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
-  cubeMesh3.SetMeshData(cubeMeshDat);
   cubeMaterial3.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
+  cubeInfo3->hasAlbedo = true;
   cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
   cubeInfo3->normalMatrix[3][1] = 0.0f;
@@ -167,21 +165,24 @@ int main(int c, char* argv[])
   RenderObject* obj3 = gRenderer().CreateRenderObject();
 
   obj1->materialId = &cubeMaterial;
-  obj1->meshId = &cubeMesh;
+  obj1->meshDescriptorId = &cubeMesh;
   obj1->skinned = true;
 
   obj2->materialId = &cubeMaterial2;
-  obj2->meshId = &cubeMesh2;
+  obj2->meshDescriptorId = &cubeMesh2;
   obj2->skinned = true;
 
   obj3->materialId = &cubeMaterial3;
-  obj3->meshId = &cubeMesh3;
+  obj3->meshDescriptorId = &cubeMesh3;
   obj3->skinned = true;
 
   obj1->Initialize();
   obj2->Initialize();
   obj3->Initialize();
 
+  obj1->PushBack(cubeMeshDat);
+  obj3->PushBack(sphereMeshDat);
+  obj3->PushBack(cubeMeshDat);
   ///////////////////////////////////////////////////////////////////////////////////////
 
   /* Create the cmd list to send to the renderer. */

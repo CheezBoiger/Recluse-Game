@@ -12,7 +12,7 @@ namespace Recluse {
 class Cube {
 public:
 
-  static std::vector<SkinnedVertex> MeshInstance();
+  static std::vector<SkinnedVertex> MeshInstance(r32 scale = 1.0f);
   static std::vector<u32> IndicesInstance();
 };
 } // Recluse

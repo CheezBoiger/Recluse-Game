@@ -14,9 +14,9 @@ class VertexBuffer;
 class VulkanRHI;
 class IndexBuffer;
 
-class ScreenQuad {
+class RenderQuad {
 public:
-  ScreenQuad() { }
+  RenderQuad() { }
 
 
   void            Initialize(VulkanRHI* rhi);

@@ -25,7 +25,7 @@ public:
   VkResult          Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
   void              UnMap();
 
-  VkBuffer          Handle() const { return mBuffer; }
+  VkBuffer          NativeBuffer() const { return mBuffer; }
   VkDeviceMemory    Memory() const { return mMemory; }
   void*             Mapped() const { return mMapped; }
 

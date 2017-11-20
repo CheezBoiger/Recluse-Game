@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "Mesh.hpp"
+#include "MeshDescriptor.hpp"
 #include "MeshData.hpp"
 #include "Renderer.hpp"
 #include "RHI/VulkanRHI.hpp"
@@ -9,13 +9,12 @@
 
 namespace Recluse {
 
-Mesh::Mesh()
+MeshDescriptor::MeshDescriptor()
   : mVisible(true)
   , mRenderable(true)
   , mTransparent(false)
   , mTranslucent(false)
   , mStatic(true) 
-  , mMeshData(nullptr)
 {
   mObjectData.lodBias = 0.0f;
   mObjectData.hasAlbedo = false;
@@ -28,7 +27,15 @@ Mesh::Mesh()
 }
 
 
-void Mesh::Initialize(Renderer* renderer)
+MeshDescriptor::~MeshDescriptor()
+{
+  if (mObjectBuffer) {
+    R_DEBUG(rWarning, "Object buffer from mesh was not properly cleaned up!\n");
+  }
+}
+
+
+void MeshDescriptor::Initialize(Renderer* renderer)
 {
   mRenderer = renderer;
 
@@ -45,7 +52,7 @@ void Mesh::Initialize(Renderer* renderer)
 }
 
 
-void Mesh::Update()
+void MeshDescriptor::Update()
 {
   mObjectBuffer->Map();
     memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
@@ -53,7 +60,7 @@ void Mesh::Update()
 }
 
 
-void Mesh::CleanUp()
+void MeshDescriptor::CleanUp()
 {
 
   if (mObjectBuffer) {
@@ -63,15 +70,24 @@ void Mesh::CleanUp()
 }
 
 
-SkinnedMesh::SkinnedMesh()
+SkinnedMeshDescriptor::SkinnedMeshDescriptor()
   : mBonesBuffer(nullptr)
+  , MeshDescriptor()
 {
 }
 
 
-void SkinnedMesh::Initialize(Renderer* renderer)
+SkinnedMeshDescriptor::~SkinnedMeshDescriptor()
 {
-  Mesh::Initialize(renderer);
+  if (mBonesBuffer) {
+    R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
+  }
+}
+
+
+void SkinnedMeshDescriptor::Initialize(Renderer* renderer)
+{
+  MeshDescriptor::Initialize(renderer);
 
   VkBufferCreateInfo bonesCI = {};
   VkDeviceSize bonesSize = sizeof(BonesBuffer);
@@ -84,9 +100,9 @@ void SkinnedMesh::Initialize(Renderer* renderer)
 }
 
 
-void SkinnedMesh::Update()
+void SkinnedMeshDescriptor::Update()
 {
-  Mesh::Update();
+  MeshDescriptor::Update();
 
   mBonesBuffer->Map();
   memcpy(mBonesBuffer->Mapped(), &mBonesData, sizeof(BonesBuffer));
@@ -94,9 +110,9 @@ void SkinnedMesh::Update()
 }
 
 
-void SkinnedMesh::CleanUp()
+void SkinnedMeshDescriptor::CleanUp()
 {
-  Mesh::CleanUp();
+  MeshDescriptor::CleanUp();
 
   if (mBonesBuffer) {
     mRenderer->RHI()->FreeBuffer(mBonesBuffer);

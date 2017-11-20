@@ -59,6 +59,8 @@ class LightMaterial {
 public:
 
   LightMaterial();
+  ~LightMaterial();
+
   void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
   void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
 

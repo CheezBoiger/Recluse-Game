@@ -46,6 +46,7 @@ struct GlobalBuffer {
 class GlobalMaterial {
 public:
   GlobalMaterial();
+  ~GlobalMaterial();
 
   void              Update();
   void              Initialize();

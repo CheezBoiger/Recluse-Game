@@ -28,6 +28,18 @@ GlobalMaterial::GlobalMaterial()
 }
 
 
+GlobalMaterial::~GlobalMaterial()
+{
+  if (mGlobalBuffer) {
+    R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
+  }
+
+  if (mDescriptorSet) {
+    R_DEBUG(rWarning, "Global material was not properly cleaned up!\n");
+  }
+}
+
+
 void GlobalMaterial::Initialize()
 {
   if (!mRhi) {
@@ -55,7 +67,7 @@ void GlobalMaterial::Initialize()
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
   VkDescriptorBufferInfo globalBufferInfo = {};
-  globalBufferInfo.buffer = mGlobalBuffer->Handle();
+  globalBufferInfo.buffer = mGlobalBuffer->NativeBuffer();
   globalBufferInfo.offset = 0;
   globalBufferInfo.range = sizeof(GlobalBuffer);
 

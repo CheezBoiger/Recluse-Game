@@ -10,7 +10,8 @@
 
 #include "Resources.hpp"
 #include "RendererData.hpp"
-#include "Mesh.hpp"
+#include "MeshDescriptor.hpp"
+#include "MeshData.hpp"
 #include "Material.hpp"
 #include "TextureType.hpp"
 
@@ -19,9 +20,9 @@
 namespace Recluse {
 
 
-RenderObject::RenderObject(Mesh* mesh, Material* material)
+RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
   : materialId(material)
-  , meshId(mesh)
+  , meshDescriptorId(mesh)
   , skinned(false)
   , mDescriptorSet(nullptr)
 {
@@ -38,9 +39,9 @@ RenderObject::~RenderObject()
 
 void RenderObject::Initialize()
 {
-  if (!meshId || !materialId) {
-    Log(rError) << "A mesh AND material need to be set for this render object!\n"; 
-    R_ASSERT(false, "No material or mesh set for this render object!");
+  if (!meshDescriptorId || !materialId) {
+    Log(rError) << "A mesh descriptor AND material need to be set for this render object!\n"; 
+    R_ASSERT(false, "No material or mesh descriptor set for this render object!");
     return;
   } 
 
@@ -83,14 +84,14 @@ void RenderObject::UpdateDescriptorSet(b8 includeBufferUpdate)
   Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
 
   VkDescriptorBufferInfo objBufferInfo = {};
-  objBufferInfo.buffer = meshId->NativeObjectBuffer()->Handle();
+  objBufferInfo.buffer = meshDescriptorId->NativeObjectBuffer()->NativeBuffer();
   objBufferInfo.offset = 0;
   objBufferInfo.range = sizeof(ObjectBuffer);
 
   VkDescriptorBufferInfo boneBufferInfo = {};
   if (skinned) {
-    SkinnedMesh* sm = reinterpret_cast<SkinnedMesh*>(meshId);
-    boneBufferInfo.buffer = sm->NativeBoneBuffer()->Handle();
+    SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(meshDescriptorId);
+    boneBufferInfo.buffer = sm->NativeBoneBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
     boneBufferInfo.range = sizeof(BonesBuffer);
   }
@@ -236,7 +237,7 @@ void RenderObject::UpdateDescriptorSet(b8 includeBufferUpdate)
   }
 
   if (!mDescriptorSet) {
-    R_DEBUG(rError, "Cannot update uninitialized descriptor set in material! Material is either uninitialized or cleaned up!\n");
+    R_DEBUG(rError, "Cannot update uninitialized descriptor set in RenderObject! Descriptor is either null or cleaned up!\n");
     return;
   }
 
