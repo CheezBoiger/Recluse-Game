@@ -11,6 +11,11 @@ namespace Recluse {
 
 void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeType, void* data, Type type)
 {
+  if (mBuffer) {
+    R_DEBUG(rNotify, "Vertex buffer already initialized. Skipping...\n");
+    return;
+  }
+
   mRhi = rhi;
   mBuffer = rhi->CreateBuffer();
   mVertexCount = static_cast<u32>(vertexCount);
@@ -69,6 +74,7 @@ void VertexBuffer::CleanUp()
 {
   if (mBuffer) {
     mRhi->FreeBuffer(mBuffer);
+    mBuffer = nullptr;
   }
 }
 } // Recluse

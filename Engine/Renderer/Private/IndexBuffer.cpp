@@ -12,6 +12,11 @@ namespace Recluse {
 
 void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType, void* data)
 {
+  if (mBuffer) {
+    R_DEBUG(rNotify, "Index buffer already initialized. Skipping...\n");
+    return;
+  }
+
   mRhi = rhi;
   mBuffer = rhi->CreateBuffer();
   mIndexCount = static_cast<u32>(indexCount);
@@ -70,6 +75,7 @@ void IndexBuffer::CleanUp()
 {
   if (mBuffer) {
     mRhi->FreeBuffer(mBuffer);
+    mBuffer = nullptr;
   }
 }
 } // Recluse

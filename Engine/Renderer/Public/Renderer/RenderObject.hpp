@@ -24,8 +24,8 @@ public:
   void              CleanUp();
 
   // Updates the descriptor set of this object. Calling this will require 
-  // rebuilding of the commandbuffers in the renderer. If you have rebuilt
-  // 
+  // rebuilding of the commandbuffers in the renderer (calling Build() from 
+  // Renderer.)
   void              Update();
 
   DescriptorSet*    Set() { return mDescriptorSet; }

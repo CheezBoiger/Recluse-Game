@@ -254,8 +254,8 @@ private:
 
   ScreenQuad        mScreenQuad;
   UIOverlay*        mUI;
-  b8                mRendering;
-  b8                mInitialized;
+  b8                mRendering      : 1;
+  b8                mInitialized    : 1;
 };
 
 Renderer&           gRenderer();

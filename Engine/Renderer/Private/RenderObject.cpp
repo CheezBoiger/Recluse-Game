@@ -23,6 +23,7 @@ RenderObject::RenderObject(Mesh* mesh, Material* material)
   : materialId(material)
   , meshId(mesh)
   , skinned(false)
+  , mDescriptorSet(nullptr)
 {
 }
 
@@ -42,6 +43,12 @@ void RenderObject::Initialize()
     R_ASSERT(false, "No material or mesh set for this render object!");
     return;
   } 
+
+  if (mDescriptorSet) {
+    R_DEBUG(rNotify, "This RenderObject is already initialized. Skipping...\n");
+    return;
+  }
+  
   // Now create the set to update to.
   mDescriptorSet = mRhi->CreateDescriptorSet();
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr);
