@@ -233,7 +233,6 @@ int main(int c, char* argv[])
     cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
       Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
       Matrix4::Translate(Matrix4::Identity(), light0Pos);
-
     cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
     cubeInfo3->normalMatrix[3][0] = 0.0f;
     cubeInfo3->normalMatrix[3][1] = 0.0f;

@@ -1338,7 +1338,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
         VkDescriptorSet descriptorSets[] = {
           mGlobalMat->Set()->Handle(),
-          renderObj->Set()->Handle(),
+          renderObj->CurrSet()->Handle(),
           mLightMat->Set()->Handle()
         };
 
@@ -1589,13 +1589,12 @@ void Renderer::BuildAsync()
   // TODO(): building the command buffers asyncronously requires us
   // to allocate temp commandbuffers, build them, and then swap them with
   // the previous commandbuffers.
-  std::thread async([] () -> void {
+  std::thread async([&] () -> void {
     if (inProgress) { return; }
 
     inProgress = true;
+    u32 idx = mRhi->CurrentImageIndex();
 
-
-    
 
     inProgress = false;
   });

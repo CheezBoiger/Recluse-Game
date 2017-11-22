@@ -104,6 +104,8 @@ public:
   // This will build the swapchain command buffers.
   void                          RebuildCommandBuffers(u32 set);
 
+  size_t                        SwapchainImageCount() const { return mSwapchain.ImageCount(); }
+
   // Get the logical device.
   VkDevice                      Device() { return mLogicalDevice.Handle(); }
 
@@ -124,6 +126,8 @@ public:
 
   // Create a semaphore object.
   Semaphore*                    CreateVkSemaphore();
+
+  u32                           NumDescriptorSets() { return mCurrDescSets; }
 
   // Free a semaphore that was created by this RHI.
   void                          FreeVkSemaphore(Semaphore* semaphore);
@@ -225,5 +229,6 @@ private:
   } mSwapchainInfo;
 
   SwapchainCmdBufferBuildFunc   mSwapchainCmdBufferBuild;
+  u32                           mCurrDescSets;
 };
 } // Recluse

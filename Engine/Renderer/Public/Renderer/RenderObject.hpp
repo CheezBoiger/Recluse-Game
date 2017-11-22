@@ -3,6 +3,7 @@
 #include "Core/Types.hpp"
 #include "Core/Utility/Vector.hpp"
 
+
 namespace Recluse {
 
 
@@ -36,13 +37,12 @@ public:
   // Clean up the descriptor for this render object.
   void                    CleanUp();
 
-  // Updates the descriptor set of this object. Calling this will require 
-  // rebuilding of the commandbuffers in the renderer (calling Build() from 
-  // Renderer.)
+  // Updates the descriptor set that is not the current index of this
+  // render object. 
   void                    Update();
 
-  // The descriptor set initialized in this renderobject.
-  DescriptorSet*          Set() { return mDescriptorSet; }
+  // The currently used descriptor set.
+  DescriptorSet*          CurrSet() { return mDescriptorSets[mCurrIdx]; }
 
   // The Mesh descriptor, used to define the renderobject in 3D space.
   MeshDescriptor*         meshDescriptorId;
@@ -55,6 +55,15 @@ public:
 
   size_t                  Size() const { return mMeshGroup.size(); }
 
+  // The number of descriptor sets that buffer this render object. There are normally
+  // 2, since these are used to double buffer when one of the indices updates.
+  size_t                  NumOfDescriptorSets() const { return 2; }
+
+  // Current index of this render object's descriptor sets.
+  size_t                  CurrIdx() const { return mCurrIdx; }
+
+  void                    SwapDescriptorSet() { mCurrIdx = mCurrIdx == 0 ? 1 : 0; }
+
   void                    Resize(size_t newSize) { mMeshGroup.resize(newSize); }
   void                    Add(size_t idx, MeshData* data) { mMeshGroup[idx] = data; }
   void                    PushBack(MeshData* data) { mMeshGroup.push_back(data); }
@@ -63,14 +72,14 @@ public:
   MeshData*               operator[](size_t idx) { return Get(idx); }
   
 private:
-  void                    UpdateDescriptorSet(b8 includeBufferUpdate);
+  void                    UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate);
 
   // The mesh group to render with the following description and material ids.
   std::vector<MeshData*>  mMeshGroup;
 
   // The actual descriptor set used.
-  DescriptorSet*          mDescriptorSet;
-
+  DescriptorSet*          mDescriptorSets     [2];
+  size_t                  mCurrIdx;
   VulkanRHI*              mRhi;
   friend class Renderer;
 };

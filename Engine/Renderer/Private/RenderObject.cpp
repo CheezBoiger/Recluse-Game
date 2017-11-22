@@ -17,6 +17,7 @@
 
 #include <array>
 
+
 namespace Recluse {
 
 
@@ -24,14 +25,16 @@ RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
   : materialId(material)
   , meshDescriptorId(mesh)
   , skinned(false)
-  , mDescriptorSet(nullptr)
+  , mCurrIdx(0)
 {
+  mDescriptorSets[0] = nullptr;
+  mDescriptorSets[1] = nullptr;
 }
 
 
 RenderObject::~RenderObject()
 {
-  if (mDescriptorSet) {
+  if (mDescriptorSets[0] || mDescriptorSets[1]) {
     Log(rError) << "Descriptor Set was not cleaned up before destruction of this object!\n";
   }
 }
@@ -45,35 +48,45 @@ void RenderObject::Initialize()
     return;
   } 
 
-  if (mDescriptorSet) {
+  if (mDescriptorSets[0] || mDescriptorSets[1]) {
     R_DEBUG(rNotify, "This RenderObject is already initialized. Skipping...\n");
     return;
   }
   
   // Now create the set to update to.
-  mDescriptorSet = mRhi->CreateDescriptorSet();
+  mDescriptorSets[0] = mRhi->CreateDescriptorSet();
+  mDescriptorSets[1] = mRhi->CreateDescriptorSet();
+
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr);
-  mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
-  UpdateDescriptorSet(true);
+  mDescriptorSets[0]->Allocate(mRhi->DescriptorPool(), pbrLayout);
+  mDescriptorSets[1]->Allocate(mRhi->DescriptorPool(), pbrLayout);
+
+  UpdateDescriptorSet(0, true);
+  UpdateDescriptorSet(1, true);
 }
 
 
 void RenderObject::CleanUp()
 {
-  if (mDescriptorSet) {
-    mRhi->FreeDescriptorSet(mDescriptorSet);
-    mDescriptorSet = nullptr;
+  if (mDescriptorSets[0]) {
+    mRhi->FreeDescriptorSet(mDescriptorSets[0]);
+    mDescriptorSets[0] = nullptr;
+  }
+
+  if (mDescriptorSets[1]) {
+    mRhi->FreeDescriptorSet(mDescriptorSets[1]);
+    mDescriptorSets[1] = nullptr;
   }
 }
 
 
 void RenderObject::Update()
 {
-  UpdateDescriptorSet(false);
+  UpdateDescriptorSet(((mCurrIdx == 0) ? 1 : 0), false);
 }
 
 
-void RenderObject::UpdateDescriptorSet(b8 includeBufferUpdate)
+void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 {
   std::array<VkWriteDescriptorSet, 8> writeSets;
   size_t count = 0;
@@ -236,11 +249,11 @@ void RenderObject::UpdateDescriptorSet(b8 includeBufferUpdate)
     }
   }
 
-  if (!mDescriptorSet) {
+  if (!mDescriptorSets[idx]) {
     R_DEBUG(rError, "Cannot update uninitialized descriptor set in RenderObject! Descriptor is either null or cleaned up!\n");
     return;
   }
 
-  mDescriptorSet->Update(static_cast<u32>(count), writeSets.data());
+  mDescriptorSets[idx]->Update(static_cast<u32>(count), writeSets.data());
 }
 } // Recluse

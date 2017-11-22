@@ -48,6 +48,7 @@ VulkanRHI::VulkanRHI()
   , mComputeCmdPool(VK_NULL_HANDLE)
   , mDescriptorPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
+  , mCurrDescSets(0)
 {
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
@@ -175,6 +176,7 @@ void VulkanRHI::Initialize(HWND windowHandle)
   VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
   mPhysicalDeviceProperties = props;
 
+  // Descriptor pool maxes.
   BuildDescriptorPool(UINT16_MAX, UINT16_MAX);
 
   CreateDepthAttachment();
@@ -651,7 +653,7 @@ DescriptorSet* VulkanRHI::CreateDescriptorSet()
 {
   DescriptorSet* dset = new DescriptorSet();
   dset->SetOwner(mLogicalDevice.Handle());
-  
+  mCurrDescSets += 1;
   return dset;
 }
 
@@ -663,6 +665,7 @@ void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
   dset->Free();
   
   delete dset;
+  mCurrDescSets -= 1;
 }
 
 

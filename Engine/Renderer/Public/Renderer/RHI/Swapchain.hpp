@@ -35,7 +35,7 @@ public:
   VkSwapchainKHR                Handle() { return mSwapchain; }
 
 
-  size_t                        ImageCount() { return SwapchainImages.size(); }
+  size_t                        ImageCount() const { return SwapchainImages.size(); }
 
   SwapchainImage&               Get(const size_t index) { return SwapchainImages[index]; }
   SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }

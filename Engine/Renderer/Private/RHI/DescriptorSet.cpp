@@ -35,8 +35,19 @@ void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLa
   allocInfo.descriptorSetCount = 1;
   allocInfo.pSetLayouts = &layoutRef;
 
-  if (vkAllocateDescriptorSets(mOwner, &allocInfo, &mDescriptorSet) != VK_SUCCESS) {
+  VkResult result = vkAllocateDescriptorSets(mOwner, &allocInfo, &mDescriptorSet);
+  if (result != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to allocate descriptor set!\n");
+    switch (result) {
+      case VK_ERROR_FRAGMENTED_POOL:
+        Log(rError) << "Descriptor pool is fragmented! Need to create your own new descriptor pool!\n"; break;
+      case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+        Log(rError) << "Can not allocate descriptor set. GPU out of memory!\n"; break;
+      case VK_ERROR_OUT_OF_HOST_MEMORY:
+        Log(rError) << "Can not allocate descriptor set. CPU is out of memory!\n"; break;
+      default:
+        Log(rError) << "Unknown descriptor set allocation failure!\n"; break;
+    }
   }
 }
 
