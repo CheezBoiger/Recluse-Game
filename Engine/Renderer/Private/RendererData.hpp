@@ -17,6 +17,7 @@ extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
 
 extern std::string PBRPipelineStr;
+extern std::string PBRStaticPipelineStr;
 extern std::string PBRLayoutStr;
 extern std::string PBRColorAttachStr;
 extern std::string PBRNormalAttachStr;

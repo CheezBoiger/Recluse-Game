@@ -12,11 +12,13 @@ u32 Tester::TestsFailed = 0;
 u32 Tester::TestsPassed = 0;
 
 std::vector<Tester::TestFunc> test = {
-  Test::BasicVectorMath 
+  Test::BasicVectorMath,
+  Test::BasicMatrixMath
 };
 
 int main()
 {
+  Log::DisplayToConsole(true);
   Log() << "Initial testing of Recluse Engine Software Libraries.\n"
               << "Initializing testing data cache...\n";
 

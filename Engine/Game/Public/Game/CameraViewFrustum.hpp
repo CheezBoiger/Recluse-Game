@@ -8,6 +8,7 @@ namespace Recluse {
 
 
 class Camera;
+class AABB;
 
 class CCamViewFrustum {
 public:
@@ -26,6 +27,9 @@ public:
   
   // TODO(): Update() function to calculate camera view frustum
   // which will be used to send to global material.
+  void        Update();
+
+  b8          Intersect(AABB* aabb);
   
 };
 } // Recluse

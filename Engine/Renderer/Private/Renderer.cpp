@@ -717,7 +717,11 @@ void Renderer::SetUpGraphicsPipelines()
 
   // PbrForward Pipeline Creation.
   GraphicsPipeline* pbrForwardPipeline = mRhi->CreateGraphicsPipeline();
-  FrameBuffer* pbrFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
+  GraphicsPipeline* pbrStaticPipeline = mRhi->CreateGraphicsPipeline();
+
+  gResources().RegisterGraphicsPipeline(PBRPipelineStr, pbrForwardPipeline);
+  gResources().RegisterGraphicsPipeline(PBRStaticPipelineStr, pbrStaticPipeline);
+  FrameBuffer* pbrFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);  
 
   VkGraphicsPipelineCreateInfo graphicsPipeline = {};
   graphicsPipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -783,9 +787,6 @@ void Renderer::SetUpGraphicsPipelines()
   
   // Initialize pbr forward pipeline.
   pbrForwardPipeline->Initialize(graphicsPipeline, pipelineLayout);
-  
-  gResources().RegisterGraphicsPipeline(PBRPipelineStr, pbrForwardPipeline);
-
   mRhi->FreeShader(mVertPBR);
   mRhi->FreeShader(mFragPBR);  
 
@@ -935,6 +936,9 @@ void Renderer::CleanUpGraphicsPipelines()
 {
   GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline(PBRPipelineStr);
   mRhi->FreeGraphicsPipeline(pbrPipeline);
+
+  GraphicsPipeline* pbrStaticPipeline = gResources().UnregisterGraphicsPipeline(PBRStaticPipelineStr);
+  mRhi->FreeGraphicsPipeline(pbrStaticPipeline);
 
   GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline(FinalPipelineStr);
   mRhi->FreeGraphicsPipeline(quadPipeline);

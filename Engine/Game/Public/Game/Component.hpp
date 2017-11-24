@@ -6,32 +6,44 @@
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Quaternion.hpp"
 
+#include <algorithm>
+
 namespace Recluse {
 
+typedef u64 component_t;
+
+#define RCOMPONENT(cls) friend class GameObject; \
+    static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
+    static const tchar* GetName() { return #cls; } 
 
 class GameObject;
 
 
 class Component : public ISerializable {
+  RCOMPONENT(Component)
 public:
-  Component() 
-    : mGameObjectOwner(nullptr) { }
   virtual ~Component() { }
 
   GameObject*   GetOwner() { return mGameObjectOwner; }
-
-  virtual void  Update() { }
+  void          SetOwner(GameObject* newOwner) { mGameObjectOwner = newOwner; }
 
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
 
 protected:
+  Component()
+    : mGameObjectOwner(nullptr) { }
+
   GameObject*   mGameObjectOwner;
 };
 
 
 class Transform : public Component {
+  RCOMPONENT(Transform)
 public:
+
+  Transform() { }
+
   // Front axis of the object in world space.
   Vector3       Front;
 
@@ -59,5 +71,8 @@ public:
 
   // Rotation of the transform in world space.
   Quaternion    Rotation;
+
+  void          Serialize(IArchive& archive) override { }
+  void          Deserialize(IArchive& archive) override { }
 };
 } // Recluse

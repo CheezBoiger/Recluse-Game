@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 
+namespace Recluse {
 
 typedef int8_t            b8;
 typedef uint8_t           u8;
@@ -20,5 +21,7 @@ typedef float             r32;
 typedef double            r64;
 
 typedef char              tchar;
+
+} // Recluse
 
 #define RTEXT(s)          u8##s

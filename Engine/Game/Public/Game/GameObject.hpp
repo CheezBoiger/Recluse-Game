@@ -7,17 +7,17 @@
 #include "Core/Utility/Vector.hpp"
 
 #include "Component.hpp"
+#include "Scripts/Behavior.hpp"
 
 #include <unordered_map>
 
 namespace Recluse {
 
-class CBehavior;
 
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
 // physics, audio, animation, etc.
-class GameObject : public ISerializable {
+class GameObject : public ISerializable, public IBehavior {
 public:
   GameObject();
   ~GameObject();
@@ -28,16 +28,24 @@ public:
   GameObject& operator=(GameObject&&);
 
   // Get a component from this game object. Components are usually retrieved via a 
-  // hashed value, which matches their uid.
+  // hashed value, which matches their uuid. If a component does not exist in this
+  // game object, it will return a nullptr.
   template<typename Obj>
-  Obj                                 GetComponent() {
-    static_assert(std::is_pointer<Obj>::value, "Must be a pointer type!"); 
+  Obj*                                GetComponent() {
+    // TODO(): Need to get the component ref
     return nullptr; 
   }
 
   // Add a component to this game object.
-  template<typename Obj>
+  template<class T = Component>
   void                                AddComponent() {
+    component_t uuid = T::UUID();
+    if (uuid == Transform::UUID()) {
+      Log(rNotify) << Transform::GetName() << " already exists in game object. Skipping...\n";
+      return;
+    }
+
+    // TODO(): Still need to add components.
   }
 
   void                                Serialize(IArchive& archive) override;

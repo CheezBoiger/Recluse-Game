@@ -24,6 +24,7 @@ protected:
 };
 
 
+namespace Recluse {
 namespace {
 
 
@@ -63,7 +64,7 @@ VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkImageLayo
 }
 
 
-VkRenderPassCreateInfo CreateRenderPassInfo(u32 attachmentCount, u32 dependencyCount, 
+VkRenderPassCreateInfo CreateRenderPassInfo(Recluse::u32 attachmentCount, Recluse::u32 dependencyCount, 
   VkAttachmentDescription* pAttachments, VkSubpassDependency* pDependencies, 
   u32 subpassCount, VkSubpassDescription* pSubpasses, VkRenderPassCreateFlags flags = 0, 
   void* pNext = nullptr)
@@ -81,3 +82,4 @@ VkRenderPassCreateInfo CreateRenderPassInfo(u32 attachmentCount, u32 dependencyC
   return rp;
 }
 }
+} // Recluse

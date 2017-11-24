@@ -7,6 +7,12 @@
 
 #include "Core/Utility/Vector.hpp"
 
+
+#define TASSERT_EQUAL(a, b) if (a != b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+}
+
 namespace Recluse {
 
 struct Tester {

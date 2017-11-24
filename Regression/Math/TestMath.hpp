@@ -3,6 +3,8 @@
 #include "Core/Logging/Log.hpp"
 
 
+using namespace Recluse;
+
 namespace Test {
 
 

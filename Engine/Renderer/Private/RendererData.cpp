@@ -14,6 +14,7 @@ std::string ShadowMapVertFileStr      = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr      = "ShadowMapping.frag.spv";
 
 std::string PBRPipelineStr            = "PBRPipeline";
+std::string PBRStaticPipelineStr      = "PBRStaticPipeline";
 std::string PBRLayoutStr              = "PBRLayout";
 std::string PBRColorAttachStr         = "PBRColor";
 std::string PBRNormalAttachStr        = "PBRNormal";

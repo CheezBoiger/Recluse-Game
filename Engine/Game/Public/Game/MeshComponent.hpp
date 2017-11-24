@@ -4,25 +4,35 @@
 #include "Core/Types.hpp"
 #include "Component.hpp"
 
-#include "Renderer/Mesh.hpp"
 #include "Renderer/Material.hpp"
-
 
 namespace Recluse {
 
 
 class RenderObject;
+class MeshDescriptor;
+class Renderer;
 class Material;
 class Mesh;
 
 
 class MeshComponent : public Component {
 public:
-  MeshComponent() { }
-  Material      m_Material;
-  Mesh          m_Mesh;
+  MeshComponent() 
+    : mRenderer(nullptr)
+    , mMaterial(nullptr)
+    , mRenderObj(nullptr)
+    , mMeshDescriptor(nullptr) { }
+
+  void            Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const Material* mat);
+  void            CleanUp();
+
+  RenderObject*   RenderObj() { return mRenderObj; }
 
 private:
-  RenderObject* mRenderObj;
+  Renderer*       mRenderer;
+  Material*       mMaterial;
+  RenderObject*   mRenderObj;
+  MeshDescriptor* mMeshDescriptor;
 };
 } // Recluse
