@@ -9,6 +9,8 @@ namespace Test {
 
 b8 BasicMatrixMath()
 {
+  Log() << "\n\nMatrix Math\n\n";
+
   Matrix4 mat(
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f,
@@ -20,7 +22,6 @@ b8 BasicMatrixMath()
 
   Log(rNotify) << "\n" << mat << "\n";
   Log() << "Identity: \n" << identity << "\n"; 
-
   TASSERT_E(mat, identity);
 
   return true;

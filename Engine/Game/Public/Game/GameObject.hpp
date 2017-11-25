@@ -5,6 +5,7 @@
 #include "Core/Serialize.hpp"
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Vector.hpp"
+#include "Core/Memory/SmartPointer.hpp"
 
 #include "Component.hpp"
 #include "Scripts/Behavior.hpp"
@@ -32,7 +33,12 @@ public:
   // game object, it will return a nullptr.
   template<typename Obj>
   Obj*                                GetComponent() {
-    // TODO(): Need to get the component ref
+    component_t uuid = Obj::UUID();
+    auto it = mComponents.find(uuid);
+    if (it != mComponents.end()) {
+      return static_cast<Obj*>(mComponents[uuid].Ptr());
+    }
+    
     return nullptr; 
   }
 
@@ -45,7 +51,14 @@ public:
       return;
     }
 
-    // TODO(): Still need to add components.
+    auto it = mComponents.find(uuid);
+    if (it != mComponents.end()) {
+      Log(rNotify) << T::GetName() << " already exists in game object. Skipping...\n";
+      return; 
+    }
+
+    mComponents[uuid] = T();
+    mComponents[uuid]->SetOwner(this);
   }
 
   void                                Serialize(IArchive& archive) override;
@@ -64,7 +77,8 @@ private:
   Transform                           mTransform;
 
   // The components associated with this game object.
-  std::unordered_map<u64, Component>  mComponents;
+  std::unordered_map<component_t, 
+    APtr<Component> >                 mComponents;
 
   // List of associated children.
   std::vector<GameObject*>            mChildren;

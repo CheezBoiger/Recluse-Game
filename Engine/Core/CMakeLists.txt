@@ -60,6 +60,10 @@ set(RECLUSE_CORE_FILES
   
   ${RECLUSE_CORE_PRIVATE_DIR}/Thread/CoreThread.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Thread/Threading.cpp
+
+  ${RECLUSE_CORE_PUB_DIR}/Memory/SmartPointer.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Memory/Allocator.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Memory/StackAllocator.hpp
 )
 
 

@@ -17,6 +17,7 @@ class Mesh;
 
 
 class MeshComponent : public Component {
+  RCOMPONENT(MeshComponent)
 public:
   MeshComponent() 
     : mRenderer(nullptr)
