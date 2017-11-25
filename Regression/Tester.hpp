@@ -8,10 +8,36 @@
 #include "Core/Utility/Vector.hpp"
 
 
-#define TASSERT_EQUAL(a, b) if (a != b) { Log(rError) << "Assertion Failed.\n"; \
+#define TASSERT_E(a, b) if (a != b) { Log(rError) << "Assertion Failed.\n"; \
   Log() << "issue with var : " << #a << " and " << #b << "\n"; \
   return false; \
 }
+
+#define TASSERT_L(a, b) if (a >= b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+}
+
+#define TASSERT_LE(a, b) if (a > b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+} 
+
+#define TASSERT_GE(a, b) if (a < b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+}
+
+#define TASSERT_G(a, b) if (a <= b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+} 
+
+#define TASSERT_NE(a, b) if (a == b) { Log(rError) << "Assertion Failed.\n"; \
+  Log() << "issue with var : " << #a << " and " << #b << "\n"; \
+  return false; \
+} 
+
 
 namespace Recluse {
 

@@ -19,6 +19,7 @@ struct Vector2 {
 
   Vector2 operator+(const Vector2& other) const;
   Vector2 operator-(const Vector2& other) const;
+  Vector2 operator-() const;
 
   Vector2 operator*(const r32 scaler) const;
   Vector2 operator/(const r32 scaler) const;
@@ -31,6 +32,10 @@ struct Vector2 {
 
   r32     Magnitude() const;
   r32     Dot(const Vector2& other) const;
+  r32&    operator [] (const size_t idx) { return (&x)[ idx ]; }
+
+  b8      operator==(const Vector2& other) const; 
+  b8      operator!=(const Vector2& other) const;
 };
 
 

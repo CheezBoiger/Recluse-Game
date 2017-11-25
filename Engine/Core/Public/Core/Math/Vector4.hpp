@@ -23,6 +23,7 @@ struct Vector4 {
 
   Vector4 operator+(const Vector4& other) const;
   Vector4 operator-(const Vector4& other) const;
+  Vector4 operator-() const;
 
   Vector4 operator*(const r32 scaler) const;
   Vector4 operator/(const r32 scaler) const;
@@ -33,8 +34,13 @@ struct Vector4 {
   void    operator*=(const r32 scaler);
   void    operator/=(const r32 scaler);
 
+  r32&    operator[](size_t idx) { return (&x)[ idx ]; }
+
   r32     Magnitude() const;
   r32     Dot(const Vector4& other) const;
+
+  b8      operator==(const Vector4& other) const;
+  b8      operator!=(const Vector4& other) const;
 };
 
 

@@ -73,6 +73,14 @@ Vector3 Vector3::operator-(const Vector3& other) const
 }
 
 
+Vector3 Vector3::operator-() const
+{
+  return Vector3(
+    -x, -y, -z
+  );
+}
+
+
 Vector3 Vector3::operator*(const r32 scaler) const
 {
   return Vector3(
@@ -85,10 +93,11 @@ Vector3 Vector3::operator*(const r32 scaler) const
 
 Vector3 Vector3::operator/(const r32 scaler) const
 {
+  r32 scale = 1.0f / scaler;
   return Vector3(
-    x / scaler,
-    y / scaler,
-    z / scaler
+    x * scale,
+    y * scale,
+    z * scale
   );
 }
 
@@ -119,9 +128,30 @@ void Vector3::operator*=(const r32 scaler)
 
 void Vector3::operator/=(const r32 scaler)
 {
-  x /= scaler;
-  y /= scaler;
-  z /= scaler;
+  r32 scale = 1.0f / scaler;
+  x *= scale;
+  y *= scale;
+  z *= scale;
+}
+
+
+b8 Vector3::operator==(const Vector3& other) const
+{
+  if (x == other.x &&
+      y == other.y &&
+      z == other.z
+     )
+  {
+    return true;
+  }
+
+  return false;
+}
+
+
+b8 Vector3::operator!=(const Vector3& other) const
+{
+  return !(*this == other);
 }
 
 

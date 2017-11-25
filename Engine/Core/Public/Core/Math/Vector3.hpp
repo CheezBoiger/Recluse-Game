@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Core/Types.hpp"
+#include "Core/Math/Vector2.hpp"
 
 namespace Recluse {
 
@@ -20,6 +21,9 @@ struct Vector3 {
   Vector3(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f)
     : x(x), y(y), z(z) { }
 
+  Vector3(const Vector2& other, r32 z = 0.0f)
+    : x(other.x), y(other.y), z(z) { }
+
   static Vector3  Lerp(const Vector3& a, const Vector3& b, const r32 t);
   
   Vector3         Normalize() const;
@@ -28,6 +32,7 @@ struct Vector3 {
 
   Vector3         operator+(const Vector3& other) const;
   Vector3         operator-(const Vector3& other) const;
+  Vector3         operator-() const;
 
   Vector3         operator*(const r32 scaler) const;
   Vector3         operator/(const r32 scaler) const;
@@ -39,6 +44,10 @@ struct Vector3 {
   void            operator/=(const r32 scaler);
 
   r32             Magnitude() const;
+  r32&            operator [] (const size_t idx) { return (&x)[ idx ]; }
+
+  b8              operator==(const Vector3& other) const;
+  b8              operator!=(const Vector3& other) const;
 };
 
 // Overload to let Log take in vector3 values.

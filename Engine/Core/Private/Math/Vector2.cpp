@@ -30,6 +30,14 @@ Vector2 Vector2::operator-(const Vector2& other) const
 }
 
 
+Vector2 Vector2::operator-() const
+{
+  return Vector2(
+    -x, -y
+  );
+}
+
+
 Vector2 Vector2::operator*(const r32 scaler) const
 {
   return Vector2(
@@ -41,9 +49,10 @@ Vector2 Vector2::operator*(const r32 scaler) const
 
 Vector2 Vector2::operator/(const r32 scaler) const
 {
+  r32 scale = 1.0f / scaler;
   return Vector2(
-    x - scaler,
-    y - scaler  
+    x * scale,
+    y * scale  
   );
 }
 
@@ -71,8 +80,9 @@ void Vector2::operator*=(const r32 scaler)
 
 void Vector2::operator/=(const r32 scaler)
 {
-  x /= scaler;
-  y /= scaler;
+  r32 scale = 1.0f / scaler;
+  x *= scale;
+  y *= scale;
 }
 
 
@@ -85,6 +95,25 @@ r32 Vector2::Magnitude() const
 r32 Vector2::Dot(const Vector2& other) const
 {
   return ((x*other.x) + (y*other.y));
+}
+
+
+b8 Vector2::operator==(const Vector2& other) const
+{
+  if (x == other.x &&
+      y == other.y 
+     )
+  {
+    return true;
+  }
+  
+  return false;
+}
+
+
+b8 Vector2::operator!=(const Vector2& other) const
+{
+  return !(*this == other);
 }
 
 

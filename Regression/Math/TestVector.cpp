@@ -42,6 +42,9 @@ b8 BasicVectorMath()
     return false;
   }
 
+
+  Vector3 c4 = a3 - b3;
+
   return true;
 }
 } // Test

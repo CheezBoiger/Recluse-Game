@@ -23,6 +23,14 @@ Vector4 Vector4::operator-(const Vector4& other) const
 }
 
 
+Vector4 Vector4::operator-() const 
+{
+  return Vector4(
+    -x, -y, -z, -w
+  );
+}
+
+
 Vector4 Vector4::operator*(const r32 scaler) const
 {
   return Vector4(
@@ -33,8 +41,9 @@ Vector4 Vector4::operator*(const r32 scaler) const
 
 Vector4 Vector4::operator/(const r32 scaler) const
 {
+  r32 scale = 1.0f / scaler;
   return Vector4(
-    x / scaler, y / scaler, z / scaler, w / scaler
+    x * scale, y * scale, z * scale, w * scale
   );
 }
 
@@ -68,10 +77,11 @@ void Vector4::operator*=(const r32 scaler)
 
 void Vector4::operator/=(const r32 scaler)
 {
-  x /= scaler;
-  y /= scaler;
-  z /= scaler;
-  w /= scaler;
+  r32 scale = 1.0f / scaler;
+  x *= scale;
+  y *= scale;
+  z *= scale;
+  w *= scale;
 }
 
 
@@ -91,6 +101,27 @@ Vector4 Vector4::Normalize() const
 {
   r32 magnitude = Magnitude();
   return (*this) / magnitude;
+}
+
+
+b8 Vector4::operator==(const Vector4& other) const
+{
+  if (x == other.x && 
+      y == other.y && 
+      z == other.z && 
+      w == other.w
+     ) 
+  {
+    return true;
+  }
+
+  return false;
+}
+
+
+b8 Vector4::operator!=(const Vector4& other) const
+{
+  return !(*this == other);
 }
 
 
