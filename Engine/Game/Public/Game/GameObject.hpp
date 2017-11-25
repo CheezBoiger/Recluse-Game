@@ -33,6 +33,7 @@ public:
   // game object, it will return a nullptr.
   template<typename Obj>
   Obj*                                GetComponent() {
+    static_assert(std::is_base_of<Component, Obj>::value, "Type does not inherit Component.");
     component_t uuid = Obj::UUID();
     auto it = mComponents.find(uuid);
     if (it != mComponents.end()) {
@@ -45,6 +46,8 @@ public:
   // Add a component to this game object.
   template<class T = Component>
   void                                AddComponent() {
+    static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
+
     component_t uuid = T::UUID();
     if (uuid == Transform::UUID()) {
       Log(rNotify) << Transform::GetName() << " already exists in game object. Skipping...\n";
