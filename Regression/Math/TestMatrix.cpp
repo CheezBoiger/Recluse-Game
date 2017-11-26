@@ -23,6 +23,7 @@ b8 BasicMatrixMath()
   Log(rNotify) << "\n" << mat << "\n";
   Log() << "Identity: \n" << identity << "\n"; 
   TASSERT_E(mat, identity);
+
   return true;
 }
 } // Test

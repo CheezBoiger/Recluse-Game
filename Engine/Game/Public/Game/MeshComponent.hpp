@@ -25,6 +25,44 @@ public:
     , mRenderObj(nullptr)
     , mMeshDescriptor(nullptr) { }
 
+  MeshComponent(const MeshComponent& m)
+    : mRenderer(m.mRenderer)
+    , mMaterial(m.mMaterial)
+    , mMeshDescriptor(m.mMeshDescriptor)
+    , mRenderObj(m.mRenderObj) { }
+
+  MeshComponent(MeshComponent&& m)
+    : mRenderer(m.mRenderer)
+    , mMaterial(m.mMaterial)
+    , mMeshDescriptor(m.mMeshDescriptor)
+    , mRenderObj(m.mRenderObj)
+  {
+    m.mMaterial = nullptr;
+    m.mMeshDescriptor = nullptr;
+    m.mRenderer = nullptr;
+    m.mRenderObj = nullptr;
+  }
+
+  MeshComponent& operator=(MeshComponent&& obj) {
+    mRenderer = obj.mRenderer;
+    mRenderObj = obj.mRenderObj;
+    mMaterial = obj.mMaterial;
+    mMeshDescriptor = obj.mMeshDescriptor;
+
+    obj.mMeshDescriptor = nullptr;
+    obj.mMaterial = nullptr;
+    obj.mRenderObj = nullptr;
+    obj.mRenderer = nullptr;
+    return (*this);
+  }
+
+  MeshComponent& operator=(const MeshComponent& obj) {
+    mRenderer = obj.mRenderer;
+    mRenderObj = obj.mRenderObj;
+    mMaterial = obj.mMaterial;
+    mMeshDescriptor = obj.mMeshDescriptor;
+  }
+
   void            Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const Material* mat);
   void            CleanUp();
 

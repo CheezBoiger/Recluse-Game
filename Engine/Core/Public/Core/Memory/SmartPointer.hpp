@@ -17,8 +17,9 @@ public:
   APtr()
     : mObject(nullptr) { }
 
-  APtr(T&& obj) 
-    : mObject(new T(obj)) { }
+  template<typename I>
+  APtr(I&& obj) 
+    : mObject(new I(std::move(obj))) { }
 
   APtr(APtr&& ptr)
     : mObject(ptr.mObject)
@@ -41,11 +42,12 @@ public:
     return (*this);
   }
   
-  APtr&   operator=(T&& obj) 
+  template<typename I>
+  APtr&   operator=(I&& obj) 
   {
     CleanUp();
 
-    mObject = new T(obj);
+    mObject = new I(std::move(obj));
     return (*this);
   }
 

@@ -60,7 +60,7 @@ public:
       return; 
     }
 
-    mComponents[uuid] = T();
+    mComponents[uuid] = std::move(T());
     mComponents[uuid]->SetOwner(this);
   }
 
