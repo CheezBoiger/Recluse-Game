@@ -2,11 +2,27 @@
 #include "GameObject.hpp"
 #include "Core/Exception.hpp"
 
+#include "GameObjectManager.hpp"
+
 namespace Recluse {
 
 
-GameObject::GameObject()
+GameObject* GameObject::Instantiate()
+{
+  return gGameObjectManager().Allocate();
+}
+
+
+void GameObject::DestroyAll()
+{
+  gGameObjectManager().Clear();
+}
+
+
+GameObject::GameObject(game_uuid_t id)
   : mParent(nullptr)
+  , mId(id)
+  , mName("Default Name")
 {
 }
 
@@ -16,24 +32,36 @@ GameObject::~GameObject()
 }
 
 
-GameObject::GameObject(const GameObject& obj)
-{
-}
-
-
 GameObject::GameObject(GameObject&& obj)
+  : mId(obj.mId)
+  , mParent(obj.mParent)
+  , mTransform(obj.mTransform)
+  , mComponents(std::move(obj.mComponents))
+  , mChildren(std::move(obj.mChildren))
+  , mName(std::move(obj.mName))
 {
-}
-
-
-GameObject& GameObject::operator=(const GameObject& obj)
-{
-  return (*this);
+  obj.mId = 0;
+  obj.mParent = nullptr;
+  obj.mTransform = Transform();
+  obj.mComponents.clear();
+  obj.mChildren.clear();
+  obj.mName.clear();
 }
 
 
 GameObject& GameObject::operator=(GameObject&& obj)
 {
+  mId = obj.mId;
+  mParent = obj.mParent;
+  mTransform = std::move(obj.mTransform);
+  mComponents = std::move(obj.mComponents);
+  mChildren = std::move(obj.mChildren);
+
+  obj.mId = 0;
+  obj.mParent = nullptr;
+  obj.mTransform = Transform();
+  obj.mComponents.clear();
+  obj.mChildren.clear();
   return (*this);
 }
 

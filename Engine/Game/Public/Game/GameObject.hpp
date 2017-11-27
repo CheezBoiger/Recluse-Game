@@ -15,17 +15,25 @@
 namespace Recluse {
 
 
+typedef u64 game_uuid_t;
+
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
 // physics, audio, animation, etc.
 class GameObject : public ISerializable, public IBehavior {
-public:
-  GameObject();
-  ~GameObject();
-  GameObject(const GameObject&);
-  GameObject(GameObject&&);
 
-  GameObject& operator=(const GameObject&);
+  GameObject(const GameObject&) = delete;
+  GameObject& operator=(const GameObject&) = delete;
+
+public:
+
+  static GameObject*  Instantiate();
+  static void         Destroy(GameObject* obj);
+  static void         DestroyAll();
+
+  GameObject(game_uuid_t id = 0);
+  ~GameObject();
+  GameObject(GameObject&&);
   GameObject& operator=(GameObject&&);
 
   // Get a component from this game object. Components are usually retrieved via a 
@@ -47,7 +55,6 @@ public:
   template<class T = Component>
   void                                AddComponent() {
     static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
-
     component_t uuid = T::UUID();
     if (uuid == Transform::UUID()) {
       Log(rNotify) << Transform::GetName() << " already exists in game object. Skipping...\n";
@@ -65,17 +72,20 @@ public:
   }
 
   void                                Serialize(IArchive& archive) override;
-
   void                                Deserialize(IArchive& archive) override;
+  void                                SetParent(GameObject* parent) { mParent = parent; }
+  void                                SetName(std::string name) { mName = name; }
 
   GameObject*                         GetParent() { return mParent; }
-
   GameObject*                         GetChild(std::string id);
   GameObject*                         GetChild(size_t idx);
 
   Transform*                          GetTransform() { return &mTransform; }
+  std::string                         GetName() const { return mName; }
+  game_uuid_t                         GetId() const { return mId; }
 
 private:
+  std::string                         mName;
   // Mandatory to have a transform for all game objects.
   Transform                           mTransform;
 
@@ -88,5 +98,8 @@ private:
 
   // Possible parent.
   GameObject*                         mParent;
+  game_uuid_t                         mId;
+
+  friend class GameObjectManager;
 };
 } // Recluse

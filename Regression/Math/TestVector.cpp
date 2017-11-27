@@ -9,12 +9,31 @@ using namespace Recluse;
 namespace Test {
 
 
+b8 ToleranceSuccess(const Vector3& a, const Vector3& b)
+{
+  if (a.x > b.x + CONST_TOLERANCE || a.x < b.x - CONST_TOLERANCE) {
+    Log() << "Vector addition failed!\n";
+    return false;
+  }
+
+  if (a.y > b.y + CONST_TOLERANCE || a.y < b.y - CONST_TOLERANCE) {
+    Log() << "Vector addition failed!\n";
+    return false;
+  }
+
+  if (a.z > b.z + CONST_TOLERANCE || a.z < b.z - CONST_TOLERANCE) {
+    Log() << "Vector addition failed!\n";
+    return false;
+  }
+
+  return true;
+}
+
+
 
 b8 BasicVectorMath()
 {
   Log() << "Vector Math\n";
-
-
 
   Log() << "Vector3 addition\n";
   r32 ex = 4.4777f;
@@ -27,24 +46,14 @@ b8 BasicVectorMath()
   Vector3 c3 = a3 + b3;  
   Log() << "Calculated Addition Vector: " << c3 << "\n";
 
-  if (c3.x > ex + CONST_TOLERANCE || c3.x < ex - CONST_TOLERANCE) {
-    Log() << "Vector addition failed!\n";
+  if (!ToleranceSuccess(c3, Vector3(ex, ey, ez))) {
     return false;
   }
 
-  if (c3.y > ey + CONST_TOLERANCE || c3.y < ey - CONST_TOLERANCE) {
-    Log() << "Vector addition failed!\n";
-    return false;
-  }
-
-  if (c3.z > ez + CONST_TOLERANCE || c3.z < ez - CONST_TOLERANCE) {
-    Log() << "Vector addition failed!\n";
-    return false;
-  }
-
-
-  Vector3 c4 = a3 - b3;
-
+  Log() << "Vector3 subtraction\n";
+  Vector3 c4 = b3 - a3;
+  Log() << "Calculated Subtraction Vector: " << c4 << "\n";
+ 
   return true;
 }
 } // Test

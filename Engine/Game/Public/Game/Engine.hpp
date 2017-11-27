@@ -12,6 +12,7 @@
 #include "Geometry/Cube.hpp"
 #include "Camera.hpp"
 #include "GameObject.hpp"
+#include "Component.hpp"
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
@@ -36,7 +37,7 @@ namespace Recluse {
 class Scene;
 
 
-// First person engine.
+// Engine object.
 class Engine {
 public:
   Engine();

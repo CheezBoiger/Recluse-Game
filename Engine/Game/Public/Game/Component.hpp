@@ -19,6 +19,10 @@ typedef u64 component_t;
 class GameObject;
 
 
+// Component is the base class of all component modules within a game object.
+// Components specify information that would otherwise be labeled as abstract,
+// as they define information that may or may not be common in all game objects.
+// These components may define information about Physics, audio, animation, etc.
 class Component : public ISerializable {
   RCOMPONENT(Component)
 public:

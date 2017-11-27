@@ -21,7 +21,7 @@ public:
   virtual void  ShutDown() { }
   
   // Called when object is being initialized.
-  virtual void  Initialize() { }
+  virtual void  Awake() { }
 
   // Mandatory that this update function is defined.
   virtual void  Update() { }

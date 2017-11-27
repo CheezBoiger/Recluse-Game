@@ -16,57 +16,26 @@ class Material;
 class Mesh;
 
 
+// Mesh Component, which holds static mesh object info for rendering
+// data.
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent)
 public:
-  MeshComponent() 
-    : mRenderer(nullptr)
-    , mMaterial(nullptr)
-    , mRenderObj(nullptr)
-    , mMeshDescriptor(nullptr) { }
-
-  MeshComponent(const MeshComponent& m)
-    : mRenderer(m.mRenderer)
-    , mMaterial(m.mMaterial)
-    , mMeshDescriptor(m.mMeshDescriptor)
-    , mRenderObj(m.mRenderObj) { }
-
-  MeshComponent(MeshComponent&& m)
-    : mRenderer(m.mRenderer)
-    , mMaterial(m.mMaterial)
-    , mMeshDescriptor(m.mMeshDescriptor)
-    , mRenderObj(m.mRenderObj)
-  {
-    m.mMaterial = nullptr;
-    m.mMeshDescriptor = nullptr;
-    m.mRenderer = nullptr;
-    m.mRenderObj = nullptr;
-  }
-
-  MeshComponent& operator=(MeshComponent&& obj) {
-    mRenderer = obj.mRenderer;
-    mRenderObj = obj.mRenderObj;
-    mMaterial = obj.mMaterial;
-    mMeshDescriptor = obj.mMeshDescriptor;
-
-    obj.mMeshDescriptor = nullptr;
-    obj.mMaterial = nullptr;
-    obj.mRenderObj = nullptr;
-    obj.mRenderer = nullptr;
-    return (*this);
-  }
-
-  MeshComponent& operator=(const MeshComponent& obj) {
-    mRenderer = obj.mRenderer;
-    mRenderObj = obj.mRenderObj;
-    mMaterial = obj.mMaterial;
-    mMeshDescriptor = obj.mMeshDescriptor;
-  }
+  MeshComponent();
+  MeshComponent(const MeshComponent& m);
+  MeshComponent(MeshComponent&& m);
+  MeshComponent& operator=(MeshComponent&& obj);
+  MeshComponent& operator=(const MeshComponent& obj);
 
   void            Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const Material* mat);
   void            CleanUp();
+  void            Serialize(IArchive& archive) override;
+  void            Deserialize(IArchive& archive) override;
 
   RenderObject*   RenderObj() { return mRenderObj; }
+  Renderer*       GetRenderer() { return mRenderer; }
+  Material*       GetMaterial() { return mMaterial; }
+  MeshDescriptor* GetDescriptor() { return mMeshDescriptor; }
 
 private:
   Renderer*       mRenderer;

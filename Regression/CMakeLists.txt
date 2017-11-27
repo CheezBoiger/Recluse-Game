@@ -12,6 +12,10 @@ set(REGRESSIONS_MATH_FILES
   Math/TestQuaternion.cpp
   Math/TestRay.cpp
   Math/TestVector.cpp
+
+  Game/TestGameObject.hpp
+  Game/TestGameObject.cpp
+  Game/TestGameObjectManager.cpp
 )
 
 set(REGRESSIONS_FILES
