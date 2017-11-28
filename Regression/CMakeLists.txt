@@ -16,6 +16,9 @@ set(REGRESSIONS_MATH_FILES
   Game/TestGameObject.hpp
   Game/TestGameObject.cpp
   Game/TestGameObjectManager.cpp
+
+  Memory/TestMemory.hpp
+  Memory/TestAllocator.cpp
 )
 
 set(REGRESSIONS_FILES

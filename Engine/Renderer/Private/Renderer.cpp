@@ -1338,7 +1338,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         if (!renderCmd.target) continue;
 
         RenderObject* renderObj = renderCmd.target;
-        Material* mat = renderObj->materialId;
+        Material* mat = renderObj->MaterialId;
 
         VkDescriptorSet descriptorSets[] = {
           mGlobalMat->Set()->Handle(),

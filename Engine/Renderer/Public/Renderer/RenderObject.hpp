@@ -45,13 +45,13 @@ public:
   DescriptorSet*          CurrSet() { return mDescriptorSets[mCurrIdx]; }
 
   // The Mesh descriptor, used to define the renderobject in 3D space.
-  MeshDescriptor*         meshDescriptorId;
+  MeshDescriptor*         MeshDescriptorId;
 
   // The material of this Render Object.
-  Material*               materialId;
+  Material*               MaterialId;
 
   // Does this render object define a skinned mesh descriptor?
-  b8                      skinned;
+  b8                      Skinned;
 
   size_t                  Size() const { return mMeshGroup.size(); }
 

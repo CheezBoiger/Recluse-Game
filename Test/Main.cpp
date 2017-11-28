@@ -164,17 +164,17 @@ int main(int c, char* argv[])
   RenderObject* obj2 = gRenderer().CreateRenderObject();
   RenderObject* obj3 = gRenderer().CreateRenderObject();
 
-  obj1->materialId = &cubeMaterial;
-  obj1->meshDescriptorId = &cubeMesh;
-  obj1->skinned = true;
+  obj1->MaterialId = &cubeMaterial;
+  obj1->MeshDescriptorId = &cubeMesh;
+  obj1->Skinned = true;
 
-  obj2->materialId = &cubeMaterial2;
-  obj2->meshDescriptorId = &cubeMesh2;
-  obj2->skinned = true;
+  obj2->MaterialId = &cubeMaterial2;
+  obj2->MeshDescriptorId = &cubeMesh2;
+  obj2->Skinned = true;
 
-  obj3->materialId = &cubeMaterial3;
-  obj3->meshDescriptorId = &cubeMesh3;
-  obj3->skinned = true;
+  obj3->MaterialId = &cubeMaterial3;
+  obj3->MeshDescriptorId = &cubeMesh3;
+  obj3->Skinned = true;
 
   obj1->Initialize();
   obj2->Initialize();

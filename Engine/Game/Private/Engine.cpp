@@ -139,8 +139,8 @@ void Engine::Update(r64 dt)
     RenderCmd& cmd = mRenderCmdList[i];
     RenderObject* obj = cmd.target;
 
-    if (obj && obj->meshDescriptorId) {
-      obj->meshDescriptorId->Update();
+    if (obj && obj->MeshDescriptorId) {
+      obj->MeshDescriptorId->Update();
     }
   }
 }

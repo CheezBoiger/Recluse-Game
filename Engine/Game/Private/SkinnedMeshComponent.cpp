@@ -94,9 +94,9 @@ void SkinnedMeshComponent::Initialize(Renderer* renderer, Material* material, Sk
 
   mRenderObj = mRenderer->CreateRenderObject();
 
-  mRenderObj->materialId = mMaterial;
-  mRenderObj->meshDescriptorId = mMesh;
-  mRenderObj->skinned = true;
+  mRenderObj->MaterialId = mMaterial;
+  mRenderObj->MeshDescriptorId = mMesh;
+  mRenderObj->Skinned = true;
 
   mRenderObj->Initialize();
 }

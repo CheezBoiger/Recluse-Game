@@ -22,9 +22,9 @@ namespace Recluse {
 
 
 RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
-  : materialId(material)
-  , meshDescriptorId(mesh)
-  , skinned(false)
+  : MaterialId(material)
+  , MeshDescriptorId(mesh)
+  , Skinned(false)
   , mCurrIdx(0)
 {
   mDescriptorSets[0] = nullptr;
@@ -42,7 +42,7 @@ RenderObject::~RenderObject()
 
 void RenderObject::Initialize()
 {
-  if (!meshDescriptorId || !materialId) {
+  if (!MeshDescriptorId || !MaterialId) {
     Log(rError) << "A mesh descriptor AND material need to be set for this render object!\n"; 
     R_ASSERT(false, "No material or mesh descriptor set for this render object!");
     return;
@@ -92,18 +92,18 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
   size_t count = 0;
 
   Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
-  if (materialId->Sampler()) sampler = materialId->Sampler()->Handle();
+  if (MaterialId->Sampler()) sampler = MaterialId->Sampler()->Handle();
 
   Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
 
   VkDescriptorBufferInfo objBufferInfo = {};
-  objBufferInfo.buffer = meshDescriptorId->NativeObjectBuffer()->NativeBuffer();
+  objBufferInfo.buffer = MeshDescriptorId->NativeObjectBuffer()->NativeBuffer();
   objBufferInfo.offset = 0;
   objBufferInfo.range = sizeof(ObjectBuffer);
 
   VkDescriptorBufferInfo boneBufferInfo = {};
-  if (skinned) {
-    SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(meshDescriptorId);
+  if (Skinned) {
+    SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(MeshDescriptorId);
     boneBufferInfo.buffer = sm->NativeBoneBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
     boneBufferInfo.range = sizeof(BonesBuffer);
@@ -111,8 +111,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo albedoInfo = {};
   albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Albedo()) {
-    albedoInfo.imageView = materialId->Albedo()->Handle()->View();
+  if (MaterialId->Albedo()) {
+    albedoInfo.imageView = MaterialId->Albedo()->Handle()->View();
   }
   else {
     albedoInfo.imageView = defaultTexture->View();
@@ -121,8 +121,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo metallicInfo = {};
   metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Metallic()) {
-    metallicInfo.imageView = materialId->Metallic()->Handle()->View();
+  if (MaterialId->Metallic()) {
+    metallicInfo.imageView = MaterialId->Metallic()->Handle()->View();
   }
   else {
     metallicInfo.imageView = defaultTexture->View();
@@ -131,8 +131,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo roughInfo = {};
   roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Roughness()) {
-    roughInfo.imageView = materialId->Roughness()->Handle()->View();
+  if (MaterialId->Roughness()) {
+    roughInfo.imageView = MaterialId->Roughness()->Handle()->View();
   }
   else {
     roughInfo.imageView = defaultTexture->View();
@@ -141,8 +141,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo normalInfo = {};
   normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Normal()) {
-    normalInfo.imageView = materialId->Normal()->Handle()->View();
+  if (MaterialId->Normal()) {
+    normalInfo.imageView = MaterialId->Normal()->Handle()->View();
   }
   else {
     normalInfo.imageView = defaultTexture->View();
@@ -151,8 +151,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo aoInfo = {};
   aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Ao()) {
-    aoInfo.imageView = materialId->Ao()->Handle()->View();
+  if (MaterialId->Ao()) {
+    aoInfo.imageView = MaterialId->Ao()->Handle()->View();
   }
   else {
     aoInfo.imageView = defaultTexture->View();
@@ -161,8 +161,8 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
 
   VkDescriptorImageInfo emissiveInfo = {};
   emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (materialId->Emissive()) {
-    emissiveInfo.imageView = materialId->Emissive()->Handle()->View();
+  if (MaterialId->Emissive()) {
+    emissiveInfo.imageView = MaterialId->Emissive()->Handle()->View();
   }
   else {
     emissiveInfo.imageView = defaultTexture->View();
@@ -237,7 +237,7 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
     writeSets[count].pNext = nullptr;
     count++;
 
-    if (skinned) {
+    if (Skinned) {
       writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
       writeSets[count].dstBinding = 1;
