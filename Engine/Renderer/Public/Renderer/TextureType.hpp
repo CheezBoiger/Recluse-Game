@@ -11,26 +11,39 @@ class Texture;
 class Sampler;
 class Image;
 
-// 1 Dimensional texture object.
-class Texture1D {
+
+struct TextureBase {
 public:
-  Texture1D()
+  Texture* Handle() { return texture; }
+  VulkanRHI* GetRhi() { return mRhi; }
+
+protected:
+  TextureBase()
     : texture(nullptr)
     , mRhi(nullptr) { }
 
-  void        Initialize(u32 width);
-  void        CleanUp();
-private:
   Texture*    texture;
   VulkanRHI*  mRhi;
 };
 
-// 2 Dimensional texture object.
-class Texture2D {
+
+// 1 Dimensional texture object.
+class Texture1D : public TextureBase {
 public:
-  Texture2D()
-    : texture(nullptr)
-    , mRhi(nullptr) { }
+  Texture1D() { }
+
+  void        Initialize(u32 width);
+  void        CleanUp();
+private:
+  friend class Renderer;
+
+};
+
+
+// 2 Dimensional texture object.
+class Texture2D : public TextureBase {
+public:
+  Texture2D() { }
 
   // Initializes the texture object with fixed width and height.
   // All images that are uploaded to this texture must then be the 
@@ -41,14 +54,11 @@ public:
   // Update texture with a new image to be written over.
   void        Update(Image const& image);
   void        CleanUp();
-
-  Texture*    Handle() { return texture; }
 private:
-  Texture*    texture;
-  VulkanRHI*  mRhi;
 
   friend class Renderer;
 };
+
 
 // 2 Dimensional array texture object.
 class Texture2DArray {

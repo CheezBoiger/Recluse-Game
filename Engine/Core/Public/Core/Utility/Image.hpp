@@ -7,10 +7,14 @@
 namespace Recluse {
 
 
+// Image constitutes a displayable representation of a textured colored
+// surface. This is the very representation of some image.
+
+// TODO(): Need to accomodate textured cubes.
 class Image {
 public:
   Image()
-    : mWidth(0), mHeight(0), mChannels(0), mData(nullptr) { }
+    : mWidth(0), mHeight(0), mChannels(0), mData(nullptr), mMemorySize(0) { }
 
   ~Image();
 
@@ -24,8 +28,10 @@ public:
   i32           Height() const { return mHeight; }
   i32           Width() const { return mWidth; }
   const u8*     Data() const { return mData; }
+  u64           MemorySize() const { return mMemorySize; }         
 
 private:
+  u64           mMemorySize;
   i32           mWidth;
   i32           mHeight;
   i32           mChannels;

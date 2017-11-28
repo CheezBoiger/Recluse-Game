@@ -66,6 +66,8 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   mWidth = imageInfo.extent.width;
   mHeight = imageInfo.extent.height;
   mSamples = imageInfo.samples;
+  mMipLevels = imageInfo.mipLevels;
+  mArrayLayers = imageInfo.arrayLayers;
 }
 
 
@@ -90,7 +92,7 @@ void Texture::CleanUp()
 
 void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
 {
-  VkDeviceSize imageSize = image.Width() * image.Height() * 4;
+  VkDeviceSize imageSize = image.MemorySize();
   Buffer stagingBuffer;
   stagingBuffer.SetOwner(mOwner);
 
@@ -114,23 +116,44 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
+  // Max barriers.
+  std::vector<VkBufferImageCopy> bufferCopies;
+  size_t offset = 0;
+  for (u32 face = 0; face < mArrayLayers; ++face) {
+    for (u32 mipLevel = 0; mipLevel < mMipLevels; ++mipLevel) {
+      VkBufferImageCopy region = {};
+      region.bufferOffset = offset;
+      region.bufferImageHeight = 0;
+      region.bufferRowLength = 0;
+      region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      region.imageSubresource.baseArrayLayer = face;
+      region.imageSubresource.layerCount = 1;
+      region.imageSubresource.mipLevel = mipLevel;
+      region.imageExtent.width = mWidth;
+      region.imageExtent.height = mHeight;
+      region.imageExtent.depth = 1;
+      region.imageOffset = { 0, 0, 0 };
+      bufferCopies.push_back(region);
+    }
+  }
+
+  VkImageMemoryBarrier imgBarrier = {};
+  imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgBarrier.image = mImage;
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgBarrier.srcAccessMask = 0;
+  imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  imgBarrier.subresourceRange.baseArrayLayer = 0;
+  imgBarrier.subresourceRange.baseMipLevel = 0;
+  imgBarrier.subresourceRange.layerCount = mArrayLayers;
+  imgBarrier.subresourceRange.levelCount = mMipLevels;
+
   // TODO(): Copy buffer to image stream.
   buffer.Begin(beginInfo);
-    VkImageMemoryBarrier imgBarrier = { };
-    imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    imgBarrier.image = mImage;
-    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    imgBarrier.srcAccessMask = 0;
-    imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    imgBarrier.subresourceRange.baseArrayLayer = 0;
-    imgBarrier.subresourceRange.baseMipLevel = 0;
-    imgBarrier.subresourceRange.layerCount = 1;
-    imgBarrier.subresourceRange.levelCount = 1;
-
     // Image memory barrier.
     buffer.PipelineBarrier(
       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 
@@ -140,21 +163,14 @@ void Texture::Upload(VulkanRHI* rhi, Recluse::Image const& image)
       1, &imgBarrier
     );
     
-    VkBufferImageCopy region = { };
-    region.bufferOffset = 0;
-    region.bufferImageHeight = 0;
-    region.bufferRowLength = 0;
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = 1;
-    region.imageSubresource.mipLevel = 0;
-    region.imageExtent.width = mWidth;
-    region.imageExtent.height = mHeight;
-    region.imageExtent.depth = 1;
-    region.imageOffset = { 0, 0, 0 };
-
     // Send buffer image copy cmd.
-    buffer.CopyBufferToImage(stagingBuffer.NativeBuffer(), mImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL , 1, &region);
+    buffer.CopyBufferToImage(
+      stagingBuffer.NativeBuffer(), 
+      mImage, 
+      VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+      static_cast<u32>(bufferCopies.size()),  
+      bufferCopies.data()
+    );
 
     imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

@@ -36,7 +36,13 @@ public:
   Texture()
     : mView(VK_NULL_HANDLE)
     , mImage(VK_NULL_HANDLE)
-    , mMemory(VK_NULL_HANDLE) { }
+    , mMemory(VK_NULL_HANDLE)
+    , mMipLevels(0)
+    , mArrayLayers(0)
+    , mFormat(VK_FORMAT_UNDEFINED)
+    , mWidth(0)
+    , mHeight(0)
+    , mSamples(VK_SAMPLE_COUNT_1_BIT) { }
 
   
   void                  Initialize(const VkImageCreateInfo& imageInfo, 
@@ -53,6 +59,8 @@ public:
   VkFormat              Format() const { return mFormat; }
   u32                   Width() const { return mWidth; }
   u32                   Height() const { return mHeight; }
+  u32                   MipLevels() const { return mMipLevels; }
+  u32                   ArrayLayers() const { return mArrayLayers; }
   VkSampleCountFlagBits Samples() const { return mSamples; }
 
 private:
@@ -63,5 +71,7 @@ private:
   VkSampleCountFlagBits mSamples;
   u32                   mWidth;
   u32                   mHeight;
+  u32                   mMipLevels;
+  u32                   mArrayLayers;
 };
 } // Recluse
