@@ -56,11 +56,6 @@ public:
   void                                AddComponent() {
     static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
     component_t uuid = T::UUID();
-    if (uuid == Transform::UUID()) {
-      Log(rNotify) << Transform::GetName() << " already exists in game object. Skipping...\n";
-      return;
-    }
-
     auto it = mComponents.find(uuid);
     if (it != mComponents.end()) {
       Log(rNotify) << T::GetName() << " already exists in game object. Skipping...\n";
@@ -80,14 +75,12 @@ public:
   GameObject*                         GetChild(std::string id);
   GameObject*                         GetChild(size_t idx);
 
-  Transform*                          GetTransform() { return &mTransform; }
+  Transform*                          GetTransform() { return GetComponent<Transform>(); }
   std::string                         GetName() const { return mName; }
   game_uuid_t                         GetId() const { return mId; }
 
 private:
   std::string                         mName;
-  // Mandatory to have a transform for all game objects.
-  Transform                           mTransform;
 
   // The components associated with this game object.
   std::unordered_map<component_t, 

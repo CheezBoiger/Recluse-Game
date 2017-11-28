@@ -35,14 +35,12 @@ GameObject::~GameObject()
 GameObject::GameObject(GameObject&& obj)
   : mId(obj.mId)
   , mParent(obj.mParent)
-  , mTransform(obj.mTransform)
   , mComponents(std::move(obj.mComponents))
   , mChildren(std::move(obj.mChildren))
   , mName(std::move(obj.mName))
 {
   obj.mId = 0;
   obj.mParent = nullptr;
-  obj.mTransform = Transform();
   obj.mComponents.clear();
   obj.mChildren.clear();
   obj.mName.clear();
@@ -53,13 +51,11 @@ GameObject& GameObject::operator=(GameObject&& obj)
 {
   mId = obj.mId;
   mParent = obj.mParent;
-  mTransform = std::move(obj.mTransform);
   mComponents = std::move(obj.mComponents);
   mChildren = std::move(obj.mChildren);
 
   obj.mId = 0;
   obj.mParent = nullptr;
-  obj.mTransform = Transform();
   obj.mComponents.clear();
   obj.mChildren.clear();
   return (*this);

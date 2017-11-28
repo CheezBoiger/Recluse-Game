@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Core/Logging/Log.hpp"
 #include "Math/TestMath.hpp"
+#include "Game/TestGameObject.hpp"
 
 #include "Tester.hpp"
 
@@ -13,7 +14,8 @@ u32 Tester::TestsPassed = 0;
 
 std::vector<Tester::TestFunc> test = {
   Test::BasicVectorMath,
-  Test::BasicMatrixMath
+  Test::BasicMatrixMath,
+  Test::TestGameObject
 };
 
 int main()

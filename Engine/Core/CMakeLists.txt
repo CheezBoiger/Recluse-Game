@@ -19,6 +19,9 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Math/Vector3.hpp
   ${RECLUSE_CORE_PUB_DIR}/Math/Vector4.hpp
   ${RECLUSE_CORE_PUB_DIR}/Math/Common.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Math/Sphere.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Math/Box.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Math/Plane.hpp
 
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Matrix3.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Matrix4.cpp
@@ -26,6 +29,9 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Vector3.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Vector2.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Quaternion.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Math/Plane.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Math/Sphere.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Math/Box.cpp
   #${RECLUSE_CORE_PRIVATE_DIR}/Math/Ray.cpp
 
   ${RECLUSE_CORE_PUB_DIR}/Utility/Vector.hpp

@@ -29,8 +29,8 @@ public:
 
   void            Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const Material* mat);
   void            CleanUp();
-  void            Serialize(IArchive& archive) override;
-  void            Deserialize(IArchive& archive) override;
+  void            Serialize(IArchive& archive) override { }
+  void            Deserialize(IArchive& archive) override { }
 
   RenderObject*   RenderObj() { return mRenderObj; }
   Renderer*       GetRenderer() { return mRenderer; }
