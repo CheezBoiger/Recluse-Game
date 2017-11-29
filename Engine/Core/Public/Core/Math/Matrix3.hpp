@@ -28,6 +28,7 @@ struct Matrix3 {
   r32         Determinant() const;
   Matrix3     Transpose() const;
   Matrix3     Inverse() const;
+  Matrix3     Adjugate() const;
   
   Matrix3     operator*(const Matrix3& other) const;
   Matrix3     operator+(const Matrix3& other) const;

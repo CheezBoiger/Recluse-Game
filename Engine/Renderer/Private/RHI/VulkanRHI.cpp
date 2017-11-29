@@ -163,13 +163,13 @@ void VulkanRHI::Initialize(HWND windowHandle)
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.GraphicsIndex());
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
-  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
+  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create primary command pool!\n");
   } 
 
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.ComputeIndex());
 
-  if (vkCreateCommandPool(mLogicalDevice.Handle(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
+  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
@@ -199,26 +199,26 @@ void VulkanRHI::CleanUp()
   }
 
   if (mCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Handle(), mCmdPool, nullptr);
+    vkDestroyCommandPool(mLogicalDevice.Native(), mCmdPool, nullptr);
   }
 
   if (mComputeCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Handle(), mComputeCmdPool, nullptr);
+    vkDestroyCommandPool(mLogicalDevice.Native(), mComputeCmdPool, nullptr);
   }
 
   if (mDescriptorPool) {
-    vkDestroyDescriptorPool(Device(), mDescriptorPool, nullptr);
+    vkDestroyDescriptorPool(mLogicalDevice.Native(), mDescriptorPool, nullptr);
     mDescriptorPool = VK_NULL_HANDLE;
   }
 
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
-    vkDestroyFramebuffer(mLogicalDevice.Handle(), framebuffer, nullptr);
+    vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
   }
-  vkDestroyRenderPass(mLogicalDevice.Handle(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
+  vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
   
-  vkDestroyImageView(mLogicalDevice.Handle(), mSwapchainInfo.mDepthView, nullptr);
-  vkDestroyImage(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, nullptr);
-  vkFreeMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthMemory, nullptr);
+  vkDestroyImageView(mLogicalDevice.Native(), mSwapchainInfo.mDepthView, nullptr);
+  vkDestroyImage(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, nullptr);
+  vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
 
   // NOTE(): Clean up any vulkan modules before destroying the logical device!
   mSwapchain.CleanUp();
@@ -254,7 +254,7 @@ void VulkanRHI::QueryFromSwapchain()
     framebufferCI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
     framebufferCI.layers = 1;
     
-    if (vkCreateFramebuffer(mLogicalDevice.Handle(), &framebufferCI, nullptr, 
+    if (vkCreateFramebuffer(mLogicalDevice.Native(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create framebuffer on swapchain image " 
         + std::to_string(u32(i)) + "!\n");
@@ -284,24 +284,24 @@ void VulkanRHI::CreateDepthAttachment()
   imageCI.imageType = VK_IMAGE_TYPE_2D;
   imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-  if (vkCreateImage(mLogicalDevice.Handle(), &imageCI, nullptr, &mSwapchainInfo.mDepthAttachment) != VK_SUCCESS) {
+  if (vkCreateImage(mLogicalDevice.Native(), &imageCI, nullptr, &mSwapchainInfo.mDepthAttachment) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create depth image!\n");
     return;
   }
 
   VkMemoryRequirements mem;
-  vkGetImageMemoryRequirements(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, &mem);
+  vkGetImageMemoryRequirements(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, &mem);
  
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = mem.size;
   allocInfo.memoryTypeIndex = gPhysicalDevice.FindMemoryType(mem.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   
-  if (vkAllocateMemory(mLogicalDevice.Handle(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
+  if (vkAllocateMemory(mLogicalDevice.Native(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
     R_DEBUG(rError, "Depth memory was not allocated!\n");
     return;
   }
-  vkBindImageMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, mSwapchainInfo.mDepthMemory, 0);
+  vkBindImageMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, mSwapchainInfo.mDepthMemory, 0);
   
   // Now create the depth view.
   VkImageViewCreateInfo ivCI = {};
@@ -315,7 +315,7 @@ void VulkanRHI::CreateDepthAttachment()
   ivCI.subresourceRange.layerCount = 1;
   ivCI.subresourceRange.levelCount = 1;
   
-  if (vkCreateImageView(mLogicalDevice.Handle(), &ivCI, nullptr, &mSwapchainInfo.mDepthView) != VK_SUCCESS) {
+  if (vkCreateImageView(mLogicalDevice.Native(), &ivCI, nullptr, &mSwapchainInfo.mDepthView) != VK_SUCCESS) {
     R_DEBUG(rError, "Depth view not created!\n");
   }
  
@@ -395,7 +395,7 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   renderpassCI.dependencyCount = static_cast<u32>(dependencies.size());
   renderpassCI.pDependencies = dependencies.data();
 
-  if (vkCreateRenderPass(mLogicalDevice.Handle(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
+  if (vkCreateRenderPass(mLogicalDevice.Native(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create swapchain renderpass!\n");
   }
 }
@@ -416,7 +416,7 @@ void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
 
 void VulkanRHI::AcquireNextImage()
 {
-  vkAcquireNextImageKHR(Device(), mSwapchain.Handle(), UINT_MAX,
+  vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT_MAX,
     mSwapchain.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
 }
 
@@ -469,8 +469,8 @@ void VulkanRHI::Present()
 void VulkanRHI::ComputeSubmit(const VkSubmitInfo& submitInfo)
 {
   VkFence fence = mSwapchain.ComputeFence();
-  vkWaitForFences(mLogicalDevice.Handle(), 1, &fence, VK_TRUE, UINT64_MAX);
-  vkResetFences(mLogicalDevice.Handle(), 1, &fence);
+  vkWaitForFences(mLogicalDevice.Native(), 1, &fence, VK_TRUE, UINT64_MAX);
+  vkResetFences(mLogicalDevice.Native(), 1, &fence);
 
   if (vkQueueSubmit(mSwapchain.ComputeQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
     R_DEBUG(rError, "Compute failed to submit task!\n");
@@ -498,7 +498,7 @@ void VulkanRHI::PresentWaitIdle()
 
 void VulkanRHI::DeviceWaitIdle()
 {
-  vkDeviceWaitIdle(mLogicalDevice.Handle());
+  vkDeviceWaitIdle(mLogicalDevice.Native());
 }
 
 
@@ -509,7 +509,7 @@ void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
 
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
     CommandBuffer& cmdBuffer = cmdBufferSet[i];
-    cmdBuffer.SetOwner(mLogicalDevice.Handle());
+    cmdBuffer.SetOwner(mLogicalDevice.Native());
     cmdBuffer.Allocate(mCmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     
     VkCommandBufferBeginInfo cmdBufferBI = { };
@@ -558,14 +558,14 @@ void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
 
   for (size_t i = 0; i < mSwapchainInfo.mSwapchainFramebuffers.size(); ++i) {
     VkFramebuffer framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
-    vkDestroyFramebuffer(mLogicalDevice.Handle(), framebuffer, nullptr);
+    vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
   }
 
-  vkDestroyRenderPass(mLogicalDevice.Handle(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
+  vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
 
-  vkDestroyImageView(mLogicalDevice.Handle(), mSwapchainInfo.mDepthView, nullptr);
-  vkDestroyImage(mLogicalDevice.Handle(), mSwapchainInfo.mDepthAttachment, nullptr);
-  vkFreeMemory(mLogicalDevice.Handle(), mSwapchainInfo.mDepthMemory, nullptr);
+  vkDestroyImageView(mLogicalDevice.Native(), mSwapchainInfo.mDepthView, nullptr);
+  vkDestroyImage(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, nullptr);
+  vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
 
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
@@ -581,7 +581,7 @@ void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
 Buffer* VulkanRHI::CreateBuffer()
 { 
   Buffer* buffer = new Buffer();
-  buffer->SetOwner(mLogicalDevice.Handle());
+  buffer->SetOwner(mLogicalDevice.Native());
 
   return buffer;
 }
@@ -591,7 +591,7 @@ void VulkanRHI::FreeBuffer(Buffer* buffer)
 {
   if (!buffer) return;
 
-  if (buffer->Owner() != mLogicalDevice.Handle()) {
+  if (buffer->Owner() != mLogicalDevice.Native()) {
     R_DEBUG(rNotify, "Unable to free buffer. Device is not same as this vulkan rhi!\n");
     return;
   }
@@ -605,7 +605,7 @@ void VulkanRHI::FreeBuffer(Buffer* buffer)
 GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
 {
   GraphicsPipeline* pipeline = new GraphicsPipeline();
-  pipeline->SetOwner(mLogicalDevice.Handle());
+  pipeline->SetOwner(mLogicalDevice.Native());
   return pipeline;
 }
 
@@ -614,7 +614,7 @@ void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
 {
   if (!pipeline) return ;
 
-  if (pipeline->Owner() != mLogicalDevice.Handle()) {
+  if (pipeline->Owner() != mLogicalDevice.Native()) {
     R_DEBUG(rNotify, "Unable to free pipeline. Device is not same as this vulkan rhi!\n");
     return;
   }
@@ -628,7 +628,7 @@ void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
 Shader* VulkanRHI::CreateShader()
 {
   Shader* shader = new Shader();
-  shader->SetOwner(mLogicalDevice.Handle());
+  shader->SetOwner(mLogicalDevice.Native());
   
   return shader;
 }
@@ -638,7 +638,7 @@ void VulkanRHI::FreeShader(Shader* shader)
 {
   if (!shader) return;
 
-  if (shader->Owner() != mLogicalDevice.Handle()) {
+  if (shader->Owner() != mLogicalDevice.Native()) {
     R_DEBUG(rNotify, "Unable to free shader. Device is not same as this vulkan rhi!\n");
     return;
   }
@@ -652,7 +652,7 @@ void VulkanRHI::FreeShader(Shader* shader)
 DescriptorSet* VulkanRHI::CreateDescriptorSet()
 {
   DescriptorSet* dset = new DescriptorSet();
-  dset->SetOwner(mLogicalDevice.Handle());
+  dset->SetOwner(mLogicalDevice.Native());
   mCurrDescSets += 1;
   return dset;
 }
@@ -672,7 +672,7 @@ void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
 Sampler* VulkanRHI::CreateSampler()
 {
   Sampler* sampler = new Sampler();
-  sampler->SetOwner(mLogicalDevice.Handle());
+  sampler->SetOwner(mLogicalDevice.Native());
   
   return sampler;
 }
@@ -691,7 +691,7 @@ void VulkanRHI::FreeSampler(Sampler* sampler)
 Texture* VulkanRHI::CreateTexture()
 {
   Texture* texture = new Texture();
-  texture->SetOwner(mLogicalDevice.Handle());
+  texture->SetOwner(mLogicalDevice.Native());
   
   return texture;
 }
@@ -710,7 +710,7 @@ void VulkanRHI::FreeTexture(Texture* texture)
 FrameBuffer* VulkanRHI::CreateFrameBuffer()
 {
   FrameBuffer* framebuffer = new FrameBuffer();
-  framebuffer->SetOwner(mLogicalDevice.Handle());
+  framebuffer->SetOwner(mLogicalDevice.Native());
 
   return framebuffer;
 }
@@ -729,7 +729,7 @@ void VulkanRHI::FreeFrameBuffer(FrameBuffer* framebuffer)
 CommandBuffer* VulkanRHI::CreateCommandBuffer()
 {
   CommandBuffer* buffer = new CommandBuffer();
-  buffer->SetOwner(mLogicalDevice.Handle());
+  buffer->SetOwner(mLogicalDevice.Native());
   
   return buffer;
 }
@@ -747,7 +747,7 @@ void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
 DescriptorSetLayout* VulkanRHI::CreateDescriptorSetLayout()
 {
   DescriptorSetLayout* layout = new DescriptorSetLayout();
-  layout->SetOwner(mLogicalDevice.Handle());
+  layout->SetOwner(mLogicalDevice.Native());
   return layout;
 }
 
@@ -765,7 +765,7 @@ void VulkanRHI::FreeDescriptorSetLayout(DescriptorSetLayout* layout)
 ComputePipeline* VulkanRHI::CreateComputePipeline()
 {
   ComputePipeline* pipeline = new ComputePipeline();
-  pipeline->SetOwner(mLogicalDevice.Handle());
+  pipeline->SetOwner(mLogicalDevice.Native());
 
   return pipeline;
 }
@@ -784,7 +784,7 @@ void VulkanRHI::FreeComputePipeline(ComputePipeline* pipeline)
 Semaphore* VulkanRHI::CreateVkSemaphore()
 {
   Semaphore* semaphore = new Semaphore();
-  semaphore->SetOwner(mLogicalDevice.Handle());
+  semaphore->SetOwner(mLogicalDevice.Native());
   
   return semaphore;
 }
@@ -803,7 +803,7 @@ void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
 void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
 {
   if (mDescriptorPool) {
-    vkDestroyDescriptorPool(Device(), mDescriptorPool, nullptr);
+    vkDestroyDescriptorPool(mLogicalDevice.Native(), mDescriptorPool, nullptr);
     mDescriptorPool = VK_NULL_HANDLE;
   }
 
@@ -825,7 +825,7 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   descriptorPoolCI.pNext = nullptr;
   descriptorPoolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-  if (vkCreateDescriptorPool(Device(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(mLogicalDevice.Native(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to created descriptor pool!\n");
   }
 }

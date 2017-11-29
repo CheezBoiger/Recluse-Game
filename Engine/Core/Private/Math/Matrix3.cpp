@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Matrix3.hpp"
 #include "Logging/Log.hpp"
+#include "Exception.hpp"
 
 #include <iomanip>
 
@@ -27,8 +28,21 @@ Matrix3 Matrix3::Transpose() const
 
 Matrix3 Matrix3::Inverse() const
 {
+  // Calculate similar to 4x4 matrix.
+  // Get 1 / determinant
+  // Calculate cofactor matrix -> Adjugate
+  //  Multiply Adjugate * 1/determinant
   Matrix3 inverse;
+  R_ASSERT(false, "Not implemented.");
   return inverse;
+}
+
+
+Matrix3 Matrix3::Adjugate() const
+{
+  Matrix3 cofactor;
+  R_ASSERT(false, "Not implemented.");
+  return  cofactor.Transpose();
 }
 
 

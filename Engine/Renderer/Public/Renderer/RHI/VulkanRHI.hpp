@@ -106,8 +106,7 @@ public:
 
   size_t                        SwapchainImageCount() const { return mSwapchain.ImageCount(); }
 
-  // Get the logical device.
-  VkDevice                      Device() { return mLogicalDevice.Handle(); }
+  LogicalDevice*                LogicDevice() { return &mLogicalDevice; }
 
   // Get the Swapchain handle.
   Swapchain*                    SwapchainObject() { return &mSwapchain; }

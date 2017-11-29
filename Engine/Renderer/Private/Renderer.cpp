@@ -15,6 +15,7 @@
 #include "MeshData.hpp"
 #include "LightMaterial.hpp"
 #include "GlobalMaterial.hpp"
+#include "StructuredBuffer.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"

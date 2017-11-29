@@ -25,4 +25,10 @@ void LogicalDevice::CleanUp()
     handle = VK_NULL_HANDLE;
   }
 }
+
+
+VkResult LogicalDevice::FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges)
+{
+  return vkFlushMappedMemoryRanges(handle, count, ranges);
+}
 } // Recluse

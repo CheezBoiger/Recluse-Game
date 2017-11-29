@@ -37,9 +37,6 @@ class Texture2DArray;
 class TextureSampler;
 class UIOverlay;
 class RenderObject;
-struct DirectionLight;
-struct PointLight;
-struct SpotLight;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -101,15 +98,23 @@ public:
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
   void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
+
+  // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
 
   // Creates a mesh object of which to submit to render.
   // Be sure to call FreeMeshData() if done with this mesh object.
   MeshData*         CreateMeshData();
 
+  // Create a 1D texture.
   Texture1D*        CreateTexture1D();
+
+  // Create a 2D Texture surface.
   Texture2D*        CreateTexture2D();
+
+  // Create a 2D Array texture surface.
   Texture2DArray*   CreateTexture2DArray();
+
   Texture3D*        CreateTexture3D();
   TextureCube*      CreateTextureCube();
   TextureSampler*   CreateTextureSampler();
@@ -121,15 +126,6 @@ public:
   // Create a light material object, which holds all lights that affect this 
   // scene. This will then be used for the light culling method of the renderer.
   LightMaterial*    CreateLightMaterial();
-
-  // Create a directional light.
-  DirectionLight*   CreateDirectionLight();
-
-  // Create a point light.
-  PointLight*       CreatePointLight();
-
-  // Create a spotlight.
-  SpotLight*        CreateSpotLight();
 
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();

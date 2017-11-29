@@ -31,7 +31,7 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   mGraphicsQueueIndex = graphicsIndex;
   mPresentationQueueIndex = presentationIndex;
   mComputeQueueIndex = computeIndex;
-  mOwner = device.Handle();
+  mOwner = device.Native();
 
   vkGetDeviceQueue(mOwner, graphicsIndex, 0, &mGraphicsQueue);
   vkGetDeviceQueue(mOwner, mPresentationQueueIndex, 0, &mPresentationQueue);
