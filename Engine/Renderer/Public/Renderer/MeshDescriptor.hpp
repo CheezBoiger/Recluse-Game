@@ -53,18 +53,18 @@ public:
 
   void          SetVisible(b8 enable) { mVisible = enable; }
   void          SetRenderable(b8 enable) { mRenderable = enable; }
-  void          SetTransparent(b8 enable) { mTransparent = enable; }
   void          SetTranslucent(b8 enable) { mTranslucent = enable; }
+  void          SetTransparent(b8 enable) { mObjectData.isTransparent = enable; }
+
 
   ObjectBuffer* ObjectData() { return &mObjectData; }
 
 
   b8            Visible() const { return mVisible; }
   b8            Renderable() const { return mRenderable; }
-  b8            Transparent() const { return mTransparent; }
+  b8            Transparent() const { return mObjectData.isTransparent; }
   b8            Translucent() const { return mTranslucent; }
   b8            Static() const { return mStatic; }
-
   Buffer*       NativeObjectBuffer() { return mObjectBuffer; }
 
 protected:
@@ -74,7 +74,6 @@ protected:
   b8            mVisible;
   b8            mRenderable;
 
-  b8            mTransparent;
   b8            mTranslucent;
   b8            mStatic;
   

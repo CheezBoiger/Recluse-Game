@@ -632,7 +632,7 @@ void Renderer::SetUpGraphicsPipelines()
 
   colorBlendAttachments[1] = { };
   colorBlendAttachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachments[1].blendEnable = VK_FALSE;
+  colorBlendAttachments[1].blendEnable = VK_TRUE;
   colorBlendAttachments[1].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
   colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachments[1].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -644,8 +644,8 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO; 
   colorBlendCI.attachmentCount = 2;
   colorBlendCI.pAttachments = colorBlendAttachments;
-  colorBlendCI.logicOpEnable = VK_TRUE;
-  colorBlendCI.logicOp = VK_LOGIC_OP_COPY;
+  colorBlendCI.logicOpEnable = VK_FALSE;
+  colorBlendCI.logicOp = VK_LOGIC_OP_NO_OP;
   colorBlendCI.blendConstants[0] = 0.0f;
   colorBlendCI.blendConstants[1] = 0.0f;
   colorBlendCI.blendConstants[2] = 0.0f;
@@ -731,7 +731,7 @@ void Renderer::SetUpGraphicsPipelines()
   graphicsPipeline.pTessellationState = nullptr;
   graphicsPipeline.pDynamicState = &dynamicCI;
   graphicsPipeline.subpass = 0;
-
+  
   Shader* mVertPBR = mRhi->CreateShader();
   Shader* mFragPBR = mRhi->CreateShader();
 
@@ -793,6 +793,7 @@ void Renderer::SetUpGraphicsPipelines()
   // Set to default renderpass.
   graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
   colorBlendAttachments[0].blendEnable = VK_FALSE;
+  colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
   colorBlendCI.attachmentCount = 1;

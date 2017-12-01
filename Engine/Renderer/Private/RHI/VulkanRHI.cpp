@@ -140,6 +140,8 @@ void VulkanRHI::Initialize(HWND windowHandle)
   features.samplerAnisotropy = VK_TRUE;
   features.multiViewport = VK_TRUE;
   features.geometryShader = VK_TRUE;
+  features.logicOp = VK_TRUE;
+  features.alphaToOne = VK_TRUE;
 
   VkDeviceCreateInfo deviceCreate = {};
   deviceCreate.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

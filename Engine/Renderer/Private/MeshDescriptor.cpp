@@ -12,7 +12,6 @@ namespace Recluse {
 MeshDescriptor::MeshDescriptor()
   : mVisible(true)
   , mRenderable(true)
-  , mTransparent(false)
   , mTranslucent(false)
   , mStatic(true) 
 {

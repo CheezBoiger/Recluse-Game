@@ -136,6 +136,7 @@ int main(int c, char* argv[])
 
   Material cubeMaterial2;
   SkinnedMeshDescriptor cubeMesh2;
+  cubeMesh2.SetTransparent(true);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
@@ -145,8 +146,8 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
-  cubeInfo2->isTransparent = true;
-  cubeInfo2->transparency = 0.0f;
+  cubeInfo2->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+  cubeInfo2->transparency = 0.4f;
 
   Material cubeMaterial3;
   SkinnedMeshDescriptor cubeMesh3;
@@ -190,11 +191,12 @@ int main(int c, char* argv[])
   // TODO(): This part should be something our engine worries about, not the user.
   // Plan: Create Game Objects from Engine, this will give engine handle to all objects
   // in game.
+  // Transparent objects need to be rendered after opaque objects.
   CmdList& list = gEngine().RenderCommandList();
   list.Resize(3);
-  list[0].target = obj2;
+  list[0].target = obj3;
   list[1].target = obj1;
-  list[2].target = obj3;
+  list[2].target = obj2;
 
   gRenderer().Build();
   r64 timeAccumulator = 0.0;
