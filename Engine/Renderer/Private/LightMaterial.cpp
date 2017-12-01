@@ -24,16 +24,16 @@ LightMaterial::LightMaterial()
   , mLightBuffer(nullptr)
 {
   mLights.primaryLight.enable = false;
-  //mLights.primaryLight.pad[0] = 0;
-  //mLights.primaryLight.pad[1] = 0;
+  mLights.primaryLight.pad[0] = 0;
+  mLights.primaryLight.pad[1] = 0;
   //mLights.primaryLight.pad[2] = 0;
   for (size_t i = 0; i < 128; ++i) {
     mLights.pointLights[i].position = Vector4();
     mLights.pointLights[i].color = Vector4();
     mLights.pointLights[i].range = 0.0f;
     mLights.pointLights[i].enable = false;
-    //mLights.pointLights[i].pad[0] = 0.0f;
-    //mLights.pointLights[i].pad[1] = 0.0f;
+    mLights.pointLights[i].pad[0] = 0;
+    mLights.pointLights[i].pad[1] = 0;
     //mLights.pointLights[i].pad[2] = 0.0f;
   }
 }

@@ -240,7 +240,6 @@ std::vector<SkinnedVertex> Cube::MeshInstance(r32 scale)
     cube[i].normal = normals[i];
     cube[i].texcoord0 = Vector2(texcoords[i].x, texcoords[i].y);
     null_bones(cube[i]);
-    cube[i].color = colors[i];
   }
   return cube;
 }

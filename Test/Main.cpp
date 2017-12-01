@@ -145,6 +145,8 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
+  cubeInfo2->isTransparent = true;
+  cubeInfo2->transparency = 0.0f;
 
   Material cubeMaterial3;
   SkinnedMeshDescriptor cubeMesh3;
@@ -152,7 +154,6 @@ int main(int c, char* argv[])
   cubeMaterial3.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
   cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
-  cubeInfo3->hasAlbedo = true;
   cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
   cubeInfo3->normalMatrix[3][0] = 0.0f;
   cubeInfo3->normalMatrix[3][1] = 0.0f;
@@ -181,7 +182,7 @@ int main(int c, char* argv[])
   obj3->Initialize();
 
   obj1->PushBack(cubeMeshDat);
-  obj3->PushBack(sphereMeshDat);
+  obj2->PushBack(sphereMeshDat);
   obj3->PushBack(cubeMeshDat);
   ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -191,8 +192,8 @@ int main(int c, char* argv[])
   // in game.
   CmdList& list = gEngine().RenderCommandList();
   list.Resize(3);
-  list[0].target = obj1;
-  list[1].target = obj2;
+  list[0].target = obj2;
+  list[1].target = obj1;
   list[2].target = obj3;
 
   gRenderer().Build();

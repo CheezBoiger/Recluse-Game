@@ -7,7 +7,6 @@ layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
 layout (location = 2) in vec2   texcoord0;
 layout (location = 3) in vec2   texcoord1;
-layout (location = 4) in vec4   color;
 layout (location = 5) in vec4   boneWeights;
 layout (location = 6) in ivec4  boneIDs;
 
@@ -36,7 +35,9 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  vec4  color;
   float levelOfDetail;
+  float transparency;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -44,6 +45,8 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasEmissive;
   int   hasAO;
   int   hasBones; 
+  int   isTransparent;
+  ivec2 pad;
 } objBuffer;
 
 
@@ -59,7 +62,6 @@ out FRAG_IN {
   float pad1;
   vec2  texcoord0;
   vec2  texcoord1;
-  vec4  color;
 } frag_in;
 
 
@@ -72,7 +74,6 @@ void main()
   frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
-  frag_in.color = color;
   frag_in.normal = normalize(objBuffer.normalMatrix * normal).xyz;
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;

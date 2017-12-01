@@ -626,7 +626,7 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
   colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
   colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
   colorBlendAttachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
 
@@ -636,7 +636,7 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendAttachments[1].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
   colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   colorBlendAttachments[1].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachments[1].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
   colorBlendAttachments[1].colorBlendOp = VK_BLEND_OP_ADD;
   colorBlendAttachments[1].alphaBlendOp = VK_BLEND_OP_ADD;
 
@@ -644,7 +644,7 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO; 
   colorBlendCI.attachmentCount = 2;
   colorBlendCI.pAttachments = colorBlendAttachments;
-  colorBlendCI.logicOpEnable = VK_FALSE;
+  colorBlendCI.logicOpEnable = VK_TRUE;
   colorBlendCI.logicOp = VK_LOGIC_OP_COPY;
   colorBlendCI.blendConstants[0] = 0.0f;
   colorBlendCI.blendConstants[1] = 0.0f;
@@ -666,7 +666,7 @@ void Renderer::SetUpGraphicsPipelines()
   vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
   u32 offset = 0;
-  VkVertexInputAttributeDescription pbrAttributes[7];
+  VkVertexInputAttributeDescription pbrAttributes[6];
   pbrAttributes[0].binding = 0;
   pbrAttributes[0].location = 0;
   pbrAttributes[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -692,28 +692,22 @@ void Renderer::SetUpGraphicsPipelines()
   offset += sizeof(r32) * 2;
 
   pbrAttributes[4].binding = 0;
-  pbrAttributes[4].location = 4;
-  pbrAttributes[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  pbrAttributes[4].location = 5;
+  pbrAttributes[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;    
   pbrAttributes[4].offset = offset;
   offset += sizeof(r32) * 4;
-  
-  pbrAttributes[5].binding = 0;
-  pbrAttributes[5].location = 5;
-  pbrAttributes[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;    
-  pbrAttributes[5].offset = offset;
-  offset += sizeof(r32) * 4;
 
-  pbrAttributes[6].binding = 0;
-  pbrAttributes[6].location = 6;
-  pbrAttributes[6].format = VK_FORMAT_R32G32B32A32_SINT;
-  pbrAttributes[6].offset = offset;
+  pbrAttributes[5].binding = 0;
+  pbrAttributes[5].location = 6;
+  pbrAttributes[5].format = VK_FORMAT_R32G32B32A32_SINT;
+  pbrAttributes[5].offset = offset;
   offset += sizeof(i32) * 4;
 
   VkPipelineVertexInputStateCreateInfo vertexCI = { };
   vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexCI.vertexBindingDescriptionCount = 1;
   vertexCI.pVertexBindingDescriptions = &vertBindingDesc;
-  vertexCI.vertexAttributeDescriptionCount = 7;
+  vertexCI.vertexAttributeDescriptionCount = 6;
   vertexCI.pVertexAttributeDescriptions = pbrAttributes;
 
   // PbrForward Pipeline Creation.

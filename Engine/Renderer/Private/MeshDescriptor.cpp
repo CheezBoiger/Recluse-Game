@@ -16,7 +16,9 @@ MeshDescriptor::MeshDescriptor()
   , mTranslucent(false)
   , mStatic(true) 
 {
+  mObjectData.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   mObjectData.lodBias = 0.0f;
+  mObjectData.transparency = 1.0f;
   mObjectData.hasAlbedo = false;
   mObjectData.hasAO = false;
   mObjectData.hasBones = false;
@@ -24,6 +26,9 @@ MeshDescriptor::MeshDescriptor()
   mObjectData.hasMetallic = false;
   mObjectData.hasNormal = false;
   mObjectData.hasRoughness = false;
+  mObjectData.isTransparent = false;
+  mObjectData.pad[0] = 1;
+  mObjectData.pad[1] = 2;
 }
 
 

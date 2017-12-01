@@ -14,7 +14,6 @@ struct Vertex {
   Vector4 normal;
   Vector2 texcoord0;
   Vector2 texcoord1;
-  Vector4 color;
 };
 
 
@@ -29,7 +28,6 @@ struct SkinnedVertex {
   Vector4 normal;
   Vector2 texcoord0;
   Vector2 texcoord1;
-  Vector4 color;
   Vector4 boneWeights;
   i32     boneIds       [4];
 };

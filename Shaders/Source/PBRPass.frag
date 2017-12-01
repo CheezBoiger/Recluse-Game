@@ -10,7 +10,6 @@ in FRAG_IN {
   float pad1;
   vec2  texcoord0;
   vec2  texcoord1;
-  vec4  color;
 } frag_in;
 
 #define MAX_LIGHTS            128
@@ -54,7 +53,9 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  vec4  color;
   float levelOfDetail;
+  float transparency;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -62,6 +63,8 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasEmissive;
   int   hasAO;
   int   hasBones; 
+  int   isTransparent;
+  ivec2 pad;
 } objBuffer;
 
 
@@ -254,7 +257,7 @@ void main()
   if (objBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0).rgb, vec3(2.2));
   } else {
-    fragAlbedo = frag_in.color.rgb;
+    fragAlbedo = objBuffer.color.rgb;
   }
     
   if (objBuffer.hasMetallic >= 1) {
@@ -300,5 +303,25 @@ void main()
   }
 
   // We might wanna set a debug param here...
-  finalColor = vec4(outColor, 1.0);
+  float transparency = 1.0;
+  if (objBuffer.isTransparent >= 1) {
+    transparency = objBuffer.transparency;
+  }
+  finalColor = vec4(outColor, transparency);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
