@@ -25,6 +25,20 @@ class VulkanRHI;
 // create multiple render objects to define meshes with separate mesh descriptors and/or materials!
 class RenderObject {
 public:
+  // The Mesh descriptor, used to define the renderobject in 3D space.
+  MeshDescriptor*         MeshDescriptorId;
+
+  // The material of this Render Object.
+  Material*               MaterialId;
+
+  // Number of instances to draw meshdata within the render object.
+  // Typically set to 1 (default is 1.)
+  u32                     Instances;
+
+  // Does this render object define a skinned mesh descriptor?
+  b8                      Skinned;
+
+
   RenderObject(MeshDescriptor* mesh = nullptr, 
                 Material* material = nullptr);
 
@@ -43,15 +57,6 @@ public:
 
   // The currently used descriptor set.
   DescriptorSet*          CurrSet() { return mDescriptorSets[mCurrIdx]; }
-
-  // The Mesh descriptor, used to define the renderobject in 3D space.
-  MeshDescriptor*         MeshDescriptorId;
-
-  // The material of this Render Object.
-  Material*               MaterialId;
-
-  // Does this render object define a skinned mesh descriptor?
-  b8                      Skinned;
 
   size_t                  Size() const { return mMeshGroup.size(); }
 

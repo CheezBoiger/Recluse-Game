@@ -23,7 +23,11 @@ public:
   void            CleanUp();
 
   VertexBuffer*   VertexData() { return &mVertexBuffer; }
-  IndexBuffer*    IndexData() { return &mIndexBuffer; }
+  
+  IndexBuffer*    IndexData() { 
+    if (mIndexBuffer.IndexCount() > 0) return &mIndexBuffer; 
+    else return nullptr; 
+  }
 
 private:
   VertexBuffer    mVertexBuffer;

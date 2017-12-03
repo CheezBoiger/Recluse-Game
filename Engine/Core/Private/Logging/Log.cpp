@@ -6,11 +6,18 @@
 namespace Recluse {
 
 b8 Log::display = false;
+b8 Log::store = false;
 
 
 void Log::DisplayToConsole(b8 enable)
 {
   display = enable;
+}
+
+
+void Log::StoreLogs(b8 enable)
+{
+  store = enable;
 }
 
 

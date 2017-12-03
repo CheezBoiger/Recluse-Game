@@ -2,7 +2,7 @@
 #include "TestGameObject.hpp"
 #include "../Tester.hpp"
 #include "Core/Exception.hpp"
-
+#include "Core/Utility/Archive.hpp"
 #include "Game/GameObject.hpp"
 #include "Game/SkinnedMeshComponent.hpp"
 
@@ -67,6 +67,9 @@ b8 TestGameObject()
   Transform* testTransform = gameObj->GetComponent<Transform>();
   TASSERT_E(testTransform->Position, TestPosition);
   TASSERT_E(transform->Position, testTransform->Position);
+
+  Archive archive;
+  gameObj->Serialize(archive);
 
   GameObject::DestroyAll();
   return true;

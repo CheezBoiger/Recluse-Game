@@ -2,6 +2,7 @@
 #include "Core/Logging/Log.hpp"
 #include "Math/TestMath.hpp"
 #include "Game/TestGameObject.hpp"
+#include "Memory/TestMemory.hpp"
 
 #include "Tester.hpp"
 
@@ -15,7 +16,8 @@ u32 Tester::TestsPassed = 0;
 std::vector<Tester::TestFunc> test = {
   Test::BasicVectorMath,
   Test::BasicMatrixMath,
-  Test::TestGameObject
+  Test::TestGameObject,
+  Test::TestAllocators
 };
 
 int main()

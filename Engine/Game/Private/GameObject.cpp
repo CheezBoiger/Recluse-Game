@@ -51,6 +51,7 @@ GameObject& GameObject::operator=(GameObject&& obj)
 {
   mId = obj.mId;
   mParent = obj.mParent;
+  mName = std::move(obj.mName);
   mComponents = std::move(obj.mComponents);
   mChildren = std::move(obj.mChildren);
 

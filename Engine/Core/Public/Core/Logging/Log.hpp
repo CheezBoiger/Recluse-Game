@@ -3,6 +3,7 @@
 #include "Core/Types.hpp"
 #include <iostream>
 
+
 namespace Recluse {
 
 
@@ -19,16 +20,20 @@ enum Verbosity {
 // TODO(): Log should be reading into a file for keeping history of events happening in the engine.
 class Log {
   static b8     display;
+  static b8     store;
 public:
   static b8     DisplayingToConsole();
+  static b8     Storing() { return store; }
   static b8     Disable(Verbosity verbose);
   static b8     Enable(Verbosity verbose);
   static void   DisplayToConsole(b8 enable);
+  static void   StoreLogs(b8 enable);
 
   Log(Verbosity verbosity = rNormal) : Type(verbosity) { }
 
-
-  void          StoreOutput();
+  template<typename DataType>
+  void Store(DataType& type) {
+  }
 
   Verbosity     Type;
 };
@@ -48,6 +53,10 @@ Log& operator<<(Log& log, Type val) {
     }
   
     std::cout << val;
+  }
+
+  if (Log::Storing()) {
+    log.Store(val);
   }
   // Set back to normal to prevent redundant logging.
   log.Type = rNormal;

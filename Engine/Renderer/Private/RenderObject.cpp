@@ -26,6 +26,7 @@ RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
   , MeshDescriptorId(mesh)
   , Skinned(false)
   , mCurrIdx(0)
+  , Instances(1)
 {
   mDescriptorSets[0] = nullptr;
   mDescriptorSets[1] = nullptr;

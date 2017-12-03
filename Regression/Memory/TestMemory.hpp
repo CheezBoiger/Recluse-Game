@@ -8,5 +8,6 @@ using namespace Recluse;
 namespace Test {
 
 
-b8 TestMemory();
+b8  TestMemory();
+b8  TestAllocators();
 } // Test

@@ -112,8 +112,8 @@ int main(int c, char* argv[])
   albedo->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(5.0f, 60, 60);
-  auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 60, 60);
+  auto sphereData = UVSphere::MeshInstance(5.0f, 128, 128);
+  auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 128, 128);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
 

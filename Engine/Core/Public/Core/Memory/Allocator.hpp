@@ -16,7 +16,7 @@ public:
     , m_Used(0)
     , m_NumAllocations(0) { }
   
-  virtual void* Allocate(size_t size, u8 align) { return nullptr; }
+  virtual void* Allocate(size_t size, size_t align) { return nullptr; }
   virtual void  Deallocate(void* ptr) { }
 
   void*         RawMemory() { return m_Memory; }

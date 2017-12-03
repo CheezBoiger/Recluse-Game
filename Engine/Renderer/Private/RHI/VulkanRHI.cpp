@@ -418,7 +418,7 @@ void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
 
 void VulkanRHI::AcquireNextImage()
 {
-  vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT_MAX,
+  vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
     mSwapchain.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
 }
 

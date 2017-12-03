@@ -1332,10 +1332,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         RenderCmd& renderCmd = mCmdList->Get(i);
         // Need to notify that this render command does not have a render object.
         if (!renderCmd.target) continue;
-
         RenderObject* renderObj = renderCmd.target;
         Material* mat = renderObj->MaterialId;
-
         VkDescriptorSet descriptorSets[] = {
           mGlobalMat->Set()->Handle(),
           renderObj->CurrSet()->Handle(),
@@ -1358,13 +1356,17 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
           VertexBuffer* vertexBuffer = data->VertexData();
           IndexBuffer* indexBuffer = data->IndexData();
           VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
-          VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
 
           VkDeviceSize offsets[] = { 0 };
           cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
-          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), 1, 0, 0, 0);
-          //cmdBuffer->Draw(vertexBuffer->VertexCount(), 1, 0, 0);
+
+          if (indexBuffer) {
+            VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
+            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), renderObj->Instances, 0, 0, 0);
+          } else {
+            cmdBuffer->Draw(vertexBuffer->VertexCount(), renderObj->Instances, 0, 0);
+          }
         }
       }
     }

@@ -34,6 +34,8 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Box.cpp
   #${RECLUSE_CORE_PRIVATE_DIR}/Math/Ray.cpp
 
+
+  ${RECLUSE_CORE_PUB_DIR}/Math/Color4.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Vector.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Module.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Time.hpp
@@ -71,7 +73,9 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Memory/Allocator.hpp
   ${RECLUSE_CORE_PUB_DIR}/Memory/StackAllocator.hpp
   ${RECLUSE_CORE_PUB_DIR}/Memory/PoolAllocator.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Memory/FreeListAllocator.hpp
 
+  ${RECLUSE_CORE_PRIVATE_DIR}/Memory/FreeListAllocator.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Memory/StackAllocator.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Memory/PoolAllocator.cpp
 )
