@@ -24,6 +24,7 @@ class Texture;
 class DescriptorSet;
 class DescriptorSetLayout;
 class UserParams;
+class Query;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
@@ -85,6 +86,7 @@ public:
   CommandBuffer*                CreateCommandBuffer();
   DescriptorSet*                CreateDescriptorSet();
   DescriptorSetLayout*          CreateDescriptorSetLayout();
+  Query*                        CreateQuery();
 
   void                          FreeBuffer(Buffer* buffer);
   void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
@@ -96,6 +98,7 @@ public:
   void                          FreeCommandBuffer(CommandBuffer* buffer);
   void                          FreeDescriptorSet(DescriptorSet* set);
   void                          FreeDescriptorSetLayout(DescriptorSetLayout* layout);
+  void                          FreeQuery(Query* query);
 
   // Set the default swapchain command buffers, which is defined by the programmer of the renderer.
   void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
@@ -122,6 +125,9 @@ public:
 
   // Get the descriptor pool that is used to create our descriptor sets.
   VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
+
+  // Get the query pool that is used to create queries.
+  VkQueryPool                   OcclusionQueryPool() { return mOccQueryPool; }
 
   // Create a semaphore object.
   Semaphore*                    CreateVkSemaphore();
@@ -194,6 +200,7 @@ private:
   void                          QueryFromSwapchain();
   void                          CreateDepthAttachment();
   void                          CreateSwapchainCommandBuffers(u32 swapSet);  
+  void                          CreateOcclusionQueryPool(u32 queries);
 
   // Builds the descriptor pool for materials. WARNING: Recalling this function will
   // destroy old descriptor pool and replace with a new one, be sure to destroy all
@@ -207,6 +214,7 @@ private:
   VkCommandPool                 mCmdPool;
   VkCommandPool                 mComputeCmdPool;
   VkDescriptorPool              mDescriptorPool;
+  VkQueryPool                   mOccQueryPool;
   VkPhysicalDeviceProperties    mPhysicalDeviceProperties;
 
   // Framebuffers and Renderpass that is used by the swapchain. We must

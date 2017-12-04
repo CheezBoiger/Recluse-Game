@@ -16,6 +16,7 @@
 #include "LightMaterial.hpp"
 #include "GlobalMaterial.hpp"
 #include "StructuredBuffer.hpp"
+#include "VertexDescription.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -508,14 +509,14 @@ void Renderer::SetUpFrameBuffers()
   subpass.pColorAttachments = attachmentColors;
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
   
-  VkRenderPassCreateInfo renderpassCI = { };
-  renderpassCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderpassCI.attachmentCount = 3;
-  renderpassCI.pAttachments = attachmentDescriptions;
-  renderpassCI.subpassCount = 1;
-  renderpassCI.pSubpasses = &subpass;
-  renderpassCI.dependencyCount = 2;
-  renderpassCI.pDependencies = dependencies;
+  VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
+    3,
+    attachmentDescriptions,
+    2,
+    dependencies,
+    1,
+    &subpass
+  );
 
 
   VkImageView attachments[3];
@@ -523,14 +524,15 @@ void Renderer::SetUpFrameBuffers()
   attachments[1] = pbrNormal->View();
   attachments[2] = pbrDepth->View();
 
-  VkFramebufferCreateInfo framebufferCI = {};
-  framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-  framebufferCI.height = mWindowHandle->Height();
-  framebufferCI.width = mWindowHandle->Width();
-  framebufferCI.renderPass = nullptr; // The finalize call handles this for us.
-  framebufferCI.layers = 1;
-  framebufferCI.attachmentCount = 3;
-  framebufferCI.pAttachments = attachments;
+  VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
+    mWindowHandle->Width(),
+    mWindowHandle->Height(),
+    nullptr, // Finalize() call handles this for us.
+    3,
+    attachments,
+    1)
+  ;
+
   pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
   
   // No need to render any depth, as we are only writing on a 2d surface.
@@ -585,18 +587,15 @@ void Renderer::SetUpGraphicsPipelines()
   viewportCI.scissorCount = 1;
   viewportCI.pScissors = &scissor;
 
-  VkPipelineRasterizationStateCreateInfo rasterizerCI = { };
-  rasterizerCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-  rasterizerCI.depthClampEnable = VK_FALSE;
-  rasterizerCI.rasterizerDiscardEnable = VK_FALSE;
-  rasterizerCI.polygonMode = VK_POLYGON_MODE_FILL;
-  rasterizerCI.lineWidth = 1.0f;
-  rasterizerCI.cullMode = VK_CULL_MODE_BACK_BIT;
-  rasterizerCI.frontFace = VK_FRONT_FACE_CLOCKWISE;
-  rasterizerCI.depthBiasEnable = VK_FALSE;
-  rasterizerCI.depthBiasConstantFactor = 0.0f;
-  rasterizerCI.depthBiasSlopeFactor = 0.0f;
-  rasterizerCI.depthBiasClamp = 0.0f;
+  VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
+     VK_POLYGON_MODE_FILL,
+      VK_FALSE, 
+      VK_CULL_MODE_BACK_BIT,
+      VK_FRONT_FACE_CLOCKWISE,
+      1.0f,
+      VK_FALSE,
+      VK_FALSE
+  );
 
   VkPipelineMultisampleStateCreateInfo msCI = { };
   msCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -620,36 +619,34 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.front = { };
 
   VkPipelineColorBlendAttachmentState colorBlendAttachments[2];
-  colorBlendAttachments[0] = { };
-  colorBlendAttachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachments[0].blendEnable = VK_TRUE;
-  colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-  colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
-  colorBlendAttachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
+  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
 
-  colorBlendAttachments[1] = { };
-  colorBlendAttachments[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-  colorBlendAttachments[1].blendEnable = VK_TRUE;
-  colorBlendAttachments[1].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  colorBlendAttachments[1].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachments[1].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-  colorBlendAttachments[1].colorBlendOp = VK_BLEND_OP_ADD;
-  colorBlendAttachments[1].alphaBlendOp = VK_BLEND_OP_ADD;
+  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
 
-  VkPipelineColorBlendStateCreateInfo colorBlendCI = { };
-  colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO; 
-  colorBlendCI.attachmentCount = 2;
-  colorBlendCI.pAttachments = colorBlendAttachments;
-  colorBlendCI.logicOpEnable = VK_FALSE;
-  colorBlendCI.logicOp = VK_LOGIC_OP_NO_OP;
-  colorBlendCI.blendConstants[0] = 0.0f;
-  colorBlendCI.blendConstants[1] = 0.0f;
-  colorBlendCI.blendConstants[2] = 0.0f;
-  colorBlendCI.blendConstants[3] = 0.0f;
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+    2,
+    colorBlendAttachments,
+    VK_FALSE,
+    VK_LOGIC_OP_NO_OP
+  );
 
   VkDynamicState dynamicStates[1] = {
     VK_DYNAMIC_STATE_VIEWPORT
@@ -660,55 +657,15 @@ void Renderer::SetUpGraphicsPipelines()
   dynamicCI.dynamicStateCount = 1;
   dynamicCI.pDynamicStates = dynamicStates;
   
-  VkVertexInputBindingDescription vertBindingDesc = { };
-  vertBindingDesc.binding = 0;
-  vertBindingDesc.stride = sizeof(SkinnedVertex);
-  vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-  u32 offset = 0;
-  VkVertexInputAttributeDescription pbrAttributes[6];
-  pbrAttributes[0].binding = 0;
-  pbrAttributes[0].location = 0;
-  pbrAttributes[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-  pbrAttributes[0].offset = offset;
-  offset += sizeof(r32) * 4;
-
-  pbrAttributes[1].binding = 0;
-  pbrAttributes[1].location = 1;
-  pbrAttributes[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-  pbrAttributes[1].offset = offset;
-  offset += sizeof(r32) * 4;
-
-  pbrAttributes[2].binding = 0;
-  pbrAttributes[2].location = 2;
-  pbrAttributes[2].format = VK_FORMAT_R32G32_SFLOAT;
-  pbrAttributes[2].offset = offset;
-  offset += sizeof(r32) * 2;
-  
-  pbrAttributes[3].binding = 0;
-  pbrAttributes[3].location = 3;
-  pbrAttributes[3].format = VK_FORMAT_R32G32_SFLOAT;
-  pbrAttributes[3].offset = offset;
-  offset += sizeof(r32) * 2;
-
-  pbrAttributes[4].binding = 0;
-  pbrAttributes[4].location = 5;
-  pbrAttributes[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;    
-  pbrAttributes[4].offset = offset;
-  offset += sizeof(r32) * 4;
-
-  pbrAttributes[5].binding = 0;
-  pbrAttributes[5].location = 6;
-  pbrAttributes[5].format = VK_FORMAT_R32G32B32A32_SINT;
-  pbrAttributes[5].offset = offset;
-  offset += sizeof(i32) * 4;
+  VkVertexInputBindingDescription vertBindingDesc = SkinnedVertexDescription::GetBindingDescription();
+  auto pbrAttributes = SkinnedVertexDescription::GetVertexAttributes();
 
   VkPipelineVertexInputStateCreateInfo vertexCI = { };
   vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexCI.vertexBindingDescriptionCount = 1;
   vertexCI.pVertexBindingDescriptions = &vertBindingDesc;
-  vertexCI.vertexAttributeDescriptionCount = 6;
-  vertexCI.pVertexAttributeDescriptions = pbrAttributes;
+  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(pbrAttributes.size());
+  vertexCI.pVertexAttributeDescriptions = pbrAttributes.data();
 
   // PbrForward Pipeline Creation.
   GraphicsPipeline* pbrForwardPipeline = mRhi->CreateGraphicsPipeline();
@@ -798,6 +755,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.stencilTestEnable = VK_FALSE;
   colorBlendCI.attachmentCount = 1;
   rasterizerCI.cullMode = VK_CULL_MODE_NONE;
+  rasterizerCI.polygonMode = VK_POLYGON_MODE_FILL;
 
   Shader* quadVert = mRhi->CreateShader();
   Shader* quadFrag = mRhi->CreateShader();
@@ -830,23 +788,11 @@ void Renderer::SetUpGraphicsPipelines()
   graphicsPipeline.stageCount = 2;
   graphicsPipeline.pStages = finalShaders;
 
-  VkVertexInputAttributeDescription finalAttribs[2];
-  finalAttribs[0].binding = 0;
-  finalAttribs[0].format = VK_FORMAT_R32G32_SFLOAT;
-  finalAttribs[0].location = 0;
-  finalAttribs[0].offset = 0;
+  auto finalAttribs = QuadVertexDescription::GetVertexAttributes();
+  vertBindingDesc = QuadVertexDescription::GetBindingDescription();
   
-  finalAttribs[1].binding = 0;
-  finalAttribs[1].format = VK_FORMAT_R32G32_SFLOAT;
-  finalAttribs[1].location = 1;
-  finalAttribs[1].offset = sizeof(r32) * 2;
-
-  vertBindingDesc.binding = 0;
-  vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-  vertBindingDesc.stride = sizeof(QuadVertex);
-  
-  vertexCI.vertexAttributeDescriptionCount = 2;
-  vertexCI.pVertexAttributeDescriptions = finalAttribs;
+  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(finalAttribs.size());
+  vertexCI.pVertexAttributeDescriptions = finalAttribs.data();
   //vertexCI.pNext
 
   VkPipelineLayoutCreateInfo finalLayout = {};

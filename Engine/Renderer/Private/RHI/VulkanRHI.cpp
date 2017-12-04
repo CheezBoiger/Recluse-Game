@@ -47,6 +47,7 @@ VulkanRHI::VulkanRHI()
   , mCmdPool(VK_NULL_HANDLE)
   , mComputeCmdPool(VK_NULL_HANDLE)
   , mDescriptorPool(VK_NULL_HANDLE)
+  , mOccQueryPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
   , mCurrDescSets(0)
 {
@@ -180,6 +181,7 @@ void VulkanRHI::Initialize(HWND windowHandle)
 
   // Descriptor pool maxes.
   BuildDescriptorPool(UINT16_MAX, UINT16_MAX);
+  CreateOcclusionQueryPool(UINT16_MAX);
 
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
@@ -202,10 +204,12 @@ void VulkanRHI::CleanUp()
 
   if (mCmdPool) {
     vkDestroyCommandPool(mLogicalDevice.Native(), mCmdPool, nullptr);
+    mCmdPool = VK_NULL_HANDLE;
   }
 
   if (mComputeCmdPool) {
     vkDestroyCommandPool(mLogicalDevice.Native(), mComputeCmdPool, nullptr);
+    mComputeCmdPool = VK_NULL_HANDLE;
   }
 
   if (mDescriptorPool) {
@@ -213,11 +217,18 @@ void VulkanRHI::CleanUp()
     mDescriptorPool = VK_NULL_HANDLE;
   }
 
+  if (mOccQueryPool) {
+    vkDestroyQueryPool(mLogicalDevice.Native(), mOccQueryPool, nullptr);
+    mOccQueryPool = VK_NULL_HANDLE;
+  }
+
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
     vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
+    framebuffer = VK_NULL_HANDLE;
   }
+
   vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
-  
+    
   vkDestroyImageView(mLogicalDevice.Native(), mSwapchainInfo.mDepthView, nullptr);
   vkDestroyImage(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, nullptr);
   vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
@@ -830,5 +841,18 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   if (vkCreateDescriptorPool(mLogicalDevice.Native(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to created descriptor pool!\n");
   }
+}
+
+
+void VulkanRHI::CreateOcclusionQueryPool(u32 queries)
+{
+  VkQueryPoolCreateInfo queryCi = { };
+  queryCi.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+  queryCi.queryCount = queries;
+  queryCi.queryType = VK_QUERY_TYPE_OCCLUSION;
+  
+  if (vkCreateQueryPool(mLogicalDevice.Native(), &queryCi, nullptr, &mOccQueryPool) != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to create occlusion query pool!\n");
+  } 
 }
 } // Recluse
