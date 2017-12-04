@@ -37,6 +37,7 @@ extern std::string RenderTarget8xScaledStr;
 extern std::string FrameBuffer2xStr;
 extern std::string FrameBuffer4xStr;
 extern std::string FrameBuffer8xStr;
+extern std::string DownscaleBlurLayoutStr;
 extern std::string DownscaleBlurPipelineStr;
 extern std::string DownscaleBlurVertFileStr;
 extern std::string DownscaleBlurFragFileStr;

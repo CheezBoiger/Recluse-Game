@@ -46,8 +46,8 @@ void ProcessInput()
 
   // Window changing sets.
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
-  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->Show(); }
-  if (Keyboard::KeyPressed(KEY_CODE_B)) { window->SetToWindowed(800, 600, true); window->Show(); }
+  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->SetToCenter(); window->Show(); }
+  if (Keyboard::KeyPressed(KEY_CODE_B)) { window->SetToWindowed(800, 600, true); window->SetToCenter(); window->Show(); }
   if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { window->Close(); }
 }
 

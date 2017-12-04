@@ -406,6 +406,26 @@ void Renderer::SetUpDescriptorSetLayouts()
   hdrLayoutCi.pBindings = hdrBindings;
   
   hdrSetLayout->Initialize(hdrLayoutCi);
+
+  // Downscale descriptor set layout info.
+  DescriptorSetLayout* downscaleLayout = mRhi->CreateDescriptorSetLayout();
+  gResources().RegisterDescriptorSetLayout(DownscaleBlurLayoutStr, downscaleLayout);
+
+  VkDescriptorSetLayoutBinding dwnscl[1];
+  dwnscl[0].binding = 0;
+  dwnscl[0].descriptorCount = 1;
+  dwnscl[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  dwnscl[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  dwnscl[0].pImmutableSamplers = nullptr;
+
+  VkDescriptorSetLayoutCreateInfo dwnLayout = { };
+  dwnLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  dwnLayout.bindingCount = 1;
+  dwnLayout.pBindings = dwnscl;
+  dwnLayout.flags = 0;
+  dwnLayout.pNext = nullptr;
+  
+  downscaleLayout->Initialize(dwnLayout);
 }
 
 
@@ -424,6 +444,9 @@ void Renderer::CleanUpDescriptorSetLayouts()
 
   DescriptorSetLayout* hdrSetLayout = gResources().UnregisterDescriptorSetLayout(HDRGammaDescSetLayoutStr);
   mRhi->FreeDescriptorSetLayout(hdrSetLayout);
+
+  DescriptorSetLayout* downscaleLayout = gResources().UnregisterDescriptorSetLayout(DownscaleBlurLayoutStr);
+  mRhi->FreeDescriptorSetLayout(downscaleLayout);
 }
 
 
@@ -518,7 +541,6 @@ void Renderer::SetUpFrameBuffers()
     &subpass
   );
 
-
   VkImageView attachments[3];
   attachments[0] = pbrColor->View();
   attachments[1] = pbrNormal->View();
@@ -546,6 +568,7 @@ void Renderer::SetUpFrameBuffers()
   subpass.colorAttachmentCount = 1;
   hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
 
+  // Downscale render textures.
   Texture* rtDownScale2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
   Texture* rtDownScale4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
   Texture* rtDownScale8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
@@ -557,12 +580,36 @@ void Renderer::SetUpFrameBuffers()
   gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x);
   gResources().RegisterFrameBuffer(FrameBuffer8xStr, DownScaleFB8x);
 
-  
+  // 2x
+  attachments[0] = rtDownScale2x->View();
+  attachmentDescriptions[0].format = rtDownScale2x->Format();
+  attachmentDescriptions[0].samples = rtDownScale2x->Samples();
+  framebufferCI.width = rtDownScale2x->Width();
+  framebufferCI.height = rtDownScale2x->Height();
+  DownScaleFB2x->Finalize(framebufferCI, renderpassCI);
+
+  // 4x
+  attachments[0] = rtDownScale4x->View();
+  attachmentDescriptions[0].format = rtDownScale4x->Format();
+  attachmentDescriptions[0].samples = rtDownScale4x->Samples();
+  framebufferCI.width = rtDownScale4x->Width();
+  framebufferCI.height = rtDownScale4x->Height();
+  DownScaleFB4x->Finalize(framebufferCI, renderpassCI);
+
+  // 8x
+  attachments[0] = rtDownScale8x->View();
+  attachmentDescriptions[0].format = rtDownScale8x->Format();
+  attachmentDescriptions[0].samples = rtDownScale8x->Samples();
+  framebufferCI.width = rtDownScale8x->Width();
+  framebufferCI.height = rtDownScale8x->Height();
+  DownScaleFB8x->Finalize(framebufferCI, renderpassCI);
 }
 
 
 void Renderer::SetUpGraphicsPipelines()
 {
+  std::string filepath = gFilesystem().CurrentAppDirectory();
+
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -691,8 +738,6 @@ void Renderer::SetUpGraphicsPipelines()
   
   Shader* mVertPBR = mRhi->CreateShader();
   Shader* mFragPBR = mRhi->CreateShader();
-
-  std::string filepath = gFilesystem().CurrentAppDirectory();
 
   if (!mVertPBR->Initialize(filepath + "/" + ShadersPath + "/" + PBRVertFileStr)) {
     Log(rError) << "Could not find " + PBRVertFileStr + "!";
@@ -842,6 +887,10 @@ void Renderer::SetUpGraphicsPipelines()
 
   // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
   // pass. 
+  GraphicsPipeline* downscale = mRhi->CreateGraphicsPipeline();
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipelineStr, downscale);
+  DescriptorSetLayout* downscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
+
   Shader* dbVert = mRhi->CreateShader();
   Shader* dbFrag = mRhi->CreateShader();
   if (!dbVert->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
@@ -851,6 +900,24 @@ void Renderer::SetUpGraphicsPipelines()
   if (!dbFrag->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
     Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
   }
+
+  VkPushConstantRange pushConst = { };
+  pushConst.offset = 0;
+  pushConst.size = 4;
+  pushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+ 
+  VkDescriptorSetLayout dwnsclLayout[] = { downscaleDescLayout->Layout() };
+  VkPipelineLayoutCreateInfo downscaleLayout = { };
+  downscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  downscaleLayout.pushConstantRangeCount = 1;
+  downscaleLayout.pPushConstantRanges = &pushConst;
+  downscaleLayout.setLayoutCount = 1;
+  downscaleLayout.pSetLayouts = dwnsclLayout;
+
+  finalShaders[0].module = dbVert->Handle();
+  finalShaders[1].module = dbFrag->Handle();
+
+  downscale->Initialize(graphicsPipeline, downscaleLayout);
 
   mRhi->FreeShader(dbVert);
   mRhi->FreeShader(dbFrag);
@@ -887,6 +954,9 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* hdrPipeline = gResources().UnregisterGraphicsPipeline(HDRGammaPipelineStr);
   mRhi->FreeGraphicsPipeline(hdrPipeline);
+
+  GraphicsPipeline* downscalePipeline = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipelineStr);
+  mRhi->FreeGraphicsPipeline(downscalePipeline);
 }
 
 
@@ -1350,16 +1420,17 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   VkClearValue clearVal = { };
   clearVal.color = { 0.1f, 0.1f, 0.1f, 0.0f };
 
-  cmdBuffer->Begin(cmdBi);
-    VkRenderPassBeginInfo renderpassInfo = { };
-    renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderpassInfo.framebuffer = hdrFrameBuffer->Handle();
-    renderpassInfo.clearValueCount = 1;
-    renderpassInfo.pClearValues =  &clearVal;
-    renderpassInfo.renderPass = hdrFrameBuffer->RenderPass(); 
-    renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
-    renderpassInfo.renderArea.offset = { 0, 0 };
+  VkRenderPassBeginInfo renderpassInfo = {};
+  renderpassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderpassInfo.framebuffer = hdrFrameBuffer->Handle();
+  renderpassInfo.clearValueCount = 1;
+  renderpassInfo.pClearValues = &clearVal;
+  renderpassInfo.renderPass = hdrFrameBuffer->RenderPass();
+  renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  renderpassInfo.renderArea.offset = { 0, 0 };
 
+  cmdBuffer->Begin(cmdBi);
+    // TODO(): Add downscaling rendering here?
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     VkViewport viewport = {};

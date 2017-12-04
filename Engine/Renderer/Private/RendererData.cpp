@@ -35,6 +35,7 @@ std::string FrameBuffer2xStr          = "FrameBuffer2x";
 std::string FrameBuffer4xStr          = "FrameBuffer4x";
 std::string FrameBuffer8xStr          = "FrameBuffer8x";
 std::string DownscaleBlurPipelineStr  = "DownscaleBlurPipeline";
+std::string DownscaleBlurLayoutStr    = "DownscaleBlurLayout";
 std::string DownscaleBlurVertFileStr  = "DownscaleBlurPass.vert.spv";
 std::string DownscaleBlurFragFileStr  = "DownscaleBlurPass.frag.spv";
 
