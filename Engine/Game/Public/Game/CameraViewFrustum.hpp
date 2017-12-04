@@ -3,6 +3,7 @@
 
 #include "Core/Types.hpp"
 #include "Core/Math/Vector4.hpp"
+#include "Core/Math/Plane.hpp"
 
 namespace Recluse {
 
@@ -23,7 +24,7 @@ public:
   // 3          bottom
   // 4          near
   // 5          far
-  Vector4     m_Planes      [6];
+  Plane       m_Planes      [6];
   
   // TODO(): Update() function to calculate camera view frustum
   // which will be used to send to global material.
