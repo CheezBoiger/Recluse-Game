@@ -53,7 +53,8 @@ public:
   virtual void        Look(r64 x, r64 y) { }
   virtual void        Move(Movement move, r64 dt) { }
   Vector3             Position() const { return mPosition; }
-  Vector3             LookPosition() const { return mLookAt; }
+  Vector3             LookDir() const { return mLookAt; }
+  Vector3             WorldUp() const { return mWorldUp; }
   Quaternion          Rotation() const { return mRotation; }
   
   Ray                 GetDirectionRay() {  

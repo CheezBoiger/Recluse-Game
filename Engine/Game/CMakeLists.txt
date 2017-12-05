@@ -38,6 +38,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/SkinnedMeshComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObjectManager.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/CameraViewFrustum.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

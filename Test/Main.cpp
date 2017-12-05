@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Recluse Project. All rights reserved.
 #include "Game/Engine.hpp"
 #include "Game/Geometry/UVSphere.hpp"
+#include "Game/CameraViewFrustum.hpp"
 #include "Renderer/Vertex.hpp"
 #include "Renderer/UserParams.hpp"
 #include "Renderer/CmdList.hpp"
@@ -71,6 +72,7 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
+  CCamViewFrustum frustum;
   Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
 
@@ -78,6 +80,7 @@ int main(int c, char* argv[])
     Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f), Vector3::UP);
 
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
+  frustum.SetCamera(&fpsCamera);
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
 
@@ -233,8 +236,14 @@ int main(int c, char* argv[])
     // light cube transforming.
     light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -3.0f, 2.0f, 0.0f);
     lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
+    // Testing quat.
+    Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
     cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
+#if 0
       Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
+#else
+    quat.ToMatrix4() *
+#endif
       Matrix4::Translate(Matrix4::Identity(), light0Pos);
     cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
     cubeInfo3->normalMatrix[3][0] = 0.0f;
@@ -252,6 +261,7 @@ int main(int c, char* argv[])
 
     // Syncronize engine modules, as they run on threads.
     gEngine().Update(dt);
+    frustum.Update(); // TODO(): Testing frustum... This will go in engine soon.
     gCore().Sync();
     gRenderer().Render();
 

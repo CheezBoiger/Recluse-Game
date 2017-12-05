@@ -53,7 +53,6 @@ b8 BasicVectorMath()
   Log() << "Vector3 subtraction\n";
   Vector3 c4 = b3 - a3;
   Log() << "Calculated Subtraction Vector: " << c4 << "\n";
- 
   return true;
 }
 } // Test

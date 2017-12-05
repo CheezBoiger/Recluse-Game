@@ -11,10 +11,27 @@ namespace Recluse {
 class Camera;
 class AABB;
 
-class CCamViewFrustum {
-public:
+typedef struct CCamViewFrustum CFrustum;
+
+struct CCamViewFrustum {
+  static u32    PLEFT;
+  static u32    PRIGHT;
+  static u32    PTOP;
+  static u32    PBOTTOM;
+  static u32    PNEAR;
+  static u32    PFAR;
+
+private:
   // camera that this view frustum is associated with.
   Camera*     m_Camera;
+  r32         m_Nh;
+  r32         m_Nw;
+  r32         m_Fh;
+  r32         m_Fw;
+
+public:
+  CCamViewFrustum()
+    : m_Camera(nullptr) { }
 
   // Planes of the camera. Ordered as so:
   // idx        plane
@@ -30,7 +47,13 @@ public:
   // which will be used to send to global material.
   void        Update();
 
-  b8          Intersect(AABB* aabb);
+  b8          Intersect(const AABB* aabb);
+
+  // Check if AABB object is inside this frustum.
+  b8          InsideFrustum(const AABB* aabb);
+
+  void        SetCamera(Camera* camera);
+  Camera*     GetCamera() const { return m_Camera; }
   
 };
 } // Recluse
