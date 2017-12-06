@@ -1,5 +1,13 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "RendererData.hpp"
+#include "Resources.hpp"
+#include "Core/Logging/Log.hpp"
+#include "Renderer.hpp"
+#include "RHI/VulkanRHI.hpp"
+#include "RHI/Shader.hpp"
+#include "RHI/DescriptorSet.hpp"
+#include "RHI/GraphicsPipeline.hpp"
+#include "RHI/Framebuffer.hpp"
 
 
 namespace Recluse {
@@ -55,4 +63,263 @@ std::string FinalDescSetStr           = "FinalSet";
 std::string FinalDescSetLayoutStr     = "FinalSetLayout";
 std::string FinalVertFileStr          = "FinalPass.vert.spv";
 std::string FinalFragFileStr          = "FinalPass.frag.spv";
+
+
+namespace RendererPass {
+
+
+void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  // PbrForward Pipeline Creation.
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  GraphicsPipeline* PbrForwardPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* PbrStaticPipeline = Rhi->CreateGraphicsPipeline();
+  FrameBuffer* PbrFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
+  Shader* VertPBR = Rhi->CreateShader();
+  Shader* FragPBR = Rhi->CreateShader();
+
+  gResources().RegisterGraphicsPipeline(PBRPipelineStr, PbrForwardPipeline);
+  gResources().RegisterGraphicsPipeline(PBRStaticPipelineStr, PbrStaticPipeline);
+  if (!VertPBR->Initialize(Filepath + "/" + ShadersPath + "/" + PBRVertFileStr)) {
+    Log(rError) << "Could not find " + PBRVertFileStr + "!";
+  }
+
+  if (!FragPBR->Initialize(Filepath + "/" + ShadersPath + "/" + PBRFragFileStr)) {
+    Log(rError) << "Could not find " + PBRFragFileStr + "!";
+  }
+
+  VkPipelineShaderStageCreateInfo PbrShaders[2];
+  PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[0].module = VertPBR->Handle();
+  PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  PbrShaders[0].pName = "main";
+  PbrShaders[0].pNext = nullptr;
+  PbrShaders[0].pSpecializationInfo = nullptr;
+  PbrShaders[0].flags = 0;
+
+  PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[1].module = FragPBR->Handle();
+  PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  PbrShaders[1].pName = "main";
+  PbrShaders[1].pNext = nullptr;
+  PbrShaders[1].flags = 0;
+  PbrShaders[1].pSpecializationInfo = nullptr;
+
+  GraphicsInfo.renderPass = PbrFrameBuffer->RenderPass();
+  GraphicsInfo.stageCount = 2;
+  GraphicsInfo.pStages = PbrShaders;
+
+  VkDescriptorSetLayout DLayouts[3];
+  DLayouts[0] = gResources().GetDescriptorSetLayout(PBRGlobalMatLayoutStr)->Layout();
+  DLayouts[1] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
+  DLayouts[2] = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr)->Layout();
+
+  VkPipelineLayoutCreateInfo PipelineLayout = {};
+  PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  PipelineLayout.setLayoutCount = 3;
+  PipelineLayout.pSetLayouts = DLayouts;
+  PipelineLayout.pPushConstantRanges = 0;
+  PipelineLayout.pushConstantRangeCount = 0;
+
+  // Initialize pbr forward pipeline.
+  PbrForwardPipeline->Initialize(GraphicsInfo, PipelineLayout);
+  Rhi->FreeShader(VertPBR);
+  Rhi->FreeShader(FragPBR);
+}
+
+
+void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
+  VkPipelineLayoutCreateInfo hdrLayout = {};
+  VkDescriptorSetLayout hdrSetLayout = gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr)->Layout();
+
+  Shader* HdrFrag = Rhi->CreateShader();
+  Shader* HdrVert = Rhi->CreateShader();
+
+  if (!HdrFrag->Initialize(Filepath + "/" + ShadersPath + "/" + HDRGammaFragFileStr)) {
+    Log(rError) << "Could not find " + HDRGammaFragFileStr + "!";
+  }
+
+  if (!HdrVert->Initialize(Filepath + "/" + ShadersPath + "/" + HDRGammaVertFileStr)) {
+    Log(rError) << "Could not find " + HDRGammaVertFileStr + "!";
+  }
+
+  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
+  GraphicsInfo.renderPass = hdrBuffer->RenderPass();
+
+  VkPipelineShaderStageCreateInfo ShaderModules[2];
+  ShaderModules[0].flags = 0;
+  ShaderModules[0].module = HdrVert->Handle();
+  ShaderModules[0].pName = "main";
+  ShaderModules[0].pNext = nullptr;
+  ShaderModules[0].pSpecializationInfo = nullptr;
+  ShaderModules[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  ShaderModules[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  ShaderModules[1].flags = 0;
+  ShaderModules[1].module = HdrFrag->Handle();
+  ShaderModules[1].pName = "main";
+  ShaderModules[1].pNext = nullptr;
+  ShaderModules[1].pSpecializationInfo = nullptr;
+  ShaderModules[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  ShaderModules[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  GraphicsInfo.pStages = ShaderModules;
+  GraphicsInfo.stageCount = 2;
+
+  hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  hdrLayout.setLayoutCount = 1;
+  hdrLayout.pSetLayouts = &hdrSetLayout;
+
+  hdrPipeline->Initialize(GraphicsInfo, hdrLayout);
+
+  Rhi->FreeShader(HdrFrag);
+  Rhi->FreeShader(HdrVert);
+  gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
+
+}
+
+
+void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+
+  // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
+  // pass. 
+  GraphicsPipeline* downscale = Rhi->CreateGraphicsPipeline();
+  FrameBuffer*      FrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer*      FrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
+  FrameBuffer*      FrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipelineStr, downscale);
+  DescriptorSetLayout* downscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
+
+  Shader* dbVert = Rhi->CreateShader();
+  Shader* dbFrag = Rhi->CreateShader();
+  if (!dbVert->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
+    Log(rError) << "Could not find " + DownscaleBlurVertFileStr + "!\n";
+  }
+
+  if (!dbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
+    Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
+  }
+
+  VkPushConstantRange PushConst = {};
+  PushConst.offset = 0;
+  PushConst.size = 4;
+  PushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayout dwnsclLayout[] = { downscaleDescLayout->Layout() };
+  VkPipelineLayoutCreateInfo downscaleLayout = {};
+  downscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  downscaleLayout.pushConstantRangeCount = 1;
+  downscaleLayout.pPushConstantRanges = &PushConst;
+  downscaleLayout.setLayoutCount = 1;
+  downscaleLayout.pSetLayouts = dwnsclLayout;
+
+  VkPipelineShaderStageCreateInfo ShaderModules[2];
+  ShaderModules[0].flags = 0;
+  ShaderModules[0].module = dbVert->Handle();
+  ShaderModules[0].pName = "main";
+  ShaderModules[0].pNext = nullptr;
+  ShaderModules[0].pSpecializationInfo = nullptr;
+  ShaderModules[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  ShaderModules[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  ShaderModules[1].flags = 0;
+  ShaderModules[1].module = dbFrag->Handle();
+  ShaderModules[1].pName = "main";
+  ShaderModules[1].pNext = nullptr;
+  ShaderModules[1].pSpecializationInfo = nullptr;
+  ShaderModules[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  ShaderModules[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  GraphicsInfo.pStages = ShaderModules;
+  GraphicsInfo.stageCount = 2;
+  GraphicsInfo.renderPass = FrameBuffer2x->RenderPass();
+  
+  downscale->Initialize(GraphicsInfo, downscaleLayout);
+
+  Rhi->FreeShader(dbVert);
+  Rhi->FreeShader(dbFrag);
+}
+
+
+void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  Shader* quadVert = Rhi->CreateShader();
+  Shader* quadFrag = Rhi->CreateShader();
+  // TODO(): Need to structure all of this into more manageable modules.
+  //
+  GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
+  gResources().RegisterGraphicsPipeline(FinalPipelineStr, quadPipeline);
+
+  if (!quadVert->Initialize(Filepath + "/" + ShadersPath + "/" + FinalVertFileStr)) {
+    Log(rError) << "Could not find " + FinalVertFileStr + "!";
+  }
+
+  if (!quadFrag->Initialize(Filepath + "/" + ShadersPath + "/" + FinalFragFileStr)) {
+    Log(rError) << "Could not find " + FinalFragFileStr + "!";
+  }
+
+  GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
+
+  VkPipelineShaderStageCreateInfo FinalShaders[2];
+  FinalShaders[0].flags = 0;
+  FinalShaders[0].module = quadVert->Handle();
+  FinalShaders[0].pName = "main";
+  FinalShaders[0].pNext = nullptr;
+  FinalShaders[0].pSpecializationInfo = nullptr;
+  FinalShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  FinalShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  FinalShaders[1].flags = 0;
+  FinalShaders[1].module = quadFrag->Handle();
+  FinalShaders[1].pName = "main";
+  FinalShaders[1].pNext = nullptr;
+  FinalShaders[1].pSpecializationInfo = nullptr;
+  FinalShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  FinalShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+  GraphicsInfo.stageCount = 2;
+  GraphicsInfo.pStages = FinalShaders;
+
+  VkPipelineLayoutCreateInfo finalLayout = {};
+  finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  finalLayout.setLayoutCount = 1;
+  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr)->Layout();
+  finalLayout.pSetLayouts = &finalL;
+  finalLayout.pushConstantRangeCount = 0;
+  finalLayout.pPushConstantRanges = nullptr;
+
+  quadPipeline->Initialize(GraphicsInfo, finalLayout);
+
+  Rhi->FreeShader(quadVert);
+  Rhi->FreeShader(quadFrag);
+}
+
+
+void SetUpShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  // ShadowMapping shader.
+  // TODO(): Shadow mapping MUST be deferred until downsampling and glow buffers have finished!
+  // This will prevent blurry shadows.
+  Shader* SmVert = Rhi->CreateShader();
+  Shader* SmFrag = Rhi->CreateShader();
+
+  if (!SmVert->Initialize(Filepath + "/" + ShadersPath + "/" + ShadowMapVertFileStr)) {
+    Log(rError) << "Could not find " + ShadowMapVertFileStr + "!\n";
+  }
+
+  if (!SmFrag->Initialize(Filepath + "/" + ShadersPath + "/" + ShadowMapFragFileStr)) {
+    Log(rError) << "Could not find " + ShadowMapFragFileStr + "!\n";
+  }
+
+  Rhi->FreeShader(SmVert);
+  Rhi->FreeShader(SmFrag);
+}
+} // RendererPass
 } // Recluse

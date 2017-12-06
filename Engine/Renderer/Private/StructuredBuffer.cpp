@@ -61,8 +61,7 @@ void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   bInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; 
   bInfo.size = MemSize;
   bInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  bInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | 
-                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | 
+  bInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |  
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT;
   mBuffer->Initialize(bInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 

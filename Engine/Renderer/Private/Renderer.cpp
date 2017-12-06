@@ -608,7 +608,7 @@ void Renderer::SetUpFrameBuffers()
 
 void Renderer::SetUpGraphicsPipelines()
 {
-  std::string filepath = gFilesystem().CurrentAppDirectory();
+  std::string Filepath = gFilesystem().CurrentAppDirectory();
 
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -714,86 +714,23 @@ void Renderer::SetUpGraphicsPipelines()
   vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(pbrAttributes.size());
   vertexCI.pVertexAttributeDescriptions = pbrAttributes.data();
 
-  // PbrForward Pipeline Creation.
-  GraphicsPipeline* pbrForwardPipeline = mRhi->CreateGraphicsPipeline();
-  GraphicsPipeline* pbrStaticPipeline = mRhi->CreateGraphicsPipeline();
+  VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = {};
+  GraphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+  GraphicsPipelineInfo.pColorBlendState = &colorBlendCI;
+  GraphicsPipelineInfo.pDepthStencilState = &depthStencilCI;
+  GraphicsPipelineInfo.pInputAssemblyState = &assemblyCI;
+  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
+  GraphicsPipelineInfo.pMultisampleState = &msCI;
+  GraphicsPipelineInfo.pVertexInputState = &vertexCI;
+  GraphicsPipelineInfo.pViewportState = &viewportCI;
+  GraphicsPipelineInfo.pTessellationState = nullptr;
+  GraphicsPipelineInfo.pDynamicState = &dynamicCI;
+  GraphicsPipelineInfo.subpass = 0;
+  GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    
+  RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
 
-  gResources().RegisterGraphicsPipeline(PBRPipelineStr, pbrForwardPipeline);
-  gResources().RegisterGraphicsPipeline(PBRStaticPipelineStr, pbrStaticPipeline);
-  FrameBuffer* pbrFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);  
-
-  VkGraphicsPipelineCreateInfo graphicsPipeline = {};
-  graphicsPipeline.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  graphicsPipeline.renderPass = pbrFrameBuffer->RenderPass();
-  graphicsPipeline.pColorBlendState = &colorBlendCI;
-  graphicsPipeline.pDepthStencilState = &depthStencilCI;
-  graphicsPipeline.pInputAssemblyState = &assemblyCI;
-  graphicsPipeline.pRasterizationState = &rasterizerCI;
-  graphicsPipeline.pMultisampleState = &msCI;
-  graphicsPipeline.pVertexInputState = &vertexCI;
-  graphicsPipeline.pViewportState = &viewportCI;
-  graphicsPipeline.pTessellationState = nullptr;
-  graphicsPipeline.pDynamicState = &dynamicCI;
-  graphicsPipeline.subpass = 0;
-  
-  Shader* mVertPBR = mRhi->CreateShader();
-  Shader* mFragPBR = mRhi->CreateShader();
-
-  if (!mVertPBR->Initialize(filepath + "/" + ShadersPath + "/" + PBRVertFileStr)) {
-    Log(rError) << "Could not find " + PBRVertFileStr + "!";
-  }
-  
-  if (!mFragPBR->Initialize(filepath + "/" + ShadersPath + "/" + PBRFragFileStr)) { 
-    Log(rError) << "Could not find " + PBRFragFileStr + "!";
-  }
-
-  VkPipelineShaderStageCreateInfo pbrShaders[2];
-  pbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  pbrShaders[0].module = mVertPBR->Handle();
-  pbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  pbrShaders[0].pName = "main";
-  pbrShaders[0].pNext = nullptr;
-  pbrShaders[0].pSpecializationInfo = nullptr;
-  pbrShaders[0].flags = 0;
-
-  pbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  pbrShaders[1].module = mFragPBR->Handle();
-  pbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  pbrShaders[1].pName = "main";
-  pbrShaders[1].pNext = nullptr;
-  pbrShaders[1].flags = 0;
-  pbrShaders[1].pSpecializationInfo = nullptr;
-
-  graphicsPipeline.stageCount = 2;
-  graphicsPipeline.pStages = pbrShaders;
-
-  graphicsPipeline.basePipelineHandle = VK_NULL_HANDLE;
-
-
-  VkDescriptorSetLayout dLayouts[3];
-  dLayouts[0] = gResources().GetDescriptorSetLayout(PBRGlobalMatLayoutStr)->Layout();
-  dLayouts[1] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
-  dLayouts[2] = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr)->Layout();
-
-  VkPipelineLayoutCreateInfo pipelineLayout = { };
-  pipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayout.setLayoutCount = 3;
-  pipelineLayout.pSetLayouts = dLayouts;
-  pipelineLayout.pPushConstantRanges = 0;
-  pipelineLayout.pushConstantRangeCount = 0;
-  
-  // Initialize pbr forward pipeline.
-  pbrForwardPipeline->Initialize(graphicsPipeline, pipelineLayout);
-  mRhi->FreeShader(mVertPBR);
-  mRhi->FreeShader(mFragPBR);  
-
-  // TODO(): Need to structure all of this into more manageable modules.
-  //
-  GraphicsPipeline* quadPipeline = mRhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(FinalPipelineStr, quadPipeline);
-
-  // Set to default renderpass.
-  graphicsPipeline.renderPass = mRhi->SwapchainRenderPass();
+  // Set to quad rendering format.
   colorBlendAttachments[0].blendEnable = VK_FALSE;
   colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
@@ -802,142 +739,15 @@ void Renderer::SetUpGraphicsPipelines()
   rasterizerCI.cullMode = VK_CULL_MODE_NONE;
   rasterizerCI.polygonMode = VK_POLYGON_MODE_FILL;
 
-  Shader* quadVert = mRhi->CreateShader();
-  Shader* quadFrag = mRhi->CreateShader();
-
-  if (!quadVert->Initialize(filepath + "/" + ShadersPath + "/" + FinalVertFileStr)) {
-    Log(rError) << "Could not find " + FinalVertFileStr + "!";
-  }
-  
-  if (!quadFrag->Initialize(filepath + "/" + ShadersPath + "/" + FinalFragFileStr)) {
-    Log(rError) << "Could not find " + FinalFragFileStr + "!";
-  }
-
-  VkPipelineShaderStageCreateInfo finalShaders[2];
-  finalShaders[0].flags = 0;
-  finalShaders[0].module = quadVert->Handle();
-  finalShaders[0].pName = "main";
-  finalShaders[0].pNext = nullptr;
-  finalShaders[0].pSpecializationInfo = nullptr;
-  finalShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  finalShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-
-  finalShaders[1].flags = 0;
-  finalShaders[1].module = quadFrag->Handle();
-  finalShaders[1].pName = "main";
-  finalShaders[1].pNext = nullptr;
-  finalShaders[1].pSpecializationInfo = nullptr;
-  finalShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  finalShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-
-  graphicsPipeline.stageCount = 2;
-  graphicsPipeline.pStages = finalShaders;
-
   auto finalAttribs = QuadVertexDescription::GetVertexAttributes();
   vertBindingDesc = QuadVertexDescription::GetBindingDescription();
-  
   vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(finalAttribs.size());
   vertexCI.pVertexAttributeDescriptions = finalAttribs.data();
-  //vertexCI.pNext
 
-  VkPipelineLayoutCreateInfo finalLayout = {};
-  finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  finalLayout.setLayoutCount = 1;
-  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr)->Layout();
-  finalLayout.pSetLayouts = &finalL;
-  finalLayout.pushConstantRangeCount = 0;
-  finalLayout.pPushConstantRanges = nullptr;
-
-  quadPipeline->Initialize(graphicsPipeline, finalLayout);
-
-  mRhi->FreeShader(quadVert);
-  mRhi->FreeShader(quadFrag);
-
-  // HDR Pipeline initialization.
-  GraphicsPipeline* hdrPipeline = mRhi->CreateGraphicsPipeline();
-  VkPipelineLayoutCreateInfo hdrLayout = { };
-  VkDescriptorSetLayout hdrSetLayout = gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr)->Layout();
-
-  Shader* hdrFrag = mRhi->CreateShader();
-  Shader* hdrVert = mRhi->CreateShader();
-
-  if (!hdrFrag->Initialize(filepath + "/" + ShadersPath + "/" + HDRGammaFragFileStr)) {
-    Log(rError) << "Could not find " + HDRGammaFragFileStr + "!";
-  }
-
-  if (!hdrVert->Initialize(filepath + "/" + ShadersPath + "/" + HDRGammaVertFileStr)) {
-    Log(rError) << "Could not find " + HDRGammaVertFileStr + "!";
-  }
-
-  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
-  graphicsPipeline.renderPass = hdrBuffer->RenderPass();
-
-  finalShaders[0].module = hdrVert->Handle();
-  finalShaders[1].module = hdrFrag->Handle();
-
-  hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  hdrLayout.setLayoutCount = 1;
-  hdrLayout.pSetLayouts = &hdrSetLayout;
-
-  hdrPipeline->Initialize(graphicsPipeline, hdrLayout);
-
-  mRhi->FreeShader(hdrFrag);
-  mRhi->FreeShader(hdrVert);
-  gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
-
-  // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
-  // pass. 
-  GraphicsPipeline* downscale = mRhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipelineStr, downscale);
-  DescriptorSetLayout* downscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
-
-  Shader* dbVert = mRhi->CreateShader();
-  Shader* dbFrag = mRhi->CreateShader();
-  if (!dbVert->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
-    Log(rError) << "Could not find " + DownscaleBlurVertFileStr + "!\n";
-  }
-
-  if (!dbFrag->Initialize(filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
-    Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
-  }
-
-  VkPushConstantRange pushConst = { };
-  pushConst.offset = 0;
-  pushConst.size = 4;
-  pushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
- 
-  VkDescriptorSetLayout dwnsclLayout[] = { downscaleDescLayout->Layout() };
-  VkPipelineLayoutCreateInfo downscaleLayout = { };
-  downscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  downscaleLayout.pushConstantRangeCount = 1;
-  downscaleLayout.pPushConstantRanges = &pushConst;
-  downscaleLayout.setLayoutCount = 1;
-  downscaleLayout.pSetLayouts = dwnsclLayout;
-
-  finalShaders[0].module = dbVert->Handle();
-  finalShaders[1].module = dbFrag->Handle();
-
-  downscale->Initialize(graphicsPipeline, downscaleLayout);
-
-  mRhi->FreeShader(dbVert);
-  mRhi->FreeShader(dbFrag);
-
-  // ShadowMapping shader.
-  // TODO(): Shadow mapping MUST be deferred until downsampling and glow buffers have finished!
-  // This will prevent blurry shadows.
-  Shader* smVert = mRhi->CreateShader();
-  Shader* smFrag = mRhi->CreateShader();
-
-  if (!smVert->Initialize(filepath + "/" + ShadersPath + "/" + ShadowMapVertFileStr)) {
-    Log(rError) << "Could not find " + ShadowMapVertFileStr + "!\n";
-  }
-
-  if (!smFrag->Initialize(filepath + "/" + ShadersPath + "/" + ShadowMapFragFileStr)) {
-    Log(rError) << "Could not find " + ShadowMapFragFileStr + "!\n";
-  }
-
-  mRhi->FreeShader(smVert);
-  mRhi->FreeShader(smFrag);
+  RendererPass::SetUpFinalPass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpHDRGammaPass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpDownScalePass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
 }
 
 

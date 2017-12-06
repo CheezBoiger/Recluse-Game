@@ -7,6 +7,8 @@
 
 namespace Recluse {
 
+class Renderer;
+
 extern std::string ShadersPath;
 
 extern std::string DefaultTextureStr;
@@ -58,4 +60,21 @@ extern std::string FinalDescSetStr;
 extern std::string FinalDescSetLayoutStr;
 extern std::string FinalVertFileStr;
 extern std::string FinalFragFileStr;
+
+
+namespace RendererPass {
+
+
+// Set up the downscale pass.
+void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+// Set up the HDR Gamma pass.
+void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+}
 } // Recluse
