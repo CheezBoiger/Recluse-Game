@@ -3,6 +3,7 @@
 
 #include "Core/Types.hpp"
 #include "Core/Utility/Module.hpp"
+#include "Game/GameObject.hpp"
 #include "AudioConfigs.hpp"
 
 
@@ -20,6 +21,9 @@ public:
 
 
   // TODO():
+  void              AddGameObject(game_uuid_t uuid);
+  void              RemoveGameObject(game_uuid_t uuid);
+
   void              OnStartUp() override;
   void              OnShutDown() override;
 

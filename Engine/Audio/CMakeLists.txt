@@ -62,9 +62,11 @@ set(AUDIO_FILES
   ${AUDIO_PUBLIC_DIR}/Audio.hpp
   ${AUDIO_PUBLIC_DIR}/AudioListener.hpp
   ${AUDIO_PUBLIC_DIR}/AudioConfigs.hpp
+  ${AUDIO_PUBLIC_DIR}/AudioSource.hpp
   
   ${AUDIO_PRIVATE_DIR}/Audio.cpp
   ${AUDIO_PRIVATE_DIR}/AudioListener.cpp
+  ${AUDIO_PRIVATE_DIR}/AudioSource.cpp
   ${AUDIO_PRIVATE_DIR}/WwiseEngine.hpp
   ${AUDIO_PRIVATE_DIR}/WwiseEngine.cpp
   ${AUDIO_PRIVATE_DIR}/AudioMemAllocDefines.cpp
