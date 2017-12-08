@@ -14,23 +14,37 @@ class Image;
 
 struct TextureBase {
 public:
+  enum Type {
+    TEXTURE_1D,
+    TEXTURE_2D,
+    TEXTURE_2D_ARRAY,
+    TEXTURE_3D,
+    TEXTURE_CUBE,
+  };
+
   Texture* Handle() { return texture; }
   VulkanRHI* GetRhi() { return mRhi; }
+  
+  Type TexType() const { return m_TexType; }
 
 protected:
-  TextureBase()
+  TextureBase(Type type)
     : texture(nullptr)
-    , mRhi(nullptr) { }
+    , mRhi(nullptr)
+    , m_TexType(type) { }
 
   Texture*    texture;
   VulkanRHI*  mRhi;
+
+private:
+  Type        m_TexType;
 };
 
 
 // 1 Dimensional texture object.
 class Texture1D : public TextureBase {
 public:
-  Texture1D() { }
+  Texture1D() : TextureBase(TEXTURE_1D) { }
 
   void        Initialize(u32 width);
   void        CleanUp();
@@ -43,7 +57,7 @@ private:
 // 2 Dimensional texture object.
 class Texture2D : public TextureBase {
 public:
-  Texture2D() { }
+  Texture2D() : TextureBase(TEXTURE_2D) { }
 
   // Initializes the texture object with fixed width and height.
   // All images that are uploaded to this texture must then be the 

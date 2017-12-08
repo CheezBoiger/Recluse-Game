@@ -735,7 +735,7 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
-  colorBlendCI.attachmentCount = 1;
+  colorBlendCI.attachmentCount = 1; 
   rasterizerCI.cullMode = VK_CULL_MODE_NONE;
   rasterizerCI.polygonMode = VK_POLYGON_MODE_FILL;
 

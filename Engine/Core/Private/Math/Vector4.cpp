@@ -7,6 +7,12 @@
 namespace Recluse {
 
 
+Vector4 Vector4::Lerp(const Vector4& A, const Vector4& B, const r32 T)
+{
+  return A * (1.0f - T) + B * T;
+}
+
+
 Vector4 Vector4::operator+(const Vector4& other) const
 {
   return Vector4(

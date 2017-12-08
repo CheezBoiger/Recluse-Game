@@ -38,6 +38,8 @@ struct Vector4 {
 
   r32&            operator[](size_t idx) { return (&x)[ idx ]; }
 
+  
+
   r32             Magnitude() const;
   r32             Dot(const Vector4& other) const;
 

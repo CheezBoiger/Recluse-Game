@@ -47,6 +47,7 @@ struct Vector3 {
   // This can also be denoted as a wedge product in exterior algebra.
   Vector3         operator^(const Vector3& other) const { return Cross(other); }
 
+  r32             operator|(const Vector3& other) const { return Dot(other); }
   r32             Magnitude() const;
   r32&            operator [] (const size_t idx) { return (&x)[ idx ]; }
 
