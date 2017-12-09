@@ -2,18 +2,14 @@
 #pragma once
 
 #include "Core/Types.hpp"
-#include "Game/Component.hpp"
 
 
 namespace Recluse {
 
 
-class AudioSource : public Component {
-  RCOMPONENT(AudioSource)
+class AudioSource { 
 public:
-  
-
-  
+    
 private:
 
 };

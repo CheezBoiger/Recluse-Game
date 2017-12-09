@@ -24,18 +24,20 @@ namespace Recluse {
 class Core : public EngineModule<Core> {
 public:
   Core() 
-    : mPool(2) { }
+    : m_Pool(2) { }
 
 
   void OnStartUp() override;
   void OnShutDown() override;
+
+  ThreadPool&     ThrPool() { return m_Pool; }
 
   // Syncronize threads.
   // TODO():
   void Sync() { }
 
 private:
-  ThreadPool      mPool;
+  ThreadPool      m_Pool;
 };
 
 

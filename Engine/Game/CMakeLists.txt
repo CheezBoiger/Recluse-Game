@@ -31,6 +31,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/Character.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/SkinnedMeshComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/AudioSourceComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp

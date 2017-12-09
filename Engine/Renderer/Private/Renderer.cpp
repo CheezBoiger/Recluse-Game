@@ -273,65 +273,66 @@ void Renderer::SetUpDescriptorSetLayouts()
   DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
   d0->Initialize(layout0);
 
-  VkDescriptorSetLayoutBinding bindings[8];
+  std::vector<VkDescriptorSetLayoutBinding> bindings(8);
   bindings[0].binding = 0;
   bindings[0].descriptorCount = 1;
   bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   bindings[0].pImmutableSamplers = nullptr;
   bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  bindings[1].binding = 1;
-  bindings[1].descriptorCount = 1;
-  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  bindings[1].pImmutableSamplers = nullptr;
-  bindings[1].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
   // albedo
-  bindings[2].binding = 2;
+  bindings[1].binding = 2;
+  bindings[1].descriptorCount = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[1].pImmutableSamplers = nullptr;
+  bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  // metallic
+  bindings[2].binding = 3;
   bindings[2].descriptorCount = 1;
   bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[2].pImmutableSamplers = nullptr;
   bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // metallic
-  bindings[3].binding = 3;
+  // roughness
+  bindings[3].binding = 4;
   bindings[3].descriptorCount = 1;
   bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[3].pImmutableSamplers = nullptr;
   bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // roughness
-  bindings[4].binding = 4;
+  // normal
+  bindings[4].binding = 5;
   bindings[4].descriptorCount = 1;
   bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[4].pImmutableSamplers = nullptr;
   bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // normal
-  bindings[5].binding = 5;
+  // ao
+  bindings[5].binding = 6;
   bindings[5].descriptorCount = 1;
   bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[5].pImmutableSamplers = nullptr;
   bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // ao
-  bindings[6].binding = 6;
+  // emissive
+  bindings[6].binding = 7;
   bindings[6].descriptorCount = 1;
   bindings[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[6].pImmutableSamplers = nullptr;
   bindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // emissive
-  bindings[7].binding = 7;
+  bindings[7].binding = 1;
   bindings[7].descriptorCount = 1;
-  bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   bindings[7].pImmutableSamplers = nullptr;
-  bindings[7].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  bindings[7].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 
   VkDescriptorSetLayoutCreateInfo layout1 = {};
   layout1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   layout1.bindingCount = 8;
-  layout1.pBindings = bindings;
+  layout1.pBindings = bindings.data();
 
   DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
   d1->Initialize(layout1);
@@ -765,8 +766,8 @@ void Renderer::CleanUpGraphicsPipelines()
   GraphicsPipeline* hdrPipeline = gResources().UnregisterGraphicsPipeline(HDRGammaPipelineStr);
   mRhi->FreeGraphicsPipeline(hdrPipeline);
 
-  GraphicsPipeline* downscalePipeline = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipelineStr);
-  mRhi->FreeGraphicsPipeline(downscalePipeline);
+  GraphicsPipeline* downscalePipeline2x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline2xStr);
+  mRhi->FreeGraphicsPipeline(downscalePipeline2x);
 }
 
 
@@ -1116,6 +1117,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   CommandBuffer* cmdBuffer = mOffscreen.cmdBuffers[cmdBufferIndex];
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(PBRPipelineStr);
+  GraphicsPipeline* staticPbrPipeline = gResources().GetGraphicsPipeline(PBRStaticPipelineStr);
 
   if (cmdBuffer && !cmdBuffer->Recording()) {
 
@@ -1151,8 +1153,6 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Pipeline());
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
     if (mCmdList) {
       for (size_t i = 0; i < mCmdList->Size(); ++i) {
         RenderCmd& renderCmd = mCmdList->Get(i);
@@ -1166,9 +1166,19 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
           mLightMat->Set()->Handle()
         };
 
+        GraphicsPipeline* pipeline = renderObj->Skinned ? pbrPipeline : staticPbrPipeline;
+        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+        cmdBuffer->SetViewPorts(0, 1, &viewport);
+
         // Bind materials.
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline->Layout(), 0,
-          3, descriptorSets, 0, nullptr);
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+          pipeline->Layout(), 
+          0,
+          3, 
+          descriptorSets, 
+          0, 
+          nullptr
+        );
   
         // Set up the render group.
         for (size_t idx = 0; idx < renderObj->Size(); ++idx) {

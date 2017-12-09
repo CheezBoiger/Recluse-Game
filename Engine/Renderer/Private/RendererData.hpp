@@ -30,6 +30,7 @@ extern std::string PBRGlobalMatLayoutStr;
 extern std::string PBRLightMatLayoutStr;
 extern std::string PBRObjMatLayoutStr;
 extern std::string PBRVertFileStr;
+extern std::string PBRStaticVertFileStr;
 extern std::string PBRFragFileStr;
 
 extern std::string ScaledSamplerStr;
@@ -40,7 +41,8 @@ extern std::string FrameBuffer2xStr;
 extern std::string FrameBuffer4xStr;
 extern std::string FrameBuffer8xStr;
 extern std::string DownscaleBlurLayoutStr;
-extern std::string DownscaleBlurPipelineStr;
+extern std::string GlowPipelineStr;
+extern std::string DownscaleBlurPipeline2xStr;
 extern std::string DownscaleBlurVertFileStr;
 extern std::string DownscaleBlurFragFileStr;
 

@@ -231,15 +231,15 @@ std::array<u32, 36> indices = {
 };
 
 
-std::vector<SkinnedVertex> Cube::MeshInstance(r32 scale)
+std::vector<StaticVertex> Cube::MeshInstance(r32 scale)
 {
-  std::vector<SkinnedVertex> cube(36);
+  std::vector<StaticVertex> cube(36);
   for (size_t i = 0; i < cube.size(); ++i) {
     cube[i].position = positions[i] * scale;
     cube[i].position.w = 1.0f;
     cube[i].normal = normals[i];
     cube[i].texcoord0 = Vector2(texcoords[i].x, texcoords[i].y);
-    null_bones(cube[i]);
+    //null_bones(cube[i]);
   }
   return cube;
 }

@@ -55,11 +55,6 @@ layout (set = 1, binding = 1) uniform BonesBuffer {
 } boneBuffer;
 
 
-layout (location = 0) out vec4 fragPos;
-layout (location = 1) out vec4 fragNormal;
-layout (location = 2) out vec2 fragTexCoord;
-
-
 out FRAG_IN {
   vec3  position;
   float lodBias;

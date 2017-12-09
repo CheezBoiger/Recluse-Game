@@ -11,6 +11,7 @@ class IArchive;
 
 class ISerializable {
 public:
+  virtual ~ISerializable() { }
 
   virtual b8 Serializable() { return true; }
 

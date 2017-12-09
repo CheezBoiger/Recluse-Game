@@ -11,10 +11,10 @@
 
 namespace Recluse {
 
-std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32 stackCount)
+std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32 stackCount)
 {
   //subdivisions = (std::min)(subdivisions, 5u);
-  std::vector<SkinnedVertex> vertices;
+  std::vector<StaticVertex> vertices;
 
   //
   // Compute the vertices stating at the top pole and moving down the stacks.
@@ -23,21 +23,21 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
   // Poles: note that there will be texture coordinate distortion as there is
   // not a unique point on the texture map to assign to the pole when mapping
   // a rectangular texture onto a sphere.
-  SkinnedVertex topVertex;
+  StaticVertex topVertex;
   Vector4 color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
   topVertex.position = Vector4(0.0f, +radius, 0.0f, 1.0f);
   topVertex.normal = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
   topVertex.texcoord0 = Vector2(0.0f, 0.0f);
   topVertex.texcoord1 = Vector2(0.0f, 0.0f);
-  null_bones(topVertex);
+  //null_bones(topVertex);
 
-  SkinnedVertex bottomVertex;
+  StaticVertex bottomVertex;
   bottomVertex.position = Vector4(0.0f, -radius, 0.0f, 1.0f);
   bottomVertex.normal = Vector4(0.0f, -1.0f, 0.0f, 1.0f);
   bottomVertex.texcoord0 = Vector2(0.0f, 1.0f);
   bottomVertex.texcoord1 = Vector2(0.0f, 1.0f);
-  null_bones(bottomVertex);
+  //null_bones(bottomVertex);
 
   vertices.push_back(topVertex);
 
@@ -54,8 +54,8 @@ std::vector<SkinnedVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u3
     {
       r32 theta = j*thetaStep;
 
-      SkinnedVertex v;
-      null_bones(v);
+      StaticVertex v;
+      //null_bones(v);
 
       // spherical to cartesian
       v.position.x = radius*sinf(phi)*cosf(theta);

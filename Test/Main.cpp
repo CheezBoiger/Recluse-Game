@@ -171,15 +171,15 @@ int main(int c, char* argv[])
 
   obj1->MaterialId = &cubeMaterial;
   obj1->MeshDescriptorId = &cubeMesh;
-  obj1->Skinned = true;
+  obj1->Skinned = false;
 
   obj2->MaterialId = &cubeMaterial2;
   obj2->MeshDescriptorId = &cubeMesh2;
-  obj2->Skinned = true;
+  obj2->Skinned = false;
 
   obj3->MaterialId = &cubeMaterial3;
   obj3->MeshDescriptorId = &cubeMesh3;
-  obj3->Skinned = true;
+  obj3->Skinned = false;
 
   obj1->Initialize();
   obj2->Initialize();

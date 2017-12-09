@@ -45,7 +45,8 @@ class ThreadPool {
   };
 
 public:
-  ThreadPool(u32 InitThreadCount);
+  ThreadPool(u32 InitThreadCount = 2) 
+    : m_CurrentTaskCount(0) { }
 
   void                  Run();
   void                  AddJob(thr_work_func_t WorkFunc);
