@@ -1007,12 +1007,21 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   }
 
   DescriptorSetLayout* Layout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
-  DescriptorSet* DBDS = mRhi->CreateDescriptorSet();
-  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet, DBDS);
-  DBDS->Allocate(mRhi->DescriptorPool(), Layout);
+  DescriptorSet* DBDS2x = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS4x = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS8x = mRhi->CreateDescriptorSet();
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2x, DBDS2x);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4x, DBDS4x);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8x, DBDS8x);
+  DBDS2x->Allocate(mRhi->DescriptorPool(), Layout);
+  DBDS4x->Allocate(mRhi->DescriptorPool(), Layout);
+  DBDS8x->Allocate(mRhi->DescriptorPool(), Layout);
 
   Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
+  Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
+  Texture* Color4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
   Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
+  Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
   
   VkDescriptorImageInfo Img = { };
   Img.sampler = PBRSampler->Handle();
@@ -1030,7 +1039,13 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   WriteSet.pNext = nullptr;
   WriteSet.pTexelBufferView = nullptr;
   
-  DBDS->Update(1, &WriteSet);
+  DBDS2x->Update(1, &WriteSet);
+  //Img.sampler = DownscaleSampler->Handle();
+  Img.imageView = Color2x->View();
+  Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  DBDS4x->Update(1, &WriteSet);
+  Img.imageView = Color4x->View();
+  DBDS8x->Update(1, &WriteSet);
 }
 
 
@@ -1039,8 +1054,12 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
   if (FullCleanUp) {
   }
 
-  DescriptorSet* DBDS = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet);
-  mRhi->FreeDescriptorSet(DBDS);
+  DescriptorSet* DBDS2x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2x);
+  mRhi->FreeDescriptorSet(DBDS2x);
+  DescriptorSet* DBDS4x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet4x);
+  mRhi->FreeDescriptorSet(DBDS4x);
+  DescriptorSet* DBDS8x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8x);
+  mRhi->FreeDescriptorSet(DBDS8x);
 }
 
 
@@ -1284,11 +1303,16 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   GraphicsPipeline* hdrPipeline = gResources().GetGraphicsPipeline(HDRGammaPipelineStr);
   GraphicsPipeline* Downscale2x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline2xStr);
+  GraphicsPipeline* Downscale4x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline4xStr);
+  GraphicsPipeline* Downscale8x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline8xStr);
   FrameBuffer* hdrFrameBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
-  FrameBuffer* DownScaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer* DownscaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer* DownscaleFrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
+  FrameBuffer* DownscaleFrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
   DescriptorSet* hdrSet = gResources().GetDescriptorSet(HDRGammaDescSetStr);
-  DescriptorSet* DownscaleSet = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet);
-  
+  DescriptorSet* DownscaleSet2x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2x);
+  DescriptorSet* DownscaleSet4x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet4x);
+  DescriptorSet* DownscaleSet8x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet8x);
 
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   VkCommandBufferBeginInfo cmdBi = { };
@@ -1307,14 +1331,32 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   renderpassInfo.renderArea.offset = { 0, 0 };
 
-  VkRenderPassBeginInfo DownscalePass =  { };
-  DownscalePass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  DownscalePass.framebuffer = DownScaleFrameBuffer2x->Handle();
-  DownscalePass.renderPass = DownScaleFrameBuffer2x->RenderPass();
-  DownscalePass.clearValueCount = 1;
-  DownscalePass.pClearValues = &clearVal;
-  DownscalePass.renderArea.extent = { DownScaleFrameBuffer2x->Width(), DownScaleFrameBuffer2x->Height() };
-  DownscalePass.renderArea.offset = { 0, 0 };
+  VkRenderPassBeginInfo DownscalePass2x =  { };
+  DownscalePass2x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  DownscalePass2x.framebuffer = DownscaleFrameBuffer2x->Handle();
+  DownscalePass2x.renderPass = DownscaleFrameBuffer2x->RenderPass();
+  DownscalePass2x.clearValueCount = 1;
+  DownscalePass2x.pClearValues = &clearVal;
+  DownscalePass2x.renderArea.extent = { DownscaleFrameBuffer2x->Width(), DownscaleFrameBuffer2x->Height() };
+  DownscalePass2x.renderArea.offset = { 0, 0 };
+
+  VkRenderPassBeginInfo DownscalePass4x = { };
+  DownscalePass4x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  DownscalePass4x.framebuffer = DownscaleFrameBuffer4x->Handle();
+  DownscalePass4x.renderPass = DownscaleFrameBuffer4x->RenderPass();
+  DownscalePass4x.clearValueCount = 1;
+  DownscalePass4x.pClearValues = &clearVal;
+  DownscalePass4x.renderArea.extent = { DownscaleFrameBuffer4x->Width(), DownscaleFrameBuffer4x->Height() };
+  DownscalePass4x.renderArea.offset = { 0, 0 };
+
+  VkRenderPassBeginInfo DownscalePass8x = {};
+  DownscalePass8x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  DownscalePass8x.framebuffer = DownscaleFrameBuffer8x->Handle();
+  DownscalePass8x.renderPass = DownscaleFrameBuffer8x->RenderPass();
+  DownscalePass8x.clearValueCount = 1;
+  DownscalePass8x.pClearValues = &clearVal;
+  DownscalePass8x.renderArea.extent = { DownscaleFrameBuffer8x->Width(), DownscaleFrameBuffer8x->Height() };
+  DownscalePass8x.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
   viewport.height = (r32)mWindowHandle->Height();
@@ -1326,10 +1368,10 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    VkDescriptorSet DownscaleSetNative = DownscaleSet->Handle();
+    VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;
     viewport.width = (r32)mWindowHandle->Width() * 0.5f;
-    cmdBuffer->BeginRenderPass(DownscalePass, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
@@ -1338,6 +1380,40 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       int horizontal = true;
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    viewport.height = (r32)mWindowHandle->Height() / 4.0f;
+    viewport.width = (r32)mWindowHandle->Width() / 4.0f;
+    DownscaleSetNative = DownscaleSet4x->Handle();
+    horizontal = false;
+    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      horizontal = true;
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    viewport.height = (r32)mWindowHandle->Height() / 8.0f;
+    viewport.width = (r32)mWindowHandle->Width() / 8.0f;
+    DownscaleSetNative = DownscaleSet8x->Handle();
+    horizontal = false;
+    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
+      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      horizontal = true;
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
