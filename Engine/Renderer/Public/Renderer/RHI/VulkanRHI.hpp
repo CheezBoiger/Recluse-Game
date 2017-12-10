@@ -37,6 +37,8 @@ public:
   Semaphore()
     : mSema(VK_NULL_HANDLE) { }
 
+  ~Semaphore();
+
   void          Initialize(const VkSemaphoreCreateInfo& info);
   void          CleanUp();
 

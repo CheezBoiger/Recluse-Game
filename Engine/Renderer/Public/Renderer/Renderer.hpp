@@ -212,6 +212,8 @@ private:
   void              SetUpOffscreen(b8 fullSetup);
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
+  void              SetUpDownscale(b8 FullSetUp);
+  void              CleanUpDownscale(b8 FullCleanUp);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
   void              UpdateMaterials();

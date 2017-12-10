@@ -158,4 +158,11 @@ void CommandBuffer::EndQuery(VkQueryPool queryPool, u32 query)
   ASSERT_RECORDING();
   vkCmdEndQuery(mHandle, queryPool, query);
 }
+
+
+void CommandBuffer::PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values)
+{
+  ASSERT_RECORDING();
+  vkCmdPushConstants(mHandle, Layout, StageFlags, Offset, Size, p_Values);
+}
 } // Recluse

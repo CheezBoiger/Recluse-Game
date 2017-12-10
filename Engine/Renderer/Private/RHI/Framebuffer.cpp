@@ -15,6 +15,8 @@ void FrameBuffer::Finalize(VkFramebufferCreateInfo& info,
   }
 
   info.renderPass = mRenderPass;
+  m_Width = info.width;
+  m_Height = info.height;
 
   result = vkCreateFramebuffer(mOwner, &info, nullptr, &mHandle);
   if (result != VK_SUCCESS) {

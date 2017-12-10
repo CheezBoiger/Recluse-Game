@@ -50,6 +50,8 @@ public:
   void            BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags);
   void            EndQuery(VkQueryPool queryPool, u32 query);
 
+  void            PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values);
+
   void            Reset(const VkCommandBufferResetFlags flags);
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }

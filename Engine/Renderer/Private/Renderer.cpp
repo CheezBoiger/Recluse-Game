@@ -183,6 +183,7 @@ void Renderer::CleanUp()
 
   mRenderQuad.CleanUp();
   CleanUpHDR(true);
+  CleanUpDownscale(true);
   CleanUpOffscreen(true);
   CleanUpFinalOutputs();
   CleanUpDescriptorSetLayouts();
@@ -213,6 +214,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpGraphicsPipelines();
   SetUpFinalOutputs();
   SetUpOffscreen(true);
+  SetUpDownscale(true);
   SetUpHDR(true);
   mRenderQuad.Initialize(mRhi);
 
@@ -999,6 +1001,49 @@ void Renderer::CleanUpOffscreen(b8 fullCleanup)
 }
 
 
+void Renderer::SetUpDownscale(b8 FullSetUp)
+{
+  if (FullSetUp) {
+  }
+
+  DescriptorSetLayout* Layout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
+  DescriptorSet* DBDS = mRhi->CreateDescriptorSet();
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet, DBDS);
+  DBDS->Allocate(mRhi->DescriptorPool(), Layout);
+
+  Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
+  Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
+  
+  VkDescriptorImageInfo Img = { };
+  Img.sampler = PBRSampler->Handle();
+  Img.imageView = PBRColor->View();
+  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  
+  VkWriteDescriptorSet WriteSet = { };
+  WriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  WriteSet.descriptorCount = 1;
+  WriteSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  WriteSet.dstArrayElement = 0;
+  WriteSet.dstBinding = 0;
+  WriteSet.pBufferInfo = nullptr;
+  WriteSet.pImageInfo = &Img;
+  WriteSet.pNext = nullptr;
+  WriteSet.pTexelBufferView = nullptr;
+  
+  DBDS->Update(1, &WriteSet);
+}
+
+
+void Renderer::CleanUpDownscale(b8 FullCleanUp)
+{
+  if (FullCleanUp) {
+  }
+
+  DescriptorSet* DBDS = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet);
+  mRhi->FreeDescriptorSet(DBDS);
+}
+
+
 void Renderer::SetUpHDR(b8 fullSetUp)
 {
   if (fullSetUp) {
@@ -1233,9 +1278,16 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   CommandBuffer* cmdBuffer = mHDR.cmdBuffers[cmdBufferIndex];
   if (!cmdBuffer) return;
 
+  VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
+  VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
+  VkDeviceSize offsets[] = { 0 };
+
   GraphicsPipeline* hdrPipeline = gResources().GetGraphicsPipeline(HDRGammaPipelineStr);
+  GraphicsPipeline* Downscale2x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline2xStr);
   FrameBuffer* hdrFrameBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
+  FrameBuffer* DownScaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
   DescriptorSet* hdrSet = gResources().GetDescriptorSet(HDRGammaDescSetStr);
+  DescriptorSet* DownscaleSet = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet);
   
 
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1255,30 +1307,51 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   renderpassInfo.renderArea.offset = { 0, 0 };
 
-  cmdBuffer->Begin(cmdBi);
-    // TODO(): Add downscaling rendering here?
-    cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
+  VkRenderPassBeginInfo DownscalePass =  { };
+  DownscalePass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  DownscalePass.framebuffer = DownScaleFrameBuffer2x->Handle();
+  DownscalePass.renderPass = DownScaleFrameBuffer2x->RenderPass();
+  DownscalePass.clearValueCount = 1;
+  DownscalePass.pClearValues = &clearVal;
+  DownscalePass.renderArea.extent = { DownScaleFrameBuffer2x->Width(), DownScaleFrameBuffer2x->Height() };
+  DownscalePass.renderArea.offset = { 0, 0 };
 
-    VkViewport viewport = {};
+  VkViewport viewport = {};
+  viewport.height = (r32)mWindowHandle->Height();
+  viewport.width = (r32)mWindowHandle->Width();
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.y = 0.0f;
+  viewport.x = 0.0f;
+
+  cmdBuffer->Begin(cmdBi);
+    // TODO(): Need to allow switching on/off bloom passing.
+    VkDescriptorSet DownscaleSetNative = DownscaleSet->Handle();
+    viewport.height = (r32)mWindowHandle->Height() * 0.5f;
+    viewport.width = (r32)mWindowHandle->Width() * 0.5f;
+    cmdBuffer->BeginRenderPass(DownscalePass, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      int horizontal = true;
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    VkDescriptorSet dSet = hdrSet->Handle();
     viewport.height = (r32)mWindowHandle->Height();
     viewport.width = (r32)mWindowHandle->Width();
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    viewport.y = 0.0f;
-    viewport.x = 0.0f;
-
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
-    VkDescriptorSet dSet = hdrSet->Handle();
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
-    VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
-    VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
-    VkDeviceSize offsets[] = { 0 };
-
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-    cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
 
@@ -1408,6 +1481,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   mUI->CleanUp();
 
   CleanUpHDR(false);
+  CleanUpDownscale(false);
   CleanUpOffscreen(false);
   CleanUpFinalOutputs();
   CleanUpGraphicsPipelines();
@@ -1419,6 +1493,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpGraphicsPipelines();
   SetUpFinalOutputs();
   SetUpOffscreen(false);
+  SetUpDownscale(false);
   SetUpHDR(false);
 
   mUI->Initialize(mRhi);

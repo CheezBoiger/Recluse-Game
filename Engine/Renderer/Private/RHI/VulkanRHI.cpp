@@ -24,6 +24,14 @@ PhysicalDevice                VulkanRHI::gPhysicalDevice;
 std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
+Semaphore::~Semaphore()
+{
+  if (mSema) {
+    R_DEBUG(rWarning, "Semaphore was not cleaned up prior to deletion!\n");
+  }
+}
+
+
 void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
 {
   if (vkCreateSemaphore(mOwner, &info, nullptr, &mSema) != VK_SUCCESS) {

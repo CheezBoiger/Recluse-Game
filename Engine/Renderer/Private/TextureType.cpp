@@ -87,7 +87,7 @@ void Texture2D::Update(Image const& Image)
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   // Max barriers.
-  std::vector<VkBufferImageCopy> bufferCopies;
+  std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
   size_t offset = 0;
   for (u32 mipLevel = 0; mipLevel < texture->MipLevels(); ++mipLevel) {
     VkBufferImageCopy region = { };
@@ -102,7 +102,7 @@ void Texture2D::Update(Image const& Image)
     region.imageExtent.height = texture->Height();
     region.imageExtent.depth = 1;
     region.imageOffset = { 0, 0, 0 };
-    bufferCopies.push_back(region);
+    bufferCopies[mipLevel] = region;
   }
 
   VkImageMemoryBarrier imgBarrier = {};
