@@ -43,6 +43,8 @@ extern std::string FrameBuffer8xStr;
 extern std::string DownscaleBlurLayoutStr;
 extern std::string GlowPipelineStr;
 extern std::string DownscaleBlurPipeline2xStr;
+extern std::string DownscaleBlurPipeline4xStr;
+extern std::string DownscaleBlurPipeline8xStr;
 extern std::string DownscaleBlurVertFileStr;
 extern std::string DownscaleBlurFragFileStr;
 

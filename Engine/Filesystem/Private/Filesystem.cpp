@@ -26,8 +26,8 @@ void Filesystem::OnStartUp()
   char buffer[MAX_PATH];
   GetModuleFileName(NULL, buffer, MAX_PATH);
   std::string::size_type pos = std::string(buffer).find_last_of("\\/");
-  mCurrentDirectoryPath = std::string(buffer).substr(0, pos);
-  std::replace(mCurrentDirectoryPath.begin(), mCurrentDirectoryPath.end(), '\\', '/');  
+  m_CurrentDirectoryPath = std::string(buffer).substr(0, pos);
+  std::replace(m_CurrentDirectoryPath.begin(), m_CurrentDirectoryPath.end(), '\\', '/');  
 }
 
 
@@ -38,6 +38,6 @@ void Filesystem::OnShutDown()
 
 const tchar* Filesystem::CurrentAppDirectory()
 {
-  return mCurrentDirectoryPath.data();
+  return m_CurrentDirectoryPath.data();
 }
 } // Recluse

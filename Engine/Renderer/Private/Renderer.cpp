@@ -754,20 +754,26 @@ void Renderer::SetUpGraphicsPipelines()
 
 void Renderer::CleanUpGraphicsPipelines()
 {
-  GraphicsPipeline* pbrPipeline = gResources().UnregisterGraphicsPipeline(PBRPipelineStr);
-  mRhi->FreeGraphicsPipeline(pbrPipeline);
+  GraphicsPipeline* PbrPipeline = gResources().UnregisterGraphicsPipeline(PBRPipelineStr);
+  mRhi->FreeGraphicsPipeline(PbrPipeline);
 
-  GraphicsPipeline* pbrStaticPipeline = gResources().UnregisterGraphicsPipeline(PBRStaticPipelineStr);
-  mRhi->FreeGraphicsPipeline(pbrStaticPipeline);
+  GraphicsPipeline* PbrStaticPipeline = gResources().UnregisterGraphicsPipeline(PBRStaticPipelineStr);
+  mRhi->FreeGraphicsPipeline(PbrStaticPipeline);
 
-  GraphicsPipeline* quadPipeline = gResources().UnregisterGraphicsPipeline(FinalPipelineStr);
-  mRhi->FreeGraphicsPipeline(quadPipeline);
+  GraphicsPipeline* QuadPipeline = gResources().UnregisterGraphicsPipeline(FinalPipelineStr);
+  mRhi->FreeGraphicsPipeline(QuadPipeline);
 
-  GraphicsPipeline* hdrPipeline = gResources().UnregisterGraphicsPipeline(HDRGammaPipelineStr);
-  mRhi->FreeGraphicsPipeline(hdrPipeline);
+  GraphicsPipeline* HdrPipeline = gResources().UnregisterGraphicsPipeline(HDRGammaPipelineStr);
+  mRhi->FreeGraphicsPipeline(HdrPipeline);
 
-  GraphicsPipeline* downscalePipeline2x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline2xStr);
-  mRhi->FreeGraphicsPipeline(downscalePipeline2x);
+  GraphicsPipeline* DownscalePipeline2x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline2xStr);
+  mRhi->FreeGraphicsPipeline(DownscalePipeline2x);
+
+  GraphicsPipeline* DownscalePipeline4x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline4xStr);
+  mRhi->FreeGraphicsPipeline(DownscalePipeline4x);
+
+  GraphicsPipeline* DownscalePipeline8x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline8xStr);
+  mRhi->FreeGraphicsPipeline(DownscalePipeline8x);
 }
 
 

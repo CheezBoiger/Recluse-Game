@@ -23,7 +23,7 @@ b8 Archive::Close()
     R_ASSERT(false, "Archive file was not open to begin with! Can not close anything!\n");
     return false;
   }
-
+  
   m_File.close();
   return IArchive::Close();
 }
@@ -33,6 +33,7 @@ b8 Archive::Close()
 
 IArchive& Archive::operator<<(u8 Val) 
 {
+  m_File << Val;
   return (*this);
 }
 
@@ -45,6 +46,7 @@ IArchive& Archive::operator<<(i8 Val)
 
 IArchive& Archive::operator<<(u16 Val)
 {
+  m_File << Val;
   return (*this);
 }
 
@@ -57,6 +59,7 @@ IArchive& Archive::operator<<(i16 Val)
 
 IArchive& Archive::operator<<(u32 Val)
 {
+  m_File << Val;
   return (*this);
 }
 
@@ -69,6 +72,7 @@ IArchive& Archive::operator<<(i32 Val)
 
 IArchive& Archive::operator<<(u64 Val)
 {
+  m_File << Val;
   return (*this);
 }
 
@@ -81,60 +85,70 @@ IArchive& Archive::operator<<(i64 Val)
 
 IArchive& Archive::operator<<(std::string Val)
 {
+  m_File << Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(u8& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(i8& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(u16& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(i16& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(u32& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(i32& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(u64& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(i64& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 
 
 IArchive& Archive::operator>>(std::string& Val)
 {
+  m_File >> Val;
   return (*this);
 }
 } // Recluse

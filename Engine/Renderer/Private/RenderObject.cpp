@@ -170,7 +170,6 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
   }
   emissiveInfo.sampler = sampler->Handle();
 
-
   writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[count].dstBinding = 2;
   writeSets[count].descriptorCount = 1;
@@ -197,7 +196,6 @@ void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
   writeSets[count].pImageInfo = &roughInfo;
   writeSets[count].pNext = nullptr;
   count++;
-
 
   writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[count].dstBinding = 5;

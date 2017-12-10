@@ -41,6 +41,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Utility/Time.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Image.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Archive.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Utility/Cpu.hpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Archive.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Window.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Win32Time.cpp
@@ -64,6 +65,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.hpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/stb_image.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Image.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Cpu.cpp
   ${RECLUSE_CORE_PUB_DIR}/Types.hpp
   
   ${RECLUSE_CORE_PRIVATE_DIR}/Thread/CoreThread.cpp

@@ -12,6 +12,8 @@ namespace Recluse {
 
 class VulkanRHI;
 
+// Mesh data represents data, in the form of gpu friendly buffers, to which we draw onto the 
+// frame. We use mesh data to represent the model we are drawing.
 class MeshData {
 public:
   MeshData();

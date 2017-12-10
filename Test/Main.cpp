@@ -36,8 +36,8 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_G)) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
   if (Keyboard::KeyPressed(KEY_CODE_H)) { gRenderer().SetGamma(gRenderer().Gamma() <= 0.0f ? 0.1f : gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
   // Test HDR Reinhard exposure.
-  if (Keyboard::KeyPressed(KEY_CODE_E)) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(3.0 * Time::DeltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_R)) { gRenderer().SetExposure(gRenderer().Exposure() - (r32)(3.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_E)) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(2.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_R)) { gRenderer().SetExposure(gRenderer().Exposure() <= 0.0f ? 0.1f : gRenderer().Exposure() - (r32)(2.0 * Time::DeltaTime)); }
   // Test albedo enabling.
   if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
   if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
@@ -118,12 +118,12 @@ int main(int c, char* argv[])
   auto sphereData = UVSphere::MeshInstance(5.0f, 128, 128);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 128, 128);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
-  sphereMeshDat->Initialize(sphereData.size(), sizeof(SkinnedVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
+  sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
 
   auto cubeData = Cube::MeshInstance();
   auto cubeIndices = Cube::IndicesInstance();
   MeshData* cubeMeshDat = gRenderer().CreateMeshData();
-  cubeMeshDat->Initialize(cubeData.size(), sizeof(SkinnedVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
+  cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
  
   Material cubeMaterial;
   SkinnedMeshDescriptor cubeMesh;

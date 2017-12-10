@@ -9,20 +9,26 @@
 namespace Recluse {
 
 
+struct FileHandle {
+    u64   Sz;
+    u8*   Buf;
+};
+
+
+struct AsyncFileHandle {
+    // Check if the file is finished reading. If not, 
+    // Buf and Sz are not readable!
+    b8    Finished;
+    // Size of the buffer.
+    u64   Sz;
+    // The buffer to read from.
+    u8*   Buf;
+};
+
+
 // Filesystem module, intended to hold onto files lulz.
 class Filesystem : public EngineModule<Filesystem> {
 public:
-  class FileHandle {
-    u64   size;
-    u8*   buffer;
-  };
-
-  class AsyncFileHandle {
-    b8    finished;
-
-    u64   size;
-    u8*   buffer;
-  };
 
   enum FilePathType {
     Absolute,
@@ -34,23 +40,25 @@ public:
 
   void                      OnStartUp() override;
   void                      OnShutDown() override;
-  void                      SetCurrentAppDirectory(tchar* applicationPath);
+  void                      SetCurrentAppDirectory(tchar* ApplicationPath);
   void                      AppendSearchPath(tchar* path);
+  void                      ReadFile(FileHandle* Buf);
+  void                      AsyncReadFile(AsyncFileHandle* Buf);
 
   // Current application directory of the executable.
   const tchar*              CurrentAppDirectory();
 
-  b8                        FileExists(tchar* filepath);
-  b8                        DirectoryExists(tchar* directorypath);
+  b8                        FileExists(tchar* Filepath);
+  b8                        DirectoryExists(tchar* DirectoryPath);
   tchar*                    GetApplicationSourcePath();
-  tchar*                    SetApplicationSourcePath(const tchar* srcPath);
-  std::vector<std::string>  DirectoryContents(std::string& path);
-  std::vector<std::string>  SearchPaths() { return mSearchPath; }  
+  tchar*                    SetApplicationSourcePath(const tchar* SrcPath);
+  std::vector<std::string>  DirectoryContents(std::string& Path);
+  std::vector<std::string>  SearchPaths() { return m_SearchPath; }  
 
 private:
-  std::string               mCurrentDirectoryPath;
-  std::string               mAppSourcePath;
-  std::vector<std::string>  mSearchPath;
+  std::string               m_CurrentDirectoryPath;
+  std::string               m_AppSourcePath;
+  std::vector<std::string>  m_SearchPath;
 };
 
 

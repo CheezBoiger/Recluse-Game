@@ -45,7 +45,9 @@ std::string FrameBuffer2xStr            = "FrameBuffer2x";
 std::string FrameBuffer4xStr            = "FrameBuffer4x";
 std::string FrameBuffer8xStr            = "FrameBuffer8x";
 std::string GlowPipelineStr             = "GlowPipelineStr";
-std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline";
+std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline2x";
+std::string DownscaleBlurPipeline4xStr  = "DownscaleBlurPipeline4x";
+std::string DownscaleBlurPipeline8xStr  = "DownscaleBlurPipeline8x";
 std::string DownscaleBlurLayoutStr      = "DownscaleBlurLayout";
 std::string DownscaleBlurVertFileStr    = "DownscaleBlurPass.vert.spv";
 std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
@@ -214,20 +216,24 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
   // pass. 
-  GraphicsPipeline* downscale2x = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* Downscale2x = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* Downscale4x = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* Downscale8x = Rhi->CreateGraphicsPipeline();
   FrameBuffer*      FrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
   FrameBuffer*      FrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
   FrameBuffer*      FrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline2xStr, downscale2x);
-  DescriptorSetLayout* downscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline2xStr, Downscale2x);
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline4xStr, Downscale4x);
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline8xStr, Downscale8x);
+  DescriptorSetLayout* DownscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
 
-  Shader* dbVert = Rhi->CreateShader();
-  Shader* dbFrag = Rhi->CreateShader();
-  if (!dbVert->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
+  Shader* DbVert = Rhi->CreateShader();
+  Shader* DbFrag = Rhi->CreateShader();
+  if (!DbVert->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
     Log(rError) << "Could not find " + DownscaleBlurVertFileStr + "!\n";
   }
 
-  if (!dbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
+  if (!DbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
     Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
   }
 
@@ -236,17 +242,17 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   PushConst.size = 4;
   PushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayout dwnsclLayout[] = { downscaleDescLayout->Layout() };
-  VkPipelineLayoutCreateInfo downscaleLayout = {};
-  downscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  downscaleLayout.pushConstantRangeCount = 1;
-  downscaleLayout.pPushConstantRanges = &PushConst;
-  downscaleLayout.setLayoutCount = 1;
-  downscaleLayout.pSetLayouts = dwnsclLayout;
+  VkDescriptorSetLayout DwnsclLayout[] = { DownscaleDescLayout->Layout() };
+  VkPipelineLayoutCreateInfo DownscaleLayout = {};
+  DownscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  DownscaleLayout.pushConstantRangeCount = 1;
+  DownscaleLayout.pPushConstantRanges = &PushConst;
+  DownscaleLayout.setLayoutCount = 1;
+  DownscaleLayout.pSetLayouts = DwnsclLayout;
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
-  ShaderModules[0].module = dbVert->Handle();
+  ShaderModules[0].module = DbVert->Handle();
   ShaderModules[0].pName = "main";
   ShaderModules[0].pNext = nullptr;
   ShaderModules[0].pSpecializationInfo = nullptr;
@@ -254,7 +260,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   ShaderModules[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
   ShaderModules[1].flags = 0;
-  ShaderModules[1].module = dbFrag->Handle();
+  ShaderModules[1].module = DbFrag->Handle();
   ShaderModules[1].pName = "main";
   ShaderModules[1].pNext = nullptr;
   ShaderModules[1].pSpecializationInfo = nullptr;
@@ -265,11 +271,14 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.renderPass = FrameBuffer2x->RenderPass();
   
-  downscale2x->Initialize(GraphicsInfo, downscaleLayout);
+  Downscale2x->Initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer4x->RenderPass();
+  Downscale4x->Initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer8x->RenderPass();
+  Downscale8x->Initialize(GraphicsInfo, DownscaleLayout);
 
-  Rhi->FreeShader(dbVert);
-  Rhi->FreeShader(dbFrag);
+  Rhi->FreeShader(DbVert);
+  Rhi->FreeShader(DbFrag);
 }
 
 
