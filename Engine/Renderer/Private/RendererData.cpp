@@ -242,7 +242,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   VkPushConstantRange PushConst = {};
   PushConst.offset = 0;
-  PushConst.size = 4;
+  PushConst.size = 8;
   PushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkDescriptorSetLayout DwnsclLayout[] = { DownscaleDescLayout->Layout() };

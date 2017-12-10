@@ -13,8 +13,11 @@ in FRAG_IN {
 // The surface we are blurring.
 layout (set = 0, binding = 0) uniform sampler2D sceneSurface;
 
-// Push constant to determin direction of blur.
-layout (constant_id = 0) const int horizontal = 0;
+// Push constants to determine direction of blur.
+layout (push_constant) uniform Consts {
+  int   horizontal;
+  float strength;
+} Blur;
 
 
 void main()
@@ -31,15 +34,15 @@ void main()
   vec3 blurColor = texture(sceneSurface, frag_in.uv).rgb * weight[0];
   
   // TODO(): Perform blur. May want to do a liner sample instead?
-  if (horizontal == 0) {
+  if (Blur.horizontal == 0) {
     for (int i = 1; i < 5; ++i) {
-      blurColor += texture(sceneSurface, frag_in.uv + vec2(offset.x * i, 0.0)).rgb * weight[i];
-      blurColor += texture(sceneSurface, frag_in.uv - vec2(offset.x * i, 0.0)).rgb * weight[i];
+      blurColor += texture(sceneSurface, frag_in.uv + vec2(offset.x * i, 0.0)).rgb * weight[i] * Blur.strength;
+      blurColor += texture(sceneSurface, frag_in.uv - vec2(offset.x * i, 0.0)).rgb * weight[i] * Blur.strength;
     }
   } else {
     for (int i = 1; i < 5; ++i) {
-      blurColor += texture(sceneSurface, frag_in.uv + vec2(0.0, offset.x * i)).rgb * weight[i];
-      blurColor += texture(sceneSurface, frag_in.uv - vec2(0.0, offset.x * i)).rgb * weight[i];
+      blurColor += texture(sceneSurface, frag_in.uv + vec2(0.0, offset.x * i)).rgb * weight[i] * Blur.strength;
+      blurColor += texture(sceneSurface, frag_in.uv - vec2(0.0, offset.x * i)).rgb * weight[i] * Blur.strength;
     }
   }
   

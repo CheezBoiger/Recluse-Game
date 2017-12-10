@@ -250,6 +250,11 @@ private:
     b8                            enabled;
   } mHDR;
 
+  struct {
+    i32     horizontal;
+    r32     strength;
+  } m_Downscale;
+
   RenderQuad        mRenderQuad;
   UIOverlay*        mUI;
   b8                mRendering      : 1;

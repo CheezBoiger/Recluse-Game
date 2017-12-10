@@ -58,6 +58,9 @@ Renderer::Renderer()
 
   mHDR.cmdBuffers.resize(2);
   mOffscreen.currCmdBufferIndex = 0;
+  
+  m_Downscale.horizontal = 0;
+  m_Downscale.strength = 1.0f;
 }
 
 
@@ -1368,6 +1371,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
+    m_Downscale.strength = 1.8f;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;
     viewport.width = (r32)mWindowHandle->Width() * 0.5f;
@@ -1377,16 +1381,17 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale.strength);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-      int horizontal = true;
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      m_Downscale.horizontal = true;
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &m_Downscale.horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
     viewport.height = (r32)mWindowHandle->Height() / 4.0f;
     viewport.width = (r32)mWindowHandle->Width() / 4.0f;
     DownscaleSetNative = DownscaleSet4x->Handle();
-    horizontal = false;
+    int horizontal = false;
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
