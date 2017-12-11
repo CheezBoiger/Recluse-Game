@@ -688,7 +688,7 @@ void Renderer::SetUpGraphicsPipelines()
   VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
      VK_POLYGON_MODE_FILL,
       VK_FALSE, 
-      VK_CULL_MODE_BACK_BIT,
+      VK_CULL_MODE_NONE,
       VK_FRONT_FACE_CLOCKWISE,
       1.0f,
       VK_FALSE,
@@ -1573,9 +1573,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
@@ -1615,11 +1615,7 @@ void Renderer::SetUpFinalOutputs()
 
   Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* hdrColor = gResources().GetRenderTexture(
-#if 1
   HDRGammaColorAttachStr
-#else
-  RenderTargetGlowStr
-#endif
   );
   Sampler* hdrSampler = gResources().GetSampler(HDRGammaSamplerStr);
   Sampler* pbrSampler = gResources().GetSampler(PBRSamplerStr);

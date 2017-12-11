@@ -167,7 +167,7 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
     
     vec3 F = FSchlick(dotNV, F0, roughness);
     vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
- 
+    if (isnan(brdf).x == true) discard;
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;

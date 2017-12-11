@@ -141,7 +141,7 @@ int main(int c, char* argv[])
 
   Material cubeMaterial2;
   SkinnedMeshDescriptor cubeMesh2;
-  cubeMesh2.SetTransparent(false);
+  cubeMesh2.SetTransparent(true);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
