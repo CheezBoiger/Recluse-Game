@@ -1119,7 +1119,6 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   WriteSet.pTexelBufferView = nullptr;
   
   DBDS2x->Update(1, &WriteSet);
-  //Img.sampler = DownscaleSampler->Handle();
   Img.imageView = Color2x->View();
   Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   DBDS2xFinal->Update(1, &WriteSet);
@@ -1522,7 +1521,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
     m_Downscale.strength = 1.0f;
-    m_Downscale.scale = 4.0f;
+    m_Downscale.scale = 1.0f;
     m_Downscale.horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;
