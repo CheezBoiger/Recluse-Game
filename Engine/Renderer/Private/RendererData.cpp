@@ -49,9 +49,12 @@ std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline2x";
 std::string DownscaleBlurPipeline4xStr  = "DownscaleBlurPipeline4x";
 std::string DownscaleBlurPipeline8xStr  = "DownscaleBlurPipeline8x";
 std::string DownscaleBlurLayoutStr      = "DownscaleBlurLayout";
-std::string DownscaleBlurDescriptorSet2x= "DownscaleBlurDescriptorSet2x";
+std::string DownscaleBlurDescriptorSet2x          = "DownscaleBlurDescriptorSet2x";
+std::string DownscaleBlurDescriptorSet2xFinalStr  = "DownscaleFinal2x";
 std::string DownscaleBlurDescriptorSet4x= "DownscaleBlurDescriptorSet4x";
-std::string DownscaleBlurDescriptorSet8x= "DownscaleBlurDescriptorSet8x";
+std::string DownscaleBlurDescriptorSet4xFinalStr  = "DownscaleFinal4x";
+std::string DownscaleBlurDescriptorSet8x          = "DownscaleBlurDescriptorSet8x";
+std::string DownscaleBlurDescriptorSet8xFinalStr  = "DownscaleFinal8x";
 std::string DownscaleBlurVertFileStr    = "DownscaleBlurPass.vert.spv";
 std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
 

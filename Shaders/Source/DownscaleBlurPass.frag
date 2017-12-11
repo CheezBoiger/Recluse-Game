@@ -41,8 +41,8 @@ void main()
     }
   } else {
     for (int i = 1; i < 5; ++i) {
-      blurColor += texture(sceneSurface, frag_in.uv + vec2(0.0, offset.x * i)).rgb * weight[i] * Blur.strength;
-      blurColor += texture(sceneSurface, frag_in.uv - vec2(0.0, offset.x * i)).rgb * weight[i] * Blur.strength;
+      blurColor += texture(sceneSurface, frag_in.uv + vec2(0.0, offset.y * i)).rgb * weight[i] * Blur.strength;
+      blurColor += texture(sceneSurface, frag_in.uv - vec2(0.0, offset.y * i)).rgb * weight[i] * Blur.strength;
     }
   }
   

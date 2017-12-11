@@ -829,7 +829,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -841,7 +841,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -1011,17 +1011,28 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
 
   DescriptorSetLayout* Layout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
   DescriptorSet* DBDS2x = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS2xFinal = mRhi->CreateDescriptorSet();
   DescriptorSet* DBDS4x = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS4xFinal = mRhi->CreateDescriptorSet();
   DescriptorSet* DBDS8x = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS8xFinal = mRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2x, DBDS2x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4x, DBDS4x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8x, DBDS8x);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr, DBDS2xFinal);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr, DBDS4xFinal);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr, DBDS8xFinal);
+
   DBDS2x->Allocate(mRhi->DescriptorPool(), Layout);
   DBDS4x->Allocate(mRhi->DescriptorPool(), Layout);
   DBDS8x->Allocate(mRhi->DescriptorPool(), Layout);
+  DBDS2xFinal->Allocate(mRhi->DescriptorPool(), Layout);
+  DBDS4xFinal->Allocate(mRhi->DescriptorPool(), Layout);
+  DBDS8xFinal->Allocate(mRhi->DescriptorPool(), Layout);
 
   Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
+  Texture* Color8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* Color4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
   Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
   Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
@@ -1046,9 +1057,13 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   //Img.sampler = DownscaleSampler->Handle();
   Img.imageView = Color2x->View();
   Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  DBDS2xFinal->Update(1, &WriteSet);
   DBDS4x->Update(1, &WriteSet);
   Img.imageView = Color4x->View();
   DBDS8x->Update(1, &WriteSet);
+  DBDS4xFinal->Update(1, &WriteSet);
+  Img.imageView = Color8x->View();
+  DBDS8xFinal->Update(1, &WriteSet);
 }
 
 
@@ -1063,6 +1078,12 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
   mRhi->FreeDescriptorSet(DBDS4x);
   DescriptorSet* DBDS8x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8x);
   mRhi->FreeDescriptorSet(DBDS8x);
+  DescriptorSet* DBDS2xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr);
+  mRhi->FreeDescriptorSet(DBDS2xFinal);
+  DescriptorSet* DBDS4xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr);
+  mRhi->FreeDescriptorSet(DBDS4xFinal);
+  DescriptorSet* DBDS8xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr);
+  mRhi->FreeDescriptorSet(DBDS8xFinal);
 }
 
 
@@ -1316,6 +1337,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   DescriptorSet* DownscaleSet2x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2x);
   DescriptorSet* DownscaleSet4x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet4x);
   DescriptorSet* DownscaleSet8x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet8x);
+  DescriptorSet* DownscaleSet2xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr);
+  DescriptorSet* DownscaleSet4xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr);
+  DescriptorSet* DownscaleSet8xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr);
 
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   VkCommandBufferBeginInfo cmdBi = { };
@@ -1371,7 +1395,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale.strength = 1.8f;
+    m_Downscale.strength = 1.0f;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;
     viewport.width = (r32)mWindowHandle->Width() * 0.5f;
@@ -1384,6 +1408,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale.strength);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       m_Downscale.horizontal = true;
+      DownscaleSetNative = DownscaleSet2xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &m_Downscale.horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
@@ -1400,7 +1426,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       horizontal = true;
+      DownscaleSetNative = DownscaleSet4xFinal->Handle();
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
@@ -1417,7 +1445,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       horizontal = true;
+      DownscaleSetNative = DownscaleSet8xFinal->Handle();
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
