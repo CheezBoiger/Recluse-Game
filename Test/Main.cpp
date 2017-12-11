@@ -52,6 +52,8 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { window->Close(); }
 }
 
+#define SPHERE_SEGS 64
+
 
 int main(int c, char* argv[])
 {
@@ -96,7 +98,7 @@ int main(int c, char* argv[])
   lights->primaryLight.direction = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
   lights->primaryLight.intensity = 0.5f;
   lights->primaryLight.color = Vector4(0.5f, 0.5f, 0.2f, 1.0f);
-  lights->primaryLight.enable = true;
+  lights->primaryLight.enable = false;
 
   lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
@@ -115,8 +117,8 @@ int main(int c, char* argv[])
   albedo->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(2.0f, 64, 64);
-  auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 64, 64);
+  auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
+  auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
 

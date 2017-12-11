@@ -782,7 +782,6 @@ void Renderer::SetUpGraphicsPipelines()
   RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
 
   // Set to quad rendering format.
-  colorBlendAttachments[0].blendEnable = VK_FALSE;
   colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
@@ -795,8 +794,14 @@ void Renderer::SetUpGraphicsPipelines()
   vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(finalAttribs.size());
   vertexCI.pVertexAttributeDescriptions = finalAttribs.data();
 
-  RendererPass::SetUpFinalPass(RHI(), Filepath, GraphicsPipelineInfo);
+  colorBlendAttachments[0].blendEnable = VK_TRUE;
+  colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+  colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
   RendererPass::SetUpHDRGammaPass(RHI(), Filepath, GraphicsPipelineInfo);
+  colorBlendAttachments[0].blendEnable = VK_FALSE;
+  RendererPass::SetUpFinalPass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpDownScalePass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
 }
@@ -1517,7 +1522,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
     m_Downscale.strength = 1.0f;
-    m_Downscale.scale = 2.0f;
+    m_Downscale.scale = 4.0f;
     m_Downscale.horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;

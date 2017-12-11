@@ -166,7 +166,8 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
     float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
     
     vec3 F = FSchlick(dotNV, F0, roughness);
-    vec3 brdf = D * F * G / (4 * dotNL * dotNV);
+    vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
+ 
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
