@@ -45,6 +45,11 @@ std::string FrameBuffer2xStr            = "FrameBuffer2x";
 std::string FrameBuffer4xStr            = "FrameBuffer4x";
 std::string FrameBuffer8xStr            = "FrameBuffer8x";
 std::string GlowPipelineStr             = "GlowPipelineStr";
+std::string GlowFragFileStr             = "GlowPass.frag.spv";
+std::string RenderTargetGlowStr         = "RenderTargetGlow";
+std::string FrameBufferGlowStr          = "FrameBufferGlow";
+std::string GlowDescriptorSetLayoutStr  = "GlowDescriptorSetLayout";
+std::string GlowDescriptorSetStr        = "GlowDescriptorSet";
 std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline2x";
 std::string DownscaleBlurPipeline4xStr  = "DownscaleBlurPipeline4x";
 std::string DownscaleBlurPipeline8xStr  = "DownscaleBlurPipeline8x";
@@ -222,16 +227,26 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   // TODO(): Glow and Downsampling graphics pipeline, which will be done right after pbr 
   // pass. 
+  VkPipelineInputAssemblyStateCreateInfo n = { };
+  n.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  n.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+  n.primitiveRestartEnable = VK_FALSE;
+  GraphicsInfo.pInputAssemblyState = &n;
+
   GraphicsPipeline* Downscale2x = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* Downscale4x = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* Downscale8x = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* GlowPipeline = Rhi->CreateGraphicsPipeline();
   FrameBuffer*      FrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
   FrameBuffer*      FrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
   FrameBuffer*      FrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
+  FrameBuffer*      GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline2xStr, Downscale2x);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline4xStr, Downscale4x);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline8xStr, Downscale8x);
+  gResources().RegisterGraphicsPipeline(GlowPipelineStr, GlowPipeline);
   DescriptorSetLayout* DownscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
+  DescriptorSetLayout* GlowDescLayout = gResources().GetDescriptorSetLayout(GlowDescriptorSetLayoutStr);
 
   Shader* DbVert = Rhi->CreateShader();
   Shader* DbFrag = Rhi->CreateShader();
@@ -245,7 +260,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   VkPushConstantRange PushConst = {};
   PushConst.offset = 0;
-  PushConst.size = 8;
+  PushConst.size = 12;
   PushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkDescriptorSetLayout DwnsclLayout[] = { DownscaleDescLayout->Layout() };
@@ -283,6 +298,25 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   GraphicsInfo.renderPass = FrameBuffer8x->RenderPass();
   Downscale8x->Initialize(GraphicsInfo, DownscaleLayout);
 
+  Rhi->FreeShader(DbFrag);
+  DbFrag = Rhi->CreateShader();
+
+  if (!DbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + GlowFragFileStr)) {
+    Log(rError) << "Could not find " + GlowFragFileStr + "!\n";
+  }
+
+  ShaderModules[1].module = DbFrag->Handle();
+  VkPipelineLayoutCreateInfo GlowPipelineLayout = { };
+  VkDescriptorSetLayout GlowDescSetLayout = GlowDescLayout->Layout();
+  GlowPipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  GlowPipelineLayout.pSetLayouts = &GlowDescSetLayout;
+  GlowPipelineLayout.setLayoutCount = 1;
+  GlowPipelineLayout.pPushConstantRanges = nullptr;
+  GlowPipelineLayout.pushConstantRangeCount = 0;
+
+  GraphicsInfo.renderPass = GlowFrameBuffer->RenderPass();
+  GlowPipeline->Initialize(GraphicsInfo, GlowPipelineLayout);
+
   Rhi->FreeShader(DbVert);
   Rhi->FreeShader(DbFrag);
 }
@@ -295,6 +329,8 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
   Shader* quadFrag = Rhi->CreateShader();
   // TODO(): Need to structure all of this into more manageable modules.
   //
+  VkPipelineInputAssemblyStateCreateInfo n = { };
+
   GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
   gResources().RegisterGraphicsPipeline(FinalPipelineStr, quadPipeline);
 

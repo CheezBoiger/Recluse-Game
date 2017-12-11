@@ -38,6 +38,8 @@ public:
   // Does this render object define a skinned mesh descriptor?
   b8                      Skinned;
 
+  // Is this object renderable? If not, the renderer will ignore it.
+  b8                      Renderable;
 
   RenderObject(MeshDescriptor* mesh = nullptr, 
                 Material* material = nullptr);

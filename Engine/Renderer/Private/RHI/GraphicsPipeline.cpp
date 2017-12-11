@@ -6,6 +6,14 @@
 namespace Recluse {
 
 
+GraphicsPipeline::~GraphicsPipeline()
+{
+  if (mPipeline) {
+    R_DEBUG(rWarning, "Graphics pipeline CleanUp was not called prior to its deletion!\n");
+  }
+}
+
+
 void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
   const VkPipelineLayoutCreateInfo& layout)
 {
@@ -27,6 +35,8 @@ void GraphicsPipeline::CleanUp()
   if (mPipeline && mLayout) {
     vkDestroyPipeline(mOwner, mPipeline, nullptr);
     vkDestroyPipelineLayout(mOwner, mLayout, nullptr);
+    mPipeline = VK_NULL_HANDLE;
+    mLayout = VK_NULL_HANDLE;
   }
 }
 } // Recluse

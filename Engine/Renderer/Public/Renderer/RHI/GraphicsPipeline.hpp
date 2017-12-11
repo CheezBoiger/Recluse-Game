@@ -16,6 +16,8 @@ public:
     : mPipeline(VK_NULL_HANDLE)
     , mLayout(VK_NULL_HANDLE) { }
 
+  ~GraphicsPipeline();
+
   // Graphics Pipeline initialization call. This will effectively 
   // initialize the pipeline, along with setting the pipeline layout.
   void              Initialize(VkGraphicsPipelineCreateInfo& info,

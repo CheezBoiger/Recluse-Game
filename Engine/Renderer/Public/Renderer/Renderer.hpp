@@ -253,6 +253,7 @@ private:
   struct {
     i32     horizontal;
     r32     strength;
+    r32     scale;
   } m_Downscale;
 
   RenderQuad        mRenderQuad;

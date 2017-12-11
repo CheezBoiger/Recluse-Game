@@ -42,8 +42,8 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
   if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
 
-  if (Keyboard::KeyPressed(KEY_CODE_0)) { gRenderer().EnableHDR(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_1)) { gRenderer().EnableHDR(true); }
+  if (Keyboard::KeyPressed(KEY_CODE_0)) { gRenderer().EnableBloom(false); }
+  if (Keyboard::KeyPressed(KEY_CODE_1)) { gRenderer().EnableBloom(true); }
 
   // Window changing sets.
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
@@ -115,7 +115,7 @@ int main(int c, char* argv[])
   albedo->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(5.0f, 64, 64);
+  auto sphereData = UVSphere::MeshInstance(2.0f, 64, 64);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), 64, 64);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
@@ -139,7 +139,7 @@ int main(int c, char* argv[])
 
   Material cubeMaterial2;
   SkinnedMeshDescriptor cubeMesh2;
-  cubeMesh2.SetTransparent(true);
+  cubeMesh2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
@@ -176,6 +176,7 @@ int main(int c, char* argv[])
   obj2->MaterialId = &cubeMaterial2;
   obj2->MeshDescriptorId = &cubeMesh2;
   obj2->Skinned = false;
+  obj2->Renderable = true;
 
   obj3->MaterialId = &cubeMaterial3;
   obj3->MeshDescriptorId = &cubeMesh3;

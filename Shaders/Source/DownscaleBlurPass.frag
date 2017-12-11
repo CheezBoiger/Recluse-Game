@@ -17,6 +17,7 @@ layout (set = 0, binding = 0) uniform sampler2D sceneSurface;
 layout (push_constant) uniform Consts {
   int   horizontal;
   float strength;
+  float scale;
 } Blur;
 
 
@@ -30,7 +31,7 @@ void main()
   weight[3] = 0.0540540541;
   weight[4] = 0.0162162162;
   
-  vec2 offset = 1.0 / textureSize(sceneSurface, 0);
+  vec2 offset = 1.0 / textureSize(sceneSurface, 0) * Blur.scale;
   vec3 blurColor = texture(sceneSurface, frag_in.uv).rgb * weight[0];
   
   // TODO(): Perform blur. May want to do a liner sample instead?
