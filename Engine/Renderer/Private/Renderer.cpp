@@ -927,10 +927,10 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.extent.width = mWindowHandle->Width();
   cImageInfo.extent.height = mWindowHandle->Height();
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   hdrTexture->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.usage = mRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -1532,6 +1532,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale.horizontal);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale.strength);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale.scale);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
