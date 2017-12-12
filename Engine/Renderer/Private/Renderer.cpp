@@ -495,6 +495,7 @@ void Renderer::SetUpFrameBuffers()
   Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
   Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
+  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
 
   FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(PBRFrameBufferStr, pbrFrameBuffer);
@@ -502,7 +503,7 @@ void Renderer::SetUpFrameBuffers()
   FrameBuffer* hdrFrameBuffer = mRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
-  VkAttachmentDescription attachmentDescriptions[3];
+  std::array<VkAttachmentDescription, 4> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
@@ -528,6 +529,17 @@ void Renderer::SetUpFrameBuffers()
   );
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
+    RTBright->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    RTBright->Samples()
+  );
+
+  attachmentDescriptions[3] = CreateAttachmentDescription(
     pbrDepth->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -558,42 +570,46 @@ void Renderer::SetUpFrameBuffers()
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
-  VkAttachmentReference attachmentColors[2];
-  VkAttachmentReference attachmentDepthRef = { 2, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  std::array<VkAttachmentReference, 3> attachmentColors;
+  VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   attachmentColors[1].attachment = 1;
   attachmentColors[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+  attachmentColors[2].attachment = 2;
+  attachmentColors[2].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = 2;
-  subpass.pColorAttachments = attachmentColors;
+  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+  subpass.pColorAttachments = attachmentColors.data();
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
   
   VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
-    3,
-    attachmentDescriptions,
+    static_cast<u32>(attachmentDescriptions.size()),
+    attachmentDescriptions.data(),
     2,
     dependencies,
     1,
     &subpass
   );
 
-  VkImageView attachments[3];
+  std::array<VkImageView, 4> attachments;
   attachments[0] = pbrColor->View();
   attachments[1] = pbrNormal->View();
-  attachments[2] = pbrDepth->View();
+  attachments[2] = RTBright->View();
+  attachments[3] = pbrDepth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
     mWindowHandle->Width(),
     mWindowHandle->Height(),
     nullptr, // Finalize() call handles this for us.
-    3,
-    attachments,
-    1)
-  ;
+    static_cast<u32>(attachments.size()),
+    attachments.data(),
+    1
+  );
 
   pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
   
@@ -609,21 +625,31 @@ void Renderer::SetUpFrameBuffers()
   hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
 
   // Downscale render textures.
-  Texture* rtDownScale2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
+  Texture* rtDownScale2x = gResources().GetRenderTexture(RenderTarget2xHorizStr);
+  Texture* RenderTarget2xFinal = gResources().GetRenderTexture(RenderTarget2xFinalStr);
   Texture* rtDownScale4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
   Texture* rtDownScale8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* GlowTarget = gResources().GetRenderTexture(RenderTargetGlowStr);
 
   FrameBuffer* DownScaleFB2x = mRhi->CreateFrameBuffer();
+  FrameBuffer* FB2xFinal = mRhi->CreateFrameBuffer();
   FrameBuffer* DownScaleFB4x = mRhi->CreateFrameBuffer();
   FrameBuffer* DownScaleFB8x = mRhi->CreateFrameBuffer();
   FrameBuffer* GlowFB = mRhi->CreateFrameBuffer();
-  gResources().RegisterFrameBuffer(FrameBuffer2xStr, DownScaleFB2x);
+  gResources().RegisterFrameBuffer(FrameBuffer2xHorizStr, DownScaleFB2x);
+  gResources().RegisterFrameBuffer(FrameBuffer2xFinalStr, FB2xFinal);
   gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x);
   gResources().RegisterFrameBuffer(FrameBuffer8xStr, DownScaleFB8x);
   gResources().RegisterFrameBuffer(FrameBufferGlowStr, GlowFB);
 
   // 2x
+  attachments[0] = RenderTarget2xFinal->View();
+  attachmentDescriptions[0].format = RenderTarget2xFinal->Format();
+  attachmentDescriptions[0].samples = RenderTarget2xFinal->Samples();
+  framebufferCI.width = RenderTarget2xFinal->Width();
+  framebufferCI.height = RenderTarget2xFinal->Height();
+  FB2xFinal->Finalize(framebufferCI, renderpassCI);
+
   attachments[0] = rtDownScale2x->View();
   attachmentDescriptions[0].format = rtDownScale2x->Format();
   attachmentDescriptions[0].samples = rtDownScale2x->Samples();
@@ -716,7 +742,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.back = { };
   depthStencilCI.front = { };
 
-  VkPipelineColorBlendAttachmentState colorBlendAttachments[2];
+  std::array<VkPipelineColorBlendAttachmentState, 3> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -739,9 +765,21 @@ void Renderer::SetUpGraphicsPipelines()
     VK_BLEND_OP_ADD
   );
 
+  colorBlendAttachments[2] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+
   VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    2,
-    colorBlendAttachments,
+    static_cast<u32>(colorBlendAttachments.size()),
+    colorBlendAttachments.data(),
     VK_FALSE,
     VK_LOGIC_OP_NO_OP
   );
@@ -794,11 +832,11 @@ void Renderer::SetUpGraphicsPipelines()
   vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(finalAttribs.size());
   vertexCI.pVertexAttributeDescriptions = finalAttribs.data();
 
-  colorBlendAttachments[0].blendEnable = VK_TRUE;
-  colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+  colorBlendAttachments[0].blendEnable = VK_FALSE;
+  colorBlendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+  colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-  colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+  colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
   RendererPass::SetUpDownScalePass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpHDRGammaPass(RHI(), Filepath, GraphicsPipelineInfo);
   colorBlendAttachments[0].blendEnable = VK_FALSE;
@@ -844,7 +882,8 @@ void Renderer::CleanUpFrameBuffers()
   FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer(HDRGammaFrameBufferStr);
   mRhi->FreeFrameBuffer(hdrFrameBuffer);
 
-  FrameBuffer* DownScaleFB2x = gResources().UnregisterFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer* DownScaleFB2x = gResources().UnregisterFrameBuffer(FrameBuffer2xHorizStr);
+  FrameBuffer* FB2xFinal = gResources().UnregisterFrameBuffer(FrameBuffer2xFinalStr);
   FrameBuffer* DownScaleFB4x = gResources().UnregisterFrameBuffer(FrameBuffer4xStr);
   FrameBuffer* DownScaleFB8x = gResources().UnregisterFrameBuffer(FrameBuffer8xStr);
   FrameBuffer* GlowFB = gResources().UnregisterFrameBuffer(FrameBufferGlowStr);
@@ -852,6 +891,7 @@ void Renderer::CleanUpFrameBuffers()
   mRhi->FreeFrameBuffer(DownScaleFB2x);
   mRhi->FreeFrameBuffer(DownScaleFB4x);
   mRhi->FreeFrameBuffer(DownScaleFB8x);
+  mRhi->FreeFrameBuffer(FB2xFinal);
   mRhi->FreeFrameBuffer(GlowFB);
 }
 
@@ -859,8 +899,10 @@ void Renderer::CleanUpFrameBuffers()
 void Renderer::SetUpRenderTextures(b8 fullSetup)
 {
   Texture* renderTarget2xScaled = mRhi->CreateTexture();
+  Texture* RenderTarget2xFinal = mRhi->CreateTexture();
   Texture* renderTarget4xScaled = mRhi->CreateTexture();
   Texture* renderTarget8xScaled = mRhi->CreateTexture();
+  Texture* RenderTargetBright = mRhi->CreateTexture();
   Texture* GlowTarget = mRhi->CreateTexture();
 
   Texture* pbrColor = mRhi->CreateTexture();
@@ -875,7 +917,9 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(PBRColorAttachStr, pbrColor);
   gResources().RegisterRenderTexture(PBRNormalAttachStr, pbrNormal);
   gResources().RegisterRenderTexture(PBRDepthAttachStr, pbrDepth);
-  gResources().RegisterRenderTexture(RenderTarget2xScaledStr, renderTarget2xScaled);
+  gResources().RegisterRenderTexture(RenderTargetBrightStr, RenderTargetBright);
+  gResources().RegisterRenderTexture(RenderTarget2xHorizStr, renderTarget2xScaled);
+  gResources().RegisterRenderTexture(RenderTarget2xFinalStr, RenderTarget2xFinal);
   gResources().RegisterRenderTexture(RenderTarget4xScaledStr, renderTarget4xScaled);
   gResources().RegisterRenderTexture(RenderTarget8xScaledStr, renderTarget8xScaled);
   gResources().RegisterRenderTexture(RenderTargetGlowStr, GlowTarget);
@@ -911,12 +955,14 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
   pbrColor->Initialize(cImageInfo, cViewInfo);
   pbrNormal->Initialize(cImageInfo, cViewInfo);
+  RenderTargetBright->Initialize(cImageInfo, cViewInfo);
   GlowTarget->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
   cImageInfo.extent.width = mWindowHandle->Width() / 2;
   cImageInfo.extent.height = mWindowHandle->Height() / 2;
   renderTarget2xScaled->Initialize(cImageInfo, cViewInfo);
+  RenderTarget2xFinal->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.extent.width = mWindowHandle->Width() / 4;
   cImageInfo.extent.height = mWindowHandle->Height() / 4;
@@ -1002,12 +1048,14 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
 void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 {
-  Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xScaledStr);
+  Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xHorizStr);
+  Texture* RenderTarget2xFinal = gResources().UnregisterRenderTexture(RenderTarget2xFinalStr);
   Texture* renderTarget4xScaled = gResources().UnregisterRenderTexture(RenderTarget4xScaledStr);
   Texture* renderTarget8xScaled = gResources().UnregisterRenderTexture(RenderTarget8xScaledStr);
   Texture* GlowTarget = gResources().UnregisterRenderTexture(RenderTargetGlowStr);
 
   mRhi->FreeTexture(renderTarget2xScaled);
+  mRhi->FreeTexture(RenderTarget2xFinal);
   mRhi->FreeTexture(renderTarget4xScaled);
   mRhi->FreeTexture(renderTarget8xScaled);
   mRhi->FreeTexture(GlowTarget);
@@ -1015,6 +1063,7 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
   Texture* pbrDepth = gResources().UnregisterRenderTexture(PBRDepthAttachStr);
+  Texture* RenderTargetBright = gResources().UnregisterRenderTexture(RenderTargetBrightStr);
   Sampler* pbrSampler = gResources().UnregisterSampler(PBRSamplerStr);
 
   Texture* hdrTexture = gResources().UnregisterRenderTexture(HDRGammaColorAttachStr);
@@ -1026,6 +1075,7 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   mRhi->FreeTexture(pbrColor);
   mRhi->FreeTexture(pbrNormal);
   mRhi->FreeTexture(pbrDepth);
+  mRhi->FreeTexture(RenderTargetBright);
   mRhi->FreeSampler(pbrSampler);
 
   if (fullCleanup) {
@@ -1096,15 +1146,17 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   GlowDS->Allocate(mRhi->DescriptorPool(), GlowLayout);
 
   Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
-  Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xScaledStr);
+  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
+  Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xHorizStr);
+  Texture* Color2xFinal = gResources().GetRenderTexture(RenderTarget2xFinalStr);
   Texture* Color8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* Color4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
   Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
   Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
-  
+
   VkDescriptorImageInfo Img = { };
   Img.sampler = PBRSampler->Handle();
-  Img.imageView = PBRColor->View();
+  Img.imageView = RTBright->View();
   Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   
   VkWriteDescriptorSet WriteSet = { };
@@ -1122,6 +1174,7 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Img.imageView = Color2x->View();
   Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   DBDS2xFinal->Update(1, &WriteSet);
+  Img.imageView = Color2xFinal->View();
   DBDS4x->Update(1, &WriteSet);
   Img.imageView = Color4x->View();
   DBDS8x->Update(1, &WriteSet);
@@ -1335,17 +1388,18 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-  VkClearValue clearValues[3];
+  std::array<VkClearValue, 4> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[2].depthStencil = { 1.0f, 0 };
+  clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[3].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo pbrRenderPassInfo = {};
   pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   pbrRenderPassInfo.framebuffer = pbrBuffer->Handle();
   pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
-  pbrRenderPassInfo.pClearValues = clearValues;
-  pbrRenderPassInfo.clearValueCount = 3;
+  pbrRenderPassInfo.pClearValues = clearValues.data();
+  pbrRenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
   pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
   pbrRenderPassInfo.renderArea.offset = { 0, 0 };
 
@@ -1444,7 +1498,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   GraphicsPipeline* Downscale8x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline8xStr);
   GraphicsPipeline* GlowPipeline = gResources().GetGraphicsPipeline(GlowPipelineStr);
   FrameBuffer* hdrFrameBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
-  FrameBuffer* DownscaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xStr);
+  FrameBuffer* DownscaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xHorizStr);
+  FrameBuffer* FB2xFinal = gResources().GetFrameBuffer(FrameBuffer2xFinalStr);
   FrameBuffer* DownscaleFrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
   FrameBuffer* DownscaleFrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
   FrameBuffer* GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
@@ -1536,6 +1591,10 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale.strength);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale.scale);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+    DownscalePass2x.framebuffer = FB2xFinal->Handle();
+    DownscalePass2x.renderPass = FB2xFinal->RenderPass();
+    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       m_Downscale.horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);

@@ -32,12 +32,15 @@ extern std::string PBRObjMatLayoutStr;
 extern std::string PBRVertFileStr;
 extern std::string PBRStaticVertFileStr;
 extern std::string PBRFragFileStr;
+extern std::string RenderTargetBrightStr;
 
 extern std::string ScaledSamplerStr;
-extern std::string RenderTarget2xScaledStr;
+extern std::string RenderTarget2xHorizStr;
+extern std::string RenderTarget2xFinalStr;
 extern std::string RenderTarget4xScaledStr;
 extern std::string RenderTarget8xScaledStr;
-extern std::string FrameBuffer2xStr;
+extern std::string FrameBuffer2xHorizStr;
+extern std::string FrameBuffer2xFinalStr;
 extern std::string FrameBuffer4xStr;
 extern std::string FrameBuffer8xStr;
 extern std::string DownscaleBlurLayoutStr;
