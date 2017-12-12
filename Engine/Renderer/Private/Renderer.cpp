@@ -628,18 +628,24 @@ void Renderer::SetUpFrameBuffers()
   Texture* rtDownScale2x = gResources().GetRenderTexture(RenderTarget2xHorizStr);
   Texture* RenderTarget2xFinal = gResources().GetRenderTexture(RenderTarget2xFinalStr);
   Texture* rtDownScale4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
+  Texture* RenderTarget4xFinal = gResources().GetRenderTexture(RenderTarget4xFinalStr);
   Texture* rtDownScale8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
+  Texture* RenderTarget8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
   Texture* GlowTarget = gResources().GetRenderTexture(RenderTargetGlowStr);
 
   FrameBuffer* DownScaleFB2x = mRhi->CreateFrameBuffer();
   FrameBuffer* FB2xFinal = mRhi->CreateFrameBuffer();
   FrameBuffer* DownScaleFB4x = mRhi->CreateFrameBuffer();
+  FrameBuffer* FB4xFinal = mRhi->CreateFrameBuffer();
   FrameBuffer* DownScaleFB8x = mRhi->CreateFrameBuffer();
+  FrameBuffer* FB8xFinal = mRhi->CreateFrameBuffer();
   FrameBuffer* GlowFB = mRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(FrameBuffer2xHorizStr, DownScaleFB2x);
   gResources().RegisterFrameBuffer(FrameBuffer2xFinalStr, FB2xFinal);
-  gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x);
+  gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x); 
+  gResources().RegisterFrameBuffer(FrameBuffer4xFinalStr, FB4xFinal);
   gResources().RegisterFrameBuffer(FrameBuffer8xStr, DownScaleFB8x);
+  gResources().RegisterFrameBuffer(FrameBuffer8xFinalStr, FB8xFinal);
   gResources().RegisterFrameBuffer(FrameBufferGlowStr, GlowFB);
 
   // 2x
@@ -658,6 +664,13 @@ void Renderer::SetUpFrameBuffers()
   DownScaleFB2x->Finalize(framebufferCI, renderpassCI);
 
   // 4x
+  attachments[0] = RenderTarget4xFinal->View();
+  attachmentDescriptions[0].format = RenderTarget4xFinal->Format();
+  attachmentDescriptions[0].samples = RenderTarget4xFinal->Samples();
+  framebufferCI.width = RenderTarget4xFinal->Width();
+  framebufferCI.height = RenderTarget4xFinal->Height();
+  FB4xFinal->Finalize(framebufferCI, renderpassCI);
+
   attachments[0] = rtDownScale4x->View();
   attachmentDescriptions[0].format = rtDownScale4x->Format();
   attachmentDescriptions[0].samples = rtDownScale4x->Samples();
@@ -666,6 +679,13 @@ void Renderer::SetUpFrameBuffers()
   DownScaleFB4x->Finalize(framebufferCI, renderpassCI);
 
   // 8x
+  attachments[0] = RenderTarget8xFinal->View();
+  attachmentDescriptions[0].format = RenderTarget8xFinal->Format();
+  attachmentDescriptions[0].samples = RenderTarget8xFinal->Samples();
+  framebufferCI.width = RenderTarget8xFinal->Width();
+  framebufferCI.height = RenderTarget8xFinal->Height();
+  FB8xFinal->Finalize(framebufferCI, renderpassCI);
+
   attachments[0] = rtDownScale8x->View();
   attachmentDescriptions[0].format = rtDownScale8x->Format();
   attachmentDescriptions[0].samples = rtDownScale8x->Samples();
@@ -878,20 +898,23 @@ void Renderer::CleanUpFrameBuffers()
   FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer(PBRFrameBufferStr);
   mRhi->FreeFrameBuffer(pbrFrameBuffer);
 
-
   FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer(HDRGammaFrameBufferStr);
   mRhi->FreeFrameBuffer(hdrFrameBuffer);
 
   FrameBuffer* DownScaleFB2x = gResources().UnregisterFrameBuffer(FrameBuffer2xHorizStr);
   FrameBuffer* FB2xFinal = gResources().UnregisterFrameBuffer(FrameBuffer2xFinalStr);
   FrameBuffer* DownScaleFB4x = gResources().UnregisterFrameBuffer(FrameBuffer4xStr);
+  FrameBuffer* FB4xFinal = gResources().UnregisterFrameBuffer(FrameBuffer4xFinalStr);
   FrameBuffer* DownScaleFB8x = gResources().UnregisterFrameBuffer(FrameBuffer8xStr);
+  FrameBuffer* FB8xFinal = gResources().UnregisterFrameBuffer(FrameBuffer8xFinalStr);
   FrameBuffer* GlowFB = gResources().UnregisterFrameBuffer(FrameBufferGlowStr);
 
   mRhi->FreeFrameBuffer(DownScaleFB2x);
   mRhi->FreeFrameBuffer(DownScaleFB4x);
   mRhi->FreeFrameBuffer(DownScaleFB8x);
   mRhi->FreeFrameBuffer(FB2xFinal);
+  mRhi->FreeFrameBuffer(FB4xFinal);
+  mRhi->FreeFrameBuffer(FB8xFinal);
   mRhi->FreeFrameBuffer(GlowFB);
 }
 
@@ -901,7 +924,9 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   Texture* renderTarget2xScaled = mRhi->CreateTexture();
   Texture* RenderTarget2xFinal = mRhi->CreateTexture();
   Texture* renderTarget4xScaled = mRhi->CreateTexture();
+  Texture* RenderTarget4xFinal = mRhi->CreateTexture();
   Texture* renderTarget8xScaled = mRhi->CreateTexture();
+  Texture* RenderTarget8xFinal = mRhi->CreateTexture();
   Texture* RenderTargetBright = mRhi->CreateTexture();
   Texture* GlowTarget = mRhi->CreateTexture();
 
@@ -921,7 +946,9 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(RenderTarget2xHorizStr, renderTarget2xScaled);
   gResources().RegisterRenderTexture(RenderTarget2xFinalStr, RenderTarget2xFinal);
   gResources().RegisterRenderTexture(RenderTarget4xScaledStr, renderTarget4xScaled);
+  gResources().RegisterRenderTexture(RenderTarget4xFinalStr, RenderTarget4xFinal);
   gResources().RegisterRenderTexture(RenderTarget8xScaledStr, renderTarget8xScaled);
+  gResources().RegisterRenderTexture(RenderTarget8xFinalStr, RenderTarget8xFinal);
   gResources().RegisterRenderTexture(RenderTargetGlowStr, GlowTarget);
   gResources().RegisterSampler(PBRSamplerStr, pbrSampler);
   
@@ -967,10 +994,12 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.extent.width = mWindowHandle->Width() / 4;
   cImageInfo.extent.height = mWindowHandle->Height() / 4;
   renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
+  RenderTarget4xFinal->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.extent.width = mWindowHandle->Width() / 8;
   cImageInfo.extent.height = mWindowHandle->Height()/ 8;
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
+  RenderTarget8xFinal->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -1051,12 +1080,16 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xHorizStr);
   Texture* RenderTarget2xFinal = gResources().UnregisterRenderTexture(RenderTarget2xFinalStr);
   Texture* renderTarget4xScaled = gResources().UnregisterRenderTexture(RenderTarget4xScaledStr);
+  Texture* RenderTarget4xFinal = gResources().UnregisterRenderTexture(RenderTarget4xFinalStr);
   Texture* renderTarget8xScaled = gResources().UnregisterRenderTexture(RenderTarget8xScaledStr);
+  Texture* RenderTarget8xFinal = gResources().UnregisterRenderTexture(RenderTarget8xFinalStr);
   Texture* GlowTarget = gResources().UnregisterRenderTexture(RenderTargetGlowStr);
 
   mRhi->FreeTexture(renderTarget2xScaled);
   mRhi->FreeTexture(RenderTarget2xFinal);
   mRhi->FreeTexture(renderTarget4xScaled);
+  mRhi->FreeTexture(RenderTarget4xFinal);
+  mRhi->FreeTexture(RenderTarget8xFinal);
   mRhi->FreeTexture(renderTarget8xScaled);
   mRhi->FreeTexture(GlowTarget);
 
@@ -1149,8 +1182,10 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
   Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xHorizStr);
   Texture* Color2xFinal = gResources().GetRenderTexture(RenderTarget2xFinalStr);
-  Texture* Color8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* Color4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
+  Texture* Color4xFinal = gResources().GetRenderTexture(RenderTarget4xFinalStr);
+  Texture* Color8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
+  Texture* Color8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
   Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
   Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
 
@@ -1177,21 +1212,22 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Img.imageView = Color2xFinal->View();
   DBDS4x->Update(1, &WriteSet);
   Img.imageView = Color4x->View();
-  DBDS8x->Update(1, &WriteSet);
   DBDS4xFinal->Update(1, &WriteSet);
+  Img.imageView = Color4xFinal->View();
+  DBDS8x->Update(1, &WriteSet);
   Img.imageView = Color8x->View();
   DBDS8xFinal->Update(1, &WriteSet);
 
-  Img.imageView = Color2x->View();
+  Img.imageView = Color2xFinal->View();
 
   VkDescriptorImageInfo Img1 = { };
   Img1.sampler = PBRSampler->Handle();
-  Img1.imageView = Color4x->View();
+  Img1.imageView = Color4xFinal->View();
   Img1.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkDescriptorImageInfo Img2 = { };
   Img2.sampler = PBRSampler->Handle();
-  Img2.imageView = Color8x->View();
+  Img2.imageView = Color8xFinal->View();
   Img2.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   // Glow buffer.
@@ -1501,7 +1537,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   FrameBuffer* DownscaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xHorizStr);
   FrameBuffer* FB2xFinal = gResources().GetFrameBuffer(FrameBuffer2xFinalStr);
   FrameBuffer* DownscaleFrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
+  FrameBuffer* FB4xFinal = gResources().GetFrameBuffer(FrameBuffer4xFinalStr);
   FrameBuffer* DownscaleFrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
+  FrameBuffer* FB8xFinal = gResources().GetFrameBuffer(FrameBuffer8xFinalStr);
   FrameBuffer* GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
   DescriptorSet* hdrSet = gResources().GetDescriptorSet(HDRGammaDescSetStr);
   DescriptorSet* DownscaleSet2x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2x);
@@ -1575,8 +1613,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale.strength = 1.0f;
-    m_Downscale.scale = 2.0f;
+    m_Downscale.strength = 0.4f;
+    m_Downscale.scale = 4.0f;
     m_Downscale.horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
     viewport.height = (r32)mWindowHandle->Height() * 0.5f;
@@ -1613,9 +1651,14 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    DownscalePass4x.framebuffer = FB4xFinal->Handle();
+    DownscalePass4x.renderPass = FB4xFinal->RenderPass();
+    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->Handle();
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
@@ -1633,6 +1676,11 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    DownscalePass8x.framebuffer = FB8xFinal->Handle();
+    DownscalePass8x.renderPass = FB8xFinal->RenderPass();
+    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
