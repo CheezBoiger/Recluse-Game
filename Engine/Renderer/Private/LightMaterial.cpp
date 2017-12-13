@@ -36,6 +36,13 @@ LightMaterial::LightMaterial()
     mLights.pointLights[i].pad[1] = 0;
     //mLights.pointLights[i].pad[2] = 0.0f;
   }
+
+  for (size_t i = 0; i < 32; ++i) {
+    mLights.directionalLights[i].direction = Vector4();
+    mLights.directionalLights[i].enable = false;
+    mLights.directionalLights[i].intensity = 1.0f;
+    mLights.directionalLights[i].color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+  }
 }
 
 

@@ -50,7 +50,8 @@ struct PointLight {
 struct LightBuffer {
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  primaryLight;
-  PointLight        pointLights[128];
+  DirectionalLight  directionalLights [32];
+  PointLight        pointLights       [128];
 };
 
 

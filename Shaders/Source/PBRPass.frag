@@ -12,7 +12,8 @@ in FRAG_IN {
   vec2  texcoord1;
 } frag_in;
 
-#define MAX_LIGHTS            128
+#define MAX_DIRECTION_LIGHTS    32
+#define MAX_POINT_LIGHTS        128
 
 struct DirectionLight {
   vec4  direction;
@@ -78,7 +79,8 @@ layout (set = 1, binding = 7) uniform sampler2D emissive;
 
 layout (set = 2, binding = 0) uniform LightBuffer {
   DirectionLight  primaryLight;
-  PointLight      pointLights[MAX_LIGHTS];
+  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
+  PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
 
 layout (set = 2, binding = 1) uniform sampler2D globalShadow;
@@ -298,7 +300,13 @@ void main()
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);   
   }
   
-  for (int i = 0; i < MAX_LIGHTS; ++i) {
+  for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
+    DirectionLight light = gLightBuffer.directionLights[i];
+    if (light.enable <= 0) { continue; }
+    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
+  }
+  
+  for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
     outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
@@ -312,6 +320,8 @@ void main()
   }
   finalColor = vec4(outColor, transparency);
 
+  // TODO(): Replace with metallness and emission instead, this will force all objects to be shiney
+  // at the moment.
   float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
   if (brightness > 1.0) {
     BrightColor = vec4(finalColor.rgb, 1.0);

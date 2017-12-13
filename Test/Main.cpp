@@ -100,6 +100,11 @@ int main(int c, char* argv[])
   lights->primaryLight.color = Vector4(0.5f, 0.5f, 0.2f, 1.0f);
   lights->primaryLight.enable = true;
 
+  lights->directionalLights[0].enable = true;
+  lights->directionalLights[0].direction = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+  lights->directionalLights[0].intensity = 10.0f;
+  lights->directionalLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
   lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
   lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
