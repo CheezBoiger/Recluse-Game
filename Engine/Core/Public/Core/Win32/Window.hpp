@@ -64,6 +64,8 @@ public:
   
   i32           Width() const { return mWidth; }
   i32           Height() const { return mHeight; }
+  i32           X() const { return m_PosX; }
+  i32           Y() const { return m_PosY; }
 
   HWND          Handle() { return mHandle; }
 
@@ -79,6 +81,8 @@ private:
 
   i32           mHeight;
   i32           mWidth;
+  i32           m_PosX;
+  i32           m_PosY;
 
   b8            mRequestClose : 1;
   b8            mFullScreen   : 1;

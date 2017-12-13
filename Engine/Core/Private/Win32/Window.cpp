@@ -127,6 +127,13 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   {
     if (gKeyboardCallback) gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYUP, 0);
   } break;
+  case WM_MOVE:
+  {
+    if (window) {
+      window->m_PosX = (int)(short) LOWORD(lParam);
+      window->m_PosY = (int)(short) HIWORD(lParam);
+    }
+  }  break;
   case WM_SIZE:
   {
     if (window) {
@@ -159,7 +166,7 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_MOUSEMOVE:
   {
-    if (window && Mouse::Enabled()) {
+    if (window && Mouse::Enabled() && Mouse::Tracking()) {
       AdjustClientViewRect(window->mHandle);
 
       const int x = GET_X_LPARAM(lParam);
@@ -186,9 +193,7 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_INPUT:
   {
-    // TODO(): 
-    // Need to add in unlimited movement. This will require disabling the cursor.
-    if (window && !Mouse::Enabled()) {
+    if (window && !Mouse::Enabled() && Mouse::Tracking()) {
       i32 dx, dy;
       UINT dwSize;
 
@@ -270,8 +275,8 @@ Window::~Window()
 
 b8 Window::Create(std::string title, i32 width, i32 height)
 {
-  i32 xPos = 0;
-  i32 yPos = 0;
+  m_PosX = 0;
+  m_PosY = 0;
   mWidth = width;
   mHeight = height;
 
@@ -287,7 +292,7 @@ b8 Window::Create(std::string title, i32 width, i32 height)
 
   mHandle = CreateWindowExW(NULL, RECLUSE_WINDOW_CLASS_NAME,
     ltitle, (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX), 
-    xPos, yPos, mWidth, mHeight, NULL, NULL, GetModuleHandle(NULL), NULL);
+    m_PosX, m_PosY, mWidth, mHeight, NULL, NULL, GetModuleHandle(NULL), NULL);
 
   delete[] ltitle;
 

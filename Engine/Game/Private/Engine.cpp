@@ -17,7 +17,13 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   Keyboard::keys[key] = (KeyAction)action;
 
-  if (Keyboard::KeyPressed(KEY_CODE_2)) Mouse::EnableMouse(!Mouse::Enabled());
+  if (Keyboard::KeyPressed(KEY_CODE_2)) {
+    Mouse::Show(!Mouse::Showing());
+    Mouse::Track(!Mouse::Tracking());
+    Mouse::SetPosition( window->Width() * 0.5 + window->X(), 
+                        window->Height() * 0.5 + window->Y()
+    );
+  }
 }
 
 
@@ -33,7 +39,7 @@ void WindowResized(Window* window, i32 width, i32 height)
 void MousePositionMove(Window* window, r64 x, r64 y)
 {
   Camera* camera = gEngine().GetCamera();
-  if (camera) {
+  if (camera && !Mouse::Showing()) {
     camera->Look(x, y);
   }
 }
