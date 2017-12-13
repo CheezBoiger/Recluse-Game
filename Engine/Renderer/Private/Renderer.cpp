@@ -986,18 +986,18 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   GlowTarget->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
-  cImageInfo.extent.width = mWindowHandle->Width() / 2;
-  cImageInfo.extent.height = mWindowHandle->Height() / 2;
+  cImageInfo.extent.width = mWindowHandle->Width()    >> 1;
+  cImageInfo.extent.height = mWindowHandle->Height()  >> 1;
   renderTarget2xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget2xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = mWindowHandle->Width() / 4;
-  cImageInfo.extent.height = mWindowHandle->Height() / 4;
+  cImageInfo.extent.width = mWindowHandle->Width()    >> 2;
+  cImageInfo.extent.height = mWindowHandle->Height()  >> 2;
   renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget4xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = mWindowHandle->Width() / 8;
-  cImageInfo.extent.height = mWindowHandle->Height()/ 8;
+  cImageInfo.extent.width =  mWindowHandle->Width()   >> 3;
+  cImageInfo.extent.height = mWindowHandle->Height()  >> 3;
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget8xFinal->Initialize(cImageInfo, cViewInfo);
 
@@ -1617,8 +1617,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
     m_Downscale.scale = 4.0f;
     m_Downscale.horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
-    viewport.height = (r32)mWindowHandle->Height() * 0.5f;
-    viewport.width = (r32)mWindowHandle->Width() * 0.5f;
+    viewport.height = (r32)(mWindowHandle->Height() >> 1);
+    viewport.width =  (r32)(mWindowHandle->Width() >> 1);
     cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
@@ -1636,18 +1636,18 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       m_Downscale.horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &m_Downscale.horizontal);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale.horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)mWindowHandle->Height() / 4.0f;
-    viewport.width = (r32)mWindowHandle->Width() / 4.0f;
+    viewport.height = (r32)(mWindowHandle->Height() >> 2);
+    viewport.width = (r32)(mWindowHandle->Width() >> 2);
     DownscaleSetNative = DownscaleSet4x->Handle();
-    int horizontal = true;
+    i32 horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -1660,18 +1660,18 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)mWindowHandle->Height() / 8.0f;
-    viewport.width = (r32)mWindowHandle->Width() / 8.0f;
+    viewport.height = (r32)(mWindowHandle->Height() >> 3);
+    viewport.width = (r32)(mWindowHandle->Width() >> 3);
     DownscaleSetNative = DownscaleSet8x->Handle();
     horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
-      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -1684,7 +1684,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(int), &horizontal);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
       cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
