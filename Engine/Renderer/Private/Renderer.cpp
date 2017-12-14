@@ -139,11 +139,10 @@ void Renderer::Render()
   BeginFrame();
     while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
 
+    // Render shadow map here. Primary shadow map is our concern.
+
     // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
-
-    // Offscreen downsampling.
-    // mRhi->GraphicsSubmit(downsampleSI);
 
     // High Dynamic Range and Gamma Pass.
     if (mHDR.enabled) mRhi->GraphicsSubmit(hdrSI);
@@ -843,6 +842,7 @@ void Renderer::SetUpGraphicsPipelines()
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     
   RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpDirectionalShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
 
   // Set to quad rendering format.
   colorBlendCI.logicOpEnable = VK_FALSE;
@@ -866,7 +866,6 @@ void Renderer::SetUpGraphicsPipelines()
   RendererPass::SetUpHDRGammaPass(RHI(), Filepath, GraphicsPipelineInfo);
   colorBlendAttachments[0].blendEnable = VK_FALSE;
   RendererPass::SetUpFinalPass(RHI(), Filepath, GraphicsPipelineInfo);
-  RendererPass::SetUpShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
 }
 
 

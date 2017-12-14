@@ -10,6 +10,7 @@
 #include "RHI/GraphicsPipeline.hpp"
 #include "RHI/Framebuffer.hpp"
 
+#include "Filesystem/Filesystem.hpp"
 
 namespace Recluse {
 
@@ -93,6 +94,16 @@ std::string FinalFragFileStr            = "FinalPass.frag.spv";
 namespace RendererPass {
 
 
+void LoadShader(std::string Filename, Shader* S)
+{
+  std::string Filepath = gFilesystem().CurrentAppDirectory();
+  if (!S->Initialize(Filepath
+      + "/" + ShadersPath + "/" + Filename)) {
+    Log(rError) << "Could not find " + Filename + "!";
+  }
+}
+
+
 void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   // PbrForward Pipeline Creation.
@@ -105,13 +116,9 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
 
   gResources().RegisterGraphicsPipeline(PBRPipelineStr, PbrForwardPipeline);
   gResources().RegisterGraphicsPipeline(PBRStaticPipelineStr, PbrStaticPipeline);
-  if (!VertPBR->Initialize(Filepath + "/" + ShadersPath + "/" + PBRVertFileStr)) {
-    Log(rError) << "Could not find " + PBRVertFileStr + "!";
-  }
 
-  if (!FragPBR->Initialize(Filepath + "/" + ShadersPath + "/" + PBRFragFileStr)) {
-    Log(rError) << "Could not find " + PBRFragFileStr + "!";
-  }
+  LoadShader(PBRVertFileStr, VertPBR);
+  LoadShader(PBRFragFileStr, FragPBR);
 
   VkPipelineShaderStageCreateInfo PbrShaders[2];
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -164,9 +171,7 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
 
   Rhi->FreeShader(VertPBR);
   VertPBR = Rhi->CreateShader();
-  if (!VertPBR->Initialize(Filepath + "/" + ShadersPath + "/" + PBRStaticVertFileStr)) {
-    Log(rError) << "Could not find " + PBRStaticVertFileStr + "!";
-  }
+  LoadShader(PBRStaticVertFileStr, VertPBR);
   
   PbrShaders[0].module = VertPBR->Handle();
   PbrStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
@@ -186,13 +191,8 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
   Shader* HdrFrag = Rhi->CreateShader();
   Shader* HdrVert = Rhi->CreateShader();
 
-  if (!HdrFrag->Initialize(Filepath + "/" + ShadersPath + "/" + HDRGammaFragFileStr)) {
-    Log(rError) << "Could not find " + HDRGammaFragFileStr + "!";
-  }
-
-  if (!HdrVert->Initialize(Filepath + "/" + ShadersPath + "/" + HDRGammaVertFileStr)) {
-    Log(rError) << "Could not find " + HDRGammaVertFileStr + "!";
-  }
+  LoadShader(HDRGammaVertFileStr, HdrVert);
+  LoadShader(HDRGammaFragFileStr, HdrFrag);
 
   FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
   GraphicsInfo.renderPass = hdrBuffer->RenderPass();
@@ -259,13 +259,9 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   Shader* DbVert = Rhi->CreateShader();
   Shader* DbFrag = Rhi->CreateShader();
-  if (!DbVert->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurVertFileStr)) {
-    Log(rError) << "Could not find " + DownscaleBlurVertFileStr + "!\n";
-  }
 
-  if (!DbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + DownscaleBlurFragFileStr)) {
-    Log(rError) << "Could not find " + DownscaleBlurFragFileStr + "!\n";
-  }
+  LoadShader(DownscaleBlurVertFileStr, DbVert);
+  LoadShader(DownscaleBlurFragFileStr, DbFrag);
 
   VkPushConstantRange PushConst = {};
   PushConst.offset = 0;
@@ -310,9 +306,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   Rhi->FreeShader(DbFrag);
   DbFrag = Rhi->CreateShader();
 
-  if (!DbFrag->Initialize(Filepath + "/" + ShadersPath + "/" + GlowFragFileStr)) {
-    Log(rError) << "Could not find " + GlowFragFileStr + "!\n";
-  }
+  LoadShader(GlowFragFileStr, DbFrag);
 
   ShaderModules[1].module = DbFrag->Handle();
   VkPipelineLayoutCreateInfo GlowPipelineLayout = { };
@@ -343,13 +337,8 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
   GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
   gResources().RegisterGraphicsPipeline(FinalPipelineStr, quadPipeline);
 
-  if (!quadVert->Initialize(Filepath + "/" + ShadersPath + "/" + FinalVertFileStr)) {
-    Log(rError) << "Could not find " + FinalVertFileStr + "!";
-  }
-
-  if (!quadFrag->Initialize(Filepath + "/" + ShadersPath + "/" + FinalFragFileStr)) {
-    Log(rError) << "Could not find " + FinalFragFileStr + "!";
-  }
+  LoadShader(FinalVertFileStr, quadVert);
+  LoadShader(FinalFragFileStr, quadFrag);
 
   GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
 
@@ -388,22 +377,17 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
 }
 
 
-void SetUpShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   // ShadowMapping shader.
-  // TODO(): Shadow mapping MUST be deferred until downsampling and glow buffers have finished!
-  // This will prevent blurry shadows.
+  // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
+  // This will prevent blurry shadows. It must be combined in the forward render pass (maybe?)
   Shader* SmVert = Rhi->CreateShader();
   Shader* SmFrag = Rhi->CreateShader();
 
-  if (!SmVert->Initialize(Filepath + "/" + ShadersPath + "/" + ShadowMapVertFileStr)) {
-    Log(rError) << "Could not find " + ShadowMapVertFileStr + "!\n";
-  }
-
-  if (!SmFrag->Initialize(Filepath + "/" + ShadersPath + "/" + ShadowMapFragFileStr)) {
-    Log(rError) << "Could not find " + ShadowMapFragFileStr + "!\n";
-  }
+  LoadShader(ShadowMapVertFileStr, SmVert);
+  LoadShader(ShadowMapFragFileStr, SmFrag);
 
   Rhi->FreeShader(SmVert);
   Rhi->FreeShader(SmFrag);

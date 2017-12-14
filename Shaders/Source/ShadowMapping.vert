@@ -13,10 +13,12 @@ layout (set = 0, binding = 0) uniform LightSpace {
 } light_space;
 
 
-layout (set = 0, binding = 0) uniform ObjectBuffer {
+layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  vec4  color;
   float levelOfDetail;
+  float transparency;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -24,6 +26,8 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
   int   hasEmissive;
   int   hasAO;
   int   hasBones; 
+  int   isTransparent;
+  ivec2 pad;
 } obj_buffer;
 
 

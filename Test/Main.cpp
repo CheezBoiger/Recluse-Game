@@ -98,22 +98,23 @@ int main(int c, char* argv[])
   LightBuffer* lights = lightMat->Data();
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
-  lights->primaryLight.direction = Vector4(1.0f, 0.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 0.5f;
+  lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
+  lights->primaryLight.intensity = 50.0f;
   lights->primaryLight.color = Vector4(0.5f, 0.5f, 0.2f, 1.0f);
   lights->primaryLight.enable = true;
 
   lights->directionalLights[0].enable = true;
-  lights->directionalLights[0].direction = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-  lights->directionalLights[0].intensity = 10.0f;
-  lights->directionalLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->directionalLights[0].direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
+  lights->directionalLights[0].intensity = 1.0f;
+  lights->directionalLights[0].color = Vector4(1.0f, 1.0f, 0.4f, 1.0f);
 
-  lights->pointLights[0].enable = true;
+  lights->pointLights[0].enable = false;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
   lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->pointLights[0].range = 90.0f;
+  lights->pointLights[0].intensity = 1.0f;
 
-  lights->pointLights[1].enable = true;
+  lights->pointLights[1].enable = false;
   lights->pointLights[1].position = Vector4(3.0f, 2.0f, -4.0f, 1.0f);
   lights->pointLights[1].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->pointLights[1].range = 30.0f;

@@ -39,11 +39,20 @@ struct PointLight {
   Vector4 position;
   Vector4 color;
   r32     range;
+  r32     intensity;
   i32     enable;
-  i32     pad[2];
+  i32     pad;
 
   PointLight()
     : enable(false), range(1.0f) { }
+};
+
+
+struct SpotLight {
+  Vector4 position;
+  Vector4 color;
+  r32     range;
+  i32     enable;
 };
 
 
@@ -56,14 +65,14 @@ struct LightBuffer {
 
 
 // Light material.
+// TODO(): Shadow mapping might require us to create a separate buffer that holds
+// shadow maps for each point light, however we should limit the number of shadow maps
+// for pointlights to remain consistent in performance.
 class LightMaterial {
 public:
 
   LightMaterial();
   ~LightMaterial();
-
-  void              SetShadowMap(Texture* shadow) { mShadowMap = shadow; }
-  void              SetShadowSampler(Sampler* sampler) { mShadowSampler = sampler; }
 
   // Update the light information on the gpu, for use in our shaders.
   void              Update();
@@ -77,8 +86,12 @@ public:
   LightBuffer*      Data() { return &mLights; }
   DescriptorSet*    Set() { return mDescriptorSet; }
 
-  Texture*          ShadowMap() { return mShadowMap; }
+  Texture*          PrimaryShadowMap() { return mShadowMap; }
   Sampler*          ShadowSampler() { return mShadowSampler; }
+
+  void              EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
+
+  b8                PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
 private:
   // Descriptor Set.
@@ -106,6 +119,8 @@ private:
 
   // Vulkan Rhi.
   VulkanRHI*        mRhi;
+
+  b8                m_PrimaryShadowEnable;
 
   friend class Renderer;
 };

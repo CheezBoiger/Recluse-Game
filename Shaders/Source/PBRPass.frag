@@ -28,8 +28,9 @@ struct PointLight {
   vec4    position;
   vec4    color;
   float   range;
+  float   intensity;
   int     enable;
-  ivec2   pad;
+  int     pad;
 };
 
 
@@ -166,7 +167,7 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
   
   float distance = length(L);
   float attenuation = light.range / ((distance * distance) + 1.0);
-  vec3 radiance = light.color.xyz * attenuation;
+  vec3 radiance = light.color.xyz * attenuation * light.intensity;
   
   if (dotNL > 0.0) {
     float D = DGGX(dotNH, roughness);

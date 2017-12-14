@@ -31,9 +31,9 @@ LightMaterial::LightMaterial()
     mLights.pointLights[i].position = Vector4();
     mLights.pointLights[i].color = Vector4();
     mLights.pointLights[i].range = 0.0f;
+    mLights.pointLights[i].intensity = 1.0f;
     mLights.pointLights[i].enable = false;
-    mLights.pointLights[i].pad[0] = 0;
-    mLights.pointLights[i].pad[1] = 0;
+    mLights.pointLights[i].pad = 0;
     //mLights.pointLights[i].pad[2] = 0.0f;
   }
 
