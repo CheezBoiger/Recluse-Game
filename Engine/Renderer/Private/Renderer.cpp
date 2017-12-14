@@ -1364,7 +1364,6 @@ void Renderer::SetUpHDR(b8 fullSetUp)
 void Renderer::CleanUpHDR(b8 fullCleanUp)
 {
   if (fullCleanUp) {
-    mRhi->FreeBuffer(mHDR.hdrBuffer);
     mRhi->FreeVkSemaphore(mHDR.semaphore);
 
     for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
@@ -1373,7 +1372,6 @@ void Renderer::CleanUpHDR(b8 fullCleanUp)
     }
 
     mHDR.semaphore = nullptr;
-    mHDR.hdrBuffer = nullptr;
   }
 
   DescriptorSet* hdrSet = gResources().UnregisterDescriptorSet(HDRGammaDescSetStr);

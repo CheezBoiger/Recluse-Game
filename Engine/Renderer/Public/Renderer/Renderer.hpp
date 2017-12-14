@@ -217,16 +217,10 @@ private:
     Semaphore*                    semaphore;
   } mOffscreen; 
 
-  struct HDRBuffer {
-
-  };
-
   struct {
     std::vector<CommandBuffer*>   cmdBuffers;
-    HDRBuffer                     data;
     u32                           currCmdBufferIndex;
     Semaphore*                    semaphore;
-    Buffer*                       hdrBuffer;
     b8                            enabled;
   } mHDR;
 
