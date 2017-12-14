@@ -33,17 +33,19 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_A)) { camera->Move(Camera::RIGHT, Time::DeltaTime); }
 
   // Test Gamma correction
-  if (Keyboard::KeyPressed(KEY_CODE_G)) { gRenderer().SetGamma(gRenderer().Gamma() + (r32)(5.0 * Time::DeltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_H)) { gRenderer().SetGamma(gRenderer().Gamma() <= 0.0f ? 0.1f : gRenderer().Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_G)) { camera->SetGamma(camera->Gamma() + (r32)(5.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_H)) { camera->SetGamma(camera->Gamma() <= 0.0f ? 0.1f : camera->Gamma() - (r32)(5.0 * Time::DeltaTime)); }
   // Test HDR Reinhard exposure.
-  if (Keyboard::KeyPressed(KEY_CODE_E)) { gRenderer().SetExposure(gRenderer().Exposure() + (r32)(2.0 * Time::DeltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_R)) { gRenderer().SetExposure(gRenderer().Exposure() <= 0.0f ? 0.1f : gRenderer().Exposure() - (r32)(2.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_E)) { camera->SetExposure(camera->Exposure() + (r32)(2.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_R)) { camera->SetExposure(camera->Exposure() <= 0.0f ? 0.1f : camera->Exposure() - (r32)(2.0 * Time::DeltaTime)); }
+
+  if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->EnableBloom(false); }
+  if (Keyboard::KeyPressed(KEY_CODE_1)) { 
+    camera->EnableBloom(true); }
+
   // Test albedo enabling.
   if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
   if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
-
-  if (Keyboard::KeyPressed(KEY_CODE_0)) { gRenderer().EnableBloom(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_1)) { gRenderer().EnableBloom(true); }
 
   // Window changing sets.
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }

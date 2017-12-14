@@ -11,6 +11,7 @@
 
 #include "Resources.hpp"
 #include "RenderQuad.hpp"
+#include "GlobalMaterial.hpp"
 
 namespace Recluse {
 
@@ -91,10 +92,6 @@ public:
   // application change, as it will result warnings from the renderer!
   void              BuildAsync();
 
-  // Set the global material for the renderer. This is the data used to specify  the world 
-  // scene, which contains data about the current virtual camera, and global info of the world.
-  void              SetGlobalMaterial(GlobalMaterial* material) { mGlobalMat = material; }
-
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
   void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
@@ -119,10 +116,6 @@ public:
   TextureCube*      CreateTextureCube();
   TextureSampler*   CreateTextureSampler();
 
-  // Create a global material object. This holds view, projection, SH coefficients
-  // and other things that may affect the global aspect of the scene.
-  GlobalMaterial*   CreateGlobalMaterial();
-  
   // Create a light material object, which holds all lights that affect this 
   // scene. This will then be used for the light culling method of the renderer.
   LightMaterial*    CreateLightMaterial();
@@ -130,14 +123,13 @@ public:
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
 
+  GlobalBuffer*     GlobalData() { return mGlobalMat->Data(); }
+
   // Frees the render object.
   void              FreeRenderObject(RenderObject* renderObject);
 
   // Frees up the allocated mesh data object.
   void              FreeMeshData(MeshData* mesh);
-
-  // Frees up the allocated global material object.
-  void              FreeGlobalMaterial(GlobalMaterial* material);
 
   // Frees up the allocated light material object.
   void              FreeLightMaterial(LightMaterial* material);
@@ -174,19 +166,10 @@ public:
 
   // Check if this renderer is initialized with the window reference given.
   b8                Initialized() { return mInitialized; }
-  b8                EnabledHDR() const { return mHDR.enabled; }
-  b8                EnabledBloom() const { return mHDR.data.bloomEnabled; }
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return mRhi; }
-
-  void              SetGamma(r32 gamma);
-  void              SetExposure(r32 exposure);
-  r32               Gamma() const { return mHDR.data.gamma; }
-  r32               Exposure() const { return mHDR.data.exposure; }
-
   void              EnableHDR(b8 enable);
-  void              EnableBloom(b8 enable);
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
@@ -235,10 +218,7 @@ private:
   } mOffscreen; 
 
   struct HDRBuffer {
-    r32       gamma;
-    r32       exposure;
-    i32       bloomEnabled;
-    i32       pad1;
+
   };
 
   struct {

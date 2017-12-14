@@ -23,8 +23,10 @@ GlobalMaterial::GlobalMaterial()
 {
   mGlobal.screenSize[0] = 0;
   mGlobal.screenSize[1] = 0;
-  mGlobal.pad[0] = 0;
-  mGlobal.pad[1] = 0;
+  mGlobal.gamma = 2.2f;
+  mGlobal.bloomEnabled = true;
+  mGlobal.exposure = 1.0f;
+  mGlobal.pad1 = 0;
 }
 
 

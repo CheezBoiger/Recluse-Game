@@ -14,12 +14,24 @@ in FRAG_IN {
 layout (set = 0, binding = 0) uniform sampler2D sceneSurface;
 layout (set = 0, binding = 1) uniform sampler2D bloomSurface;
 
-layout (set = 0, binding = 2) uniform HDR {
+layout (set = 0, binding = 2) uniform GlobalBuffer {
+  mat4  view;
+  mat4  proj;
+  mat4  viewProj;
+  vec4  cameraPos;
+  vec4  l_plane;
+  vec4  r_plane;
+  vec4  t_plane;
+  vec4  b_plane;
+  vec4  n_plane;
+  vec4  f_plane;
+  vec2  mousePos;
+  ivec2 screenSize;
   float gamma;
   float exposure;
   int   bloomEnabled;
   int   pad1;
-} hdr;
+} gWorldBuffer;
 
 
 void main()
@@ -31,12 +43,12 @@ void main()
   
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (hdr.bloomEnabled >= 1) { color += bloom; }
+  if (gWorldBuffer.bloomEnabled >= 1) { color += bloom; }
   
   // Extended exposure pass with Reinhard tone mapping. Gamma correction
   // is also enabled.
-  vec3 tone = vec3(1.0) - exp(-color * hdr.exposure);
-  tone = pow(tone, vec3(1.0 / hdr.gamma));
+  vec3 tone = vec3(1.0) - exp(-color * gWorldBuffer.exposure);
+  tone = pow(tone, vec3(1.0 / gWorldBuffer.gamma));
   
   fragColor = vec4(tone, 1.0);
 }

@@ -16,6 +16,22 @@ void DescriptorSetLayout::Initialize(const VkDescriptorSetLayoutCreateInfo& info
 }
 
 
+DescriptorSetLayout::~DescriptorSetLayout()
+{
+  if (mLayout) {
+    R_DEBUG(rWarning, "Descriptor set layout was not cleaned up prior to deletion!\n");
+  }
+}
+
+
+DescriptorSet::~DescriptorSet()
+{
+  if (mDescriptorSet) {
+    R_DEBUG(rWarning, "Descriptor set was not cleaned up prior to deletion!\n");
+  }
+}
+
+
 void DescriptorSetLayout::CleanUp()
 {
   if (mLayout) {

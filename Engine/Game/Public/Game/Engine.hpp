@@ -65,7 +65,6 @@ public:
   void                          SetLightData(LightMaterial* lights);
 
   LightBuffer*                  LightData() { return mLightMat->Data(); }
-  GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
 
   CmdList&                      RenderCommandList() { return mRenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }
@@ -78,7 +77,6 @@ public:
   // rebuilding...
 
 private:
-  GlobalMaterial*               mCamMat;
   LightMaterial*                mLightMat;
   Camera*                       mCamera;
   Scene*                        mPushedScene;

@@ -13,6 +13,7 @@ public:
   DescriptorSetLayout()
     : mLayout(VK_NULL_HANDLE) { }
 
+  ~DescriptorSetLayout();
   void                      Initialize(const VkDescriptorSetLayoutCreateInfo& info);
   void                      CleanUp();
 
@@ -28,7 +29,7 @@ public:
     : mDescriptorSet(VK_NULL_HANDLE)
     , mPoolOwner(VK_NULL_HANDLE) { }
 
-
+  ~DescriptorSet();
   void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout);
   void                  Free();
 

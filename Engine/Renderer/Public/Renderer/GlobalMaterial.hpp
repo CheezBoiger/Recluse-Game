@@ -37,8 +37,12 @@ struct GlobalBuffer {
   Vector4         bPlane;
   Vector4         nPlane;
   Vector4         fPlane;
+  Vector2         mousePos;
   i32             screenSize[2];
-  i32             pad[2];
+  r32             gamma;
+  r32             exposure;
+  i32             bloomEnabled;
+  i32             pad1;
 };
 
 
@@ -55,6 +59,8 @@ public:
   DescriptorSet*    Set() { return mDescriptorSet; }
 
   GlobalBuffer*     Data() { return &mGlobal; }
+  Buffer*           Handle() { return mGlobalBuffer; }
+
 private:
   DescriptorSet*    mDescriptorSet;
   Buffer*           mGlobalBuffer;

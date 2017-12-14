@@ -53,9 +53,10 @@ void MousePositionMove(Window* window, r64 x, r64 y)
 
 void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
 {
-  Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
-  Log() << " pressed at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n"; 
-  
+  if (action == Mouse::PRESSED) {
+    Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
+    Log() << " pressed at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n"; 
+  }
 }
 
 
@@ -68,7 +69,6 @@ Engine& gEngine()
 
 Engine::Engine()
   : mCamera(nullptr)
-  , mCamMat(nullptr)
   , mLightMat(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
@@ -99,13 +99,6 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
   gRenderer().Initialize(&mWindow);
 
-  mCamMat = gRenderer().CreateGlobalMaterial();
-  mLightMat = gRenderer().CreateLightMaterial();
-  
-  mCamMat->Initialize();
-  mCamMat->Update();
-
-  gRenderer().SetGlobalMaterial(mCamMat);
   gRenderer().PushCmdList(&mRenderCmdList);
 
   if (fullscreen) {
@@ -120,9 +113,6 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
 void Engine::CleanUp()
 {
-  gRenderer().FreeGlobalMaterial(mCamMat);
-
-  mCamMat = nullptr;
   mLightMat = nullptr;
 
   gUI().ShutDown();
@@ -136,7 +126,7 @@ void Engine::CleanUp()
 void Engine::Update(r64 dt)
 {
   // Update camera and screen info.
-  GlobalBuffer* gCamBuffer = mCamMat->Data();
+  GlobalBuffer* gCamBuffer = gRenderer().GlobalData();
   if (mCamera) {
     mCamera->Update();
     mCamera->SetAspect(((r32)mWindow.Width() / (r32)mWindow.Height()));
@@ -147,10 +137,10 @@ void Engine::Update(r64 dt)
     gCamBuffer->viewProj = gCamBuffer->view * gCamBuffer->proj;
     gCamBuffer->screenSize[0] = mWindow.Width();
     gCamBuffer->screenSize[1] = mWindow.Height();
-  }
-
-  if (mCamMat) {
-    mCamMat->Update();
+    gCamBuffer->bloomEnabled = mCamera->Bloom();
+    gCamBuffer->exposure = mCamera->Exposure();
+    gCamBuffer->gamma = mCamera->Gamma();
+    gCamBuffer->mousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
   }
 
   if (mLightMat) {

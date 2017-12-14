@@ -176,25 +176,38 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
     }
   } break;
   case WM_LBUTTONDOWN:
+  case WM_RBUTTONDOWN:
   {
     if (window) {
+      Mouse::ButtonType type;
+      switch (uMsg) {
+      case WM_LBUTTONDOWN: type = Mouse::LEFT; break;
+      case WM_RBUTTONDOWN: type = Mouse::RIGHT; break;  
+      default: type = Mouse::UNKNOWN; break;
+      };
+
       int X = (int)(short) GET_X_LPARAM(lParam);
       int Y = (int)(short) GET_Y_LPARAM(lParam);
-      if (gMouseButtonCallback) gMouseButtonCallback(window, Mouse::LEFT, 
+      if (gMouseButtonCallback) gMouseButtonCallback(window, type, 
                                   Mouse::PRESSED, 0);
     }
   } break;
   case WM_LBUTTONUP:
-  {
-    Log() << "Left mouse button up.\n";
-  } break;
-  case WM_RBUTTONDOWN:
-  {
-    Log() << "Right mouse button down.\n";
-  } break;
   case WM_RBUTTONUP:
   {
-    Log() << "Right mouse button up.\n";
+    if (window) {
+      Mouse::ButtonType type;
+      switch (uMsg) {
+      case WM_LBUTTONUP: type = Mouse::LEFT; break;
+      case WM_RBUTTONUP: type = Mouse::RIGHT; break;
+      default: type = Mouse::UNKNOWN; break;
+      };
+
+      int X = (int)(short)GET_X_LPARAM(lParam);
+      int Y = (int)(short)GET_Y_LPARAM(lParam);
+      if (gMouseButtonCallback) gMouseButtonCallback(window, type,
+        Mouse::RELEASED, 0);
+    }
   } break;
   case WM_INPUT:
   {

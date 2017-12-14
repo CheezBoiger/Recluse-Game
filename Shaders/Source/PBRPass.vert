@@ -27,8 +27,12 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec2  mousePos;
   ivec2 screenSize;
-  ivec2 pad;
+  float gamma;
+  float exposure;
+  int   bloomEnabled;
+  int   pad1;
 } gWorldBuffer;
 
 

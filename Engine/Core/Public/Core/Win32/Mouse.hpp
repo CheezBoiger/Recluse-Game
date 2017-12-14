@@ -17,6 +17,7 @@ public:
   };
 
   enum ButtonType {
+    UNKNOWN,
     LEFT,
     RIGHT,
     MIDDLE

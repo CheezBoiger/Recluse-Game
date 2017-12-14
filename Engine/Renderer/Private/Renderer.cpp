@@ -48,11 +48,7 @@ Renderer::Renderer()
   , mRendering(false)
   , mInitialized(false)
 {
-  mHDR.data.gamma = 2.2f;
-  mHDR.data.bloomEnabled = false;
-  mHDR.data.exposure = 1.0f;
   mHDR.enabled = true;
-  
   mOffscreen.cmdBuffers.resize(2);
   mOffscreen.currCmdBufferIndex = 0;
 
@@ -179,6 +175,10 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   mRhi->DeviceWaitIdle();
 
+  mGlobalMat->CleanUp();
+  delete mGlobalMat;
+  mGlobalMat = nullptr;
+
   if (mUI) {
     mUI->CleanUp();
     delete mUI;
@@ -216,6 +216,11 @@ b8 Renderer::Initialize(Window* window)
   SetUpFrameBuffers();
   SetUpDescriptorSetLayouts();
   SetUpGraphicsPipelines();
+  GlobalMaterial* gMat = new GlobalMaterial();
+  gMat->mRhi = mRhi;
+  gMat->Initialize();
+  gMat->Update();
+  mGlobalMat = gMat;
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
@@ -1291,18 +1296,6 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
 void Renderer::SetUpHDR(b8 fullSetUp)
 {
   if (fullSetUp) {
-    mHDR.hdrBuffer = mRhi->CreateBuffer();
-    VkBufferCreateInfo bufferCi = { };
-    bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    bufferCi.size = sizeof(mHDR.data);
-    bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    
-    mHDR.hdrBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    mHDR.hdrBuffer->Map();
-      memcpy(mHDR.hdrBuffer->Mapped(), &mHDR.data, sizeof(mHDR.data));
-    mHDR.hdrBuffer->UnMap();
- 
     for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
       mHDR.cmdBuffers[i] = mRhi->CreateCommandBuffer();
       mHDR.cmdBuffers[i]->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -1318,8 +1311,8 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   VkWriteDescriptorSet hdrWrites[3];
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
-  hdrBufferInfo.range = sizeof(mHDR.data);
-  hdrBufferInfo.buffer = mHDR.hdrBuffer->NativeBuffer();
+  hdrBufferInfo.range = sizeof(GlobalBuffer);
+  hdrBufferInfo.buffer = mGlobalMat->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
   pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
@@ -1760,18 +1753,6 @@ void Renderer::CleanUpFinalOutputs()
 }
 
 
-void Renderer::SetExposure(r32 e)
-{
-  mHDR.data.exposure = e;
-}
-
-
-void Renderer::SetGamma(r32 g)
-{
-  mHDR.data.gamma = g;
-}
-
-
 MeshData* Renderer::CreateMeshData()
 {
   MeshData* mesh = new MeshData();
@@ -1805,10 +1786,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
-  Buffer* hdr = mHDR.hdrBuffer;
-  hdr->Map();
-    memcpy(hdr->Mapped(), &mHDR.data, sizeof(mHDR.data));
-  hdr->UnMap();
+  mGlobalMat->Update();
 }
 
 
@@ -1874,7 +1852,6 @@ void Renderer::BuildAsync()
     inProgress = true;
     u32 idx = mRhi->CurrentImageIndex();
 
-
     inProgress = false;
   });
 }
@@ -1883,21 +1860,6 @@ void Renderer::BuildAsync()
 void Renderer::WaitIdle()
 {
   mRhi->DeviceWaitIdle();
-}
-
-
-GlobalMaterial* Renderer::CreateGlobalMaterial()
-{
-  GlobalMaterial* gMat = new GlobalMaterial();
-  gMat->mRhi = mRhi;
-  return gMat;
-}
-
-
-void Renderer::FreeGlobalMaterial(GlobalMaterial* material)
-{
-  material->CleanUp();
-  delete material;
 }
 
 
@@ -1951,11 +1913,6 @@ Texture2DArray* Renderer::CreateTexture2DArray()
 {
   Texture2DArray* texture = new Texture2DArray();
   return texture;
-}
-
-void Renderer::EnableBloom(b8 enable)
-{
-  mHDR.data.bloomEnabled = enable;
 }
 
 

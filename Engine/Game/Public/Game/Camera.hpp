@@ -73,6 +73,14 @@ public:
   Vector3             Right() const { return m_Right; }
   Vector3             Up() const { return m_Up; }
 
+  r32                 Exposure() const { return m_Exposure; }
+  r32                 Gamma() const { return m_Gamma; }
+  b8                  Bloom() const { return m_Bloom; }
+
+  void                SetExposure(r32 exposure) { m_Exposure = exposure; }
+  void                SetGamma(r32 gamma) { m_Gamma = gamma; }
+  void                EnableBloom(b8 enable) { m_Bloom = enable; }
+
 protected:
   Vector3             m_WorldUp;  
 
@@ -89,6 +97,10 @@ protected:
   r32                 m_Aspect;
   r32                 m_ZNear;
   r32                 m_ZFar;
+
+  r32                 m_Gamma;
+  r32                 m_Exposure;
+  b8                  m_Bloom;
 };
 
 

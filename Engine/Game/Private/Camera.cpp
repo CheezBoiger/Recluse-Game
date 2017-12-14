@@ -18,6 +18,9 @@ Camera::Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar,
   , m_WorldUp(worldUp)
   , m_ZNear(zNear)
   , m_ZFar(zFar)
+  , m_Bloom(false)
+  , m_Gamma(2.2f)
+  , m_Exposure(1.0f)
 {
 }
 
