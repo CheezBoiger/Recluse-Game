@@ -177,7 +177,12 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_LBUTTONDOWN:
   {
-    Log() << "Left mouse button down.\n";
+    if (window) {
+      int X = (int)(short) GET_X_LPARAM(lParam);
+      int Y = (int)(short) GET_Y_LPARAM(lParam);
+      if (gMouseButtonCallback) gMouseButtonCallback(window, Mouse::LEFT, 
+                                  Mouse::PRESSED, 0);
+    }
   } break;
   case WM_LBUTTONUP:
   {
@@ -250,6 +255,7 @@ b8 Window::InitializeAPI()
   
   if (!RegisterClassExW(&winclass)) return false;
 
+  Mouse::cursor = GetCursor();
   initialized = true;
   return initialized;
 }

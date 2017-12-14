@@ -68,7 +68,11 @@ public:
   GlobalBuffer*                 GlobalData() { return mCamMat->Data(); }
 
   CmdList&                      RenderCommandList() { return mRenderCmdList; }
-
+  r64                           GameMousePosX() const { return m_GameMouseX; }
+  r64                           GameMousePosY() const { return m_GameMouseY; }
+  void                          SetGameMouseX(r64 x) { m_GameMouseX = x; }
+  void                          SetGameMouseY(r64 y) { m_GameMouseY = y; }
+  
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
@@ -78,6 +82,8 @@ private:
   LightMaterial*                mLightMat;
   Camera*                       mCamera;
   Scene*                        mPushedScene;
+  r64                           m_GameMouseX;
+  r64                           m_GameMouseY;
 
   Window                        mWindow;
   CmdList                       mRenderCmdList;

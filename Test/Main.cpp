@@ -157,7 +157,7 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
-  cubeInfo2->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+  cubeInfo2->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   cubeInfo2->transparency = 0.4f;
 
   Material cubeMaterial3;
@@ -276,7 +276,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
     Window::PollEvents();
     ProcessInput();
   }

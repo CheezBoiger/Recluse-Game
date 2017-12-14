@@ -22,7 +22,6 @@ void Mouse::Enable(b8 enable)
   if (enable && Mouse::cursor) {
     SetCursor(Mouse::cursor);
   } else {
-    Mouse::cursor = GetCursor();
     SetCursor(NULL);
   }
 
@@ -32,7 +31,7 @@ void Mouse::Enable(b8 enable)
 
 void Mouse::Show(b8 enable)
 {
-  if (enable && Mouse::cursor) {
+  if (enable) {
     ShowCursor(true);
   } else {
     ShowCursor(false);
@@ -45,5 +44,9 @@ void Mouse::Show(b8 enable)
 void Mouse::SetPosition(r64 x, r64 y)
 {
   SetCursorPos((i32)x, (i32)y);
+  Mouse::XPos = x;
+  Mouse::YPos = y;
+  Mouse::LastXPos = x;
+  Mouse::LastYPos = y;
 }
 } // Recluse
