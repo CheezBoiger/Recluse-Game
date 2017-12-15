@@ -90,12 +90,12 @@ int main(int c, char* argv[])
   Camera* gCamera = gEngine().GetCamera();
 
   // Only thing we worry about is setting up lights.
-  LightMaterial* lightMat = gRenderer().CreateLightMaterial();
-  lightMat->Initialize();
+  LightDescriptor* lightDesc = gRenderer().CreateLightMaterial();
+  lightDesc->Initialize();
 
-  gEngine().SetLightData(lightMat);
+  gEngine().SetLightData(lightDesc);
 
-  LightBuffer* lights = lightMat->Data();
+  LightBuffer* lights = lightDesc->Data();
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
@@ -279,7 +279,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
     Window::PollEvents();
     ProcessInput();
   }
@@ -294,11 +294,11 @@ int main(int c, char* argv[])
   gRenderer().FreeRenderObject(obj3);
   gRenderer().FreeMeshData(cubeMeshDat);
   gRenderer().FreeMeshData(sphereMeshDat);
+  gRenderer().FreeLightMaterial(lightDesc);
 
   cubeMesh.CleanUp();
   cubeMesh2.CleanUp();
   cubeMesh3.CleanUp();
-  gRenderer().FreeLightMaterial(lightMat);
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

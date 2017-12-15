@@ -17,7 +17,7 @@
 namespace Recluse {
 
 
-GlobalMaterial::GlobalMaterial()
+GlobalDescriptor::GlobalDescriptor()
   : mGlobalBuffer(nullptr)
   , mDescriptorSet(nullptr)
 {
@@ -30,7 +30,7 @@ GlobalMaterial::GlobalMaterial()
 }
 
 
-GlobalMaterial::~GlobalMaterial()
+GlobalDescriptor::~GlobalDescriptor()
 {
   if (mGlobalBuffer) {
     R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
@@ -42,7 +42,7 @@ GlobalMaterial::~GlobalMaterial()
 }
 
 
-void GlobalMaterial::Initialize()
+void GlobalDescriptor::Initialize()
 {
   if (!mRhi) {
     R_DEBUG(rError, "No RHI owner set in this Global Material upon initialization!\n");
@@ -86,7 +86,7 @@ void GlobalMaterial::Initialize()
 }
 
 
-void GlobalMaterial::CleanUp()
+void GlobalDescriptor::CleanUp()
 {
   // TODO
   if (mDescriptorSet) {
@@ -101,7 +101,7 @@ void GlobalMaterial::CleanUp()
 }
 
 
-void GlobalMaterial::Update()
+void GlobalDescriptor::Update()
 {
   mGlobalBuffer->Map();
   memcpy(mGlobalBuffer->Mapped(), &mGlobal, sizeof(GlobalBuffer));

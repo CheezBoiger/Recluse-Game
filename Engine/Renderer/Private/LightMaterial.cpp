@@ -4,10 +4,13 @@
 #include "RendererData.hpp"
 #include "TextureType.hpp"
 
+#include "Filesystem/Filesystem.hpp"
+
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Buffer.hpp"
 #include "RHI/Texture.hpp"
 #include "RHI/VulkanRHI.hpp"
+#include "RHI/Framebuffer.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -16,12 +19,14 @@
 
 namespace Recluse {
 
-LightMaterial::LightMaterial()
+LightDescriptor::LightDescriptor()
   : mShadowMap(nullptr)
   , mShadowSampler(nullptr)
   , mRhi(nullptr)
   , mDescriptorSet(nullptr)
   , mLightBuffer(nullptr)
+  , mFrameBuffer(nullptr)
+  , m_PrimaryShadowPipeline(nullptr)
 {
   mLights.primaryLight.enable = false;
   mLights.primaryLight.pad[0] = 0;
@@ -46,7 +51,7 @@ LightMaterial::LightMaterial()
 }
 
 
-LightMaterial::~LightMaterial()
+LightDescriptor::~LightDescriptor()
 {
   if (mLightBuffer) {
     R_DEBUG(rWarning, "Light buffer was not cleaned up!\n");
@@ -55,10 +60,22 @@ LightMaterial::~LightMaterial()
   if (mDescriptorSet) {
     R_DEBUG(rWarning, "Light Material descriptor set was not properly cleaned up!\n");
   }
+  
+  if (mShadowMap) {
+    R_DEBUG(rWarning, "Light Shadow Map texture was not properly cleaned up!\n");
+  }
+
+  if (mShadowSampler) {
+    R_DEBUG(rWarning, "Light Shadow Map sampler was not properly cleaned up!\n");
+  }
+
+  if (m_PrimaryShadowPipeline) {
+    R_DEBUG(rWarning, "Light Shadow Map pipeline was not properly cleaned up!\n");
+  }
 }
 
 
-void LightMaterial::Initialize()
+void LightDescriptor::Initialize()
 {
   // TODO
   if (!mRhi) {
@@ -84,6 +101,8 @@ void LightMaterial::Initialize()
 
   // Create our shadow map texture.
   if (!mShadowMap) {
+
+    // TODO():
     mShadowMap = mRhi->CreateTexture();
 
     VkImageCreateInfo imageCi = {};
@@ -91,6 +110,7 @@ void LightMaterial::Initialize()
   }
 
   if (!mShadowSampler) {
+    // TODO():
     mShadowSampler = mRhi->CreateSampler();
   }
 
@@ -104,6 +124,7 @@ void LightMaterial::Initialize()
   lightBufferInfo.range = sizeof(LightBuffer);
 
   // TODO(): Once we create our shadow map, we will add it here.
+  // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalShadowInfo.imageView = gResources().GetRenderTexture(DefaultTextureStr)->View();
@@ -127,10 +148,11 @@ void LightMaterial::Initialize()
   writeSets[1].dstBinding = 1;
 
   mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+  InitializePipeline();
 }
 
 
-void LightMaterial::CleanUp()
+void LightDescriptor::CleanUp()
 {
   if (mShadowMap) {
     mRhi->FreeTexture(mShadowMap);
@@ -152,13 +174,166 @@ void LightMaterial::CleanUp()
     mRhi->FreeBuffer(mLightBuffer);
     mLightBuffer = nullptr;
   }
+
+  if (m_PrimaryShadowPipeline) {
+    mRhi->FreeGraphicsPipeline(m_PrimaryShadowPipeline);
+    m_PrimaryShadowPipeline = nullptr;
+  }
 }
 
 
-void LightMaterial::Update()
+void LightDescriptor::Update()
 {
   mLightBuffer->Map();
   memcpy(mLightBuffer->Mapped(), &mLights, sizeof(LightBuffer));
   mLightBuffer->UnMap();
+}
+
+
+void LightDescriptor::InitializePipeline()
+{
+  if (!mFrameBuffer) return;
+  std::string Filepath = gFilesystem().CurrentAppDirectory();
+
+  VkPipelineInputAssemblyStateCreateInfo assemblyCI = {};
+  assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  assemblyCI.primitiveRestartEnable = VK_FALSE;
+
+  VkViewport viewport = {};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.height = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().height);
+  viewport.width = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().width);
+
+  VkRect2D scissor = {};
+  scissor.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  scissor.offset = { 0, 0 };
+
+  VkPipelineViewportStateCreateInfo viewportCI = {};
+  viewportCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+  viewportCI.viewportCount = 1;
+  viewportCI.pViewports = &viewport;
+  viewportCI.scissorCount = 1;
+  viewportCI.pScissors = &scissor;
+
+  VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
+    VK_POLYGON_MODE_FILL,
+    VK_FALSE,
+    VK_CULL_MODE_NONE,
+    VK_FRONT_FACE_CLOCKWISE,
+    1.0f,
+    VK_FALSE,
+    VK_FALSE
+  );
+
+  VkPipelineMultisampleStateCreateInfo msCI = {};
+  msCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+  msCI.sampleShadingEnable = VK_FALSE;
+  msCI.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  msCI.minSampleShading = 1.0f;
+  msCI.pSampleMask = nullptr;
+  msCI.alphaToOneEnable = VK_FALSE;
+  msCI.alphaToCoverageEnable = VK_FALSE;
+
+  VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
+  depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencilCI.depthTestEnable = VK_TRUE;
+  depthStencilCI.depthWriteEnable = VK_TRUE;
+  depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
+  depthStencilCI.depthBoundsTestEnable = VK_FALSE;
+  depthStencilCI.minDepthBounds = 0.0f;
+  depthStencilCI.maxDepthBounds = 1.0f;
+  depthStencilCI.stencilTestEnable = VK_FALSE;
+  depthStencilCI.back = {};
+  depthStencilCI.front = {};
+
+  std::array<VkPipelineColorBlendAttachmentState, 3> colorBlendAttachments;
+  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[2] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+    static_cast<u32>(colorBlendAttachments.size()),
+    colorBlendAttachments.data(),
+    VK_FALSE,
+    VK_LOGIC_OP_NO_OP
+  );
+
+  VkDynamicState dynamicStates[1] = {
+    VK_DYNAMIC_STATE_VIEWPORT
+  };
+
+  VkPipelineDynamicStateCreateInfo dynamicCI = {};
+  dynamicCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dynamicCI.dynamicStateCount = 1;
+  dynamicCI.pDynamicStates = dynamicStates;
+
+  VkVertexInputBindingDescription vertBindingDesc = { };
+  vertBindingDesc.binding = 0;
+  vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+  vertBindingDesc.stride = sizeof(Vector4);
+
+  std::array<VkVertexInputAttributeDescription, 1> pbrAttributes;
+  pbrAttributes[0].binding = 0;
+  pbrAttributes[0].format = VK_FORMAT_R32_SFLOAT;
+  pbrAttributes[0].location = 0;
+  pbrAttributes[0].offset = 0;
+
+  VkPipelineVertexInputStateCreateInfo vertexCI = {};
+  vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  vertexCI.vertexBindingDescriptionCount = 1;
+  vertexCI.pVertexBindingDescriptions = &vertBindingDesc;
+  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(pbrAttributes.size());
+  vertexCI.pVertexAttributeDescriptions = pbrAttributes.data();
+
+  VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = {};
+  GraphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+  GraphicsPipelineInfo.pColorBlendState = &colorBlendCI;
+  GraphicsPipelineInfo.pDepthStencilState = &depthStencilCI;
+  GraphicsPipelineInfo.pInputAssemblyState = &assemblyCI;
+  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
+  GraphicsPipelineInfo.pMultisampleState = &msCI;
+  GraphicsPipelineInfo.pVertexInputState = &vertexCI;
+  GraphicsPipelineInfo.pViewportState = &viewportCI;
+  GraphicsPipelineInfo.pTessellationState = nullptr;
+  GraphicsPipelineInfo.pDynamicState = &dynamicCI;
+  GraphicsPipelineInfo.subpass = 0;
+  GraphicsPipelineInfo.renderPass = mFrameBuffer->RenderPass();
+  GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+  // TODO(): Initialize shadow map pipeline.
 }
 } // Recluse

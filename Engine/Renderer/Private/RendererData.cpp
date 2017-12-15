@@ -10,6 +10,8 @@
 #include "RHI/GraphicsPipeline.hpp"
 #include "RHI/Framebuffer.hpp"
 
+#include <array>
+
 #include "Filesystem/Filesystem.hpp"
 
 namespace Recluse {
@@ -22,6 +24,7 @@ std::string DefaultSamplerStr         = "DefaultSampler";
 std::string ShadowMapPipelineStr      = "ShadowMapPipeline";
 std::string ShadowMapVertFileStr      = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr      = "ShadowMapping.frag.spv";
+std::string LightViewDescriptorSetLayoutStr   = "LightViewDescriptorLayout";
 
 std::string PBRPipelineStr              = "PBRPipeline";
 std::string PBRStaticPipelineStr        = "PBRStaticPipeline";
@@ -295,8 +298,8 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   GraphicsInfo.pStages = ShaderModules;
   GraphicsInfo.stageCount = 2;
+
   GraphicsInfo.renderPass = FrameBuffer2x->RenderPass();
-  
   Downscale2x->Initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer4x->RenderPass();
   Downscale4x->Initialize(GraphicsInfo, DownscaleLayout);
@@ -379,7 +382,20 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
 
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
+  GraphicsPipeline* ShadowMapPipeline = Rhi->CreateGraphicsPipeline();
+  gResources().RegisterGraphicsPipeline(ShadowMapPipelineStr, ShadowMapPipeline);
+
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  VkPipelineLayoutCreateInfo PipeLayout = { };
+  std::array<VkDescriptorSetLayout, 2> DescLayouts;
+  DescLayouts[0] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
+  DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+
+  PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO; 
+  PipeLayout.pushConstantRangeCount = 0;
+  PipeLayout.pPushConstantRanges = nullptr;
+  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size());
+  PipeLayout.pSetLayouts = DescLayouts.data();
   // ShadowMapping shader.
   // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
   // This will prevent blurry shadows. It must be combined in the forward render pass (maybe?)
@@ -388,6 +404,28 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
 
   LoadShader(ShadowMapVertFileStr, SmVert);
   LoadShader(ShadowMapFragFileStr, SmFrag);
+
+  std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;
+  Shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  Shaders[0].flags = 0;
+  Shaders[0].pName = "main";
+  Shaders[0].pNext = nullptr;
+  Shaders[0].pSpecializationInfo = nullptr;
+  Shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  Shaders[0].module = SmVert->Handle();
+
+  Shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  Shaders[1].flags = 0;
+  Shaders[1].pName = "main";
+  Shaders[1].pNext = nullptr;
+  Shaders[1].pSpecializationInfo = nullptr;
+  Shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  Shaders[1].module = SmFrag->Handle();
+
+  GraphicsInfo.pStages = Shaders.data();
+  GraphicsInfo.stageCount = static_cast<u32>(Shaders.size());
+
+  ShadowMapPipeline->Initialize(GraphicsInfo, PipeLayout);
 
   Rhi->FreeShader(SmVert);
   Rhi->FreeShader(SmFrag);

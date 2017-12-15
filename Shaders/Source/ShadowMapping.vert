@@ -6,14 +6,7 @@
 layout (location = 0) in vec4 position;
 
 
-// One directional light.
-layout (set = 0, binding = 0) uniform LightSpace {
-  mat4  proj;
-  mat4  view;
-} light_space;
-
-
-layout (set = 1, binding = 0) uniform ObjectBuffer {
+layout (set = 0, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
   vec4  color;
@@ -29,6 +22,13 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   isTransparent;
   ivec2 pad;
 } obj_buffer;
+
+
+// One directional light.
+layout (set = 1, binding = 0) uniform LightSpace {
+  mat4  proj;
+  mat4  view;
+} light_space;
 
 
 void main()

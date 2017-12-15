@@ -69,7 +69,7 @@ Engine& gEngine()
 
 Engine::Engine()
   : mCamera(nullptr)
-  , mLightMat(nullptr)
+  , mLightDesc(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
 {
@@ -113,7 +113,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
 void Engine::CleanUp()
 {
-  mLightMat = nullptr;
+  mLightDesc = nullptr;
 
   gUI().ShutDown();
   gAnimation().ShutDown();
@@ -143,8 +143,8 @@ void Engine::Update(r64 dt)
     gCamBuffer->mousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
   }
 
-  if (mLightMat) {
-    mLightMat->Update();
+  if (mLightDesc) {
+    mLightDesc->Update();
   }
 
   // TODO(): RenderObject updated, We need to use RenderObject Now.
@@ -159,11 +159,11 @@ void Engine::Update(r64 dt)
 }
 
 
-void Engine::SetLightData(LightMaterial* lights)
+void Engine::SetLightData(LightDescriptor* lights)
 {
   if (lights) {
     gRenderer().SetLightMaterial(lights);
-    mLightMat = lights;
+    mLightDesc = lights;
   } else {
     Log(rError) << "Null lights passed... using previous light data.";
   }

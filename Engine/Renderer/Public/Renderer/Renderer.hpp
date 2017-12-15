@@ -27,8 +27,8 @@ class GpuParams;
 class UserParams;
 class MeshData;
 class Material;
-class LightMaterial;
-class GlobalMaterial;
+class LightDescriptor;
+class GlobalDescriptor;
 class TextureCube;
 class Semaphore;
 class Texture1D;
@@ -94,7 +94,7 @@ public:
 
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
-  void              SetLightMaterial(LightMaterial*   material) { mLightMat = material; }
+  void              SetLightMaterial(LightDescriptor*   material) { mLightDesc = material; }
 
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
@@ -118,12 +118,12 @@ public:
 
   // Create a light material object, which holds all lights that affect this 
   // scene. This will then be used for the light culling method of the renderer.
-  LightMaterial*    CreateLightMaterial();
+  LightDescriptor*    CreateLightMaterial();
 
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
 
-  GlobalBuffer*     GlobalData() { return mGlobalMat->Data(); }
+  GlobalBuffer*     GlobalData() { return mGlobalDesc->Data(); }
 
   // Frees the render object.
   void              FreeRenderObject(RenderObject* renderObject);
@@ -132,7 +132,7 @@ public:
   void              FreeMeshData(MeshData* mesh);
 
   // Frees up the allocated light material object.
-  void              FreeLightMaterial(LightMaterial* material);
+  void              FreeLightMaterial(LightDescriptor* material);
 
   //  Frees up the allocated texture1d object.
   void              FreeTexture1D(Texture1D* texture);
@@ -205,8 +205,8 @@ private:
   Window*           mWindowHandle;
   CmdList*          mCmdList;
   CmdList*          mDeferredCmdList;
-  GlobalMaterial*   mGlobalMat;
-  LightMaterial*    mLightMat;
+  GlobalDescriptor*   mGlobalDesc;
+  LightDescriptor*    mLightDesc;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
   VulkanRHI*        mRhi;

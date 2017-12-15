@@ -17,6 +17,7 @@ extern std::string DefaultSamplerStr;
 extern std::string ShadowMapPipelineStr;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
+extern std::string LightViewDescriptorSetLayoutStr;
 
 extern std::string PBRPipelineStr;
 extern std::string PBRStaticPipelineStr;
@@ -85,7 +86,6 @@ extern std::string FinalFragFileStr;
 
 
 namespace RendererPass {
-
 
 // Set up the downscale pass.
 void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);

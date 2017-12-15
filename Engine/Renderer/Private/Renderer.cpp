@@ -174,9 +174,9 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   mRhi->DeviceWaitIdle();
 
-  mGlobalMat->CleanUp();
-  delete mGlobalMat;
-  mGlobalMat = nullptr;
+  mGlobalDesc->CleanUp();
+  delete mGlobalDesc;
+  mGlobalDesc = nullptr;
 
   if (mUI) {
     mUI->CleanUp();
@@ -215,11 +215,11 @@ b8 Renderer::Initialize(Window* window)
   SetUpFrameBuffers();
   SetUpDescriptorSetLayouts();
   SetUpGraphicsPipelines();
-  GlobalMaterial* gMat = new GlobalMaterial();
+  GlobalDescriptor* gMat = new GlobalDescriptor();
   gMat->mRhi = mRhi;
   gMat->Initialize();
   gMat->Update();
-  mGlobalMat = gMat;
+  mGlobalDesc = gMat;
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
@@ -268,6 +268,23 @@ b8 Renderer::Initialize(Window* window)
 
 void Renderer::SetUpDescriptorSetLayouts()
 {
+  {
+    std::array<VkDescriptorSetLayoutBinding, 1> LightViewBindings;
+    LightViewBindings[0].pImmutableSamplers = nullptr;
+    LightViewBindings[0].binding = 0;
+    LightViewBindings[0].descriptorCount = 1;
+    LightViewBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    DescriptorSetLayout* LightViewLayout = mRhi->CreateDescriptorSetLayout();
+    VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
+    LightViewInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    LightViewInfo.bindingCount = static_cast<u32>(LightViewBindings.size());
+    LightViewInfo.pBindings = LightViewBindings.data();
+    LightViewLayout->Initialize(LightViewInfo);
+    gResources().RegisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr, LightViewLayout);  
+  }
+
   std::array<VkDescriptorSetLayoutBinding, 1> objLayoutBindings;
   objLayoutBindings[0].binding = 0;
   objLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -283,7 +300,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
   d0->Initialize(layout0);
 
-  std::vector<VkDescriptorSetLayoutBinding> bindings(8);
+  std::array<VkDescriptorSetLayoutBinding, 8> bindings;
   bindings[0].binding = 0;
   bindings[0].descriptorCount = 1;
   bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -341,7 +358,7 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   VkDescriptorSetLayoutCreateInfo layout1 = {};
   layout1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout1.bindingCount = 8;
+  layout1.bindingCount = static_cast<u32>(bindings.size());
   layout1.pBindings = bindings.data();
 
   DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
@@ -479,6 +496,9 @@ void Renderer::CleanUpDescriptorSetLayouts()
   mRhi->FreeDescriptorSetLayout(d0);
   mRhi->FreeDescriptorSetLayout(d1);
   mRhi->FreeDescriptorSetLayout(d2);
+
+  DescriptorSetLayout* LightViewLayout = gResources().UnregisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
+  mRhi->FreeDescriptorSetLayout(LightViewLayout);
 
   DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout(FinalDescSetLayoutStr);
   mRhi->FreeDescriptorSetLayout(finalSetLayout);
@@ -842,7 +862,6 @@ void Renderer::SetUpGraphicsPipelines()
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     
   RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
-  RendererPass::SetUpDirectionalShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
 
   // Set to quad rendering format.
   colorBlendCI.logicOpEnable = VK_FALSE;
@@ -1311,7 +1330,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
   hdrBufferInfo.range = sizeof(GlobalBuffer);
-  hdrBufferInfo.buffer = mGlobalMat->Handle()->NativeBuffer();
+  hdrBufferInfo.buffer = mGlobalDesc->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
   pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
@@ -1395,7 +1414,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
     return; 
   }
 
-  if (!mLightMat || !mGlobalMat) {  
+  if (!mLightDesc || !mGlobalDesc) {  
     Log(rWarning) << "Can not build commandbuffers without light or global data! One of them is null!";
   } 
 
@@ -1448,9 +1467,9 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         if (!renderObj->Renderable) continue;
         Material* mat = renderObj->MaterialId;
         VkDescriptorSet descriptorSets[] = {
-          mGlobalMat->Set()->Handle(),
+          mGlobalDesc->Set()->Handle(),
           renderObj->CurrSet()->Handle(),
-          mLightMat->Set()->Handle()
+          mLightDesc->Set()->Handle()
         };
 
         GraphicsPipeline* pipeline = renderObj->Skinned ? pbrPipeline : staticPbrPipeline;
@@ -1783,7 +1802,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
-  mGlobalMat->Update();
+  mGlobalDesc->Update();
 }
 
 
@@ -1860,16 +1879,16 @@ void Renderer::WaitIdle()
 }
 
 
-LightMaterial* Renderer::CreateLightMaterial()
+LightDescriptor* Renderer::CreateLightMaterial()
 {
-  LightMaterial* lMat = new LightMaterial();
+  LightDescriptor* lMat = new LightDescriptor();
   lMat->mRhi = mRhi;
 
   return lMat;
 }
 
 
-void Renderer::FreeLightMaterial(LightMaterial* material)
+void Renderer::FreeLightMaterial(LightDescriptor* material)
 {
   material->CleanUp();
   delete material;

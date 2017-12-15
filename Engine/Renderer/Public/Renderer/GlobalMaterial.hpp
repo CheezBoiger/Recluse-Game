@@ -47,10 +47,10 @@ struct GlobalBuffer {
 
 
 // Global Material.
-class GlobalMaterial {
+class GlobalDescriptor {
 public:
-  GlobalMaterial();
-  ~GlobalMaterial();
+  GlobalDescriptor();
+  ~GlobalDescriptor();
 
   void              Update();
   void              Initialize();

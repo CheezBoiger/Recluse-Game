@@ -26,7 +26,7 @@ struct LightGridInfo {
 #define MAX_LIGHTS            128
 
 
-layout (set = 0, binding = 0) uniform GlobalBuffer {
+layout (set = 0, binding = 2) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  viewProj;
@@ -37,8 +37,12 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec2  mousePos;
   ivec2 screenSize;
-  ivec2 pad;
+  float gamma;
+  float exposure;
+  int   bloomEnabled;
+  int   pad1;
 } gWorldBuffer;
 
 
