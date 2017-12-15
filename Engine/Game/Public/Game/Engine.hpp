@@ -17,8 +17,8 @@
 
 #include "Renderer/Renderer.hpp"
 #include "Renderer/Material.hpp"
-#include "Renderer/LightMaterial.hpp"
-#include "Renderer/GlobalMaterial.hpp"
+#include "Renderer/LightDescriptor.hpp"
+#include "Renderer/GlobalDescriptor.hpp"
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/CmdList.hpp"
 

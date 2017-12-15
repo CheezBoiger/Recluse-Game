@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "LightMaterial.hpp"
+#include "LightDescriptor.hpp"
 #include "Resources.hpp"
 #include "RendererData.hpp"
 #include "TextureType.hpp"

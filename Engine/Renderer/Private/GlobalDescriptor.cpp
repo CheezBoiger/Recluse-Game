@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "GlobalMaterial.hpp"
+#include "GlobalDescriptor.hpp"
 #include "Resources.hpp"
 #include "RendererData.hpp"
 #include "TextureType.hpp"

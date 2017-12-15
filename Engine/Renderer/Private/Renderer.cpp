@@ -13,8 +13,8 @@
 #include "RendererData.hpp"
 #include "RenderObject.hpp"
 #include "MeshData.hpp"
-#include "LightMaterial.hpp"
-#include "GlobalMaterial.hpp"
+#include "LightDescriptor.hpp"
+#include "GlobalDescriptor.hpp"
 #include "StructuredBuffer.hpp"
 #include "VertexDescription.hpp"
 

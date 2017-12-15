@@ -11,7 +11,7 @@
 
 #include "Resources.hpp"
 #include "RenderQuad.hpp"
-#include "GlobalMaterial.hpp"
+#include "GlobalDescriptor.hpp"
 
 namespace Recluse {
 
