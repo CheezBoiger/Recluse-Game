@@ -145,10 +145,8 @@ vec3 LambertDiffuse(vec3 kD, vec3 albedoFrag)
 }
 
 
-// TODO():
-vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metallic)
+vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metallic)
 {
-  vec3 L = light.position.xyz - frag_in.position;
   vec3 nV = normalize(V);
   vec3 nL = normalize(L);
   vec3 nN = normalize(N);
@@ -165,10 +163,6 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
   
   F0 = mix(F0, albedoFrag, metallic);
   
-  float distance = length(L);
-  float attenuation = light.range / ((distance * distance) + 1.0);
-  vec3 radiance = light.color.xyz * attenuation * light.intensity;
-  
   if (dotNL > 0.0) {
     float D = DGGX(dotNH, roughness);
     float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
@@ -180,7 +174,7 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
-    color += (LambertDiffuse(kD, albedoFrag) + brdf) * radiance * dotNL;
+    color += (LambertDiffuse(kD, albedoFrag) + brdf) * dotNL;
   }
   
   return color;
@@ -188,43 +182,22 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 albedoFrag, vec3 V, vec3 N, float 
 
 
 // TODO():
-vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPoint(PointLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+{
+  vec3 L = light.position.xyz - frag_in.position;
+  float distance = length(L);
+  float attenuation = light.range / ((distance * distance) + 1.0);
+  vec3 radiance = light.color.xyz * attenuation * light.intensity;
+  return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
+}
+
+
+// TODO():
+vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
 {
   vec3 L = -(light.direction.xyz);
-  vec3 nV = normalize(V);
-  vec3 nL = normalize(L);
-  vec3 nN = normalize(N);
-  
-  vec3 H = normalize(nV + nL);
-  
-  float dotNL = clamp(dot(nN, nL), 0.0, 1.0);
-  float dotNV = clamp(dot(nN, nV), 0.0, 1.0);
-  float dotLH = clamp(dot(nL, H), 0.0, 1.0);
-  float dotNH = clamp(dot(nN, H), 0.0, 1.0);
-  
-  vec3 color = vec3(0.0);
-  vec3 F0 = vec3(0.04);
-  
-  F0 = mix(F0, albedoFrag, metallic);
-  
-  float distance = length(L);
   vec3 radiance = light.color.xyz * light.intensity;
-  
-  if (dotNL > 0.0) {
-    float D = DGGX(dotNH, roughness);
-    float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
-    
-    vec3 F = FSchlick(dotNV, F0, roughness);
-    vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
-    if (isnan(brdf).x == true) discard;
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-    
-    color += (LambertDiffuse(kD, albedoFrag) + brdf) * radiance * dotNL;
-  }
-  
-  return color;
+  return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
 }
 
 

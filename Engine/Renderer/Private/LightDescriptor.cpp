@@ -11,6 +11,8 @@
 #include "RHI/Texture.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/Framebuffer.hpp"
+#include "RHI/GraphicsPipeline.hpp"
+#include "RHI/Shader.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -335,5 +337,48 @@ void LightDescriptor::InitializePipeline()
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
   // TODO(): Initialize shadow map pipeline.
+  VkPipelineLayoutCreateInfo PipeLayout = {};
+  std::array<VkDescriptorSetLayout, 2> DescLayouts;
+  DescLayouts[0] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
+  DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+
+  PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  PipeLayout.pushConstantRangeCount = 0;
+  PipeLayout.pPushConstantRanges = nullptr;
+  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size());
+  PipeLayout.pSetLayouts = DescLayouts.data();
+  // ShadowMapping shader.
+  // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
+  // This will prevent blurry shadows. It must be combined in the forward render pass (maybe?)
+  Shader* SmVert = mRhi->CreateShader();
+  Shader* SmFrag = mRhi->CreateShader();
+
+  RendererPass::LoadShader(ShadowMapVertFileStr, SmVert);
+  RendererPass::LoadShader(ShadowMapFragFileStr, SmFrag);
+
+  std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;
+  Shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  Shaders[0].flags = 0;
+  Shaders[0].pName = "main";
+  Shaders[0].pNext = nullptr;
+  Shaders[0].pSpecializationInfo = nullptr;
+  Shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  Shaders[0].module = SmVert->Handle();
+
+  Shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  Shaders[1].flags = 0;
+  Shaders[1].pName = "main";
+  Shaders[1].pNext = nullptr;
+  Shaders[1].pSpecializationInfo = nullptr;
+  Shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  Shaders[1].module = SmFrag->Handle();
+
+  GraphicsPipelineInfo.pStages = Shaders.data();
+  GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
+
+  //m_PrimaryShadowPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
+
+  mRhi->FreeShader(SmVert);
+  mRhi->FreeShader(SmFrag);
 }
 } // Recluse

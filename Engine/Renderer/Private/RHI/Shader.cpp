@@ -39,6 +39,14 @@ b8 Shader::Initialize(const std::string& binaryPath)
 }
 
 
+Shader::~Shader()
+{
+  if (mModule) {
+    R_DEBUG(rWarning, "Shader module not properly cleaned up prior to deletion!\n");
+  }
+}
+
+
 void Shader::CleanUp()
 {
   if (mModule) {

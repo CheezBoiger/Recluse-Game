@@ -87,6 +87,9 @@ extern std::string FinalFragFileStr;
 
 namespace RendererPass {
 
+
+void LoadShader(std::string Filename, Shader* S);
+
 // Set up the downscale pass.
 void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 

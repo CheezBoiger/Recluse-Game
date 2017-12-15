@@ -108,10 +108,10 @@ int main(int c, char* argv[])
   lights->directionalLights[0].intensity = 1.0f;
   lights->directionalLights[0].color = Vector4(1.0f, 1.0f, 0.4f, 1.0f);
 
-  lights->pointLights[0].enable = false;
+  lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
   lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->pointLights[0].range = 90.0f;
+  lights->pointLights[0].range = 10.0f;
   lights->pointLights[0].intensity = 1.0f;
 
   lights->pointLights[1].enable = false;
@@ -246,7 +246,7 @@ int main(int c, char* argv[])
     cubeInfo->normalMatrix[3][3] = 1.0f;
 
     // light cube transforming.
-    light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -3.0f, 2.0f, 0.0f);
+    light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -5.0f, 2.0f, 0.0f);
     lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
     // Testing quat.
     Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
