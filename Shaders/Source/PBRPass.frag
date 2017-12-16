@@ -62,6 +62,8 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   vec4  color;
   float levelOfDetail;
   float transparency;
+  float metal;
+  float rough;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -70,7 +72,6 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasAO;
   int   hasBones; 
   int   isTransparent;
-  ivec2 pad;
 } objBuffer;
 
 
@@ -169,7 +170,7 @@ vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metall
     
     vec3 F = FSchlick(dotNV, F0, roughness);
     vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
-    if (isnan(brdf).x == true) discard;
+    if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
@@ -233,8 +234,8 @@ void main()
   vec3 fragNormal = vec3(0.0);
   vec4 fragEmissive = vec4(0.0);
   
-  float fragMetallic = 0.0;
-  float fragRoughness = 0.0;
+  float fragMetallic = 0.01;
+  float fragRoughness = 0.1;
   float fragAO = 0.0;
   
   if (objBuffer.hasAlbedo >= 1) {
@@ -245,10 +246,14 @@ void main()
     
   if (objBuffer.hasMetallic >= 1) {
     fragMetallic = texture(metallic, frag_in.texcoord0).r;
+  } else {
+    fragMetallic = objBuffer.metal;
   }
   
   if (objBuffer.hasRoughness >= 1) {
     fragRoughness = texture(roughness, frag_in.texcoord0).r;
+  } else {
+    fragRoughness = objBuffer.rough;
   }
   
   if (objBuffer.hasNormal >= 1) {
@@ -300,12 +305,11 @@ void main()
 
   // TODO(): Replace with metallness and emission instead, this will force all objects to be shiney
   // at the moment.
-  float brightness = dot(outColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-  if (brightness > 1.0) {
-    BrightColor = vec4(finalColor.rgb, 1.0);
-  } else {
-    BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-  }
+  vec3 glow = outColor.rgb - vec3(0.8);
+  glow.r = clamp(glow.r, 0.0, 1.0);
+  glow.g = clamp(glow.g, 0.0, 1.0);
+  glow.b = clamp(glow.b, 0.0, 1.0);
+  BrightColor = vec4(glow, 1.0);
 }
 
 

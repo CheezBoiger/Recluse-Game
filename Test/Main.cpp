@@ -99,14 +99,14 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 50.0f;
+  lights->primaryLight.intensity = 20.0f;
   lights->primaryLight.color = Vector4(0.5f, 0.5f, 0.2f, 1.0f);
   lights->primaryLight.enable = true;
 
   lights->directionalLights[0].enable = true;
   lights->directionalLights[0].direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
   lights->directionalLights[0].intensity = 1.0f;
-  lights->directionalLights[0].color = Vector4(1.0f, 1.0f, 0.4f, 1.0f);
+  lights->directionalLights[0].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
   lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
@@ -162,6 +162,8 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][3] = 1.0f;
   cubeInfo2->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   cubeInfo2->transparency = 0.4f;
+  cubeInfo2->baseMetal = 0.5f;
+  cubeInfo2->baseRough = 0.1f;
 
   Material cubeMaterial3;
   SkinnedMeshDescriptor cubeMesh3;

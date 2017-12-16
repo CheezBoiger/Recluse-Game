@@ -26,8 +26,8 @@ MeshDescriptor::MeshDescriptor()
   mObjectData.hasNormal = false;
   mObjectData.hasRoughness = false;
   mObjectData.isTransparent = false;
-  mObjectData.pad[0] = 1;
-  mObjectData.pad[1] = 2;
+  mObjectData.baseMetal = 0.0f;
+  mObjectData.baseRough = 1.0f;
 }
 
 

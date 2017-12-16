@@ -42,6 +42,8 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   vec4  color;
   float levelOfDetail;
   float transparency;
+  float metal;
+  float rough;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -50,7 +52,6 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasAO;
   int   hasBones; 
   int   isTransparent;
-  ivec2 pad;
 } objBuffer;
 
 

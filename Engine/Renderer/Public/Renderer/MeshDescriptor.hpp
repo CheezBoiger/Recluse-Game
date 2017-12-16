@@ -20,6 +20,8 @@ struct ObjectBuffer {
   Vector4 color;
   r32     lodBias;
   r32     transparency;
+  r32     baseMetal;
+  r32     baseRough;
   u32     hasAlbedo;
   u32     hasMetallic;
   u32     hasRoughness;
@@ -28,7 +30,6 @@ struct ObjectBuffer {
   u32     hasAO;
   u32     hasBones;
   u32     isTransparent;
-  u32     pad[2];
 };
 
 
