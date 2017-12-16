@@ -70,6 +70,7 @@ Engine& gEngine()
 Engine::Engine()
   : mCamera(nullptr)
   , mLightDesc(nullptr)
+  , mPushedScene(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
 {
@@ -141,12 +142,29 @@ void Engine::Update(r64 dt)
     gCamBuffer->exposure = mCamera->Exposure();
     gCamBuffer->gamma = mCamera->Gamma();
     gCamBuffer->mousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
+
+    m_CamFrustum.Update();
+    gCamBuffer->lPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PLEFT];
+    gCamBuffer->rPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PRIGHT];
+    gCamBuffer->tPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PTOP];
+    gCamBuffer->bPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PBOTTOM];
+    gCamBuffer->nPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PNEAR];
+    gCamBuffer->fPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PFAR];
   }
 
   if (mLightDesc) {
     mLightDesc->Update();
   }
 
+  if (mPushedScene) {
+    R_DEBUG(rVerbose, "Updating game object transforms...\n");
+    size_t SceneSz = mPushedScene->GameObjectCount();
+    for (size_t i = 0; i < SceneSz; ++i) {
+      GameObject* Obj = mPushedScene->Get(i);
+      Transform* T = Obj->GetComponent<Transform>();
+      if (!T) continue;
+    }
+  }
   // TODO(): RenderObject updated, We need to use RenderObject Now.
   for (u32 i = 0; i < mRenderCmdList.Size(); ++i) {
     RenderCmd& cmd = mRenderCmdList[i];

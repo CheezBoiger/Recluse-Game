@@ -63,12 +63,8 @@ int main(int c, char* argv[])
   Mouse::Enable(false);
   Mouse::Show(false);
 
-  gEngine().StartUp(RTEXT("私は猫が大好き"), false, 1200, 800);
-
-  Window* window = gEngine().GetWindow(); 
-  window->SetToWindowed(1200, 800);
-  window->SetToCenter();
-  window->Show();    
+  gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
+  Window* window = gEngine().GetWindow();    
 
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -77,15 +73,14 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  CCamViewFrustum frustum;
   Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
     Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f), Vector3::UP);
+  fpsCamera.EnableFrustumCull(true);
 
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
-  frustum.SetCamera(&fpsCamera);
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
 
@@ -99,8 +94,8 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 20.0f;
-  lights->primaryLight.color = Vector4(0.5f, 0.5f, 0.2f, 1.0f);
+  lights->primaryLight.intensity = 10.0f;
+  lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.4f, 1.0f);
   lights->primaryLight.enable = true;
 
   lights->directionalLights[0].enable = true;
@@ -150,7 +145,7 @@ int main(int c, char* argv[])
 
   Material cubeMaterial2;
   SkinnedMeshDescriptor cubeMesh2;
-  cubeMesh2.SetTransparent(true);
+  cubeMesh2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
@@ -160,7 +155,7 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
-  cubeInfo2->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  cubeInfo2->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
   cubeInfo2->transparency = 0.4f;
   cubeInfo2->baseMetal = 0.5f;
   cubeInfo2->baseRough = 0.1f;
@@ -275,7 +270,6 @@ int main(int c, char* argv[])
 
     // Syncronize engine modules, as they run on threads.
     gEngine().Update(dt);
-    frustum.Update(); // TODO(): Testing frustum... This will go in engine soon.
     gCore().Sync();
     gRenderer().Render();
 

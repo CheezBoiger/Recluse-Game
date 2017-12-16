@@ -28,11 +28,13 @@ public:
   // null if no object was found there.
   GameObject*               RemoveGameObject(u32 idx);
 
-  GameObject*               Get(size_t idx);
+  GameObject*               Get(size_t idx) { return m_GameObjects[idx]; }
 
   GameObject*               operator[](size_t idx) {
     return Get(idx);
   }
+
+  size_t                    GameObjectCount() const { return m_GameObjects.size(); }
 
   // Set the name of this scene.
   void                      SetName(std::string name) { m_SceneName = name; }

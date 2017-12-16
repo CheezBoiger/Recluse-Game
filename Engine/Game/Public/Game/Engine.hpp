@@ -13,6 +13,7 @@
 #include "Camera.hpp"
 #include "GameObject.hpp"
 #include "Component.hpp"
+#include "CameraViewFrustum.hpp"
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
@@ -54,10 +55,11 @@ public:
   Window*                       GetWindow() { return &mWindow; }
 
   void                          Update(r64 dt);
-  void                          SetCamera(Camera* camera) { mCamera = camera; }
+  void                          SetCamera(Camera* camera) { mCamera = camera; m_CamFrustum.SetCamera(mCamera); }
 
   // Push the new scene to into this engine for extraction.
   void                          PushScene(Scene* scene);
+  void                          BuildScene();
   void                          LoadSceneTransition();
 
   // TODO(): Should we have this data be stored in the scene instead? It would be more probable, 
@@ -77,7 +79,8 @@ public:
   // rebuilding...
 
 private:
-  LightDescriptor*                mLightDesc;
+  CCamViewFrustum               m_CamFrustum;
+  LightDescriptor*              mLightDesc;
   Camera*                       mCamera;
   Scene*                        mPushedScene;
   r64                           m_GameMouseX;

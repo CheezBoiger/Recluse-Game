@@ -47,6 +47,7 @@ public:
   // which will be used to send to global material.
   void        Update();
 
+
   b8          Intersect(const AABB* aabb);
 
   // Check if AABB object is inside this frustum.
@@ -54,6 +55,9 @@ public:
 
   void        SetCamera(Camera* camera);
   Camera*     GetCamera() const { return m_Camera; }
+
+protected:
+  void        ConfigureFrustum();
   
 };
 } // Recluse

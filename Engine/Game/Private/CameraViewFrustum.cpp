@@ -18,7 +18,11 @@ void CCamViewFrustum::SetCamera(Camera* camera)
 {
   if (!camera) return;
   m_Camera = camera;
+}
 
+
+void CCamViewFrustum::ConfigureFrustum()
+{
   // Might need to figure out this Tang thing...
   r32 Tang = (r32)tanf(Radians(m_Camera->FoV() * 0.5f));
   m_Nh = m_Camera->Near() * Tang;
@@ -34,6 +38,9 @@ void CCamViewFrustum::Update()
     R_DEBUG(rError, "No camera set to calc frustums from!\n");
     return;
   }
+
+  if (!m_Camera->Culling()) return;
+  ConfigureFrustum();
   
   Vector3 l = m_Camera->LookDir();
   Vector3 p = m_Camera->Position();

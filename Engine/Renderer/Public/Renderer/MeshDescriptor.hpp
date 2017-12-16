@@ -15,21 +15,21 @@ class MeshData;
 
 
 struct ObjectBuffer {
-  Matrix4 model;
-  Matrix4 normalMatrix;
-  Vector4 color;
-  r32     lodBias;
-  r32     transparency;
-  r32     baseMetal;
-  r32     baseRough;
-  u32     hasAlbedo;
-  u32     hasMetallic;
-  u32     hasRoughness;
-  u32     hasNormal;
-  u32     hasEmissive;
-  u32     hasAO;
-  u32     hasBones;
-  u32     isTransparent;
+  Matrix4 model;          // Model matrix
+  Matrix4 normalMatrix;   // Normal matrix.
+  Vector4 color;          // object base color.
+  r32     lodBias;        // object level of detail bias.
+  r32     transparency;   // transparency [0.0, 1.0]
+  r32     baseMetal;      // object base metalness [0.0, 1.0]
+  r32     baseRough;      // object base roughness [0.0, 1.0]
+  u32     hasAlbedo;      // does object have albedo map?
+  u32     hasMetallic;    // does object have metalness map?
+  u32     hasRoughness;   // does object have roughness map?
+  u32     hasNormal;      // does object have normal map?
+  u32     hasEmissive;    // does object have emissive map?
+  u32     hasAO;          // does object have ambient occlusion map?
+  u32     hasBones;       // does object have bones?
+  u32     isTransparent;  // is object transparent?
 };
 
 
