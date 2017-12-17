@@ -125,15 +125,15 @@ float GSchlickSmithGGX(float NoL, float NoV, float roughness)
 {
   float remap = roughness + 1.0;
   float k = (remap * remap) / 8.0;
-  float GL = NoL / (NoL * (1.0 - k) + k);
-  float GV = NoV / (NoV * (1.0 - k) + k);
+  float num = NoV;
+  float denom = (NoV * (1.0 - k) + k);
 
-  return (GL * GV);
+  return num / denom;
 }
 
 
 // Schlick Approximation of our Fresnel Term
-vec3 FSchlick(float cosTheta, vec3 F0, float roughness)
+vec3 FSchlick(float cosTheta, vec3 F0)
 {
   return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
@@ -168,7 +168,7 @@ vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metall
     float D = DGGX(dotNH, roughness);
     float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
     
-    vec3 F = FSchlick(dotNV, F0, roughness);
+    vec3 F = FSchlick(dotNH, F0);
     vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
     if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
     vec3 kS = F;
@@ -223,7 +223,7 @@ mat3 BiTangentFrame(vec3 Normal, vec3 Position, vec2 UV)
 vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
 {
   vec3 tNormal = texture(normal, TexCoord).rgb * 2.0 - 1.0;
-  mat3 TBN = BiTangentFrame(N, -V, TexCoord);
+  mat3 TBN = BiTangentFrame(N, V, TexCoord);
   return normalize(TBN * tNormal);
 }
 
@@ -295,6 +295,9 @@ void main()
     outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
     
   }
+  
+  vec3 ambient = vec3(0.03) * fragAlbedo; 
+  outColor = outColor + ambient;
   
   // We might wanna set a debug param here...
   float transparency = 1.0;

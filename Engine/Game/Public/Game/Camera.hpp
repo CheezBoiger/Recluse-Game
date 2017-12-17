@@ -36,7 +36,7 @@ public:
   };
 
   Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 lookAt, Vector3 worldUp);
+    Vector3 pos, Vector3 lookAt);
 
   virtual Matrix4     View();
   virtual Matrix4     Projection();
@@ -45,7 +45,7 @@ public:
   virtual void        Update();
 
   void                SetPosition(Vector3 nPos) { m_Position = nPos; }
-  void                SetWorldUp(Vector3 up) { m_WorldUp = up; }
+  void                InvertWorldUp() { m_WorldUp = -m_WorldUp; }
   void                SetLookAt(Vector3 lookAt) { m_LookAt = lookAt; }
   void                SetAspect(r32 aspect) { m_Aspect = aspect; }
   void                SetFoV(r32 fov) { m_Fov = fov; }
@@ -115,7 +115,7 @@ public:
   static r32          MAX_YAW;
 
   FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 dir, Vector3 worldUp);
+    Vector3 pos, Vector3 dir);
 
   virtual Matrix4     View() override;
 
@@ -153,7 +153,7 @@ protected:
 class FlyViewCamera : public FirstPersonCamera {
 public:
   FlyViewCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 dir, Vector3 worldUp, r32 speed = 10.0f);
+    Vector3 pos, Vector3 dir, r32 speed = 10.0f);
   virtual void        Move(Movement movement, r64 dt) override;
 
 protected:

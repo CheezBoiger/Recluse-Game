@@ -9,18 +9,18 @@ namespace Recluse {
 
 
 Camera::Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar, 
-  Vector3 pos, Vector3 lookAt, Vector3 worldUp)
+  Vector3 pos, Vector3 lookAt)
   : m_ProjType(type)
   , m_Fov(fov)
   , m_Aspect(aspect)
   , m_Position(pos)
   , m_LookAt(lookAt)
-  , m_WorldUp(worldUp)
   , m_ZNear(zNear)
   , m_ZFar(zFar)
   , m_Bloom(false)
   , m_Gamma(2.2f)
   , m_Exposure(1.0f)
+  , m_WorldUp(Vector3::UP)
   , m_FrustumCull(false)
 {
 }
@@ -52,9 +52,9 @@ void Camera::Update()
 
 
 FirstPersonCamera::FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar,
-  Vector3 pos, Vector3 dir, Vector3 worldUp)
-  : m_X_Sensitivity(0.2f)
-  , m_Y_Sensitivity(0.2f)
+  Vector3 pos, Vector3 dir)
+  : m_X_Sensitivity(0.1f)
+  , m_Y_Sensitivity(0.1f)
   , m_Yaw(90.0f)
   , m_Pitch(0.0f)
   , m_ConstainedPitch(89.0f)
@@ -63,13 +63,16 @@ FirstPersonCamera::FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar,
   , m_LastY(0.0f)
   , m_Speed(5.0f)
   , m_Locked(false)
-  , Camera(PERSPECTIVE, fov, aspect, zNear, zFar, pos, dir, worldUp)
+  , Camera(PERSPECTIVE, fov, aspect, zNear, zFar, pos, dir)
 {
 }
 
 
 Matrix4 FirstPersonCamera::View()
 {
+  if (m_Locked) {
+    return Matrix4::LookAt(m_Position, m_LookAt, m_WorldUp);
+  }
   return Matrix4::LookAt(m_Position, m_Front + m_Position, m_WorldUp);
 }
 
@@ -109,11 +112,15 @@ void FirstPersonCamera::Move(Movement movement, r64 dt)
 
 void FirstPersonCamera::Update()
 {
-  m_Front.x = cosf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
-  m_Front.y = sinf(Radians(m_Pitch));
-  m_Front.z = sinf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
-  m_Front = m_Front.Normalize();
+  if (!m_Locked) {
+    m_Front.x = cosf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
+    m_Front.y = sinf(Radians(m_Pitch));
+    m_Front.z = sinf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
+  } else {
+    m_Front = m_LookAt - m_Position;
+  }
 
+  m_Front = m_Front.Normalize();
   m_Right = m_Front.Cross(m_WorldUp).Normalize();
   m_Up = m_Right.Cross(m_Front).Normalize();
 }

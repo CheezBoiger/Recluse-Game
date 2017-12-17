@@ -42,8 +42,7 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_R)) { camera->SetExposure(camera->Exposure() <= 0.0f ? 0.1f : camera->Exposure() - (r32)(2.0 * Time::DeltaTime)); }
 
   if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->EnableBloom(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_1)) { 
-    camera->EnableBloom(true); }
+  if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
   // Test albedo enabling.
   if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
@@ -77,12 +76,12 @@ int main(int c, char* argv[])
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
   Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
-    Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f), Vector3::UP);
+    Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f));
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
-    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f), Vector3::UP);
-  fpsCamera.EnableFrustumCull(true);
+    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
+  fpsCamera.EnableFrustumCull(true);
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
@@ -97,23 +96,33 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 40.0f;
-  lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.4f, 1.0f);
+  lights->primaryLight.intensity = 5.0f;
+  lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
   lights->primaryLight.enable = true;
 
-  lights->directionalLights[0].enable = true;
+  lights->directionalLights[0].enable = false;
   lights->directionalLights[0].direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
-  lights->directionalLights[0].intensity = 1.0f;
+  lights->directionalLights[0].intensity = 5.0f;
   lights->directionalLights[0].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
+
+  lights->directionalLights[1].enable = false;
+  lights->directionalLights[1].direction = Vector4(-1.0f, 0.0f, -1.0f, 1.0f);
+  lights->directionalLights[1].intensity = 5.0f;
+  lights->directionalLights[1].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
+
+  lights->directionalLights[2].enable = false;
+  lights->directionalLights[2].direction = Vector4(1.0f, 0.0f, -1.0f, 1.0f);
+  lights->directionalLights[2].intensity = 5.0f;
+  lights->directionalLights[2].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
   lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
   lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->pointLights[0].range = 100.0f;
+  lights->pointLights[0].range = 10.0f;
   lights->pointLights[0].intensity = 1.0f;
 
   lights->pointLights[1].enable = false;
-  lights->pointLights[1].position = Vector4(3.0f, 2.0f, -4.0f, 1.0f);
+  lights->pointLights[1].position = Vector4(0.0f, 3.0f, 4.0f, 1.0f);
   lights->pointLights[1].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->pointLights[1].range = 30.0f;
 
@@ -122,6 +131,12 @@ int main(int c, char* argv[])
   Texture2D* albedo = gRenderer().CreateTexture2D();
   albedo->Initialize(img.Width(), img.Height());
   albedo->Update(img);
+  img.CleanUp();
+
+  img.Load("normal.jpg");
+  Texture2D* normal = gRenderer().CreateTexture2D();
+  normal->Initialize(img.Width(), img.Height());
+  normal->Update(img);
   img.CleanUp();
 
   auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
@@ -135,8 +150,8 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-#define ObjectCount 1000
-  r32 MaxNum = 150.0f;
+#define ObjectCount 200
+  r32 MaxNum = 250.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-MaxNum, MaxNum);
@@ -145,20 +160,26 @@ int main(int c, char* argv[])
   MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
   cubeMaterial.SetAlbedo(albedo);
+  cubeMaterial.SetNormal(normal);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
-  cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
+  cubeInfo->hasNormal = true;
+  cubeInfo->model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
   cubeInfo->normalMatrix[3][0] = 0.0f;
   cubeInfo->normalMatrix[3][1] = 0.0f;
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
+  cubeInfo->baseMetal = 0.01f;
+  cubeInfo->baseRough = 0.5f;
 
   Material cubeMaterial2;
   MeshDescriptor cubeMesh2;
   cubeMesh2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
+  cubeMaterial2.SetNormal(normal);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
+  cubeInfo2->hasNormal = true;
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
@@ -200,6 +221,7 @@ int main(int c, char* argv[])
     buffer->normalMatrix[3][3] = 1.0f;
     buffer->baseMetal = 0.5f;
     buffer->baseRough = 0.1f;
+    buffer->color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
     RenderObjects[i] = gRenderer().CreateRenderObject();
     RenderObjects[i]->MaterialId = &cubeMaterial2;
     RenderObjects[i]->MeshDescriptorId = &MeshDescriptors[i];
@@ -326,7 +348,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
     Window::PollEvents();
     ProcessInput();
   }
@@ -336,6 +358,7 @@ int main(int c, char* argv[])
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
+  gRenderer().FreeTexture2D(normal);
   gRenderer().FreeRenderObject(obj1);
   gRenderer().FreeRenderObject(obj2);
   gRenderer().FreeRenderObject(obj3);

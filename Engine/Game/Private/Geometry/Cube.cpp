@@ -126,6 +126,7 @@ std::array<Vector4, 36> normals = {
 
 
 std::array<Vector4, 36> texcoords = {
+  // Front
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 1.0f, 0.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -154,6 +155,7 @@ std::array<Vector4, 36> texcoords = {
   Vector4(0.0f, 1.0f, 0.0f, 1.0f),
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
 
+  // Right
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 1.0f, 0.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -161,12 +163,13 @@ std::array<Vector4, 36> texcoords = {
   Vector4(0.0f, 1.0f, 0.0f, 1.0f),
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
 
+  // Left
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 1.0f, 0.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
   Vector4(0.0f, 1.0f, 0.0f, 1.0f),
-  Vector4(0.0f, 0.0f, 0.0f, 0.0f), 
+  Vector4(0.0f, 0.0f, 0.0f, 0.0f),
 };
 
 
