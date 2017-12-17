@@ -94,7 +94,7 @@ public:
 
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
-  void              SetLightMaterial(LightDescriptor*   material) { mLightDesc = material; }
+  void              SetLightMaterial(LightDescriptor*   material) { mLights = material; }
 
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
@@ -123,7 +123,7 @@ public:
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
 
-  GlobalBuffer*     GlobalData() { return mGlobalDesc->Data(); }
+  GlobalBuffer*     GlobalData() { return mGlobal->Data(); }
 
   // Frees the render object.
   void              FreeRenderObject(RenderObject* renderObject);
@@ -205,8 +205,8 @@ private:
   Window*           mWindowHandle;
   CmdList*          mCmdList;
   CmdList*          mDeferredCmdList;
-  GlobalDescriptor*   mGlobalDesc;
-  LightDescriptor*    mLightDesc;
+  GlobalDescriptor* mGlobal;
+  LightDescriptor*  mLights;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
   VulkanRHI*        mRhi;

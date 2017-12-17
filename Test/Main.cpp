@@ -132,7 +132,7 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
  
   Material cubeMaterial;
-  SkinnedMeshDescriptor cubeMesh;
+  MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
   cubeMaterial.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
@@ -144,7 +144,7 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][3] = 1.0f;
 
   Material cubeMaterial2;
-  SkinnedMeshDescriptor cubeMesh2;
+  MeshDescriptor cubeMesh2;
   cubeMesh2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
@@ -161,7 +161,7 @@ int main(int c, char* argv[])
   cubeInfo2->baseRough = 0.1f;
 
   Material cubeMaterial3;
-  SkinnedMeshDescriptor cubeMesh3;
+  MeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
   cubeMaterial3.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
@@ -179,16 +179,13 @@ int main(int c, char* argv[])
 
   obj1->MaterialId = &cubeMaterial;
   obj1->MeshDescriptorId = &cubeMesh;
-  obj1->Skinned = false;
 
   obj2->MaterialId = &cubeMaterial2;
   obj2->MeshDescriptorId = &cubeMesh2;
-  obj2->Skinned = false;
   obj2->Renderable = true;
 
   obj3->MaterialId = &cubeMaterial3;
   obj3->MeshDescriptorId = &cubeMesh3;
-  obj3->Skinned = false;
 
   obj1->Initialize();
   obj2->Initialize();

@@ -75,21 +75,21 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 } objBuffer;
 
 
-layout (set = 1, binding = 2) uniform sampler2D albedo;
-layout (set = 1, binding = 3) uniform sampler2D metallic;
-layout (set = 1, binding = 4) uniform sampler2D roughness;
-layout (set = 1, binding = 5) uniform sampler2D normal;
-layout (set = 1, binding = 6) uniform sampler2D ao;
-layout (set = 1, binding = 7) uniform sampler2D emissive;
+layout (set = 2, binding = 0) uniform sampler2D albedo;
+layout (set = 2, binding = 1) uniform sampler2D metallic;
+layout (set = 2, binding = 2) uniform sampler2D roughness;
+layout (set = 2, binding = 3) uniform sampler2D normal;
+layout (set = 2, binding = 4) uniform sampler2D ao;
+layout (set = 2, binding = 5) uniform sampler2D emissive;
 
 
-layout (set = 2, binding = 0) uniform LightBuffer {
+layout (set = 3, binding = 0) uniform LightBuffer {
   DirectionLight  primaryLight;
   DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
   PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
 
-layout (set = 2, binding = 1) uniform sampler2D globalShadow;
+layout (set = 3, binding = 1) uniform sampler2D globalShadow;
 
 
 // TODO(): Need to addin gridLights buffer, for light culling, too.

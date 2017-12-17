@@ -35,9 +35,6 @@ public:
   // Typically set to 1 (default is 1.)
   u32                     Instances;
 
-  // Does this render object define a skinned mesh descriptor?
-  b8                      Skinned;
-
   // Is this object renderable? If not, the renderer will ignore it.
   b8                      Renderable;
 
@@ -58,7 +55,9 @@ public:
   void                    Update();
 
   // The currently used descriptor set.
-  DescriptorSet*          CurrSet() { return mDescriptorSets[mCurrIdx]; }
+  DescriptorSet*          CurrMeshSet() { return mMeshSets[mCurrIdx]; }
+  DescriptorSet*          CurrMaterialSet() { return mMaterialSets[mCurrIdx]; }
+  DescriptorSet*          CurrBoneSet() { return m_BonesSets[mCurrIdx]; }
 
   size_t                  Size() const { return mMeshGroup.size(); }
 
@@ -77,15 +76,19 @@ public:
 
   MeshData*               Get(size_t idx) { return mMeshGroup[idx]; }
   MeshData*               operator[](size_t idx) { return Get(idx); }
-  
-private:
-  void                    UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate);
 
+protected:  
+
+ void                     UpdateDescriptorSets(size_t idx);
+
+private:
   // The mesh group to render with the following description and material ids.
   std::vector<MeshData*>  mMeshGroup;
 
   // The actual descriptor set used.
-  DescriptorSet*          mDescriptorSets     [2];
+  DescriptorSet*          mMeshSets           [2];
+  DescriptorSet*          mMaterialSets       [2];
+  DescriptorSet*          m_BonesSets         [2];
   size_t                  mCurrIdx;
   VulkanRHI*              mRhi;
   friend class Renderer;

@@ -24,20 +24,23 @@ namespace Recluse {
 RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
   : MaterialId(material)
   , MeshDescriptorId(mesh)
-  , Skinned(false)
   , mCurrIdx(0)
   , Instances(1)
   , Renderable(true)
 {
-  mDescriptorSets[0] = nullptr;
-  mDescriptorSets[1] = nullptr;
+  mMeshSets[0] = nullptr;
+  mMeshSets[1] = nullptr;
+  mMaterialSets[0] = nullptr;
+  mMaterialSets[1] = nullptr;
+  m_BonesSets[0] = nullptr;
+  m_BonesSets[1] = nullptr;
 }
 
 
 RenderObject::~RenderObject()
 {
-  if (mDescriptorSets[0] || mDescriptorSets[1]) {
-    Log(rError) << "Descriptor Set was not cleaned up before destruction of this object!\n";
+  if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1] || m_BonesSets[0] || m_BonesSets[1]) {
+    Log(rError) << "Descriptor Sets were not cleaned up before destruction of this object!\n";
   }
 }
 
@@ -50,210 +53,220 @@ void RenderObject::Initialize()
     return;
   } 
 
-  if (mDescriptorSets[0] || mDescriptorSets[1]) {
+  if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1]) {
     R_DEBUG(rNotify, "This RenderObject is already initialized. Skipping...\n");
     return;
   }
   
   // Now create the set to update to.
-  mDescriptorSets[0] = mRhi->CreateDescriptorSet();
-  mDescriptorSets[1] = mRhi->CreateDescriptorSet();
+  mMeshSets[0] = mRhi->CreateDescriptorSet();
+  mMeshSets[1] = mRhi->CreateDescriptorSet();
+  mMaterialSets[0] = mRhi->CreateDescriptorSet();
+  mMaterialSets[1] = mRhi->CreateDescriptorSet();
 
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr);
-  mDescriptorSets[0]->Allocate(mRhi->DescriptorPool(), pbrLayout);
-  mDescriptorSets[1]->Allocate(mRhi->DescriptorPool(), pbrLayout);
+  DescriptorSetLayout* MeshLayout = gResources().GetDescriptorSetLayout(MeshSetLayoutStr);
+  DescriptorSetLayout* MaterialLayout = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr);
+  mMeshSets[0]->Allocate(mRhi->DescriptorPool(), MeshLayout);
+  mMeshSets[1]->Allocate(mRhi->DescriptorPool(), MeshLayout);
+  mMaterialSets[0]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
+  mMaterialSets[1]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
 
-  UpdateDescriptorSet(0, true);
-  UpdateDescriptorSet(1, true);
+  if (MeshDescriptorId->Skinned()) {
+    DescriptorSetLayout* BonesLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
+    m_BonesSets[0] = mRhi->CreateDescriptorSet();
+    m_BonesSets[1] = mRhi->CreateDescriptorSet();
+    m_BonesSets[0]->Allocate(mRhi->DescriptorPool(), BonesLayout);
+    m_BonesSets[1]->Allocate(mRhi->DescriptorPool(), BonesLayout);
+  }
+
+  UpdateDescriptorSets(0);
+  UpdateDescriptorSets(1);
 }
 
 
 void RenderObject::CleanUp()
 {
-  if (mDescriptorSets[0]) {
-    mRhi->FreeDescriptorSet(mDescriptorSets[0]);
-    mDescriptorSets[0] = nullptr;
+  for (size_t idx = 0; idx < 2; ++idx) {
+    if (mMeshSets[idx]) {
+      mRhi->FreeDescriptorSet(mMeshSets[idx]);
+      mMeshSets[idx] = nullptr;
+    }
   }
 
-  if (mDescriptorSets[1]) {
-    mRhi->FreeDescriptorSet(mDescriptorSets[1]);
-    mDescriptorSets[1] = nullptr;
+  for (size_t idx = 0; idx < 2; ++idx) {
+    if (mMaterialSets[idx]) {
+      mRhi->FreeDescriptorSet(mMaterialSets[idx]);
+      mMaterialSets[idx] = nullptr;
+    }
+  }
+
+  for (size_t idx = 0; idx < 2; ++idx) {
+    mRhi->FreeDescriptorSet(m_BonesSets[idx]);
+    m_BonesSets[idx] = nullptr;
   }
 }
 
 
 void RenderObject::Update()
 {
-  UpdateDescriptorSet(((mCurrIdx == 0) ? 1 : 0), false);
+  UpdateDescriptorSets(((mCurrIdx == 0) ? 1 : 0));
 }
 
 
-void RenderObject::UpdateDescriptorSet(size_t idx, b8 includeBufferUpdate)
+void RenderObject::UpdateDescriptorSets(size_t idx)
 {
-  std::array<VkWriteDescriptorSet, 8> writeSets;
-  size_t count = 0;
-
   Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
   if (MaterialId->Sampler()) sampler = MaterialId->Sampler()->Handle();
 
   Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
 
-  VkDescriptorBufferInfo objBufferInfo = {};
-  objBufferInfo.buffer = MeshDescriptorId->NativeObjectBuffer()->NativeBuffer();
-  objBufferInfo.offset = 0;
-  objBufferInfo.range = sizeof(ObjectBuffer);
+  // Mesh
+  {
+    VkDescriptorBufferInfo objBufferInfo = {};
+    objBufferInfo.buffer = MeshDescriptorId->NativeObjectBuffer()->NativeBuffer();
+    objBufferInfo.offset = 0;
+    objBufferInfo.range = sizeof(ObjectBuffer);
+    VkWriteDescriptorSet MeshWriteSet = { };
+    MeshWriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MeshWriteSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    MeshWriteSet.dstBinding = 0;
+    MeshWriteSet.dstArrayElement = 0;
+    MeshWriteSet.pBufferInfo = &objBufferInfo;
+    MeshWriteSet.descriptorCount = 1;
+    MeshWriteSet.pNext = nullptr;
+    mMeshSets[idx]->Update(1, &MeshWriteSet);
+  }
 
-  VkDescriptorBufferInfo boneBufferInfo = {};
-  if (Skinned) {
+  {
+    std::array<VkWriteDescriptorSet, 6> MaterialWriteSets;
+    VkDescriptorImageInfo albedoInfo = {};
+    albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Albedo()) {
+      albedoInfo.imageView = MaterialId->Albedo()->Handle()->View();
+    }
+    else {
+      albedoInfo.imageView = defaultTexture->View();
+    }
+    albedoInfo.sampler = sampler->Handle();
+
+    VkDescriptorImageInfo metallicInfo = {};
+    metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Metallic()) {
+      metallicInfo.imageView = MaterialId->Metallic()->Handle()->View();
+    }
+    else {
+      metallicInfo.imageView = defaultTexture->View();
+    }
+    metallicInfo.sampler = sampler->Handle();
+
+    VkDescriptorImageInfo roughInfo = {};
+    roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Roughness()) {
+      roughInfo.imageView = MaterialId->Roughness()->Handle()->View();
+    }
+    else {
+      roughInfo.imageView = defaultTexture->View();
+    }
+    roughInfo.sampler = sampler->Handle();
+
+    VkDescriptorImageInfo normalInfo = {};
+    normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Normal()) {
+      normalInfo.imageView = MaterialId->Normal()->Handle()->View();
+    }
+    else {
+      normalInfo.imageView = defaultTexture->View();
+    }
+    normalInfo.sampler = sampler->Handle();
+
+    VkDescriptorImageInfo aoInfo = {};
+    aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Ao()) {
+      aoInfo.imageView = MaterialId->Ao()->Handle()->View();
+    }
+    else {
+      aoInfo.imageView = defaultTexture->View();
+    }
+    aoInfo.sampler = sampler->Handle();
+
+    VkDescriptorImageInfo emissiveInfo = {};
+    emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (MaterialId->Emissive()) {
+      emissiveInfo.imageView = MaterialId->Emissive()->Handle()->View();
+    }
+    else {
+      emissiveInfo.imageView = defaultTexture->View();
+    }
+    emissiveInfo.sampler = sampler->Handle();
+
+    MaterialWriteSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[0].dstBinding = 0;
+    MaterialWriteSets[0].descriptorCount = 1;
+    MaterialWriteSets[0].dstArrayElement = 0;
+    MaterialWriteSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[0].pImageInfo = &albedoInfo;
+    MaterialWriteSets[0].pNext = nullptr;
+
+    MaterialWriteSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[1].dstBinding = 1;
+    MaterialWriteSets[1].descriptorCount = 1;
+    MaterialWriteSets[1].dstArrayElement = 0;
+    MaterialWriteSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[1].pImageInfo = &metallicInfo;
+    MaterialWriteSets[1].pNext = nullptr;
+
+    MaterialWriteSets[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[2].dstBinding = 2;
+    MaterialWriteSets[2].descriptorCount = 1;
+    MaterialWriteSets[2].dstArrayElement = 0;
+    MaterialWriteSets[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[2].pImageInfo = &roughInfo;
+    MaterialWriteSets[2].pNext = nullptr;
+
+    MaterialWriteSets[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[3].dstBinding = 3;
+    MaterialWriteSets[3].descriptorCount = 1;
+    MaterialWriteSets[3].dstArrayElement = 0;
+    MaterialWriteSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[3].pImageInfo = &normalInfo;
+    MaterialWriteSets[3].pNext = nullptr;
+
+    MaterialWriteSets[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[4].dstBinding = 4;
+    MaterialWriteSets[4].descriptorCount = 1;
+    MaterialWriteSets[4].dstArrayElement = 0;
+    MaterialWriteSets[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[4].pImageInfo = &aoInfo;
+    MaterialWriteSets[4].pNext = nullptr;
+
+    MaterialWriteSets[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    MaterialWriteSets[5].dstBinding = 5;
+    MaterialWriteSets[5].descriptorCount = 1;
+    MaterialWriteSets[5].dstArrayElement = 0;
+    MaterialWriteSets[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialWriteSets[5].pImageInfo = &emissiveInfo;
+    MaterialWriteSets[5].pNext = nullptr;
+
+    mMaterialSets[idx]->Update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
+  }
+
+  // Bones
+  if (MeshDescriptorId->Skinned()) {
+    VkDescriptorBufferInfo boneBufferInfo = { };
     SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(MeshDescriptorId);
     boneBufferInfo.buffer = sm->NativeBoneBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
     boneBufferInfo.range = sizeof(BonesBuffer);
+    VkWriteDescriptorSet BoneWriteSet = { };
+    BoneWriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    BoneWriteSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    BoneWriteSet.dstBinding = 0;
+    BoneWriteSet.pBufferInfo = &boneBufferInfo;
+    BoneWriteSet.dstArrayElement = 0;
+    BoneWriteSet.descriptorCount = 1;
+    BoneWriteSet.pNext = nullptr;
+
+    m_BonesSets[idx]->Update(1, &BoneWriteSet);
   }
-
-  VkDescriptorImageInfo albedoInfo = {};
-  albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Albedo()) {
-    albedoInfo.imageView = MaterialId->Albedo()->Handle()->View();
-  }
-  else {
-    albedoInfo.imageView = defaultTexture->View();
-  }
-  albedoInfo.sampler = sampler->Handle();
-
-  VkDescriptorImageInfo metallicInfo = {};
-  metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Metallic()) {
-    metallicInfo.imageView = MaterialId->Metallic()->Handle()->View();
-  }
-  else {
-    metallicInfo.imageView = defaultTexture->View();
-  }
-  metallicInfo.sampler = sampler->Handle();
-
-  VkDescriptorImageInfo roughInfo = {};
-  roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Roughness()) {
-    roughInfo.imageView = MaterialId->Roughness()->Handle()->View();
-  }
-  else {
-    roughInfo.imageView = defaultTexture->View();
-  }
-  roughInfo.sampler = sampler->Handle();
-
-  VkDescriptorImageInfo normalInfo = {};
-  normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Normal()) {
-    normalInfo.imageView = MaterialId->Normal()->Handle()->View();
-  }
-  else {
-    normalInfo.imageView = defaultTexture->View();
-  }
-  normalInfo.sampler = sampler->Handle();
-
-  VkDescriptorImageInfo aoInfo = {};
-  aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Ao()) {
-    aoInfo.imageView = MaterialId->Ao()->Handle()->View();
-  }
-  else {
-    aoInfo.imageView = defaultTexture->View();
-  }
-  aoInfo.sampler = sampler->Handle();
-
-  VkDescriptorImageInfo emissiveInfo = {};
-  emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  if (MaterialId->Emissive()) {
-    emissiveInfo.imageView = MaterialId->Emissive()->Handle()->View();
-  }
-  else {
-    emissiveInfo.imageView = defaultTexture->View();
-  }
-  emissiveInfo.sampler = sampler->Handle();
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 2;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &albedoInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 3;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &metallicInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 4;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &roughInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 5;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &normalInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 6;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &aoInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[count].dstBinding = 7;
-  writeSets[count].descriptorCount = 1;
-  writeSets[count].dstArrayElement = 0;
-  writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[count].pImageInfo = &emissiveInfo;
-  writeSets[count].pNext = nullptr;
-  count++;
-
-  // Include uniform buffer update if these have changed internally, which 
-  // is not really going to happen.
-  if (includeBufferUpdate) {
-    writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    writeSets[count].dstBinding = 0;
-    writeSets[count].dstArrayElement = 0;
-    writeSets[count].pBufferInfo = &objBufferInfo;
-    writeSets[count].descriptorCount = 1;
-    writeSets[count].pNext = nullptr;
-    count++;
-
-    if (Skinned) {
-      writeSets[count].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      writeSets[count].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-      writeSets[count].dstBinding = 1;
-      writeSets[count].pBufferInfo = &boneBufferInfo;
-      writeSets[count].dstArrayElement = 0;
-      writeSets[count].descriptorCount = 1;
-      writeSets[count].pNext = nullptr;
-      count++;
-    }
-  }
-
-  if (!mDescriptorSets[idx]) {
-    R_DEBUG(rError, "Cannot update uninitialized descriptor set in RenderObject! Descriptor is either null or cleaned up!\n");
-    return;
-  }
-
-  mDescriptorSets[idx]->Update(static_cast<u32>(count), writeSets.data());
 }
 } // Recluse

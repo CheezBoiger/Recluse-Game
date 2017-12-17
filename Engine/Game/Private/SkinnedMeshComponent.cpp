@@ -96,7 +96,6 @@ void SkinnedMeshComponent::Initialize(Renderer* renderer, Material* material, Sk
 
   mRenderObj->MaterialId = mMaterial;
   mRenderObj->MeshDescriptorId = mMesh;
-  mRenderObj->Skinned = true;
 
   mRenderObj->Initialize();
 }

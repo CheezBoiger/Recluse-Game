@@ -27,13 +27,16 @@ extern std::string PBRNormalAttachStr;
 extern std::string PBRSamplerStr;
 extern std::string PBRDepthAttachStr;
 extern std::string PBRFrameBufferStr;
-extern std::string PBRGlobalMatLayoutStr;
-extern std::string PBRLightMatLayoutStr;
-extern std::string PBRObjMatLayoutStr;
 extern std::string PBRVertFileStr;
 extern std::string PBRStaticVertFileStr;
 extern std::string PBRFragFileStr;
 extern std::string RenderTargetBrightStr;
+
+extern std::string MeshSetLayoutStr;
+extern std::string MaterialSetLayoutStr;
+extern std::string BonesSetLayoutStr;
+extern std::string GlobalSetLayoutStr;
+extern std::string LightSetLayoutStr;
 
 extern std::string ScaledSamplerStr;
 extern std::string RenderTarget2xHorizStr;

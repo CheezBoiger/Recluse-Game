@@ -116,7 +116,7 @@ void LightDescriptor::Initialize()
     mShadowSampler = mRhi->CreateSampler();
   }
 
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr);
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(LightSetLayoutStr);
   mDescriptorSet = mRhi->CreateDescriptorSet();
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
 
@@ -339,7 +339,7 @@ void LightDescriptor::InitializePipeline()
   // TODO(): Initialize shadow map pipeline.
   VkPipelineLayoutCreateInfo PipeLayout = {};
   std::array<VkDescriptorSetLayout, 2> DescLayouts;
-  DescLayouts[0] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
+  DescLayouts[0] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
   DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
 
   PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

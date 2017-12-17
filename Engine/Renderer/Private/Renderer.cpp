@@ -5,7 +5,6 @@
 #include "RenderQuad.hpp"
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
-#include "Material.hpp"
 #include "MeshDescriptor.hpp"
 #include "UserParams.hpp"
 #include "TextureType.hpp"
@@ -47,6 +46,8 @@ Renderer::Renderer()
   , mDeferredCmdList(nullptr)
   , mRendering(false)
   , mInitialized(false)
+  , mLights(nullptr)
+  , mGlobal(nullptr)
 {
   mHDR.enabled = true;
   mOffscreen.cmdBuffers.resize(2);
@@ -174,9 +175,9 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   mRhi->DeviceWaitIdle();
 
-  mGlobalDesc->CleanUp();
-  delete mGlobalDesc;
-  mGlobalDesc = nullptr;
+  mGlobal->CleanUp();
+  delete mGlobal;
+  mGlobal = nullptr;
 
   if (mUI) {
     mUI->CleanUp();
@@ -219,7 +220,7 @@ b8 Renderer::Initialize(Window* window)
   gMat->mRhi = mRhi;
   gMat->Initialize();
   gMat->Update();
-  mGlobalDesc = gMat;
+  mGlobal = gMat;
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
@@ -285,109 +286,125 @@ void Renderer::SetUpDescriptorSetLayouts()
     gResources().RegisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr, LightViewLayout);  
   }
 
-  std::array<VkDescriptorSetLayoutBinding, 1> objLayoutBindings;
-  objLayoutBindings[0].binding = 0;
-  objLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  objLayoutBindings[0].descriptorCount = 1;
-  objLayoutBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  objLayoutBindings[0].pImmutableSamplers = nullptr;
+  DescriptorSetLayout* GlobalSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* MeshSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* MaterialSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* LightSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* BonesSetLayout = mRhi->CreateDescriptorSetLayout();
+  gResources().RegisterDescriptorSetLayout(GlobalSetLayoutStr, GlobalSetLayout);
+  gResources().RegisterDescriptorSetLayout(MeshSetLayoutStr, MeshSetLayout);
+  gResources().RegisterDescriptorSetLayout(MaterialSetLayoutStr, MaterialSetLayout);
+  gResources().RegisterDescriptorSetLayout(LightSetLayoutStr, LightSetLayout);
+  gResources().RegisterDescriptorSetLayout(BonesSetLayoutStr, BonesSetLayout);
 
-  VkDescriptorSetLayoutCreateInfo layout0 = {};
-  layout0.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout0.bindingCount = static_cast<u32>(objLayoutBindings.size());
-  layout0.pBindings = objLayoutBindings.data();
+  // Global and Mesh Layout.
+  {
+    std::array<VkDescriptorSetLayoutBinding, 1> GlobalBindings;
+    GlobalBindings[0].binding = 0;
+    GlobalBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    GlobalBindings[0].descriptorCount = 1;
+    GlobalBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    GlobalBindings[0].pImmutableSamplers = nullptr;
 
-  DescriptorSetLayout* d0 = mRhi->CreateDescriptorSetLayout();
-  d0->Initialize(layout0);
+    VkDescriptorSetLayoutCreateInfo GlobalLayout = {};
+    GlobalLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    GlobalLayout.bindingCount = static_cast<u32>(GlobalBindings.size());
+    GlobalLayout.pBindings = GlobalBindings.data();
+    GlobalSetLayout->Initialize(GlobalLayout);
+    MeshSetLayout->Initialize(GlobalLayout);
+  }
 
-  std::array<VkDescriptorSetLayoutBinding, 8> bindings;
-  bindings[0].binding = 0;
-  bindings[0].descriptorCount = 1;
-  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  bindings[0].pImmutableSamplers = nullptr;
-  bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  // Material Layout.
+  {
+    std::array<VkDescriptorSetLayoutBinding, 6> MaterialBindings;
+    // albedo
+    MaterialBindings[0].binding = 0;
+    MaterialBindings[0].descriptorCount = 1;
+    MaterialBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[0].pImmutableSamplers = nullptr;
+    MaterialBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // albedo
-  bindings[1].binding = 2;
-  bindings[1].descriptorCount = 1;
-  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[1].pImmutableSamplers = nullptr;
-  bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // metallic
+    MaterialBindings[1].binding = 1;
+    MaterialBindings[1].descriptorCount = 1;
+    MaterialBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[1].pImmutableSamplers = nullptr;
+    MaterialBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // metallic
-  bindings[2].binding = 3;
-  bindings[2].descriptorCount = 1;
-  bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[2].pImmutableSamplers = nullptr;
-  bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // roughness
+    MaterialBindings[2].binding = 2;
+    MaterialBindings[2].descriptorCount = 1;
+    MaterialBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[2].pImmutableSamplers = nullptr;
+    MaterialBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // roughness
-  bindings[3].binding = 4;
-  bindings[3].descriptorCount = 1;
-  bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[3].pImmutableSamplers = nullptr;
-  bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // normal
+    MaterialBindings[3].binding = 3;
+    MaterialBindings[3].descriptorCount = 1;
+    MaterialBindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[3].pImmutableSamplers = nullptr;
+    MaterialBindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // normal
-  bindings[4].binding = 5;
-  bindings[4].descriptorCount = 1;
-  bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[4].pImmutableSamplers = nullptr;
-  bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // ao
+    MaterialBindings[4].binding = 4;
+    MaterialBindings[4].descriptorCount = 1;
+    MaterialBindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[4].pImmutableSamplers = nullptr;
+    MaterialBindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // ao
-  bindings[5].binding = 6;
-  bindings[5].descriptorCount = 1;
-  bindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[5].pImmutableSamplers = nullptr;
-  bindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // emissive
+    MaterialBindings[5].binding = 5;
+    MaterialBindings[5].descriptorCount = 1;
+    MaterialBindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    MaterialBindings[5].pImmutableSamplers = nullptr;
+    MaterialBindings[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  // emissive
-  bindings[6].binding = 7;
-  bindings[6].descriptorCount = 1;
-  bindings[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  bindings[6].pImmutableSamplers = nullptr;
-  bindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    VkDescriptorSetLayoutCreateInfo MaterialLayout = {};
+    MaterialLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    MaterialLayout.bindingCount = static_cast<u32>(MaterialBindings.size());
+    MaterialLayout.pBindings = MaterialBindings.data();
 
-  bindings[7].binding = 1;
-  bindings[7].descriptorCount = 1;
-  bindings[7].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  bindings[7].pImmutableSamplers = nullptr;
-  bindings[7].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    MaterialSetLayout->Initialize(MaterialLayout);
+  }
 
+  // Bones Layout.
+  {
+    // bones.
+    std::array<VkDescriptorSetLayoutBinding, 1> BonesBindings;
+    BonesBindings[0].binding = 0;
+    BonesBindings[0].descriptorCount = 1;
+    BonesBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    BonesBindings[0].pImmutableSamplers = nullptr;
+    BonesBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    VkDescriptorSetLayoutCreateInfo BoneLayout = { };
+    BoneLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    BoneLayout.bindingCount = static_cast<u32>(BonesBindings.size());
+    BoneLayout.pBindings = BonesBindings.data();
+    BonesSetLayout->Initialize(BoneLayout);
+  }
 
-  VkDescriptorSetLayoutCreateInfo layout1 = {};
-  layout1.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout1.bindingCount = static_cast<u32>(bindings.size());
-  layout1.pBindings = bindings.data();
+  // Light layout.
+  {
+    std::array<VkDescriptorSetLayoutBinding, 2> LightBindings;
+    LightBindings[0].binding = 0;
+    LightBindings[0].descriptorCount = 1;
+    LightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    LightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    LightBindings[0].pImmutableSamplers = nullptr;
 
-  DescriptorSetLayout* d1 = mRhi->CreateDescriptorSetLayout();
-  d1->Initialize(layout1);
+    LightBindings[1].binding = 1;
+    LightBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    LightBindings[1].descriptorCount = 1;
+    LightBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    LightBindings[1].pImmutableSamplers = nullptr;
 
-  std::array<VkDescriptorSetLayoutBinding, 2> lightLayoutBindings;
-  lightLayoutBindings[0].binding = 0;
-  lightLayoutBindings[0].descriptorCount = 1;
-  lightLayoutBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  lightLayoutBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  lightLayoutBindings[0].pImmutableSamplers = nullptr;
+    VkDescriptorSetLayoutCreateInfo LightLayout = { };
+    LightLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    LightLayout.bindingCount = static_cast<u32>(LightBindings.size());
+    LightLayout.pBindings = LightBindings.data();
 
-  lightLayoutBindings[1].binding = 1;
-  lightLayoutBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  lightLayoutBindings[1].descriptorCount = 1;
-  lightLayoutBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  lightLayoutBindings[1].pImmutableSamplers = nullptr;
-
-  VkDescriptorSetLayoutCreateInfo layout2 = {};
-  layout2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout2.bindingCount = static_cast<u32>(lightLayoutBindings.size());
-  layout2.pBindings = lightLayoutBindings.data();
-
-  DescriptorSetLayout* d2 = mRhi->CreateDescriptorSetLayout();
-  d2->Initialize(layout2);
-
-  gResources().RegisterDescriptorSetLayout(PBRGlobalMatLayoutStr, d0);
-  gResources().RegisterDescriptorSetLayout(PBRObjMatLayoutStr, d1);
-  gResources().RegisterDescriptorSetLayout(PBRLightMatLayoutStr, d2);
+    LightSetLayout->Initialize(LightLayout);
+  }
 
   DescriptorSetLayout* finalSetLayout = mRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(FinalDescSetLayoutStr, finalSetLayout);
@@ -489,13 +506,17 @@ void Renderer::SetUpDescriptorSetLayouts()
 
 void Renderer::CleanUpDescriptorSetLayouts()
 {
-  DescriptorSetLayout* d0 = gResources().UnregisterDescriptorSetLayout(PBRGlobalMatLayoutStr);
-  DescriptorSetLayout* d1 = gResources().UnregisterDescriptorSetLayout(PBRObjMatLayoutStr);
-  DescriptorSetLayout* d2 = gResources().UnregisterDescriptorSetLayout(PBRLightMatLayoutStr);
+  DescriptorSetLayout* GlobalSetLayout = gResources().UnregisterDescriptorSetLayout(GlobalSetLayoutStr);
+  DescriptorSetLayout* MeshSetLayout = gResources().UnregisterDescriptorSetLayout(MeshSetLayoutStr);
+  DescriptorSetLayout* MaterialSetLayout = gResources().UnregisterDescriptorSetLayout(MaterialSetLayoutStr);
+  DescriptorSetLayout* LightSetLayout = gResources().UnregisterDescriptorSetLayout(LightSetLayoutStr);
+  DescriptorSetLayout* BonesSetLayout = gResources().UnregisterDescriptorSetLayout(BonesSetLayoutStr);
 
-  mRhi->FreeDescriptorSetLayout(d0);
-  mRhi->FreeDescriptorSetLayout(d1);
-  mRhi->FreeDescriptorSetLayout(d2);
+  mRhi->FreeDescriptorSetLayout(GlobalSetLayout);
+  mRhi->FreeDescriptorSetLayout(MeshSetLayout);
+  mRhi->FreeDescriptorSetLayout(MaterialSetLayout);
+  mRhi->FreeDescriptorSetLayout(LightSetLayout);
+  mRhi->FreeDescriptorSetLayout(BonesSetLayout);
 
   DescriptorSetLayout* LightViewLayout = gResources().UnregisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
   mRhi->FreeDescriptorSetLayout(LightViewLayout);
@@ -1330,7 +1351,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
   hdrBufferInfo.range = sizeof(GlobalBuffer);
-  hdrBufferInfo.buffer = mGlobalDesc->Handle()->NativeBuffer();
+  hdrBufferInfo.buffer = mGlobal->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
   pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
@@ -1414,7 +1435,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
     return; 
   }
 
-  if (!mLightDesc || !mGlobalDesc) {  
+  if (!mLights || !mGlobal) {  
     Log(rWarning) << "Can not build commandbuffers without light or global data! One of them is null!";
   } 
 
@@ -1456,6 +1477,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
+  VkDescriptorSet DescriptorSets[5];
+
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     if (mCmdList) {
@@ -1463,32 +1486,33 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         RenderCmd& renderCmd = mCmdList->Get(i);
         // Need to notify that this render command does not have a render object.
         if (!renderCmd.target) continue;
-        RenderObject* renderObj = renderCmd.target;
-        if (!renderObj->Renderable) continue;
-        Material* mat = renderObj->MaterialId;
-        VkDescriptorSet descriptorSets[] = {
-          mGlobalDesc->Set()->Handle(),
-          renderObj->CurrSet()->Handle(),
-          mLightDesc->Set()->Handle()
-        };
+        RenderObject* RenderObj = renderCmd.target;
+        if (!RenderObj->Renderable) continue;
 
-        GraphicsPipeline* pipeline = renderObj->Skinned ? pbrPipeline : staticPbrPipeline;
-        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+        b8 Skinned = RenderObj->MeshDescriptorId->Skinned();
+        GraphicsPipeline* Pipe = Skinned ? pbrPipeline : staticPbrPipeline;
+        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
+
+        DescriptorSets[0] = mGlobal->Set()->Handle();
+        DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
+        DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
+        DescriptorSets[3] = mLights->Set()->Handle();
+        DescriptorSets[4] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
 
         // Bind materials.
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-          pipeline->Layout(), 
+          Pipe->Layout(), 
           0,
-          3, 
-          descriptorSets, 
+          (Skinned ? 5 : 4), 
+          DescriptorSets, 
           0, 
           nullptr
         );
   
         // Set up the render group.
-        for (size_t idx = 0; idx < renderObj->Size(); ++idx) {
-          MeshData* data = (*renderObj)[idx];
+        for (size_t idx = 0; idx < RenderObj->Size(); ++idx) {
+          MeshData* data = (*RenderObj)[idx];
 
           if (!data) {
             R_DEBUG(rWarning, "Null data in render object group!, skipping...\n");
@@ -1505,9 +1529,9 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
           if (indexBuffer) {
             VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
             cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), renderObj->Instances, 0, 0, 0);
+            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), RenderObj->Instances, 0, 0, 0);
           } else {
-            cmdBuffer->Draw(vertexBuffer->VertexCount(), renderObj->Instances, 0, 0);
+            cmdBuffer->Draw(vertexBuffer->VertexCount(), RenderObj->Instances, 0, 0);
           }
         }
       }
@@ -1802,7 +1826,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
-  mGlobalDesc->Update();
+  mGlobal->Update();
 }
 
 

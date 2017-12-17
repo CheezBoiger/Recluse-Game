@@ -57,7 +57,6 @@ public:
   void          SetTranslucent(b8 enable) { mTranslucent = enable; }
   void          SetTransparent(b8 enable) { mObjectData.isTransparent = enable; }
 
-
   ObjectBuffer* ObjectData() { return &mObjectData; }
 
 
@@ -66,6 +65,7 @@ public:
   b8            Transparent() const { return mObjectData.isTransparent; }
   b8            Translucent() const { return mTranslucent; }
   b8            Static() const { return mStatic; }
+  b8            Skinned() const { return mSkinned; }
   Buffer*       NativeObjectBuffer() { return mObjectBuffer; }
 
 protected:
@@ -74,6 +74,7 @@ protected:
 
   b8            mVisible;
   b8            mRenderable;
+  b8            mSkinned;
 
   b8            mTranslucent;
   b8            mStatic;

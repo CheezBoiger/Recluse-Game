@@ -14,6 +14,7 @@ MeshDescriptor::MeshDescriptor()
   , mRenderable(true)
   , mTranslucent(false)
   , mStatic(true) 
+  , mSkinned(false)
 {
   mObjectData.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   mObjectData.lodBias = 0.0f;
@@ -78,6 +79,7 @@ SkinnedMeshDescriptor::SkinnedMeshDescriptor()
   : mBonesBuffer(nullptr)
   , MeshDescriptor()
 {
+  mSkinned = true;
 }
 
 

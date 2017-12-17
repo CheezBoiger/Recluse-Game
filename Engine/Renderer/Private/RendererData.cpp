@@ -34,15 +34,17 @@ std::string PBRNormalAttachStr          = "PBRNormal";
 std::string PBRDepthAttachStr           = "PBRDepth";
 std::string PBRSamplerStr               = "PBRSampler";
 std::string PBRFrameBufferStr           = "PBRFrameBuffer";
-std::string PBRGlobalMatLayoutStr       = "PBRGlobalMaterialLayout";
-std::string PBRLightMatLayoutStr        = "PBRLightMaterialLayout";
-std::string PBRObjMatLayoutStr          = "PBRObjectMaterialLayout";
 std::string PBRVertFileStr              = "PBRPass.vert.spv";
 std::string PBRStaticVertFileStr        = "StaticPBRPass.vert.spv";
 std::string PBRFragFileStr              = "PBRPass.frag.spv";
 std::string RenderTargetBrightStr       = "RenderTargetBright";
 std::string RenderTargetBlurHoriz4xStr  = "RTBlurHoriz4xTemp";
 std::string FrameBuffer4xHorizStr       = "FrameBufferHoriz4xStr";
+std::string MeshSetLayoutStr            = "MeshDescriptorSetLayout";
+std::string MaterialSetLayoutStr        = "MaterialDescriptorSetLayout";
+std::string BonesSetLayoutStr           = "BonesDescriptorSetLayout";
+std::string GlobalSetLayoutStr          = "GlobalDescriptorSetLayout";
+std::string LightSetLayoutStr           = "LightDescriptorSetLayout";
 
 std::string ScaledSamplerStr            = "ScaledSampler";
 std::string RenderTarget2xHorizStr      = "RenderTarget2x";
@@ -144,15 +146,17 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
-  VkDescriptorSetLayout DLayouts[3];
-  DLayouts[0] = gResources().GetDescriptorSetLayout(PBRGlobalMatLayoutStr)->Layout();
-  DLayouts[1] = gResources().GetDescriptorSetLayout(PBRObjMatLayoutStr)->Layout();
-  DLayouts[2] = gResources().GetDescriptorSetLayout(PBRLightMatLayoutStr)->Layout();
+  std::array<VkDescriptorSetLayout, 5> DLayouts;
+  DLayouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
+  DLayouts[1] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
+  DLayouts[2] = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr)->Layout();
+  DLayouts[3] = gResources().GetDescriptorSetLayout(LightSetLayoutStr)->Layout();
+  DLayouts[4] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  PipelineLayout.setLayoutCount = 3;
-  PipelineLayout.pSetLayouts = DLayouts;
+  PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size());
+  PipelineLayout.pSetLayouts = DLayouts.data();
   PipelineLayout.pPushConstantRanges = 0;
   PipelineLayout.pushConstantRangeCount = 0;
 
@@ -177,6 +181,7 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   LoadShader(PBRStaticVertFileStr, VertPBR);
   
   PbrShaders[0].module = VertPBR->Handle();
+  PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size() - 1); // We don't need bone buffer.
   PbrStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
   
   Rhi->FreeShader(VertPBR);

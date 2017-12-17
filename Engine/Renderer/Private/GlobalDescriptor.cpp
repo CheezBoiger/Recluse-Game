@@ -63,7 +63,7 @@ void GlobalDescriptor::Initialize()
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
   mGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(PBRGlobalMatLayoutStr);
+  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr);
 
   mDescriptorSet = mRhi->CreateDescriptorSet();
   mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
