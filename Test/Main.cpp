@@ -14,6 +14,8 @@
 #include "Core/Utility/Image.hpp"
 
 #include <stdio.h>
+#include <array>
+#include <random>
 
 using namespace Recluse;
 
@@ -55,6 +57,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
+#define PERFORMANCE_TEST 1
 
 
 int main(int c, char* argv[])
@@ -94,7 +97,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 10.0f;
+  lights->primaryLight.intensity = 40.0f;
   lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.4f, 1.0f);
   lights->primaryLight.enable = true;
 
@@ -106,7 +109,7 @@ int main(int c, char* argv[])
   lights->pointLights[0].enable = true;
   lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
   lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->pointLights[0].range = 10.0f;
+  lights->pointLights[0].range = 100.0f;
   lights->pointLights[0].intensity = 1.0f;
 
   lights->pointLights[1].enable = false;
@@ -130,7 +133,14 @@ int main(int c, char* argv[])
   auto cubeIndices = Cube::IndicesInstance();
   MeshData* cubeMeshDat = gRenderer().CreateMeshData();
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
- 
+
+#if PERFORMANCE_TEST
+#define ObjectCount 1000
+  r32 MaxNum = 150.0f;
+  std::random_device gen;
+  std::mt19937 r(gen());
+  std::uniform_real_distribution<r32> uni(-MaxNum, MaxNum);
+#endif
   Material cubeMaterial;
   MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
@@ -172,6 +182,31 @@ int main(int c, char* argv[])
   cubeInfo3->normalMatrix[3][2] = 0.0f;
   cubeInfo3->normalMatrix[3][3] = 1.0f;
 
+#if PERFORMANCE_TEST
+  std::array<MeshDescriptor, ObjectCount> MeshDescriptors;
+  std::array<RenderObject*, ObjectCount> RenderObjects;
+  std::array<Vector3, ObjectCount> Positions;
+  
+  for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
+    MeshDescriptors[i].Initialize(&gRenderer());
+    r32 same = uni(r);
+    Positions[i] = Vector3(same, uni(r), same);
+    ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
+    buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), Positions[i]);
+    buffer->normalMatrix = buffer->model.Inverse().Transpose();
+    buffer->normalMatrix[3][0] = 0.0f;
+    buffer->normalMatrix[3][1] = 0.0f;
+    buffer->normalMatrix[3][2] = 0.0f;
+    buffer->normalMatrix[3][3] = 1.0f;
+    buffer->baseMetal = 0.5f;
+    buffer->baseRough = 0.1f;
+    RenderObjects[i] = gRenderer().CreateRenderObject();
+    RenderObjects[i]->MaterialId = &cubeMaterial2;
+    RenderObjects[i]->MeshDescriptorId = &MeshDescriptors[i];
+    RenderObjects[i]->Initialize();
+    RenderObjects[i]->PushBack(sphereMeshDat);
+  }
+#endif  
 
   RenderObject* obj1 = gRenderer().CreateRenderObject();
   RenderObject* obj2 = gRenderer().CreateRenderObject();
@@ -202,11 +237,20 @@ int main(int c, char* argv[])
   // in game.
   // Transparent objects need to be rendered after opaque objects.
   CmdList& list = gEngine().RenderCommandList();
-  list.Resize(3);
+  list.Resize(3 
+#if PERFORMANCE_TEST
+    + RenderObjects.size()
+#endif
+  );
   list[0].target = obj3;
   list[1].target = obj1;
   list[2].target = obj2;
 
+#if PERFORMANCE_TEST
+  for (size_t i = 3; i < list.Size(); ++i) {
+    list[i].target = RenderObjects[i - 3];
+  }
+#endif
   gRenderer().Build();
   r64 timeAccumulator = 0.0;
 
@@ -231,14 +275,24 @@ int main(int c, char* argv[])
       timeAccumulator -= Time::FixTime;
     }
 
-    // box 1 transforming.
-    cubeInfo->model = Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
-    cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
-    cubeInfo->normalMatrix[3][0] = 0.0f;
-    cubeInfo->normalMatrix[3][1] = 0.0f;
-    cubeInfo->normalMatrix[3][2] = 0.0f;
-    cubeInfo->normalMatrix[3][3] = 1.0f;
+#if PERFORMANCE_TEST
+    for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
+      ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
+      Vector3 Rev;
+      r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+      r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
 
+      Rev.x = c * Positions[i].x;
+      Rev.z = s * Positions[i].z;
+      Rev.y = Positions[i].y;
+      buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
+      buffer->normalMatrix = buffer->model.Inverse().Transpose();
+      buffer->normalMatrix[3][0] = 0.0f;
+      buffer->normalMatrix[3][1] = 0.0f;
+      buffer->normalMatrix[3][2] = 0.0f;
+      buffer->normalMatrix[3][3] = 1.0f;
+    }
+#endif
     // light cube transforming.
     light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -5.0f, 2.0f, 0.0f);
     lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
@@ -272,7 +326,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
     Window::PollEvents();
     ProcessInput();
   }
@@ -288,7 +342,12 @@ int main(int c, char* argv[])
   gRenderer().FreeMeshData(cubeMeshDat);
   gRenderer().FreeMeshData(sphereMeshDat);
   gRenderer().FreeLightMaterial(lightDesc);
-
+#if PERFORMANCE_TEST
+  for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
+    MeshDescriptors[i].CleanUp();
+    gRenderer().FreeRenderObject(RenderObjects[i]);
+  }
+#endif
   cubeMesh.CleanUp();
   cubeMesh2.CleanUp();
   cubeMesh3.CleanUp();

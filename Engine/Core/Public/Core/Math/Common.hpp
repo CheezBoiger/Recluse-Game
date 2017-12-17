@@ -13,4 +13,5 @@
 #define Clamp(v, min, max)  v = (v > max ? max : (v < min ? min : v))  
 #define R_Max(a, b)        ((a) > (b) ? (a) : (b))
 #define R_Min(a, b)        ((a) < (b) ? (a) : (b))
+#define Absf(a)            ((a) >= 0.0f ? (a) : -(a))
 #define CONST_TOLERANCE     0.0001f
