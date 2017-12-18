@@ -65,6 +65,7 @@ FirstPersonCamera::FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar,
   , m_Locked(false)
   , Camera(PERSPECTIVE, fov, aspect, zNear, zFar, pos, dir)
 {
+  // TODO(): Need to set the yaw and pitch to the direction of where initial look at is.
 }
 
 

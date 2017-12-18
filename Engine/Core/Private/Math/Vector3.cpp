@@ -164,7 +164,7 @@ Log& operator<<(Log& log, const Vector3& vec3)
 
 Log& operator<<(Log& log, const Ray& ray)
 {
-  log << "Origin:    " << ray.Origin << "\n"
+  log << "Origin:    " << ray.Origin << " "
       << "Direction: " << ray.Direction; 
   return log;
 }

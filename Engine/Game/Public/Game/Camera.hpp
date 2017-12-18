@@ -60,7 +60,7 @@ public:
   Ray                 GetDirectionRay() {  
     Ray camRay;
     camRay.Origin = m_Position;
-    camRay.Direction = (m_LookAt - m_Position).Normalize();
+    camRay.Direction = m_Front.Normalize();
     return camRay;
   }
 

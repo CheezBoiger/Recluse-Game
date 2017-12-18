@@ -29,6 +29,8 @@ void ProcessInput()
   Camera* camera = gEngine().GetCamera();
   Window* window = gEngine().GetWindow();
 
+  if (Keyboard::KeyPressed(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(200.0f); }
+  if (Keyboard::KeyReleased(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(5.0f); }
   if (Keyboard::KeyPressed(KEY_CODE_W)) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_S)) { camera->Move(Camera::BACK, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_D)) { camera->Move(Camera::LEFT, Time::DeltaTime); }
@@ -56,7 +58,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 1
+#define PERFORMANCE_TEST 0
 
 
 int main(int c, char* argv[])
@@ -75,13 +77,14 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 1000.0f, 
-    Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 0.0f));
+  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 5000.0f, 
+    Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
-    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
+    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, -1.0f));
 
   fpsCamera.EnableFrustumCull(true);
+
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
@@ -139,7 +142,7 @@ int main(int c, char* argv[])
   normal->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
+  auto sphereData = UVSphere::MeshInstance(1.0f, SPHERE_SEGS, SPHERE_SEGS);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
@@ -151,7 +154,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 #define ObjectCount 200
-  r32 MaxNum = 250.0f;
+  r32 MaxNum = 150.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-MaxNum, MaxNum);
@@ -179,14 +182,14 @@ int main(int c, char* argv[])
   cubeMaterial2.SetAlbedo(albedo);
   cubeMaterial2.SetNormal(normal);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
-  cubeInfo2->hasNormal = true;
+  cubeInfo2->hasNormal = false;
   cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
   cubeInfo2->normalMatrix[3][0] = 0.0f;
   cubeInfo2->normalMatrix[3][1] = 0.0f;
   cubeInfo2->normalMatrix[3][2] = 0.0f;
   cubeInfo2->normalMatrix[3][3] = 1.0f;
-  cubeInfo2->color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+  cubeInfo2->color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
   cubeInfo2->transparency = 0.4f;
   cubeInfo2->baseMetal = 0.5f;
   cubeInfo2->baseRough = 0.1f;
@@ -307,7 +310,7 @@ int main(int c, char* argv[])
       Rev.x = c * Positions[i].x;
       Rev.z = s * Positions[i].z;
       Rev.y = Positions[i].y;
-      buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
+      buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
       buffer->normalMatrix = buffer->model.Inverse().Transpose();
       buffer->normalMatrix[3][0] = 0.0f;
       buffer->normalMatrix[3][1] = 0.0f;
@@ -326,7 +329,7 @@ int main(int c, char* argv[])
 #else
     quat.ToMatrix4() *
 #endif
-      Matrix4::Translate(Matrix4::Identity(), light0Pos);
+    Matrix4::Translate(Matrix4::Identity(), light0Pos);
     cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
     cubeInfo3->normalMatrix[3][0] = 0.0f;
     cubeInfo3->normalMatrix[3][1] = 0.0f;
@@ -349,6 +352,7 @@ int main(int c, char* argv[])
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
     printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+
     Window::PollEvents();
     ProcessInput();
   }
