@@ -69,7 +69,7 @@ Engine& gEngine()
 
 Engine::Engine()
   : mCamera(nullptr)
-  , mLightDesc(nullptr)
+  , mLightRef(nullptr)
   , mPushedScene(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
@@ -114,7 +114,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
 void Engine::CleanUp()
 {
-  mLightDesc = nullptr;
+  mLightRef = nullptr;
 
   gUI().ShutDown();
   gAnimation().ShutDown();
@@ -152,8 +152,8 @@ void Engine::Update(r64 dt)
     gCamBuffer->fPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PFAR];
   }
 
-  if (mLightDesc) {
-    mLightDesc->Update();
+  if (mLightRef) {
+    mLightRef->Update();
   }
 
   if (mPushedScene) {
@@ -180,8 +180,8 @@ void Engine::Update(r64 dt)
 void Engine::SetLightData(LightDescriptor* lights)
 {
   if (lights) {
-    gRenderer().SetLightMaterial(lights);
-    mLightDesc = lights;
+    gRenderer().SetLightDescriptor(lights);
+    mLightRef = lights;
   } else {
     Log(rError) << "Null lights passed... using previous light data.";
   }

@@ -54,6 +54,13 @@ struct SpotLight {
   Vector4 color;
   r32     range;
   i32     enable;
+  i32     pad;
+};
+
+
+struct LightViewSpace {
+  Matrix4       proj;
+  Matrix4       view;
 };
 
 
@@ -119,6 +126,7 @@ private:
   GraphicsPipeline*   m_PrimaryShadowPipeline;
 
   // Information of our lights, to which we use this to modify light sources.
+  LightViewSpace      m_PrimaryLightSpace;
   LightBuffer         mLights;
 
   // Vulkan Rhi.

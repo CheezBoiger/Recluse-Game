@@ -66,7 +66,7 @@ public:
   // rather than on the engine... we need to save this data!
   void                          SetLightData(LightDescriptor* lights);
 
-  LightBuffer*                  LightData() { return mLightDesc->Data(); }
+  LightBuffer*                  LightData() { return mLightRef->Data(); }
 
   CmdList&                      RenderCommandList() { return mRenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }
@@ -80,7 +80,7 @@ public:
 
 private:
   CCamViewFrustum               m_CamFrustum;
-  LightDescriptor*              mLightDesc;
+  LightDescriptor*              mLightRef;
   Camera*                       mCamera;
   Scene*                        mPushedScene;
   r64                           m_GameMouseX;

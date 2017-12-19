@@ -90,7 +90,7 @@ int main(int c, char* argv[])
   Camera* gCamera = gEngine().GetCamera();
 
   // Only thing we worry about is setting up lights.
-  LightDescriptor* lightDesc = gRenderer().CreateLightMaterial();
+  LightDescriptor* lightDesc = gRenderer().CreateLightDescriptor();
   lightDesc->Initialize();
 
   gEngine().SetLightData(lightDesc);
@@ -99,7 +99,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 5.0f;
+  lights->primaryLight.intensity = 10.0f;
   lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
   lights->primaryLight.enable = true;
 
@@ -368,7 +368,7 @@ int main(int c, char* argv[])
   gRenderer().FreeRenderObject(obj3);
   gRenderer().FreeMeshData(cubeMeshDat);
   gRenderer().FreeMeshData(sphereMeshDat);
-  gRenderer().FreeLightMaterial(lightDesc);
+  gRenderer().FreeLightDescriptor(lightDesc);
 #if PERFORMANCE_TEST
   for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
     MeshDescriptors[i].CleanUp();

@@ -141,6 +141,8 @@ void Renderer::Render()
     while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
 
     // Render shadow map here. Primary shadow map is our concern.
+    if (mLights->PrimaryShadowEnabled()) {
+    }
 
     // Offscreen PBR Forward Rendering Pass.
     mRhi->GraphicsSubmit(offscreenSI);
@@ -1903,7 +1905,7 @@ void Renderer::WaitIdle()
 }
 
 
-LightDescriptor* Renderer::CreateLightMaterial()
+LightDescriptor* Renderer::CreateLightDescriptor()
 {
   LightDescriptor* lMat = new LightDescriptor();
   lMat->mRhi = mRhi;
@@ -1912,7 +1914,7 @@ LightDescriptor* Renderer::CreateLightMaterial()
 }
 
 
-void Renderer::FreeLightMaterial(LightDescriptor* material)
+void Renderer::FreeLightDescriptor(LightDescriptor* material)
 {
   material->CleanUp();
   delete material;

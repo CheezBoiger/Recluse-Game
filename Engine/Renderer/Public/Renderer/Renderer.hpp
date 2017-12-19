@@ -94,7 +94,7 @@ public:
 
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
-  void              SetLightMaterial(LightDescriptor*   material) { mLights = material; }
+  void              SetLightDescriptor(LightDescriptor*   material) { mLights = material; }
 
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
@@ -118,7 +118,7 @@ public:
 
   // Create a light material object, which holds all lights that affect this 
   // scene. This will then be used for the light culling method of the renderer.
-  LightDescriptor*    CreateLightMaterial();
+  LightDescriptor*    CreateLightDescriptor();
 
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
@@ -132,7 +132,7 @@ public:
   void              FreeMeshData(MeshData* mesh);
 
   // Frees up the allocated light material object.
-  void              FreeLightMaterial(LightDescriptor* material);
+  void              FreeLightDescriptor(LightDescriptor* material);
 
   //  Frees up the allocated texture1d object.
   void              FreeTexture1D(Texture1D* texture);

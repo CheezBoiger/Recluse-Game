@@ -107,13 +107,56 @@ void LightDescriptor::Initialize()
     // TODO():
     mShadowMap = mRhi->CreateTexture();
 
-    VkImageCreateInfo imageCi = {};
-    imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    VkImageCreateInfo ImageCi = {};
+    ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    ImageCi.arrayLayers = 1;
+    ImageCi.extent.width = 1024;
+    ImageCi.extent.height = 1024;
+    ImageCi.extent.depth = 1;
+    ImageCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    ImageCi.imageType = VK_IMAGE_TYPE_2D;
+    ImageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    ImageCi.mipLevels = 1;
+    ImageCi.samples = VK_SAMPLE_COUNT_1_BIT;
+    ImageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+    ImageCi.usage =  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    ImageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    VkImageViewCreateInfo ViewCi = { };
+    ViewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    ViewCi.components = { };
+    ViewCi.format = ImageCi.format;
+    ViewCi.subresourceRange = { };
+    ViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    ViewCi.subresourceRange.baseArrayLayer = 0;
+    ViewCi.subresourceRange.baseMipLevel = 0;
+    ViewCi.subresourceRange.layerCount = 1;
+    ViewCi.subresourceRange.levelCount = 1;
+    ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    
+    mShadowMap->Initialize(ImageCi, ViewCi);
   }
 
   if (!mShadowSampler) {
     // TODO():
     mShadowSampler = mRhi->CreateSampler();
+    VkSamplerCreateInfo SamplerCi = { };
+    SamplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    SamplerCi.addressModeV = SamplerCi.addressModeU;
+    SamplerCi.addressModeW = SamplerCi.addressModeV;
+    SamplerCi.anisotropyEnable = VK_FALSE;
+    SamplerCi.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+    SamplerCi.compareEnable = VK_FALSE;
+    SamplerCi.magFilter = VK_FILTER_LINEAR;
+    SamplerCi.minFilter = VK_FILTER_LINEAR;
+    SamplerCi.maxAnisotropy = 1.0f;
+    SamplerCi.maxLod = 1.0f;
+    SamplerCi.minLod = 0.0f;
+    SamplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    SamplerCi.unnormalizedCoordinates = VK_FALSE;
+
+    mShadowSampler->Initialize(SamplerCi);
   }
 
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(LightSetLayoutStr);
@@ -129,8 +172,8 @@ void LightDescriptor::Initialize()
   // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalShadowInfo.imageView = gResources().GetRenderTexture(DefaultTextureStr)->View();
-  globalShadowInfo.sampler = gResources().GetSampler(DefaultSamplerStr)->Handle();
+  globalShadowInfo.imageView = mShadowMap->View();
+  globalShadowInfo.sampler = mShadowSampler->Handle();
 
   std::array<VkWriteDescriptorSet, 2> writeSets;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -186,8 +229,18 @@ void LightDescriptor::CleanUp()
 
 void LightDescriptor::Update()
 {
+  Vector3 Eye = Vector3(
+    mLights.primaryLight.direction.x, 
+    mLights.primaryLight.direction.y, 
+    mLights.primaryLight.direction.z
+  );
+
+  m_PrimaryLightSpace.view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
+  m_PrimaryLightSpace.proj = Matrix4::Ortho(0.0f, 1024.0f, 1024.0f, 0.0f, 0.0001f, 1000.0f);
+
+
   mLightBuffer->Map();
-  memcpy(mLightBuffer->Mapped(), &mLights, sizeof(LightBuffer));
+    memcpy(mLightBuffer->Mapped(), &mLights, sizeof(LightBuffer));
   mLightBuffer->UnMap();
 }
 
@@ -196,7 +249,7 @@ void LightDescriptor::InitializePipeline()
 {
   if (!mFrameBuffer) return;
   std::string Filepath = gFilesystem().CurrentAppDirectory();
-
+  R_DEBUG(rNotify, "Initializing Light Shadow Map Pipeline...\n");
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = {};
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -376,7 +429,7 @@ void LightDescriptor::InitializePipeline()
   GraphicsPipelineInfo.pStages = Shaders.data();
   GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
 
-  //m_PrimaryShadowPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
+  m_PrimaryShadowPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
 
   mRhi->FreeShader(SmVert);
   mRhi->FreeShader(SmFrag);
