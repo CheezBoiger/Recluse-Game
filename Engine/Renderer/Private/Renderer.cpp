@@ -1648,7 +1648,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale.strength = 0.7f;
+    m_Downscale.strength = 1.f;
     m_Downscale.scale = 2.0f;
     m_Downscale.horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();

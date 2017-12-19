@@ -308,7 +308,7 @@ void main()
 
   // TODO(): Replace with metallness and emission instead, this will force all objects to be shiney
   // at the moment.
-  vec3 glow = outColor.rgb - vec3(1.0);
+  vec3 glow = outColor.rgb - vec3(4.0 * fragRoughness);
   glow.r = clamp(glow.r, 0.0, 1.0);
   glow.g = clamp(glow.g, 0.0, 1.0);
   glow.b = clamp(glow.b, 0.0, 1.0);

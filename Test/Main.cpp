@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <array>
 #include <random>
+#include <thread>
 
 using namespace Recluse;
 
@@ -47,7 +48,7 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
   // Test albedo enabling.
-  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
+  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo; }
   if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
 
   // Window changing sets.
@@ -99,7 +100,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 10.0f;
+  lights->primaryLight.intensity = 25.0f;
   lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
   lights->primaryLight.enable = true;
 
@@ -153,8 +154,8 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-#define ObjectCount 200
-  r32 MaxNum = 150.0f;
+#define ObjectCount 3000
+  r32 MaxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-MaxNum, MaxNum);
@@ -172,8 +173,8 @@ int main(int c, char* argv[])
   cubeInfo->normalMatrix[3][1] = 0.0f;
   cubeInfo->normalMatrix[3][2] = 0.0f;
   cubeInfo->normalMatrix[3][3] = 1.0f;
-  cubeInfo->baseMetal = 0.01f;
-  cubeInfo->baseRough = 0.5f;
+  cubeInfo->baseMetal = 0.1f;
+  cubeInfo->baseRough = 0.6f;
 
   Material cubeMaterial2;
   MeshDescriptor cubeMesh2;
@@ -191,7 +192,7 @@ int main(int c, char* argv[])
   cubeInfo2->normalMatrix[3][3] = 1.0f;
   cubeInfo2->color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
   cubeInfo2->transparency = 0.4f;
-  cubeInfo2->baseMetal = 0.5f;
+  cubeInfo2->baseMetal = 0.8f;
   cubeInfo2->baseRough = 0.1f;
 
   Material cubeMaterial3;
@@ -207,10 +208,13 @@ int main(int c, char* argv[])
   cubeInfo3->normalMatrix[3][3] = 1.0f;
 
 #if PERFORMANCE_TEST
+  // Multithreaded calculations at runtime.
+  std::array<std::thread, 2>              Workers;
   std::array<MeshDescriptor, ObjectCount> MeshDescriptors;
   std::array<RenderObject*, ObjectCount> RenderObjects;
   std::array<Vector3, ObjectCount> Positions;
-  
+  size_t middle = MeshDescriptors.size() / 2;
+
   for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
     MeshDescriptors[i].Initialize(&gRenderer());
     r32 same = uni(r);
@@ -301,6 +305,47 @@ int main(int c, char* argv[])
     }
 
 #if PERFORMANCE_TEST
+    Workers[0] = std::thread([&]() -> void {
+      for (size_t i = 0; i < middle; ++i) {
+        ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
+        Vector3 Rev;
+        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+
+        Rev.x = c * Positions[i].x;
+        Rev.z = s * Positions[i].z;
+        Rev.y = Positions[i].y;
+        buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
+        buffer->normalMatrix = buffer->model.Inverse().Transpose();
+        buffer->normalMatrix[3][0] = 0.0f;
+        buffer->normalMatrix[3][1] = 0.0f;
+        buffer->normalMatrix[3][2] = 0.0f;
+        buffer->normalMatrix[3][3] = 1.0f;
+      }
+    });
+
+    Workers[1] = std::thread([&]() -> void {
+      for (size_t i = middle; i < MeshDescriptors.size(); ++i) {
+        ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
+        Vector3 Rev;
+        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+
+        Rev.x = c * Positions[i].x;
+        Rev.z = s * Positions[i].z;
+        Rev.y = Positions[i].y;
+        buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
+        buffer->normalMatrix = buffer->model.Inverse().Transpose();
+        buffer->normalMatrix[3][0] = 0.0f;
+        buffer->normalMatrix[3][1] = 0.0f;
+        buffer->normalMatrix[3][2] = 0.0f;
+        buffer->normalMatrix[3][3] = 1.0f;
+      }
+    });
+
+    Workers[0].join();
+    Workers[1].join();
+/*
     for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
       ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
       Vector3 Rev;
@@ -317,6 +362,7 @@ int main(int c, char* argv[])
       buffer->normalMatrix[3][2] = 0.0f;
       buffer->normalMatrix[3][3] = 1.0f;
     }
+*/
 #endif
     // light cube transforming.
     light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -5.0f, 2.0f, 0.0f);
