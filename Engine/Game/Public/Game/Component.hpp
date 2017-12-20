@@ -31,14 +31,22 @@ public:
   virtual ~Component() { }
 
   GameObject*   GetOwner() { return mGameObjectOwner; }
+
+  // IS this component enabled?
+  b8            Enabled() const { return m_Enable; }
+
   void          SetOwner(GameObject* owner) { mGameObjectOwner = owner; }
+
+  // Enable this component. Set true to enable, false to disable.
+  void          Enable(b8 enable) { m_Enable = enable; }
 
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
 
 protected:
   Component()
-    : mGameObjectOwner(nullptr) { }
+    : mGameObjectOwner(nullptr)
+    , m_Enable(false) { }
 
   template<typename T>
   static APtr<Component> Create() {
@@ -67,6 +75,7 @@ protected:
   virtual void  OnCleanUp() { }
 
   GameObject*   mGameObjectOwner;
+  b8            m_Enable;
 };
 
 
