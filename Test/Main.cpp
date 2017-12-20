@@ -104,7 +104,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 25.0f;
+  lights->primaryLight.intensity = 5.0f;
   lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
   lights->primaryLight.enable = true;
 

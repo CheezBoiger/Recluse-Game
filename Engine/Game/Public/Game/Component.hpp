@@ -5,7 +5,7 @@
 #include "Core/Serialize.hpp"
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Quaternion.hpp"
-
+#include "Core/Memory/SmartPointer.hpp"
 #include <algorithm>
 
 namespace Recluse {
@@ -23,13 +23,15 @@ class GameObject;
 // Components specify information that would otherwise be labeled as abstract,
 // as they define information that may or may not be common in all game objects.
 // These components may define information about Physics, audio, animation, etc.
+// Be aware, components can have only one ownership! Two game objects MAY NOT share
+// the same component.
 class Component : public ISerializable {
   RCOMPONENT(Component)
 public:
   virtual ~Component() { }
 
   GameObject*   GetOwner() { return mGameObjectOwner; }
-  void          SetOwner(GameObject* newOwner) { mGameObjectOwner = newOwner; }
+  void          SetOwner(GameObject* owner) { mGameObjectOwner = owner; }
 
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
@@ -37,6 +39,32 @@ public:
 protected:
   Component()
     : mGameObjectOwner(nullptr) { }
+
+  template<typename T>
+  static APtr<Component> Create() {
+    return APtr<Component>(T());
+  }
+
+  // Perform early initialization of abstract component, then call OnInitialize() if any.
+  void          Initialize(GameObject* owner) {
+    mGameObjectOwner = owner;
+    if (!mGameObjectOwner) {
+      return;
+    }
+
+    OnInitialize(mGameObjectOwner);
+  }
+
+  // Perform early clean up of abstract component, then call OnCleanUp() if any.
+  void          CleanUp() {
+    // Perform actions necessary for component clean up.
+    OnCleanUp();
+  }
+
+  // Overrideable callbacks, in case component needs to initialize additional 
+  // objects.
+  virtual void  OnInitialize(GameObject* owner) { }
+  virtual void  OnCleanUp() { }
 
   GameObject*   mGameObjectOwner;
 };

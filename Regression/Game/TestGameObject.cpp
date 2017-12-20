@@ -23,55 +23,69 @@ void AddSkinnedMeshComponents(GameObject* obj)
 
 b8 TestGameObject()
 {
-  GameObject* gameObj = nullptr;
-  GameObject* gameObj2 = nullptr;
-  GameObject* gameObj3 = nullptr;
   {
-    gameObj = GameObject::Instantiate();
-    gameObj2 = GameObject::Instantiate(); 
-    gameObj3 = GameObject::Instantiate();
-  }
+    GameObject* gameObj = nullptr;
+    GameObject* gameObj2 = nullptr;
+    GameObject* gameObj3 = nullptr;
+    {
+      gameObj = GameObject::Instantiate();
+      gameObj2 = GameObject::Instantiate(); 
+      gameObj3 = GameObject::Instantiate();
+    }
 
-  // Only gameObj and gameObj2 get a skinned mesh component.
-  AddSkinnedMeshComponents(gameObj);
-  AddSkinnedMeshComponents(gameObj2);
+    // Only gameObj and gameObj2 get a skinned mesh component.
+    AddSkinnedMeshComponents(gameObj);
+    AddSkinnedMeshComponents(gameObj2);
 
-  SkinnedMeshComponent* component = gameObj->GetComponent<SkinnedMeshComponent>();
-  SkinnedMeshComponent* component2 = gameObj2->GetComponent<SkinnedMeshComponent>();
-  SkinnedMeshComponent* component3 = gameObj3->GetComponent<SkinnedMeshComponent>();
+    SkinnedMeshComponent* component = gameObj->GetComponent<SkinnedMeshComponent>();
+    SkinnedMeshComponent* component2 = gameObj2->GetComponent<SkinnedMeshComponent>();
+    SkinnedMeshComponent* component3 = gameObj3->GetComponent<SkinnedMeshComponent>();
 
-  if (!component || !component2 || component3) {
-    Log(rError) << "Failed to create component!";
-    return false;
-  }
+    if (!component || !component2 || component3) {
+      Log(rError) << "Failed to create component!";
+      return false;
+    }
 
-  TASSERT_E(gameObj, component->GetOwner());
-  TASSERT_E(gameObj2, component2->GetOwner());
-  TASSERT_E(nullptr, component3);
+    TASSERT_E(gameObj, component->GetOwner());
+    TASSERT_E(gameObj2, component2->GetOwner());
+    TASSERT_E(nullptr, component3);
 
-  Transform* transform = gameObj->GetComponent<Transform>();
-  TASSERT_E(transform, nullptr);
+    Log(rNotify) << "Removing Skinned Mesh Component from gameObj.\n";
+    gameObj->DestroyComponent<SkinnedMeshComponent>();
+    SkinnedMeshComponent* destroyed = gameObj->GetComponent<SkinnedMeshComponent>();
+    if (destroyed) {
+      Log(rError) << "Failed to destory skinned mesh component from gameObj!\n";
+      return false;
+    }
 
-  {
-    gameObj->AddComponent<Transform>();
-  }
+    Transform* transform = gameObj->GetComponent<Transform>();
+    TASSERT_E(transform, nullptr);
 
-  transform = gameObj->GetTransform();
-  TASSERT_NE(transform, nullptr);
-  transform->Position = TestPosition;
+    {
+      gameObj->AddComponent<Transform>();
+    }
+
+    transform = gameObj->GetTransform();
+    TASSERT_NE(transform, nullptr);
+    transform->Position = TestPosition;
   
-  Log(rNotify) << "Testing duplicate component avoidance...\n";
-  gameObj->AddComponent<Transform>();
+    Log(rNotify) << "Testing duplicate component avoidance...\n";
+    gameObj->AddComponent<Transform>();
 
-  Log(rNotify) << "Testing component comparison with game object.\n";
-  Transform* testTransform = gameObj->GetComponent<Transform>();
-  TASSERT_E(testTransform->Position, TestPosition);
-  TASSERT_E(transform->Position, testTransform->Position);
+    Log(rNotify) << "Testing component comparison with game object.\n";
+    Transform* testTransform = gameObj->GetComponent<Transform>();
+    TASSERT_E(testTransform->Position, TestPosition);
+    TASSERT_E(transform->Position, testTransform->Position);
 
-  Archive archive;
-  gameObj->Serialize(archive);
+    Archive archive;
+    gameObj->Serialize(archive);
 
-  GameObject::DestroyAll();
+    // NOTE(): Possible memory leak when clearing all?
+    GameObject::DestroyAll();
+
+    Log() << "Finished with game object test.\n";
+  }
+  
   return true;
 }
 } // Test

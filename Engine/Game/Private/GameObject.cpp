@@ -29,6 +29,9 @@ GameObject::GameObject(game_uuid_t id)
 
 GameObject::~GameObject()
 {
+  for (auto& component : mComponents) {
+    component.second->CleanUp();
+  }
 }
 
 

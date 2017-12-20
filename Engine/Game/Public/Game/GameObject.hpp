@@ -51,8 +51,9 @@ public:
     return nullptr; 
   }
 
-  // Add a component to this game object.
-  template<class T = Component>
+  // Add a component to this game object. Request is ignored if a component already
+  // exists in this game object, with the same type.
+  template<class T>
   void                                AddComponent() {
     static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
     component_t uuid = T::UUID();
@@ -62,8 +63,20 @@ public:
       return; 
     }
 
-    mComponents[uuid] = std::move(T());
-    mComponents[uuid]->SetOwner(this);
+    mComponents[uuid] = Component::Create<T>();
+    mComponents[uuid]->Initialize(this);
+  }
+
+  // Destroys a component from this game object.
+  template<typename T>
+  void                                DestroyComponent() {
+    static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
+    component_t uuid = T::UUID();
+    auto it = mComponents.find(uuid);
+    if (it != mComponents.end()) {
+      mComponents[uuid]->CleanUp();
+      mComponents.erase(uuid);
+    }
   }
 
   void                                Serialize(IArchive& archive) override;
@@ -94,5 +107,6 @@ private:
   game_uuid_t                         mId;
 
   friend class GameObjectManager;
+  friend class Component;
 };
 } // Recluse
