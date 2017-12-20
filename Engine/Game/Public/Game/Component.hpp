@@ -35,8 +35,6 @@ public:
   // IS this component enabled?
   b8            Enabled() const { return m_Enable; }
 
-  void          SetOwner(GameObject* owner) { mGameObjectOwner = owner; }
-
   // Enable this component. Set true to enable, false to disable.
   void          Enable(b8 enable) { m_Enable = enable; }
 
