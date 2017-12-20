@@ -35,7 +35,7 @@ public:
     PERSPECTIVE
   };
 
-  Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar, 
+  Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
     Vector3 pos, Vector3 lookAt);
 
   virtual Matrix4     View();
@@ -48,7 +48,10 @@ public:
   void                InvertWorldUp() { m_WorldUp = -m_WorldUp; }
   void                SetLookAt(Vector3 lookAt) { m_LookAt = lookAt; }
   void                SetAspect(r32 aspect) { m_Aspect = aspect; }
+  void                SetPixelWidth(r32 width) { m_PixelWidth = width; }
+  void                SetPixelHeight(r32 height) { m_PixelHeight = height; }
   void                SetFoV(r32 fov) { m_Fov = fov; }
+  void                SetProjection(Project proj) { m_ProjType = proj; }
 
   virtual void        Look(r64 x, r64 y) { }
   virtual void        Move(Movement move, r64 dt) { }
@@ -63,11 +66,16 @@ public:
     camRay.Direction = m_Front.Normalize();
     return camRay;
   }
+  
+  Project             CurrentProject() const { return m_ProjType; }
 
+  r32                 PixelWidth() const { return m_PixelWidth; }
+  r32                 PixelHeight() const { return m_PixelHeight; }
   r32                 Aspect() const { return m_Aspect; }
   r32                 FoV() const { return m_Fov; }
   r32                 Near() const { return m_ZNear; }
   r32                 Far() const { return m_ZFar; }
+  r32                 OrthoScale() const { return m_OrthoScale; }
 
   Vector3             Front() const { return m_Front; }
   Vector3             Right() const { return m_Right; }
@@ -78,11 +86,12 @@ public:
   b8                  Bloom() const { return m_Bloom; }
   b8                  Culling() const { return m_FrustumCull; }
 
+  void                ResetAspect();
   void                SetExposure(r32 exposure) { m_Exposure = exposure; }
   void                SetGamma(r32 gamma) { m_Gamma = gamma; }
   void                EnableBloom(b8 enable) { m_Bloom = enable; }
   void                EnableFrustumCull(b8 enable) { m_FrustumCull = enable; }
-
+  void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 protected:
   Vector3             m_WorldUp;  
 
@@ -95,8 +104,11 @@ protected:
   Vector3             m_LookAt;
   Quaternion          m_Rotation;
   Project             m_ProjType;
+  r32                 m_OrthoScale;
   r32                 m_Fov;
   r32                 m_Aspect;
+  r32                 m_PixelWidth;
+  r32                 m_PixelHeight;
   r32                 m_ZNear;
   r32                 m_ZFar;
 
@@ -114,7 +126,7 @@ class FirstPersonCamera : public Camera {
 public:
   static r32          MAX_YAW;
 
-  FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar, 
+  FirstPersonCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
     Vector3 pos, Vector3 dir);
 
   virtual Matrix4     View() override;

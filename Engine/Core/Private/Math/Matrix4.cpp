@@ -250,16 +250,13 @@ Matrix4 Matrix4::LookAt(const Vector3& eye, const Vector3& center, const Vector3
 }
 
 
-Matrix4 Matrix4::Ortho(r32 left, r32 right, r32 bottom, r32 top, r32 zNear, r32 zFar)
+Matrix4 Matrix4::Ortho(r32 width, r32 height, r32 zNear, r32 zFar)
 {
   Matrix4 ortho = Matrix4::Identity();
-  ortho[0][0] =  2.0f / (right - left);
-  ortho[1][1] = -2.0f / (top - bottom);
-  ortho[2][2] =  2.0f / (zFar - zNear);
-
-  ortho[3][0] = -(right + left) / (right - left);
-  ortho[3][1] = -(top + bottom) / (top - bottom);
-  ortho[3][2] = -(zFar + zNear) / (zFar - zNear);
+  ortho[0][0] =  2.0f / width;
+  ortho[1][1] = -2.0f / height;
+  ortho[2][2] =  1.0f / (zFar - zNear);
+  ortho[3][2] = zNear / (zNear - zFar);
   return ortho;
 }
 

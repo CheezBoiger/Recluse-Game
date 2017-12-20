@@ -48,8 +48,12 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
   // Test albedo enabling.
-  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo; }
+  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
   if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
+
+  // Camera projection changing.
+  if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
+  if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->SetProjection(Camera::PERSPECTIVE); }
 
   // Window changing sets.
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
@@ -78,11 +82,11 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), ((r32)window->Width() / (r32)window->Height()), 0.0001f, 5000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), (r32)window->Width(), (r32)window->Height(), 0.0001f, 5000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
-  FirstPersonCamera fpsCamera(camera.FoV(), camera.Aspect(), camera.Near(), camera.Far(),
-    Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, -1.0f));
+  FirstPersonCamera fpsCamera(camera.FoV(), camera.PixelWidth(), 
+    camera.PixelHeight(), camera.Near(), camera.Far(), Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, -1.0f));
 
   fpsCamera.EnableFrustumCull(true);
 

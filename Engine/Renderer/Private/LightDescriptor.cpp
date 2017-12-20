@@ -236,7 +236,7 @@ void LightDescriptor::Update()
   );
 
   m_PrimaryLightSpace.view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
-  m_PrimaryLightSpace.proj = Matrix4::Ortho(0.0f, 1024.0f, 1024.0f, 0.0f, 0.0001f, 1000.0f);
+  m_PrimaryLightSpace.proj = Matrix4::Ortho(1024.0f, 1024.0f, 0.0001f, 1000.0f);
 
 
   mLightBuffer->Map();

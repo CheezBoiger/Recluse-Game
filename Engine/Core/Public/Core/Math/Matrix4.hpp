@@ -48,7 +48,7 @@ struct Matrix4 {
   static Matrix4          Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar);
 
   // Left hand Orthographic matrix.
-  static Matrix4          Ortho(r32 left, r32 right, r32 bottom, r32 top, r32 zNear, r32 zFar);
+  static Matrix4          Ortho(r32 width, r32 height, r32 zNear, r32 zFar);
 
   // Retrieve the LookAt matrix, which is in left hand coordinates.
   static Matrix4          LookAt(const Vector3& eye, const Vector3& center, const Vector3& up);

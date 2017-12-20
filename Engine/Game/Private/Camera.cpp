@@ -8,15 +8,18 @@
 namespace Recluse {
 
 
-Camera::Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar, 
+Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
   Vector3 pos, Vector3 lookAt)
   : m_ProjType(type)
   , m_Fov(fov)
-  , m_Aspect(aspect)
+  , m_PixelWidth(pixelWidth)
+  , m_PixelHeight(pixelHeight)
+  , m_Aspect(pixelWidth / pixelHeight)
   , m_Position(pos)
   , m_LookAt(lookAt)
   , m_ZNear(zNear)
   , m_ZFar(zFar)
+  , m_OrthoScale(1.0f)
   , m_Bloom(false)
   , m_Gamma(2.2f)
   , m_Exposure(1.0f)
@@ -29,7 +32,10 @@ Camera::Camera(Project type, r32 fov, r32 aspect, r32 zNear, r32 zFar,
 Matrix4 Camera::Projection()
 {
   if (m_ProjType == ORTHO) { 
-    R_DEBUG(rError, "Camera orthographic projection not implemented.\n");
+    return Matrix4::Ortho((m_PixelWidth * 0.01f) * m_OrthoScale, 
+                          (m_PixelHeight * 0.01f) * m_OrthoScale, 
+                          m_ZNear, 
+                          m_ZFar);
   }
 
   return Matrix4::Perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
@@ -43,6 +49,12 @@ Matrix4 Camera::View()
 }
 
 
+void Camera::ResetAspect()
+{
+  m_Aspect = m_PixelWidth / m_PixelHeight;
+}
+
+
 void Camera::Update()
 {
   m_Front = (m_LookAt - m_Position).Normalize();
@@ -51,8 +63,8 @@ void Camera::Update()
 }
 
 
-FirstPersonCamera::FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar,
-  Vector3 pos, Vector3 dir)
+FirstPersonCamera::FirstPersonCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
+  r32 zNear, r32 zFar, Vector3 pos, Vector3 dir)
   : m_X_Sensitivity(0.1f)
   , m_Y_Sensitivity(0.1f)
   , m_Yaw(90.0f)
@@ -63,7 +75,7 @@ FirstPersonCamera::FirstPersonCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar,
   , m_LastY(0.0f)
   , m_Speed(5.0f)
   , m_Locked(false)
-  , Camera(PERSPECTIVE, fov, aspect, zNear, zFar, pos, dir)
+  , Camera(PERSPECTIVE, fov, pixelWidth, pixelHeight, zNear, zFar, pos, dir)
 {
   // TODO(): Need to set the yaw and pitch to the direction of where initial look at is.
 }
