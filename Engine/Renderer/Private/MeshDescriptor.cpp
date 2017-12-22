@@ -25,6 +25,7 @@ MeshDescriptor::MeshDescriptor()
   mObjectData.hasEmissive = false;
   mObjectData.hasMetallic = false;
   mObjectData.hasNormal = false;
+  mObjectData.baseEmissive = 0.0f;
   mObjectData.hasRoughness = false;
   mObjectData.isTransparent = false;
   mObjectData.baseMetal = 0.0f;

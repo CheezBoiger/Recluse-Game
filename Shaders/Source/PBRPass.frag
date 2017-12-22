@@ -64,6 +64,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   float transparency;
   float metal;
   float rough;
+  float emissive;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -72,6 +73,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasAO;
   int   hasBones; 
   int   isTransparent;
+  // Needs to be padded 3 ints.
 } objBuffer;
 
 
@@ -232,7 +234,7 @@ void main()
 {
   vec3 fragAlbedo = vec3(0.0);
   vec3 fragNormal = vec3(0.0);
-  vec4 fragEmissive = vec4(0.0);
+  vec3 fragEmissive = vec3(0.0);
   
   float fragMetallic = 0.01;
   float fragRoughness = 0.1;
@@ -265,7 +267,7 @@ void main()
   normalColor = vec4(fragNormal, 1.0);
   
   if (objBuffer.hasEmissive >= 1) {
-    fragEmissive = texture(emissive, frag_in.texcoord0);
+    fragEmissive = texture(emissive, frag_in.texcoord0).rgb;
   } 
   
   if (objBuffer.hasAO >= 1) {
@@ -297,7 +299,7 @@ void main()
   }
   
   vec3 ambient = vec3(0.03) * fragAlbedo; 
-  outColor = outColor + ambient;
+  outColor = (fragEmissive * objBuffer.emissive) + outColor + ambient;
   
   // We might wanna set a debug param here...
   float transparency = 1.0;

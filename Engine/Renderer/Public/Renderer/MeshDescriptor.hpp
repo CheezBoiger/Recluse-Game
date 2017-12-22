@@ -22,6 +22,7 @@ struct ObjectBuffer {
   r32     transparency;   // transparency [0.0, 1.0]
   r32     baseMetal;      // object base metalness [0.0, 1.0]
   r32     baseRough;      // object base roughness [0.0, 1.0]
+  r32     baseEmissive;   // emissive base [0.0, inf]
   u32     hasAlbedo;      // does object have albedo map?
   u32     hasMetallic;    // does object have metalness map?
   u32     hasRoughness;   // does object have roughness map?
@@ -30,6 +31,7 @@ struct ObjectBuffer {
   u32     hasAO;          // does object have ambient occlusion map?
   u32     hasBones;       // does object have bones?
   u32     isTransparent;  // is object transparent?
+  u32     pad[3];
 };
 
 

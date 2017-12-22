@@ -42,6 +42,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   float transparency;
   float metal;
   float rough;
+  float emissive;
   int   hasAlbedo;
   int   hasMetallic;
   int   hasRoughness;
@@ -50,6 +51,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasAO;
   int   hasBones; 
   int   isTransparent;
+  // Needs to be padded 3 ints.
 } objBuffer;
 
 
