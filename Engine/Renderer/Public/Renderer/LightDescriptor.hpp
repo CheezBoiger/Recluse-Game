@@ -21,54 +21,52 @@ class Texture1D;
 class Texture2DArray;
 class TextureCube;
 class FrameBuffer;
-class GraphicsPipeline;
 
 
 struct DirectionalLight {
-  Vector4 direction;
-  Vector4 color;
-  r32     intensity;
-  i32     enable;
-  i32     pad[2];
+  Vector4           _Direction;
+  Vector4           _Color;
+  r32               _Intensity;
+  i32               _Enable;
+  i32               _Pad[2];
 
   DirectionalLight()
-    : enable(false) { }
+    : _Enable(false) { }
 };
 
 
 struct PointLight {
-  Vector4 position;
-  Vector4 color;
-  r32     range;
-  r32     intensity;
-  i32     enable;
-  i32     pad;
+  Vector4           _Position;
+  Vector4           _Color;
+  r32               _Range;
+  r32               _Intensity;
+  i32               _Enable;
+  i32               _Pad;
 
   PointLight()
-    : enable(false), range(1.0f) { }
+    : _Enable(false), _Range(1.0f) { }
 };
 
 
 struct SpotLight {
-  Vector4 position;
-  Vector4 color;
-  r32     range;
-  i32     enable;
-  i32     pad;
+  Vector4           _Position;
+  Vector4           _Color;
+  r32               _Range;
+  i32               _Enable;
+  i32               _Pad;
 };
 
 
 struct LightViewSpace {
-  Matrix4       proj;
-  Matrix4       view;
+  Matrix4           _ViewProj;
 };
 
 
 struct LightBuffer {
   // NOTE(): Do we want more directional lights? This can be done if needed.
-  DirectionalLight  primaryLight;
-  DirectionalLight  directionalLights [32];
-  PointLight        pointLights       [128];
+  DirectionalLight  _PrimaryLight;
+  DirectionalLight  _DirectionalLights [32];
+  PointLight        _PointLights       [128];
 };
 
 
@@ -91,46 +89,51 @@ public:
   // Cleanup.
   void                CleanUp();
 
-  LightBuffer*        Data() { return &mLights; }
-  DescriptorSet*      Set() { return mDescriptorSet; }
+  LightBuffer*        Data() { return &m_Lights; }
 
-  Texture*            PrimaryShadowMap() { return mShadowMap; }
-  Sampler*            ShadowSampler() { return mShadowSampler; }
+  DescriptorSet*      Set() { return m_pLightDescriptorSet; }
+  DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
+
+  Texture*            PrimaryShadowMap() { return m_pShadowMap; }
+  Sampler*            ShadowSampler() { return m_pShadowSampler; }
 
   void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
 
   b8                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
 private:
-  void                InitializePipeline();
+  void                InitializeNativeLights();
+  void                InitializePrimaryShadow();
   // Descriptor Set.
-  DescriptorSet*      mDescriptorSet;
+  DescriptorSet*      m_pLightDescriptorSet;
+  DescriptorSet*      m_pLightViewDescriptorSet;
 
   // Light list is this!
-  Buffer*             mLightBuffer;
+  Buffer*             m_pLightBuffer;
 
   // After computing the clusters to shade our lights, we store them in here!
-  Buffer*             mLightGrid;
+  Buffer*             m_pLightGrid;
+
+  // Light view buffer.
+  Buffer*             m_pLightViewBuffer;
 
   // Shadow map, this is mainly for our directional light, the primary light.
-  Texture*            mShadowMap;
+  Texture*            m_pShadowMap;
 
   // Shadow map sampler.
-  Sampler*            mShadowSampler;
+  Sampler*            m_pShadowSampler;
 
   // Framebuffer object used for command buffer pass through. Shadow mapping can't be
   // statically stored into the renderer pipeline. Only possibility is to create this 
   // outside.
-  FrameBuffer*        mFrameBuffer;
-
-  GraphicsPipeline*   m_PrimaryShadowPipeline;
+  FrameBuffer*        m_pFrameBuffer;
 
   // Information of our lights, to which we use this to modify light sources.
   LightViewSpace      m_PrimaryLightSpace;
-  LightBuffer         mLights;
+  LightBuffer         m_Lights;
 
   // Vulkan Rhi.
-  VulkanRHI*          mRhi;
+  VulkanRHI*          m_pRhi;
 
   b8                  m_PrimaryShadowEnable;
 

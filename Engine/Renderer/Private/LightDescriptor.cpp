@@ -22,76 +22,80 @@
 namespace Recluse {
 
 LightDescriptor::LightDescriptor()
-  : mShadowMap(nullptr)
-  , mShadowSampler(nullptr)
-  , mRhi(nullptr)
-  , mDescriptorSet(nullptr)
-  , mLightBuffer(nullptr)
-  , mFrameBuffer(nullptr)
-  , m_PrimaryShadowPipeline(nullptr)
+  : m_pShadowMap(nullptr)
+  , m_pShadowSampler(nullptr)
+  , m_pRhi(nullptr)
+  , m_pLightDescriptorSet(nullptr)
+  , m_pLightViewDescriptorSet(nullptr)
+  , m_pLightBuffer(nullptr)
+  , m_pLightViewBuffer(nullptr)
+  , m_pFrameBuffer(nullptr)
 {
-  mLights.primaryLight.enable = false;
-  mLights.primaryLight.pad[0] = 0;
-  mLights.primaryLight.pad[1] = 0;
+  m_Lights._PrimaryLight._Enable = false;
+  m_Lights._PrimaryLight._Pad[0] = 0;
+  m_Lights._PrimaryLight._Pad[1] = 0;
   //mLights.primaryLight.pad[2] = 0;
   for (size_t i = 0; i < 128; ++i) {
-    mLights.pointLights[i].position = Vector4();
-    mLights.pointLights[i].color = Vector4();
-    mLights.pointLights[i].range = 0.0f;
-    mLights.pointLights[i].intensity = 1.0f;
-    mLights.pointLights[i].enable = false;
-    mLights.pointLights[i].pad = 0;
+    m_Lights._PointLights[i]._Position = Vector4();
+    m_Lights._PointLights[i]._Color = Vector4();
+    m_Lights._PointLights[i]._Range = 0.0f;
+    m_Lights._PointLights[i]._Intensity = 1.0f;
+    m_Lights._PointLights[i]._Enable = false;
+    m_Lights._PointLights[i]._Pad = 0;
     //mLights.pointLights[i].pad[2] = 0.0f;
   }
 
   for (size_t i = 0; i < 32; ++i) {
-    mLights.directionalLights[i].direction = Vector4();
-    mLights.directionalLights[i].enable = false;
-    mLights.directionalLights[i].intensity = 1.0f;
-    mLights.directionalLights[i].color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    m_Lights._DirectionalLights[i]._Direction = Vector4();
+    m_Lights._DirectionalLights[i]._Enable = false;
+    m_Lights._DirectionalLights[i]._Intensity = 1.0f;
+    m_Lights._DirectionalLights[i]._Color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   }
 }
 
 
 LightDescriptor::~LightDescriptor()
 {
-  if (mLightBuffer) {
+  if (m_pLightBuffer) {
     R_DEBUG(rWarning, "Light buffer was not cleaned up!\n");
   }
 
-  if (mDescriptorSet) {
+  if (m_pLightDescriptorSet) {
     R_DEBUG(rWarning, "Light Material descriptor set was not properly cleaned up!\n");
   }
   
-  if (mShadowMap) {
+  if (m_pShadowMap) {
     R_DEBUG(rWarning, "Light Shadow Map texture was not properly cleaned up!\n");
   }
 
-  if (mShadowSampler) {
+  if (m_pShadowSampler) {
     R_DEBUG(rWarning, "Light Shadow Map sampler was not properly cleaned up!\n");
   }
 
-  if (m_PrimaryShadowPipeline) {
-    R_DEBUG(rWarning, "Light Shadow Map pipeline was not properly cleaned up!\n");
+  if (m_pFrameBuffer) {
+    R_DEBUG(rWarning, "Light framebuffer was not properly cleaned up!\n");
+  }
+  
+  if (m_pLightViewBuffer) {
+    R_DEBUG(rWarning, "Light view buffer was not properly cleaned up!\n");
   }
 }
 
 
 void LightDescriptor::Initialize()
 {
-  // TODO
-  if (!mRhi) {
+  if (!m_pRhi) {
     R_DEBUG(rError, "RHI owner not set for light material upon initialization!\n");
     return;
   }
 
   // This class has already been initialized.
-  if (mLightBuffer || mDescriptorSet)  {
+  if (m_pLightBuffer || m_pLightDescriptorSet)  {
     R_DEBUG(rNotify, "This light buffer is already initialized! Skipping...\n");
     return;
   }
 
-  mLightBuffer = mRhi->CreateBuffer();
+  m_pLightBuffer = m_pRhi->CreateBuffer();
   VkBufferCreateInfo bufferCI = {};
   VkDeviceSize dSize = sizeof(LightBuffer);
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -99,13 +103,13 @@ void LightDescriptor::Initialize()
   bufferCI.size = dSize;
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-  mLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
   // Create our shadow map texture.
-  if (!mShadowMap) {
+  if (!m_pShadowMap) {
 
     // TODO():
-    mShadowMap = mRhi->CreateTexture();
+    m_pShadowMap = m_pRhi->CreateTexture();
 
     VkImageCreateInfo ImageCi = {};
     ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -134,12 +138,12 @@ void LightDescriptor::Initialize()
     ViewCi.subresourceRange.levelCount = 1;
     ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
     
-    mShadowMap->Initialize(ImageCi, ViewCi);
+    m_pShadowMap->Initialize(ImageCi, ViewCi);
   }
 
-  if (!mShadowSampler) {
+  if (!m_pShadowSampler) {
     // TODO():
-    mShadowSampler = mRhi->CreateSampler();
+    m_pShadowSampler = m_pRhi->CreateSampler();
     VkSamplerCreateInfo SamplerCi = { };
     SamplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -156,15 +160,83 @@ void LightDescriptor::Initialize()
     SamplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     SamplerCi.unnormalizedCoordinates = VK_FALSE;
 
-    mShadowSampler->Initialize(SamplerCi);
+    m_pShadowSampler->Initialize(SamplerCi);
   }
 
+  InitializeNativeLights();
+  InitializePrimaryShadow();
+}
+
+
+void LightDescriptor::CleanUp()
+{
+  if (m_pShadowMap) {
+    m_pRhi->FreeTexture(m_pShadowMap);
+    m_pShadowMap = nullptr;
+  }
+
+  if (m_pShadowSampler) {
+    m_pRhi->FreeSampler(m_pShadowSampler);
+    m_pShadowSampler = nullptr;
+  }
+
+  // TODO
+  if (m_pLightDescriptorSet) {
+    m_pRhi->FreeDescriptorSet(m_pLightDescriptorSet);
+    m_pLightDescriptorSet = nullptr;
+  }
+
+  if (m_pLightBuffer) {
+    m_pRhi->FreeBuffer(m_pLightBuffer);
+    m_pLightBuffer = nullptr;
+  }
+
+  if (m_pFrameBuffer) {
+    m_pRhi->FreeFrameBuffer(m_pFrameBuffer);
+    m_pFrameBuffer = nullptr;
+  }
+
+  if (m_pLightViewBuffer) {
+    m_pRhi->FreeBuffer(m_pLightViewBuffer);
+    m_pLightViewBuffer = nullptr;
+  }
+}
+
+
+void LightDescriptor::Update()
+{
+  Vector3 Eye = Vector3(
+    m_Lights._PrimaryLight._Direction.x, 
+    m_Lights._PrimaryLight._Direction.y, 
+    m_Lights._PrimaryLight._Direction.z
+  );
+
+  // Pass as one matrix.
+  Matrix4 view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
+  Matrix4 proj = Matrix4::Ortho(1024.0f, 1024.0f, 0.0001f, 1000.0f);
+  m_PrimaryLightSpace._ViewProj = view * proj;
+
+
+  m_pLightBuffer->Map();
+    memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
+  m_pLightBuffer->UnMap();
+
+  if (PrimaryShadowEnabled() && m_pLightViewBuffer) {
+    m_pLightViewBuffer->Map();
+      memcpy(m_pLightViewBuffer->Mapped(), &m_PrimaryLightSpace, sizeof(LightViewSpace));
+    m_pLightViewBuffer->UnMap();
+  }
+}
+
+
+void LightDescriptor::InitializeNativeLights()
+{
   DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(LightSetLayoutStr);
-  mDescriptorSet = mRhi->CreateDescriptorSet();
-  mDescriptorSet->Allocate(mRhi->DescriptorPool(), pbrLayout);
+  m_pLightDescriptorSet = m_pRhi->CreateDescriptorSet();
+  m_pLightDescriptorSet->Allocate(m_pRhi->DescriptorPool(), pbrLayout);
 
   VkDescriptorBufferInfo lightBufferInfo = {};
-  lightBufferInfo.buffer = mLightBuffer->NativeBuffer();
+  lightBufferInfo.buffer = m_pLightBuffer->NativeBuffer();
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
 
@@ -172,8 +244,8 @@ void LightDescriptor::Initialize()
   // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalShadowInfo.imageView = mShadowMap->View();
-  globalShadowInfo.sampler = mShadowSampler->Handle();
+  globalShadowInfo.imageView = m_pShadowMap->View();
+  globalShadowInfo.sampler = m_pShadowSampler->Handle();
 
   std::array<VkWriteDescriptorSet, 2> writeSets;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -192,246 +264,12 @@ void LightDescriptor::Initialize()
   writeSets[1].pImageInfo = &globalShadowInfo;
   writeSets[1].dstBinding = 1;
 
-  mDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
-  InitializePipeline();
+  m_pLightDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
 }
 
 
-void LightDescriptor::CleanUp()
+void LightDescriptor::InitializePrimaryShadow()
 {
-  if (mShadowMap) {
-    mRhi->FreeTexture(mShadowMap);
-    mShadowMap = nullptr;
-  }
-
-  if (mShadowSampler) {
-    mRhi->FreeSampler(mShadowSampler);
-    mShadowSampler = nullptr;
-  }
-
-  // TODO
-  if (mDescriptorSet) {
-    mRhi->FreeDescriptorSet(mDescriptorSet);
-    mDescriptorSet = nullptr;
-  }
-
-  if (mLightBuffer) {
-    mRhi->FreeBuffer(mLightBuffer);
-    mLightBuffer = nullptr;
-  }
-
-  if (m_PrimaryShadowPipeline) {
-    mRhi->FreeGraphicsPipeline(m_PrimaryShadowPipeline);
-    m_PrimaryShadowPipeline = nullptr;
-  }
-}
-
-
-void LightDescriptor::Update()
-{
-  Vector3 Eye = Vector3(
-    mLights.primaryLight.direction.x, 
-    mLights.primaryLight.direction.y, 
-    mLights.primaryLight.direction.z
-  );
-
-  m_PrimaryLightSpace.view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
-  m_PrimaryLightSpace.proj = Matrix4::Ortho(1024.0f, 1024.0f, 0.0001f, 1000.0f);
-
-
-  mLightBuffer->Map();
-    memcpy(mLightBuffer->Mapped(), &mLights, sizeof(LightBuffer));
-  mLightBuffer->UnMap();
-}
-
-
-void LightDescriptor::InitializePipeline()
-{
-  if (!mFrameBuffer) return;
-  std::string Filepath = gFilesystem().CurrentAppDirectory();
-  R_DEBUG(rNotify, "Initializing Light Shadow Map Pipeline...\n");
-  VkPipelineInputAssemblyStateCreateInfo assemblyCI = {};
-  assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-  assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-  assemblyCI.primitiveRestartEnable = VK_FALSE;
-
-  VkViewport viewport = {};
-  viewport.x = 0.0f;
-  viewport.y = 0.0f;
-  viewport.minDepth = 0.0f;
-  viewport.maxDepth = 1.0f;
-  viewport.height = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().height);
-  viewport.width = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().width);
-
-  VkRect2D scissor = {};
-  scissor.extent = mRhi->SwapchainObject()->SwapchainExtent();
-  scissor.offset = { 0, 0 };
-
-  VkPipelineViewportStateCreateInfo viewportCI = {};
-  viewportCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-  viewportCI.viewportCount = 1;
-  viewportCI.pViewports = &viewport;
-  viewportCI.scissorCount = 1;
-  viewportCI.pScissors = &scissor;
-
-  VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
-    VK_POLYGON_MODE_FILL,
-    VK_FALSE,
-    VK_CULL_MODE_NONE,
-    VK_FRONT_FACE_CLOCKWISE,
-    1.0f,
-    VK_FALSE,
-    VK_FALSE
-  );
-
-  VkPipelineMultisampleStateCreateInfo msCI = {};
-  msCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-  msCI.sampleShadingEnable = VK_FALSE;
-  msCI.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-  msCI.minSampleShading = 1.0f;
-  msCI.pSampleMask = nullptr;
-  msCI.alphaToOneEnable = VK_FALSE;
-  msCI.alphaToCoverageEnable = VK_FALSE;
-
-  VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
-  depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  depthStencilCI.depthTestEnable = VK_TRUE;
-  depthStencilCI.depthWriteEnable = VK_TRUE;
-  depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
-  depthStencilCI.depthBoundsTestEnable = VK_FALSE;
-  depthStencilCI.minDepthBounds = 0.0f;
-  depthStencilCI.maxDepthBounds = 1.0f;
-  depthStencilCI.stencilTestEnable = VK_FALSE;
-  depthStencilCI.back = {};
-  depthStencilCI.front = {};
-
-  std::array<VkPipelineColorBlendAttachmentState, 3> colorBlendAttachments;
-  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
-    VK_TRUE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
-
-  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
-    VK_TRUE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
-
-  colorBlendAttachments[2] = CreateColorBlendAttachmentState(
-    VK_TRUE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
-
-
-  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    static_cast<u32>(colorBlendAttachments.size()),
-    colorBlendAttachments.data(),
-    VK_FALSE,
-    VK_LOGIC_OP_NO_OP
-  );
-
-  VkDynamicState dynamicStates[1] = {
-    VK_DYNAMIC_STATE_VIEWPORT
-  };
-
-  VkPipelineDynamicStateCreateInfo dynamicCI = {};
-  dynamicCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-  dynamicCI.dynamicStateCount = 1;
-  dynamicCI.pDynamicStates = dynamicStates;
-
-  VkVertexInputBindingDescription vertBindingDesc = { };
-  vertBindingDesc.binding = 0;
-  vertBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-  vertBindingDesc.stride = sizeof(Vector4);
-
-  std::array<VkVertexInputAttributeDescription, 1> pbrAttributes;
-  pbrAttributes[0].binding = 0;
-  pbrAttributes[0].format = VK_FORMAT_R32_SFLOAT;
-  pbrAttributes[0].location = 0;
-  pbrAttributes[0].offset = 0;
-
-  VkPipelineVertexInputStateCreateInfo vertexCI = {};
-  vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexCI.vertexBindingDescriptionCount = 1;
-  vertexCI.pVertexBindingDescriptions = &vertBindingDesc;
-  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(pbrAttributes.size());
-  vertexCI.pVertexAttributeDescriptions = pbrAttributes.data();
-
-  VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = {};
-  GraphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  GraphicsPipelineInfo.pColorBlendState = &colorBlendCI;
-  GraphicsPipelineInfo.pDepthStencilState = &depthStencilCI;
-  GraphicsPipelineInfo.pInputAssemblyState = &assemblyCI;
-  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
-  GraphicsPipelineInfo.pMultisampleState = &msCI;
-  GraphicsPipelineInfo.pVertexInputState = &vertexCI;
-  GraphicsPipelineInfo.pViewportState = &viewportCI;
-  GraphicsPipelineInfo.pTessellationState = nullptr;
-  GraphicsPipelineInfo.pDynamicState = &dynamicCI;
-  GraphicsPipelineInfo.subpass = 0;
-  GraphicsPipelineInfo.renderPass = mFrameBuffer->RenderPass();
-  GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-
-  // TODO(): Initialize shadow map pipeline.
-  VkPipelineLayoutCreateInfo PipeLayout = {};
-  std::array<VkDescriptorSetLayout, 2> DescLayouts;
-  DescLayouts[0] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
-  DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
-
-  PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  PipeLayout.pushConstantRangeCount = 0;
-  PipeLayout.pPushConstantRanges = nullptr;
-  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size());
-  PipeLayout.pSetLayouts = DescLayouts.data();
-  // ShadowMapping shader.
-  // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
-  // This will prevent blurry shadows. It must be combined in the forward render pass (maybe?)
-  Shader* SmVert = mRhi->CreateShader();
-  Shader* SmFrag = mRhi->CreateShader();
-
-  RendererPass::LoadShader(ShadowMapVertFileStr, SmVert);
-  RendererPass::LoadShader(ShadowMapFragFileStr, SmFrag);
-
-  std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;
-  Shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  Shaders[0].flags = 0;
-  Shaders[0].pName = "main";
-  Shaders[0].pNext = nullptr;
-  Shaders[0].pSpecializationInfo = nullptr;
-  Shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  Shaders[0].module = SmVert->Handle();
-
-  Shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  Shaders[1].flags = 0;
-  Shaders[1].pName = "main";
-  Shaders[1].pNext = nullptr;
-  Shaders[1].pSpecializationInfo = nullptr;
-  Shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  Shaders[1].module = SmFrag->Handle();
-
-  GraphicsPipelineInfo.pStages = Shaders.data();
-  GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
-
-  m_PrimaryShadowPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
-
-  mRhi->FreeShader(SmVert);
-  mRhi->FreeShader(SmFrag);
+  // TODO(): Create DescriptorSet and Framebuffer for shadow pass.
 }
 } // Recluse

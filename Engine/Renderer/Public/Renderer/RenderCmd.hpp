@@ -17,11 +17,11 @@ class RenderObject;
 
 struct RenderCmd {
   RenderCmd()
-    : target(nullptr)
-    , debug(false) { }
+    : _pTarget(nullptr)
+    , _Debug(false) { }
 
 
-  RenderObject*     target;
-  b8                debug;
+  RenderObject*     _pTarget;
+  b8                _Debug;
 };
 } // Recluse

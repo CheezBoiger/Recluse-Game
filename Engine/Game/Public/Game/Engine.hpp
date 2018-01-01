@@ -51,24 +51,20 @@ public:
   void                          CleanUp();
   void                          ProcessInput();
 
-  Camera*                       GetCamera() { return mCamera; }
-  Window*                       GetWindow() { return &mWindow; }
+  Camera*                       GetCamera() { return m_pCamera; }
+  Window*                       GetWindow() { return &m_Window; }
 
   void                          Update(r64 dt);
-  void                          SetCamera(Camera* camera) { mCamera = camera; m_CamFrustum.SetCamera(mCamera); }
+  void                          SetCamera(Camera* camera) { m_pCamera = camera; m_CamFrustum.SetCamera(m_pCamera); }
 
   // Push the new scene to into this engine for extraction.
   void                          PushScene(Scene* scene);
   void                          BuildScene();
   void                          LoadSceneTransition();
 
-  // TODO(): Should we have this data be stored in the scene instead? It would be more probable, 
-  // rather than on the engine... we need to save this data!
-  void                          SetLightData(LightDescriptor* lights);
+  LightBuffer*                  LightData() { return m_pLights->Data(); }
 
-  LightBuffer*                  LightData() { return mLightRef->Data(); }
-
-  CmdList&                      RenderCommandList() { return mRenderCmdList; }
+  CmdList&                      RenderCommandList() { return m_RenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }
   r64                           GameMousePosY() const { return m_GameMouseY; }
   void                          SetGameMouseX(r64 x) { m_GameMouseX = x; }
@@ -80,15 +76,15 @@ public:
 
 private:
   CCamViewFrustum               m_CamFrustum;
-  LightDescriptor*              mLightRef;
-  Camera*                       mCamera;
-  Scene*                        mPushedScene;
+  LightDescriptor*              m_pLights;
+  Camera*                       m_pCamera;
+  Scene*                        m_pPushedScene;
   r64                           m_GameMouseX;
   r64                           m_GameMouseY;
 
-  Window                        mWindow;
-  CmdList                       mRenderCmdList;
-  CmdList                       mDeferredCmdList;
+  Window                        m_Window;
+  CmdList                       m_RenderCmdList;
+  CmdList                       m_DeferredCmdList;
 };
 
 

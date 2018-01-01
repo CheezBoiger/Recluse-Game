@@ -27,22 +27,22 @@ class FrameBuffer;
 // TODO(): Need to add more information like mouse input,
 // Possible SunDir(?), fog amount (?), and others.
 struct GlobalBuffer {
-  Matrix4         view;
-  Matrix4         proj;
-  Matrix4         viewProj;
-  Vector4         cameraPos;
-  Vector4         lPlane;
-  Vector4         rPlane;
-  Vector4         tPlane;
-  Vector4         bPlane;
-  Vector4         nPlane;
-  Vector4         fPlane;
-  Vector2         mousePos;
-  i32             screenSize[2];
-  r32             gamma;
-  r32             exposure;
-  i32             bloomEnabled;
-  i32             pad1;
+  Matrix4         _View;
+  Matrix4         _Proj;
+  Matrix4         _ViewProj;
+  Vector4         _CameraPos;
+  Vector4         _LPlane;
+  Vector4         _RPlane;
+  Vector4         _TPlane;
+  Vector4         _BPlane;
+  Vector4         _NPlane;
+  Vector4         _FPlane;
+  Vector2         _MousePos;
+  i32             _ScreenSize[2];
+  r32             _Gamma;
+  r32             _Exposure;
+  i32             _BloomEnabled;
+  i32             _Pad1;
 };
 
 
@@ -56,16 +56,16 @@ public:
   void              Initialize();
   void              CleanUp();
 
-  DescriptorSet*    Set() { return mDescriptorSet; }
+  DescriptorSet*    Set() { return m_pDescriptorSet; }
 
-  GlobalBuffer*     Data() { return &mGlobal; }
-  Buffer*           Handle() { return mGlobalBuffer; }
+  GlobalBuffer*     Data() { return &m_Global; }
+  Buffer*           Handle() { return m_pGlobalBuffer; }
 
 private:
-  DescriptorSet*    mDescriptorSet;
-  Buffer*           mGlobalBuffer;
-  VulkanRHI*        mRhi;
-  GlobalBuffer      mGlobal;
+  DescriptorSet*    m_pDescriptorSet;
+  Buffer*           m_pGlobalBuffer;
+  VulkanRHI*        m_pRhi;
+  GlobalBuffer      m_Global;
 
   friend class Renderer;
 };

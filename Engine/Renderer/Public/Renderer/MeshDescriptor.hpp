@@ -15,28 +15,28 @@ class MeshData;
 
 
 struct ObjectBuffer {
-  Matrix4 model;          // Model matrix
-  Matrix4 normalMatrix;   // Normal matrix.
-  Vector4 color;          // object base color.
-  r32     lodBias;        // object level of detail bias.
-  r32     transparency;   // transparency [0.0, 1.0]
-  r32     baseMetal;      // object base metalness [0.0, 1.0]
-  r32     baseRough;      // object base roughness [0.0, 1.0]
-  r32     baseEmissive;   // emissive base [0.0, inf]
-  u32     hasAlbedo;      // does object have albedo map?
-  u32     hasMetallic;    // does object have metalness map?
-  u32     hasRoughness;   // does object have roughness map?
-  u32     hasNormal;      // does object have normal map?
-  u32     hasEmissive;    // does object have emissive map?
-  u32     hasAO;          // does object have ambient occlusion map?
-  u32     hasBones;       // does object have bones?
-  u32     isTransparent;  // is object transparent?
-  u32     pad[3];
+  Matrix4 _Model;          // Model matrix
+  Matrix4 _NormalMatrix;   // Normal matrix.
+  Vector4 _Color;          // object base color.
+  r32     _LodBias;        // object level of detail bias.
+  r32     _Transparency;   // transparency [0.0, 1.0]
+  r32     _BaseMetal;      // object base metalness [0.0, 1.0]
+  r32     _BaseRough;      // object base roughness [0.0, 1.0]
+  r32     _BaseEmissive;   // emissive base [0.0, inf]
+  u32     _HasAlbedo;      // does object have albedo map?
+  u32     _HasMetallic;    // does object have metalness map?
+  u32     _HasRoughness;   // does object have roughness map?
+  u32     _HasNormal;      // does object have normal map?
+  u32     _HasEmissive;    // does object have emissive map?
+  u32     _HasAO;          // does object have ambient occlusion map?
+  u32     _HasBones;       // does object have bones?
+  u32     _IsTransparent;  // is object transparent?
+  u32     _Pad[3];
 };
 
 
 struct BonesBuffer {
-  Matrix4 bones[64];
+  Matrix4 _Bones[64];
 };
 
 
@@ -54,34 +54,34 @@ public:
 
   virtual void  Update();
 
-  void          SetVisible(b8 enable) { mVisible = enable; }
-  void          SetRenderable(b8 enable) { mRenderable = enable; }
-  void          SetTranslucent(b8 enable) { mTranslucent = enable; }
-  void          SetTransparent(b8 enable) { mObjectData.isTransparent = enable; }
+  void          SetVisible(b8 enable) { m_Visible = enable; }
+  void          SetRenderable(b8 enable) { m_Renderable = enable; }
+  void          SetTranslucent(b8 enable) { m_Translucent = enable; }
+  void          SetTransparent(b8 enable) { m_ObjectData._IsTransparent = enable; }
 
-  ObjectBuffer* ObjectData() { return &mObjectData; }
+  ObjectBuffer* ObjectData() { return &m_ObjectData; }
 
 
-  b8            Visible() const { return mVisible; }
-  b8            Renderable() const { return mRenderable; }
-  b8            Transparent() const { return mObjectData.isTransparent; }
-  b8            Translucent() const { return mTranslucent; }
-  b8            Static() const { return mStatic; }
-  b8            Skinned() const { return mSkinned; }
-  Buffer*       NativeObjectBuffer() { return mObjectBuffer; }
+  b8            Visible() const { return m_Visible; }
+  b8            Renderable() const { return m_Renderable; }
+  b8            Transparent() const { return m_ObjectData._IsTransparent; }
+  b8            Translucent() const { return m_Translucent; }
+  b8            Static() const { return m_Static; }
+  b8            Skinned() const { return m_Skinned; }
+  Buffer*       NativeObjectBuffer() { return m_pObjectBuffer; }
 
 protected:
-  ObjectBuffer  mObjectData;
-  Buffer*       mObjectBuffer;
+  ObjectBuffer  m_ObjectData;
+  Buffer*       m_pObjectBuffer;
 
-  b8            mVisible;
-  b8            mRenderable;
-  b8            mSkinned;
+  b8            m_Visible;
+  b8            m_Renderable;
+  b8            m_Skinned;
 
-  b8            mTranslucent;
-  b8            mStatic;
+  b8            m_Translucent;
+  b8            m_Static;
   
-  Renderer*     mRenderer;
+  Renderer*     m_Renderer;
   
   friend class Renderer;
 };
@@ -96,12 +96,12 @@ public:
   virtual void  CleanUp() override;
   virtual void  Update() override;
 
-  BonesBuffer*  BonesData() { return &mBonesData; }
-  Buffer*       NativeBoneBuffer() { return mBonesBuffer; }
+  BonesBuffer*  BonesData() { return &m_BonesData; }
+  Buffer*       NativeBoneBuffer() { return m_pBonesBuffer; }
 
 private:
-  BonesBuffer   mBonesData;
-  Buffer*       mBonesBuffer;
+  BonesBuffer   m_BonesData;
+  Buffer*       m_pBonesBuffer;
   friend class  Renderer;
 };
 } // Recluse

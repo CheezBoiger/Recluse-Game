@@ -17,43 +17,43 @@ u32 CCamViewFrustum::PFAR = 5;
 void CCamViewFrustum::SetCamera(Camera* camera)
 {
   if (!camera) return;
-  m_Camera = camera;
+  m_pCamera = camera;
 }
 
 
 void CCamViewFrustum::ConfigureFrustum()
 {
   // Might need to figure out this Tang thing...
-  r32 Tang = (r32)tanf(Radians(m_Camera->FoV() * 0.5f));
-  m_Nh = m_Camera->Near() * Tang;
-  m_Nw = m_Nh * m_Camera->Aspect();
-  m_Fh = m_Camera->Far() * Tang;
-  m_Fw = m_Fh * m_Camera->Aspect();
+  r32 Tang = (r32)tanf(Radians(m_pCamera->FoV() * 0.5f));
+  m_Nh = m_pCamera->Near() * Tang;
+  m_Nw = m_Nh * m_pCamera->Aspect();
+  m_Fh = m_pCamera->Far() * Tang;
+  m_Fw = m_Fh * m_pCamera->Aspect();
 }
 
 
 void CCamViewFrustum::Update()
 {
-  if (!m_Camera) {
+  if (!m_pCamera) {
     R_DEBUG(rError, "No camera set to calc frustums from!\n");
     return;
   }
 
-  if (!m_Camera->Culling()) return;
+  if (!m_pCamera->Culling()) return;
   ConfigureFrustum();
   
-  Vector3 l = m_Camera->LookDir();
-  Vector3 p = m_Camera->Position();
-  Vector3 u = m_Camera->Up();
+  Vector3 l = m_pCamera->LookDir();
+  Vector3 p = m_pCamera->Position();
+  Vector3 u = m_pCamera->Up();
 
   Vector3 Nc, Fc, X, Y, Z;
 
-  Z = m_Camera->Front().Normalize();
+  Z = m_pCamera->Front().Normalize();
   X = -(u ^ Z).Normalize();
   Y = Z ^ X;
   
-  Nc = p - Z * m_Camera->Near();
-  Fc = p - Z * m_Camera->Far();
+  Nc = p - Z * m_pCamera->Near();
+  Fc = p - Z * m_pCamera->Far();
 
   Vector3 ntl = Nc + Y * m_Nh - X * m_Nw;
   Vector3 ntr = Nc + Y * m_Nh + X * m_Nw;
@@ -65,11 +65,11 @@ void CCamViewFrustum::Update()
   Vector3 fbl = Fc - Y * m_Fh - X * m_Fw;
   Vector3 fbr = Fc - Y * m_Fh + X * m_Fw;
   
-  m_Planes[PTOP]    = Plane(ntr, ntl, ftl);
-  m_Planes[PBOTTOM] = Plane(nbl, nbr, fbr);
-  m_Planes[PLEFT]   = Plane(ntl, nbl, fbl);
-  m_Planes[PRIGHT]  = Plane(nbr, ntr, fbr);
-  m_Planes[PNEAR]   = Plane(ntl, ntr, nbr);
-  m_Planes[PFAR]    = Plane(ftr, ftl, fbl);
+  _Planes[PTOP]    = Plane(ntr, ntl, ftl);
+  _Planes[PBOTTOM] = Plane(nbl, nbr, fbr);
+  _Planes[PLEFT]   = Plane(ntl, nbl, fbl);
+  _Planes[PRIGHT]  = Plane(nbr, ntr, fbr);
+  _Planes[PNEAR]   = Plane(ntl, ntr, nbr);
+  _Planes[PFAR]    = Plane(ftr, ftl, fbl);
 }
 } // Recluse

@@ -51,7 +51,7 @@ public:
   ~Renderer();
 
   b8                Initialize(Window* window);
-  b8                Rendering() const { return mRendering; }
+  b8                Rendering() const { return m_Rendering; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
@@ -73,11 +73,11 @@ public:
 
   // Push the command list into the renderer. This is the list used to figure out what 
   // renderable objects to draw and texture on the screen.
-  void              PushCmdList(CmdList* cmdList) { mCmdList = cmdList; }
+  void              PushCmdList(CmdList* cmdList) { m_pCmdList = cmdList; }
 
   // Push the deferred list into the renderer, this is the list used for commands to be called
   // after gbuffer offscreen rendering. This is mainly used for UI overlay rendering.
-  void              PushDeferredCmdList(CmdList* cmdList) { mDeferredCmdList = cmdList; }
+  void              PushDeferredCmdList(CmdList* cmdList) { m_pDeferredCmdList = cmdList; }
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
@@ -94,7 +94,7 @@ public:
 
   // Set the light material for this renderer. This will set the lights that are in the world
   // scene. 
-  void              SetLightDescriptor(LightDescriptor*   material) { mLights = material; }
+  void              SetLightDescriptor(LightDescriptor*   material) { m_pLights = material; }
 
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
@@ -112,8 +112,13 @@ public:
   // Create a 2D Array texture surface.
   Texture2DArray*   CreateTexture2DArray();
 
+  // Create a 3D texture surface.
   Texture3D*        CreateTexture3D();
+
+  // Create a Texture Cube surface.
   TextureCube*      CreateTextureCube();
+
+  // Create a Sampler.
   TextureSampler*   CreateTextureSampler();
 
   // Create a light material object, which holds all lights that affect this 
@@ -123,7 +128,7 @@ public:
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
 
-  GlobalBuffer*     GlobalData() { return mGlobal->Data(); }
+  GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
 
   // Frees the render object.
   void              FreeRenderObject(RenderObject* renderObject);
@@ -161,14 +166,16 @@ public:
   LightProbe*       BakeLightProbe(const TextureCube* envmap);
 
   // Window reference.
-  Window*           WindowRef() { return mWindowHandle; }
-  UIOverlay*        Overlay() { return mUI; }  
+  Window*           WindowRef() { return m_pWindow; }
+  UIOverlay*        Overlay() { return m_pUI; }  
 
   // Check if this renderer is initialized with the window reference given.
-  b8                Initialized() { return mInitialized; }
+  b8                Initialized() { return m_Initialized; }
 
   // Get the rendering hardware interface used in this renderer.
-  VulkanRHI*        RHI() { return mRhi; }
+  VulkanRHI*        RHI() { return m_pRhi; }
+
+  // Enable HDR Post processing.
   void              EnableHDR(b8 enable);
 
 protected:
@@ -201,39 +208,41 @@ private:
   void              CleanUpHDR(b8 fullCleanup);
   void              UpdateMaterials();
   void              RenderOverlay();
+  void              RenderPrimaryShadows();
 
-  Window*           mWindowHandle;
-  CmdList*          mCmdList;
-  CmdList*          mDeferredCmdList;
-  GlobalDescriptor* mGlobal;
-  LightDescriptor*  mLights;
+  Window*           m_pWindow;
+  CmdList*          m_pCmdList;
+  CmdList*          m_pDeferredCmdList;
+  GlobalDescriptor* m_pGlobal;
+  LightDescriptor*  m_pLights;
 
   // NOTE(): This can be abstracted, but we will be tight coupling with Vulkan anyway...
-  VulkanRHI*        mRhi;
+  VulkanRHI*        m_pRhi;
 
   struct {
-    std::vector<CommandBuffer*>   cmdBuffers;
-    u32                           currCmdBufferIndex;
-    Semaphore*                    semaphore;
-  } mOffscreen; 
+    std::vector<CommandBuffer*>   _CmdBuffers;
+    std::vector<CommandBuffer*>   _ShadowBuffers;
+    u32                           _CurrCmdBufferIndex;
+    Semaphore*                    _Semaphore;
+  } m_Offscreen; 
 
   struct {
-    std::vector<CommandBuffer*>   cmdBuffers;
-    u32                           currCmdBufferIndex;
-    Semaphore*                    semaphore;
-    b8                            enabled;
-  } mHDR;
+    std::vector<CommandBuffer*>   _CmdBuffers;
+    u32                           _CurrCmdBufferIndex;
+    Semaphore*                    _Semaphore;
+    b8                            _Enabled;
+  } m_HDR;
 
   struct {
-    i32     horizontal;
-    r32     strength;
-    r32     scale;
+    i32                           _Horizontal;
+    r32                           _Strength;
+    r32                           _Scale;
   } m_Downscale;
 
-  RenderQuad        mRenderQuad;
-  UIOverlay*        mUI;
-  b8                mRendering      : 1;
-  b8                mInitialized    : 1;
+  RenderQuad        m_RenderQuad;
+  UIOverlay*        m_pUI;
+  b8                m_Rendering      : 1;
+  b8                m_Initialized    : 1;
 };
 
 Renderer&           gRenderer();

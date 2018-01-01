@@ -101,7 +101,6 @@ target_link_libraries(${RECLUSE_RENDERER}
 )
 
 
-
 # Doing some stuff for organization.
 if (MSVC)
   foreach(source IN LISTS RECLUSE_RENDERER_FILES)

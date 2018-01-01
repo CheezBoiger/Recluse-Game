@@ -41,24 +41,25 @@ Renderer& gRenderer() {
 
 
 Renderer::Renderer()
-  : mRhi(nullptr)
-  , mCmdList(nullptr)
-  , mDeferredCmdList(nullptr)
-  , mRendering(false)
-  , mInitialized(false)
-  , mLights(nullptr)
-  , mGlobal(nullptr)
+  : m_pRhi(nullptr)
+  , m_pCmdList(nullptr)
+  , m_pDeferredCmdList(nullptr)
+  , m_Rendering(false)
+  , m_Initialized(false)
+  , m_pLights(nullptr)
+  , m_pGlobal(nullptr)
 {
-  mHDR.enabled = true;
-  mOffscreen.cmdBuffers.resize(2);
-  mOffscreen.currCmdBufferIndex = 0;
+  m_HDR._Enabled = true;
+  m_Offscreen._CmdBuffers.resize(2);
+  m_Offscreen._ShadowBuffers.resize(2);
+  m_Offscreen._CurrCmdBufferIndex = 0;
 
-  mHDR.cmdBuffers.resize(2);
-  mOffscreen.currCmdBufferIndex = 0;
+  m_HDR._CmdBuffers.resize(2);
+  m_Offscreen._CurrCmdBufferIndex = 0;
   
-  m_Downscale.horizontal = 0;
-  m_Downscale.strength = 1.0f;
-  m_Downscale.scale = 1.0f;
+  m_Downscale._Horizontal = 0;
+  m_Downscale._Strength = 1.0f;
+  m_Downscale._Scale = 1.0f;
 }
 
 
@@ -74,7 +75,7 @@ void Renderer::OnStartUp()
   }
   VulkanRHI::CreateContext();
   VulkanRHI::FindPhysicalDevice();
-  if (!mRhi) mRhi = new VulkanRHI();
+  if (!m_pRhi) m_pRhi = new VulkanRHI();
 }
 
 
@@ -90,16 +91,16 @@ void Renderer::OnShutDown()
 
 void Renderer::BeginFrame()
 {
-  mRendering = true;
-  mRhi->PresentWaitIdle();
-  mRhi->AcquireNextImage();
+  m_Rendering = true;
+  m_pRhi->PresentWaitIdle();
+  m_pRhi->AcquireNextImage();
 }
 
 
 void Renderer::EndFrame()
 {
-  mRendering = false;
-  mRhi->Present();
+  m_Rendering = false;
+  m_pRhi->Present();
 }
 
 
@@ -107,9 +108,9 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
-  VkCommandBuffer offscreenCmd = mOffscreen.cmdBuffers[mOffscreen.currCmdBufferIndex]->Handle();
-  VkSemaphore waitSemas[] = { mRhi->SwapchainObject()->ImageAvailableSemaphore() };
-  VkSemaphore signalSemas[] = { mOffscreen.semaphore->Handle() };
+  VkCommandBuffer offscreenCmd = m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle();
+  VkSemaphore waitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
+  VkSemaphore signalSemas[] = { m_Offscreen._Semaphore->Handle() };
   VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
   VkSubmitInfo offscreenSI = {};
@@ -123,36 +124,37 @@ void Renderer::Render()
   offscreenSI.pWaitDstStageMask = waitFlags;
 
   VkSubmitInfo hdrSI = offscreenSI;
-  VkSemaphore hdrWaits[] = { mOffscreen.semaphore->Handle() };
-  VkSemaphore hdrSignal[] = { mHDR.semaphore->Handle() };
-  VkCommandBuffer hdrCmd = mHDR.cmdBuffers[mHDR.currCmdBufferIndex]->Handle();
+  VkSemaphore hdrWaits[] = { m_Offscreen._Semaphore->Handle() };
+  VkSemaphore hdrSignal[] = { m_HDR._Semaphore->Handle() };
+  VkCommandBuffer hdrCmd = m_HDR._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
   hdrSI.pSignalSemaphores = hdrSignal;
   hdrSI.pWaitSemaphores = hdrWaits;
 
-  VkSemaphore waitSemaphores = mHDR.semaphore->Handle();
-  if (!mHDR.enabled) waitSemaphores = mOffscreen.semaphore->Handle();
+  VkSemaphore waitSemaphores = m_HDR._Semaphore->Handle();
+  if (!m_HDR._Enabled) waitSemaphores = m_Offscreen._Semaphore->Handle();
 
   // Update materials before rendering the frame.
   UpdateMaterials();
 
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-    while (mOffscreen.cmdBuffers[mHDR.currCmdBufferIndex]->Recording() || !mRhi->CmdBuffersComplete()) {}
+    while (m_Offscreen._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
 
     // Render shadow map here. Primary shadow map is our concern.
-    if (mLights->PrimaryShadowEnabled()) {
+    if (m_pLights->PrimaryShadowEnabled()) {
+      RenderPrimaryShadows();
     }
 
     // Offscreen PBR Forward Rendering Pass.
-    mRhi->GraphicsSubmit(offscreenSI);
+    m_pRhi->GraphicsSubmit(offscreenSI);
 
     // High Dynamic Range and Gamma Pass.
-    if (mHDR.enabled) mRhi->GraphicsSubmit(hdrSI);
+    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(hdrSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
     // ssent our signal to our swapchain cmd buffers.
-    mRhi->SubmitCurrSwapchainCmdBuffer(1, &waitSemaphores);
+    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &waitSemaphores);
 
     // Render the Overlay.
     RenderOverlay();
@@ -168,26 +170,26 @@ void Renderer::Render()
   computeSubmit.signalSemaphoreCount = 0;
   computeSubmit.waitSemaphoreCount = 0;
 
-  mRhi->ComputeSubmit(computeSubmit);
+  m_pRhi->ComputeSubmit(computeSubmit);
 }
 
 
 void Renderer::CleanUp()
 {
   // Must wait for all command buffers to finish before cleaning up.
-  mRhi->DeviceWaitIdle();
+  m_pRhi->DeviceWaitIdle();
 
-  mGlobal->CleanUp();
-  delete mGlobal;
-  mGlobal = nullptr;
+  m_pGlobal->CleanUp();
+  delete m_pGlobal;
+  m_pGlobal = nullptr;
 
-  if (mUI) {
-    mUI->CleanUp();
-    delete mUI;
-    mUI = nullptr;
+  if (m_pUI) {
+    m_pUI->CleanUp();
+    delete m_pUI;
+    m_pUI = nullptr;
   }
 
-  mRenderQuad.CleanUp();
+  m_RenderQuad.CleanUp();
   CleanUpHDR(true);
   CleanUpDownscale(true);
   CleanUpOffscreen(true);
@@ -197,43 +199,43 @@ void Renderer::CleanUp()
   CleanUpFrameBuffers();
   CleanUpRenderTextures(true);
 
-  if (mRhi) {
-    mRhi->CleanUp();
-    delete mRhi;
-    mRhi = nullptr;
+  if (m_pRhi) {
+    m_pRhi->CleanUp();
+    delete m_pRhi;
+    m_pRhi = nullptr;
   }
-  mInitialized = false;
+  m_Initialized = false;
 }
 
 
 b8 Renderer::Initialize(Window* window)
 {
   if (!window) return false;
-  if (mInitialized) return true;
+  if (m_Initialized) return true;
   
-  mWindowHandle = window;
-  mRhi->Initialize(window->Handle());
+  m_pWindow = window;
+  m_pRhi->Initialize(window->Handle());
 
   SetUpRenderTextures(true);
   SetUpFrameBuffers();
   SetUpDescriptorSetLayouts();
   SetUpGraphicsPipelines();
   GlobalDescriptor* gMat = new GlobalDescriptor();
-  gMat->mRhi = mRhi;
+  gMat->m_pRhi = m_pRhi;
   gMat->Initialize();
   gMat->Update();
-  mGlobal = gMat;
+  m_pGlobal = gMat;
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
   SetUpHDR(true);
-  mRenderQuad.Initialize(mRhi);
+  m_RenderQuad.Initialize(m_pRhi);
 
-  mRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
+  m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
     VkViewport viewport = { };
-    viewport.height = (r32) mWindowHandle->Height();
-    viewport.width = (r32) mWindowHandle->Width();
+    viewport.height = (r32) m_pWindow->Height();
+    viewport.width = (r32) m_pWindow->Width();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     viewport.x = 0.0f;
@@ -248,23 +250,23 @@ b8 Renderer::Initialize(Window* window)
       VkDescriptorSet finalDescriptorSet = finalSet->Handle();    
 
       cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Layout(), 0, 1, &finalDescriptorSet, 0, nullptr);
-      VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
-      VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
+      VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
+      VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
       cmdBuffer.BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer.BindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
-      cmdBuffer.DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer.DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer.EndRenderPass();
   });
 
-  if (!mUI) {
-    mUI = new UIOverlay();
-    mUI->Initialize(mRhi);
+  if (!m_pUI) {
+    m_pUI = new UIOverlay();
+    m_pUI->Initialize(m_pRhi);
   }
 
-  mInitialized = true;
+  m_Initialized = true;
   return true;
 }
 
@@ -279,7 +281,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     LightViewBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-    DescriptorSetLayout* LightViewLayout = mRhi->CreateDescriptorSetLayout();
+    DescriptorSetLayout* LightViewLayout = m_pRhi->CreateDescriptorSetLayout();
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
     LightViewInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     LightViewInfo.bindingCount = static_cast<u32>(LightViewBindings.size());
@@ -288,11 +290,11 @@ void Renderer::SetUpDescriptorSetLayouts()
     gResources().RegisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr, LightViewLayout);  
   }
 
-  DescriptorSetLayout* GlobalSetLayout = mRhi->CreateDescriptorSetLayout();
-  DescriptorSetLayout* MeshSetLayout = mRhi->CreateDescriptorSetLayout();
-  DescriptorSetLayout* MaterialSetLayout = mRhi->CreateDescriptorSetLayout();
-  DescriptorSetLayout* LightSetLayout = mRhi->CreateDescriptorSetLayout();
-  DescriptorSetLayout* BonesSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* GlobalSetLayout = m_pRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* MeshSetLayout = m_pRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* MaterialSetLayout = m_pRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* LightSetLayout = m_pRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* BonesSetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(GlobalSetLayoutStr, GlobalSetLayout);
   gResources().RegisterDescriptorSetLayout(MeshSetLayoutStr, MeshSetLayout);
   gResources().RegisterDescriptorSetLayout(MaterialSetLayoutStr, MaterialSetLayout);
@@ -408,7 +410,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     LightSetLayout->Initialize(LightLayout);
   }
 
-  DescriptorSetLayout* finalSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* finalSetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(FinalDescSetLayoutStr, finalSetLayout);
 
   VkDescriptorSetLayoutBinding finalTextureSample = {};
@@ -426,7 +428,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   finalSetLayout->Initialize(finalLayoutInfo);
 
   // HDR Layout pass.
-  DescriptorSetLayout* hdrSetLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* hdrSetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(HDRGammaDescSetLayoutStr, hdrSetLayout);
   VkDescriptorSetLayoutBinding hdrBindings[3];
   hdrBindings[0].binding = 0;
@@ -455,7 +457,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   hdrSetLayout->Initialize(hdrLayoutCi);
 
   // Downscale descriptor set layout info.
-  DescriptorSetLayout* downscaleLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* downscaleLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(DownscaleBlurLayoutStr, downscaleLayout);
 
   VkDescriptorSetLayoutBinding dwnscl[1];
@@ -474,7 +476,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   
   downscaleLayout->Initialize(dwnLayout);
 
-  DescriptorSetLayout* GlowLayout = mRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* GlowLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(GlowDescriptorSetLayoutStr, GlowLayout);
   VkDescriptorSetLayoutBinding glow[3];
 
@@ -514,26 +516,26 @@ void Renderer::CleanUpDescriptorSetLayouts()
   DescriptorSetLayout* LightSetLayout = gResources().UnregisterDescriptorSetLayout(LightSetLayoutStr);
   DescriptorSetLayout* BonesSetLayout = gResources().UnregisterDescriptorSetLayout(BonesSetLayoutStr);
 
-  mRhi->FreeDescriptorSetLayout(GlobalSetLayout);
-  mRhi->FreeDescriptorSetLayout(MeshSetLayout);
-  mRhi->FreeDescriptorSetLayout(MaterialSetLayout);
-  mRhi->FreeDescriptorSetLayout(LightSetLayout);
-  mRhi->FreeDescriptorSetLayout(BonesSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(GlobalSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(MeshSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(MaterialSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(LightSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(BonesSetLayout);
 
   DescriptorSetLayout* LightViewLayout = gResources().UnregisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
-  mRhi->FreeDescriptorSetLayout(LightViewLayout);
+  m_pRhi->FreeDescriptorSetLayout(LightViewLayout);
 
   DescriptorSetLayout* finalSetLayout = gResources().UnregisterDescriptorSetLayout(FinalDescSetLayoutStr);
-  mRhi->FreeDescriptorSetLayout(finalSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(finalSetLayout);
 
   DescriptorSetLayout* hdrSetLayout = gResources().UnregisterDescriptorSetLayout(HDRGammaDescSetLayoutStr);
-  mRhi->FreeDescriptorSetLayout(hdrSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(hdrSetLayout);
 
   DescriptorSetLayout* downscaleLayout = gResources().UnregisterDescriptorSetLayout(DownscaleBlurLayoutStr);
-  mRhi->FreeDescriptorSetLayout(downscaleLayout);
+  m_pRhi->FreeDescriptorSetLayout(downscaleLayout);
 
   DescriptorSetLayout* GlowLayout = gResources().UnregisterDescriptorSetLayout(GlowDescriptorSetLayoutStr);
-  mRhi->FreeDescriptorSetLayout(GlowLayout);
+  m_pRhi->FreeDescriptorSetLayout(GlowLayout);
 }
 
 
@@ -544,10 +546,10 @@ void Renderer::SetUpFrameBuffers()
   Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
   Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
 
-  FrameBuffer* pbrFrameBuffer = mRhi->CreateFrameBuffer();
+  FrameBuffer* pbrFrameBuffer = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(PBRFrameBufferStr, pbrFrameBuffer);
 
-  FrameBuffer* hdrFrameBuffer = mRhi->CreateFrameBuffer();
+  FrameBuffer* hdrFrameBuffer = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
   std::array<VkAttachmentDescription, 4> attachmentDescriptions;
@@ -650,8 +652,8 @@ void Renderer::SetUpFrameBuffers()
   attachments[3] = pbrDepth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
-    mWindowHandle->Width(),
-    mWindowHandle->Height(),
+    m_pWindow->Width(),
+    m_pWindow->Height(),
     nullptr, // Finalize() call handles this for us.
     static_cast<u32>(attachments.size()),
     attachments.data(),
@@ -680,13 +682,13 @@ void Renderer::SetUpFrameBuffers()
   Texture* RenderTarget8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
   Texture* GlowTarget = gResources().GetRenderTexture(RenderTargetGlowStr);
 
-  FrameBuffer* DownScaleFB2x = mRhi->CreateFrameBuffer();
-  FrameBuffer* FB2xFinal = mRhi->CreateFrameBuffer();
-  FrameBuffer* DownScaleFB4x = mRhi->CreateFrameBuffer();
-  FrameBuffer* FB4xFinal = mRhi->CreateFrameBuffer();
-  FrameBuffer* DownScaleFB8x = mRhi->CreateFrameBuffer();
-  FrameBuffer* FB8xFinal = mRhi->CreateFrameBuffer();
-  FrameBuffer* GlowFB = mRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB2x = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* FB2xFinal = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB4x = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* FB4xFinal = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB8x = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* FB8xFinal = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* GlowFB = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(FrameBuffer2xHorizStr, DownScaleFB2x);
   gResources().RegisterFrameBuffer(FrameBuffer2xFinalStr, FB2xFinal);
   gResources().RegisterFrameBuffer(FrameBuffer4xStr, DownScaleFB4x); 
@@ -744,8 +746,8 @@ void Renderer::SetUpFrameBuffers()
   attachments[0] = GlowTarget->View();
   attachmentDescriptions[0].format = GlowTarget->Format();
   attachmentDescriptions[0].samples = GlowTarget->Samples();
-  framebufferCI.width = mRhi->SwapchainObject()->SwapchainExtent().width;
-  framebufferCI.height = mRhi->SwapchainObject()->SwapchainExtent().height;
+  framebufferCI.width = m_pRhi->SwapchainObject()->SwapchainExtent().width;
+  framebufferCI.height = m_pRhi->SwapchainObject()->SwapchainExtent().height;
   GlowFB->Finalize(framebufferCI, renderpassCI);
 }
 
@@ -764,11 +766,11 @@ void Renderer::SetUpGraphicsPipelines()
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().height);
-  viewport.width = static_cast<r32>(mRhi->SwapchainObject()->SwapchainExtent().width);
+  viewport.height = static_cast<r32>(m_pRhi->SwapchainObject()->SwapchainExtent().height);
+  viewport.width = static_cast<r32>(m_pRhi->SwapchainObject()->SwapchainExtent().width);
 
   VkRect2D scissor = { };
-  scissor.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  scissor.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
   scissor.offset = { 0, 0 };
 
   VkPipelineViewportStateCreateInfo viewportCI = { };
@@ -883,6 +885,14 @@ void Renderer::SetUpGraphicsPipelines()
   GraphicsPipelineInfo.pDynamicState = &dynamicCI;
   GraphicsPipelineInfo.subpass = 0;
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+  if (m_pLights && m_pLights->m_pFrameBuffer) {
+    GraphicsPipelineInfo.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
+    RendererPass::SetUpDirectionalShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
+    GraphicsPipelineInfo.renderPass = nullptr;
+  } else {
+    R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
+  }
     
   RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
 
@@ -914,38 +924,43 @@ void Renderer::SetUpGraphicsPipelines()
 void Renderer::CleanUpGraphicsPipelines()
 {
   GraphicsPipeline* PbrPipeline = gResources().UnregisterGraphicsPipeline(PBRPipelineStr);
-  mRhi->FreeGraphicsPipeline(PbrPipeline);
+  m_pRhi->FreeGraphicsPipeline(PbrPipeline);
 
   GraphicsPipeline* PbrStaticPipeline = gResources().UnregisterGraphicsPipeline(PBRStaticPipelineStr);
-  mRhi->FreeGraphicsPipeline(PbrStaticPipeline);
+  m_pRhi->FreeGraphicsPipeline(PbrStaticPipeline);
 
   GraphicsPipeline* QuadPipeline = gResources().UnregisterGraphicsPipeline(FinalPipelineStr);
-  mRhi->FreeGraphicsPipeline(QuadPipeline);
+  m_pRhi->FreeGraphicsPipeline(QuadPipeline);
 
   GraphicsPipeline* HdrPipeline = gResources().UnregisterGraphicsPipeline(HDRGammaPipelineStr);
-  mRhi->FreeGraphicsPipeline(HdrPipeline);
+  m_pRhi->FreeGraphicsPipeline(HdrPipeline);
 
   GraphicsPipeline* DownscalePipeline2x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline2xStr);
-  mRhi->FreeGraphicsPipeline(DownscalePipeline2x);
+  m_pRhi->FreeGraphicsPipeline(DownscalePipeline2x);
 
   GraphicsPipeline* DownscalePipeline4x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline4xStr);
-  mRhi->FreeGraphicsPipeline(DownscalePipeline4x);
+  m_pRhi->FreeGraphicsPipeline(DownscalePipeline4x);
 
   GraphicsPipeline* DownscalePipeline8x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline8xStr);
-  mRhi->FreeGraphicsPipeline(DownscalePipeline8x);
+  m_pRhi->FreeGraphicsPipeline(DownscalePipeline8x);
 
   GraphicsPipeline* GlowPipeline = gResources().UnregisterGraphicsPipeline(GlowPipelineStr);
-  mRhi->FreeGraphicsPipeline(GlowPipeline);
+  m_pRhi->FreeGraphicsPipeline(GlowPipeline);
+
+  GraphicsPipeline* ShadowMapPipeline = gResources().UnregisterGraphicsPipeline(ShadowMapPipelineStr);
+  if (ShadowMapPipeline) {
+    m_pRhi->FreeGraphicsPipeline(ShadowMapPipeline);
+  }
 }
 
 
 void Renderer::CleanUpFrameBuffers()
 {
   FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer(PBRFrameBufferStr);
-  mRhi->FreeFrameBuffer(pbrFrameBuffer);
+  m_pRhi->FreeFrameBuffer(pbrFrameBuffer);
 
   FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer(HDRGammaFrameBufferStr);
-  mRhi->FreeFrameBuffer(hdrFrameBuffer);
+  m_pRhi->FreeFrameBuffer(hdrFrameBuffer);
 
   FrameBuffer* DownScaleFB2x = gResources().UnregisterFrameBuffer(FrameBuffer2xHorizStr);
   FrameBuffer* FB2xFinal = gResources().UnregisterFrameBuffer(FrameBuffer2xFinalStr);
@@ -955,33 +970,33 @@ void Renderer::CleanUpFrameBuffers()
   FrameBuffer* FB8xFinal = gResources().UnregisterFrameBuffer(FrameBuffer8xFinalStr);
   FrameBuffer* GlowFB = gResources().UnregisterFrameBuffer(FrameBufferGlowStr);
 
-  mRhi->FreeFrameBuffer(DownScaleFB2x);
-  mRhi->FreeFrameBuffer(DownScaleFB4x);
-  mRhi->FreeFrameBuffer(DownScaleFB8x);
-  mRhi->FreeFrameBuffer(FB2xFinal);
-  mRhi->FreeFrameBuffer(FB4xFinal);
-  mRhi->FreeFrameBuffer(FB8xFinal);
-  mRhi->FreeFrameBuffer(GlowFB);
+  m_pRhi->FreeFrameBuffer(DownScaleFB2x);
+  m_pRhi->FreeFrameBuffer(DownScaleFB4x);
+  m_pRhi->FreeFrameBuffer(DownScaleFB8x);
+  m_pRhi->FreeFrameBuffer(FB2xFinal);
+  m_pRhi->FreeFrameBuffer(FB4xFinal);
+  m_pRhi->FreeFrameBuffer(FB8xFinal);
+  m_pRhi->FreeFrameBuffer(GlowFB);
 }
 
 
 void Renderer::SetUpRenderTextures(b8 fullSetup)
 {
-  Texture* renderTarget2xScaled = mRhi->CreateTexture();
-  Texture* RenderTarget2xFinal = mRhi->CreateTexture();
-  Texture* renderTarget4xScaled = mRhi->CreateTexture();
-  Texture* RenderTarget4xFinal = mRhi->CreateTexture();
-  Texture* renderTarget8xScaled = mRhi->CreateTexture();
-  Texture* RenderTarget8xFinal = mRhi->CreateTexture();
-  Texture* RenderTargetBright = mRhi->CreateTexture();
-  Texture* GlowTarget = mRhi->CreateTexture();
+  Texture* renderTarget2xScaled = m_pRhi->CreateTexture();
+  Texture* RenderTarget2xFinal = m_pRhi->CreateTexture();
+  Texture* renderTarget4xScaled = m_pRhi->CreateTexture();
+  Texture* RenderTarget4xFinal = m_pRhi->CreateTexture();
+  Texture* renderTarget8xScaled = m_pRhi->CreateTexture();
+  Texture* RenderTarget8xFinal = m_pRhi->CreateTexture();
+  Texture* RenderTargetBright = m_pRhi->CreateTexture();
+  Texture* GlowTarget = m_pRhi->CreateTexture();
 
-  Texture* pbrColor = mRhi->CreateTexture();
-  Texture* pbrNormal = mRhi->CreateTexture();
-  Texture* pbrDepth = mRhi->CreateTexture();
-  Sampler* pbrSampler = mRhi->CreateSampler();
-  Texture* hdrTexture = mRhi->CreateTexture();
-  Sampler* hdrSampler = mRhi->CreateSampler();
+  Texture* pbrColor = m_pRhi->CreateTexture();
+  Texture* pbrNormal = m_pRhi->CreateTexture();
+  Texture* pbrDepth = m_pRhi->CreateTexture();
+  Sampler* pbrSampler = m_pRhi->CreateSampler();
+  Texture* hdrTexture = m_pRhi->CreateTexture();
+  Sampler* hdrSampler = m_pRhi->CreateSampler();
 
   gResources().RegisterSampler(HDRGammaSamplerStr, hdrSampler);
   gResources().RegisterRenderTexture(HDRGammaColorAttachStr, hdrTexture);
@@ -1009,8 +1024,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
   cImageInfo.arrayLayers = 1;
-  cImageInfo.extent.width = mWindowHandle->Width();
-  cImageInfo.extent.height = mWindowHandle->Height();
+  cImageInfo.extent.width = m_pWindow->Width();
+  cImageInfo.extent.height = m_pWindow->Height();
   cImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   cImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -1032,33 +1047,33 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   GlowTarget->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
-  cImageInfo.extent.width = mWindowHandle->Width()    >> 1;
-  cImageInfo.extent.height = mWindowHandle->Height()  >> 1;
+  cImageInfo.extent.width = m_pWindow->Width()    >> 1;
+  cImageInfo.extent.height = m_pWindow->Height()  >> 1;
   renderTarget2xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget2xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = mWindowHandle->Width()    >> 2;
-  cImageInfo.extent.height = mWindowHandle->Height()  >> 2;
+  cImageInfo.extent.width = m_pWindow->Width()    >> 2;
+  cImageInfo.extent.height = m_pWindow->Height()  >> 2;
   renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget4xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width =  mWindowHandle->Width()   >> 3;
-  cImageInfo.extent.height = mWindowHandle->Height()  >> 3;
+  cImageInfo.extent.width = m_pWindow->Width()   >> 3;
+  cImageInfo.extent.height = m_pWindow->Height()  >> 3;
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget8xFinal->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  cImageInfo.extent.width = mWindowHandle->Width();
-  cImageInfo.extent.height = mWindowHandle->Height();
+  cImageInfo.extent.width = m_pWindow->Width();
+  cImageInfo.extent.height = m_pWindow->Height();
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   hdrTexture->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.usage = mRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
-  cImageInfo.format = mRhi->DepthFormat();
+  cImageInfo.usage = m_pRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
+  cImageInfo.format = m_pRhi->DepthFormat();
 
-  cViewInfo.format = mRhi->DepthFormat();
-  cViewInfo.subresourceRange.aspectMask = mRhi->DepthAspectFlags();
+  cViewInfo.format = m_pRhi->DepthFormat();
+  cViewInfo.subresourceRange.aspectMask = m_pRhi->DepthAspectFlags();
 
   pbrDepth->Initialize(cImageInfo, cViewInfo);
 
@@ -1081,7 +1096,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   pbrSampler->Initialize(samplerCI);
   hdrSampler->Initialize(samplerCI);
   if (fullSetup) {
-    Sampler* defaultSampler = mRhi->CreateSampler();
+    Sampler* defaultSampler = m_pRhi->CreateSampler();
     defaultSampler->Initialize(samplerCI);
     gResources().RegisterSampler(DefaultSamplerStr, defaultSampler);
 
@@ -1096,8 +1111,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
     dImageInfo.mipLevels = 1;
     dImageInfo.extent.depth = 1;
     dImageInfo.arrayLayers = 1;
-    dImageInfo.extent.width = mWindowHandle->Width();
-    dImageInfo.extent.height = mWindowHandle->Height();
+    dImageInfo.extent.width = m_pWindow->Width();
+    dImageInfo.extent.height = m_pWindow->Height();
     dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -1113,7 +1128,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
     dViewInfo.subresourceRange.layerCount = 1;
     dViewInfo.subresourceRange.levelCount = 1;
 
-    Texture* defaultTexture = mRhi->CreateTexture();
+    Texture* defaultTexture = m_pRhi->CreateTexture();
 
     defaultTexture->Initialize(dImageInfo, dViewInfo);
     gResources().RegisterRenderTexture(DefaultTextureStr, defaultTexture);
@@ -1131,13 +1146,13 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* RenderTarget8xFinal = gResources().UnregisterRenderTexture(RenderTarget8xFinalStr);
   Texture* GlowTarget = gResources().UnregisterRenderTexture(RenderTargetGlowStr);
 
-  mRhi->FreeTexture(renderTarget2xScaled);
-  mRhi->FreeTexture(RenderTarget2xFinal);
-  mRhi->FreeTexture(renderTarget4xScaled);
-  mRhi->FreeTexture(RenderTarget4xFinal);
-  mRhi->FreeTexture(RenderTarget8xFinal);
-  mRhi->FreeTexture(renderTarget8xScaled);
-  mRhi->FreeTexture(GlowTarget);
+  m_pRhi->FreeTexture(renderTarget2xScaled);
+  m_pRhi->FreeTexture(RenderTarget2xFinal);
+  m_pRhi->FreeTexture(renderTarget4xScaled);
+  m_pRhi->FreeTexture(RenderTarget4xFinal);
+  m_pRhi->FreeTexture(RenderTarget8xFinal);
+  m_pRhi->FreeTexture(renderTarget8xScaled);
+  m_pRhi->FreeTexture(GlowTarget);
 
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
@@ -1148,21 +1163,21 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* hdrTexture = gResources().UnregisterRenderTexture(HDRGammaColorAttachStr);
   Sampler* hdrSampler = gResources().UnregisterSampler(HDRGammaSamplerStr);
   
-  mRhi->FreeTexture(hdrTexture);
-  mRhi->FreeSampler(hdrSampler);
+  m_pRhi->FreeTexture(hdrTexture);
+  m_pRhi->FreeSampler(hdrSampler);
 
-  mRhi->FreeTexture(pbrColor);
-  mRhi->FreeTexture(pbrNormal);
-  mRhi->FreeTexture(pbrDepth);
-  mRhi->FreeTexture(RenderTargetBright);
-  mRhi->FreeSampler(pbrSampler);
+  m_pRhi->FreeTexture(pbrColor);
+  m_pRhi->FreeTexture(pbrNormal);
+  m_pRhi->FreeTexture(pbrDepth);
+  m_pRhi->FreeTexture(RenderTargetBright);
+  m_pRhi->FreeSampler(pbrSampler);
 
   if (fullCleanup) {
     Texture* defaultTexture = gResources().UnregisterRenderTexture(DefaultTextureStr);
     Sampler* defaultSampler = gResources().UnregisterSampler(DefaultSamplerStr);
 
-    mRhi->FreeTexture(defaultTexture);
-    mRhi->FreeSampler(defaultSampler);
+    m_pRhi->FreeTexture(defaultTexture);
+    m_pRhi->FreeSampler(defaultSampler);
   }
 }
 
@@ -1170,14 +1185,14 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 void Renderer::SetUpOffscreen(b8 fullSetup)
 {
   if (fullSetup) {
-    mOffscreen.semaphore = mRhi->CreateVkSemaphore();
+    m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCI = { };
     semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    mOffscreen.semaphore->Initialize(semaCI);
+    m_Offscreen._Semaphore->Initialize(semaCI);
 
-    for (size_t i = 0; i < mOffscreen.cmdBuffers.size(); ++i) {
-      mOffscreen.cmdBuffers[i] = mRhi->CreateCommandBuffer();
-      mOffscreen.cmdBuffers[i]->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
+      m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
+      m_Offscreen._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
   }
 }
@@ -1186,9 +1201,9 @@ void Renderer::SetUpOffscreen(b8 fullSetup)
 void Renderer::CleanUpOffscreen(b8 fullCleanup)
 {
   if (fullCleanup) {
-    mRhi->FreeVkSemaphore(mOffscreen.semaphore);
-    for (size_t i = 0; i < mOffscreen.cmdBuffers.size(); ++i) {
-      mRhi->FreeCommandBuffer(mOffscreen.cmdBuffers[i]);
+    m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
+    for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
+      m_pRhi->FreeCommandBuffer(m_Offscreen._CmdBuffers[i]);
     }
   }
 }
@@ -1201,13 +1216,13 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
 
   DescriptorSetLayout* Layout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
   DescriptorSetLayout* GlowLayout = gResources().GetDescriptorSetLayout(GlowDescriptorSetLayoutStr);
-  DescriptorSet* DBDS2x = mRhi->CreateDescriptorSet();
-  DescriptorSet* DBDS2xFinal = mRhi->CreateDescriptorSet();
-  DescriptorSet* DBDS4x = mRhi->CreateDescriptorSet();
-  DescriptorSet* DBDS4xFinal = mRhi->CreateDescriptorSet();
-  DescriptorSet* DBDS8x = mRhi->CreateDescriptorSet();
-  DescriptorSet* DBDS8xFinal = mRhi->CreateDescriptorSet();
-  DescriptorSet* GlowDS = mRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS2x = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS2xFinal = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS4x = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS4xFinal = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS8x = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS8xFinal = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* GlowDS = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2x, DBDS2x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4x, DBDS4x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8x, DBDS8x);
@@ -1216,13 +1231,13 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr, DBDS8xFinal);
   gResources().RegisterDescriptorSet(GlowDescriptorSetStr, GlowDS);
 
-  DBDS2x->Allocate(mRhi->DescriptorPool(), Layout);
-  DBDS4x->Allocate(mRhi->DescriptorPool(), Layout);
-  DBDS8x->Allocate(mRhi->DescriptorPool(), Layout);
-  DBDS2xFinal->Allocate(mRhi->DescriptorPool(), Layout);
-  DBDS4xFinal->Allocate(mRhi->DescriptorPool(), Layout);
-  DBDS8xFinal->Allocate(mRhi->DescriptorPool(), Layout);
-  GlowDS->Allocate(mRhi->DescriptorPool(), GlowLayout);
+  DBDS2x->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS4x->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS8x->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS2xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS4xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS8xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
+  GlowDS->Allocate(m_pRhi->DescriptorPool(), GlowLayout);
 
   Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
@@ -1318,42 +1333,42 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
   }
 
   DescriptorSet* DBDS2x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2x);
-  mRhi->FreeDescriptorSet(DBDS2x);
+  m_pRhi->FreeDescriptorSet(DBDS2x);
   DescriptorSet* DBDS4x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet4x);
-  mRhi->FreeDescriptorSet(DBDS4x);
+  m_pRhi->FreeDescriptorSet(DBDS4x);
   DescriptorSet* DBDS8x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8x);
-  mRhi->FreeDescriptorSet(DBDS8x);
+  m_pRhi->FreeDescriptorSet(DBDS8x);
   DescriptorSet* DBDS2xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr);
-  mRhi->FreeDescriptorSet(DBDS2xFinal);
+  m_pRhi->FreeDescriptorSet(DBDS2xFinal);
   DescriptorSet* DBDS4xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr);
-  mRhi->FreeDescriptorSet(DBDS4xFinal);
+  m_pRhi->FreeDescriptorSet(DBDS4xFinal);
   DescriptorSet* DBDS8xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr);
-  mRhi->FreeDescriptorSet(DBDS8xFinal);
+  m_pRhi->FreeDescriptorSet(DBDS8xFinal);
   DescriptorSet* GlowDS = gResources().UnregisterDescriptorSet(GlowDescriptorSetStr);
-  mRhi->FreeDescriptorSet(GlowDS);
+  m_pRhi->FreeDescriptorSet(GlowDS);
 }
 
 
 void Renderer::SetUpHDR(b8 fullSetUp)
 {
   if (fullSetUp) {
-    for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
-      mHDR.cmdBuffers[i] = mRhi->CreateCommandBuffer();
-      mHDR.cmdBuffers[i]->Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    for (size_t i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+      m_HDR._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
+      m_HDR._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
-    mHDR.semaphore = mRhi->CreateVkSemaphore();
+    m_HDR._Semaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCi = { };
     semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-    mHDR.semaphore->Initialize(semaCi);
+    m_HDR._Semaphore->Initialize(semaCi);
   }
 
-  DescriptorSet* hdrSet = mRhi->CreateDescriptorSet();
+  DescriptorSet* hdrSet = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(HDRGammaDescSetStr, hdrSet);
   VkWriteDescriptorSet hdrWrites[3];
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
   hdrBufferInfo.range = sizeof(GlobalBuffer);
-  hdrBufferInfo.buffer = mGlobal->Handle()->NativeBuffer();
+  hdrBufferInfo.buffer = m_pGlobal->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
   pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
@@ -1397,7 +1412,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   hdrWrites[2].pNext = nullptr;
 
   // Allocate and update the hdr buffer.
-  hdrSet->Allocate(mRhi->DescriptorPool(), gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr));
+  hdrSet->Allocate(m_pRhi->DescriptorPool(), gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr));
   hdrSet->Update(3, hdrWrites);
 }
 
@@ -1405,50 +1420,50 @@ void Renderer::SetUpHDR(b8 fullSetUp)
 void Renderer::CleanUpHDR(b8 fullCleanUp)
 {
   if (fullCleanUp) {
-    mRhi->FreeVkSemaphore(mHDR.semaphore);
+    m_pRhi->FreeVkSemaphore(m_HDR._Semaphore);
 
-    for (size_t i = 0; i < mHDR.cmdBuffers.size(); ++i) {
-      mRhi->FreeCommandBuffer(mHDR.cmdBuffers[i]);
-      mHDR.cmdBuffers[i] = nullptr;
+    for (size_t i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+      m_pRhi->FreeCommandBuffer(m_HDR._CmdBuffers[i]);
+      m_HDR._CmdBuffers[i] = nullptr;
     }
 
-    mHDR.semaphore = nullptr;
+    m_HDR._Semaphore = nullptr;
   }
 
   DescriptorSet* hdrSet = gResources().UnregisterDescriptorSet(HDRGammaDescSetStr);
-  mRhi->FreeDescriptorSet(hdrSet);
+  m_pRhi->FreeDescriptorSet(hdrSet);
 }
 
 
 void Renderer::Build()
 {
-  mRhi->GraphicsWaitIdle();
+  m_pRhi->GraphicsWaitIdle();
 
-  BuildOffScreenBuffer(mOffscreen.currCmdBufferIndex);
-  BuildHDRCmdBuffer(mHDR.currCmdBufferIndex);
-  mRhi->RebuildCommandBuffers(mRhi->CurrentSwapchainCmdBufferSet());
+  BuildOffScreenBuffer(m_Offscreen._CurrCmdBufferIndex);
+  BuildHDRCmdBuffer(m_HDR._CurrCmdBufferIndex);
+  m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
 }
 
 
 void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 {
-  if (cmdBufferIndex >= mOffscreen.cmdBuffers.size()) { 
+  if (cmdBufferIndex >= m_Offscreen._CmdBuffers.size()) { 
     R_DEBUG(rError, "Attempted to build offscreen cmd buffer. Index out of bounds!\n");
     return; 
   }
 
-  if (!mLights || !mGlobal) {  
+  if (!m_pLights || !m_pGlobal) {  
     Log(rWarning) << "Can not build commandbuffers without light or global data! One of them is null!";
   } 
 
-  CommandBuffer* cmdBuffer = mOffscreen.cmdBuffers[cmdBufferIndex];
+  CommandBuffer* cmdBuffer = m_Offscreen._CmdBuffers[cmdBufferIndex];
   FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
   GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(PBRPipelineStr);
   GraphicsPipeline* staticPbrPipeline = gResources().GetGraphicsPipeline(PBRStaticPipelineStr);
 
   if (cmdBuffer && !cmdBuffer->Recording()) {
 
-    mRhi->DeviceWaitIdle();
+    m_pRhi->DeviceWaitIdle();
     cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
 
@@ -1468,12 +1483,12 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
   pbrRenderPassInfo.pClearValues = clearValues.data();
   pbrRenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-  pbrRenderPassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  pbrRenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
   pbrRenderPassInfo.renderArea.offset = { 0, 0 };
 
   VkViewport viewport =  { };
-  viewport.height = (r32)mWindowHandle->Height();
-  viewport.width = (r32)mWindowHandle->Width();
+  viewport.height = (r32)m_pWindow->Height();
+  viewport.width = (r32)m_pWindow->Width();
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -1483,12 +1498,12 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    if (mCmdList) {
-      for (size_t i = 0; i < mCmdList->Size(); ++i) {
-        RenderCmd& renderCmd = mCmdList->Get(i);
+    if (m_pCmdList) {
+      for (size_t i = 0; i < m_pCmdList->Size(); ++i) {
+        RenderCmd& renderCmd = m_pCmdList->Get(i);
         // Need to notify that this render command does not have a render object.
-        if (!renderCmd.target) continue;
-        RenderObject* RenderObj = renderCmd.target;
+        if (!renderCmd._pTarget) continue;
+        RenderObject* RenderObj = renderCmd._pTarget;
         if (!RenderObj->Renderable) continue;
 
         b8 Skinned = RenderObj->MeshDescriptorId->Skinned();
@@ -1496,10 +1511,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
 
-        DescriptorSets[0] = mGlobal->Set()->Handle();
+        DescriptorSets[0] = m_pGlobal->Set()->Handle();
         DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
         DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
-        DescriptorSets[3] = mLights->Set()->Handle();
+        DescriptorSets[3] = m_pLights->Set()->Handle();
         DescriptorSets[4] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
 
         // Bind materials.
@@ -1539,8 +1554,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       }
     }
 
-    if (mDeferredCmdList) {
-      for (size_t i = 0; i < mDeferredCmdList->Size(); ++i) {
+    if (m_pDeferredCmdList) {
+      for (size_t i = 0; i < m_pDeferredCmdList->Size(); ++i) {
 
       }
     }
@@ -1551,16 +1566,16 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
 void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 {
-  if (cmdBufferIndex >= mHDR.cmdBuffers.size()) {
+  if (cmdBufferIndex >= m_HDR._CmdBuffers.size()) {
     R_DEBUG(rError, "Attempted to build HDR cmd buffer. Index out of bounds!\n");
     return;
   }
 
-  CommandBuffer* cmdBuffer = mHDR.cmdBuffers[cmdBufferIndex];
+  CommandBuffer* cmdBuffer = m_HDR._CmdBuffers[cmdBufferIndex];
   if (!cmdBuffer) return;
 
-  VkBuffer vertexBuffer = mRenderQuad.Quad()->Handle()->NativeBuffer();
-  VkBuffer indexBuffer = mRenderQuad.Indices()->Handle()->NativeBuffer();
+  VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
+  VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
 
   GraphicsPipeline* hdrPipeline = gResources().GetGraphicsPipeline(HDRGammaPipelineStr);
@@ -1599,7 +1614,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
   renderpassInfo.renderPass = hdrFrameBuffer->RenderPass();
-  renderpassInfo.renderArea.extent = mRhi->SwapchainObject()->SwapchainExtent();
+  renderpassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
   renderpassInfo.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass2x =  { };
@@ -1639,8 +1654,8 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   GlowPass.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  viewport.height = (r32)mWindowHandle->Height();
-  viewport.width = (r32)mWindowHandle->Width();
+  viewport.height = (r32)m_pWindow->Height();
+  viewport.width = (r32)m_pWindow->Width();
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -1648,83 +1663,83 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale.strength = 1.f;
-    m_Downscale.scale = 2.0f;
-    m_Downscale.horizontal = true;
+    m_Downscale._Strength = 1.f;
+    m_Downscale._Scale = 2.0f;
+    m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
-    viewport.height = (r32)(mWindowHandle->Height() >> 1);
-    viewport.width =  (r32)(mWindowHandle->Width() >> 1);
+    viewport.height = (r32)(m_pWindow->Height() >> 1);
+    viewport.width =  (r32)(m_pWindow->Width() >> 1);
     cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale.horizontal);
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale.strength);
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale.scale);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
     DownscalePass2x.framebuffer = FB2xFinal->Handle();
     DownscalePass2x.renderPass = FB2xFinal->RenderPass();
     cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
-      m_Downscale.horizontal = false;
+      m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale.horizontal);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)(mWindowHandle->Height() >> 2);
-    viewport.width = (r32)(mWindowHandle->Width() >> 2);
+    viewport.height = (r32)(m_pWindow->Height() >> 2);
+    viewport.width = (r32)(m_pWindow->Width() >> 2);
     DownscaleSetNative = DownscaleSet4x->Handle();
-    i32 horizontal = true;
+    i32 _Horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
     DownscalePass4x.framebuffer = FB4xFinal->Handle();
     DownscalePass4x.renderPass = FB4xFinal->RenderPass();
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
-      horizontal = false;
+      _Horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)(mWindowHandle->Height() >> 3);
-    viewport.width = (r32)(mWindowHandle->Width() >> 3);
+    viewport.height = (r32)(m_pWindow->Height() >> 3);
+    viewport.width = (r32)(m_pWindow->Width() >> 3);
     DownscaleSetNative = DownscaleSet8x->Handle();
-    horizontal = true;
+    _Horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
-      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
+      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
     DownscalePass8x.framebuffer = FB8xFinal->Handle();
     DownscalePass8x.renderPass = FB8xFinal->RenderPass();
     cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
-      horizontal = false;
+      _Horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &horizontal);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)mWindowHandle->Height();
-    viewport.width = (r32)mWindowHandle->Width();
+    viewport.height = (r32)m_pWindow->Height();
+    viewport.width = (r32)m_pWindow->Width();
     VkDescriptorSet GlowDescriptorNative = GlowSet->Handle();
     cmdBuffer->BeginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -1732,7 +1747,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Layout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
     VkDescriptorSet dSet = hdrSet->Handle();
@@ -1742,7 +1757,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(mRenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
@@ -1751,9 +1766,9 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 void Renderer::SetUpFinalOutputs()
 {
   DescriptorSetLayout* finalSetLayout = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr);
-  DescriptorSet* offscreenImageDescriptor = mRhi->CreateDescriptorSet();
+  DescriptorSet* offscreenImageDescriptor = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(FinalDescSetStr, offscreenImageDescriptor);
-  offscreenImageDescriptor->Allocate(mRhi->DescriptorPool(), finalSetLayout);
+  offscreenImageDescriptor->Allocate(m_pRhi->DescriptorPool(), finalSetLayout);
 
   Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* hdrColor = gResources().GetRenderTexture(
@@ -1766,7 +1781,7 @@ void Renderer::SetUpFinalOutputs()
   VkDescriptorImageInfo renderTextureFinal = {};
   renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-  if (mHDR.enabled) {
+  if (m_HDR._Enabled) {
     renderTextureFinal.sampler = hdrSampler->Handle();
     renderTextureFinal.imageView = hdrColor->View();
   } else {
@@ -1788,17 +1803,23 @@ void Renderer::SetUpFinalOutputs()
 }
 
 
+void Renderer::RenderPrimaryShadows()
+{
+
+}
+
+
 void Renderer::CleanUpFinalOutputs()
 {
   DescriptorSet* offscreenDescriptorSet = gResources().UnregisterDescriptorSet(FinalDescSetStr);
-  mRhi->FreeDescriptorSet(offscreenDescriptorSet);
+  m_pRhi->FreeDescriptorSet(offscreenDescriptorSet);
 }
 
 
 MeshData* Renderer::CreateMeshData()
 {
   MeshData* mesh = new MeshData();
-  mesh->mRhi = mRhi;
+  mesh->mRhi = m_pRhi;
   return mesh;
 }
 
@@ -1813,7 +1834,7 @@ void Renderer::FreeMeshData(MeshData* mesh)
 RenderObject* Renderer::CreateRenderObject()
 {
   RenderObject* obj = new RenderObject(nullptr, nullptr);
-  obj->mRhi = mRhi;
+  obj->mRhi = m_pRhi;
   return obj;
 }
 
@@ -1828,22 +1849,22 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
-  mGlobal->Update();
+  m_pGlobal->Update();
 }
 
 
 void Renderer::RenderOverlay()
 {
-  mUI->Render();
+  m_pUI->Render();
 }
 
 
 void Renderer::UpdateRendererConfigs(UserParams* params)
 {
-  mRhi->DeviceWaitIdle();
+  m_pRhi->DeviceWaitIdle();
 
-  if (mWindowHandle->Width() <= 0 || mWindowHandle <= 0) return;
-  VkPresentModeKHR presentMode = mRhi->SwapchainObject()->CurrentPresentMode();
+  if (m_pWindow->Width() <= 0 || m_pWindow <= 0) return;
+  VkPresentModeKHR presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode();
 
   if (params) {
     switch (params->presentMode) {
@@ -1855,9 +1876,9 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   }
 
   // Triple buffering atm, we will need to use user params to switch this.
-  mRhi->ReConfigure(presentMode, mWindowHandle->Width(), mWindowHandle->Height());
+  m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height());
 
-  mUI->CleanUp();
+  m_pUI->CleanUp();
 
   CleanUpHDR(false);
   CleanUpDownscale(false);
@@ -1875,8 +1896,8 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   SetUpDownscale(false);
   SetUpHDR(false);
 
-  mUI->Initialize(mRhi);
-  if (mCmdList->Size() > 0) {
+  m_pUI->Initialize(m_pRhi);
+  if (m_pCmdList->Size() > 0) {
     Build();
   }
 }
@@ -1892,7 +1913,7 @@ void Renderer::BuildAsync()
     if (inProgress) { return; }
 
     inProgress = true;
-    u32 idx = mRhi->CurrentImageIndex();
+    u32 idx = m_pRhi->CurrentImageIndex();
 
     inProgress = false;
   });
@@ -1901,14 +1922,14 @@ void Renderer::BuildAsync()
 
 void Renderer::WaitIdle()
 {
-  mRhi->DeviceWaitIdle();
+  m_pRhi->DeviceWaitIdle();
 }
 
 
 LightDescriptor* Renderer::CreateLightDescriptor()
 {
   LightDescriptor* lMat = new LightDescriptor();
-  lMat->mRhi = mRhi;
+  lMat->m_pRhi = m_pRhi;
 
   return lMat;
 }
@@ -1937,7 +1958,7 @@ void Renderer::FreeTexture1D(Texture1D* texture)
 Texture2D* Renderer::CreateTexture2D()
 {
   Texture2D* texture = new Texture2D();
-  texture->mRhi = mRhi;
+  texture->mRhi = m_pRhi;
 
   return texture;
 }
@@ -1960,8 +1981,8 @@ Texture2DArray* Renderer::CreateTexture2DArray()
 
 void Renderer::EnableHDR(b8 enable)
 {
-  if (mHDR.enabled != enable) {
-    mHDR.enabled = enable;
+  if (m_HDR._Enabled != enable) {
+    m_HDR._Enabled = enable;
     UpdateRendererConfigs(nullptr);
   }
 }

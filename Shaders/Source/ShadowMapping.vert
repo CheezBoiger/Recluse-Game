@@ -32,13 +32,12 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 // One directional light.
 layout (set = 1, binding = 0) uniform LightSpace {
-  mat4  proj;
-  mat4  view;
+  mat4  viewProj;
 } light_space;
 
 
 void main()
 {
-  mat4 mvp = light_space.proj * light_space.view * obj_buffer.model;
+  mat4 mvp = light_space.viewProj * obj_buffer.model;
   gl_Position = mvp * vec4(position.xyz, 1.0);
 }

@@ -10,32 +10,32 @@
 namespace Recluse {
 
 MeshDescriptor::MeshDescriptor()
-  : mVisible(true)
-  , mRenderable(true)
-  , mTranslucent(false)
-  , mStatic(true) 
-  , mSkinned(false)
+  : m_Visible(true)
+  , m_Renderable(true)
+  , m_Translucent(false)
+  , m_Static(true) 
+  , m_Skinned(false)
 {
-  mObjectData.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  mObjectData.lodBias = 0.0f;
-  mObjectData.transparency = 1.0f;
-  mObjectData.hasAlbedo = false;
-  mObjectData.hasAO = false;
-  mObjectData.hasBones = false;
-  mObjectData.hasEmissive = false;
-  mObjectData.hasMetallic = false;
-  mObjectData.hasNormal = false;
-  mObjectData.baseEmissive = 0.0f;
-  mObjectData.hasRoughness = false;
-  mObjectData.isTransparent = false;
-  mObjectData.baseMetal = 0.0f;
-  mObjectData.baseRough = 1.0f;
+  m_ObjectData._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  m_ObjectData._LodBias = 0.0f;
+  m_ObjectData._Transparency = 1.0f;
+  m_ObjectData._HasAlbedo = false;
+  m_ObjectData._HasAO = false;
+  m_ObjectData._HasBones = false;
+  m_ObjectData._HasEmissive = false;
+  m_ObjectData._HasMetallic = false;
+  m_ObjectData._HasNormal = false;
+  m_ObjectData._BaseEmissive = 0.0f;
+  m_ObjectData._HasRoughness = false;
+  m_ObjectData._IsTransparent = false;
+  m_ObjectData._BaseMetal = 0.0f;
+  m_ObjectData._BaseRough = 1.0f;
 }
 
 
 MeshDescriptor::~MeshDescriptor()
 {
-  if (mObjectBuffer) {
+  if (m_pObjectBuffer) {
     R_DEBUG(rWarning, "Object buffer from mesh was not properly cleaned up!\n");
   }
 }
@@ -43,10 +43,10 @@ MeshDescriptor::~MeshDescriptor()
 
 void MeshDescriptor::Initialize(Renderer* renderer)
 {
-  mRenderer = renderer;
+  m_Renderer = renderer;
 
   // Create the render buffer for the object.
-  mObjectBuffer = mRenderer->RHI()->CreateBuffer();
+  m_pObjectBuffer = m_Renderer->RHI()->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
   VkBufferCreateInfo objectCI = {};
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -54,39 +54,39 @@ void MeshDescriptor::Initialize(Renderer* renderer)
   objectCI.size = objectSize;
   objectCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  mObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 
 void MeshDescriptor::Update()
 {
-  mObjectBuffer->Map();
-    memcpy(mObjectBuffer->Mapped(), &mObjectData, sizeof(ObjectBuffer));
-  mObjectBuffer->UnMap();
+  m_pObjectBuffer->Map();
+    memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
+  m_pObjectBuffer->UnMap();
 }
 
 
 void MeshDescriptor::CleanUp()
 {
 
-  if (mObjectBuffer) {
-    mRenderer->RHI()->FreeBuffer(mObjectBuffer);
-    mObjectBuffer = nullptr;
+  if (m_pObjectBuffer) {
+    m_Renderer->RHI()->FreeBuffer(m_pObjectBuffer);
+    m_pObjectBuffer = nullptr;
   }
 }
 
 
 SkinnedMeshDescriptor::SkinnedMeshDescriptor()
-  : mBonesBuffer(nullptr)
+  : m_pBonesBuffer(nullptr)
   , MeshDescriptor()
 {
-  mSkinned = true;
+  m_Skinned = true;
 }
 
 
 SkinnedMeshDescriptor::~SkinnedMeshDescriptor()
 {
-  if (mBonesBuffer) {
+  if (m_pBonesBuffer) {
     R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
   }
 }
@@ -102,8 +102,8 @@ void SkinnedMeshDescriptor::Initialize(Renderer* renderer)
   bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bonesCI.size = bonesSize;
 
-  mBonesBuffer = mRenderer->RHI()->CreateBuffer();
-  mBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pBonesBuffer = m_Renderer->RHI()->CreateBuffer();
+  m_pBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 
@@ -111,9 +111,9 @@ void SkinnedMeshDescriptor::Update()
 {
   MeshDescriptor::Update();
 
-  mBonesBuffer->Map();
-  memcpy(mBonesBuffer->Mapped(), &mBonesData, sizeof(BonesBuffer));
-  mBonesBuffer->UnMap();
+  m_pBonesBuffer->Map();
+    memcpy(m_pBonesBuffer->Mapped(), &m_BonesData, sizeof(BonesBuffer));
+  m_pBonesBuffer->UnMap();
 }
 
 
@@ -121,9 +121,9 @@ void SkinnedMeshDescriptor::CleanUp()
 {
   MeshDescriptor::CleanUp();
 
-  if (mBonesBuffer) {
-    mRenderer->RHI()->FreeBuffer(mBonesBuffer);
-    mBonesBuffer = nullptr;
+  if (m_pBonesBuffer) {
+    m_Renderer->RHI()->FreeBuffer(m_pBonesBuffer);
+    m_pBonesBuffer = nullptr;
   }
 }
 } // Recluse

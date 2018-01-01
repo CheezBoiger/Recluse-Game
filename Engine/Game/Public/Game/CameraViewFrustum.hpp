@@ -23,7 +23,7 @@ struct CCamViewFrustum {
 
 private:
   // camera that this view frustum is associated with.
-  Camera*     m_Camera;
+  Camera*     m_pCamera;
   r32         m_Nh;
   r32         m_Nw;
   r32         m_Fh;
@@ -31,7 +31,7 @@ private:
 
 public:
   CCamViewFrustum()
-    : m_Camera(nullptr) { }
+    : m_pCamera(nullptr) { }
 
   // Planes of the camera. Ordered as so:
   // idx        plane
@@ -41,7 +41,7 @@ public:
   // 3          bottom
   // 4          near
   // 5          far
-  Plane       m_Planes      [6];
+  Plane       _Planes      [6];
   
   // TODO(): Update() function to calculate camera view frustum
   // which will be used to send to global material.
@@ -54,7 +54,7 @@ public:
   b8          InsideFrustum(const AABB* aabb);
 
   void        SetCamera(Camera* camera);
-  Camera*     GetCamera() const { return m_Camera; }
+  Camera*     GetCamera() const { return m_pCamera; }
 
 protected:
   void        ConfigureFrustum();

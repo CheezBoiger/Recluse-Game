@@ -35,8 +35,7 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 // One directional light.
 layout (set = 1, binding = 0) uniform LightSpace {
-  mat4  proj;
-  mat4  view;
+  mat4  viewProj;
 } light_space;
 
 
@@ -60,5 +59,5 @@ void main()
   }
   
   worldPosition = obj_buffer.model * worldPosition;
-  gl_Position = light_space.proj * light_space.view * worldPosition;
+  gl_Position = light_space.viewProj * worldPosition;
 }

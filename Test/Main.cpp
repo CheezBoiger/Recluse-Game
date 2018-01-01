@@ -63,8 +63,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 0
-
+#define PERFORMANCE_TEST 1
 
 int main(int c, char* argv[])
 {
@@ -94,45 +93,40 @@ int main(int c, char* argv[])
   gEngine().SetCamera(&fpsCamera);
   Camera* gCamera = gEngine().GetCamera();
 
-  // Only thing we worry about is setting up lights.
-  LightDescriptor* lightDesc = gRenderer().CreateLightDescriptor();
-  lightDesc->Initialize();
-
-  gEngine().SetLightData(lightDesc);
-
-  LightBuffer* lights = lightDesc->Data();
+  // Get Light data from engine.
+  LightBuffer* lights = gEngine().LightData();
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
-  lights->primaryLight.direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->primaryLight.intensity = 5.0f;
-  lights->primaryLight.color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-  lights->primaryLight.enable = true;
+  lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
+  lights->_PrimaryLight._Intensity = 10.0f;
+  lights->_PrimaryLight._Color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
+  lights->_PrimaryLight._Enable = true;
 
-  lights->directionalLights[0].enable = false;
-  lights->directionalLights[0].direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
-  lights->directionalLights[0].intensity = 5.0f;
-  lights->directionalLights[0].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
+  lights->_DirectionalLights[0]._Enable = false;
+  lights->_DirectionalLights[0]._Direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
+  lights->_DirectionalLights[0]._Intensity = 1.0f;
+  lights->_DirectionalLights[0]._Color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
-  lights->directionalLights[1].enable = false;
-  lights->directionalLights[1].direction = Vector4(-1.0f, 0.0f, -1.0f, 1.0f);
-  lights->directionalLights[1].intensity = 5.0f;
-  lights->directionalLights[1].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
+  lights->_DirectionalLights[1]._Enable = false;
+  lights->_DirectionalLights[1]._Direction = Vector4(-1.0f, 0.0f, -1.0f, 1.0f);
+  lights->_DirectionalLights[1]._Intensity = 5.0f;
+  lights->_DirectionalLights[1]._Color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
-  lights->directionalLights[2].enable = false;
-  lights->directionalLights[2].direction = Vector4(1.0f, 0.0f, -1.0f, 1.0f);
-  lights->directionalLights[2].intensity = 5.0f;
-  lights->directionalLights[2].color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
+  lights->_DirectionalLights[2]._Enable = false;
+  lights->_DirectionalLights[2]._Direction = Vector4(1.0f, 0.0f, -1.0f, 1.0f);
+  lights->_DirectionalLights[2]._Intensity = 5.0f;
+  lights->_DirectionalLights[2]._Color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
-  lights->pointLights[0].enable = true;
-  lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
-  lights->pointLights[0].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->pointLights[0].range = 10.0f;
-  lights->pointLights[0].intensity = 1.0f;
+  lights->_PointLights[0]._Enable = true;
+  lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
+  lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->_PointLights[0]._Range = 10.0f;
+  lights->_PointLights[0]._Intensity = 1.0f;
 
-  lights->pointLights[1].enable = false;
-  lights->pointLights[1].position = Vector4(0.0f, 3.0f, 4.0f, 1.0f);
-  lights->pointLights[1].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->pointLights[1].range = 30.0f;
+  lights->_PointLights[1]._Enable = false;
+  lights->_PointLights[1]._Position = Vector4(0.0f, 3.0f, 4.0f, 1.0f);
+  lights->_PointLights[1]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->_PointLights[1]._Range = 30.0f;
 
   Image img;
   img.Load("albedo.jpg");
@@ -147,6 +141,12 @@ int main(int c, char* argv[])
   normal->Update(img);
   img.CleanUp();
 
+  img.Load("emissive.jpg");
+  Texture2D* emissive = gRenderer().CreateTexture2D();
+  emissive->Initialize(img.Width(), img.Height());
+  emissive->Update(img);
+  img.CleanUp();
+
   auto sphereData = UVSphere::MeshInstance(1.0f, SPHERE_SEGS, SPHERE_SEGS);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
@@ -158,27 +158,30 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-#define ObjectCount 3000
-  r32 MaxNum = 1050.0f;
+#define ObjectCount 3200
+  r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
-  std::uniform_real_distribution<r32> uni(-MaxNum, MaxNum);
+  std::uniform_real_distribution<r32> uni(-maxNum, maxNum);
 #endif
   Material cubeMaterial;
   MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
   cubeMaterial.SetAlbedo(albedo);
   cubeMaterial.SetNormal(normal);
+  cubeMaterial.SetEmissive(emissive);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
-  cubeInfo->hasNormal = true;
-  cubeInfo->model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
-  cubeInfo->normalMatrix = cubeInfo->model.Inverse().Transpose();
-  cubeInfo->normalMatrix[3][0] = 0.0f;
-  cubeInfo->normalMatrix[3][1] = 0.0f;
-  cubeInfo->normalMatrix[3][2] = 0.0f;
-  cubeInfo->normalMatrix[3][3] = 1.0f;
-  cubeInfo->baseMetal = 0.1f;
-  cubeInfo->baseRough = 0.6f;
+  cubeInfo->_HasNormal = false;
+  cubeInfo->_HasEmissive = true;
+  cubeInfo->_BaseEmissive = 1.0f;
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
+  cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
+  cubeInfo->_NormalMatrix[3][0] = 0.0f;
+  cubeInfo->_NormalMatrix[3][1] = 0.0f;
+  cubeInfo->_NormalMatrix[3][2] = 0.0f;
+  cubeInfo->_NormalMatrix[3][3] = 1.0f;
+  cubeInfo->_BaseMetal = 0.1f;
+  cubeInfo->_BaseRough = 0.6f;
 
   Material cubeMaterial2;
   MeshDescriptor cubeMesh2;
@@ -187,57 +190,57 @@ int main(int c, char* argv[])
   cubeMaterial2.SetAlbedo(albedo);
   cubeMaterial2.SetNormal(normal);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
-  cubeInfo2->hasNormal = false;
-  cubeInfo2->model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
-  cubeInfo2->normalMatrix = cubeInfo2->model.Inverse().Transpose();
-  cubeInfo2->normalMatrix[3][0] = 0.0f;
-  cubeInfo2->normalMatrix[3][1] = 0.0f;
-  cubeInfo2->normalMatrix[3][2] = 0.0f;
-  cubeInfo2->normalMatrix[3][3] = 1.0f;
-  cubeInfo2->color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
-  cubeInfo2->transparency = 0.4f;
-  cubeInfo2->baseMetal = 0.8f;
-  cubeInfo2->baseRough = 0.1f;
+  cubeInfo2->_HasNormal = false;
+  cubeInfo2->_Model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
+  cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
+  cubeInfo2->_NormalMatrix[3][0] = 0.0f;
+  cubeInfo2->_NormalMatrix[3][1] = 0.0f;
+  cubeInfo2->_NormalMatrix[3][2] = 0.0f;
+  cubeInfo2->_NormalMatrix[3][3] = 1.0f;
+  cubeInfo2->_Color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
+  cubeInfo2->_Transparency = 0.4f;
+  cubeInfo2->_BaseMetal = 0.8f;
+  cubeInfo2->_BaseRough = 0.1f;
 
   Material cubeMaterial3;
   MeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
   cubeMaterial3.SetAlbedo(albedo);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
-  cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
-  cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
-  cubeInfo3->normalMatrix[3][0] = 0.0f;
-  cubeInfo3->normalMatrix[3][1] = 0.0f;
-  cubeInfo3->normalMatrix[3][2] = 0.0f;
-  cubeInfo3->normalMatrix[3][3] = 1.0f;
+  cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
+  cubeInfo3->_NormalMatrix = cubeInfo3->_Model.Inverse().Transpose();
+  cubeInfo3->_NormalMatrix[3][0] = 0.0f;
+  cubeInfo3->_NormalMatrix[3][1] = 0.0f;
+  cubeInfo3->_NormalMatrix[3][2] = 0.0f;
+  cubeInfo3->_NormalMatrix[3][3] = 1.0f;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
-  std::array<std::thread, 2>              Workers;
-  std::array<MeshDescriptor, ObjectCount> MeshDescriptors;
-  std::array<RenderObject*, ObjectCount> RenderObjects;
-  std::array<Vector3, ObjectCount> Positions;
-  size_t middle = MeshDescriptors.size() / 2;
+  std::array<std::thread, 2>              workers;
+  std::array<MeshDescriptor, ObjectCount> meshDescriptors;
+  std::array<RenderObject*, ObjectCount> renderObjects;
+  std::array<Vector3, ObjectCount> positions;
+  size_t middle = meshDescriptors.size() / 2;
 
-  for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
-    MeshDescriptors[i].Initialize(&gRenderer());
+  for (size_t i = 0; i < meshDescriptors.size(); ++i) {
+    meshDescriptors[i].Initialize(&gRenderer());
     r32 same = uni(r);
-    Positions[i] = Vector3(same, uni(r), same);
-    ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
-    buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), Positions[i]);
-    buffer->normalMatrix = buffer->model.Inverse().Transpose();
-    buffer->normalMatrix[3][0] = 0.0f;
-    buffer->normalMatrix[3][1] = 0.0f;
-    buffer->normalMatrix[3][2] = 0.0f;
-    buffer->normalMatrix[3][3] = 1.0f;
-    buffer->baseMetal = 0.5f;
-    buffer->baseRough = 0.1f;
-    buffer->color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
-    RenderObjects[i] = gRenderer().CreateRenderObject();
-    RenderObjects[i]->MaterialId = &cubeMaterial2;
-    RenderObjects[i]->MeshDescriptorId = &MeshDescriptors[i];
-    RenderObjects[i]->Initialize();
-    RenderObjects[i]->PushBack(sphereMeshDat);
+    positions[i] = Vector3(same, uni(r), same);
+    ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+    buffer->_Model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), positions[i]);
+    buffer->_NormalMatrix = buffer->_Model.Inverse().Transpose();
+    buffer->_NormalMatrix[3][0] = 0.0f;
+    buffer->_NormalMatrix[3][1] = 0.0f;
+    buffer->_NormalMatrix[3][2] = 0.0f;
+    buffer->_NormalMatrix[3][3] = 1.0f;
+    buffer->_BaseMetal = 0.5f;
+    buffer->_BaseRough = 0.1f;
+    buffer->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
+    renderObjects[i] = gRenderer().CreateRenderObject();
+    renderObjects[i]->MaterialId = &cubeMaterial2;
+    renderObjects[i]->MeshDescriptorId = &meshDescriptors[i];
+    renderObjects[i]->Initialize();
+    renderObjects[i]->PushBack(sphereMeshDat);
   }
 #endif  
 
@@ -272,16 +275,16 @@ int main(int c, char* argv[])
   CmdList& list = gEngine().RenderCommandList();
   list.Resize(3 
 #if PERFORMANCE_TEST
-    + RenderObjects.size()
+    + renderObjects.size()
 #endif
   );
-  list[0].target = obj3;
-  list[1].target = obj1;
-  list[2].target = obj2;
+  list[0]._pTarget = obj3;
+  list[1]._pTarget = obj1;
+  list[2]._pTarget = obj2;
 
 #if PERFORMANCE_TEST
   for (size_t i = 3; i < list.Size(); ++i) {
-    list[i].target = RenderObjects[i - 3];
+    list[i]._pTarget = renderObjects[i - 3];
   }
 #endif
   gRenderer().Build();
@@ -309,85 +312,67 @@ int main(int c, char* argv[])
     }
 
 #if PERFORMANCE_TEST
-    Workers[0] = std::thread([&]() -> void {
+    workers[0] = std::thread([&]() -> void {
       for (size_t i = 0; i < middle; ++i) {
-        ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
-        Vector3 Rev;
-        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
-        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+        ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+        Vector3 rev;
+        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
 
-        Rev.x = c * Positions[i].x;
-        Rev.z = s * Positions[i].z;
-        Rev.y = Positions[i].y;
-        buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
-        buffer->normalMatrix = buffer->model.Inverse().Transpose();
-        buffer->normalMatrix[3][0] = 0.0f;
-        buffer->normalMatrix[3][1] = 0.0f;
-        buffer->normalMatrix[3][2] = 0.0f;
-        buffer->normalMatrix[3][3] = 1.0f;
+        rev.x = c * positions[i].x;
+        rev.z = s * positions[i].z;
+        rev.y = positions[i].y;
+        buffer->_Model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), rev);
+        buffer->_NormalMatrix = buffer->_Model.Inverse().Transpose();
+        buffer->_NormalMatrix[3][0] = 0.0f;
+        buffer->_NormalMatrix[3][1] = 0.0f;
+        buffer->_NormalMatrix[3][2] = 0.0f;
+        buffer->_NormalMatrix[3][3] = 1.0f;
       }
     });
 
-    Workers[1] = std::thread([&]() -> void {
-      for (size_t i = middle; i < MeshDescriptors.size(); ++i) {
-        ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
-        Vector3 Rev;
-        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
-        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
+    workers[1] = std::thread([&]() -> void {
+      for (size_t i = middle; i < meshDescriptors.size(); ++i) {
+        ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+        Vector3 rev;
+        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
 
-        Rev.x = c * Positions[i].x;
-        Rev.z = s * Positions[i].z;
-        Rev.y = Positions[i].y;
-        buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
-        buffer->normalMatrix = buffer->model.Inverse().Transpose();
-        buffer->normalMatrix[3][0] = 0.0f;
-        buffer->normalMatrix[3][1] = 0.0f;
-        buffer->normalMatrix[3][2] = 0.0f;
-        buffer->normalMatrix[3][3] = 1.0f;
+        rev.x = c * positions[i].x;
+        rev.z = s * positions[i].z;
+        rev.y = positions[i].y;
+        buffer->_Model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), rev);
+        buffer->_NormalMatrix = buffer->_Model.Inverse().Transpose();
+        buffer->_NormalMatrix[3][0] = 0.0f;
+        buffer->_NormalMatrix[3][1] = 0.0f;
+        buffer->_NormalMatrix[3][2] = 0.0f;
+        buffer->_NormalMatrix[3][3] = 1.0f;
       }
     });
 
-    Workers[0].join();
-    Workers[1].join();
-/*
-    for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
-      ObjectBuffer* buffer = MeshDescriptors[i].ObjectData();
-      Vector3 Rev;
-      r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
-      r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(Positions[i].x / MaxNum)));
-
-      Rev.x = c * Positions[i].x;
-      Rev.z = s * Positions[i].z;
-      Rev.y = Positions[i].y;
-      buffer->model = Matrix4::Scale(Matrix4::Identity(), Vector3(1.0f, 1.0f, 1.0f)) * Matrix4::Translate(Matrix4::Identity(), Rev);
-      buffer->normalMatrix = buffer->model.Inverse().Transpose();
-      buffer->normalMatrix[3][0] = 0.0f;
-      buffer->normalMatrix[3][1] = 0.0f;
-      buffer->normalMatrix[3][2] = 0.0f;
-      buffer->normalMatrix[3][3] = 1.0f;
-    }
-*/
+    workers[0].join();
+    workers[1].join();
 #endif
     // light cube transforming.
     light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -5.0f, 2.0f, 0.0f);
-    lights->pointLights[0].position = Vector4(light0Pos, 1.0f);
+    lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
     // Testing quat.
     Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
-    cubeInfo3->model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
+    cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
 #if 0
       Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
 #else
     quat.ToMatrix4() *
 #endif
     Matrix4::Translate(Matrix4::Identity(), light0Pos);
-    cubeInfo3->normalMatrix = cubeInfo3->model.Inverse().Transpose();
-    cubeInfo3->normalMatrix[3][0] = 0.0f;
-    cubeInfo3->normalMatrix[3][1] = 0.0f;
-    cubeInfo3->normalMatrix[3][2] = 0.0f;
-    cubeInfo3->normalMatrix[3][3] = 1.0f;
+    cubeInfo3->_NormalMatrix = cubeInfo3->_Model.Inverse().Transpose();
+    cubeInfo3->_NormalMatrix[3][0] = 0.0f;
+    cubeInfo3->_NormalMatrix[3][1] = 0.0f;
+    cubeInfo3->_NormalMatrix[3][2] = 0.0f;
+    cubeInfo3->_NormalMatrix[3][3] = 1.0f;
 
-    if (noAlbedo2) { cubeMesh2.ObjectData()->hasAlbedo = false; } else { cubeMesh2.ObjectData()->hasAlbedo = true; }
-    if (noAlbedo) { cubeMesh.ObjectData()->hasAlbedo = false; } else { cubeMesh.ObjectData()->hasAlbedo = true; }
+    if (noAlbedo2) { cubeMesh2.ObjectData()->_HasAlbedo = false; } else { cubeMesh2.ObjectData()->_HasAlbedo = true; }
+    if (noAlbedo) { cubeMesh.ObjectData()->_HasAlbedo = false; } else { cubeMesh.ObjectData()->_HasAlbedo = true; }
 
     // //////////
     // End updates.
@@ -413,16 +398,16 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   gRenderer().FreeTexture2D(albedo);
   gRenderer().FreeTexture2D(normal);
+  gRenderer().FreeTexture2D(emissive);
   gRenderer().FreeRenderObject(obj1);
   gRenderer().FreeRenderObject(obj2);
   gRenderer().FreeRenderObject(obj3);
   gRenderer().FreeMeshData(cubeMeshDat);
   gRenderer().FreeMeshData(sphereMeshDat);
-  gRenderer().FreeLightDescriptor(lightDesc);
 #if PERFORMANCE_TEST
-  for (size_t i = 0; i < MeshDescriptors.size(); ++i) {
-    MeshDescriptors[i].CleanUp();
-    gRenderer().FreeRenderObject(RenderObjects[i]);
+  for (size_t i = 0; i < meshDescriptors.size(); ++i) {
+    meshDescriptors[i].CleanUp();
+    gRenderer().FreeRenderObject(renderObjects[i]);
   }
 #endif
   cubeMesh.CleanUp();

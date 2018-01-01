@@ -104,5 +104,6 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
 void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
 }
 } // Recluse

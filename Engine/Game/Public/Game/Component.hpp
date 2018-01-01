@@ -30,7 +30,7 @@ class Component : public ISerializable {
 public:
   virtual ~Component() { }
 
-  GameObject*   GetOwner() { return mGameObjectOwner; }
+  GameObject*   GetOwner() { return m_pGameObjectOwner; }
 
   // IS this component enabled?
   b8            Enabled() const { return m_Enable; }
@@ -43,7 +43,7 @@ public:
 
 protected:
   Component()
-    : mGameObjectOwner(nullptr)
+    : m_pGameObjectOwner(nullptr)
     , m_Enable(false) { }
 
   template<typename T>
@@ -53,12 +53,12 @@ protected:
 
   // Perform early initialization of abstract component, then call OnInitialize() if any.
   void          Initialize(GameObject* owner) {
-    mGameObjectOwner = owner;
-    if (!mGameObjectOwner) {
+    m_pGameObjectOwner = owner;
+    if (!m_pGameObjectOwner) {
       return;
     }
 
-    OnInitialize(mGameObjectOwner);
+    OnInitialize(m_pGameObjectOwner);
   }
 
   // Perform early clean up of abstract component, then call OnCleanUp() if any.
@@ -72,7 +72,7 @@ protected:
   virtual void  OnInitialize(GameObject* owner) { }
   virtual void  OnCleanUp() { }
 
-  GameObject*   mGameObjectOwner;
+  GameObject*   m_pGameObjectOwner;
   b8            m_Enable;
 };
 

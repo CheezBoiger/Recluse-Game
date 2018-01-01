@@ -278,7 +278,8 @@ void main()
   vec3 N = normalize(fragNormal);
 
   // Brute force lights for now.
-  vec3 outColor = vec3(0.0);
+  vec3 ambient = vec3(0.03) * fragAlbedo; 
+  vec3 outColor = (fragEmissive * objBuffer.emissive) + ambient;
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
@@ -297,10 +298,7 @@ void main()
     outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
     
   }
-  
-  vec3 ambient = vec3(0.03) * fragAlbedo; 
-  outColor = (fragEmissive * objBuffer.emissive) + outColor + ambient;
-  
+    
   // We might wanna set a debug param here...
   float transparency = 1.0;
   if (objBuffer.isTransparent >= 1) {

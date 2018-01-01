@@ -68,9 +68,9 @@ Engine& gEngine()
 
 
 Engine::Engine()
-  : mCamera(nullptr)
-  , mLightRef(nullptr)
-  , mPushedScene(nullptr)
+  : m_pCamera(nullptr)
+  , m_pLights(nullptr)
+  , m_pPushedScene(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
 {
@@ -96,26 +96,32 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   Window::SetMousePositionCallback(MousePositionMove);
   Window::SetMouseButtonCallback(MouseButtonClick);
 
-  mWindow.Create(appName, width, height);
+  m_Window.Create(appName, width, height);
+  gRenderer().Initialize(&m_Window);
 
-  gRenderer().Initialize(&mWindow);
+  // Set up lights.
+  m_pLights = gRenderer().CreateLightDescriptor();
+  m_pLights->Initialize();
+  gRenderer().SetLightDescriptor(m_pLights);
 
-  gRenderer().PushCmdList(&mRenderCmdList);
+  gRenderer().PushCmdList(&m_RenderCmdList);
 
   if (fullscreen) {
-    mWindow.SetToFullScreen();
-    mWindow.Show();
+    m_Window.SetToFullScreen();
+    m_Window.Show();
   } else {
-    mWindow.SetToCenter();
-    mWindow.Show();
+    m_Window.SetToCenter();
+    m_Window.Show();
   }
 }
 
 
 void Engine::CleanUp()
 {
-  mLightRef = nullptr;
-
+  if (m_pLights) {
+    gRenderer().FreeLightDescriptor(m_pLights);
+    m_pLights = nullptr;
+  }
   gUI().ShutDown();
   gAnimation().ShutDown();
   gRenderer().ShutDown();
@@ -128,62 +134,51 @@ void Engine::Update(r64 dt)
 {
   // Update camera and screen info.
   GlobalBuffer* gCamBuffer = gRenderer().GlobalData();
-  if (mCamera) {
-    mCamera->Update();
-    mCamera->SetAspect(((r32)mWindow.Width() / (r32)mWindow.Height()));
+  if (m_pCamera) {
+    m_pCamera->Update();
+    m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
 
-    gCamBuffer->cameraPos = Vector4(mCamera->Position(), 1.0f);
-    gCamBuffer->proj = mCamera->Projection();
-    gCamBuffer->view = mCamera->View();
-    gCamBuffer->viewProj = gCamBuffer->view * gCamBuffer->proj;
-    gCamBuffer->screenSize[0] = mWindow.Width();
-    gCamBuffer->screenSize[1] = mWindow.Height();
-    gCamBuffer->bloomEnabled = mCamera->Bloom();
-    gCamBuffer->exposure = mCamera->Exposure();
-    gCamBuffer->gamma = mCamera->Gamma();
-    gCamBuffer->mousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
+    gCamBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
+    gCamBuffer->_Proj = m_pCamera->Projection();
+    gCamBuffer->_View = m_pCamera->View();
+    gCamBuffer->_ViewProj = gCamBuffer->_View * gCamBuffer->_Proj;
+    gCamBuffer->_ScreenSize[0] = m_Window.Width();
+    gCamBuffer->_ScreenSize[1] = m_Window.Height();
+    gCamBuffer->_BloomEnabled = m_pCamera->Bloom();
+    gCamBuffer->_Exposure = m_pCamera->Exposure();
+    gCamBuffer->_Gamma = m_pCamera->Gamma();
+    gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
 
     m_CamFrustum.Update();
-    gCamBuffer->lPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PLEFT];
-    gCamBuffer->rPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PRIGHT];
-    gCamBuffer->tPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PTOP];
-    gCamBuffer->bPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PBOTTOM];
-    gCamBuffer->nPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PNEAR];
-    gCamBuffer->fPlane = m_CamFrustum.m_Planes[CCamViewFrustum::PFAR];
+    gCamBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
+    gCamBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
+    gCamBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
+    gCamBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
+    gCamBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
+    gCamBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
   }
 
-  if (mLightRef) {
-    mLightRef->Update();
+  if (m_pLights) {
+    m_pLights->Update();
   }
 
-  if (mPushedScene) {
+  if (m_pPushedScene) {
     R_DEBUG(rVerbose, "Updating game object transforms...\n");
-    size_t SceneSz = mPushedScene->GameObjectCount();
+    size_t SceneSz = m_pPushedScene->GameObjectCount();
     for (size_t i = 0; i < SceneSz; ++i) {
-      GameObject* Obj = mPushedScene->Get(i);
+      GameObject* Obj = m_pPushedScene->Get(i);
       Transform* T = Obj->GetComponent<Transform>();
       if (!T) continue;
     }
   }
   // TODO(): RenderObject updated, We need to use RenderObject Now.
-  for (u32 i = 0; i < mRenderCmdList.Size(); ++i) {
-    RenderCmd& cmd = mRenderCmdList[i];
-    RenderObject* obj = cmd.target;
+  for (u32 i = 0; i < m_RenderCmdList.Size(); ++i) {
+    RenderCmd& cmd = m_RenderCmdList[i];
+    RenderObject* obj = cmd._pTarget;
 
     if (obj && obj->MeshDescriptorId) {
       obj->MeshDescriptorId->Update();
     }
-  }
-}
-
-
-void Engine::SetLightData(LightDescriptor* lights)
-{
-  if (lights) {
-    gRenderer().SetLightDescriptor(lights);
-    mLightRef = lights;
-  } else {
-    Log(rError) << "Null lights passed... using previous light data.";
   }
 }
 
