@@ -105,33 +105,40 @@ void LightDescriptor::Initialize()
 
   m_pLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
+  // Light view buffer creation.
+  m_pLightViewBuffer = m_pRhi->CreateBuffer();
+  dSize = sizeof(LightViewSpace);
+  bufferCI.size = dSize;
+  m_pLightViewBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
   // Create our shadow map texture.
   if (!m_pShadowMap) {
 
     // TODO():
     m_pShadowMap = m_pRhi->CreateTexture();
 
+    // ShadowMap is a depth image.
     VkImageCreateInfo ImageCi = {};
     ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     ImageCi.arrayLayers = 1;
     ImageCi.extent.width = 1024;
     ImageCi.extent.height = 1024;
     ImageCi.extent.depth = 1;
-    ImageCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    ImageCi.format = VK_FORMAT_D32_SFLOAT;
     ImageCi.imageType = VK_IMAGE_TYPE_2D;
     ImageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     ImageCi.mipLevels = 1;
     ImageCi.samples = VK_SAMPLE_COUNT_1_BIT;
     ImageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
-    ImageCi.usage =  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    ImageCi.usage =  VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     ImageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     
     VkImageViewCreateInfo ViewCi = { };
     ViewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     ViewCi.components = { };
     ViewCi.format = ImageCi.format;
-    ViewCi.subresourceRange = { };
-    ViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    ViewCi.subresourceRange = { }; 
+    ViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT ;
     ViewCi.subresourceRange.baseArrayLayer = 0;
     ViewCi.subresourceRange.baseMipLevel = 0;
     ViewCi.subresourceRange.layerCount = 1;
@@ -216,7 +223,6 @@ void LightDescriptor::Update()
   Matrix4 proj = Matrix4::Ortho(1024.0f, 1024.0f, 0.0001f, 1000.0f);
   m_PrimaryLightSpace._ViewProj = view * proj;
 
-
   m_pLightBuffer->Map();
     memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
   m_pLightBuffer->UnMap();
@@ -271,5 +277,76 @@ void LightDescriptor::InitializeNativeLights()
 void LightDescriptor::InitializePrimaryShadow()
 {
   // TODO(): Create DescriptorSet and Framebuffer for shadow pass.
+  if (m_pFrameBuffer) return;
+  
+  m_pFrameBuffer = m_pRhi->CreateFrameBuffer();
+  std::array<VkAttachmentDescription, 1> attachmentDescriptions;
+
+  // Actual depth buffer to write onto.
+  attachmentDescriptions[0] = CreateAttachmentDescription(
+    m_pShadowMap->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    m_pShadowMap->Samples()
+  );
+
+  std::array<VkSubpassDependency, 2> dependencies;
+  dependencies[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependencies[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  VkAttachmentReference depthRef =  {};
+  depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  depthRef.attachment = 0;
+
+  VkSubpassDescription subpass = { };
+  subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subpass.colorAttachmentCount = 0;
+  subpass.pColorAttachments = nullptr;
+  subpass.pDepthStencilAttachment = &depthRef;
+  subpass.flags = 0;
+
+  VkRenderPassCreateInfo renderPassCi = CreateRenderPassInfo(
+    static_cast<u32>(attachmentDescriptions.size()),
+    attachmentDescriptions.data(),
+    2,
+    dependencies.data(),
+    1,
+    &subpass
+  );
+
+  std::array<VkImageView, 1> attachments;
+  attachments[0] = m_pShadowMap->View();
+  
+  VkFramebufferCreateInfo frameBufferCi = CreateFrameBufferInfo(
+    1024,
+    1024,
+    nullptr,
+    static_cast<u32>(attachments.size()),
+    attachments.data(),
+    1
+  );
+
+  m_pFrameBuffer->Finalize(frameBufferCi, renderPassCi);
 }
 } // Recluse

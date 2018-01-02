@@ -22,6 +22,8 @@ std::string DefaultTextureStr         = "DefaultTexture";
 std::string DefaultSamplerStr         = "DefaultSampler";
 
 std::string ShadowMapPipelineStr              = "ShadowMapPipeline";
+std::string DynamicShadowMapPipelineStr       = "DynamicShadowMapPipeline";
+std::string DynamicShadowMapVertFileStr       = "DynamicShadowMapping.vert.spv";
 std::string ShadowMapVertFileStr              = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr              = "ShadowMapping.frag.spv";
 std::string LightViewDescriptorSetLayoutStr   = "LightViewDescriptorLayout";
@@ -389,17 +391,31 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
 {
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
   GraphicsPipeline* ShadowMapPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* DynamicShadowMapPipeline = Rhi->CreateGraphicsPipeline();
   gResources().RegisterGraphicsPipeline(ShadowMapPipelineStr, ShadowMapPipeline);
+  gResources().RegisterGraphicsPipeline(DynamicShadowMapPipelineStr, DynamicShadowMapPipeline);
+
   // TODO(): Initialize shadow map pipeline.
   VkPipelineLayoutCreateInfo PipeLayout = {};
-  std::array<VkDescriptorSetLayout, 2> DescLayouts;
+  std::array<VkDescriptorSetLayout, 3> DescLayouts;
   DescLayouts[0] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
   DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+  DescLayouts[2] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
+
+  auto Bindings = StaticVertexDescription::GetBindingDescription();
+  auto Attribs = StaticVertexDescription::GetVertexAttributes();
+  VkPipelineVertexInputStateCreateInfo Info = {};
+  Info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  Info.pVertexAttributeDescriptions = Attribs.data();
+  Info.pVertexBindingDescriptions = &Bindings;
+  Info.vertexAttributeDescriptionCount = static_cast<u32>(Attribs.size());
+  Info.vertexBindingDescriptionCount = 1;
+  Info.pNext = nullptr;
 
   PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   PipeLayout.pushConstantRangeCount = 0;
   PipeLayout.pPushConstantRanges = nullptr;
-  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size());
+  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size() - 1);
   PipeLayout.pSetLayouts = DescLayouts.data();
   // ShadowMapping shader.
   // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
@@ -429,14 +445,34 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
 
   GraphicsPipelineInfo.pStages = Shaders.data();
   GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
+  GraphicsPipelineInfo.pVertexInputState = &Info;
 
   ShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
+
+  Bindings = SkinnedVertexDescription::GetBindingDescription();
+  Attribs = SkinnedVertexDescription::GetVertexAttributes();
+  Info.pVertexAttributeDescriptions = Attribs.data();
+  Info.pVertexBindingDescriptions = &Bindings;
+  Info.vertexAttributeDescriptionCount = static_cast<u32>(Attribs.size());
+  Info.vertexBindingDescriptionCount = 1;
+  Info.pNext = nullptr;
+  
+  PipeLayout.setLayoutCount += 1;
+  // Create the dynamic shadow map pipeline.
+
+  
+  Rhi->FreeShader(SmVert);
+  SmVert = Rhi->CreateShader();
+  LoadShader(DynamicShadowMapVertFileStr, SmVert);
+ 
+  Shaders[0].module = SmVert->Handle();
+
+  DynamicShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
 
   Rhi->FreeShader(SmVert);
   Rhi->FreeShader(SmFrag);
 
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-
 }
 } // RendererPass
 } // Recluse

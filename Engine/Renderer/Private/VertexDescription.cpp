@@ -45,13 +45,13 @@ std::vector<VkVertexInputAttributeDescription> SkinnedVertexDescription::GetVert
   offset += sizeof(r32) * 2;
 
   attribs[4].binding = 0;
-  attribs[4].location = 5;
+  attribs[4].location = 4;
   attribs[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attribs[4].offset = offset;
   offset += sizeof(r32) * 4;
 
   attribs[5].binding = 0;
-  attribs[5].location = 6;
+  attribs[5].location = 5;
   attribs[5].format = VK_FORMAT_R32G32B32A32_SINT;
   attribs[5].offset = offset;
   offset += sizeof(i32) * 4;

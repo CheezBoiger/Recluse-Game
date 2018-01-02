@@ -886,10 +886,13 @@ void Renderer::SetUpGraphicsPipelines()
   GraphicsPipelineInfo.subpass = 0;
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
+  // Create the pipeline for the graphics pipeline.
   if (m_pLights && m_pLights->m_pFrameBuffer) {
+    colorBlendCI.attachmentCount = 0;
     GraphicsPipelineInfo.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
     RendererPass::SetUpDirectionalShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
     GraphicsPipelineInfo.renderPass = nullptr;
+    colorBlendCI.attachmentCount = static_cast<u32>(static_cast<u32>(colorBlendAttachments.size()));
   } else {
     R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
   }
@@ -948,8 +951,13 @@ void Renderer::CleanUpGraphicsPipelines()
   m_pRhi->FreeGraphicsPipeline(GlowPipeline);
 
   GraphicsPipeline* ShadowMapPipeline = gResources().UnregisterGraphicsPipeline(ShadowMapPipelineStr);
+  GraphicsPipeline* DynamicShadowMapPipline = gResources().UnregisterGraphicsPipeline(DynamicShadowMapPipelineStr);
   if (ShadowMapPipeline) {
     m_pRhi->FreeGraphicsPipeline(ShadowMapPipeline);
+  }
+  
+  if (DynamicShadowMapPipline) {
+    m_pRhi->FreeGraphicsPipeline(DynamicShadowMapPipline);
   }
 }
 
