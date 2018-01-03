@@ -79,6 +79,10 @@ LightDescriptor::~LightDescriptor()
   if (m_pLightViewBuffer) {
     R_DEBUG(rWarning, "Light view buffer was not properly cleaned up!\n");
   }
+
+  if (m_pLightViewDescriptorSet) {
+    R_DEBUG(rWarning, "Light view descriptor set was not properly cleaned up!\n");
+  }
 }
 
 
@@ -193,6 +197,11 @@ void LightDescriptor::CleanUp()
     m_pLightDescriptorSet = nullptr;
   }
 
+  if (m_pLightViewDescriptorSet) {
+    m_pRhi->FreeDescriptorSet(m_pLightViewDescriptorSet);
+    m_pLightViewDescriptorSet = nullptr;
+  }
+
   if (m_pLightBuffer) {
     m_pRhi->FreeBuffer(m_pLightBuffer);
     m_pLightBuffer = nullptr;
@@ -220,7 +229,14 @@ void LightDescriptor::Update()
 
   // Pass as one matrix.
   Matrix4 view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
-  Matrix4 proj = Matrix4::Ortho(1024.0f, 1024.0f, 0.0001f, 1000.0f);
+
+  Matrix4 proj = Matrix4::Ortho(
+    static_cast<r32>(m_pShadowMap->Width()), 
+    static_cast<r32>(m_pShadowMap->Height()), 
+    0.0001f, 
+    1000.0f
+  );
+
   m_PrimaryLightSpace._ViewProj = view * proj;
 
   m_pLightBuffer->Map();
@@ -278,7 +294,28 @@ void LightDescriptor::InitializePrimaryShadow()
 {
   // TODO(): Create DescriptorSet and Framebuffer for shadow pass.
   if (m_pFrameBuffer) return;
+
+  DescriptorSetLayout* viewLayout = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
+  m_pLightViewDescriptorSet = m_pRhi->CreateDescriptorSet();
+  m_pLightViewDescriptorSet->Allocate(m_pRhi->DescriptorPool(), viewLayout);
+
+  VkDescriptorBufferInfo viewBuf = { };
+  viewBuf.buffer = m_pLightViewBuffer->NativeBuffer();
+  viewBuf.offset = 0;
+  viewBuf.range = sizeof(LightViewSpace);
+
+  VkWriteDescriptorSet write = { };
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.descriptorCount = 1;
+  write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  write.dstArrayElement = 0;
+  write.dstBinding = 0;
+  write.dstSet = nullptr;
+  write.pImageInfo = nullptr;
+  write.pBufferInfo = &viewBuf;  
   
+  m_pLightViewDescriptorSet->Update(1, &write);
+
   m_pFrameBuffer = m_pRhi->CreateFrameBuffer();
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
 
@@ -339,8 +376,8 @@ void LightDescriptor::InitializePrimaryShadow()
   attachments[0] = m_pShadowMap->View();
   
   VkFramebufferCreateInfo frameBufferCi = CreateFrameBufferInfo(
-    1024,
-    1024,
+    m_pShadowMap->Width(),
+    m_pShadowMap->Height(),
     nullptr,
     static_cast<u32>(attachments.size()),
     attachments.data(),

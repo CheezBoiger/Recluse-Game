@@ -51,7 +51,7 @@ Renderer::Renderer()
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
-  m_Offscreen._ShadowBuffers.resize(2);
+  m_Offscreen._ShadowCmdBuffers.resize(2);
   m_Offscreen._CurrCmdBufferIndex = 0;
 
   m_HDR._CmdBuffers.resize(2);
@@ -1201,7 +1201,9 @@ void Renderer::SetUpOffscreen(b8 fullSetup)
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
       m_Offscreen._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    }
+      m_Offscreen._ShadowCmdBuffers[i] = m_pRhi->CreateCommandBuffer();
+      m_Offscreen._ShadowCmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);  
+  }
   }
 }
 
@@ -1212,6 +1214,7 @@ void Renderer::CleanUpOffscreen(b8 fullCleanup)
     m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_pRhi->FreeCommandBuffer(m_Offscreen._CmdBuffers[i]);
+      m_pRhi->FreeCommandBuffer(m_Offscreen._ShadowCmdBuffers[i]);
     }
   }
 }
@@ -1449,6 +1452,7 @@ void Renderer::Build()
 
   BuildOffScreenBuffer(m_Offscreen._CurrCmdBufferIndex);
   BuildHDRCmdBuffer(m_HDR._CurrCmdBufferIndex);
+  BuildShadowCmdBuffer(m_Offscreen._CurrCmdBufferIndex);
   m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
 }
 
@@ -1767,6 +1771,64 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
       cmdBuffer->EndRenderPass();
+  cmdBuffer->End();
+}
+
+
+void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
+{
+  if (!m_pLights) return;
+  if (!m_pLights->m_pFrameBuffer) return;
+  CommandBuffer* cmdBuffer = m_Offscreen._ShadowCmdBuffers[cmdBufferIndex];
+
+  if (!cmdBuffer) {
+    return;
+  }
+
+  m_pRhi->DeviceWaitIdle();
+  cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+  GraphicsPipeline* staticPipeline = gResources().GetGraphicsPipeline(ShadowMapPipelineStr);
+  GraphicsPipeline* dynamicPipeline = gResources().GetGraphicsPipeline(DynamicShadowMapPipelineStr);  
+  DescriptorSet*    lightViewSet = m_pLights->m_pLightViewDescriptorSet;  
+
+  VkCommandBufferBeginInfo begin = { };
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+  // No need to record as it is already recording?
+  if (cmdBuffer->Recording()) return;
+
+  VkRenderPassBeginInfo renderPass = { };
+  renderPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPass.framebuffer = m_pLights->m_pFrameBuffer->Handle();
+  renderPass.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
+  renderPass.renderArea.extent = { m_pLights->m_pFrameBuffer->Width(), m_pLights->m_pFrameBuffer->Height() };
+  renderPass.renderArea.offset = { 0, 0 };
+  VkClearValue depthValue = { };
+  depthValue.depthStencil = { 1.0f, 0 };
+  renderPass.clearValueCount = 1;
+  renderPass.pClearValues = &depthValue;
+
+  // Create the shadow rendering pass.
+  cmdBuffer->Begin(begin);
+    cmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
+      for (size_t i = 0; i < m_pCmdList->Size(); ++i) {
+        RenderCmd& renderCmd = (*m_pCmdList)[i];
+        RenderObject* obj = renderCmd._pTarget;
+        if (!obj) continue;
+        if (!obj->Renderable) continue;
+        
+        b8 skinned = obj->MeshDescriptorId->Skinned();
+        VkDescriptorSet descriptorSets[3];
+        descriptorSets[0] = obj->CurrMeshSet()->Handle();
+        descriptorSets[1] = lightViewSet->Handle();
+        descriptorSets[2] = skinned ? obj->CurrBoneSet()->Handle() : VK_NULL_HANDLE;
+        GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
+        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
+      }
+    cmdBuffer->EndRenderPass();    
   cmdBuffer->End();
 }
 

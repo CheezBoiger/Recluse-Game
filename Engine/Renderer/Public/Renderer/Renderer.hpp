@@ -201,6 +201,7 @@ private:
   void              SetUpRenderTextures(b8 fullSetup);
   void              SetUpOffscreen(b8 fullSetup);
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
+  void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
   void              SetUpDownscale(b8 FullSetUp);
   void              CleanUpDownscale(b8 FullCleanUp);
@@ -221,7 +222,7 @@ private:
 
   struct {
     std::vector<CommandBuffer*>   _CmdBuffers;
-    std::vector<CommandBuffer*>   _ShadowBuffers;
+    std::vector<CommandBuffer*>   _ShadowCmdBuffers;
     u32                           _CurrCmdBufferIndex;
     Semaphore*                    _Semaphore;
   } m_Offscreen; 

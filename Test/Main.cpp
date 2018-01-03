@@ -100,7 +100,7 @@ int main(int c, char* argv[])
   lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
   lights->_PrimaryLight._Intensity = 10.0f;
   lights->_PrimaryLight._Color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-  lights->_PrimaryLight._Enable = true;
+  lights->_PrimaryLight._Enable = false;
 
   lights->_DirectionalLights[0]._Enable = false;
   lights->_DirectionalLights[0]._Direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
@@ -120,13 +120,15 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Enable = true;
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[0]._Range = 10.0f;
-  lights->_PointLights[0]._Intensity = 1.0f;
+  lights->_PointLights[0]._Range = 30.0f;
+  lights->_PointLights[0]._Intensity = 5.0f;
 
+  // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
-  lights->_PointLights[1]._Position = Vector4(0.0f, 3.0f, 4.0f, 1.0f);
+  lights->_PointLights[1]._Position = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   lights->_PointLights[1]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[1]._Range = 30.0f;
+  lights->_PointLights[1]._Range = 100.0f;
+  lights->_PointLights[1]._Intensity = 10.0f;
 
   Image img;
   img.Load("albedo.jpg");
@@ -158,7 +160,8 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-#define ObjectCount 3200
+// Max: 3200
+#define ObjectCount 100
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -169,11 +172,8 @@ int main(int c, char* argv[])
   cubeMesh.Initialize(&gRenderer());
   cubeMaterial.SetAlbedo(albedo);
   cubeMaterial.SetNormal(normal);
-  cubeMaterial.SetEmissive(emissive);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
-  cubeInfo->_HasNormal = false;
-  cubeInfo->_HasEmissive = true;
-  cubeInfo->_BaseEmissive = 1.0f;
+  cubeInfo->_HasNormal = true;
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
@@ -202,10 +202,12 @@ int main(int c, char* argv[])
   cubeInfo2->_BaseMetal = 0.8f;
   cubeInfo2->_BaseRough = 0.1f;
 
+  // Box using emissive map for light mimick.
   Material cubeMaterial3;
   MeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
   cubeMaterial3.SetAlbedo(albedo);
+  cubeMaterial3.SetEmissive(emissive);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
   cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->_NormalMatrix = cubeInfo3->_Model.Inverse().Transpose();
@@ -213,6 +215,8 @@ int main(int c, char* argv[])
   cubeInfo3->_NormalMatrix[3][1] = 0.0f;
   cubeInfo3->_NormalMatrix[3][2] = 0.0f;
   cubeInfo3->_NormalMatrix[3][3] = 1.0f;
+  cubeInfo3->_HasEmissive = true;
+  cubeInfo3->_BaseEmissive = lights->_PointLights[0]._Intensity;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.

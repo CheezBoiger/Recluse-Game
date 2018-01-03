@@ -189,8 +189,13 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 Albedo, vec3 V, vec3 N, float roug
 {
   vec3 L = light.position.xyz - frag_in.position;
   float distance = length(L);
-  float attenuation = light.range / ((distance * distance) + 1.0);
-  vec3 radiance = light.color.xyz * attenuation * light.intensity;
+  // Return if range is less than the distance between light and fragment.
+  if (light.range < distance) { return vec3(0.0); }
+
+  float falloff = (distance / light.range);
+  float attenuation = light.intensity - (light.intensity * falloff);
+  
+  vec3 radiance = light.color.xyz * attenuation;
   return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
 }
 
