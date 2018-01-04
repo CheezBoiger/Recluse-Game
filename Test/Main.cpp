@@ -120,7 +120,7 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Enable = true;
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[0]._Range = 1000.0f;
+  lights->_PointLights[0]._Range = 100.0f;
   lights->_PointLights[0]._Intensity = 10.0f;
 
   // Mimicking emissive texture on first box.

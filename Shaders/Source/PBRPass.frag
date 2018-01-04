@@ -125,15 +125,23 @@ float DGGX(float NoH, float roughness)
 }
 
 
-// Schlick-Smith GGX for Geometric shadowing.
-float GSchlickSmithGGX(float NoL, float NoV, float roughness)
+float GGXSchlickApprox(float NoV, float roughness)
 {
   float remap = roughness + 1.0;
   float k = (remap * remap) / 8.0;
   float num = NoV;
   float denom = (NoV * (1.0 - k) + k);
 
-  return num / denom;
+  return num / denom; 
+}
+
+
+// Schlick-Smith GGX for Geometric shadowing.
+float GSchlickSmithGGX(float NoL, float NoV, float roughness)
+{
+  float ggx1 = GGXSchlickApprox(NoL, roughness);
+  float ggx2 = GGXSchlickApprox(NoV, roughness);
+  return ggx1 * ggx2;
 }
 
 
@@ -161,7 +169,6 @@ vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metall
   
   float dotNL = clamp(dot(nN, nL), 0.0, 1.0);
   float dotNV = clamp(dot(nN, nV), 0.0, 1.0);
-  float dotLH = clamp(dot(nL, H), 0.0, 1.0);
   float dotNH = clamp(dot(nN, H), 0.0, 1.0);
   
   vec3 color = vec3(0.0);
