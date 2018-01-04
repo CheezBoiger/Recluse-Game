@@ -6,6 +6,7 @@
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 #include "MeshDescriptor.hpp"
+#include "MaterialDescriptor.hpp"
 #include "UserParams.hpp"
 #include "TextureType.hpp"
 #include "UIOverlay.hpp"
@@ -2053,6 +2054,46 @@ Texture2DArray* Renderer::CreateTexture2DArray()
 {
   Texture2DArray* texture = new Texture2DArray();
   return texture;
+}
+
+
+MaterialDescriptor* Renderer::CreateMaterialDescriptor()
+{
+  MaterialDescriptor* descriptor = new MaterialDescriptor();
+  descriptor->m_pRhi = RHI();
+  return descriptor;
+}
+
+
+void Renderer::FreeMaterialDescriptor(MaterialDescriptor* descriptor)
+{
+  if (!descriptor) return;
+  descriptor->CleanUp();
+  delete descriptor;
+}
+
+
+MeshDescriptor* Renderer::CreateStaticMeshDescriptor()
+{
+  MeshDescriptor* descriptor = new MeshDescriptor();
+  descriptor->m_pRhi = RHI();
+  return descriptor;
+}
+
+
+SkinnedMeshDescriptor* Renderer::CreateSkinnedMeshDescriptor()
+{
+  SkinnedMeshDescriptor* descriptor = new SkinnedMeshDescriptor();
+  descriptor->m_pRhi = RHI();
+  return descriptor;
+}
+
+
+void Renderer::FreeMeshDescriptor(MeshDescriptor* descriptor)
+{
+  if (!descriptor) return;
+  descriptor->CleanUp();
+  delete descriptor; 
 }
 
 

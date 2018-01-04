@@ -21,7 +21,6 @@ class Texture3D;
 class Texture1D;
 class Texture2DArray;
 class TextureCube;
-class Renderer;
 class FrameBuffer;
 
 
@@ -47,48 +46,50 @@ class MaterialDescriptor {
 public:
 
   MaterialDescriptor();
+  ~MaterialDescriptor();
 
-  void            Initialize(Renderer* renderer);
+  // Always initialize the Material.
+  void            Initialize();
   void            Update();
   void            CleanUp();
 
-  void            SetSampler(TextureSampler* sampler) { mSampler = sampler; }
-  void            SetAlbedo(Texture2D* albedo) { mAlbedo = albedo; }
-  void            SetMetallic(Texture2D* metallic) { mMetallic = metallic; }
-  void            SetRoughness(Texture2D* roughness) { mRoughness = roughness; }
-  void            SetNormal(Texture2D* normal) { mNormal = normal; }
-  void            SetAo(Texture2D* ao) { mAo = ao; }
-  void            SetEmissive(Texture2D* emissive) { mEmissive = emissive; }
+  void            SetSampler(TextureSampler* sampler) { m_pSampler = sampler; }
+  void            SetAlbedo(Texture2D* albedo) { m_pAlbedo = albedo; }
+  void            SetMetallic(Texture2D* metallic) { m_pMetallic = metallic; }
+  void            SetRoughness(Texture2D* roughness) { m_pRoughness = roughness; }
+  void            SetNormal(Texture2D* normal) { m_pNormal = normal; }
+  void            SetAo(Texture2D* ao) { m_pAo = ao; }
+  void            SetEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
   void            SetTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
 
   MaterialBuffer* Data() { return &m_MaterialData; }
-  Buffer*         NativeBuffer() { return m_pBuffer; }
+  Buffer*         Native() { return m_pBuffer; }
 
   b8              Transparent() const { return m_MaterialData._IsTransparent; }
 
-  Texture2D*      Albedo() { return mAlbedo; }
-  Texture2D*      Metallic() { return mMetallic; }
-  Texture2D*      Roughness() { return mRoughness; }
-  Texture2D*      Normal() { return mNormal; }
-  Texture2D*      Ao() { return mAo; }
-  Texture2D*      Emissive() { return mEmissive; }
+  Texture2D*      Albedo() { return m_pAlbedo; }
+  Texture2D*      Metallic() { return m_pMetallic; }
+  Texture2D*      Roughness() { return m_pRoughness; }
+  Texture2D*      Normal() { return m_pNormal; }
+  Texture2D*      Ao() { return m_pAo; }
+  Texture2D*      Emissive() { return m_pEmissive; }
 
-  TextureSampler* Sampler() { return mSampler; }
+  TextureSampler* Sampler() { return m_pSampler; }
 
 private:
 
   MaterialBuffer  m_MaterialData;
   Buffer*         m_pBuffer;
 
-  Texture2D*      mAlbedo;
-  Texture2D*      mMetallic;
-  Texture2D*      mRoughness;
-  Texture2D*      mNormal;
-  Texture2D*      mAo;
-  Texture2D*      mEmissive;
+  Texture2D*      m_pAlbedo;
+  Texture2D*      m_pMetallic;
+  Texture2D*      m_pRoughness;
+  Texture2D*      m_pNormal;
+  Texture2D*      m_pAo;
+  Texture2D*      m_pEmissive;
 
-  TextureSampler* mSampler;
-  Renderer*       m_pRenderer;
+  TextureSampler* m_pSampler;
+  VulkanRHI*      m_pRhi;
   friend class Renderer;
 };
 } // Recluse

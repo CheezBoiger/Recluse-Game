@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "MaterialDescriptor.hpp"
 #include "Resources.hpp"
-#include "Renderer.hpp"
 #include "RendererData.hpp"
 #include "TextureType.hpp"
 
@@ -19,13 +18,14 @@ namespace Recluse {
 
 
 MaterialDescriptor::MaterialDescriptor()
-  : mAlbedo(nullptr)
-  , mMetallic(nullptr)
-  , mRoughness(nullptr)
-  , mNormal(nullptr)
-  , mAo(nullptr)
-  , mEmissive(nullptr)
-  , mSampler(nullptr)
+  : m_pAlbedo(nullptr)
+  , m_pMetallic(nullptr)
+  , m_pRoughness(nullptr)
+  , m_pNormal(nullptr)
+  , m_pAo(nullptr)
+  , m_pEmissive(nullptr)
+  , m_pSampler(nullptr)
+  , m_pBuffer(nullptr)
 { 
   m_MaterialData._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   m_MaterialData._LodBias = 0.0f;
@@ -43,10 +43,19 @@ MaterialDescriptor::MaterialDescriptor()
 }
 
 
-void MaterialDescriptor::Initialize(Renderer* renderer)
+MaterialDescriptor::~MaterialDescriptor()
 {
-  m_pRenderer = renderer;
-  m_pBuffer = renderer->RHI()->CreateBuffer();
+  if (m_pBuffer) {
+    R_DEBUG(rWarning, "MaterialDescriptor buffer was not properly cleaned up!\n");
+  }
+}
+
+
+void MaterialDescriptor::Initialize()
+{
+  if (m_pBuffer) return;
+
+  m_pBuffer = m_pRhi->CreateBuffer();
   VkDeviceSize memSize = sizeof(MaterialBuffer);
   VkBufferCreateInfo bufferCi = { };
   bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -69,7 +78,7 @@ void MaterialDescriptor::Update()
 void MaterialDescriptor::CleanUp()
 {
   if (m_pBuffer)  {
-    m_pRenderer->RHI()->FreeBuffer(m_pBuffer);
+    m_pRhi->FreeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }
 }

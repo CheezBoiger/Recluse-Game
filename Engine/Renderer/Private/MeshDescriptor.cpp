@@ -15,6 +15,7 @@ MeshDescriptor::MeshDescriptor()
   , m_Translucent(false)
   , m_Static(true) 
   , m_Skinned(false)
+  , m_pRhi(nullptr)
 {
   m_ObjectData._HasBones = false;
 }
@@ -28,12 +29,10 @@ MeshDescriptor::~MeshDescriptor()
 }
 
 
-void MeshDescriptor::Initialize(Renderer* renderer)
+void MeshDescriptor::Initialize()
 {
-  m_Renderer = renderer;
-
   // Create the render buffer for the object.
-  m_pObjectBuffer = m_Renderer->RHI()->CreateBuffer();
+  m_pObjectBuffer = m_pRhi->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
   VkBufferCreateInfo objectCI = {};
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -57,7 +56,7 @@ void MeshDescriptor::CleanUp()
 {
 
   if (m_pObjectBuffer) {
-    m_Renderer->RHI()->FreeBuffer(m_pObjectBuffer);
+    m_pRhi->FreeBuffer(m_pObjectBuffer);
     m_pObjectBuffer = nullptr;
   }
 }
@@ -79,9 +78,9 @@ SkinnedMeshDescriptor::~SkinnedMeshDescriptor()
 }
 
 
-void SkinnedMeshDescriptor::Initialize(Renderer* renderer)
+void SkinnedMeshDescriptor::Initialize()
 {
-  MeshDescriptor::Initialize(renderer);
+  MeshDescriptor::Initialize();
 
   VkBufferCreateInfo bonesCI = {};
   VkDeviceSize bonesSize = sizeof(BonesBuffer);
@@ -89,7 +88,7 @@ void SkinnedMeshDescriptor::Initialize(Renderer* renderer)
   bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bonesCI.size = bonesSize;
 
-  m_pBonesBuffer = m_Renderer->RHI()->CreateBuffer();
+  m_pBonesBuffer = m_pRhi->CreateBuffer();
   m_pBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
@@ -109,7 +108,7 @@ void SkinnedMeshDescriptor::CleanUp()
   MeshDescriptor::CleanUp();
 
   if (m_pBonesBuffer) {
-    m_Renderer->RHI()->FreeBuffer(m_pBonesBuffer);
+    m_pRhi->FreeBuffer(m_pBonesBuffer);
     m_pBonesBuffer = nullptr;
   }
 }

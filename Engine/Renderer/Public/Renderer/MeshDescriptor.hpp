@@ -36,7 +36,7 @@ public:
   MeshDescriptor();
   virtual ~MeshDescriptor();
 
-  virtual void  Initialize(Renderer* renderer);
+  virtual void  Initialize();
   virtual void  CleanUp();
 
   virtual void  Update();
@@ -66,7 +66,7 @@ protected:
   b8            m_Translucent;
   b8            m_Static;
   
-  Renderer*     m_Renderer;
+  VulkanRHI*     m_pRhi;
   
   friend class Renderer;
 };
@@ -77,7 +77,7 @@ public:
   SkinnedMeshDescriptor();
   virtual ~SkinnedMeshDescriptor();
   
-  virtual void  Initialize(Renderer* renderer) override;
+  virtual void  Initialize() override;
   virtual void  CleanUp() override;
   virtual void  Update() override;
 

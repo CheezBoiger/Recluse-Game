@@ -53,6 +53,12 @@ void RenderObject::Initialize()
     return;
   } 
 
+  if (!MaterialId->Native()) {
+    Log(rError) << "MaterialDescriptor buffer was not initialized prior to initializing this RenderObject! Halting process\n";
+    R_ASSERT(false, "MaterialDescriptor Buffer was not intialized, can not continue this RenderObject intialization.\n");
+    return;
+  }
+
   if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1]) {
     R_DEBUG(rNotify, "This RenderObject is already initialized. Skipping...\n");
     return;
@@ -138,6 +144,11 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
   }
 
   {
+    if (!MaterialId->Native()) { 
+      Log(rWarning) << "Can not update render object material descriptor sets, material descriptor buffer is not initialized!\n";
+      return; 
+    }
+
     std::array<VkWriteDescriptorSet, 7> MaterialWriteSets;
     VkDescriptorImageInfo albedoInfo = {};
     albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -200,7 +211,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     emissiveInfo.sampler = sampler->Handle();
 
     VkDescriptorBufferInfo matBufferInfo = { };
-    matBufferInfo.buffer = MaterialId->NativeBuffer()->NativeBuffer();
+    matBufferInfo.buffer = MaterialId->Native()->NativeBuffer();
     matBufferInfo.offset = 0;
     matBufferInfo.range = sizeof(MaterialBuffer);
 

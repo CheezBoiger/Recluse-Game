@@ -167,14 +167,14 @@ int main(int c, char* argv[])
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-maxNum, maxNum);
 #endif
-  MaterialDescriptor cubeMaterial;
-  MeshDescriptor cubeMesh;
-  cubeMesh.Initialize(&gRenderer());
-  cubeMaterial.Initialize(&gRenderer());
-  cubeMaterial.SetAlbedo(albedo);
-  cubeMaterial.SetNormal(normal);
-  ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
-  MaterialBuffer* cubeMat = cubeMaterial.Data();
+  MaterialDescriptor* cubeMaterial = gRenderer().CreateMaterialDescriptor();
+  MeshDescriptor* cubeMesh = gRenderer().CreateStaticMeshDescriptor();
+  cubeMesh->Initialize();
+  cubeMaterial->Initialize();
+  cubeMaterial->SetAlbedo(albedo);
+  cubeMaterial->SetNormal(normal);
+  ObjectBuffer* cubeInfo = cubeMesh->ObjectData();
+  MaterialBuffer* cubeMat = cubeMaterial->Data();
   cubeMat->_HasNormal = true;
   cubeMat->_BaseMetal = 0.1f;
   cubeMat->_BaseRough = 0.6f;
@@ -185,15 +185,15 @@ int main(int c, char* argv[])
   cubeInfo->_NormalMatrix[3][2] = 0.0f;
   cubeInfo->_NormalMatrix[3][3] = 1.0f;
 
-  MaterialDescriptor cubeMaterial2;
-  MeshDescriptor cubeMesh2;
-  cubeMaterial2.SetTransparent(false);
-  cubeMesh2.Initialize(&gRenderer());
-  cubeMaterial2.Initialize(&gRenderer());
-  cubeMaterial2.SetAlbedo(albedo);
-  cubeMaterial2.SetNormal(normal);
-  ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
-  MaterialBuffer* cubeMat2 = cubeMaterial2.Data();
+  MaterialDescriptor* cubeMaterial2 = gRenderer().CreateMaterialDescriptor();
+  MeshDescriptor* cubeMesh2 = gRenderer().CreateStaticMeshDescriptor();
+  cubeMaterial2->SetTransparent(false);
+  cubeMesh2->Initialize();
+  cubeMaterial2->Initialize();
+  cubeMaterial2->SetAlbedo(albedo);
+  cubeMaterial2->SetNormal(normal);
+  ObjectBuffer* cubeInfo2 = cubeMesh2->ObjectData();
+  MaterialBuffer* cubeMat2 = cubeMaterial2->Data();
   cubeMat2->_HasNormal = false;
   cubeInfo2->_Model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
@@ -207,14 +207,14 @@ int main(int c, char* argv[])
   cubeMat2->_BaseRough = 0.1f;
 
   // Box using emissive map for light mimick.
-  MaterialDescriptor cubeMaterial3;
-  MeshDescriptor cubeMesh3;
-  cubeMesh3.Initialize(&gRenderer());
-  cubeMaterial3.Initialize(&gRenderer());
-  cubeMaterial3.SetAlbedo(albedo);
-  cubeMaterial3.SetEmissive(emissive);
-  ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
-  MaterialBuffer* cubeMat3 = cubeMaterial3.Data();
+  MaterialDescriptor* cubeMaterial3 = gRenderer().CreateMaterialDescriptor();
+  MeshDescriptor* cubeMesh3 = gRenderer().CreateStaticMeshDescriptor();
+  cubeMesh3->Initialize();
+  cubeMaterial3->Initialize();
+  cubeMaterial3->SetAlbedo(albedo);
+  cubeMaterial3->SetEmissive(emissive);
+  ObjectBuffer* cubeInfo3 = cubeMesh3->ObjectData();
+  MaterialBuffer* cubeMat3 = cubeMaterial3->Data();
   cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->_NormalMatrix = cubeInfo3->_Model.Inverse().Transpose();
   cubeInfo3->_NormalMatrix[3][0] = 0.0f;
@@ -226,23 +226,24 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
-  std::array<std::thread, 2>              workers;
-  std::array<MeshDescriptor, ObjectCount> meshDescriptors;
-  std::array<RenderObject*, ObjectCount> renderObjects;
-  std::array<Vector3, ObjectCount> positions;
+  std::array<std::thread, 2>                workers;
+  std::array<MeshDescriptor*, ObjectCount>  meshDescriptors;
+  std::array<RenderObject*, ObjectCount>    renderObjects;
+  std::array<Vector3, ObjectCount>          positions;
   size_t middle = meshDescriptors.size() / 2;
-  MaterialDescriptor material;
-  material.Initialize(&gRenderer());
-  MaterialBuffer* mat = material.Data();    
+  MaterialDescriptor* material = gRenderer().CreateMaterialDescriptor();
+  material->Initialize();
+  MaterialBuffer* mat = material->Data();    
   mat->_BaseMetal = 0.5f;
   mat->_BaseRough = 0.1f;
   mat->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
 
   for (size_t i = 0; i < meshDescriptors.size(); ++i) {
-    meshDescriptors[i].Initialize(&gRenderer());
+    meshDescriptors[i] = gRenderer().CreateStaticMeshDescriptor();
+    meshDescriptors[i]->Initialize();
     r32 same = uni(r);
     positions[i] = Vector3(same, uni(r), same);
-    ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+    ObjectBuffer* buffer = meshDescriptors[i]->ObjectData();
     buffer->_Model = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f)) * Matrix4::Translate(Matrix4::Identity(), positions[i]);
     buffer->_NormalMatrix = buffer->_Model.Inverse().Transpose();
     buffer->_NormalMatrix[3][0] = 0.0f;
@@ -251,8 +252,8 @@ int main(int c, char* argv[])
     buffer->_NormalMatrix[3][3] = 1.0f;
 
     renderObjects[i] = gRenderer().CreateRenderObject();
-    renderObjects[i]->MaterialId = &material;
-    renderObjects[i]->MeshDescriptorId = &meshDescriptors[i];
+    renderObjects[i]->MaterialId = material;
+    renderObjects[i]->MeshDescriptorId = meshDescriptors[i];
     renderObjects[i]->Initialize();
     renderObjects[i]->PushBack(sphereMeshDat);
   }
@@ -262,15 +263,15 @@ int main(int c, char* argv[])
   RenderObject* obj2 = gRenderer().CreateRenderObject();
   RenderObject* obj3 = gRenderer().CreateRenderObject();
 
-  obj1->MaterialId = &cubeMaterial;
-  obj1->MeshDescriptorId = &cubeMesh;
+  obj1->MaterialId = cubeMaterial;
+  obj1->MeshDescriptorId = cubeMesh;
 
-  obj2->MaterialId = &cubeMaterial2;
-  obj2->MeshDescriptorId = &cubeMesh2;
+  obj2->MaterialId = cubeMaterial2;
+  obj2->MeshDescriptorId = cubeMesh2;
   obj2->Renderable = true;
 
-  obj3->MaterialId = &cubeMaterial3;
-  obj3->MeshDescriptorId = &cubeMesh3;
+  obj3->MaterialId = cubeMaterial3;
+  obj3->MeshDescriptorId = cubeMesh3;
 
   obj1->Initialize();
   obj2->Initialize();
@@ -328,7 +329,7 @@ int main(int c, char* argv[])
 #if PERFORMANCE_TEST
     workers[0] = std::thread([&]() -> void {
       for (size_t i = 0; i < middle; ++i) {
-        ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+        ObjectBuffer* buffer = meshDescriptors[i]->ObjectData();
         Vector3 rev;
         r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
         r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
@@ -347,7 +348,7 @@ int main(int c, char* argv[])
 
     workers[1] = std::thread([&]() -> void {
       for (size_t i = middle; i < meshDescriptors.size(); ++i) {
-        ObjectBuffer* buffer = meshDescriptors[i].ObjectData();
+        ObjectBuffer* buffer = meshDescriptors[i]->ObjectData();
         Vector3 rev;
         r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
         r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
@@ -385,8 +386,8 @@ int main(int c, char* argv[])
     cubeInfo3->_NormalMatrix[3][2] = 0.0f;
     cubeInfo3->_NormalMatrix[3][3] = 1.0f;
 
-    if (noAlbedo2) { cubeMaterial2.Data()->_HasAlbedo = false; } else { cubeMaterial2.Data()->_HasAlbedo = true; }
-    if (noAlbedo) { cubeMaterial.Data()->_HasAlbedo = false; } else { cubeMaterial.Data()->_HasAlbedo = true; }
+    if (noAlbedo2) { cubeMaterial2->Data()->_HasAlbedo = false; } else { cubeMaterial2->Data()->_HasAlbedo = true; }
+    if (noAlbedo) { cubeMaterial->Data()->_HasAlbedo = false; } else { cubeMaterial->Data()->_HasAlbedo = true; }
 
     // //////////
     // End updates.
@@ -420,17 +421,17 @@ int main(int c, char* argv[])
   gRenderer().FreeMeshData(sphereMeshDat);
 #if PERFORMANCE_TEST
   for (size_t i = 0; i < meshDescriptors.size(); ++i) {
-    meshDescriptors[i].CleanUp();
+    gRenderer().FreeMeshDescriptor(meshDescriptors[i]);
     gRenderer().FreeRenderObject(renderObjects[i]);
   }
 #endif
-  cubeMesh.CleanUp();
-  cubeMesh2.CleanUp();
-  cubeMesh3.CleanUp();
-  material.CleanUp();
-  cubeMaterial.CleanUp();
-  cubeMaterial2.CleanUp();
-  cubeMaterial3.CleanUp();
+  gRenderer().FreeMeshDescriptor(cubeMesh);
+  gRenderer().FreeMeshDescriptor(cubeMesh2);
+  gRenderer().FreeMeshDescriptor(cubeMesh3);
+  gRenderer().FreeMaterialDescriptor(material);
+  gRenderer().FreeMaterialDescriptor(cubeMaterial);
+  gRenderer().FreeMaterialDescriptor(cubeMaterial2);
+  gRenderer().FreeMaterialDescriptor(cubeMaterial3);
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

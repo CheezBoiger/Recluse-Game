@@ -26,6 +26,8 @@ class ComputePipeline;
 class GpuParams;
 class UserParams;
 class MeshData;
+class MeshDescriptor;
+class SkinnedMeshDescriptor;
 class MaterialDescriptor;
 class LightDescriptor;
 class GlobalDescriptor;
@@ -103,6 +105,12 @@ public:
   // Be sure to call FreeMeshData() if done with this mesh object.
   MeshData*         CreateMeshData();
 
+  // Create a Mesh descriptor.
+  MeshDescriptor*           CreateStaticMeshDescriptor();
+
+  // Create a skinned mesh descriptor. This is used for skeletal animation.
+  SkinnedMeshDescriptor*    CreateSkinnedMeshDescriptor();
+
   // Create a 1D texture.
   Texture1D*        CreateTexture1D();
 
@@ -127,6 +135,9 @@ public:
 
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
+
+  // Create a material descriptor.
+  MaterialDescriptor* CreateMaterialDescriptor();
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
 
@@ -156,6 +167,12 @@ public:
 
   // Frees up the texture sampler object.
   void              FreeTextureSampler(TextureSampler* sampler);
+
+  // Frees up the material descriptor object.
+  void              FreeMaterialDescriptor(MaterialDescriptor* descriptor);
+
+  // Frees up mesh descriptor. Works for skinned mesh descriptor as well.
+  void              FreeMeshDescriptor(MeshDescriptor* descriptor);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
