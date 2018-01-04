@@ -26,7 +26,7 @@ class FrameBuffer;
 
 struct MaterialBuffer {
   Vector4 _Color;          // object base color.
-  r32     _LodBias;        // object level of detail bias.
+  Vector4 _Ambient;        // Ambient override. Not needed if Object is influenced by a light probe.
   r32     _Transparency;   // transparency [0.0, 1.0]
   r32     _BaseMetal;      // object base metalness [0.0, 1.0]
   r32     _BaseRough;      // object base roughness [0.0, 1.0]
@@ -38,6 +38,7 @@ struct MaterialBuffer {
   u32     _HasEmissive;    // does object have emissive map?
   u32     _HasAO;          // does object have ambient occlusion map?
   u32     _IsTransparent;  // is object transparent?
+  u32     _Pad;
 };
 
 // Physically based material layout that our renderer uses as material for 

@@ -161,7 +161,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 4000
+#define ObjectCount 3000
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());

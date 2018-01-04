@@ -59,13 +59,14 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  float lod;          // Level of Detail
   int   hasBones; 
 } objBuffer;
 
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
-  float levelOfDetail;
+  vec4  ambient;
   float transparency;
   float metal;
   float rough;
@@ -239,7 +240,7 @@ mat3 BiTangentFrame(vec3 Normal, vec3 Position, vec2 UV)
 
 vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
 {
-  vec3 tNormal = texture(normal, TexCoord).rgb * 2.0 - 1.0;
+  vec3 tNormal = texture(normal, TexCoord, objBuffer.lod).rgb * 2.0 - 1.0;
   mat3 TBN = BiTangentFrame(N, V, TexCoord);
   return normalize(TBN * tNormal);
 }
@@ -256,19 +257,19 @@ void main()
   float fragAO = 0.0;
   
   if (matBuffer.hasAlbedo >= 1) {
-    fragAlbedo = pow(texture(albedo, frag_in.texcoord0).rgb, vec3(2.2));
+    fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
   } else {
     fragAlbedo = matBuffer.color.rgb;
   }
     
   if (matBuffer.hasMetallic >= 1) {
-    fragMetallic = texture(metallic, frag_in.texcoord0).r;
+    fragMetallic = texture(metallic, frag_in.texcoord0, objBuffer.lod).r;
   } else {
     fragMetallic = matBuffer.metal;
   }
   
   if (matBuffer.hasRoughness >= 1) {
-    fragRoughness = texture(roughness, frag_in.texcoord0).r;
+    fragRoughness = texture(roughness, frag_in.texcoord0, objBuffer.lod).r;
   } else {
     fragRoughness = matBuffer.rough;
   }
@@ -282,18 +283,19 @@ void main()
   normalColor = vec4(fragNormal, 1.0);
   
   if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = texture(emissive, frag_in.texcoord0).rgb;
+    fragEmissive = texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb;
   } 
   
   if (matBuffer.hasAO >= 1) {
-    fragAO = texture(ao, frag_in.texcoord0).r;
+    fragAO = texture(ao, frag_in.texcoord0, objBuffer.lod).r;
   }
     
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 N = normalize(fragNormal);
 
   // Brute force lights for now.
-  vec3 ambient = vec3(0.03) * fragAlbedo; 
+  // TODO(): Map light probes in the future, to produce environment ambient instead.
+  vec3 ambient = matBuffer.ambient.rgb * fragAlbedo; 
   vec3 outColor = (fragEmissive * matBuffer.emissive) + ambient;
 
   if (gLightBuffer.primaryLight.enable > 0) {

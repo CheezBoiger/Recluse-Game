@@ -12,6 +12,7 @@ layout (location = 3) in vec2   texcoord1;
 layout (set = 0, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  float lod;
   int   hasBones; 
 } obj_buffer;
 

@@ -38,7 +38,8 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
-  mat4  normalMatrix;
+  mat4  normalMatrix;  
+  float lod;
   int   hasBones; 
 } objBuffer;
 

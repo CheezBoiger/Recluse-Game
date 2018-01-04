@@ -15,6 +15,7 @@ layout (location = 5) in ivec4  boneIDs;
 layout (set = 0, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  float lod;
   int   hasBones; 
 } obj_buffer;
 
