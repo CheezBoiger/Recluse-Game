@@ -318,10 +318,10 @@ void Renderer::SetUpDescriptorSetLayouts()
     MeshSetLayout->Initialize(GlobalLayout);
   }
 
-  // Material Layout.
+  // MaterialDescriptor Layout.
   {
     std::array<VkDescriptorSetLayoutBinding, 7> MaterialBindings;
-    // Material Buffer
+    // MaterialDescriptor Buffer
     MaterialBindings[6].binding = 0;
     MaterialBindings[6].descriptorCount = 1;
     MaterialBindings[6].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

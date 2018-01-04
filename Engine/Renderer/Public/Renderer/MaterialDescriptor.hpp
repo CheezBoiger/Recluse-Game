@@ -43,10 +43,10 @@ struct MaterialBuffer {
 
 // Physically based material layout that our renderer uses as material for 
 // meshes.
-class Material {
+class MaterialDescriptor {
 public:
 
-  Material();
+  MaterialDescriptor();
 
   void            Initialize(Renderer* renderer);
   void            Update();

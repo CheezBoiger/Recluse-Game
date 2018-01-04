@@ -2,7 +2,7 @@
 #include "SkinnedMeshComponent.hpp"
 
 #include "Renderer/MeshDescriptor.hpp"
-#include "Renderer/Material.hpp"
+#include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/Renderer.hpp"
 
@@ -77,7 +77,7 @@ SkinnedMeshComponent::~SkinnedMeshComponent()
 }
 
 
-void SkinnedMeshComponent::Initialize(Renderer* renderer, Material* material, SkinnedMeshDescriptor* descriptor)
+void SkinnedMeshComponent::Initialize(Renderer* renderer, MaterialDescriptor* material, SkinnedMeshDescriptor* descriptor)
 {
   if (!renderer || !material || !descriptor) {
     R_DEBUG(rNotify, "Null parameters for this skinned mesh component.\n");

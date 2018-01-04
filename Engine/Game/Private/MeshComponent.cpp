@@ -2,7 +2,7 @@
 #include "MeshComponent.hpp"
 
 #include "Renderer/RenderObject.hpp"
-#include "Renderer/Material.hpp"
+#include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/Renderer.hpp"
 

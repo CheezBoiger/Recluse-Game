@@ -26,7 +26,7 @@ class ComputePipeline;
 class GpuParams;
 class UserParams;
 class MeshData;
-class Material;
+class MaterialDescriptor;
 class LightDescriptor;
 class GlobalDescriptor;
 class TextureCube;

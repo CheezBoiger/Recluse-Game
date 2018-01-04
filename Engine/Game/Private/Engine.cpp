@@ -6,7 +6,7 @@
 #include "Core/Exception.hpp"
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/MeshDescriptor.hpp"
-#include "Renderer/Material.hpp"
+#include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/UserParams.hpp"
 
 

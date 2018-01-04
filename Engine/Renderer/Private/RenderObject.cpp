@@ -12,7 +12,7 @@
 #include "RendererData.hpp"
 #include "MeshDescriptor.hpp"
 #include "MeshData.hpp"
-#include "Material.hpp"
+#include "MaterialDescriptor.hpp"
 #include "TextureType.hpp"
 
 #include <array>
@@ -21,7 +21,7 @@
 namespace Recluse {
 
 
-RenderObject::RenderObject(MeshDescriptor* mesh, Material* material)
+RenderObject::RenderObject(MeshDescriptor* mesh, MaterialDescriptor* material)
   : MaterialId(material)
   , MeshDescriptorId(mesh)
   , mCurrIdx(0)

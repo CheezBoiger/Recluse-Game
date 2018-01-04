@@ -46,7 +46,7 @@ struct GlobalBuffer {
 };
 
 
-// Global Material.
+// Global MaterialDescriptor.
 class GlobalDescriptor {
 public:
   GlobalDescriptor();

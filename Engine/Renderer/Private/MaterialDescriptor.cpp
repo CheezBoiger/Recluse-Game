@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "Material.hpp"
+#include "MaterialDescriptor.hpp"
 #include "Resources.hpp"
 #include "Renderer.hpp"
 #include "RendererData.hpp"
@@ -18,7 +18,7 @@
 namespace Recluse {
 
 
-Material::Material()
+MaterialDescriptor::MaterialDescriptor()
   : mAlbedo(nullptr)
   , mMetallic(nullptr)
   , mRoughness(nullptr)
@@ -43,7 +43,7 @@ Material::Material()
 }
 
 
-void Material::Initialize(Renderer* renderer)
+void MaterialDescriptor::Initialize(Renderer* renderer)
 {
   m_pRenderer = renderer;
   m_pBuffer = renderer->RHI()->CreateBuffer();
@@ -58,7 +58,7 @@ void Material::Initialize(Renderer* renderer)
 }
 
 
-void Material::Update()
+void MaterialDescriptor::Update()
 {
   m_pBuffer->Map();
     memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
@@ -66,7 +66,7 @@ void Material::Update()
 }
 
 
-void Material::CleanUp()
+void MaterialDescriptor::CleanUp()
 {
   if (m_pBuffer)  {
     m_pRenderer->RHI()->FreeBuffer(m_pBuffer);

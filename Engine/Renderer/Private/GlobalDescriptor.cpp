@@ -45,7 +45,7 @@ GlobalDescriptor::~GlobalDescriptor()
 void GlobalDescriptor::Initialize()
 {
   if (!m_pRhi) {
-    R_DEBUG(rError, "No RHI owner set in this Global Material upon initialization!\n");
+    R_DEBUG(rError, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
     return;
   }
 

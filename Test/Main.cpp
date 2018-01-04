@@ -9,7 +9,7 @@
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/MeshData.hpp"
-#include "Renderer/Material.hpp"
+#include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/TextureType.hpp"
 #include "Core/Utility/Image.hpp"
 
@@ -161,13 +161,13 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 3500
+#define ObjectCount 4000
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-maxNum, maxNum);
 #endif
-  Material cubeMaterial;
+  MaterialDescriptor cubeMaterial;
   MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
   cubeMaterial.Initialize(&gRenderer());
@@ -185,7 +185,7 @@ int main(int c, char* argv[])
   cubeInfo->_NormalMatrix[3][2] = 0.0f;
   cubeInfo->_NormalMatrix[3][3] = 1.0f;
 
-  Material cubeMaterial2;
+  MaterialDescriptor cubeMaterial2;
   MeshDescriptor cubeMesh2;
   cubeMaterial2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
@@ -207,7 +207,7 @@ int main(int c, char* argv[])
   cubeMat2->_BaseRough = 0.1f;
 
   // Box using emissive map for light mimick.
-  Material cubeMaterial3;
+  MaterialDescriptor cubeMaterial3;
   MeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
   cubeMaterial3.Initialize(&gRenderer());
@@ -231,7 +231,7 @@ int main(int c, char* argv[])
   std::array<RenderObject*, ObjectCount> renderObjects;
   std::array<Vector3, ObjectCount> positions;
   size_t middle = meshDescriptors.size() / 2;
-  Material material;
+  MaterialDescriptor material;
   material.Initialize(&gRenderer());
   MaterialBuffer* mat = material.Data();    
   mat->_BaseMetal = 0.5f;

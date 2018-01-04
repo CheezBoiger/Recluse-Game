@@ -10,7 +10,7 @@ namespace Recluse {
 class MeshData;
 class MeshDescriptor;
 class SkinnedMesh;
-class Material;
+class MaterialDescriptor;
 class DescriptorSet;
 class VulkanRHI;
 
@@ -29,7 +29,7 @@ public:
   MeshDescriptor*         MeshDescriptorId;
 
   // The material of this Render Object.
-  Material*               MaterialId;
+  MaterialDescriptor*               MaterialId;
 
   // Number of instances to draw meshdata within the render object.
   // Typically set to 1 (default is 1.)
@@ -39,7 +39,7 @@ public:
   b8                      Renderable;
 
   RenderObject(MeshDescriptor* mesh = nullptr, 
-                Material* material = nullptr);
+                MaterialDescriptor* material = nullptr);
 
   ~RenderObject();
 

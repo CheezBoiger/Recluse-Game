@@ -13,7 +13,7 @@ class Texture;
 class Sampler;
 class DescriptorSetLayout;
 class DescriptorSet;
-class Material;
+class MaterialDescriptor;
 class Mesh;
 
 typedef size_t resource_id_t;

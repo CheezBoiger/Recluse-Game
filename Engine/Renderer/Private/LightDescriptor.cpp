@@ -61,7 +61,7 @@ LightDescriptor::~LightDescriptor()
   }
 
   if (m_pLightDescriptorSet) {
-    R_DEBUG(rWarning, "Light Material descriptor set was not properly cleaned up!\n");
+    R_DEBUG(rWarning, "Light MaterialDescriptor descriptor set was not properly cleaned up!\n");
   }
   
   if (m_pShadowMap) {

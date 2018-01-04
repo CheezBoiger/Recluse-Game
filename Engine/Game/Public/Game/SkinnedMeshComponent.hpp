@@ -9,7 +9,7 @@
 namespace Recluse {
 
 
-class Material;
+class MaterialDescriptor;
 class SkinnedMeshDescriptor;
 class RenderObject;
 class Renderer;
@@ -28,12 +28,12 @@ public:
   SkinnedMeshComponent& operator=(const SkinnedMeshComponent&);
   SkinnedMeshComponent& operator=(SkinnedMeshComponent&&);
 
-  void                  Initialize(Renderer* renderer, Material* material, SkinnedMeshDescriptor* descriptor);
+  void                  Initialize(Renderer* renderer, MaterialDescriptor* material, SkinnedMeshDescriptor* descriptor);
   void                  CleanUp();
 
 private:
   Renderer*               mRenderer;
-  Material*               mMaterial;
+  MaterialDescriptor*     mMaterial;
   RenderObject*           mRenderObj;
   SkinnedMeshDescriptor*  mMesh;
 };

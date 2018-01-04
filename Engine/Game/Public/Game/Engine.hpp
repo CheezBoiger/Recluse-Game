@@ -17,7 +17,7 @@
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
-#include "Renderer/Material.hpp"
+#include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/LightDescriptor.hpp"
 #include "Renderer/GlobalDescriptor.hpp"
 #include "Renderer/RenderCmd.hpp"

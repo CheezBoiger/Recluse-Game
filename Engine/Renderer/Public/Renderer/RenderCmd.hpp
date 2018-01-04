@@ -11,7 +11,7 @@ namespace Recluse {
 
 
 class Mesh;
-class Material;
+class MaterialDescriptor;
 class RenderObject;
 
 
