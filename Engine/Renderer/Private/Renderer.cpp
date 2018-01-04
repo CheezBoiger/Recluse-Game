@@ -320,44 +320,51 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   // Material Layout.
   {
-    std::array<VkDescriptorSetLayoutBinding, 6> MaterialBindings;
+    std::array<VkDescriptorSetLayoutBinding, 7> MaterialBindings;
+    // Material Buffer
+    MaterialBindings[6].binding = 0;
+    MaterialBindings[6].descriptorCount = 1;
+    MaterialBindings[6].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    MaterialBindings[6].pImmutableSamplers = nullptr;
+    MaterialBindings[6].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    
     // albedo
-    MaterialBindings[0].binding = 0;
+    MaterialBindings[0].binding = 1;
     MaterialBindings[0].descriptorCount = 1;
     MaterialBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[0].pImmutableSamplers = nullptr;
     MaterialBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     // metallic
-    MaterialBindings[1].binding = 1;
+    MaterialBindings[1].binding = 2;
     MaterialBindings[1].descriptorCount = 1;
     MaterialBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[1].pImmutableSamplers = nullptr;
     MaterialBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     // roughness
-    MaterialBindings[2].binding = 2;
+    MaterialBindings[2].binding = 3;
     MaterialBindings[2].descriptorCount = 1;
     MaterialBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[2].pImmutableSamplers = nullptr;
     MaterialBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     // normal
-    MaterialBindings[3].binding = 3;
+    MaterialBindings[3].binding = 4;
     MaterialBindings[3].descriptorCount = 1;
     MaterialBindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[3].pImmutableSamplers = nullptr;
     MaterialBindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     // ao
-    MaterialBindings[4].binding = 4;
+    MaterialBindings[4].binding = 5;
     MaterialBindings[4].descriptorCount = 1;
     MaterialBindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[4].pImmutableSamplers = nullptr;
     MaterialBindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     // emissive
-    MaterialBindings[5].binding = 5;
+    MaterialBindings[5].binding = 6;
     MaterialBindings[5].descriptorCount = 1;
     MaterialBindings[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     MaterialBindings[5].pImmutableSamplers = nullptr;

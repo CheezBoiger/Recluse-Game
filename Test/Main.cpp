@@ -120,14 +120,14 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Enable = true;
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[0]._Range = 30.0f;
-  lights->_PointLights[0]._Intensity = 5.0f;
+  lights->_PointLights[0]._Range = 1000.0f;
+  lights->_PointLights[0]._Intensity = 10.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
   lights->_PointLights[1]._Position = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   lights->_PointLights[1]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[1]._Range = 100.0f;
+  lights->_PointLights[1]._Range = 5.0f;
   lights->_PointLights[1]._Intensity = 10.0f;
 
   Image img;
@@ -161,7 +161,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 100
+#define ObjectCount 3500
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -170,53 +170,59 @@ int main(int c, char* argv[])
   Material cubeMaterial;
   MeshDescriptor cubeMesh;
   cubeMesh.Initialize(&gRenderer());
+  cubeMaterial.Initialize(&gRenderer());
   cubeMaterial.SetAlbedo(albedo);
   cubeMaterial.SetNormal(normal);
   ObjectBuffer* cubeInfo = cubeMesh.ObjectData();
-  cubeInfo->_HasNormal = true;
+  MaterialBuffer* cubeMat = cubeMaterial.Data();
+  cubeMat->_HasNormal = true;
+  cubeMat->_BaseMetal = 0.1f;
+  cubeMat->_BaseRough = 0.6f;
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
   cubeInfo->_NormalMatrix[3][1] = 0.0f;
   cubeInfo->_NormalMatrix[3][2] = 0.0f;
   cubeInfo->_NormalMatrix[3][3] = 1.0f;
-  cubeInfo->_BaseMetal = 0.1f;
-  cubeInfo->_BaseRough = 0.6f;
 
   Material cubeMaterial2;
   MeshDescriptor cubeMesh2;
-  cubeMesh2.SetTransparent(false);
+  cubeMaterial2.SetTransparent(false);
   cubeMesh2.Initialize(&gRenderer());
+  cubeMaterial2.Initialize(&gRenderer());
   cubeMaterial2.SetAlbedo(albedo);
   cubeMaterial2.SetNormal(normal);
   ObjectBuffer* cubeInfo2 = cubeMesh2.ObjectData();
-  cubeInfo2->_HasNormal = false;
+  MaterialBuffer* cubeMat2 = cubeMaterial2.Data();
+  cubeMat2->_HasNormal = false;
   cubeInfo2->_Model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
   cubeInfo2->_NormalMatrix[3][0] = 0.0f;
   cubeInfo2->_NormalMatrix[3][1] = 0.0f;
   cubeInfo2->_NormalMatrix[3][2] = 0.0f;
   cubeInfo2->_NormalMatrix[3][3] = 1.0f;
-  cubeInfo2->_Color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
-  cubeInfo2->_Transparency = 0.4f;
-  cubeInfo2->_BaseMetal = 0.8f;
-  cubeInfo2->_BaseRough = 0.1f;
+  cubeMat2->_Color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
+  cubeMat2->_Transparency = 0.4f;
+  cubeMat2->_BaseMetal = 0.8f;
+  cubeMat2->_BaseRough = 0.1f;
 
   // Box using emissive map for light mimick.
   Material cubeMaterial3;
   MeshDescriptor cubeMesh3;
   cubeMesh3.Initialize(&gRenderer());
+  cubeMaterial3.Initialize(&gRenderer());
   cubeMaterial3.SetAlbedo(albedo);
   cubeMaterial3.SetEmissive(emissive);
   ObjectBuffer* cubeInfo3 = cubeMesh3.ObjectData();
+  MaterialBuffer* cubeMat3 = cubeMaterial3.Data();
   cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
   cubeInfo3->_NormalMatrix = cubeInfo3->_Model.Inverse().Transpose();
   cubeInfo3->_NormalMatrix[3][0] = 0.0f;
   cubeInfo3->_NormalMatrix[3][1] = 0.0f;
   cubeInfo3->_NormalMatrix[3][2] = 0.0f;
   cubeInfo3->_NormalMatrix[3][3] = 1.0f;
-  cubeInfo3->_HasEmissive = true;
-  cubeInfo3->_BaseEmissive = lights->_PointLights[0]._Intensity;
+  cubeMat3->_HasEmissive = true;
+  cubeMat3->_BaseEmissive = lights->_PointLights[0]._Intensity;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
@@ -225,6 +231,12 @@ int main(int c, char* argv[])
   std::array<RenderObject*, ObjectCount> renderObjects;
   std::array<Vector3, ObjectCount> positions;
   size_t middle = meshDescriptors.size() / 2;
+  Material material;
+  material.Initialize(&gRenderer());
+  MaterialBuffer* mat = material.Data();    
+  mat->_BaseMetal = 0.5f;
+  mat->_BaseRough = 0.1f;
+  mat->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
 
   for (size_t i = 0; i < meshDescriptors.size(); ++i) {
     meshDescriptors[i].Initialize(&gRenderer());
@@ -237,11 +249,9 @@ int main(int c, char* argv[])
     buffer->_NormalMatrix[3][1] = 0.0f;
     buffer->_NormalMatrix[3][2] = 0.0f;
     buffer->_NormalMatrix[3][3] = 1.0f;
-    buffer->_BaseMetal = 0.5f;
-    buffer->_BaseRough = 0.1f;
-    buffer->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
+
     renderObjects[i] = gRenderer().CreateRenderObject();
-    renderObjects[i]->MaterialId = &cubeMaterial2;
+    renderObjects[i]->MaterialId = &material;
     renderObjects[i]->MeshDescriptorId = &meshDescriptors[i];
     renderObjects[i]->Initialize();
     renderObjects[i]->PushBack(sphereMeshDat);
@@ -375,8 +385,8 @@ int main(int c, char* argv[])
     cubeInfo3->_NormalMatrix[3][2] = 0.0f;
     cubeInfo3->_NormalMatrix[3][3] = 1.0f;
 
-    if (noAlbedo2) { cubeMesh2.ObjectData()->_HasAlbedo = false; } else { cubeMesh2.ObjectData()->_HasAlbedo = true; }
-    if (noAlbedo) { cubeMesh.ObjectData()->_HasAlbedo = false; } else { cubeMesh.ObjectData()->_HasAlbedo = true; }
+    if (noAlbedo2) { cubeMaterial2.Data()->_HasAlbedo = false; } else { cubeMaterial2.Data()->_HasAlbedo = true; }
+    if (noAlbedo) { cubeMaterial.Data()->_HasAlbedo = false; } else { cubeMaterial.Data()->_HasAlbedo = true; }
 
     // //////////
     // End updates.
@@ -417,6 +427,10 @@ int main(int c, char* argv[])
   cubeMesh.CleanUp();
   cubeMesh2.CleanUp();
   cubeMesh3.CleanUp();
+  material.CleanUp();
+  cubeMaterial.CleanUp();
+  cubeMaterial2.CleanUp();
+  cubeMaterial3.CleanUp();
   ///////////////////////////////////////////////////////////////////////////////////////  
   gEngine().CleanUp();
 #if (_DEBUG)

@@ -59,6 +59,11 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
+  int   hasBones; 
+} objBuffer;
+
+
+layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
   float levelOfDetail;
   float transparency;
@@ -71,18 +76,16 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   int   hasNormal;
   int   hasEmissive;
   int   hasAO;
-  int   hasBones; 
   int   isTransparent;
-  // Needs to be padded 3 ints.
-} objBuffer;
+} matBuffer;
 
 
-layout (set = 2, binding = 0) uniform sampler2D albedo;
-layout (set = 2, binding = 1) uniform sampler2D metallic;
-layout (set = 2, binding = 2) uniform sampler2D roughness;
-layout (set = 2, binding = 3) uniform sampler2D normal;
-layout (set = 2, binding = 4) uniform sampler2D ao;
-layout (set = 2, binding = 5) uniform sampler2D emissive;
+layout (set = 2, binding = 1) uniform sampler2D albedo;
+layout (set = 2, binding = 2) uniform sampler2D metallic;
+layout (set = 2, binding = 3) uniform sampler2D roughness;
+layout (set = 2, binding = 4) uniform sampler2D normal;
+layout (set = 2, binding = 5) uniform sampler2D ao;
+layout (set = 2, binding = 6) uniform sampler2D emissive;
 
 
 layout (set = 3, binding = 0) uniform LightBuffer {
@@ -245,25 +248,25 @@ void main()
   float fragRoughness = 0.1;
   float fragAO = 0.0;
   
-  if (objBuffer.hasAlbedo >= 1) {
+  if (matBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0).rgb, vec3(2.2));
   } else {
-    fragAlbedo = objBuffer.color.rgb;
+    fragAlbedo = matBuffer.color.rgb;
   }
     
-  if (objBuffer.hasMetallic >= 1) {
+  if (matBuffer.hasMetallic >= 1) {
     fragMetallic = texture(metallic, frag_in.texcoord0).r;
   } else {
-    fragMetallic = objBuffer.metal;
+    fragMetallic = matBuffer.metal;
   }
   
-  if (objBuffer.hasRoughness >= 1) {
+  if (matBuffer.hasRoughness >= 1) {
     fragRoughness = texture(roughness, frag_in.texcoord0).r;
   } else {
-    fragRoughness = objBuffer.rough;
+    fragRoughness = matBuffer.rough;
   }
   
-  if (objBuffer.hasNormal >= 1) {
+  if (matBuffer.hasNormal >= 1) {
     fragNormal = GetNormal(frag_in.normal, frag_in.position, frag_in.texcoord0);
   } else {
     fragNormal = frag_in.normal;
@@ -271,11 +274,11 @@ void main()
   
   normalColor = vec4(fragNormal, 1.0);
   
-  if (objBuffer.hasEmissive >= 1) {
+  if (matBuffer.hasEmissive >= 1) {
     fragEmissive = texture(emissive, frag_in.texcoord0).rgb;
   } 
   
-  if (objBuffer.hasAO >= 1) {
+  if (matBuffer.hasAO >= 1) {
     fragAO = texture(ao, frag_in.texcoord0).r;
   }
     
@@ -284,7 +287,7 @@ void main()
 
   // Brute force lights for now.
   vec3 ambient = vec3(0.03) * fragAlbedo; 
-  vec3 outColor = (fragEmissive * objBuffer.emissive) + ambient;
+  vec3 outColor = (fragEmissive * matBuffer.emissive) + ambient;
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
@@ -306,8 +309,8 @@ void main()
     
   // We might wanna set a debug param here...
   float transparency = 1.0;
-  if (objBuffer.isTransparent >= 1) {
-    transparency = objBuffer.transparency;
+  if (matBuffer.isTransparent >= 1) {
+    transparency = matBuffer.transparency;
   }
   finalColor = vec4(outColor, transparency);
 

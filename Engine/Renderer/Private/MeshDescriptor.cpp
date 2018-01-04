@@ -16,20 +16,7 @@ MeshDescriptor::MeshDescriptor()
   , m_Static(true) 
   , m_Skinned(false)
 {
-  m_ObjectData._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  m_ObjectData._LodBias = 0.0f;
-  m_ObjectData._Transparency = 1.0f;
-  m_ObjectData._HasAlbedo = false;
-  m_ObjectData._HasAO = false;
   m_ObjectData._HasBones = false;
-  m_ObjectData._HasEmissive = false;
-  m_ObjectData._HasMetallic = false;
-  m_ObjectData._HasNormal = false;
-  m_ObjectData._BaseEmissive = 0.0f;
-  m_ObjectData._HasRoughness = false;
-  m_ObjectData._IsTransparent = false;
-  m_ObjectData._BaseMetal = 0.0f;
-  m_ObjectData._BaseRough = 1.0f;
 }
 
 

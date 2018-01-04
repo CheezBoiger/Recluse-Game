@@ -178,6 +178,7 @@ void Engine::Update(r64 dt)
 
     if (obj && obj->MeshDescriptorId) {
       obj->MeshDescriptorId->Update();
+      obj->MaterialId->Update();
     }
   }
 }
