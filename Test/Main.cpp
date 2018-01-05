@@ -63,7 +63,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 1
+#define PERFORMANCE_TEST 0
 
 int main(int c, char* argv[])
 {
@@ -98,7 +98,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 10.0f;
+  lights->_PrimaryLight._Intensity = 5.0f;
   lights->_PrimaryLight._Color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
   lights->_PrimaryLight._Enable = false;
 
@@ -121,7 +121,7 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PointLights[0]._Range = 100.0f;
-  lights->_PointLights[0]._Intensity = 10.0f;
+  lights->_PointLights[0]._Intensity = 5.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
@@ -131,22 +131,46 @@ int main(int c, char* argv[])
   lights->_PointLights[1]._Intensity = 10.0f;
 
   Image img;
-  img.Load("albedo.jpg");
+  img.Load("Box/albedo.jpg");
   Texture2D* albedo = gRenderer().CreateTexture2D();
   albedo->Initialize(img.Width(), img.Height());
   albedo->Update(img);
   img.CleanUp();
 
-  img.Load("normal.jpg");
+  img.Load("Box/normal.jpg");
   Texture2D* normal = gRenderer().CreateTexture2D();
   normal->Initialize(img.Width(), img.Height());
   normal->Update(img);
   img.CleanUp();
 
-  img.Load("emissive.jpg");
+  img.Load("Box/emissive.jpg");
   Texture2D* emissive = gRenderer().CreateTexture2D();
   emissive->Initialize(img.Width(), img.Height());
   emissive->Update(img);
+  img.CleanUp();
+
+  img.Load("Sphere/rustediron2_basecolor.png");
+  Texture2D* rustBase = gRenderer().CreateTexture2D();
+  rustBase->Initialize(img.Width(), img.Height());
+  rustBase->Update(img);
+  img.CleanUp();
+
+  img.Load("Sphere/rustediron2_normal.png");
+  Texture2D* rustNormal = gRenderer().CreateTexture2D();
+  rustNormal->Initialize(img.Width(), img.Height());
+  rustNormal->Update(img);
+  img.CleanUp();
+
+  img.Load("Sphere/rustediron2_roughness.png");
+  Texture2D* rustRough = gRenderer().CreateTexture2D();
+  rustRough->Initialize(img.Width(), img.Height());
+  rustRough->Update(img);
+  img.CleanUp();
+
+  img.Load("Sphere/rustediron2_metallic.png");
+  Texture2D* rustMetal = gRenderer().CreateTexture2D();
+  rustMetal->Initialize(img.Width(), img.Height());
+  rustMetal->Update(img);
   img.CleanUp();
 
   auto sphereData = UVSphere::MeshInstance(1.0f, SPHERE_SEGS, SPHERE_SEGS);
@@ -161,7 +185,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 3000
+#define ObjectCount 100
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -175,9 +199,10 @@ int main(int c, char* argv[])
   cubeMaterial->SetNormal(normal);
   ObjectBuffer* cubeInfo = cubeMesh->ObjectData();
   MaterialBuffer* cubeMat = cubeMaterial->Data();
-  cubeMat->_HasNormal = true;
-  cubeMat->_BaseMetal = 0.1f;
-  cubeMat->_BaseRough = 0.6f;
+  cubeMat->_HasNormal = false;
+  cubeMat->_BaseMetal = 1.0f;
+  cubeMat->_BaseRough = 0.45f;
+  cubeMat->_Ambient = Vector4(0.03f, 0.03f, 0.03f, 0.0f);
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
@@ -190,12 +215,17 @@ int main(int c, char* argv[])
   cubeMaterial2->SetTransparent(false);
   cubeMesh2->Initialize();
   cubeMaterial2->Initialize();
-  cubeMaterial2->SetAlbedo(albedo);
-  cubeMaterial2->SetNormal(normal);
+  cubeMaterial2->SetAlbedo(rustBase);
+  cubeMaterial2->SetNormal(rustNormal);
+  cubeMaterial2->SetRoughness(rustRough);
+  cubeMaterial2->SetMetallic(rustMetal);
   ObjectBuffer* cubeInfo2 = cubeMesh2->ObjectData();
   MaterialBuffer* cubeMat2 = cubeMaterial2->Data();
-  cubeMat2->_HasNormal = false;
-  cubeInfo2->_Model = Matrix4::Rotate(Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f)), Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
+  cubeMat2->_HasNormal = true;
+  cubeMat2->_HasRoughness = true;
+  cubeMat2->_HasMetallic = true;
+  cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(-3.0f, 0.0f, 3.0f));
+  cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
   cubeInfo2->_NormalMatrix[3][0] = 0.0f;
   cubeInfo2->_NormalMatrix[3][1] = 0.0f;
@@ -203,8 +233,9 @@ int main(int c, char* argv[])
   cubeInfo2->_NormalMatrix[3][3] = 1.0f;
   cubeMat2->_Color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
   cubeMat2->_Transparency = 0.4f;
-  cubeMat2->_BaseMetal = 0.8f;
+  cubeMat2->_BaseMetal = 0.0f;
   cubeMat2->_BaseRough = 0.1f;
+  cubeMat2->_Ambient = Vector4(0.001f, 0.001f, 0.001f, 0.0f);
 
   // Box using emissive map for light mimick.
   MaterialDescriptor* cubeMaterial3 = gRenderer().CreateMaterialDescriptor();
@@ -414,6 +445,10 @@ int main(int c, char* argv[])
   gRenderer().FreeTexture2D(albedo);
   gRenderer().FreeTexture2D(normal);
   gRenderer().FreeTexture2D(emissive);
+  gRenderer().FreeTexture2D(rustBase);
+  gRenderer().FreeTexture2D(rustNormal);
+  gRenderer().FreeTexture2D(rustRough);
+  gRenderer().FreeTexture2D(rustMetal);
   gRenderer().FreeRenderObject(obj1);
   gRenderer().FreeRenderObject(obj2);
   gRenderer().FreeRenderObject(obj3);
@@ -424,11 +459,11 @@ int main(int c, char* argv[])
     gRenderer().FreeMeshDescriptor(meshDescriptors[i]);
     gRenderer().FreeRenderObject(renderObjects[i]);
   }
+  gRenderer().FreeMaterialDescriptor(material);
 #endif
   gRenderer().FreeMeshDescriptor(cubeMesh);
   gRenderer().FreeMeshDescriptor(cubeMesh2);
   gRenderer().FreeMeshDescriptor(cubeMesh3);
-  gRenderer().FreeMaterialDescriptor(material);
   gRenderer().FreeMaterialDescriptor(cubeMaterial);
   gRenderer().FreeMaterialDescriptor(cubeMaterial2);
   gRenderer().FreeMaterialDescriptor(cubeMaterial3);

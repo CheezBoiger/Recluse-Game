@@ -55,12 +55,16 @@ std::string RenderTarget4xScaledStr     = "RenderTarget4x";
 std::string RenderTarget4xFinalStr      = "RenderTarget4xFinal";
 std::string RenderTarget8xScaledStr     = "RenderTarget8x";
 std::string RenderTarget8xFinalStr      = "RenderTarget8xFinal";
+std::string RenderTarget16xScaledStr    = "RenderTarget16x";
+std::string RenderTarget16xFinalStr     = "RenderTarget16xFinal";
 std::string FrameBuffer2xHorizStr       = "FrameBuffer2x";
 std::string FrameBuffer2xFinalStr       = "FrameBuffer2xFinal";
 std::string FrameBuffer4xFinalStr       = "FrameBuffer4xFinal";
 std::string FrameBuffer4xStr            = "FrameBuffer4x";
 std::string FrameBuffer8xStr            = "FrameBuffer8x";
 std::string FrameBuffer8xFinalStr       = "FrameBuffer8xFinal";
+std::string FrameBuffer16xStr           = "FrameBuffer16x";
+std::string FrameBuffer16xFinalStr      = "FrameBuffer16xFinal";
 std::string GlowPipelineStr             = "GlowPipelineStr";
 std::string GlowFragFileStr             = "GlowPass.frag.spv";
 std::string RenderTargetGlowStr         = "RenderTargetGlow";
@@ -70,6 +74,7 @@ std::string GlowDescriptorSetStr        = "GlowDescriptorSet";
 std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline2x";
 std::string DownscaleBlurPipeline4xStr  = "DownscaleBlurPipeline4x";
 std::string DownscaleBlurPipeline8xStr  = "DownscaleBlurPipeline8x";
+std::string DownscaleBlurPipeline16xStr = "DownscaleBlurPipeline16x";
 std::string DownscaleBlurLayoutStr      = "DownscaleBlurLayout";
 std::string DownscaleBlurDescriptorSet2x          = "DownscaleBlurDescriptorSet2x";
 std::string DownscaleBlurDescriptorSet2xFinalStr  = "DownscaleFinal2x";
@@ -77,6 +82,8 @@ std::string DownscaleBlurDescriptorSet4x          = "DownscaleBlurDescriptorSet4
 std::string DownscaleBlurDescriptorSet4xFinalStr  = "DownscaleFinal4x";
 std::string DownscaleBlurDescriptorSet8x          = "DownscaleBlurDescriptorSet8x";
 std::string DownscaleBlurDescriptorSet8xFinalStr  = "DownscaleFinal8x";
+std::string DownscaleBlurDescriptorSet16x         = "DownscaleBlurDescriptorSet16x";
+std::string DownscaleBlurDescriptorSet16xFinalStr = "DownScaleFinal16x";
 std::string DownscaleBlurVertFileStr    = "DownscaleBlurPass.vert.spv";
 std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
 
@@ -255,14 +262,19 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   GraphicsPipeline* Downscale2x = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* Downscale4x = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* Downscale8x = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* Downscale16x = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* GlowPipeline = Rhi->CreateGraphicsPipeline();
+  // Scaled and Final framebuffers have the same renderpass, so we can just use 
+  // one of their renderpasses.
   FrameBuffer*      FrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xHorizStr);
   FrameBuffer*      FrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
   FrameBuffer*      FrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
+  FrameBuffer*      FrameBuffer16x = gResources().GetFrameBuffer(FrameBuffer16xStr);
   FrameBuffer*      GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline2xStr, Downscale2x);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline4xStr, Downscale4x);
   gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline8xStr, Downscale8x);
+  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline16xStr, Downscale16x);
   gResources().RegisterGraphicsPipeline(GlowPipelineStr, GlowPipeline);
   DescriptorSetLayout* DownscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
   DescriptorSetLayout* GlowDescLayout = gResources().GetDescriptorSetLayout(GlowDescriptorSetLayoutStr);
@@ -312,6 +324,8 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   Downscale4x->Initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer8x->RenderPass();
   Downscale8x->Initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer16x->RenderPass();
+  Downscale16x->Initialize(GraphicsInfo, DownscaleLayout);
 
   Rhi->FreeShader(DbFrag);
   DbFrag = Rhi->CreateShader();

@@ -486,7 +486,7 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   DescriptorSetLayout* GlowLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(GlowDescriptorSetLayoutStr, GlowLayout);
-  VkDescriptorSetLayoutBinding glow[3];
+  std::array<VkDescriptorSetLayoutBinding, 4> glow;
 
   glow[0].binding = 0;
   glow[0].descriptorCount = 1;
@@ -506,9 +506,15 @@ void Renderer::SetUpDescriptorSetLayouts()
   glow[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
   glow[2].pImmutableSamplers = nullptr;
 
+  glow[3].binding = 3;
+  glow[3].descriptorCount = 1;
+  glow[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  glow[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  glow[3].pImmutableSamplers = nullptr;
+
   dwnLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  dwnLayout.bindingCount = 3;
-  dwnLayout.pBindings = glow;
+  dwnLayout.bindingCount = static_cast<u32>(glow.size());
+  dwnLayout.pBindings = glow.data();
   dwnLayout.flags = 0;
   dwnLayout.pNext = nullptr;
 
@@ -688,6 +694,8 @@ void Renderer::SetUpFrameBuffers()
   Texture* RenderTarget4xFinal = gResources().GetRenderTexture(RenderTarget4xFinalStr);
   Texture* rtDownScale8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* RenderTarget8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
+  Texture* rtDownScale16x = gResources().GetRenderTexture(RenderTarget16xScaledStr);
+  Texture* RenderTarget16xFinal = gResources().GetRenderTexture(RenderTarget16xFinalStr);
   Texture* GlowTarget = gResources().GetRenderTexture(RenderTargetGlowStr);
 
   FrameBuffer* DownScaleFB2x = m_pRhi->CreateFrameBuffer();
@@ -696,6 +704,8 @@ void Renderer::SetUpFrameBuffers()
   FrameBuffer* FB4xFinal = m_pRhi->CreateFrameBuffer();
   FrameBuffer* DownScaleFB8x = m_pRhi->CreateFrameBuffer();
   FrameBuffer* FB8xFinal = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* DownScaleFB16x = m_pRhi->CreateFrameBuffer();
+  FrameBuffer* FB16xFinal = m_pRhi->CreateFrameBuffer();
   FrameBuffer* GlowFB = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(FrameBuffer2xHorizStr, DownScaleFB2x);
   gResources().RegisterFrameBuffer(FrameBuffer2xFinalStr, FB2xFinal);
@@ -703,6 +713,8 @@ void Renderer::SetUpFrameBuffers()
   gResources().RegisterFrameBuffer(FrameBuffer4xFinalStr, FB4xFinal);
   gResources().RegisterFrameBuffer(FrameBuffer8xStr, DownScaleFB8x);
   gResources().RegisterFrameBuffer(FrameBuffer8xFinalStr, FB8xFinal);
+  gResources().RegisterFrameBuffer(FrameBuffer16xStr, DownScaleFB16x);
+  gResources().RegisterFrameBuffer(FrameBuffer16xFinalStr, FB16xFinal);
   gResources().RegisterFrameBuffer(FrameBufferGlowStr, GlowFB);
 
   // 2x
@@ -749,6 +761,22 @@ void Renderer::SetUpFrameBuffers()
   framebufferCI.width = rtDownScale8x->Width();
   framebufferCI.height = rtDownScale8x->Height();
   DownScaleFB8x->Finalize(framebufferCI, renderpassCI);
+
+  // 16x
+  attachments[0] = RenderTarget16xFinal->View();
+  attachmentDescriptions[0].format = RenderTarget16xFinal->Format();
+  attachmentDescriptions[0].samples = RenderTarget16xFinal->Samples();
+  framebufferCI.width = RenderTarget16xFinal->Width();
+  framebufferCI.height = RenderTarget16xFinal->Height();
+  FB16xFinal->Finalize(framebufferCI, renderpassCI);
+
+  attachments[0] = rtDownScale16x->View();
+  attachmentDescriptions[0].format = rtDownScale16x->Format();
+  attachmentDescriptions[0].samples = rtDownScale16x->Samples();
+  framebufferCI.width = rtDownScale16x->Width();
+  framebufferCI.height = rtDownScale16x->Height();
+  DownScaleFB16x->Finalize(framebufferCI, renderpassCI);
+
 
   // Glow
   attachments[0] = GlowTarget->View();
@@ -955,6 +983,9 @@ void Renderer::CleanUpGraphicsPipelines()
   GraphicsPipeline* DownscalePipeline8x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline8xStr);
   m_pRhi->FreeGraphicsPipeline(DownscalePipeline8x);
 
+  GraphicsPipeline* DownscalePipeline16x = gResources().UnregisterGraphicsPipeline(DownscaleBlurPipeline16xStr);
+  m_pRhi->FreeGraphicsPipeline(DownscalePipeline16x);
+
   GraphicsPipeline* GlowPipeline = gResources().UnregisterGraphicsPipeline(GlowPipelineStr);
   m_pRhi->FreeGraphicsPipeline(GlowPipeline);
 
@@ -984,14 +1015,18 @@ void Renderer::CleanUpFrameBuffers()
   FrameBuffer* FB4xFinal = gResources().UnregisterFrameBuffer(FrameBuffer4xFinalStr);
   FrameBuffer* DownScaleFB8x = gResources().UnregisterFrameBuffer(FrameBuffer8xStr);
   FrameBuffer* FB8xFinal = gResources().UnregisterFrameBuffer(FrameBuffer8xFinalStr);
+  FrameBuffer* DownScaleFB16x = gResources().UnregisterFrameBuffer(FrameBuffer16xStr);
+  FrameBuffer* FB16xFinal = gResources().UnregisterFrameBuffer(FrameBuffer16xFinalStr);
   FrameBuffer* GlowFB = gResources().UnregisterFrameBuffer(FrameBufferGlowStr);
 
   m_pRhi->FreeFrameBuffer(DownScaleFB2x);
   m_pRhi->FreeFrameBuffer(DownScaleFB4x);
   m_pRhi->FreeFrameBuffer(DownScaleFB8x);
+  m_pRhi->FreeFrameBuffer(DownScaleFB16x);
   m_pRhi->FreeFrameBuffer(FB2xFinal);
   m_pRhi->FreeFrameBuffer(FB4xFinal);
   m_pRhi->FreeFrameBuffer(FB8xFinal);
+  m_pRhi->FreeFrameBuffer(FB16xFinal);
   m_pRhi->FreeFrameBuffer(GlowFB);
 }
 
@@ -1004,6 +1039,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   Texture* RenderTarget4xFinal = m_pRhi->CreateTexture();
   Texture* renderTarget8xScaled = m_pRhi->CreateTexture();
   Texture* RenderTarget8xFinal = m_pRhi->CreateTexture();
+  Texture* RenderTarget16xScaled = m_pRhi->CreateTexture();
+  Texture* RenderTarget16xFinal = m_pRhi->CreateTexture();
   Texture* RenderTargetBright = m_pRhi->CreateTexture();
   Texture* GlowTarget = m_pRhi->CreateTexture();
 
@@ -1026,6 +1063,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(RenderTarget4xFinalStr, RenderTarget4xFinal);
   gResources().RegisterRenderTexture(RenderTarget8xScaledStr, renderTarget8xScaled);
   gResources().RegisterRenderTexture(RenderTarget8xFinalStr, RenderTarget8xFinal);
+  gResources().RegisterRenderTexture(RenderTarget16xScaledStr, RenderTarget16xScaled);
+  gResources().RegisterRenderTexture(RenderTarget16xFinalStr, RenderTarget16xFinal);
   gResources().RegisterRenderTexture(RenderTargetGlowStr, GlowTarget);
   gResources().RegisterSampler(PBRSamplerStr, pbrSampler);
   
@@ -1073,10 +1112,15 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget4xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = m_pWindow->Width()   >> 3;
+  cImageInfo.extent.width = m_pWindow->Width()    >> 3;
   cImageInfo.extent.height = m_pWindow->Height()  >> 3;
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget8xFinal->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.extent.width = m_pWindow->Width()    >> 4;
+  cImageInfo.extent.height = m_pWindow->Height()  >> 4;
+  RenderTarget16xScaled->Initialize(cImageInfo, cViewInfo);
+  RenderTarget16xFinal->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -1160,6 +1204,8 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* RenderTarget4xFinal = gResources().UnregisterRenderTexture(RenderTarget4xFinalStr);
   Texture* renderTarget8xScaled = gResources().UnregisterRenderTexture(RenderTarget8xScaledStr);
   Texture* RenderTarget8xFinal = gResources().UnregisterRenderTexture(RenderTarget8xFinalStr);
+  Texture* RenderTarget16xScaled = gResources().UnregisterRenderTexture(RenderTarget16xScaledStr);
+  Texture* RenderTarget16xFinal = gResources().UnregisterRenderTexture(RenderTarget16xFinalStr);
   Texture* GlowTarget = gResources().UnregisterRenderTexture(RenderTargetGlowStr);
 
   m_pRhi->FreeTexture(renderTarget2xScaled);
@@ -1168,6 +1214,8 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   m_pRhi->FreeTexture(RenderTarget4xFinal);
   m_pRhi->FreeTexture(RenderTarget8xFinal);
   m_pRhi->FreeTexture(renderTarget8xScaled);
+  m_pRhi->FreeTexture(RenderTarget16xScaled);
+  m_pRhi->FreeTexture(RenderTarget16xFinal);
   m_pRhi->FreeTexture(GlowTarget);
 
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
@@ -1241,21 +1289,27 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   DescriptorSet* DBDS4xFinal = m_pRhi->CreateDescriptorSet();
   DescriptorSet* DBDS8x = m_pRhi->CreateDescriptorSet();
   DescriptorSet* DBDS8xFinal = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS16x = m_pRhi->CreateDescriptorSet();
+  DescriptorSet* DBDS16xFinal = m_pRhi->CreateDescriptorSet();
   DescriptorSet* GlowDS = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2x, DBDS2x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4x, DBDS4x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8x, DBDS8x);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet16x, DBDS16x);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr, DBDS2xFinal);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr, DBDS4xFinal);
   gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr, DBDS8xFinal);
+  gResources().RegisterDescriptorSet(DownscaleBlurDescriptorSet16xFinalStr, DBDS16xFinal);
   gResources().RegisterDescriptorSet(GlowDescriptorSetStr, GlowDS);
 
   DBDS2x->Allocate(m_pRhi->DescriptorPool(), Layout);
   DBDS4x->Allocate(m_pRhi->DescriptorPool(), Layout);
   DBDS8x->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS16x->Allocate(m_pRhi->DescriptorPool(), Layout);
   DBDS2xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
   DBDS4xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
   DBDS8xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
+  DBDS16xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
   GlowDS->Allocate(m_pRhi->DescriptorPool(), GlowLayout);
 
   Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
@@ -1266,6 +1320,8 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Texture* Color4xFinal = gResources().GetRenderTexture(RenderTarget4xFinalStr);
   Texture* Color8x = gResources().GetRenderTexture(RenderTarget8xScaledStr);
   Texture* Color8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
+  Texture* Color16x = gResources().GetRenderTexture(RenderTarget16xScaledStr);
+  Texture* Color16xFinal = gResources().GetRenderTexture(RenderTarget16xFinalStr);
   Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
   Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
 
@@ -1297,6 +1353,10 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   DBDS8x->Update(1, &WriteSet);
   Img.imageView = Color8x->View();
   DBDS8xFinal->Update(1, &WriteSet);
+  Img.imageView = Color8xFinal->View();
+  DBDS16x->Update(1, &WriteSet);
+  Img.imageView = Color16x->View();
+  DBDS16xFinal->Update(1, &WriteSet);
 
   Img.imageView = Color2xFinal->View();
 
@@ -1310,8 +1370,13 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Img2.imageView = Color8xFinal->View();
   Img2.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+  VkDescriptorImageInfo Img3 = { };
+  Img3.sampler = PBRSampler->Handle();
+  Img3.imageView = Color16xFinal->View();
+  Img3.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
   // Glow buffer.
-  VkWriteDescriptorSet GlowWrites[3];
+  std::array<VkWriteDescriptorSet, 4> GlowWrites;
   GlowWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   GlowWrites[0].descriptorCount = 1;
   GlowWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1342,7 +1407,17 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   GlowWrites[2].pNext = nullptr;
   GlowWrites[2].pTexelBufferView = nullptr;
 
-  GlowDS->Update(3, GlowWrites);
+  GlowWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  GlowWrites[3].descriptorCount = 1;
+  GlowWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  GlowWrites[3].dstArrayElement = 0;
+  GlowWrites[3].dstBinding = 3;
+  GlowWrites[3].pBufferInfo = nullptr;
+  GlowWrites[3].pImageInfo = &Img3;
+  GlowWrites[3].pNext = nullptr;
+  GlowWrites[3].pTexelBufferView = nullptr;
+
+  GlowDS->Update(static_cast<u32>(GlowWrites.size()), GlowWrites.data());
 }
 
 
@@ -1357,12 +1432,16 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
   m_pRhi->FreeDescriptorSet(DBDS4x);
   DescriptorSet* DBDS8x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8x);
   m_pRhi->FreeDescriptorSet(DBDS8x);
+  DescriptorSet* DBDS16x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet16x);
+  m_pRhi->FreeDescriptorSet(DBDS16x);
   DescriptorSet* DBDS2xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr);
   m_pRhi->FreeDescriptorSet(DBDS2xFinal);
   DescriptorSet* DBDS4xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr);
   m_pRhi->FreeDescriptorSet(DBDS4xFinal);
   DescriptorSet* DBDS8xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr);
   m_pRhi->FreeDescriptorSet(DBDS8xFinal);
+  DescriptorSet* DBDS16xFinal = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet16xFinalStr);
+  m_pRhi->FreeDescriptorSet(DBDS16xFinal);
   DescriptorSet* GlowDS = gResources().UnregisterDescriptorSet(GlowDescriptorSetStr);
   m_pRhi->FreeDescriptorSet(GlowDS);
 }
@@ -1602,6 +1681,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   GraphicsPipeline* Downscale2x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline2xStr);
   GraphicsPipeline* Downscale4x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline4xStr);
   GraphicsPipeline* Downscale8x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline8xStr);
+  GraphicsPipeline* Downscale16x = gResources().GetGraphicsPipeline(DownscaleBlurPipeline16xStr);
   GraphicsPipeline* GlowPipeline = gResources().GetGraphicsPipeline(GlowPipelineStr);
   FrameBuffer* hdrFrameBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
   FrameBuffer* DownscaleFrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xHorizStr);
@@ -1610,14 +1690,18 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   FrameBuffer* FB4xFinal = gResources().GetFrameBuffer(FrameBuffer4xFinalStr);
   FrameBuffer* DownscaleFrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
   FrameBuffer* FB8xFinal = gResources().GetFrameBuffer(FrameBuffer8xFinalStr);
+  FrameBuffer* DownscaleFrameBuffer16x = gResources().GetFrameBuffer(FrameBuffer16xStr);
+  FrameBuffer* FB16xFinal = gResources().GetFrameBuffer(FrameBuffer16xFinalStr);
   FrameBuffer* GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
   DescriptorSet* hdrSet = gResources().GetDescriptorSet(HDRGammaDescSetStr);
   DescriptorSet* DownscaleSet2x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2x);
   DescriptorSet* DownscaleSet4x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet4x);
   DescriptorSet* DownscaleSet8x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet8x);
+  DescriptorSet* DownscaleSet16x = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet16x);
   DescriptorSet* DownscaleSet2xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet2xFinalStr);
   DescriptorSet* DownscaleSet4xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet4xFinalStr);
   DescriptorSet* DownscaleSet8xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet8xFinalStr);
+  DescriptorSet* DownscaleSet16xFinal = gResources().GetDescriptorSet(DownscaleBlurDescriptorSet16xFinalStr);
   DescriptorSet* GlowSet = gResources().GetDescriptorSet(GlowDescriptorSetStr);
 
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1664,6 +1748,15 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
   DownscalePass8x.renderArea.extent = { DownscaleFrameBuffer8x->Width(), DownscaleFrameBuffer8x->Height() };
   DownscalePass8x.renderArea.offset = { 0, 0 };
 
+  VkRenderPassBeginInfo DownscalePass16x = {};
+  DownscalePass16x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  DownscalePass16x.framebuffer = DownscaleFrameBuffer16x->Handle();
+  DownscalePass16x.renderPass = DownscaleFrameBuffer16x->RenderPass();
+  DownscalePass16x.clearValueCount = 1;
+  DownscalePass16x.pClearValues = &clearVal;
+  DownscalePass16x.renderArea.extent = { DownscaleFrameBuffer16x->Width(), DownscaleFrameBuffer16x->Height() };
+  DownscalePass16x.renderArea.offset = { 0, 0 };
+
   VkRenderPassBeginInfo GlowPass = {};
   GlowPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   GlowPass.framebuffer = GlowFrameBuffer->Handle();
@@ -1683,7 +1776,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(cmdBi);
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale._Strength = 1.f;
+    m_Downscale._Strength = 1.0f;
     m_Downscale._Scale = 2.0f;
     m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
@@ -1755,6 +1848,30 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    viewport.height = (r32)(m_pWindow->Height() >> 4);
+    viewport.width = (r32)(m_pWindow->Width() >> 4);
+    DownscaleSetNative = DownscaleSet16x->Handle();
+    _Horizontal = true;
+    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
+      cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+
+    DownscalePass16x.framebuffer = FB16xFinal->Handle();
+    DownscalePass16x.renderPass = FB16xFinal->RenderPass();
+    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+      _Horizontal = false;
+      DownscaleSetNative = DownscaleSet16xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 

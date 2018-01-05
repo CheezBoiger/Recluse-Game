@@ -9,6 +9,7 @@ layout (location = 0) out vec4 GlowColor;
 layout (set = 0, binding = 0) uniform sampler2D Target2x;
 layout (set = 0, binding = 1) uniform sampler2D Target4x;
 layout (set = 0, binding = 2) uniform sampler2D Target8x;
+layout (set = 0, binding = 3) uniform sampler2D Target16x;
 
 
 in FRAG_IN {
@@ -21,9 +22,11 @@ void main()
   vec3 t2x = texture(Target2x, frag_in.uv).rgb;
   vec3 t4x = texture(Target4x, frag_in.uv).rgb;
   vec3 t8x = texture(Target8x, frag_in.uv).rgb;
+  vec3 t16x = texture(Target16x, frag_in.uv).rgb;
   
   vec3 Combined = t2x + t4x;
   Combined = Combined + t8x;
+  Combined = Combined + t16x;
   
   GlowColor = vec4(Combined, 1.0);
 }

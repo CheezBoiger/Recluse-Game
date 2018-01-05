@@ -168,27 +168,27 @@ vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metall
   
   vec3 H = normalize(nV + nL);
   
-  float dotNL = clamp(dot(nN, nL), 0.0, 1.0);
-  float dotNV = clamp(dot(nN, nV), 0.0, 1.0);
-  float dotNH = clamp(dot(nN, H), 0.0, 1.0);
+  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
+  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoH = clamp(dot(nN, H), 0.0, 1.0);
   
   vec3 color = vec3(0.0);
   vec3 F0 = vec3(0.04);
   
   F0 = mix(F0, albedoFrag, metallic);
   
-  if (dotNL > 0.0) {
-    float D = DGGX(dotNH, roughness);
-    float G = GSchlickSmithGGX(dotNL, dotNV, roughness);
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, roughness);
     
-    vec3 F = FSchlick(dotNH, F0);
-    vec3 brdf = D * F * G / ((4 * dotNL * dotNV) + 0.001);
+    vec3 F = FSchlick(NoH, F0);
+    vec3 brdf = D * F * G / ((4 * NoL * NoV) + 0.001);
     if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
-    color += (LambertDiffuse(kD, albedoFrag) + brdf) * dotNL;
+    color += (LambertDiffuse(kD, albedoFrag) + brdf) * NoL;
   }
   
   return color;
@@ -323,27 +323,9 @@ void main()
   }
   finalColor = vec4(outColor, transparency);
 
-  // TODO(): Replace with metallness and emission instead, this will force all objects to be shiney
-  // at the moment.
-  vec3 glow = outColor.rgb - vec3(4.0 * fragRoughness);
+  vec3 glow = outColor.rgb - vec3(2.0);
   glow.r = clamp(glow.r, 0.0, 1.0);
   glow.g = clamp(glow.g, 0.0, 1.0);
   glow.b = clamp(glow.b, 0.0, 1.0);
   BrightColor = vec4(glow, 1.0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
