@@ -437,8 +437,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
-    Log() << "Scale Time: " << Time::ScaleTime << "       \r";
+    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
 
     Window::PollEvents();
     ProcessInput();

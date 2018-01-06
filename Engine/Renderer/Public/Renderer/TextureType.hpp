@@ -47,6 +47,7 @@ public:
   Texture1D() : TextureBase(TEXTURE_1D) { }
 
   void        Initialize(u32 width);
+  u32         Width();
   void        CleanUp();
 private:
   friend class Renderer;
@@ -64,10 +65,12 @@ public:
   // same width and height in order to render properly. To write 
   // texture over to this object, call Update() after this call.
   void        Initialize(u32 width, u32 height);
-
   // Update texture with a new image to be written over.
   void        Update(Image const& image);
   void        CleanUp();
+  
+  u32         Width() const;
+  u32         Height() const;
 private:
 
   friend class Renderer;

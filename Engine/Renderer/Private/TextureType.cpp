@@ -169,4 +169,18 @@ void Texture2D::Update(Image const& Image)
   buffer.Free();
   stagingBuffer.CleanUp();
 }
+
+
+u32 Texture2D::Width() const 
+{
+  if (!texture) return 0; 
+  return texture->Width();
+}
+
+
+u32 Texture2D::Height() const
+{
+  if (!texture) return 0;
+  return texture->Height();
+}
 } // Recluse

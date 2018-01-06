@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project("Testing")
 
 set(RECLUSE_TEST  "Test")
+set(RECLUSE_GAME_TEST "GameTest")
 
 # Force static runtime libraries
 foreach(flag
@@ -17,8 +18,14 @@ set(RECLUSE_TEST_FILES
   Main.cpp
 )
 
+set(RECLUSE_GAME_TEST_FILES Game/Main.cpp)
+
 add_executable(${RECLUSE_TEST}
   ${RECLUSE_TEST_FILES}
+)
+
+add_executable(${RECLUSE_GAME_TEST}
+  ${RECLUSE_GAME_TEST_FILES}
 )
 
 include_directories(
@@ -26,5 +33,9 @@ include_directories(
 )
 
 target_link_libraries(${RECLUSE_TEST}
+  ${RECLUSE_ENGINE_LINK_LIBRARIES}
+)
+
+target_link_libraries(${RECLUSE_GAME_TEST}
   ${RECLUSE_ENGINE_LINK_LIBRARIES}
 )
