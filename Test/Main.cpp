@@ -65,7 +65,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 1
+#define PERFORMANCE_TEST 0
 
 int main(int c, char* argv[])
 {
@@ -74,6 +74,7 @@ int main(int c, char* argv[])
   Mouse::Show(false);
 
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
+  gEngine().SetControlInput(ProcessInput);
   Window* window = gEngine().GetWindow();    
 
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
@@ -432,15 +433,12 @@ int main(int c, char* argv[])
 
     // Syncronize engine modules, as they run on threads.
     gEngine().Update(dt);
-    gCore().Sync();
-    gRenderer().Render();
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
     printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
 
-    Window::PollEvents();
-    ProcessInput();
+    gEngine().ProcessInput();
   }
 
   gRenderer().WaitIdle();

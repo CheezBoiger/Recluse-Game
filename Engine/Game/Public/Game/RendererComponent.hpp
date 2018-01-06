@@ -18,14 +18,14 @@ class Mesh;
 
 // Mesh Component, which holds static mesh object info for rendering
 // data.
-class MeshComponent : public Component {
-  RCOMPONENT(MeshComponent)
+class RendererComponent : public Component {
+  RCOMPONENT(RendererComponent)
 public:
-  MeshComponent();
-  MeshComponent(const MeshComponent& m);
-  MeshComponent(MeshComponent&& m);
-  MeshComponent& operator=(MeshComponent&& obj);
-  MeshComponent& operator=(const MeshComponent& obj);
+  RendererComponent();
+  RendererComponent(const RendererComponent& m);
+  RendererComponent(RendererComponent&& m);
+  RendererComponent& operator=(RendererComponent&& obj);
+  RendererComponent& operator=(const RendererComponent& obj);
 
   void                      Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const MaterialDescriptor* mat);
   void                      CleanUp();

@@ -50,5 +50,6 @@ private:
   // Game objects that are in this scene.
   std::vector<GameObject*>  m_GameObjects;
   std::string               m_SceneName;
+  u32                       m_GameObjNum;
 };
 } // Recluse 

@@ -37,6 +37,7 @@ namespace Recluse {
 // Scene graph to push into the engine.
 class Scene;
 
+typedef void (*ControlInputCallback)();
 
 // Engine object.
 class Engine {
@@ -49,7 +50,8 @@ public:
   // window in order to see something!
   void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600);
   void                          CleanUp();
-  void                          ProcessInput();
+  void                          SetControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
+  void                          ProcessInput() { Window::PollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
 
   Camera*                       GetCamera() { return m_pCamera; }
   Window*                       GetWindow() { return &m_Window; }
@@ -58,7 +60,7 @@ public:
   void                          SetCamera(Camera* camera) { m_pCamera = camera; m_CamFrustum.SetCamera(m_pCamera); }
 
   // Push the new scene to into this engine for extraction.
-  void                          PushScene(Scene* scene);
+  void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
   void                          BuildScene();
   void                          LoadSceneTransition();
 
@@ -73,18 +75,24 @@ public:
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
+  b8                            Running() { return m_Running; }
 
 private:
+
+  void                          UpdateRenderObjects();
+
   CCamViewFrustum               m_CamFrustum;
   LightDescriptor*              m_pLights;
   Camera*                       m_pCamera;
   Scene*                        m_pPushedScene;
+  ControlInputCallback          m_pControlInputFunc;
   r64                           m_GameMouseX;
   r64                           m_GameMouseY;
 
   Window                        m_Window;
   CmdList                       m_RenderCmdList;
   CmdList                       m_DeferredCmdList;
+  b8                            m_Running;
 };
 
 

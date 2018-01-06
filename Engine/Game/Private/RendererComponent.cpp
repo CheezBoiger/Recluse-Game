@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "MeshComponent.hpp"
+#include "RendererComponent.hpp"
 
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/MaterialDescriptor.hpp"
@@ -11,7 +11,7 @@
 namespace Recluse {
 
 
-MeshComponent::MeshComponent()
+RendererComponent::RendererComponent()
   : mRenderer(nullptr)
   , mMaterial(nullptr)
   , mRenderObj(nullptr)
@@ -20,7 +20,7 @@ MeshComponent::MeshComponent()
 }
 
 
-MeshComponent::MeshComponent(const MeshComponent& m)
+RendererComponent::RendererComponent(const RendererComponent& m)
   : mRenderer(m.mRenderer)
   , mMaterial(m.mMaterial)
   , mMeshDescriptor(m.mMeshDescriptor)
@@ -29,7 +29,7 @@ MeshComponent::MeshComponent(const MeshComponent& m)
 }
 
 
-MeshComponent::MeshComponent(MeshComponent&& m)
+RendererComponent::RendererComponent(RendererComponent&& m)
   : mRenderer(m.mRenderer)
   , mMaterial(m.mMaterial)
   , mMeshDescriptor(m.mMeshDescriptor)
@@ -42,7 +42,7 @@ MeshComponent::MeshComponent(MeshComponent&& m)
 }
 
 
-MeshComponent& MeshComponent::operator=(MeshComponent&& obj)
+RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
   mRenderer = obj.mRenderer;
   mRenderObj = obj.mRenderObj;
@@ -57,7 +57,7 @@ MeshComponent& MeshComponent::operator=(MeshComponent&& obj)
 }
 
 
-MeshComponent& MeshComponent::operator=(const MeshComponent& obj)
+RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
   mRenderer = obj.mRenderer;
   mRenderObj = obj.mRenderObj;

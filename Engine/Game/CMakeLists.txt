@@ -29,8 +29,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/Component.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/CameraViewFrustum.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/Character.hpp
-  ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
-  ${RECLUSE_GAME_PUBLIC_DIR}/SkinnedMeshComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/RendererComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/LightComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/PointLightComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/DirectionLightComponent.hpp
@@ -40,8 +39,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Engine.cpp
-  ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
-  ${RECLUSE_GAME_PRIVATE_DIR}/SkinnedMeshComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/RendererComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObjectManager.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/LightComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraComponent.cpp
