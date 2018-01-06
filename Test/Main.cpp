@@ -54,6 +54,8 @@ void ProcessInput()
   // Camera projection changing.
   if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
   if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->SetProjection(Camera::PERSPECTIVE); }
+  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::ScaleTime -= 0.5f * Time::DeltaTime;  }
+  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::ScaleTime += 0.5f * Time::DeltaTime; }
 
   // Window changing sets.
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
@@ -63,7 +65,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 0
+#define PERFORMANCE_TEST 1
 
 int main(int c, char* argv[])
 {
@@ -121,7 +123,7 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PointLights[0]._Range = 100.0f;
-  lights->_PointLights[0]._Intensity = 5.0f;
+  lights->_PointLights[0]._Intensity = 1.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
@@ -185,7 +187,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 100
+#define ObjectCount 4000
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -200,7 +202,7 @@ int main(int c, char* argv[])
   ObjectBuffer* cubeInfo = cubeMesh->ObjectData();
   MaterialBuffer* cubeMat = cubeMaterial->Data();
   cubeMat->_HasNormal = false;
-  cubeMat->_BaseMetal = 1.0f;
+  cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
   cubeMat->_Ambient = Vector4(0.03f, 0.03f, 0.03f, 0.0f);
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
@@ -253,7 +255,9 @@ int main(int c, char* argv[])
   cubeInfo3->_NormalMatrix[3][2] = 0.0f;
   cubeInfo3->_NormalMatrix[3][3] = 1.0f;
   cubeMat3->_HasEmissive = true;
-  cubeMat3->_BaseEmissive = lights->_PointLights[0]._Intensity;
+  cubeMat3->_BaseMetal = 0.1f; 
+  cubeMat3->_BaseRough = 0.9f;
+  cubeMat3->_BaseEmissive = 2.04f;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
@@ -343,9 +347,10 @@ int main(int c, char* argv[])
 
   while (!window->ShouldClose()) {
     Time::Update();
-
+    
     timeAccumulator += Time::DeltaTime;
     r64 dt = Time::DeltaTime * Time::ScaleTime;
+    r64 t = Time::CurrentTime() * Time::ScaleTime;
 
     // Render out the scene.
     gAnimation().UpdateState(dt);
@@ -362,8 +367,8 @@ int main(int c, char* argv[])
       for (size_t i = 0; i < middle; ++i) {
         ObjectBuffer* buffer = meshDescriptors[i]->ObjectData();
         Vector3 rev;
-        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
-        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 s = sinf((r32)t * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 c = cosf((r32)t * (1.0f - Absf(positions[i].x / maxNum)));
 
         rev.x = c * positions[i].x;
         rev.z = s * positions[i].z;
@@ -381,8 +386,8 @@ int main(int c, char* argv[])
       for (size_t i = middle; i < meshDescriptors.size(); ++i) {
         ObjectBuffer* buffer = meshDescriptors[i]->ObjectData();
         Vector3 rev;
-        r32 s = sinf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
-        r32 c = cosf((r32)Time::CurrentTime() * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 s = sinf((r32)t * (1.0f - Absf(positions[i].x / maxNum)));
+        r32 c = cosf((r32)t * (1.0f - Absf(positions[i].x / maxNum)));
 
         rev.x = c * positions[i].x;
         rev.z = s * positions[i].z;
@@ -400,10 +405,10 @@ int main(int c, char* argv[])
     workers[1].join();
 #endif
     // light cube transforming.
-    light0Pos = Vector3(sinf((r32)Time::CurrentTime() * 1.0f) * -5.0f, 2.0f, 0.0f);
+    light0Pos = Vector3(sinf((r32)t * 1.0f) * -5.0f, 2.0f, 0.0f);
     lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
     // Testing quat.
-    Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
+    Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(t) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
     cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * 
 #if 0
       Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
@@ -432,7 +437,8 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    Log() << "Scale Time: " << Time::ScaleTime << "       \r";
 
     Window::PollEvents();
     ProcessInput();
