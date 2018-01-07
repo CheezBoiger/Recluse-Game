@@ -28,8 +28,7 @@ MaterialDescriptor::MaterialDescriptor()
   , m_pBuffer(nullptr)
 { 
   m_MaterialData._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  m_MaterialData._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-  m_MaterialData._Transparency = 1.0f;
+  m_MaterialData._Opacity = 1.0f;
   m_MaterialData._HasAlbedo = false;
   m_MaterialData._HasAO = false;
   m_MaterialData._HasEmissive = false;

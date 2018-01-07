@@ -32,6 +32,7 @@ LightDescriptor::LightDescriptor()
   , m_pFrameBuffer(nullptr)
 {
   m_Lights._PrimaryLight._Enable = false;
+  m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   m_Lights._PrimaryLight._Pad[0] = 0;
   m_Lights._PrimaryLight._Pad[1] = 0;
   //mLights.primaryLight.pad[2] = 0;
@@ -50,6 +51,7 @@ LightDescriptor::LightDescriptor()
     m_Lights._DirectionalLights[i]._Enable = false;
     m_Lights._DirectionalLights[i]._Intensity = 1.0f;
     m_Lights._DirectionalLights[i]._Color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    m_Lights._DirectionalLights[i]._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   }
 }
 

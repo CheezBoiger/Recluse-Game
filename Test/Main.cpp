@@ -61,7 +61,7 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
   if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->SetToCenter(); window->Show(); }
   if (Keyboard::KeyPressed(KEY_CODE_B)) { window->SetToWindowed(800, 600, true); window->SetToCenter(); window->Show(); }
-  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { window->Close(); }
+  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
 }
 
 #define SPHERE_SEGS 64
@@ -101,9 +101,10 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
   lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 5.0f;
-  lights->_PrimaryLight._Color = Vector4(0.8f, 0.8f, 0.5f, 1.0f);
-  lights->_PrimaryLight._Enable = false;
+  lights->_PrimaryLight._Intensity = 10.0f;
+  lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 0.7f, 1.0f);
+  lights->_PrimaryLight._Ambient = Vector4(0.015f, 0.015f, 0.005f, 1.0f);
+  lights->_PrimaryLight._Enable = true;
 
   lights->_DirectionalLights[0]._Enable = false;
   lights->_DirectionalLights[0]._Direction = Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
@@ -188,7 +189,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 4000
+#define ObjectCount 2000
   r32 maxNum = 1050.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -205,7 +206,6 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeMat->_Ambient = Vector4(0.03f, 0.03f, 0.03f, 0.0f);
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
@@ -235,10 +235,9 @@ int main(int c, char* argv[])
   cubeInfo2->_NormalMatrix[3][2] = 0.0f;
   cubeInfo2->_NormalMatrix[3][3] = 1.0f;
   cubeMat2->_Color = Vector4(0.8f, 0.8f, 1.0f, 1.0f);
-  cubeMat2->_Transparency = 0.4f;
+  cubeMat2->_Opacity = 0.4f;
   cubeMat2->_BaseMetal = 0.0f;
   cubeMat2->_BaseRough = 0.1f;
-  cubeMat2->_Ambient = Vector4(0.001f, 0.001f, 0.001f, 0.0f);
 
   // Box using emissive map for light mimick.
   MaterialDescriptor* cubeMaterial3 = gRenderer().CreateMaterialDescriptor();
@@ -258,7 +257,7 @@ int main(int c, char* argv[])
   cubeMat3->_HasEmissive = true;
   cubeMat3->_BaseMetal = 0.1f; 
   cubeMat3->_BaseRough = 0.9f;
-  cubeMat3->_BaseEmissive = 2.04f;
+  cubeMat3->_BaseEmissive = 3.15f;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
@@ -344,25 +343,14 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Game loop...
   ///////////////////////////////////////////////////////////////////////////////////////
+  gEngine().Run();
   Log(rVerbose) << "Entering game loop...\n";
 
-  while (!window->ShouldClose()) {
+  while (gEngine().Running()) {
     Time::Update();
     
-    timeAccumulator += Time::DeltaTime;
     r64 dt = Time::DeltaTime * Time::ScaleTime;
     r64 t = Time::CurrentTime() * Time::ScaleTime;
-
-    // Render out the scene.
-    gAnimation().UpdateState(dt);
-    gUI().UpdateState(dt);
-
-    // TODO(): needs to be on separate thread.
-    while (timeAccumulator > Time::FixTime) {
-      // TODO(): Instead of sleeping, update the game state.
-      timeAccumulator -= Time::FixTime;
-    }
-
 #if PERFORMANCE_TEST
     workers[0] = std::thread([&]() -> void {
       for (size_t i = 0; i < middle; ++i) {
@@ -432,7 +420,7 @@ int main(int c, char* argv[])
     //Log(rDebug) << gCamera->Front() << "\n";
 
     // Syncronize engine modules, as they run on threads.
-    gEngine().Update(dt);
+    gEngine().Update();
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
@@ -441,7 +429,6 @@ int main(int c, char* argv[])
     gEngine().ProcessInput();
   }
 
-  gRenderer().WaitIdle();
   ///////////////////////////////////////////////////////////////////////////////////////
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////

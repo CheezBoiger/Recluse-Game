@@ -26,8 +26,7 @@ class FrameBuffer;
 
 struct MaterialBuffer {
   Vector4 _Color;          // object base color.
-  Vector4 _Ambient;        // Ambient override. Not needed if Object is influenced by a light probe.
-  r32     _Transparency;   // transparency [0.0, 1.0]
+  r32     _Opacity;         // opacity [0.0, 1.0]
   r32     _BaseMetal;      // object base metalness [0.0, 1.0]
   r32     _BaseRough;      // object base roughness [0.0, 1.0]
   r32     _BaseEmissive;   // emissive base [0.0, inf]

@@ -10,6 +10,7 @@ namespace Recluse {
 b8 Mouse::mouseTrack = true;
 b8 Mouse::mouseEnabled = true;
 b8 Mouse::mouseShow = true;
+b8 Mouse::mouseClamped = false;
 r64 Mouse::XPos = 0;
 r64 Mouse ::YPos = 0;
 r64 Mouse::LastXPos = 0;

@@ -53,10 +53,12 @@ public:
   void                          SetControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
   void                          ProcessInput() { Window::PollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
 
+  void                          Run();
+  void                          SignalStop() { m_Stopping = true; }
   Camera*                       GetCamera() { return m_pCamera; }
   Window*                       GetWindow() { return &m_Window; }
 
-  void                          Update(r64 dt);
+  void                          Update();
   void                          SetCamera(Camera* camera) { m_pCamera = camera; m_CamFrustum.SetCamera(m_pCamera); }
 
   // Push the new scene to into this engine for extraction.
@@ -71,7 +73,7 @@ public:
   r64                           GameMousePosY() const { return m_GameMouseY; }
   void                          SetGameMouseX(r64 x) { m_GameMouseX = x; }
   void                          SetGameMouseY(r64 y) { m_GameMouseY = y; }
-  
+
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
@@ -79,6 +81,7 @@ public:
 
 private:
 
+  void                          Stop();
   void                          UpdateRenderObjects();
 
   CCamViewFrustum               m_CamFrustum;
@@ -88,11 +91,13 @@ private:
   ControlInputCallback          m_pControlInputFunc;
   r64                           m_GameMouseX;
   r64                           m_GameMouseY;
+  r64                           m_TimeAccumulate;
 
   Window                        m_Window;
   CmdList                       m_RenderCmdList;
   CmdList                       m_DeferredCmdList;
-  b8                            m_Running;
+  b8                            m_Running : 1;
+  b8                            m_Stopping : 1;
 };
 
 

@@ -4,20 +4,20 @@
 #include "Core/Exception.hpp"
 #include "Core/Utility/Archive.hpp"
 #include "Game/GameObject.hpp"
-#include "Game/SkinnedMeshComponent.hpp"
+#include "Game/RendererComponent.hpp"
 
 
 namespace Test {
 
 Vector3 TestPosition = Vector3(1.0f, 1.22f, -7.0222022f);
 
-void AddSkinnedMeshComponents(GameObject* obj)
+void AddRendererComponents(GameObject* obj)
 {
   if (!obj) {
     return;
   }
 
-  obj->AddComponent<SkinnedMeshComponent>();  
+  obj->AddComponent<RendererComponent>();  
 }
 
 
@@ -34,12 +34,12 @@ b8 TestGameObject()
     }
 
     // Only gameObj and gameObj2 get a skinned mesh component.
-    AddSkinnedMeshComponents(gameObj);
-    AddSkinnedMeshComponents(gameObj2);
+    AddRendererComponents(gameObj);
+    AddRendererComponents(gameObj2);
 
-    SkinnedMeshComponent* component = gameObj->GetComponent<SkinnedMeshComponent>();
-    SkinnedMeshComponent* component2 = gameObj2->GetComponent<SkinnedMeshComponent>();
-    SkinnedMeshComponent* component3 = gameObj3->GetComponent<SkinnedMeshComponent>();
+    RendererComponent* component = gameObj->GetComponent<RendererComponent>();
+    RendererComponent* component2 = gameObj2->GetComponent<RendererComponent>();
+    RendererComponent* component3 = gameObj3->GetComponent<RendererComponent>();
 
     if (!component || !component2 || component3) {
       Log(rError) << "Failed to create component!";
@@ -51,8 +51,8 @@ b8 TestGameObject()
     TASSERT_E(nullptr, component3);
 
     Log(rNotify) << "Removing Skinned Mesh Component from gameObj.\n";
-    gameObj->DestroyComponent<SkinnedMeshComponent>();
-    SkinnedMeshComponent* destroyed = gameObj->GetComponent<SkinnedMeshComponent>();
+    gameObj->DestroyComponent<RendererComponent>();
+    RendererComponent* destroyed = gameObj->GetComponent<RendererComponent>();
     if (destroyed) {
       Log(rError) << "Failed to destory skinned mesh component from gameObj!\n";
       return false;

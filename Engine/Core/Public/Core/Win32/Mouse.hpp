@@ -26,7 +26,7 @@ public:
   static void Enable(b8 enable);
   static void Track(b8 enable) { mouseTrack = enable ; }
   static void Show(b8 enable);
-  static void ClampWithinWindow(b8 enable);
+  static void ClampWithinWindow(b8 enable) { mouseClamped = enable; }
 
   static b8 Enabled() { return mouseEnabled; }
   static b8 Showing() { return mouseShow; }

@@ -25,6 +25,7 @@ class FrameBuffer;
 
 struct DirectionalLight {
   Vector4           _Direction;
+  Vector4           _Ambient;        // Ambient override. Not needed if Object is influenced by a light probe.
   Vector4           _Color;
   r32               _Intensity;
   i32               _Enable;

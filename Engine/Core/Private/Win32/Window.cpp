@@ -87,8 +87,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 static void AdjustClientViewRect(HWND handle)
 {
-  if (!handle) return;
-
+  if (!handle || !Mouse::Clamped()) return;
+  
   RECT rect;
   GetClientRect(handle, &rect);
   ClientToScreen(handle, (POINT*)&rect.left);
@@ -101,21 +101,23 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   UINT   uMsg, WPARAM wParam, LPARAM lParam)
 {
   Window* window = reinterpret_cast<Window*>(GetPropW(hwnd, RECLUSE_WINDOW_PROP_NAME));
-  if (window && window->mRequestClose) {
-     uMsg = WM_CLOSE;
-  }
-
   if (gFullScreenAltTab && window->FullScreen() && !window->Minimized()) {
     window->SetToWindowed(window->Width(), window->Height());
     window->Minimize();
   }
 
   switch (uMsg) {
+  case WM_DESTROY:
+  {
+    if (!window->mHandle) break;
+    // Window on destroy.
+    window->mHandle = NULL;
+  } break;
+  case WM_QUIT:
   case WM_CLOSE:
   {
+    if (!window->mHandle) break;
     window->Close();
-    CloseWindow(window->Handle());
-    DestroyWindow(window->Handle());
   } break;
   case WM_SYSKEYDOWN:
   case WM_KEYDOWN:
@@ -445,6 +447,7 @@ void Window::Close()
   }
 
   CloseWindow(mHandle);
+  DestroyWindow(mHandle);
 }
 
 

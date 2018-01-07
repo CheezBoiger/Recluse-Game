@@ -77,6 +77,7 @@ Engine::Engine()
   , m_GameMouseY(0.0)
   , m_pControlInputFunc(nullptr)
   , m_Running(false)
+  , m_Stopping(false)
 {
 }
 
@@ -119,14 +120,16 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
     m_Window.SetToCenter();
     m_Window.Show();
   }
-
-  m_Running = true;
 }
 
 
 void Engine::CleanUp()
 {
-  if (!m_Running) return;
+  if (m_Running) return;
+  if (!m_Window.ShouldClose()) {
+    m_Window.Close();
+    Window::PollEvents();
+  }
 
   if (m_pLights) {
     gRenderer().FreeLightDescriptor(m_pLights);
@@ -141,8 +144,42 @@ void Engine::CleanUp()
 }
 
 
-void Engine::Update(r64 dt)
+void Engine::Run()
 {
+  if (m_Running) return;
+  // TODO(): Signal to continue thread works.
+  m_Running = true;
+}
+
+
+void Engine::Stop()
+{
+  if (!m_Running) return;
+  // TODO(): Signal to stop thread works.
+
+  gRenderer().WaitIdle();
+  m_Running = false;
+}
+
+
+void Engine::Update()
+{
+  if (m_Window.ShouldClose() || m_Stopping) {
+    Stop();
+    return;
+  }
+  // Render out the scene.
+  gAnimation().UpdateState(Time::DeltaTime);
+  gUI().UpdateState(Time::DeltaTime);
+
+  m_TimeAccumulate += Time::DeltaTime;
+  // TODO(): needs to be on separate thread.
+  while (m_TimeAccumulate > Time::FixTime) {
+    // TODO(): Instead of sleeping, update the game state.
+    m_TimeAccumulate -= Time::FixTime;
+    UpdateRenderObjects();
+  }
+
   // Update camera and screen info.
   GlobalBuffer* gCamBuffer = gRenderer().GlobalData();
   if (m_pCamera) {
@@ -172,8 +209,6 @@ void Engine::Update(r64 dt)
   if (m_pLights) {
     m_pLights->Update();
   }
-
-  UpdateRenderObjects();
 
   gCore().Sync();
   gRenderer().Render();

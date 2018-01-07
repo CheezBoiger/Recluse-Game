@@ -17,6 +17,7 @@ in FRAG_IN {
 
 struct DirectionLight {
   vec4  direction;
+  vec4  ambient;
   vec4  color;
   float intensity;
   int   enable;
@@ -66,8 +67,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
-  vec4  ambient;
-  float transparency;
+  float opaque;
   float metal;
   float rough;
   float emissive;
@@ -78,6 +78,7 @@ layout (set = 2, binding = 0) uniform MaterialBuffer {
   int   hasEmissive;
   int   hasAO;
   int   isTransparent;
+  int   pad;
 } matBuffer;
 
 
@@ -100,8 +101,8 @@ layout (set = 3, binding = 1) uniform sampler2D globalShadow;
 
 // TODO(): Need to addin gridLights buffer, for light culling, too.
 
-layout (location = 0) out vec4 finalColor;
-layout (location = 1) out vec4 normalColor;
+layout (location = 0) out vec4 FinalColor;
+layout (location = 1) out vec4 NormalColor;
 layout (location = 2) out vec4 BrightColor;
 
 
@@ -248,13 +249,15 @@ vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
 
 void main()
 {
+  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 fragAlbedo = vec3(0.0);
   vec3 fragNormal = vec3(0.0);
   vec3 fragEmissive = vec3(0.0);
+  vec3 outColor = vec3(0.0);
   
   float fragMetallic = 0.01;
   float fragRoughness = 0.1;
-  float fragAO = 0.0;
+  float fragAO = 0.0;  
   
   if (matBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
@@ -280,32 +283,29 @@ void main()
     fragNormal = frag_in.normal;
   }
   
-  normalColor = vec4(fragNormal, 1.0);
-  
-  if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb;
-  } 
-  
   if (matBuffer.hasAO >= 1) {
     fragAO = texture(ao, frag_in.texcoord0, objBuffer.lod).r;
   }
-    
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
+  
+  if (matBuffer.hasEmissive >= 1) {
+    fragEmissive = texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb;
+  }   
+  
   vec3 N = normalize(fragNormal);
 
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
-  vec3 ambient = matBuffer.ambient.rgb * fragAlbedo; 
-  vec3 outColor = (fragEmissive * matBuffer.emissive) + ambient;
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
+    outColor += light.ambient.rgb * fragAlbedo;
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);   
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
     DirectionLight light = gLightBuffer.directionLights[i];
     if (light.enable <= 0) { continue; }
+    outColor += light.ambient.rgb * fragAlbedo;
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
   }
   
@@ -317,13 +317,16 @@ void main()
   }
     
   // We might wanna set a debug param here...
-  float transparency = 1.0;
+  float opaque = 1.0;
   if (matBuffer.isTransparent >= 1) {
-    transparency = matBuffer.transparency;
+    opaque = matBuffer.opaque;
   }
-  finalColor = vec4(outColor, transparency);
+  
+  outColor = (fragEmissive * matBuffer.emissive) + outColor;
+  FinalColor = vec4(outColor, opaque);
+  NormalColor = vec4(fragNormal, 1.0);
 
-  vec3 glow = outColor.rgb - vec3(2.0);
+  vec3 glow = outColor.rgb - vec3(3.14);
   glow.r = clamp(glow.r, 0.0, 1.0);
   glow.g = clamp(glow.g, 0.0, 1.0);
   glow.b = clamp(glow.b, 0.0, 1.0);
