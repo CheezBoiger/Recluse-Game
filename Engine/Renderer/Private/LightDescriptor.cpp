@@ -42,12 +42,13 @@ LightDescriptor::LightDescriptor()
   , m_pLightBuffer(nullptr)
   , m_pLightViewBuffer(nullptr)
   , m_pFrameBuffer(nullptr)
+  , m_PrimaryShadowEnable(true)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   m_Lights._PrimaryLight._Pad[0] = 0;
   m_Lights._PrimaryLight._Pad[1] = 0;
-  //mLights.primaryLight.pad[2] = 0;
+
   for (size_t i = 0; i < LightBuffer::MaxNumPointLights(); ++i) {
     m_Lights._PointLights[i]._Position = Vector4();
     m_Lights._PointLights[i]._Color = Vector4();
@@ -55,7 +56,6 @@ LightDescriptor::LightDescriptor()
     m_Lights._PointLights[i]._Intensity = 1.0f;
     m_Lights._PointLights[i]._Enable = false;
     m_Lights._PointLights[i]._Pad = 0;
-    //mLights.pointLights[i].pad[2] = 0.0f;
   }
 
   for (size_t i = 0; i < LightBuffer::MaxNumDirectionalLights(); ++i) {
@@ -242,13 +242,13 @@ void LightDescriptor::Update()
   );
 
   // Pass as one matrix.
-  Matrix4 view = Matrix4::LookAt(Eye, Vector3::ZERO, Vector3::UP);
+  Matrix4 view = Matrix4::LookAt(-Eye, Vector3::ZERO, Vector3::UP);
 
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(m_pShadowMap->Width()), 
-    static_cast<r32>(m_pShadowMap->Height()), 
-    0.0001f, 
-    1000.0f
+    static_cast<r32>(1024), 
+    static_cast<r32>(1024), 
+    0.00001f, 
+    1024.0f
   );
 
   m_PrimaryLightSpace._ViewProj = view * proj;

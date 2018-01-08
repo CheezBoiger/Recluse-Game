@@ -242,6 +242,7 @@ private:
     std::vector<CommandBuffer*>   _ShadowCmdBuffers;
     u32                           _CurrCmdBufferIndex;
     Semaphore*                    _Semaphore;
+    Semaphore*                    _ShadowSema;
   } m_Offscreen; 
 
   struct {

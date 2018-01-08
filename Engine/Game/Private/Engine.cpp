@@ -109,6 +109,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   // Set up lights.
   m_pLights = gRenderer().CreateLightDescriptor();
   m_pLights->Initialize();
+
   gRenderer().SetLightDescriptor(m_pLights);
 
   gRenderer().PushCmdList(&m_RenderCmdList);

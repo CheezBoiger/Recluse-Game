@@ -112,6 +112,7 @@ void Renderer::Render()
   VkCommandBuffer offscreenCmd = m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle();
   VkSemaphore waitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
   VkSemaphore signalSemas[] = { m_Offscreen._Semaphore->Handle() };
+  VkSemaphore shadowSignal[] = { m_Offscreen._ShadowSema->Handle() };
   VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
   VkSubmitInfo offscreenSI = {};
@@ -144,7 +145,21 @@ void Renderer::Render()
 
     // Render shadow map here. Primary shadow map is our concern.
     if (m_pLights->PrimaryShadowEnabled()) {
-      RenderPrimaryShadows();
+      VkCommandBuffer shadowbuf[] = { m_Offscreen._ShadowCmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle() };
+
+      VkSubmitInfo shadowSubmit = { };
+      shadowSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      shadowSubmit.pCommandBuffers = shadowbuf;
+      shadowSubmit.commandBufferCount = 1;
+      shadowSubmit.signalSemaphoreCount = 1;
+      shadowSubmit.waitSemaphoreCount = 1;
+      shadowSubmit.pWaitSemaphores = waitSemas;
+      shadowSubmit.pSignalSemaphores = shadowSignal;
+      shadowSubmit.pWaitDstStageMask = waitFlags;
+      // Submit shadow rendering.
+      m_pRhi->GraphicsSubmit(shadowSubmit);
+
+      offscreenSI.pWaitSemaphores = shadowSignal;
     }
 
     // Offscreen PBR Forward Rendering Pass.
@@ -1250,9 +1265,11 @@ void Renderer::SetUpOffscreen(b8 fullSetup)
 {
   if (fullSetup) {
     m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
+    m_Offscreen._ShadowSema = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCI = { };
     semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     m_Offscreen._Semaphore->Initialize(semaCI);
+    m_Offscreen._ShadowSema->Initialize(semaCI);
 
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
@@ -1268,6 +1285,7 @@ void Renderer::CleanUpOffscreen(b8 fullCleanup)
 {
   if (fullCleanup) {
     m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
+    m_pRhi->FreeVkSemaphore(m_Offscreen._ShadowSema);
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_pRhi->FreeCommandBuffer(m_Offscreen._CmdBuffers[i]);
       m_pRhi->FreeCommandBuffer(m_Offscreen._ShadowCmdBuffers[i]);
@@ -1935,6 +1953,14 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   renderPass.clearValueCount = 1;
   renderPass.pClearValues = &depthValue;
 
+  VkViewport viewport = {};
+  viewport.height = (r32)m_pLights->m_pFrameBuffer->Height();
+  viewport.width = (r32)m_pLights->m_pFrameBuffer->Width();
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.y = 0.0f;
+  viewport.x = 0.0f;
+
   // Create the shadow rendering pass.
   cmdBuffer->Begin(begin);
     cmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
@@ -1951,7 +1977,25 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
         descriptorSets[2] = skinned ? obj->CurrBoneSet()->Handle() : VK_NULL_HANDLE;
         GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+        cmdBuffer->SetViewPorts(0, 1, &viewport);
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
+        for (size_t idx = 0; idx < obj->Size(); ++idx) {
+          MeshData* mesh = (*obj)[idx];
+          if (!mesh) return;
+          VertexBuffer* vertex = mesh->VertexData();
+          IndexBuffer* index = mesh->IndexData();
+          VkBuffer buf = vertex->Handle()->NativeBuffer();
+
+          VkDeviceSize offset[] = { 0 };
+          cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
+          if (index) {
+            VkBuffer ind = index->Handle()->NativeBuffer();
+            cmdBuffer->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
+            cmdBuffer->DrawIndexed(index->IndexCount(), obj->Instances, 0, 0, 0);
+          } else {
+            cmdBuffer->Draw(vertex->VertexCount(), obj->Instances, 0, 0);
+          }
+        }
       }
     cmdBuffer->EndRenderPass();    
   cmdBuffer->End();
