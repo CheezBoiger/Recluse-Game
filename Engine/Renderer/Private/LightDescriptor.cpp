@@ -245,8 +245,8 @@ void LightDescriptor::Update()
   Matrix4 view = Matrix4::LookAt(-Eye, Vector3::ZERO, Vector3::UP);
 
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(1024), 
-    static_cast<r32>(1024), 
+    static_cast<r32>(m_pFrameBuffer->Width()), 
+    static_cast<r32>(m_pFrameBuffer->Height()), 
     0.00001f, 
     1024.0f
   );
