@@ -64,10 +64,12 @@ struct LightViewSpace {
 
 
 struct LightBuffer {
+  static u32        MaxNumDirectionalLights();
+  static u32        MaxNumPointLights();
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  _PrimaryLight;
-  DirectionalLight  _DirectionalLights [32];
-  PointLight        _PointLights       [128];
+  DirectionalLight  _DirectionalLights [8];
+  PointLight        _PointLights       [64];
 };
 
 

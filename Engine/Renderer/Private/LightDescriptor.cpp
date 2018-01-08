@@ -21,6 +21,18 @@
 
 namespace Recluse {
 
+u32 LightBuffer::MaxNumDirectionalLights()
+{
+  return 8;
+}
+
+
+u32 LightBuffer::MaxNumPointLights()
+{
+  return 64;
+}
+
+
 LightDescriptor::LightDescriptor()
   : m_pShadowMap(nullptr)
   , m_pShadowSampler(nullptr)
@@ -36,7 +48,7 @@ LightDescriptor::LightDescriptor()
   m_Lights._PrimaryLight._Pad[0] = 0;
   m_Lights._PrimaryLight._Pad[1] = 0;
   //mLights.primaryLight.pad[2] = 0;
-  for (size_t i = 0; i < 128; ++i) {
+  for (size_t i = 0; i < LightBuffer::MaxNumPointLights(); ++i) {
     m_Lights._PointLights[i]._Position = Vector4();
     m_Lights._PointLights[i]._Color = Vector4();
     m_Lights._PointLights[i]._Range = 0.0f;
@@ -46,7 +58,7 @@ LightDescriptor::LightDescriptor()
     //mLights.pointLights[i].pad[2] = 0.0f;
   }
 
-  for (size_t i = 0; i < 32; ++i) {
+  for (size_t i = 0; i < LightBuffer::MaxNumDirectionalLights(); ++i) {
     m_Lights._DirectionalLights[i]._Direction = Vector4();
     m_Lights._DirectionalLights[i]._Enable = false;
     m_Lights._DirectionalLights[i]._Intensity = 1.0f;
