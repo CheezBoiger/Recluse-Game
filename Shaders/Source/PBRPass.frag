@@ -113,6 +113,49 @@ layout (location = 3) out vec4 PositionColor;
 layout (location = 4) out vec4 RoughMetalColor;
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Shadowing.
+
+#define SHADOW_FACTOR 0.25
+#define SHADOW_BIAS 0.005
+
+float textureProj(vec4 P, vec2 offset)
+{
+  float shadow = 1.0;
+  vec4 shadowCoord = P / P.w;
+  shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
+  
+  if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
+    float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
+    if (shadowCoord.w > 0.0 && dist < shadowCoord.z) {
+      shadow = SHADOW_FACTOR;
+    }
+  }
+  return shadow;
+}
+
+
+float filterPCF(vec4 sc)
+{
+  ivec2 texDim = textureSize(globalShadow, 0);
+  float scale = 1.5;
+  float dx = scale * 1.0 / float(texDim.x);
+  float dy = scale * 1.0 / float(texDim.y);
+
+  float shadowFactor = 0.0;
+  int count = 0;
+  int range = 1;
+	
+  for (int x = -range; x <= range; x++) {
+    for (int y = -range; y <= range; y++) {
+      shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
+      count++;
+    }
+  }
+  return shadowFactor / count;
+}
+
+
 ////////////////////////////////////////////////////////////////////
 // Light BRDFs
 // Lighting model goes as: Cook-Torrance
@@ -223,50 +266,8 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 Albedo, vec3 V, vec3 N, float roug
 vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
 {
   vec3 L = -(light.direction.xyz);
-  vec3 radiance = light.color.xyz * light.intensity;
+  vec3 radiance = light.color.xyz * light.intensity;  
   return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Shadowing.
-
-#define SHADOW_FACTOR 0.25
-#define SHADOW_BIAS 0.005
-
-float textureProj(vec4 P, vec2 offset)
-{
-  float shadow = 1.0;
-  vec4 shadowCoord = P / P.w;
-  shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
-  
-  if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
-    float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
-    if (shadowCoord.w > 0.0 && dist < shadowCoord.z) {
-      shadow = SHADOW_FACTOR;
-    }
-  }
-  return shadow;
-}
-
-
-float filterPCF(vec4 sc)
-{
-  ivec2 texDim = textureSize(globalShadow, 0);
-  float scale = 1.5;
-  float dx = scale * 1.0 / float(texDim.x);
-  float dy = scale * 1.0 / float(texDim.y);
-
-  float shadowFactor = 0.0;
-  int count = 0;
-  int range = 1;
-	
-  for (int x = -range; x <= range; x++) {
-    for (int y = -range; y <= range; y++) {
-      shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
-      count++;
-    }
-  }
-  return shadowFactor / count;
 }
 
 
@@ -348,7 +349,12 @@ void main()
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
     outColor += light.ambient.rgb * fragAlbedo;
-    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);   
+    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
+    if (gWorldBuffer.enableShadows >= 1) {
+      vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
+      float shadowFactor = filterPCF(shadowClip);
+      outColor *= shadowFactor;
+    }  
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
@@ -369,12 +375,6 @@ void main()
   float opaque = 1.0;
   if (matBuffer.isTransparent >= 1) {
     opaque = matBuffer.opaque;
-  }
-  
-  if (gWorldBuffer.enableShadows >= 1) {
-    vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
-    float shadowFactor = filterPCF(shadowClip);
-    outColor *= shadowFactor;
   }
   
   outColor = (fragEmissive * matBuffer.emissive) + outColor;
