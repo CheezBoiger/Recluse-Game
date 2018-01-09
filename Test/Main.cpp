@@ -48,8 +48,8 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
   // Test albedo enabling.
-  if (Keyboard::KeyPressed(KEY_CODE_V)) { noAlbedo2 = !noAlbedo2; }
-  if (Keyboard::KeyPressed(KEY_CODE_C)) { noAlbedo = !noAlbedo; }
+  if (Keyboard::KeyPressed(KEY_CODE_V)) { /*noAlbedo2 = !noAlbedo2;*/ }
+  if (Keyboard::KeyPressed(KEY_CODE_C)) { /*noAlbedo = !noAlbedo;*/ }
 
   // Camera projection changing.
   if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
@@ -65,7 +65,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 0
+#define PERFORMANCE_TEST 1
 
 int main(int c, char* argv[])
 {
@@ -189,8 +189,8 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 4000
-  r32 maxNum = 1050.0f;
+#define ObjectCount 40
+  r32 maxNum = 50.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-maxNum, maxNum);

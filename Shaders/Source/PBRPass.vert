@@ -32,7 +32,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float gamma;
   float exposure;
   int   bloomEnabled;
-  int   pad1;
+  int   enableShadows;
 } gWorldBuffer;
 
 
@@ -44,7 +44,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 } objBuffer;
 
 
-layout (set = 4, binding = 0) uniform BonesBuffer {
+layout (set = 5, binding = 0) uniform BonesBuffer {
   mat4 bones[MAX_BONES];
 } boneBuffer;
 

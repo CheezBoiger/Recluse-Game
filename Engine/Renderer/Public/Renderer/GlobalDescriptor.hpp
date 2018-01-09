@@ -42,7 +42,7 @@ struct GlobalBuffer {
   r32             _Gamma;
   r32             _Exposure;
   i32             _BloomEnabled;
-  i32             _Pad1;
+  i32             _EnableShadows;
 };
 
 

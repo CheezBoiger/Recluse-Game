@@ -157,12 +157,13 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
-  std::array<VkDescriptorSetLayout, 5> DLayouts;
+  std::array<VkDescriptorSetLayout, 6> DLayouts;
   DLayouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
   DLayouts[1] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
   DLayouts[2] = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr)->Layout();
   DLayouts[3] = gResources().GetDescriptorSetLayout(LightSetLayoutStr)->Layout();
-  DLayouts[4] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
+  DLayouts[4]= gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+  DLayouts[5] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -205,7 +206,8 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
   VkPipelineLayoutCreateInfo hdrLayout = {};
-  VkDescriptorSetLayout hdrSetLayout = gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr)->Layout();
+  VkDescriptorSetLayout hdrSetLayout[1]; 
+  hdrSetLayout[0] = gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr)->Layout();
 
   Shader* HdrFrag = Rhi->CreateShader();
   Shader* HdrVert = Rhi->CreateShader();
@@ -238,7 +240,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
 
   hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   hdrLayout.setLayoutCount = 1;
-  hdrLayout.pSetLayouts = &hdrSetLayout;
+  hdrLayout.pSetLayouts = hdrSetLayout;
 
   hdrPipeline->Initialize(GraphicsInfo, hdrLayout);
 

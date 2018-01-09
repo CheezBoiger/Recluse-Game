@@ -30,7 +30,7 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
   float gamma;
   float exposure;
   int   bloomEnabled;
-  int   pad1;
+  int   enableShadows;
 } gWorldBuffer;
 
 
@@ -40,7 +40,7 @@ void main()
   //
   vec3 color = texture(sceneSurface, frag_in.uv).rgb;
   vec3 bloom = texture(bloomSurface, frag_in.uv).rgb;
-  
+
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
   if (gWorldBuffer.bloomEnabled >= 1) { color += bloom; }

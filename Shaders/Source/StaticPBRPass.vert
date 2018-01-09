@@ -30,7 +30,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float gamma;
   float exposure;
   int   bloomEnabled;
-  int   pad1;
+  int   enableShadows;
 } gWorldBuffer;
 
 

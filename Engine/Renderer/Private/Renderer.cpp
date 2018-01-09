@@ -289,13 +289,14 @@ b8 Renderer::Initialize(Window* window)
 
 void Renderer::SetUpDescriptorSetLayouts()
 {
+  // Light space.
   {
     std::array<VkDescriptorSetLayoutBinding, 1> LightViewBindings;
     LightViewBindings[0].pImmutableSamplers = nullptr;
     LightViewBindings[0].binding = 0;
     LightViewBindings[0].descriptorCount = 1;
     LightViewBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
     DescriptorSetLayout* LightViewLayout = m_pRhi->CreateDescriptorSetLayout();
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
@@ -453,7 +454,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   // HDR Layout pass.
   DescriptorSetLayout* hdrSetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(HDRGammaDescSetLayoutStr, hdrSetLayout);
-  VkDescriptorSetLayoutBinding hdrBindings[3];
+  std::array<VkDescriptorSetLayoutBinding, 3> hdrBindings;
   hdrBindings[0].binding = 0;
   hdrBindings[0].descriptorCount = 1;
   hdrBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -465,7 +466,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   hdrBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   hdrBindings[1].pImmutableSamplers = nullptr;
   hdrBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-  
+
   hdrBindings[2].binding = 2;
   hdrBindings[2].descriptorCount = 1;
   hdrBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -474,8 +475,8 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   VkDescriptorSetLayoutCreateInfo hdrLayoutCi = {};
   hdrLayoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  hdrLayoutCi.bindingCount = 3;
-  hdrLayoutCi.pBindings = hdrBindings;
+  hdrLayoutCi.bindingCount = static_cast<u32>(hdrBindings.size());
+  hdrLayoutCi.pBindings = hdrBindings.data();
   
   hdrSetLayout->Initialize(hdrLayoutCi);
 
@@ -994,9 +995,14 @@ void Renderer::SetUpGraphicsPipelines()
   // Create the pipeline for the graphics pipeline.
   if (m_pLights && m_pLights->m_pFrameBuffer) {
     colorBlendCI.attachmentCount = 0;
+    VkRect2D shadowScissor;
+    shadowScissor.extent = { m_pLights->m_pFrameBuffer->Width(), m_pLights->m_pFrameBuffer->Height() };
+    shadowScissor.offset = { 0, 0 };
+    viewportCI.pScissors = &shadowScissor;
     GraphicsPipelineInfo.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
     RendererPass::SetUpDirectionalShadowPass(RHI(), Filepath, GraphicsPipelineInfo);
     GraphicsPipelineInfo.renderPass = nullptr;
+    viewportCI.pScissors = &scissor;
     colorBlendCI.attachmentCount = static_cast<u32>(static_cast<u32>(colorBlendAttachments.size()));
   } else {
     R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
@@ -1553,7 +1559,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
 
   DescriptorSet* hdrSet = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(HDRGammaDescSetStr, hdrSet);
-  VkWriteDescriptorSet hdrWrites[3];
+  std::array<VkWriteDescriptorSet, 3> hdrWrites;
   VkDescriptorBufferInfo hdrBufferInfo = {};
   hdrBufferInfo.offset = 0;
   hdrBufferInfo.range = sizeof(GlobalBuffer);
@@ -1602,7 +1608,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
 
   // Allocate and update the hdr buffer.
   hdrSet->Allocate(m_pRhi->DescriptorPool(), gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr));
-  hdrSet->Update(3, hdrWrites);
+  hdrSet->Update(static_cast<u32>(hdrWrites.size()), hdrWrites.data());
 }
 
 
@@ -1686,7 +1692,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
-  VkDescriptorSet DescriptorSets[5];
+  VkDescriptorSet DescriptorSets[6];
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1707,13 +1713,14 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
         DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
         DescriptorSets[3] = m_pLights->Set()->Handle();
-        DescriptorSets[4] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
+        DescriptorSets[4] = m_pLights->m_pLightViewDescriptorSet->Handle();
+        DescriptorSets[5] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
 
         // Bind materials.
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
           Pipe->Layout(), 
           0,
-          (Skinned ? 5 : 4), 
+          (Skinned ? 6 : 5), 
           DescriptorSets, 
           0, 
           nullptr
@@ -1980,11 +1987,13 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    VkDescriptorSet dSet = hdrSet->Handle();
+    VkDescriptorSet dSets[1];
+    dSets[0] = hdrSet->Handle();
+
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, &dSet, 0, nullptr);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, dSets, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
