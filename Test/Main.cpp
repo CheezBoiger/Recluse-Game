@@ -48,8 +48,8 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
   // Test albedo enabling.
-  if (Keyboard::KeyPressed(KEY_CODE_V)) { /*noAlbedo2 = !noAlbedo2;*/ }
-  if (Keyboard::KeyPressed(KEY_CODE_C)) { /*noAlbedo = !noAlbedo;*/ }
+  if (Keyboard::KeyPressed(KEY_CODE_V)) { gEngine().LightDesc()->EnablePrimaryShadow(true);/*noAlbedo2 = !noAlbedo2;*/ }
+  if (Keyboard::KeyPressed(KEY_CODE_C)) { gEngine().LightDesc()->EnablePrimaryShadow(false);/*noAlbedo = !noAlbedo;*/ }
 
   // Camera projection changing.
   if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
@@ -206,7 +206,7 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 0.0f));
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 1.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
   cubeInfo->_NormalMatrix[3][1] = 0.0f;

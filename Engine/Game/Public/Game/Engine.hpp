@@ -67,6 +67,7 @@ public:
   void                          LoadSceneTransition();
 
   LightBuffer*                  LightData() { return m_pLights->Data(); }
+  LightDescriptor*              LightDesc() { return m_pLights; }
 
   CmdList&                      RenderCommandList() { return m_RenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }

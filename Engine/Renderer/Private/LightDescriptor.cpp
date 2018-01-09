@@ -235,6 +235,7 @@ void LightDescriptor::CleanUp()
 
 void LightDescriptor::Update()
 {
+  // TODO(): The shadow map needs to follow the player...
   Vector3 Eye = Vector3(
     m_Lights._PrimaryLight._Direction.x, 
     m_Lights._PrimaryLight._Direction.y, 
