@@ -572,6 +572,8 @@ void Renderer::SetUpFrameBuffers()
 {
   Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
+  Texture* pbrPosition = gResources().GetRenderTexture(PBRPositionAttachStr);
+  Texture* pbrRoughMetal = gResources().GetRenderTexture(PBRRoughMetalAttachStr);
   Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
   Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
 
@@ -581,7 +583,7 @@ void Renderer::SetUpFrameBuffers()
   FrameBuffer* hdrFrameBuffer = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
-  std::array<VkAttachmentDescription, 4> attachmentDescriptions;
+  std::array<VkAttachmentDescription, 6> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
@@ -618,6 +620,28 @@ void Renderer::SetUpFrameBuffers()
   );
 
   attachmentDescriptions[3] = CreateAttachmentDescription(
+    pbrPosition->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrPosition->Samples()
+  );
+
+  attachmentDescriptions[4] = CreateAttachmentDescription(
+    pbrRoughMetal->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrRoughMetal->Samples()
+  );
+
+  attachmentDescriptions[5] = CreateAttachmentDescription(
     pbrDepth->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -648,7 +672,7 @@ void Renderer::SetUpFrameBuffers()
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
-  std::array<VkAttachmentReference, 3> attachmentColors;
+  std::array<VkAttachmentReference, 5> attachmentColors;
   VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -658,6 +682,12 @@ void Renderer::SetUpFrameBuffers()
 
   attachmentColors[2].attachment = 2;
   attachmentColors[2].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[3].attachment = 3;
+  attachmentColors[3].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[4].attachment = 4;
+  attachmentColors[4].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -674,11 +704,13 @@ void Renderer::SetUpFrameBuffers()
     &subpass
   );
 
-  std::array<VkImageView, 4> attachments;
+  std::array<VkImageView, 6> attachments;
   attachments[0] = pbrColor->View();
   attachments[1] = pbrNormal->View();
   attachments[2] = RTBright->View();
-  attachments[3] = pbrDepth->View();
+  attachments[3] = pbrPosition->View();
+  attachments[4] = pbrRoughMetal->View();
+  attachments[5] = pbrDepth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
     m_pWindow->Width(),
@@ -862,7 +894,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.back = { };
   depthStencilCI.front = { };
 
-  std::array<VkPipelineColorBlendAttachmentState, 3> colorBlendAttachments;
+  std::array<VkPipelineColorBlendAttachmentState, 5> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -886,6 +918,28 @@ void Renderer::SetUpGraphicsPipelines()
   );
 
   colorBlendAttachments[2] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[3] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[4] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
@@ -1061,6 +1115,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
   Texture* pbrColor = m_pRhi->CreateTexture();
   Texture* pbrNormal = m_pRhi->CreateTexture();
+  Texture* pbrPosition = m_pRhi->CreateTexture();
+  Texture* pbrRoughMetal = m_pRhi->CreateTexture();
   Texture* pbrDepth = m_pRhi->CreateTexture();
   Sampler* pbrSampler = m_pRhi->CreateSampler();
   Texture* hdrTexture = m_pRhi->CreateTexture();
@@ -1070,6 +1126,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(HDRGammaColorAttachStr, hdrTexture);
   gResources().RegisterRenderTexture(PBRColorAttachStr, pbrColor);
   gResources().RegisterRenderTexture(PBRNormalAttachStr, pbrNormal);
+  gResources().RegisterRenderTexture(PBRPositionAttachStr, pbrPosition);
+  gResources().RegisterRenderTexture(PBRRoughMetalAttachStr, pbrRoughMetal);
   gResources().RegisterRenderTexture(PBRDepthAttachStr, pbrDepth);
   gResources().RegisterRenderTexture(RenderTargetBrightStr, RenderTargetBright);
   gResources().RegisterRenderTexture(RenderTarget2xHorizStr, renderTarget2xScaled);
@@ -1137,6 +1195,13 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   RenderTarget16xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget16xFinal->Initialize(cImageInfo, cViewInfo);
 
+  cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  cImageInfo.extent.width = m_pWindow->Width();
+  cImageInfo.extent.height = m_pWindow->Height();
+  pbrPosition->Initialize(cImageInfo, cViewInfo);
+  pbrRoughMetal->Initialize(cImageInfo, cViewInfo);
+
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
@@ -1144,6 +1209,10 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   hdrTexture->Initialize(cImageInfo, cViewInfo);
 
+  cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  cImageInfo.extent.width = m_pWindow->Width();
+  cImageInfo.extent.height = m_pWindow->Height();
+  cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cImageInfo.usage = m_pRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.format = m_pRhi->DepthFormat();
 
@@ -1235,6 +1304,8 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 
   Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
   Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
+  Texture* pbrPosition = gResources().UnregisterRenderTexture(PBRPositionAttachStr);
+  Texture* pbrRoughMetal = gResources().UnregisterRenderTexture(PBRRoughMetalAttachStr);
   Texture* pbrDepth = gResources().UnregisterRenderTexture(PBRDepthAttachStr);
   Texture* RenderTargetBright = gResources().UnregisterRenderTexture(RenderTargetBrightStr);
   Sampler* pbrSampler = gResources().UnregisterSampler(PBRSamplerStr);
@@ -1247,6 +1318,8 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 
   m_pRhi->FreeTexture(pbrColor);
   m_pRhi->FreeTexture(pbrNormal);
+  m_pRhi->FreeTexture(pbrPosition);
+  m_pRhi->FreeTexture(pbrRoughMetal);
   m_pRhi->FreeTexture(pbrDepth);
   m_pRhi->FreeTexture(RenderTargetBright);
   m_pRhi->FreeSampler(pbrSampler);
@@ -1588,11 +1661,13 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-  std::array<VkClearValue, 4> clearValues;
+  std::array<VkClearValue, 6> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[3].depthStencil = { 1.0f, 0 };
+  clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[5].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo pbrRenderPassInfo = {};
   pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

@@ -104,6 +104,8 @@ layout (set = 3, binding = 1) uniform sampler2D globalShadow;
 layout (location = 0) out vec4 FinalColor;
 layout (location = 1) out vec4 NormalColor;
 layout (location = 2) out vec4 BrightColor;
+layout (location = 3) out vec4 PositionColor;
+layout (location = 4) out vec4 RoughMetalColor;
 
 
 ////////////////////////////////////////////////////////////////////
@@ -325,6 +327,8 @@ void main()
   outColor = (fragEmissive * matBuffer.emissive) + outColor;
   FinalColor = vec4(outColor, opaque);
   NormalColor = vec4(fragNormal, 1.0);
+  PositionColor = vec4(frag_in.position, 1.0);
+  RoughMetalColor = vec4(fragRoughness, fragMetallic, 0.0, 1.0);
 
   vec3 glow = outColor.rgb - vec3(3.14);
   glow.r = clamp(glow.r, 0.0, 1.0);

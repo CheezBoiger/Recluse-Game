@@ -242,11 +242,11 @@ void LightDescriptor::Update()
   );
 
   // Pass as one matrix.
-  Matrix4 view = Matrix4::LookAt(-Eye * 50.0f, Vector3::ZERO, Vector3::UP);
+  Matrix4 view = Matrix4::LookAt(-Eye * 100.0f, Vector3::ZERO, Vector3::UP);
 
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(m_pFrameBuffer->Width()), 
-    static_cast<r32>(m_pFrameBuffer->Height()), 
+    static_cast<r32>(100), 
+    static_cast<r32>(100), 
     0.00001f, 
     1024.0f
   );

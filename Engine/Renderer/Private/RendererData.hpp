@@ -25,6 +25,8 @@ extern std::string PBRStaticPipelineStr;
 extern std::string PBRLayoutStr;
 extern std::string PBRColorAttachStr;
 extern std::string PBRNormalAttachStr;
+extern std::string PBRPositionAttachStr;
+extern std::string PBRRoughMetalAttachStr;
 extern std::string PBRSamplerStr;
 extern std::string PBRDepthAttachStr;
 extern std::string PBRFrameBufferStr;
