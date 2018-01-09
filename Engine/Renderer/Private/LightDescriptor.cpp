@@ -15,6 +15,7 @@
 #include "RHI/Shader.hpp"
 
 #include "Core/Exception.hpp"
+#include "Core/Logging/Log.hpp"
 
 #include <array>
 
@@ -241,14 +242,15 @@ void LightDescriptor::Update()
     m_Lights._PrimaryLight._Direction.y, 
     m_Lights._PrimaryLight._Direction.z
   );
-
+  Eye *= 20.0f;
+  Eye -= m_vViewerPos;
   // Pass as one matrix.
-  Matrix4 view = Matrix4::LookAt(-Eye * 10.0f, Vector3::ZERO, Vector3::UP);
+  Matrix4 view = Matrix4::LookAt(-Eye, m_vViewerPos, Vector3::UP);
 
   Matrix4 proj = Matrix4::Ortho(
     static_cast<r32>(100), 
     static_cast<r32>(100), 
-    0.00001f, 
+    0.01f, 
     2056.0f
   );
 

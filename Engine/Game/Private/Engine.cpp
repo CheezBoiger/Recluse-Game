@@ -209,6 +209,7 @@ void Engine::Update()
   }
 
   if (m_pLights) {
+    if (m_pCamera) m_pLights->SetViewerPosition(m_pCamera->Position());
     m_pLights->Update();
   }
 

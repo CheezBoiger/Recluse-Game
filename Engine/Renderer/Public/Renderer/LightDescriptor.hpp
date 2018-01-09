@@ -99,6 +99,9 @@ public:
 
   Texture*            PrimaryShadowMap() { return m_pShadowMap; }
   Sampler*            ShadowSampler() { return m_pShadowSampler; }
+  void                SetViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
+  Vector3             ViewerPos() const { return m_vViewerPos; }
+  
 
   void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
 
@@ -107,6 +110,8 @@ public:
 private:
   void                InitializeNativeLights();
   void                InitializePrimaryShadow();
+
+  Vector3             m_vViewerPos;
   // Descriptor Set.
   DescriptorSet*      m_pLightDescriptorSet;
   DescriptorSet*      m_pLightViewDescriptorSet;
