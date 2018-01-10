@@ -286,6 +286,40 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
+    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+  }
+  return color * radiance;
+}
+
+
+// TODO(): This will eventually be integrated into Directional, as we will need to 
+// support more shadow maps (using a Sampler2DArray.)
+vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+{
+  vec3 color = vec3(0.0);
+  vec3 L = -(light.direction.xyz);
+  vec3 radiance = light.color.xyz * light.intensity;  
+  vec3 nV = normalize(V);
+  vec3 nL = normalize(L);
+  vec3 nN = normalize(N);
+  
+  vec3 H = normalize(nV + nL);
+  
+  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
+  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  vec3 F0 = vec3(0.04);
+  
+  F0 = mix(F0, Albedo, metallic);
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    vec3 F = FSchlick(NoH, F0);
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+    
     color += LambertDiffuse(kD, Albedo);
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
@@ -383,7 +417,7 @@ void main()
     DirectionLight light = gLightBuffer.primaryLight;
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
-    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
+    outColor += CookTorrBRDFPrimary(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
     outColor = max(outColor, ambient);
   }
   
