@@ -117,7 +117,7 @@ layout (location = 4) out vec4 RoughMetalColor;
 // Shadowing.
 
 #define SHADOW_FACTOR 0.05
-#define SHADOW_BIAS 0.0005
+#define SHADOW_BIAS 0.0009
 
 float textureProj(vec4 P, vec2 offset)
 {
@@ -135,7 +135,7 @@ float textureProj(vec4 P, vec2 offset)
 }
 
 
-float filterPCF(vec4 sc)
+float FilterPCF(vec4 sc)
 {
   ivec2 texDim = textureSize(globalShadow, 0);
   float scale = 1.5;
@@ -143,13 +143,13 @@ float filterPCF(vec4 sc)
   float dy = scale * 1.0 / float(texDim.y);
 
   float shadowFactor = 0.0;
-  int count = 0;
-  int range = 2;
+  float count = 0.0;
+  float range = 2.0;
 	
-  for (int x = -range; x <= range; x++) {
-    for (int y = -range; y <= range; y++) {
+  for (float x = -range; x <= range; x++) {
+    for (float y = -range; y <= range; y++) {
       shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
-      count++;
+      count += 1.0;
     }
   }
   return shadowFactor / count;
@@ -211,38 +211,11 @@ vec3 LambertDiffuse(vec3 kD, vec3 albedoFrag)
 }
 
 
-vec3 BRDF(vec3 L, vec3 albedoFrag, vec3 V, vec3 N, float roughness, float metallic)
+vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 {
-  vec3 nV = normalize(V);
-  vec3 nL = normalize(L);
-  vec3 nN = normalize(N);
-  
-  vec3 H = normalize(nV + nL);
-  
-  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
-  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
-  float NoH = clamp(dot(nN, H), 0.0, 1.0);
-  
-  vec3 color = vec3(0.0);
-  vec3 F0 = vec3(0.04);
-  
-  F0 = mix(F0, albedoFrag, metallic);
-  
-  if (NoL > 0.0) {
-    float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);
-    
-    vec3 F = FSchlick(NoH, F0);
-    vec3 brdf = D * F * G / ((4 * NoL * NoV) + 0.001);
-    if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-    
-    color += (LambertDiffuse(kD, albedoFrag) + brdf) * NoL;
-  }
-  
-  return color;
+  vec3 brdf = D * F * G / ((4 * NoL * NoV) + 0.001);
+  if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
+  return brdf;
 }
 
 
@@ -254,20 +227,80 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 Albedo, vec3 V, vec3 N, float roug
   // Return if range is less than the distance between light and fragment.
   if (light.range < distance) { return vec3(0.0); }
 
+  vec3 color = vec3(0.0);
   float falloff = (distance / light.range);
   float attenuation = light.intensity - (light.intensity * falloff);
+  vec3 nV = normalize(V);
+  vec3 nL = normalize(L);
+  vec3 nN = normalize(N);
   
+  vec3 H = normalize(nV + nL);
+  
+  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
+  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  vec3 F0 = vec3(0.04);
+  
+  F0 = mix(F0, Albedo, metallic);
   vec3 radiance = light.color.xyz * attenuation;
-  return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    vec3 F = FSchlick(NoH, F0);
+    
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+  
+    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+  }
+  return color * radiance;
 }
 
 
 // TODO():
 vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
 {
+  vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
   vec3 radiance = light.color.xyz * light.intensity;  
-  return BRDF(L, Albedo, V, N, roughness, metallic) * radiance;
+  vec3 nV = normalize(V);
+  vec3 nL = normalize(L);
+  vec3 nN = normalize(N);
+  
+  vec3 H = normalize(nV + nL);
+  
+  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
+  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  vec3 F0 = vec3(0.04);
+  
+  F0 = mix(F0, Albedo, metallic);
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    vec3 F = FSchlick(NoH, F0);
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+    
+    color += LambertDiffuse(kD, Albedo);
+    if (gWorldBuffer.enableShadows >= 1) {
+      vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
+      float shadowFactor = FilterPCF(shadowClip);
+      color *= shadowFactor;
+      if (shadowFactor >= SHADOW_FACTOR) {
+        color += BRDF(D, F, G, NoL, NoV);
+      }
+    } else {
+      color += BRDF(D, F, G, NoL, NoV);
+    }
+  
+    color *= NoL;
+  }
+  return color * radiance;
 }
 
 
@@ -351,12 +384,7 @@ void main()
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
-    if (gWorldBuffer.enableShadows >= 1) {
-      vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
-      float shadowFactor = filterPCF(shadowClip);
-      outColor *= shadowFactor;
-      outColor = max(outColor, ambient);
-    }  
+    outColor = max(outColor, ambient);
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {

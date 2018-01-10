@@ -867,7 +867,7 @@ void Renderer::SetUpGraphicsPipelines()
   VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
      VK_POLYGON_MODE_FILL,
       VK_FALSE, 
-      VK_CULL_MODE_NONE,
+      VK_CULL_MODE_BACK_BIT,
       VK_FRONT_FACE_CLOCKWISE,
       1.0f,
       VK_FALSE,
@@ -956,7 +956,7 @@ void Renderer::SetUpGraphicsPipelines()
     static_cast<u32>(colorBlendAttachments.size()),
     colorBlendAttachments.data(),
     VK_FALSE,
-    VK_LOGIC_OP_NO_OP
+    VK_LOGIC_OP_COPY
   );
 
   VkDynamicState dynamicStates[1] = {
