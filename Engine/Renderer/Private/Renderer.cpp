@@ -2302,6 +2302,24 @@ Texture2DArray* Renderer::CreateTexture2DArray()
 }
 
 
+void Renderer::FreeTexture2DArray(Texture2DArray* texture)
+{
+  // TODO():
+}
+
+void Renderer::FreeTextureCube(TextureCube* texture)
+{
+  // TODO():
+}
+
+
+Texture3D* Renderer::CreateTexture3D()
+{
+  Texture3D* texture = new Texture3D();
+  return texture;
+}
+
+
 MaterialDescriptor* Renderer::CreateMaterialDescriptor()
 {
   MaterialDescriptor* descriptor = new MaterialDescriptor();

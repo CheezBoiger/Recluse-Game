@@ -13,6 +13,8 @@ class Image;
 
 
 struct TextureBase {
+  static std::string  kDefaultName;
+  static u64          sIteration;
 public:
   enum Type {
     TEXTURE_1D,
@@ -27,11 +29,17 @@ public:
   
   Type TexType() const { return m_TexType; }
 
+  // Name of Texture.
+  std::string   _Name;
+
 protected:
   TextureBase(Type type)
     : texture(nullptr)
     , mRhi(nullptr)
-    , m_TexType(type) { }
+    , m_TexType(type) 
+  {
+    _Name = kDefaultName + std::to_string(sIteration++);  
+  }
 
   Texture*    texture;
   VulkanRHI*  mRhi;
@@ -78,18 +86,21 @@ private:
 
 
 // 2 Dimensional array texture object.
-class Texture2DArray {
+class Texture2DArray : public TextureBase {
 public:
+  Texture2DArray() : TextureBase(TEXTURE_2D_ARRAY) { }
 };
 
 // 3 Dimensional texture object.
-class Texture3D {
+class Texture3D : public TextureBase {
 public:
+  Texture3D() : TextureBase(TEXTURE_3D) { }
 };
 
 // Cube Map texture object. This comprises of 6 2D textures.
-class TextureCube {
+class TextureCube : public TextureBase {
 public:
+  TextureCube() : TextureBase(TEXTURE_CUBE) { }
 };
 
 

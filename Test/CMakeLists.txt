@@ -15,6 +15,7 @@ CMAKE_CXX_FLAGS_DEBUG  CMAKE_CXX_FLAGS_DEBUG_INIT)
 endforeach()
 
 set(RECLUSE_TEST_FILES
+  DemoTextureLoad.hpp
   Main.cpp
 )
 

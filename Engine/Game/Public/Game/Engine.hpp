@@ -10,6 +10,7 @@
 #include "Core/Math/Quaternion.hpp"
 
 #include "Geometry/Cube.hpp"
+#include "Rendering/TextureCache.hpp"
 #include "Camera.hpp"
 #include "GameObject.hpp"
 #include "Component.hpp"

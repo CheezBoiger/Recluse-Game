@@ -13,6 +13,8 @@
 #include "Renderer/TextureType.hpp"
 #include "Core/Utility/Image.hpp"
 
+#include "DemoTextureLoad.hpp"
+
 #include <stdio.h>
 #include <array>
 #include <random>
@@ -134,48 +136,7 @@ int main(int c, char* argv[])
   lights->_PointLights[1]._Range = 5.0f;
   lights->_PointLights[1]._Intensity = 10.0f;
 
-  Image img;
-  img.Load("Box/albedo.jpg");
-  Texture2D* albedo = gRenderer().CreateTexture2D();
-  albedo->Initialize(img.Width(), img.Height());
-  albedo->Update(img);
-  img.CleanUp();
-
-  img.Load("Box/normal.jpg");
-  Texture2D* normal = gRenderer().CreateTexture2D();
-  normal->Initialize(img.Width(), img.Height());
-  normal->Update(img);
-  img.CleanUp();
-
-  img.Load("Box/emissive.jpg");
-  Texture2D* emissive = gRenderer().CreateTexture2D();
-  emissive->Initialize(img.Width(), img.Height());
-  emissive->Update(img);
-  img.CleanUp();
-
-  img.Load("Sphere/rustediron2_basecolor.png");
-  Texture2D* rustBase = gRenderer().CreateTexture2D();
-  rustBase->Initialize(img.Width(), img.Height());
-  rustBase->Update(img);
-  img.CleanUp();
-
-  img.Load("Sphere/rustediron2_normal.png");
-  Texture2D* rustNormal = gRenderer().CreateTexture2D();
-  rustNormal->Initialize(img.Width(), img.Height());
-  rustNormal->Update(img);
-  img.CleanUp();
-
-  img.Load("Sphere/rustediron2_roughness.png");
-  Texture2D* rustRough = gRenderer().CreateTexture2D();
-  rustRough->Initialize(img.Width(), img.Height());
-  rustRough->Update(img);
-  img.CleanUp();
-
-  img.Load("Sphere/rustediron2_metallic.png");
-  Texture2D* rustMetal = gRenderer().CreateTexture2D();
-  rustMetal->Initialize(img.Width(), img.Height());
-  rustMetal->Update(img);
-  img.CleanUp();
+  LoadTextures();
 
   auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
@@ -195,12 +156,15 @@ int main(int c, char* argv[])
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-maxNum, maxNum);
 #endif
+  Texture2D* tex = nullptr;
   MaterialDescriptor* cubeMaterial = gRenderer().CreateMaterialDescriptor();
   MeshDescriptor* cubeMesh = gRenderer().CreateStaticMeshDescriptor();
   cubeMesh->Initialize();
   cubeMaterial->Initialize();
-  cubeMaterial->SetAlbedo(albedo);
-  cubeMaterial->SetNormal(normal);
+  TextureCache::Get("BoxAlbedo", &tex);
+  cubeMaterial->SetAlbedo(tex);
+  TextureCache::Get("BoxNormal", &tex);
+  cubeMaterial->SetNormal(tex);
   ObjectBuffer* cubeInfo = cubeMesh->ObjectData();
   MaterialBuffer* cubeMat = cubeMaterial->Data();
   cubeMat->_HasNormal = false;
@@ -219,10 +183,14 @@ int main(int c, char* argv[])
   cubeMaterial2->SetTransparent(false);
   cubeMesh2->Initialize();
   cubeMaterial2->Initialize();
-  cubeMaterial2->SetAlbedo(rustBase);
-  cubeMaterial2->SetNormal(rustNormal);
-  cubeMaterial2->SetRoughness(rustRough);
-  cubeMaterial2->SetMetallic(rustMetal);
+  TextureCache::Get("RustedAlbedo", &tex);
+  cubeMaterial2->SetAlbedo(tex);
+  TextureCache::Get("RustedNormal", &tex);
+  cubeMaterial2->SetNormal(tex);
+  TextureCache::Get("RustedRough", &tex);
+  cubeMaterial2->SetRoughness(tex);  
+  TextureCache::Get("RustedMetal", &tex);
+  cubeMaterial2->SetMetallic(tex);
   ObjectBuffer* cubeInfo2 = cubeMesh2->ObjectData();
   MaterialBuffer* cubeMat2 = cubeMaterial2->Data();
   cubeMat2->_HasNormal = true;
@@ -245,8 +213,10 @@ int main(int c, char* argv[])
   MeshDescriptor* cubeMesh3 = gRenderer().CreateStaticMeshDescriptor();
   cubeMesh3->Initialize();
   cubeMaterial3->Initialize();
-  cubeMaterial3->SetAlbedo(albedo);
-  cubeMaterial3->SetEmissive(emissive);
+  TextureCache::Get("BoxAlbedo", &tex);
+  cubeMaterial3->SetAlbedo(tex);
+  TextureCache::Get("BoxEmissive", &tex);
+  cubeMaterial3->SetEmissive(tex);
   ObjectBuffer* cubeInfo3 = cubeMesh3->ObjectData();
   MaterialBuffer* cubeMat3 = cubeMaterial3->Data();
   cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.1f, 0.1f, 0.1f)) * Matrix4::Translate(Matrix4::Identity(), light0Pos);
@@ -396,7 +366,7 @@ int main(int c, char* argv[])
 #endif
     // light cube transforming.
     //light0Pos = Vector3(sinf((r32)t * 1.0f) * -5.0f, 2.0f, 0.0f);
-    light0Pos += Vector3(0.0f, -1.0f, 0.0f) * dt;
+    light0Pos += Vector3(0.0f, -1.0f, 0.0f) * static_cast<r32>(dt);
     lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
     // Testing quat.
     Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(t) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
@@ -434,13 +404,8 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////////
   // Free up resources that were allocated.
   ///////////////////////////////////////////////////////////////////////////////////////
-  gRenderer().FreeTexture2D(albedo);
-  gRenderer().FreeTexture2D(normal);
-  gRenderer().FreeTexture2D(emissive);
-  gRenderer().FreeTexture2D(rustBase);
-  gRenderer().FreeTexture2D(rustNormal);
-  gRenderer().FreeTexture2D(rustRough);
-  gRenderer().FreeTexture2D(rustMetal);
+  TextureCleanUp();
+
   gRenderer().FreeRenderObject(obj1);
   gRenderer().FreeRenderObject(obj2);
   gRenderer().FreeRenderObject(obj3);

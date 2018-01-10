@@ -10,7 +10,7 @@
 namespace Recluse {
 
 
-typedef u64   tcache_t;
+typedef size_t   tcache_t;
 
 
 // Texture cache, to store textures created by renderer.
@@ -18,14 +18,31 @@ class TextureCache {
   TextureCache();
   ~TextureCache();
 public:
+  enum CacheResult {
+    Cache_Success = 0,
+    Cache_Null_Pointer = -1,
+    Cache_Failed = -2,
+    Cache_Map_Exists = -3,
+    Cache_Not_Found = -4
+  };
 
-  tcache_t                  Cache(TextureBase* texture);
-  TextureBase*              Get(tcache_t  token);
-  TextureBase*              UnCache(tcache_t token);
+  // Cache the texture2D into this data structure.
+  static CacheResult                Cache(Texture2D* texture);
 
-  u32                       CacheCount() { return m_Cache.size(); }
+  // Get the specified texture 2d from cache.
+  static CacheResult                Get(std::string texname, Texture2D** out);
+
+  // Uncache a texture value from this structure.
+  static CacheResult                UnCache(std::string texname, Texture2D** out);
+
+  // Clean up all texture from this cache. Note that this will also free texture handles
+  // back to renderer memory!
+  static void                       CleanUpAll();
+
+  // Get the number of textures in cache.
+  static size_t                     CacheCount() { return sCache.size(); }
 
 private:
-  static std::unordered_map<tcache_t, TextureBase*> m_Cache;  
+  static std::unordered_map<tcache_t, Texture2D*>  sCache;
 };
 } // Recluse
