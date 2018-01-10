@@ -116,8 +116,8 @@ layout (location = 4) out vec4 RoughMetalColor;
 ////////////////////////////////////////////////////////////////////////////////
 // Shadowing.
 
-#define SHADOW_FACTOR 0.25
-#define SHADOW_BIAS 0.005
+#define SHADOW_FACTOR 0.05
+#define SHADOW_BIAS 0.0005
 
 float textureProj(vec4 P, vec2 offset)
 {
@@ -127,7 +127,7 @@ float textureProj(vec4 P, vec2 offset)
   
   if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
     float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
-    if (shadowCoord.w > 0.0 && dist < shadowCoord.z) {
+    if (dist < shadowCoord.z - SHADOW_BIAS) {
       shadow = SHADOW_FACTOR;
     }
   }
@@ -144,7 +144,7 @@ float filterPCF(vec4 sc)
 
   float shadowFactor = 0.0;
   int count = 0;
-  int range = 1;
+  int range = 2;
 	
   for (int x = -range; x <= range; x++) {
     for (int y = -range; y <= range; y++) {
@@ -348,12 +348,14 @@ void main()
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
-    outColor += light.ambient.rgb * fragAlbedo;
+    vec3 ambient = light.ambient.rgb * fragAlbedo;
+    outColor += ambient;
     outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
       float shadowFactor = filterPCF(shadowClip);
       outColor *= shadowFactor;
+      outColor = max(outColor, ambient);
     }  
   }
   

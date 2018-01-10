@@ -99,8 +99,8 @@ int main(int c, char* argv[])
   // Get Light data from engine.
   LightBuffer* lights = gEngine().LightData();
   
-  Vector3 light0Pos = Vector3(-3.0f, 2.0f, 0.0f);
-  lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 1.0f, 1.0f);
+  Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
+  lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 0.0f, 1.0f);
   lights->_PrimaryLight._Intensity = 10.0f;
   lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 0.7f, 1.0f);
   lights->_PrimaryLight._Ambient = Vector4(0.015f, 0.015f, 0.005f, 1.0f);
@@ -177,7 +177,7 @@ int main(int c, char* argv[])
   rustMetal->Update(img);
   img.CleanUp();
 
-  auto sphereData = UVSphere::MeshInstance(1.0f, SPHERE_SEGS, SPHERE_SEGS);
+  auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
@@ -206,7 +206,8 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, 0.0f, 1.0f));
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -5.0f, 1.0f));
+  cubeInfo->_Model = Matrix4::Scale(cubeInfo->_Model, Vector3(5.0f, 5.0f, 5.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
   cubeInfo->_NormalMatrix[3][1] = 0.0f;
@@ -394,7 +395,8 @@ int main(int c, char* argv[])
     workers[1].join();
 #endif
     // light cube transforming.
-    light0Pos = Vector3(sinf((r32)t * 1.0f) * -5.0f, 2.0f, 0.0f);
+    //light0Pos = Vector3(sinf((r32)t * 1.0f) * -5.0f, 2.0f, 0.0f);
+    light0Pos += Vector3(0.0f, -1.0f, 0.0f) * dt;
     lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
     // Testing quat.
     Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(t) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
