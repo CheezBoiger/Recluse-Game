@@ -31,6 +31,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float exposure;
   int   bloomEnabled;
   int   enableShadows;
+  int   enableAA;
 } gWorldBuffer;
 
 

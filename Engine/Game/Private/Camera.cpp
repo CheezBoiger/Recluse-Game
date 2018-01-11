@@ -21,6 +21,7 @@ Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear
   , m_ZFar(zFar)
   , m_OrthoScale(1.0f)
   , m_Bloom(false)
+  , m_AA(false)
   , m_Gamma(2.2f)
   , m_Exposure(1.0f)
   , m_WorldUp(Vector3::UP)

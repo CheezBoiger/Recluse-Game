@@ -198,6 +198,7 @@ void Engine::Update()
     gCamBuffer->_Gamma = m_pCamera->Gamma();
     gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
     gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled();
+    gCamBuffer->_EnableAA = m_pCamera->AA();
 
     m_CamFrustum.Update();
     gCamBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];

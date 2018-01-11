@@ -43,6 +43,8 @@ struct GlobalBuffer {
   r32             _Exposure;
   i32             _BloomEnabled;
   i32             _EnableShadows;
+  i32             _EnableAA;
+  i32             _Pad[3];
 };
 
 
