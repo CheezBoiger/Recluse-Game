@@ -196,7 +196,7 @@ int main(int c, char* argv[])
   cubeMat2->_HasNormal = true;
   cubeMat2->_HasRoughness = true;
   cubeMat2->_HasMetallic = true;
-  cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -10.0f, 0.0f));
+  cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -14.9f, 0.0f));
   cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->_Model = Matrix4::Scale(cubeInfo2->_Model, Vector3(5.0f, 5.0f, 5.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
@@ -371,7 +371,7 @@ int main(int c, char* argv[])
     lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
     // Testing quat.
     Quaternion quat = Quaternion::AngleAxis(-Radians((r32)(t) * 50.0f), Vector3(0.0f, 1.0f, 0.0f));
-    cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(0.5f, 0.5f, 0.5f)) * 
+    cubeInfo3->_Model = Matrix4::Scale(Matrix4(), Vector3(1.5f, 1.5f, 1.5f)) * 
 #if 0
       Matrix4::Rotate(Matrix4::Identity(), -Radians((r32)(Time::CurrentTime()) * 50.0f), Vector3(0.0f, 1.0f, 0.0f)) * 
 #else

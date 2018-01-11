@@ -117,7 +117,7 @@ layout (location = 4) out vec4 RoughMetalColor;
 // Shadowing.
 
 #define SHADOW_FACTOR 0.05
-#define SHADOW_BIAS 0.0009
+#define SHADOW_BIAS   0.00001
 
 float textureProj(vec4 P, vec2 offset)
 {
@@ -125,7 +125,7 @@ float textureProj(vec4 P, vec2 offset)
   vec4 shadowCoord = P / P.w;
   shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
   
-  if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
+  if (shadowCoord.z <= 1.0) {
     float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
     if (dist < shadowCoord.z - SHADOW_BIAS) {
       shadow = SHADOW_FACTOR;
@@ -144,7 +144,7 @@ float FilterPCF(vec4 sc)
 
   float shadowFactor = 0.0;
   float count = 0.0;
-  float range = 1.0;
+  float range = 2.0;
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {
@@ -325,7 +325,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, floa
       vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
       color *= shadowFactor;
-      if (shadowFactor >= 0.60) {
+      if (shadowFactor >= 0.55) {
         color += BRDF(D, F, G, NoL, NoV);
       }
     } else {

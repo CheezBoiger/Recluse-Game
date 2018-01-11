@@ -249,8 +249,8 @@ void LightDescriptor::Update()
 
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(768), 
-    static_cast<r32>(768), 
+    static_cast<r32>(512), 
+    static_cast<r32>(512), 
     0.00001f, 
     1024.0f
   );

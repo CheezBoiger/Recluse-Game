@@ -465,6 +465,17 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
   GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
   GraphicsPipelineInfo.pVertexInputState = &Info;
 
+  VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
+    VK_POLYGON_MODE_FILL,
+    VK_FALSE,
+    VK_CULL_MODE_FRONT_BIT,
+    VK_FRONT_FACE_CLOCKWISE,
+    1.0f,
+    VK_FALSE,
+    VK_FALSE
+  );
+  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
+
   ShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
 
   Bindings = SkinnedVertexDescription::GetBindingDescription();
