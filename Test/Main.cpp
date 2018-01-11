@@ -102,7 +102,7 @@ int main(int c, char* argv[])
   LightBuffer* lights = gEngine().LightData();
   
   Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
-  lights->_PrimaryLight._Direction = Vector4(1.0f, -1.0f, 0.0f, 1.0f);
+  lights->_PrimaryLight._Direction = Vector4(0.7f, -0.3f, 0.0f, 1.0f);
   lights->_PrimaryLight._Intensity = 10.0f;
   lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 0.7f, 1.0f);
   lights->_PrimaryLight._Ambient = Vector4(0.015f, 0.015f, 0.005f, 1.0f);

@@ -20,7 +20,7 @@ typedef u64 game_uuid_t;
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
 // physics, audio, animation, etc.
-class GameObject : public ISerializable, public IBehavior {
+class GameObject : public ISerializable {
 
   GameObject(const GameObject&) = delete;
   GameObject& operator=(const GameObject&) = delete;
