@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "CameraViewFrustum.hpp"
 #include "Core/Exception.hpp"
+#include "Core/Logging/Log.hpp"
 #include "Camera.hpp"
 
 namespace Recluse {
@@ -51,7 +52,7 @@ void CCamViewFrustum::Update()
   Z = m_pCamera->Front().Normalize();
   X = -(u ^ Z).Normalize();
   Y = Z ^ X;
-  
+
   Nc = p - Z * m_pCamera->Near();
   Fc = p - Z * m_pCamera->Far();
 
@@ -65,6 +66,9 @@ void CCamViewFrustum::Update()
   Vector3 fbl = Fc - Y * m_Fh - X * m_Fw;
   Vector3 fbr = Fc - Y * m_Fh + X * m_Fw;
   
+  Log() << std::boolalpha << std::isnan(ntr.x);
+  Log() << std::boolalpha << std::isnan(ntr.y);
+  Log() << std::boolalpha << std::isnan(ntr.z);
   _Planes[PTOP]    = Plane(ntr, ntl, ftl);
   _Planes[PBOTTOM] = Plane(nbl, nbr, fbr);
   _Planes[PLEFT]   = Plane(ntl, nbl, fbl);

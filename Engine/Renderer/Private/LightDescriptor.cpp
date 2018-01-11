@@ -140,8 +140,8 @@ void LightDescriptor::Initialize()
     VkImageCreateInfo ImageCi = {};
     ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     ImageCi.arrayLayers = 1;
-    ImageCi.extent.width = 4096;
-    ImageCi.extent.height = 4096;
+    ImageCi.extent.width = 12288;
+    ImageCi.extent.height = 12288;
     ImageCi.extent.depth = 1;
     ImageCi.format = VK_FORMAT_D32_SFLOAT;
     ImageCi.imageType = VK_IMAGE_TYPE_2D;
@@ -242,17 +242,17 @@ void LightDescriptor::Update()
     m_Lights._PrimaryLight._Direction.y, 
     m_Lights._PrimaryLight._Direction.z
   );
-  Eye *= 50.0f;
+  Eye *= 256.0f;
   Eye -= m_vViewerPos;
   // Pass as one matrix.
   Matrix4 view = Matrix4::LookAt(-Eye, m_vViewerPos, Vector3::UP);
 
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(256), 
-    static_cast<r32>(256), 
-    0.01f, 
-    256.0f
+    static_cast<r32>(768), 
+    static_cast<r32>(768), 
+    0.00001f, 
+    1024.0f
   );
 
   m_PrimaryLightSpace._ViewProj = view * proj;

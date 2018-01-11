@@ -144,7 +144,7 @@ float FilterPCF(vec4 sc)
 
   float shadowFactor = 0.0;
   float count = 0.0;
-  float range = 2.0;
+  float range = 1.0;
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {
@@ -325,7 +325,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, floa
       vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
       color *= shadowFactor;
-      if (shadowFactor >= SHADOW_FACTOR) {
+      if (shadowFactor >= 0.60) {
         color += BRDF(D, F, G, NoL, NoV);
       }
     } else {

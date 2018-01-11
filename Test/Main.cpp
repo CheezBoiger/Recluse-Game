@@ -33,7 +33,7 @@ void ProcessInput()
   Window* window = gEngine().GetWindow();
 
   if (Keyboard::KeyPressed(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(200.0f); }
-  if (Keyboard::KeyReleased(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(5.0f); }
+  if (Keyboard::KeyReleased(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(50.0f); }
   if (Keyboard::KeyPressed(KEY_CODE_W)) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_S)) { camera->Move(Camera::BACK, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_D)) { camera->Move(Camera::LEFT, Time::DeltaTime); }
@@ -86,12 +86,12 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), (r32)window->Width(), (r32)window->Height(), 0.0001f, 5000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), (r32)window->Width(), (r32)window->Height(), 0.0001f, 9000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.PixelWidth(), 
     camera.PixelHeight(), camera.Near(), camera.Far(), Vector3(0.0f, 0.0f, -4.0f), Vector3(0.0f, 0.0f, -1.0f));
-
+  fpsCamera.SetSpeed(50.0f);
   fpsCamera.EnableFrustumCull(true);
 
   Log(rVerbose) << "Global camera created, attaching to engine.\n";
@@ -123,7 +123,7 @@ int main(int c, char* argv[])
   lights->_DirectionalLights[2]._Intensity = 5.0f;
   lights->_DirectionalLights[2]._Color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
-  lights->_PointLights[0]._Enable = true;
+  lights->_PointLights[0]._Enable = false;
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PointLights[0]._Range = 100.0f;
@@ -138,7 +138,7 @@ int main(int c, char* argv[])
 
   LoadTextures();
 
-  auto sphereData = UVSphere::MeshInstance(2.0f, SPHERE_SEGS, SPHERE_SEGS);
+  auto sphereData = UVSphere::MeshInstance(1.0f, SPHERE_SEGS, SPHERE_SEGS);
   auto sphereIndices = UVSphere::IndicesInstance((u32)sphereData.size(), SPHERE_SEGS, SPHERE_SEGS);
   MeshData* sphereMeshDat = gRenderer().CreateMeshData();
   sphereMeshDat->Initialize(sphereData.size(), sizeof(StaticVertex), sphereData.data(), true, sphereIndices.size(), sphereIndices.data());
@@ -151,7 +151,7 @@ int main(int c, char* argv[])
 #if PERFORMANCE_TEST
 // Max: 3200
 #define ObjectCount 40
-  r32 maxNum = 50.0f;
+  r32 maxNum = 100.0f;
   std::random_device gen;
   std::mt19937 r(gen());
   std::uniform_real_distribution<r32> uni(-maxNum, maxNum);
@@ -170,8 +170,8 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -5.0f, 1.0f));
-  cubeInfo->_Model = Matrix4::Scale(cubeInfo->_Model, Vector3(5.0f, 5.0f, 5.0f));
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -70.0f, 1.0f));
+  cubeInfo->_Model = Matrix4::Scale(cubeInfo->_Model, Vector3(50.0f, 50.0f, 50.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
   cubeInfo->_NormalMatrix[3][1] = 0.0f;
@@ -196,8 +196,9 @@ int main(int c, char* argv[])
   cubeMat2->_HasNormal = true;
   cubeMat2->_HasRoughness = true;
   cubeMat2->_HasMetallic = true;
-  cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -5.0f, 3.0f));
+  cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -10.0f, 0.0f));
   cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
+  cubeInfo2->_Model = Matrix4::Scale(cubeInfo2->_Model, Vector3(5.0f, 5.0f, 5.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
   cubeInfo2->_NormalMatrix[3][0] = 0.0f;
   cubeInfo2->_NormalMatrix[3][1] = 0.0f;
