@@ -152,8 +152,7 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-// Max: 3200
-#define ObjectCount 500
+#define ObjectCount 1500
   r32 maxNum = 100.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -173,7 +172,7 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(7000.0f, -70.0f, 0.0f));
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -70.0f, 0.0f));
   cubeInfo->_Model = Matrix4::Scale(cubeInfo->_Model, Vector3(50.0f, 50.0f, 50.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
@@ -229,7 +228,7 @@ int main(int c, char* argv[])
   cubeInfo3->_NormalMatrix[3][1] = 0.0f;
   cubeInfo3->_NormalMatrix[3][2] = 0.0f;
   cubeInfo3->_NormalMatrix[3][3] = 1.0f;
-  cubeMat3->_HasEmissive = true;
+  cubeMat3->_HasEmissive = false;
   cubeMat3->_BaseMetal = 0.1f; 
   cubeMat3->_BaseRough = 0.9f;
   cubeMat3->_BaseEmissive = 3.15f;
@@ -401,7 +400,7 @@ int main(int c, char* argv[])
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
     //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
-
+    Log() << timeAccumulator * 1000.0 << " ms\t\t" << u32(fps) << " fps\t\t\r";
     gEngine().ProcessInput();
   }
 
