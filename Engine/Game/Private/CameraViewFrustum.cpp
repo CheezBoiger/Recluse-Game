@@ -66,9 +66,6 @@ void CCamViewFrustum::Update()
   Vector3 fbl = Fc - Y * m_Fh - X * m_Fw;
   Vector3 fbr = Fc - Y * m_Fh + X * m_Fw;
   
-  Log() << std::boolalpha << std::isnan(ntr.x);
-  Log() << std::boolalpha << std::isnan(ntr.y);
-  Log() << std::boolalpha << std::isnan(ntr.z);
   _Planes[PTOP]    = Plane(ntr, ntl, ftl);
   _Planes[PBOTTOM] = Plane(nbl, nbr, fbr);
   _Planes[PLEFT]   = Plane(ntl, nbl, fbl);

@@ -306,7 +306,7 @@ Log& operator<<(Log& log, const Matrix4& mat4)
 {
   for (size_t row = 0; row < 4; ++row) {
     for (size_t col = 0; col < 4; ++col) {
-      log << std::setw(7) << mat4(row, col);
+      log << std::setw(15) << mat4(row, col);
     }
     log << "\n";
   }

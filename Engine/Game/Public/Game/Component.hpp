@@ -32,19 +32,12 @@ public:
 
   GameObject*   GetOwner() { return m_pGameObjectOwner; }
 
-  // IS this component enabled?
-  b8            Enabled() const { return m_Enable; }
-
-  // Enable this component. Set true to enable, false to disable.
-  void          Enable(b8 enable) { m_Enable = enable; }
-
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
 
 protected:
   Component()
-    : m_pGameObjectOwner(nullptr)
-    , m_Enable(false) { }
+    : m_pGameObjectOwner(nullptr) { }
 
   template<typename T>
   static APtr<Component> Create() {
@@ -73,7 +66,6 @@ protected:
   virtual void  OnCleanUp() { }
 
   GameObject*   m_pGameObjectOwner;
-  b8            m_Enable;
 };
 
 

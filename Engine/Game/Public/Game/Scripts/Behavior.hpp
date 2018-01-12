@@ -46,9 +46,9 @@ public:
   virtual void  OnDisable() { }
 
   // Enables this behavior on a game object.  
-  void          Enable();
+  void          Enable() { }
 
   // Disables this behavior on a game object.
-  void          Disable();
+  void          Disable() { }
 };
 } // Recluse

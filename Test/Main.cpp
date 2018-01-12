@@ -32,7 +32,7 @@ void ProcessInput()
   Camera* camera = gEngine().GetCamera();
   Window* window = gEngine().GetWindow();
 
-  if (Keyboard::KeyPressed(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(200.0f); }
+  if (Keyboard::KeyPressed(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(500.0f); }
   if (Keyboard::KeyReleased(KEY_CODE_SHIFT)) { FirstPersonCamera* fpsCamera = reinterpret_cast<FirstPersonCamera*>(camera); fpsCamera->SetSpeed(50.0f); }
   if (Keyboard::KeyPressed(KEY_CODE_W)) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_S)) { camera->Move(Camera::BACK, Time::DeltaTime); }
@@ -89,7 +89,7 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(55.0f), (r32)window->Width(), (r32)window->Height(), 0.0001f, 9000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), (r32)window->Width(), (r32)window->Height(), 0.001f, 10000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.PixelWidth(), 
@@ -153,7 +153,7 @@ int main(int c, char* argv[])
 
 #if PERFORMANCE_TEST
 // Max: 3200
-#define ObjectCount 40
+#define ObjectCount 500
   r32 maxNum = 100.0f;
   std::random_device gen;
   std::mt19937 r(gen());
@@ -173,7 +173,7 @@ int main(int c, char* argv[])
   cubeMat->_HasNormal = false;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
-  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -70.0f, 1.0f));
+  cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(7000.0f, -70.0f, 0.0f));
   cubeInfo->_Model = Matrix4::Scale(cubeInfo->_Model, Vector3(50.0f, 50.0f, 50.0f));
   cubeInfo->_NormalMatrix = cubeInfo->_Model.Inverse().Transpose();
   cubeInfo->_NormalMatrix[3][0] = 0.0f;
@@ -400,7 +400,7 @@ int main(int c, char* argv[])
 
     r64 fps = SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime);
     //printf("window width=%d\t\theight=%d\t\t\r", window.Width(), window.Height());
-    printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
+    //printf("%f ms\t\t%d fps\t\t\t\r", timeAccumulator * 1000.0, u32(fps));
 
     gEngine().ProcessInput();
   }
