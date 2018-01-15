@@ -36,9 +36,10 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 void WindowResized(Window* window, i32 width, i32 height)
 {
   if (gRenderer().IsActive() && gRenderer().Initialized()) {
-    UserParams params;
-    gRenderer().UpdateRendererConfigs(&params);
+    gRenderer().UpdateRendererConfigs(nullptr);
+    R_DEBUG(rVerbose, "Engine Renderer has been updated prior to resize.\n");
   }
+  
 }
 
 

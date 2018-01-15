@@ -2194,7 +2194,7 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
       case SINGLE_BUFFERING: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
       case DOUBLE_BUFFERING: presentMode = VK_PRESENT_MODE_FIFO_KHR; break;
       case TRIPLE_BUFFERING: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
-      default: presentMode = VK_PRESENT_MODE_FIFO_KHR; break;
+      default: presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode(); break;
     }
   }
 

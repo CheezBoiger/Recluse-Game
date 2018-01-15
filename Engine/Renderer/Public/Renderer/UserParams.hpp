@@ -19,9 +19,5 @@ class UserParams {
 public:
   Presentation  presentMode;
   r32           lod;
-  r32           fov;
-  
-  b8            enableShadows : 1,
-                enableBloom   : 1;
 };
 } // Recluse

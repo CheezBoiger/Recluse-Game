@@ -89,7 +89,7 @@ int main(int c, char* argv[])
   // is supposed to demonstrate how you can build a mesh and material outside the game 
   // loop.
   ///////////////////////////////////////////////////////////////////////////////////////
-  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), (r32)window->Width(), (r32)window->Height(), 0.001f, 10000.0f, 
+  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), (r32)window->Width(), (r32)window->Height(), 0.01f, 10000.0f, 
     Vector3(-4.0f, 4.0f, -4.0f), Vector3(0.0f, 0.0f, 1.0f));
 
   FirstPersonCamera fpsCamera(camera.FoV(), camera.PixelWidth(), 
@@ -152,7 +152,7 @@ int main(int c, char* argv[])
   cubeMeshDat->Initialize(cubeData.size(), sizeof(StaticVertex), cubeData.data(), true, cubeIndices.size(), cubeIndices.data());
 
 #if PERFORMANCE_TEST
-#define ObjectCount 1500
+#define ObjectCount 500
   r32 maxNum = 100.0f;
   std::random_device gen;
   std::mt19937 r(gen());

@@ -249,10 +249,10 @@ void LightDescriptor::Update()
 
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
+    static_cast<r32>(1024), 
     static_cast<r32>(512), 
-    static_cast<r32>(512), 
-    0.00001f, 
-    1024.0f
+    0.01f, 
+    4096.0f
   );
 
   m_PrimaryLightSpace._ViewProj = view * proj;
