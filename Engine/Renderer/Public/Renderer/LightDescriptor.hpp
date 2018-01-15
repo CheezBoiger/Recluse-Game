@@ -101,6 +101,8 @@ public:
   Sampler*            ShadowSampler() { return m_pShadowSampler; }
   void                SetViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
   Vector3             ViewerPos() const { return m_vViewerPos; }
+
+  void                SetShadowViewport(r32 width, r32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
   
 
   void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
@@ -140,6 +142,8 @@ private:
   LightViewSpace      m_PrimaryLightSpace;
   LightBuffer         m_Lights;
 
+  r32                 m_rShadowViewportWidth;
+  r32                 m_rShadowViewportHeight;
   // Vulkan Rhi.
   VulkanRHI*          m_pRhi;
 

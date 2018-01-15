@@ -16,6 +16,7 @@
 
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
+#include "Core/Utility/Time.hpp"
 
 #include <array>
 
@@ -44,6 +45,8 @@ LightDescriptor::LightDescriptor()
   , m_pLightViewBuffer(nullptr)
   , m_pFrameBuffer(nullptr)
   , m_PrimaryShadowEnable(true)
+  , m_rShadowViewportHeight(1024.0f)
+  , m_rShadowViewportWidth(1024.0f)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -140,8 +143,8 @@ void LightDescriptor::Initialize()
     VkImageCreateInfo ImageCi = {};
     ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     ImageCi.arrayLayers = 1;
-    ImageCi.extent.width = 12288;
-    ImageCi.extent.height = 12288;
+    ImageCi.extent.width = 16384;//12288;
+    ImageCi.extent.height = 16384;//12288;
     ImageCi.extent.depth = 1;
     ImageCi.format = VK_FORMAT_D32_SFLOAT;
     ImageCi.imageType = VK_IMAGE_TYPE_2D;
@@ -242,17 +245,17 @@ void LightDescriptor::Update()
     m_Lights._PrimaryLight._Direction.y, 
     m_Lights._PrimaryLight._Direction.z
   );
-  Eye *= 256.0f;
+  Eye *= 1024.0f;
   Eye -= m_vViewerPos;
   // Pass as one matrix.
   Matrix4 view = Matrix4::LookAt(-Eye, m_vViewerPos, Vector3::UP);
 
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
-    static_cast<r32>(1024), 
-    static_cast<r32>(512), 
+    m_rShadowViewportWidth, 
+    m_rShadowViewportHeight, 
     0.01f, 
-    4096.0f
+    8000.0f
   );
 
   m_PrimaryLightSpace._ViewProj = view * proj;

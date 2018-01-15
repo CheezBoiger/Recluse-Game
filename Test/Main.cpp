@@ -70,7 +70,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 1
+#define PERFORMANCE_TEST 0
 
 int main(int c, char* argv[])
 {
@@ -81,7 +81,11 @@ int main(int c, char* argv[])
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
   gEngine().SetControlInput(ProcessInput);
   Window* window = gEngine().GetWindow();    
-
+  {
+    UserParams params;
+    params.presentMode = DOUBLE_BUFFERING;
+    gRenderer().UpdateRendererConfigs(&params);
+  }
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
   ///////////////////////////////////////////////////////////////////////////////////////
   // build the scene for the render. Should our cmd list be updated, you need to call
@@ -105,10 +109,10 @@ int main(int c, char* argv[])
   LightBuffer* lights = gEngine().LightData();
   
   Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
-  lights->_PrimaryLight._Direction = Vector4(0.7f, -0.3f, 0.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 10.0f;
-  lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 0.7f, 1.0f);
-  lights->_PrimaryLight._Ambient = Vector4(0.015f, 0.015f, 0.005f, 1.0f);
+  lights->_PrimaryLight._Direction = Vector4(0.8f, -0.2f, 0.0f, 1.0f);
+  lights->_PrimaryLight._Intensity = 40.0f;
+  lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  lights->_PrimaryLight._Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
   lights->_PrimaryLight._Enable = true;
 
   lights->_DirectionalLights[0]._Enable = false;
@@ -126,11 +130,11 @@ int main(int c, char* argv[])
   lights->_DirectionalLights[2]._Intensity = 5.0f;
   lights->_DirectionalLights[2]._Color = Vector4(1.0f, 0.8f, 0.4f, 1.0f);
 
-  lights->_PointLights[0]._Enable = false;
+  lights->_PointLights[0]._Enable = true;
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  lights->_PointLights[0]._Range = 100.0f;
-  lights->_PointLights[0]._Intensity = 1.0f;
+  lights->_PointLights[0]._Range = 30.0f;
+  lights->_PointLights[0]._Intensity = 5.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
@@ -228,10 +232,10 @@ int main(int c, char* argv[])
   cubeInfo3->_NormalMatrix[3][1] = 0.0f;
   cubeInfo3->_NormalMatrix[3][2] = 0.0f;
   cubeInfo3->_NormalMatrix[3][3] = 1.0f;
-  cubeMat3->_HasEmissive = false;
+  cubeMat3->_HasEmissive = true;
   cubeMat3->_BaseMetal = 0.1f; 
   cubeMat3->_BaseRough = 0.9f;
-  cubeMat3->_BaseEmissive = 3.15f;
+  cubeMat3->_BaseEmissive = lights->_PointLights[0]._Intensity;
 
 #if PERFORMANCE_TEST
   // Multithreaded calculations at runtime.
@@ -243,9 +247,9 @@ int main(int c, char* argv[])
   MaterialDescriptor* material = gRenderer().CreateMaterialDescriptor();
   material->Initialize();
   MaterialBuffer* mat = material->Data();    
-  mat->_BaseMetal = 0.5f;
+  mat->_BaseMetal = 0.9f;
   mat->_BaseRough = 0.1f;
-  mat->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
+  mat->_Color = Vector4(1.0f, 0.874f, 0.0f, 1.0); //Vector4(1.0f, 0.05f, 0.03f, 1.0f);
 
   for (size_t i = 0; i < meshDescriptors.size(); ++i) {
     meshDescriptors[i] = gRenderer().CreateStaticMeshDescriptor();

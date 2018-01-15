@@ -448,9 +448,8 @@ void main()
   PositionColor = vec4(frag_in.position, 1.0);
   RoughMetalColor = vec4(fragRoughness, fragMetallic, 0.0, 1.0);
 
-  vec3 glow = outColor.rgb - vec3(3.14);
-  glow.r = clamp(glow.r, 0.0, 1.0);
-  glow.g = clamp(glow.g, 0.0, 1.0);
-  glow.b = clamp(glow.b, 0.0, 1.0);
+  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - frag_in.position) * 0.5;
+  glow = max(glow, vec3(0.0));
+  glow = glow * 0.02;
   BrightColor = vec4(glow, 1.0);
 }
