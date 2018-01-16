@@ -451,5 +451,6 @@ void main()
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - frag_in.position) * 0.5;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
+  glow = clamp(glow, vec3(0.0), vec3(1.0));
   BrightColor = vec4(glow, 1.0);
 }

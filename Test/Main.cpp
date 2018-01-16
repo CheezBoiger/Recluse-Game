@@ -70,7 +70,7 @@ void ProcessInput()
 }
 
 #define SPHERE_SEGS 64
-#define PERFORMANCE_TEST 0
+#define PERFORMANCE_TEST 1
 
 int main(int c, char* argv[])
 {
@@ -112,7 +112,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
   lights->_PrimaryLight._Direction = Vector4(0.8f, -0.2f, 0.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 15.0f;
+  lights->_PrimaryLight._Intensity = 20.0f;
   lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PrimaryLight._Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
   lights->_PrimaryLight._Enable = true;
@@ -136,7 +136,7 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PointLights[0]._Range = 30.0f;
-  lights->_PointLights[0]._Intensity = 10.0f;
+  lights->_PointLights[0]._Intensity = 100.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;
