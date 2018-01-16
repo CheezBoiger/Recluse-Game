@@ -59,6 +59,9 @@ void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
   if (action == Mouse::PRESSED) {
     Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
     Log() << " pressed at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n"; 
+  } else if (action == Mouse::RELEASED) {
+    Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
+    Log() << " released at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n";
   }
 }
 
@@ -180,6 +183,7 @@ void Engine::Update()
     // TODO(): Instead of sleeping, update the game state.
     m_TimeAccumulate -= Time::FixTime;
     UpdateRenderObjects();
+    UpdateGameLogic();
   }
 
   // Update camera and screen info.
@@ -267,5 +271,24 @@ void Engine::UpdateRenderObjects()
       obj->MeshDescriptorId->Update();
     }
   }
+}
+
+
+void Engine::UpdateGameLogic()
+{
+  if (!m_pPushedScene) return;
+  std::queue<GameObject*> q;
+  for (size_t i = 0; i < m_pPushedScene->GameObjectCount(); ++i) {
+    GameObject* obj = m_pPushedScene->Get(i);
+    
+  }
+}
+
+
+void Engine::BuildScene()
+{
+  if (!m_pPushedScene) return;
+  
+  gRenderer().Build();
 }
 } // Recluse

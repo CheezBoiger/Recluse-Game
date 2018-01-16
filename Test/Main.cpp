@@ -81,9 +81,11 @@ int main(int c, char* argv[])
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
   gEngine().SetControlInput(ProcessInput);
   Window* window = gEngine().GetWindow();    
+
   {
-    UserParams params;
-    params.presentMode = DOUBLE_BUFFERING;
+    GpuConfigParams params;
+    params._Buffering = DOUBLE_BUFFER;
+    params._EnableVsync = true;
     gRenderer().UpdateRendererConfigs(&params);
   }
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
@@ -110,7 +112,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
   lights->_PrimaryLight._Direction = Vector4(0.8f, -0.2f, 0.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 40.0f;
+  lights->_PrimaryLight._Intensity = 15.0f;
   lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PrimaryLight._Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
   lights->_PrimaryLight._Enable = true;
@@ -134,7 +136,7 @@ int main(int c, char* argv[])
   lights->_PointLights[0]._Position = Vector4(light0Pos, 1.0f);
   lights->_PointLights[0]._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PointLights[0]._Range = 30.0f;
-  lights->_PointLights[0]._Intensity = 5.0f;
+  lights->_PointLights[0]._Intensity = 10.0f;
 
   // Mimicking emissive texture on first box.
   lights->_PointLights[1]._Enable = false;

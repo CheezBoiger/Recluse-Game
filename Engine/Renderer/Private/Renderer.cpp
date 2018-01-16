@@ -2182,7 +2182,7 @@ void Renderer::RenderOverlay()
 }
 
 
-void Renderer::UpdateRendererConfigs(UserParams* params)
+void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
 {
   m_pRhi->DeviceWaitIdle();
 
@@ -2190,11 +2190,15 @@ void Renderer::UpdateRendererConfigs(UserParams* params)
   VkPresentModeKHR presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode();
 
   if (params) {
-    switch (params->presentMode) {
-      case SINGLE_BUFFERING: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
-      case DOUBLE_BUFFERING: presentMode = VK_PRESENT_MODE_FIFO_KHR; break;
-      case TRIPLE_BUFFERING: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
+    switch (params->_Buffering) {
+      case SINGLE_BUFFER: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
+      case DOUBLE_BUFFER: presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break;
+      case TRIPLE_BUFFER: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
       default: presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode(); break;
+    }
+
+    if (params->_EnableVsync >= 1) {
+      presentMode = VK_PRESENT_MODE_FIFO_KHR;
     }
   }
 

@@ -2,6 +2,7 @@
 #include "Core/Logging/Log.hpp"
 #include "Math/TestMath.hpp"
 #include "Game/TestGameObject.hpp"
+#include "Game/Engine.hpp"
 #include "Memory/TestMemory.hpp"
 
 #include "Tester.hpp"
@@ -25,9 +26,12 @@ int main()
   Log::DisplayToConsole(true);
   Log() << "Initial testing of Recluse Engine Software Libraries.\n"
               << "Initializing testing data cache...\n";
+  gEngine().StartUp("Test Engine.", false);
 
   // TODO(): Add more regressions.
   Tester::RunAllTests(test);
+  
+  gEngine().CleanUp();
 
   Log() << "Tests Passed: " <<  std::setw(10)
         << Tester::GetTestsPassed() << "\n"

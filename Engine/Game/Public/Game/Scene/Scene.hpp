@@ -6,6 +6,7 @@
 #include "Core/Serialize.hpp"
 #include "Core/Utility/Vector.hpp"
 
+#include <set>
 
 namespace Recluse {
 
@@ -22,11 +23,21 @@ public:
   ~Scene();
 
   // Add game object into the scene.
-  void                      AddGameObject(GameObject* obj);
+  b8                      AddGameObject(GameObject* obj) {
+    if (!obj) return false;
+    auto it = m_UniqueGameObjects.find(obj->GetId());
+    if (it != m_UniqueGameObjects.end()) return false;
+    m_UniqueGameObjects.insert(obj->GetId());
+    m_GameObjects.push_back(obj);
+    return true;
+  }
 
   // Remove a game object at a specified index. Returns
   // null if no object was found there.
-  GameObject*               RemoveGameObject(u32 idx);
+  GameObject*               RemoveGameObject(u32 idx) {
+    
+    return nullptr;
+  }
 
   GameObject*               Get(size_t idx) { return m_GameObjects[idx]; }
 
@@ -48,6 +59,7 @@ public:
 private:
   // Metadata.
   // Game objects that are in this scene.
+  std::set<game_uuid_t>     m_UniqueGameObjects;
   std::vector<GameObject*>  m_GameObjects;
   std::string               m_SceneName;
   u32                       m_GameObjNum;

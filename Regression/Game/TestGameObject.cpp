@@ -5,6 +5,7 @@
 #include "Core/Utility/Archive.hpp"
 #include "Game/GameObject.hpp"
 #include "Game/RendererComponent.hpp"
+#include "Game/Engine.hpp"
 
 
 namespace Test {
@@ -100,7 +101,6 @@ b8 TestGameObject()
 
     Log() << "Finished with game object test.\n";
   }
-  
   return true;
 }
 } // Test

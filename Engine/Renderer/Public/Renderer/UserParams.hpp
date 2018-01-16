@@ -8,16 +8,24 @@
 namespace Recluse {
 
 
-enum Presentation {
-  SINGLE_BUFFERING,
-  DOUBLE_BUFFERING,
-  TRIPLE_BUFFERING
+enum FrameBuffering {
+  SINGLE_BUFFER,
+  DOUBLE_BUFFER,
+  TRIPLE_BUFFER
 };
 
 
-class UserParams {
+enum WindowType {
+  WINDOW_BORDER,
+  WINDOW_BORDERLESS,
+  WINDOW_FULLSCREEN
+};
+
+
+class GpuConfigParams {
 public:
-  Presentation  presentMode;
-  r32           lod;
+  FrameBuffering  _Buffering;
+  r32             _Lod;
+  u32             _EnableVsync;
 };
 } // Recluse

@@ -85,6 +85,7 @@ private:
 
   void                          Stop();
   void                          UpdateRenderObjects();
+  void                          UpdateGameLogic();
 
   CCamViewFrustum               m_CamFrustum;
   LightDescriptor*              m_pLights;

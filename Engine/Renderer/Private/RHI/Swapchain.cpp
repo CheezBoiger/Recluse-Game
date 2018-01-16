@@ -44,7 +44,7 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.QuerySwapchainSurfaceFormats(surface);
   VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
 
-  VkPresentModeKHR desiredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+  VkPresentModeKHR desiredPresentMode = VK_PRESENT_MODE_FIFO_KHR;
   for (VkPresentModeKHR mode : presentModes) {
     if (mode == VK_PRESENT_MODE_FIFO_KHR) {
       desiredPresentMode = mode;

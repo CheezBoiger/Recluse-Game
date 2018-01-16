@@ -20,48 +20,48 @@ void GameObject::DestroyAll()
 
 
 GameObject::GameObject(game_uuid_t id)
-  : mParent(nullptr)
-  , mId(id)
-  , mName("Default Name")
+  : m_pParent(nullptr)
+  , m_Id(id)
+  , m_Name("Default Name")
 {
 }
 
 
 GameObject::~GameObject()
 {
-  for (auto& component : mComponents) {
+  for (auto& component : m_Components) {
     component.second->CleanUp();
   }
 }
 
 
 GameObject::GameObject(GameObject&& obj)
-  : mId(obj.mId)
-  , mParent(obj.mParent)
-  , mComponents(std::move(obj.mComponents))
-  , mChildren(std::move(obj.mChildren))
-  , mName(std::move(obj.mName))
+  : m_Id(obj.m_Id)
+  , m_pParent(obj.m_pParent)
+  , m_Components(std::move(obj.m_Components))
+  , m_Children(std::move(obj.m_Children))
+  , m_Name(std::move(obj.m_Name))
 {
-  obj.mId = 0;
-  obj.mParent = nullptr;
-  obj.mComponents.clear();
-  obj.mChildren.clear();
-  obj.mName.clear();
+  obj.m_Id = 0;
+  obj.m_pParent = nullptr;
+  obj.m_Components.clear();
+  obj.m_Children.clear();
+  obj.m_Name.clear();
 }
 
 
 GameObject& GameObject::operator=(GameObject&& obj)
 {
-  mId = obj.mId;
-  mParent = obj.mParent;
-  mName = std::move(obj.mName);
-  mComponents = std::move(obj.mComponents);
-  mChildren = std::move(obj.mChildren);
+  m_Id = obj.m_Id;
+  m_pParent = obj.m_pParent;
+  m_Name = std::move(obj.m_Name);
+  m_Components = std::move(obj.m_Components);
+  m_Children = std::move(obj.m_Children);
 
-  obj.mId = 0;
-  obj.mParent = nullptr;
-  obj.mComponents.clear();
-  obj.mChildren.clear();
+  obj.m_Id = 0;
+  obj.m_pParent = nullptr;
+  obj.m_Components.clear();
+  obj.m_Children.clear();
   return (*this);
 }
 

@@ -45,6 +45,11 @@ public:
   // When object is disabled, perform necessary actions.
   virtual void  OnDisable() { }
 
+  // TODO(): To work on engine physics.
+  virtual void OnCollisionEnter() { }
+  virtual void OnCollisionStay() { }
+  virtual void OnCollisionExit() { }
+
   // Enables this behavior on a game object.  
   void          Enable() { }
 

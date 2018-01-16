@@ -15,13 +15,13 @@ namespace Recluse {
 // TODO(): This will require a pool allocator instead of a vector!
 class GameObjectManager {
 public:
-  GameObjectManager(size_t initSize = 1024) 
-    : mGameObjects(initSize) { }
+  GameObjectManager(size_t initSize = 2056) 
+    : m_GameObjects(initSize) { }
 
   GameObject* Allocate() {
-    mGameObjects.push_back(std::move(GameObject()));
-    mGameObjects[mGameObjects.size() - 1].mId = mGameObjects.size() - 1;
-    return &mGameObjects.back();
+    m_GameObjects.push_back(std::move(GameObject()));
+    m_GameObjects[m_GameObjects.size() - 1].m_Id = m_GameObjects.size() - 1;
+    return &m_GameObjects.back();
   }
 
   void      Deallocate(GameObject* object) {
@@ -30,12 +30,12 @@ public:
 
 
   void        Clear() {
-    mGameObjects.clear();
+    m_GameObjects.clear();
   }
 
 private:
   // TODO(): Replace with custom pool memory allocator.
-  std::vector<GameObject> mGameObjects;
+  std::vector<GameObject> m_GameObjects;
 };
 
 

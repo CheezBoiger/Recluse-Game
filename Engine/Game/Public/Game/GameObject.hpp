@@ -43,9 +43,9 @@ public:
   Obj*                                GetComponent() {
     static_assert(std::is_base_of<Component, Obj>::value, "Type does not inherit Component.");
     component_t uuid = Obj::UUID();
-    auto it = mComponents.find(uuid);
-    if (it != mComponents.end()) {
-      return static_cast<Obj*>(mComponents[uuid].Ptr());
+    auto it = m_Components.find(uuid);
+    if (it != m_Components.end()) {
+      return static_cast<Obj*>(m_Components[uuid].Ptr());
     }
     
     return nullptr; 
@@ -57,14 +57,14 @@ public:
   void                                AddComponent() {
     static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
     component_t uuid = T::UUID();
-    auto it = mComponents.find(uuid);
-    if (it != mComponents.end()) {
+    auto it = m_Components.find(uuid);
+    if (it != m_Components.end()) {
       Log(rNotify) << T::GetName() << " already exists in game object. Skipping...\n";
       return; 
     }
 
-    mComponents[uuid] = Component::Create<T>();
-    mComponents[uuid]->Initialize(this);
+    m_Components[uuid] = Component::Create<T>();
+    m_Components[uuid]->Initialize(this);
   }
 
   // Destroys a component from this game object.
@@ -72,39 +72,39 @@ public:
   void                                DestroyComponent() {
     static_assert(std::is_base_of<Component, T>::value, "Type does not inherit Component.");
     component_t uuid = T::UUID();
-    auto it = mComponents.find(uuid);
-    if (it != mComponents.end()) {
-      mComponents[uuid]->CleanUp();
-      mComponents.erase(uuid);
+    auto it = m_Components.find(uuid);
+    if (it != m_Components.end()) {
+      m_Components[uuid]->CleanUp();
+      m_Components.erase(uuid);
     }
   }
 
   void                                Serialize(IArchive& archive) override;
   void                                Deserialize(IArchive& archive) override;
-  void                                SetParent(GameObject* parent) { mParent = parent; }
-  void                                SetName(std::string name) { mName = name; }
+  void                                SetParent(GameObject* parent) { m_pParent = parent; }
+  void                                SetName(std::string name) { m_Name = name; }
 
-  GameObject*                         GetParent() { return mParent; }
+  GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
   GameObject*                         GetChild(size_t idx);
 
   Transform*                          GetTransform() { return GetComponent<Transform>(); }
-  std::string                         GetName() const { return mName; }
-  game_uuid_t                         GetId() const { return mId; }
+  std::string                         GetName() const { return m_Name; }
+  game_uuid_t                         GetId() const { return m_Id; }
 
 private:
-  std::string                         mName;
+  std::string                         m_Name;
 
   // The components associated with this game object.
   std::unordered_map<component_t, 
-    APtr<Component> >                 mComponents;
+    APtr<Component> >                 m_Components;
 
   // List of associated children.
-  std::vector<GameObject*>            mChildren;
+  std::vector<GameObject*>            m_Children;
 
   // Possible parent.
-  GameObject*                         mParent;
-  game_uuid_t                         mId;
+  GameObject*                         m_pParent;
+  game_uuid_t                         m_Id;
 
   friend class GameObjectManager;
   friend class Component;

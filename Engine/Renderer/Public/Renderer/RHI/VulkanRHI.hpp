@@ -23,7 +23,7 @@ class Sampler;
 class Texture;
 class DescriptorSet;
 class DescriptorSetLayout;
-class UserParams;
+class GPUConfigParams;
 class Query;
 
 // Set swapchain command buffer function. Assume that the commandbuffer automatically

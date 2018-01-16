@@ -6,14 +6,14 @@
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/Renderer.hpp"
 
+#include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
 
 namespace Recluse {
 
 
 RendererComponent::RendererComponent()
-  : mRenderer(nullptr)
-  , mMaterial(nullptr)
+  : mMaterial(nullptr)
   , mRenderObj(nullptr)
   , mMeshDescriptor(nullptr)
 {
@@ -21,8 +21,7 @@ RendererComponent::RendererComponent()
 
 
 RendererComponent::RendererComponent(const RendererComponent& m)
-  : mRenderer(m.mRenderer)
-  , mMaterial(m.mMaterial)
+  : mMaterial(m.mMaterial)
   , mMeshDescriptor(m.mMeshDescriptor)
   , mRenderObj(m.mRenderObj)
 {
@@ -30,21 +29,18 @@ RendererComponent::RendererComponent(const RendererComponent& m)
 
 
 RendererComponent::RendererComponent(RendererComponent&& m)
-  : mRenderer(m.mRenderer)
-  , mMaterial(m.mMaterial)
+  : mMaterial(m.mMaterial)
   , mMeshDescriptor(m.mMeshDescriptor)
   , mRenderObj(m.mRenderObj)
 {
   m.mMaterial = nullptr;
   m.mMeshDescriptor = nullptr;
-  m.mRenderer = nullptr;
   m.mRenderObj = nullptr;
 }
 
 
 RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
-  mRenderer = obj.mRenderer;
   mRenderObj = obj.mRenderObj;
   mMaterial = obj.mMaterial;
   mMeshDescriptor = obj.mMeshDescriptor;
@@ -52,17 +48,44 @@ RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
   obj.mMeshDescriptor = nullptr;
   obj.mMaterial = nullptr;
   obj.mRenderObj = nullptr;
-  obj.mRenderer = nullptr;
   return (*this);
 }
 
 
 RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
-  mRenderer = obj.mRenderer;
   mRenderObj = obj.mRenderObj;
   mMaterial = obj.mMaterial;
   mMeshDescriptor = obj.mMeshDescriptor;
   return (*this);
+}
+
+
+void RendererComponent::OnInitialize(GameObject* owner)
+{
+  if (mRenderObj) {
+    Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
+    return;
+  }
+  mRenderObj = gRenderer().CreateRenderObject();
+  mMaterial = gRenderer().CreateMaterialDescriptor();
+  mMeshDescriptor = gRenderer().CreateStaticMeshDescriptor();
+  mMaterial->Initialize();
+  mMeshDescriptor->Initialize();
+
+  mRenderObj->MeshDescriptorId = mMeshDescriptor;
+  mRenderObj->MaterialId = mMaterial;
+  mRenderObj->Initialize();
+}
+
+
+void RendererComponent::OnCleanUp()
+{
+  gRenderer().FreeRenderObject(mRenderObj);
+  gRenderer().FreeMaterialDescriptor(mMaterial);
+  gRenderer().FreeMeshDescriptor(mMeshDescriptor);
+  mRenderObj = nullptr;
+  mMaterial = nullptr;
+  mMeshDescriptor = nullptr;
 }
 } // Recluse

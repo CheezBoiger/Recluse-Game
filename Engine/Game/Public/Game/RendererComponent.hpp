@@ -21,26 +21,33 @@ class Mesh;
 class RendererComponent : public Component {
   RCOMPONENT(RendererComponent)
 public:
+  virtual ~RendererComponent() { }
   RendererComponent();
   RendererComponent(const RendererComponent& m);
   RendererComponent(RendererComponent&& m);
   RendererComponent& operator=(RendererComponent&& obj);
   RendererComponent& operator=(const RendererComponent& obj);
 
-  void                      Initialize(Renderer* renderer, const MeshDescriptor* meshDesc, const MaterialDescriptor* mat);
-  void                      CleanUp();
-  void                      Serialize(IArchive& archive) override { }
-  void                      Deserialize(IArchive& archive) override { }
+  virtual void              OnInitialize(GameObject* owner) override;
+  virtual void              OnCleanUp() override;
+  virtual void              Serialize(IArchive& archive) override { }
+  virtual void              Deserialize(IArchive& archive) override { }
 
   RenderObject*             RenderObj() { return mRenderObj; }
-  Renderer*                 GetRenderer() { return mRenderer; }
   MaterialDescriptor*       GetMaterial() { return mMaterial; }
   MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }
 
-private:
-  Renderer*                 mRenderer;
+protected:
   MaterialDescriptor*       mMaterial;
   RenderObject*             mRenderObj;
   MeshDescriptor*           mMeshDescriptor;
+};
+
+
+// Renderer component that holds a skinned mesh object, for animation and 
+// whatnot.
+class SkinnedRendererComponent : public RendererComponent {
+public:
+  
 };
 } // Recluse

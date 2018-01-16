@@ -24,7 +24,7 @@ class ReflectionProbe;
 class GraphicsPipeline;
 class ComputePipeline;
 class GpuParams;
-class UserParams;
+class GpuConfigParams;
 class MeshData;
 class MeshDescriptor;
 class SkinnedMeshDescriptor;
@@ -58,7 +58,7 @@ public:
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
   // just plain recreate the renderer scene.
-  void              UpdateRendererConfigs(UserParams* params);
+  void              UpdateRendererConfigs(GpuConfigParams* params);
 
   // Clean up the renderer. This will "render" the renderer inactive.
   void              CleanUp();
