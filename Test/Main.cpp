@@ -81,12 +81,14 @@ int main(int c, char* argv[])
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
   gEngine().SetControlInput(ProcessInput);
   Window* window = gEngine().GetWindow();    
+  window->Show();
 
   {
     GpuConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     gRenderer().UpdateRendererConfigs(&params);
+    window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
   }
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +114,7 @@ int main(int c, char* argv[])
   
   Vector3 light0Pos = Vector3(-0.0f, 10.0f, 1.0f);
   lights->_PrimaryLight._Direction = Vector4(0.8f, -0.2f, 0.0f, 1.0f);
-  lights->_PrimaryLight._Intensity = 20.0f;
+  lights->_PrimaryLight._Intensity = 10.0f;
   lights->_PrimaryLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   lights->_PrimaryLight._Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
   lights->_PrimaryLight._Enable = true;
@@ -169,13 +171,19 @@ int main(int c, char* argv[])
   MeshDescriptor* cubeMesh = gRenderer().CreateStaticMeshDescriptor();
   cubeMesh->Initialize();
   cubeMaterial->Initialize();
-  TextureCache::Get("BoxAlbedo", &tex);
+  TextureCache::Get("RustedAlbedo", &tex);
   cubeMaterial->SetAlbedo(tex);
-  TextureCache::Get("BoxNormal", &tex);
+  TextureCache::Get("RustedNormal", &tex);
   cubeMaterial->SetNormal(tex);
+  TextureCache::Get("RustedRough", &tex);
+  cubeMaterial->SetRoughness(tex);
+  TextureCache::Get("RustedMetal", &tex);
+  cubeMaterial->SetMetallic(tex);
   ObjectBuffer* cubeInfo = cubeMesh->ObjectData();
   MaterialBuffer* cubeMat = cubeMaterial->Data();
-  cubeMat->_HasNormal = false;
+  cubeMat->_HasNormal = true;
+  cubeMat->_HasMetallic = true;
+  cubeMat->_HasRoughness = true;
   cubeMat->_BaseMetal = 0.0f;
   cubeMat->_BaseRough = 0.45f;
   cubeInfo->_Model = Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)) * Matrix4::Translate(Matrix4::Identity(), Vector3(0.0f, -70.0f, 0.0f));
@@ -204,8 +212,9 @@ int main(int c, char* argv[])
   cubeMat2->_HasNormal = true;
   cubeMat2->_HasRoughness = true;
   cubeMat2->_HasMetallic = true;
+  r32 angle = Radians(45.0f);
   cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -14.9f, 0.0f));
-  cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, Radians(45.0f), Vector3(0.0f, 1.0f, 0.0f));
+  cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, angle, Vector3(0.0f, 1.0f, 0.0f));
   cubeInfo2->_Model = Matrix4::Scale(cubeInfo2->_Model, Vector3(5.0f, 5.0f, 5.0f));
   cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
   cubeInfo2->_NormalMatrix[3][0] = 0.0f;
@@ -249,9 +258,9 @@ int main(int c, char* argv[])
   MaterialDescriptor* material = gRenderer().CreateMaterialDescriptor();
   material->Initialize();
   MaterialBuffer* mat = material->Data();    
-  mat->_BaseMetal = 0.9f;
-  mat->_BaseRough = 0.1f;
-  mat->_Color = Vector4(1.0f, 0.874f, 0.0f, 1.0); //Vector4(1.0f, 0.05f, 0.03f, 1.0f);
+  mat->_BaseMetal = 0.3f;
+  mat->_BaseRough = 0.2f;
+  mat->_Color = Vector4(1.0f, 0.05f, 0.03f, 1.0f);
 
   for (size_t i = 0; i < meshDescriptors.size(); ++i) {
     meshDescriptors[i] = gRenderer().CreateStaticMeshDescriptor();
@@ -395,6 +404,15 @@ int main(int c, char* argv[])
     if (noAlbedo2) { cubeMaterial2->Data()->_HasAlbedo = false; } else { cubeMaterial2->Data()->_HasAlbedo = true; }
     if (noAlbedo) { cubeMaterial->Data()->_HasAlbedo = false; } else { cubeMaterial->Data()->_HasAlbedo = true; }
 
+    angle += static_cast<r32>(dt);
+    cubeInfo2->_Model = Matrix4::Translate(Matrix4::Identity(), Vector3(10.0f, -14.9f, 0.0f));
+    cubeInfo2->_Model = Matrix4::Rotate(cubeInfo2->_Model, angle, Vector3(0.0f, 1.0f, 0.0f));
+    cubeInfo2->_Model = Matrix4::Scale(cubeInfo2->_Model, Vector3(5.0f, 5.0f, 5.0f));
+    cubeInfo2->_NormalMatrix = cubeInfo2->_Model.Inverse().Transpose();
+    cubeInfo2->_NormalMatrix[3][0] = 0.0f;
+    cubeInfo2->_NormalMatrix[3][1] = 0.0f;
+    cubeInfo2->_NormalMatrix[3][2] = 0.0f;
+    cubeInfo2->_NormalMatrix[3][3] = 1.0f;
     // //////////
     // End updates.
     // //////////

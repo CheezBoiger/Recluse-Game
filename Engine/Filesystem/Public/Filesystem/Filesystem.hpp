@@ -5,6 +5,8 @@
 #include "Core/Utility/Module.hpp"
 #include "Core/Utility/Vector.hpp"
 
+#include "Game/Scene/Scene.hpp"
+
 
 namespace Recluse {
 
@@ -54,6 +56,9 @@ public:
   tchar*                    SetApplicationSourcePath(const tchar* SrcPath);
   std::vector<std::string>  DirectoryContents(std::string& Path);
   std::vector<std::string>  SearchPaths() { return m_SearchPath; }  
+
+  // Load a scene from a file.
+  b8                        LoadScene(Scene* output, std::string filepath);
 
 private:
   std::string               m_CurrentDirectoryPath;

@@ -108,5 +108,6 @@ private:
 
   friend class GameObjectManager;
   friend class Component;
+  friend class Scene;
 };
 } // Recluse

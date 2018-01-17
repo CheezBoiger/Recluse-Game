@@ -57,6 +57,8 @@ set(GAME_FILES
   
   ${SCENE_PUBLIC_DIR}/Scene.hpp
   ${SCENE_PUBLIC_DIR}/SceneCache.hpp
+
+  ${SCENE_PRIVATE_DIR}/Scene.cpp
   
   ${SCRIPTS_PUBLIC_DIR}/Behavior.hpp
   ${SCRIPTS_PUBLIC_DIR}/ScriptCache.hpp

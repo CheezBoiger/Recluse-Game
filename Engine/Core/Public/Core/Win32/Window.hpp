@@ -25,6 +25,8 @@ class Window {
   static MouseButtonCallback    gMouseButtonCallback;
   static MousePositionCallback  gMousePositionCallback;
   static WindowInactiveCallack  gWindowInactiveCallback;
+  static u32                    kFullscreenWidth;
+  static u32                    kFullscreenHeight;
 
 public:
   // Initialize the Window API before creating windows!
@@ -37,6 +39,9 @@ public:
   static void                   SetMouseButtonCallback(MouseButtonCallback callback);
   static void                   SetMousePositionCallback(MousePositionCallback callback);
   static void                   SetWindowInactiveCallback(WindowInactiveCallack callback);
+
+  static u32                    FullscreenHeight() { return kFullscreenHeight; }
+  static u32                    FullscreenWidth() { return kFullscreenWidth; }
 
   Window()
     : mHandle(NULL)

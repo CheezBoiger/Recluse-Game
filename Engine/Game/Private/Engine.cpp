@@ -120,10 +120,8 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
   if (fullscreen) {
     m_Window.SetToFullScreen();
-    m_Window.Show();
   } else {
     m_Window.SetToCenter();
-    m_Window.Show();
   }
 }
 
@@ -228,37 +226,6 @@ void Engine::UpdateRenderObjects()
 {
   if (m_pPushedScene) {
     R_DEBUG(rVerbose, "Updating game object transforms...\n");
-    size_t SceneSz = m_pPushedScene->GameObjectCount();
-    for (size_t i = 0; i < SceneSz; ++i) {
-      GameObject* Obj = m_pPushedScene->Get(i);
-      Transform* T = Obj->GetComponent<Transform>();
-      if (!T) continue;
-
-      RendererComponent* mesh = Obj->GetComponent<RendererComponent>();
-
-      if (mesh) {
-        MeshDescriptor* meshDescriptor = mesh->GetDescriptor();
-        MaterialDescriptor* material = mesh->GetMaterial();
-        ObjectBuffer* objectInfo = meshDescriptor->ObjectData();
-        Vector3 position = T->Position + T->LocalPosition;
-        Vector3 scale = T->LocalScale;
-        Quaternion rotation = T->Rotation * T->LocalRotation;
-
-        Matrix4 t = Matrix4::Translate(Matrix4::Identity(), position);
-        Matrix4 r = rotation.ToMatrix4();
-        Matrix4 s = Matrix4::Scale(Matrix4::Identity(), scale);
-
-        objectInfo->_Model = s * r * t;
-        objectInfo->_NormalMatrix = objectInfo->_Model.Inverse().Transpose();
-        objectInfo->_NormalMatrix[3][0] = 0.0f;
-        objectInfo->_NormalMatrix[3][1] = 0.0f;
-        objectInfo->_NormalMatrix[3][2] = 0.0f;
-        objectInfo->_NormalMatrix[3][3] = 1.0f;
-
-        material->Update();
-        meshDescriptor->Update();
-      }
-    }
   }
 
   // TODO(): RenderObject updated, We need to use RenderObject Now.
@@ -277,11 +244,6 @@ void Engine::UpdateRenderObjects()
 void Engine::UpdateGameLogic()
 {
   if (!m_pPushedScene) return;
-  std::queue<GameObject*> q;
-  for (size_t i = 0; i < m_pPushedScene->GameObjectCount(); ++i) {
-    GameObject* obj = m_pPushedScene->Get(i);
-    
-  }
 }
 
 

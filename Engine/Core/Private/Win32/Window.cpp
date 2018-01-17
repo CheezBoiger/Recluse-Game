@@ -17,6 +17,8 @@ KeyboardCallback          Window::gKeyboardCallback = nullptr;
 MouseButtonCallback       Window::gMouseButtonCallback = nullptr;
 MousePositionCallback     Window::gMousePositionCallback = nullptr;
 WindowInactiveCallack     Window::gWindowInactiveCallback = nullptr;
+u32                       Window::kFullscreenHeight = 0;
+u32                       Window::kFullscreenWidth = 0;
 
 
 b8 Window::Initialized()
@@ -272,6 +274,11 @@ b8 Window::InitializeAPI()
 
   Mouse::cursor = GetCursor();
   initialized = true;
+
+  // Set up window fullscreen constants.
+  kFullscreenWidth = GetSystemMetrics(SM_CXSCREEN);
+  kFullscreenHeight = GetSystemMetrics(SM_CYSCREEN);
+
   return initialized;
 }
 
