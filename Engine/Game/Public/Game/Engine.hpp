@@ -31,7 +31,6 @@
 #include "UI/UI.hpp"
 
 
-
 namespace Recluse {
 
 
@@ -40,10 +39,21 @@ class Scene;
 
 typedef void (*ControlInputCallback)();
 
+
+struct InputAxis {
+  KeyAction       _Pos;
+  KeyAction       _Neg;
+  r32             _Weight;
+  // dt scale movement.
+  r32             _Scale;
+};
+
+
 // Engine object.
 class Engine {
 public:
-  typedef void (*PerformActionCallback)(Engine*, GameObject*, size_t currNum);
+  // Callback to determine the manipulation of a game object in this engine.
+  typedef void (*GameObjectActionCallback)(Engine*, GameObject*, size_t);
   
   Engine();
   ~Engine();
@@ -89,7 +99,7 @@ private:
   void                          Stop();
   void                          UpdateRenderObjects();
   void                          UpdateGameLogic();
-  void                          TraverseScene(PerformActionCallback callback);
+  void                          TraverseScene(GameObjectActionCallback callback);
 
   CCamViewFrustum               m_CamFrustum;
   LightDescriptor*              m_pLights;
@@ -101,7 +111,6 @@ private:
   r64                           m_TimeAccumulate;
 
   Window                        m_Window;
-  std::vector<GameObject*>      m_CurrentGameObjects;
   CmdList                       m_RenderCmdList;
   CmdList                       m_DeferredCmdList;
   u32                           m_SceneObjectCount;

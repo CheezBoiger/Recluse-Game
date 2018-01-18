@@ -242,6 +242,10 @@ void Engine::UpdateRenderObjects()
 void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
 {
   // Perform updates to the game object.
+  //
+  // TODO(): Need to check if gameobject has parent, and if so, calculate 
+  // its transform relative to parent's.
+  //
   RendererComponent* render = object->GetComponent<RendererComponent>();
   Transform* transform = object->GetComponent<Transform>();
   if (render) {
@@ -267,8 +271,7 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
 void Engine::UpdateGameLogic()
 {
   if (!m_pPushedScene) return;
-  for (size_t i = 0; i < m_SceneObjectCount; ++i) {
-  }
+  TraverseScene(UpdateGameObject);
 }
 
 
@@ -292,9 +295,11 @@ void Engine::BuildScene()
 }
 
 
-void Engine::TraverseScene(PerformActionCallback callback)
+void Engine::TraverseScene(GameObjectActionCallback callback)
 {
   // Traversing the scene graph using DFS.
+  // TODO(): Probably want to make a real stack allocator that doesn't have a terrible
+  // amortized time complex like this vector.
   std::vector<GameObject*> nodes;
   m_SceneObjectCount = 0;
   nodes.push_back(m_pPushedScene->GetRoot());
