@@ -73,7 +73,13 @@ class Transform : public Component {
   RCOMPONENT(Transform)
 public:
 
-  Transform() { }
+  Transform() 
+    : Front(Vector3::FRONT)
+    , Up(Vector3::UP)
+    , Right(Vector3::RIGHT)
+    , LocalScale(Vector3(1.0, 1.0f, 1.0f))
+    , Rotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
+    { }
 
   // Front axis of the object in world space.
   Vector3       Front;

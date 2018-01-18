@@ -83,14 +83,16 @@ public:
   void                                Deserialize(IArchive& archive) override;
   void                                SetParent(GameObject* parent) { m_pParent = parent; }
   void                                SetName(std::string name) { m_Name = name; }
+  void                                AddChild(GameObject* child) { m_Children.push_back(child); }
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
-  GameObject*                         GetChild(size_t idx);
+  GameObject*                         GetChild(size_t idx) { return m_Children[idx]; }
 
   Transform*                          GetTransform() { return GetComponent<Transform>(); }
   std::string                         GetName() const { return m_Name; }
   game_uuid_t                         GetId() const { return m_Id; }
+  size_t                              GetChildrenCount() const { return m_Children.size(); }
 
 private:
   std::string                         m_Name;

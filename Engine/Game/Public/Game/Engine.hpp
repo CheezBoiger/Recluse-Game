@@ -43,6 +43,8 @@ typedef void (*ControlInputCallback)();
 // Engine object.
 class Engine {
 public:
+  typedef void (*PerformActionCallback)(Engine*, GameObject*, size_t currNum);
+  
   Engine();
   ~Engine();
 
@@ -76,6 +78,7 @@ public:
   void                          SetGameMouseX(r64 x) { m_GameMouseX = x; }
   void                          SetGameMouseY(r64 y) { m_GameMouseY = y; }
 
+  u32                           GetSceneObjectCount() const { return m_SceneObjectCount; }
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
@@ -86,6 +89,7 @@ private:
   void                          Stop();
   void                          UpdateRenderObjects();
   void                          UpdateGameLogic();
+  void                          TraverseScene(PerformActionCallback callback);
 
   CCamViewFrustum               m_CamFrustum;
   LightDescriptor*              m_pLights;
@@ -97,8 +101,10 @@ private:
   r64                           m_TimeAccumulate;
 
   Window                        m_Window;
+  std::vector<GameObject*>      m_CurrentGameObjects;
   CmdList                       m_RenderCmdList;
   CmdList                       m_DeferredCmdList;
+  u32                           m_SceneObjectCount;
   b8                            m_Running : 1;
   b8                            m_Stopping : 1;
 };

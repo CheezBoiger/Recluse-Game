@@ -11,6 +11,7 @@
 #include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/UserParams.hpp"
 
+#include <queue>
 
 namespace Recluse {
 
@@ -79,6 +80,7 @@ Engine::Engine()
   , m_pPushedScene(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
+  , m_SceneObjectCount(0)
   , m_pControlInputFunc(nullptr)
   , m_Running(false)
   , m_Stopping(false)
@@ -180,8 +182,8 @@ void Engine::Update()
   while (m_TimeAccumulate > Time::FixTime) {
     // TODO(): Instead of sleeping, update the game state.
     m_TimeAccumulate -= Time::FixTime;
-    UpdateRenderObjects();
     UpdateGameLogic();
+    UpdateRenderObjects();
   }
 
   // Update camera and screen info.
@@ -224,10 +226,6 @@ void Engine::Update()
 
 void Engine::UpdateRenderObjects()
 {
-  if (m_pPushedScene) {
-    R_DEBUG(rVerbose, "Updating game object transforms...\n");
-  }
-
   // TODO(): RenderObject updated, We need to use RenderObject Now.
   for (u32 i = 0; i < m_RenderCmdList.Size(); ++i) {
     RenderCmd& cmd = m_RenderCmdList[i];
@@ -241,16 +239,79 @@ void Engine::UpdateRenderObjects()
 }
 
 
+void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
+{
+  // Perform updates to the game object.
+  RendererComponent* render = object->GetComponent<RendererComponent>();
+  Transform* transform = object->GetComponent<Transform>();
+  if (render) {
+    MeshDescriptor* descript = render->GetDescriptor();
+    MaterialDescriptor* material = render->GetMaterial();
+    ObjectBuffer* renderData = descript->ObjectData();
+    Matrix4 s = Matrix4::Scale(Matrix4::Identity(), transform->LocalScale);
+    Matrix4 t = Matrix4::Translate(Matrix4::Identity(), transform->Position + transform->LocalPosition);
+    Matrix4 r = (transform->Rotation + transform->LocalRotation).ToMatrix4();
+    renderData->_Model = s * r * t;
+    renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
+    renderData->_NormalMatrix[3][0] = 0.0f;
+    renderData->_NormalMatrix[3][1] = 0.0f;
+    renderData->_NormalMatrix[3][2] = 0.0f;
+    renderData->_NormalMatrix[3][3] = 1.0f;
+
+    material->Update();
+    descript->Update();
+  }
+}
+
+
 void Engine::UpdateGameLogic()
 {
   if (!m_pPushedScene) return;
+  for (size_t i = 0; i < m_SceneObjectCount; ++i) {
+  }
+}
+
+
+void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
+{ 
+  CmdList& list = engine->RenderCommandList();
+  // Perform updates to the game object.
+  RendererComponent* render = object->GetComponent<RendererComponent>();
+  if (render) {
+    list[currNum]._pTarget = render->RenderObj();
+  }
 }
 
 
 void Engine::BuildScene()
 {
   if (!m_pPushedScene) return;
-  
+  m_RenderCmdList.Resize(2056);
+  TraverseScene(BuildSceneCallback);
   gRenderer().Build();
 }
+
+
+void Engine::TraverseScene(PerformActionCallback callback)
+{
+  // Traversing the scene graph using DFS.
+  std::vector<GameObject*> nodes;
+  m_SceneObjectCount = 0;
+  nodes.push_back(m_pPushedScene->GetRoot());
+  while (!nodes.empty()) {
+    GameObject* object = nodes.front();
+
+    callback(this, object, m_SceneObjectCount);
+    m_SceneObjectCount++;
+
+    // Now query its children.
+    size_t child_count = object->GetChildrenCount();
+    for (size_t i = 0; i < child_count; ++i) {
+      GameObject* child = object->GetChild(i);
+      nodes.push_back(child);
+    }
+    nodes.pop_back();
+  }
+}
+
 } // Recluse
