@@ -37,6 +37,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/DirectionLightComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/CameraComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/AudioSourceComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
@@ -46,6 +47,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/LightComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraViewFrustum.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

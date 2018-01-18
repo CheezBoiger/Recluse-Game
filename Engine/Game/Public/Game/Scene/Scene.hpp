@@ -7,6 +7,7 @@
 #include "Core/Utility/Vector.hpp"
 
 #include "Game/GameObject.hpp"
+#include "Renderer/LightDescriptor.hpp"
 
 #include <set>
 
@@ -35,7 +36,11 @@ public:
   void                      Serialize(IArchive& archive) override { }
   void                      Deserialize(IArchive& archive) override  { }
 
+  DirectionalLight*         GetPrimaryLight() { return &m_PrimaryLight; }
+
+  
 private:
+  DirectionalLight          m_PrimaryLight;
   std::string               m_SceneName;
   GameObject                m_Root;
 };

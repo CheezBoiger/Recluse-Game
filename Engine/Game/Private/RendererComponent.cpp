@@ -1,5 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "RendererComponent.hpp"
+#include "MeshComponent.hpp"
+#include "GameObject.hpp"
 
 #include "Renderer/RenderObject.hpp"
 #include "Renderer/MaterialDescriptor.hpp"
@@ -76,6 +78,12 @@ void RendererComponent::OnInitialize(GameObject* owner)
   mRenderObj->MeshDescriptorId = mMeshDescriptor;
   mRenderObj->MaterialId = mMaterial;
   mRenderObj->Initialize();
+
+  // Check if MeshComponent is in game object.
+  MeshComponent* mesh = owner->GetComponent<MeshComponent>();
+  if (mesh) {
+    mRenderObj->PushBack(mesh->MeshRef()->Native());
+  }
 }
 
 

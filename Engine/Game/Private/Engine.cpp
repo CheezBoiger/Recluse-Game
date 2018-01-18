@@ -271,6 +271,17 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
 void Engine::UpdateGameLogic()
 {
   if (!m_pPushedScene) return;
+
+  {
+    DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
+    LightBuffer* pLights = m_pLights->Data();
+    pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
+    pLights->_PrimaryLight._Color = pPrimary->_Color;
+    pLights->_PrimaryLight._Direction = pPrimary->_Direction;
+    pLights->_PrimaryLight._Enable = pPrimary->_Enable;
+    pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
+  }
+
   TraverseScene(UpdateGameObject);
 }
 
@@ -305,17 +316,18 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   nodes.push_back(m_pPushedScene->GetRoot());
   while (!nodes.empty()) {
     GameObject* object = nodes.front();
+    nodes.pop_back();
 
-    callback(this, object, m_SceneObjectCount);
-    m_SceneObjectCount++;
-
+    if (object != m_pPushedScene->GetRoot()) {
+      callback(this, object, m_SceneObjectCount);
+      m_SceneObjectCount++;
+    }
     // Now query its children.
     size_t child_count = object->GetChildrenCount();
     for (size_t i = 0; i < child_count; ++i) {
       GameObject* child = object->GetChild(i);
       nodes.push_back(child);
     }
-    nodes.pop_back();
   }
 }
 

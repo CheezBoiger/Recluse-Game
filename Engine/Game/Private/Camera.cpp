@@ -107,11 +107,11 @@ void FirstPersonCamera::Move(Movement movement, r64 dt)
     } break;
     case LEFT:
     {
-      m_Position -= m_Right * Velocity;
+      m_Position += m_Right * Velocity;
     } break;
     case RIGHT:
     {
-      m_Position += m_Right * Velocity;
+      m_Position -= m_Right * Velocity;
     } break;
     case UP:
     {
