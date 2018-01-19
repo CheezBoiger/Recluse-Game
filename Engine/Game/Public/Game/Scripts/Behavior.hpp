@@ -15,8 +15,15 @@ namespace Recluse {
 // Behavior is an abstract class that defines all aspects of game logic
 // for our game object. This is what is used to define a script for the 
 // game object.
-struct IBehavior  : public Component {
+struct IBehavior : public Component {
   b8      _Enabled; 
+
+protected:
+  // Mandatory that this update function is defined.
+  virtual void  Update() override { }
+
+  // Optional fixed update, called from the physics engine updates.
+  virtual void  FixedUpdate() override { }
 };
 
 
@@ -34,10 +41,10 @@ public:
   virtual void  Awake() { }
 
   // Mandatory that this update function is defined.
-  virtual void  Update() { }
+  virtual void  Update() override { }
 
   // Optional fixed update, called from the physics engine updates.
-  virtual void  FixedUpdate() { }
+  virtual void  FixedUpdate() override { }
 
   // when object is enabled, perform necessary actions.
   virtual void  OnEnable() { }

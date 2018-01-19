@@ -31,6 +31,7 @@ public:
   void                    SetSortFunc(RenderCmdCompareFunc compare) { mCompare = compare; }
   // Sort using alg.
   void                    Sort();  
+  void                    Clear() { mRenderList.clear(); }
 
 private:
   std::vector<RenderCmd>  mRenderList;

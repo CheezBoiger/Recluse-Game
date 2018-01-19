@@ -35,13 +35,15 @@ int main(int c, char* argv[])
   scene.GetRoot()->AddChild(gameObj);
 
   // Set primary light.
-  DirectionalLight* pPrimary = scene.GetPrimaryLight();
-  pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-  pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
-  pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
-  pPrimary->_Enable = true;
-  pPrimary->_Intensity = 15.0f;
-  
+  {
+    DirectionalLight* pPrimary = scene.GetPrimaryLight();
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
+    pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
+    pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
+    pPrimary->_Enable = true;
+    pPrimary->_Intensity = 15.0f;
+  }  
+
   // Camera set.
   Camera cam(Camera::PERSPECTIVE, Radians(45.0f), 
     static_cast<r32>(window->Width()), 
@@ -51,10 +53,14 @@ int main(int c, char* argv[])
   gEngine().SetCamera(&cam);
 
   // Create a mesh object and initialize it.
-  auto vertices = UVSphere::MeshInstance(1.0f, 64, 64);
-  auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), 64, 64);
+
   Mesh mesh;
-  mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
+
+  {
+    auto vertices = UVSphere::MeshInstance(1.0f, 64, 64);
+    auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), 64, 64);
+    mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
+  }
 
   // Add component stuff.
   gameObj->AddComponent<MeshComponent>();

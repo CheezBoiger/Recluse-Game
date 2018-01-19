@@ -254,7 +254,7 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
     ObjectBuffer* renderData = descript->ObjectData();
     Matrix4 s = Matrix4::Scale(Matrix4::Identity(), transform->LocalScale);
     Matrix4 t = Matrix4::Translate(Matrix4::Identity(), transform->Position + transform->LocalPosition);
-    Matrix4 r = (transform->Rotation + transform->LocalRotation).ToMatrix4();
+    Matrix4 r = (transform->LocalRotation * transform->Rotation).ToMatrix4();
     renderData->_Model = s * r * t;
     renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
     renderData->_NormalMatrix[3][0] = 0.0f;
@@ -300,6 +300,7 @@ void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
 void Engine::BuildScene()
 {
   if (!m_pPushedScene) return;
+  m_RenderCmdList.Clear();
   m_RenderCmdList.Resize(2056);
   TraverseScene(BuildSceneCallback);
   gRenderer().Build();
@@ -315,7 +316,7 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   m_SceneObjectCount = 0;
   nodes.push_back(m_pPushedScene->GetRoot());
   while (!nodes.empty()) {
-    GameObject* object = nodes.front();
+    GameObject* object = nodes.back();
     nodes.pop_back();
 
     if (object != m_pPushedScene->GetRoot()) {
