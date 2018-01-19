@@ -16,6 +16,9 @@ void Controller()
   if (Keyboard::KeyPressed(KEY_CODE_D)) { cam->Move(Camera::RIGHT, Time::DeltaTime); } 
   if (Keyboard::KeyPressed(KEY_CODE_W)) { cam->Move(Camera::FORWARD, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_S)) { cam->Move(Camera::BACK, Time::DeltaTime); }
+
+  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
+  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
 }
 
 int main(int c, char* argv[])
@@ -74,14 +77,28 @@ int main(int c, char* argv[])
   rc->SetBaseMetal(0.5f);
   rc->SetBaseRough(0.5f);
 
+  Transform* transform = gameObj->GetComponent<Transform>();
+  transform->Position = Vector3(-3.0f, 0.0f, 0.0f);
+
   // Run engine, and build the scene to render.
   gEngine().Run();
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
 
+  r32 acc = 0.0f;
+
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
+
+    // Test a swirling sphere...
+    transform->Position.x = transform->Position.x 
+      + sinf(Radians(acc)) * 1.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    transform->Position.z = transform->Position.z 
+      + cosf(Radians(acc)) * 1.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    // Calculates the curvature.
+    acc += 20.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+
     gEngine().Update();
     gEngine().ProcessInput();
   }

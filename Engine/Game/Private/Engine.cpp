@@ -248,7 +248,7 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
   //
   RendererComponent* render = object->GetComponent<RendererComponent>();
   Transform* transform = object->GetComponent<Transform>();
-  if (render) {
+  if (render && transform) {
     MeshDescriptor* descript = render->GetDescriptor();
     MaterialDescriptor* material = render->GetMaterial();
     ObjectBuffer* renderData = descript->ObjectData();
