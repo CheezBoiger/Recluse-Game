@@ -243,8 +243,7 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
 {
   // Perform updates to the game object.
   //
-  // TODO(): Need to check if gameobject has parent, and if so, calculate 
-  // its transform relative to parent's.
+  // TODO(): Need to multithread this!
   //  
   object->Update();
 }
@@ -275,7 +274,6 @@ void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
   RendererComponent* render = object->GetComponent<RendererComponent>();
   if (render) {
     list[currNum]._pTarget = render->RenderObj();
-    object->Wake();
   }
 }
 

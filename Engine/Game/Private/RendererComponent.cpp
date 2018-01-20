@@ -104,20 +104,7 @@ void RendererComponent::Update()
   Transform* transform = m_pGameObjectOwner->GetComponent<Transform>();
   if (transform) {
     ObjectBuffer* renderData = mMeshDescriptor->ObjectData();
-    Matrix4 s = Matrix4::Scale(Matrix4::Identity(), transform->LocalScale);
-    Matrix4 t = Matrix4::Translate(Matrix4::Identity(), transform->LocalPosition);
-    Matrix4 r = transform->LocalRotation.ToMatrix4();
-    Matrix4 model = s * r * t;
-    if (m_pGameObjectOwner->GetParent()) {
-      Transform* parentTransform = m_pGameObjectOwner->GetParent()->GetTransform();
-      if (parentTransform) {
-        Matrix4 pT = Matrix4::Translate(Matrix4::Identity(), parentTransform->LocalPosition);
-        Matrix4 pR = parentTransform->LocalRotation.ToMatrix4();
-        Matrix4 pS = Matrix4::Scale(Matrix4::Identity(), parentTransform->LocalScale);
-        Matrix4 parentM = pS * pR * pT;
-        model = model * parentM;
-      } 
-    }
+    Matrix4 model = transform->GetLocalToWorldMatrix();
     renderData->_Model = model;
     renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
     renderData->_NormalMatrix[3][0] = 0.0f;
@@ -125,8 +112,9 @@ void RendererComponent::Update()
     renderData->_NormalMatrix[3][2] = 0.0f;
     renderData->_NormalMatrix[3][3] = 1.0f;
 
-    mMaterial->Update();
     mMeshDescriptor->Update();
   }
+
+  mMaterial->Update();
 }
 } // Recluse

@@ -29,7 +29,7 @@ public:
 
   void Awake() override
   {
-    Log() << "Awaking: " + m_pGameObjectOwner->GetName() + "\n";
+    Log() << "Waking: " + m_pGameObjectOwner->GetName() + "\n";
     acc = 0.0f;
   }
 
@@ -45,8 +45,8 @@ public:
     // Calculates the curvature.
     acc += 20.0f * sDt;
 
-    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3(0.0f, 1.0f, 0.0f));
-
+    //transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), transform->Forward());
+    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), transform->Up());
   }
 };
 
@@ -66,8 +66,8 @@ int main(int c, char* argv[])
   Scene scene;
   GameObject* gameObj = GameObject::Instantiate();
   GameObject* obj2 = GameObject::Instantiate();
-  scene.GetRoot()->AddChild(gameObj);
-  gameObj->AddChild(obj2);
+  scene.GetRoot()->AddChild(obj2);
+  obj2->AddChild(gameObj);
 
   // Set primary light.
   {
@@ -106,7 +106,7 @@ int main(int c, char* argv[])
 
   // Add component stuff.
   gameObj->SetName("Cube");
-  gameObj->AddComponent<MoveObjectScript>();
+  obj2->AddComponent<MoveObjectScript>();
   gameObj->AddComponent<MeshComponent>();
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
   meshComponent->SetMeshRef(&cubeMesh);
@@ -119,7 +119,7 @@ int main(int c, char* argv[])
   rc->SetBaseRough(0.5f);
 
   Transform* transform = gameObj->GetComponent<Transform>();
-  transform->Position = Vector3(-2.0f, 0.0f, 0.0f);
+  transform->LocalPosition = Vector3(-3.0f, 0.0f, 0.0f);
 
   obj2->AddComponent<MeshComponent>();
   MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
@@ -128,7 +128,9 @@ int main(int c, char* argv[])
   obj2->AddComponent<Transform>();
   Transform* t2 = obj2->GetTransform();
   t2->Position = Vector3(-3.0f, 0.0f, 0.0f);
-  
+
+  gameObj->Wake();
+  obj2->Wake();
 
   // Run engine, and build the scene to render.
   gEngine().Run();

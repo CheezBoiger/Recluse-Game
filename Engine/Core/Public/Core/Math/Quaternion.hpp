@@ -38,6 +38,9 @@ struct Quaternion {
   void              operator*=(const r32 scaler);
   void              operator/=(const r32 scaler);
 
+  b8                operator==(const Quaternion& other) const;
+  b8                operator!=(const Quaternion& other) const;
+
   Quaternion        Conjugate() const;
   Quaternion        Inverse() const;
   Quaternion        Normalize() const;

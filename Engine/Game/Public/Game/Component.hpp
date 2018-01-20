@@ -82,22 +82,22 @@ class Transform : public Component {
 public:
 
   Transform() 
-    : Front(Vector3::FRONT)
-    , Up(Vector3::UP)
-    , Right(Vector3::RIGHT)
+    : m_Front(Vector3::FRONT)
+    , m_Up(Vector3::UP)
+    , m_Right(Vector3::RIGHT)
     , LocalScale(Vector3(1.0, 1.0f, 1.0f))
     , Rotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
     , LocalRotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
     { }
 
   // Front axis of the object in world space.
-  Vector3       Front;
+  Vector3       Forward() const { return m_Front; };
 
   // Up axis of the object in world space.
-  Vector3       Up;
+  Vector3       Up() const { return m_Up; }
 
   // Right axis of the object in world space.
-  Vector3       Right;
+  Vector3       Right() const { return m_Right; };
   
   // Local scale of this object. This should be relative to the parent.
   Vector3       LocalScale;
@@ -121,9 +121,18 @@ public:
   void          Serialize(IArchive& archive) override { }
   void          Deserialize(IArchive& archive) override { }
 
+  Matrix4       GetLocalToWorldMatrix() const { return m_LocalToWorldMatrix; }
+  Matrix4       GetWorldToLocalMatrix() const { return m_WorldToLocalMatrix; }
+
 protected:
   // TODO():
   void          Update() override;
   void          FixedUpdate() override { }
+
+  Matrix4       m_LocalToWorldMatrix;
+  Matrix4       m_WorldToLocalMatrix;
+  Vector3       m_Front;
+  Vector3       m_Up;
+  Vector3       m_Right;
 };
 } // Recluse

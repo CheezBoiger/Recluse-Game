@@ -223,6 +223,20 @@ Quaternion Quaternion::Slerp(const Quaternion& q0, const Quaternion& q1, const r
 }
 
 
+b8 Quaternion::operator==(const Quaternion& other) const
+{
+  if (x == other.x && y == other.y && z == other.z && w == other.w)
+    return true;
+  return false;
+}
+
+
+b8 Quaternion::operator!=(const Quaternion& other) const
+{
+  return !( *this == other );
+}
+
+
 Log& operator<<(Log& log, const Quaternion& quat)
 {
   log << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z << ")";
