@@ -176,13 +176,13 @@ void Engine::Update()
   // Render out the scene.
   gAnimation().UpdateState(Time::DeltaTime);
   gUI().UpdateState(Time::DeltaTime);
+  UpdateGameLogic();
 
   m_TimeAccumulate += Time::DeltaTime;
   // TODO(): needs to be on separate thread.
   while (m_TimeAccumulate > Time::FixTime) {
     // TODO(): Instead of sleeping, update the game state.
     m_TimeAccumulate -= Time::FixTime;
-    UpdateGameLogic();
     UpdateRenderObjects();
   }
 

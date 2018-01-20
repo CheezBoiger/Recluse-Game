@@ -31,6 +31,9 @@ public:
   {
     Log() << "Waking: " + m_pGameObjectOwner->GetName() + "\n";
     acc = 0.0f;
+    if (m_pGameObjectOwner->GetParent()) {
+      m_pGameObjectOwner->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
+    }
   }
 
   void Update() override 
@@ -38,15 +41,26 @@ public:
     // Test a swirling sphere...
     Transform* transform = m_pGameObjectOwner->GetTransform();
     r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    transform->Position.x = transform->Position.x
-      + sinf(Radians(acc)) * 1.0f * sDt;
-    transform->Position.z = transform->Position.z
-      + cosf(Radians(acc)) * 1.0f * sDt;
-    // Calculates the curvature.
-    acc += 20.0f * sDt;
+    // If object has parent, swirl in it's local position.
+    if (m_pGameObjectOwner->GetParent()) {
+      transform->LocalPosition.x = transform->LocalPosition.x
+        + sinf(Radians(acc)) * 1.0f * sDt;
+      transform->LocalPosition.y = transform->LocalPosition.y
+        + cosf(Radians(acc)) * 1.0f * sDt;
+      // Calculates the curvature.
+      acc += 20.0f * sDt;
 
-    //transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), transform->Forward());
-    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), transform->Up());
+      transform->LocalRotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
+    } else { // swirl in world position.
+      transform->Position.x = transform->Position.x
+        + sinf(Radians(acc)) * 1.0f * sDt;
+      transform->Position.z = transform->Position.z
+        + cosf(Radians(acc)) * 1.0f * sDt;
+      // Calculates the curvature.
+      acc += 20.0f * sDt;
+
+      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
+    }
   }
 };
 
@@ -82,7 +96,7 @@ int main(int c, char* argv[])
   // Camera set.
   FirstPersonCamera cam(Radians(45.0f), 
     static_cast<r32>(window->Width()), 
-    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(5.0f, 5.0f, -5.0f), Vector3(0.0f, 0.0f, 0.0f));
+    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
   cam.EnableBloom(true);
   cam.EnableAA(true);
   gEngine().SetCamera(&cam);
@@ -109,25 +123,27 @@ int main(int c, char* argv[])
   obj2->AddComponent<MoveObjectScript>();
   gameObj->AddComponent<MeshComponent>();
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
-  meshComponent->SetMeshRef(&cubeMesh);
+  meshComponent->SetMeshRef(&mesh);
 
   gameObj->AddComponent<RendererComponent>();
   gameObj->AddComponent<Transform>();
+  gameObj->AddComponent<MoveObjectScript>();
 
   RendererComponent* rc = gameObj->GetComponent<RendererComponent>();
   rc->SetBaseMetal(0.5f);
   rc->SetBaseRough(0.5f);
 
   Transform* transform = gameObj->GetComponent<Transform>();
-  transform->LocalPosition = Vector3(-3.0f, 0.0f, 0.0f);
+  transform->Position = Vector3(0.0f, 0.0f, 0.0f);
+  transform->LocalPosition = Vector3(-2.0f, 0.0f, 0.0f);
 
   obj2->AddComponent<MeshComponent>();
   MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
-  m2->SetMeshRef(&mesh);
+  m2->SetMeshRef(&cubeMesh);
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
   Transform* t2 = obj2->GetTransform();
-  t2->Position = Vector3(-3.0f, 0.0f, 0.0f);
+  t2->Position = Vector3(-2.0f, 0.0f, 0.0f);
 
   gameObj->Wake();
   obj2->Wake();
