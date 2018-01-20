@@ -74,6 +74,14 @@ void GameObject::Update()
 }
 
 
+void GameObject::Wake()
+{
+  for (auto& it : m_Components) {
+    it.second->Awake();
+  }
+}
+
+
 void GameObject::Serialize(IArchive& archive)
 {
 }

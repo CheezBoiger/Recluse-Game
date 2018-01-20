@@ -21,6 +21,36 @@ void Controller()
   if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
 }
 
+
+// Script to move our cobe object. This is added to gameObj.
+class MoveObjectScript : public IScript {
+public:
+  r32     acc;
+
+  void Awake() override
+  {
+    Log() << "Awaking: " + m_pGameObjectOwner->GetName() + "\n";
+    acc = 0.0f;
+  }
+
+  void Update() override 
+  {
+    // Test a swirling sphere...
+    Transform* transform = m_pGameObjectOwner->GetTransform();
+    r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    transform->Position.x = transform->Position.x
+      + sinf(Radians(acc)) * 1.0f * sDt;
+    transform->Position.z = transform->Position.z
+      + cosf(Radians(acc)) * 1.0f * sDt;
+    // Calculates the curvature.
+    acc += 20.0f * sDt;
+
+    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3(0.0f, 1.0f, 0.0f));
+
+  }
+};
+
+
 int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
@@ -75,6 +105,8 @@ int main(int c, char* argv[])
   }
 
   // Add component stuff.
+  gameObj->SetName("Cube");
+  gameObj->AddComponent<MoveObjectScript>();
   gameObj->AddComponent<MeshComponent>();
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
   meshComponent->SetMeshRef(&cubeMesh);
@@ -103,22 +135,9 @@ int main(int c, char* argv[])
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
 
-  r32 acc = 0.0f;
-
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
-
-    // Test a swirling sphere...
-    transform->Position.x = transform->Position.x 
-      + sinf(Radians(acc)) * 1.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    transform->Position.z = transform->Position.z 
-      + cosf(Radians(acc)) * 1.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    // Calculates the curvature.
-    acc += 20.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-
-    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * Time::DeltaTime * Time::ScaleTime), Vector3(0.0f, 1.0f, 0.0f)); 
-
     gEngine().Update();
     gEngine().ProcessInput();
   }

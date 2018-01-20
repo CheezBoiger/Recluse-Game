@@ -24,6 +24,8 @@ protected:
 
   // Optional fixed update, called from the physics engine updates.
   virtual void  FixedUpdate() override { }
+
+  virtual void Awake() override { }
 };
 
 
@@ -38,7 +40,7 @@ public:
   virtual void  ShutDown() { }
 
   // Called when object is being initialized.
-  virtual void  Awake() { }
+  virtual void  Awake() override { }
 
   // Mandatory that this update function is defined.
   virtual void  Update() override { }

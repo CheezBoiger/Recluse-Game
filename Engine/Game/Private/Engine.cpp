@@ -275,6 +275,7 @@ void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
   RendererComponent* render = object->GetComponent<RendererComponent>();
   if (render) {
     list[currNum]._pTarget = render->RenderObj();
+    object->Wake();
   }
 }
 

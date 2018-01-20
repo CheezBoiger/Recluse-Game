@@ -60,6 +60,8 @@ protected:
   // Optional fixed update, called from the physics engine updates.
   virtual void  FixedUpdate() { }
 
+  virtual void  Awake() { }
+
   // Perform early clean up of abstract component, then call OnCleanUp() if any.
   void          CleanUp() {
     // Perform actions necessary for component clean up.

@@ -85,6 +85,7 @@ public:
   void                                SetName(std::string name) { m_Name = name; }
   void                                AddChild(GameObject* child) { child->SetParent(this); m_Children.push_back(child); }
   void                                Update();
+  void                                Wake();
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
