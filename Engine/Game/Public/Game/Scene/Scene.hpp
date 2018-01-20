@@ -17,6 +17,19 @@ namespace Recluse {
 class GameObject;
 
 
+class SceneNode {
+public:
+  void                      AddChild(GameObject* child) { m_GameObjects.push_back(child); }
+
+  size_t                    GetChildCount() const { return m_GameObjects.size(); }
+
+  GameObject*               GetChild(size_t idx) { return m_GameObjects[idx]; }
+
+private:
+  std::vector<GameObject*> m_GameObjects;
+};
+
+
 // Scene graph, used for storing, keeping track off, and 
 // maintaining, the current state of the game world.
 class Scene : public ISerializable {
@@ -28,7 +41,7 @@ public:
 
   // Set the name of this scene.
   void                      SetName(std::string name) { m_SceneName = name; }
-  GameObject*               GetRoot() { return &m_Root; }
+  SceneNode*                GetRoot() { return &m_Root; }
 
   // Get the name of this scene!
   std::string               Name() const { return m_SceneName; }
@@ -42,6 +55,6 @@ public:
 private:
   DirectionalLight          m_PrimaryLight;
   std::string               m_SceneName;
-  GameObject                m_Root;
+  SceneNode                 m_Root;
 };
 } // Recluse 

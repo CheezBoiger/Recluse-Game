@@ -35,7 +35,9 @@ int main(int c, char* argv[])
   // Add game object in scene.
   Scene scene;
   GameObject* gameObj = GameObject::Instantiate();
+  GameObject* obj2 = GameObject::Instantiate();
   scene.GetRoot()->AddChild(gameObj);
+  gameObj->AddChild(obj2);
 
   // Set primary light.
   {
@@ -48,7 +50,7 @@ int main(int c, char* argv[])
   }  
 
   // Camera set.
-  Camera cam(Camera::PERSPECTIVE, Radians(45.0f), 
+  FirstPersonCamera cam(Radians(45.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(5.0f, 5.0f, -5.0f), Vector3(0.0f, 0.0f, 0.0f));
   cam.EnableBloom(true);
@@ -58,17 +60,24 @@ int main(int c, char* argv[])
   // Create a mesh object and initialize it.
 
   Mesh mesh;
+  Mesh cubeMesh;
 
   {
     auto vertices = UVSphere::MeshInstance(1.0f, 64, 64);
     auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), 64, 64);
     mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
   }
+  
+  {
+    auto vertices = Cube::MeshInstance();
+    auto indices = Cube::IndicesInstance();
+    cubeMesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data());
+  }
 
   // Add component stuff.
   gameObj->AddComponent<MeshComponent>();
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
-  meshComponent->SetMeshRef(&mesh);
+  meshComponent->SetMeshRef(&cubeMesh);
 
   gameObj->AddComponent<RendererComponent>();
   gameObj->AddComponent<Transform>();
@@ -78,7 +87,16 @@ int main(int c, char* argv[])
   rc->SetBaseRough(0.5f);
 
   Transform* transform = gameObj->GetComponent<Transform>();
-  transform->Position = Vector3(-3.0f, 0.0f, 0.0f);
+  transform->Position = Vector3(-2.0f, 0.0f, 0.0f);
+
+  obj2->AddComponent<MeshComponent>();
+  MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
+  m2->SetMeshRef(&mesh);
+  obj2->AddComponent<RendererComponent>();
+  obj2->AddComponent<Transform>();
+  Transform* t2 = obj2->GetTransform();
+  t2->Position = Vector3(-3.0f, 0.0f, 0.0f);
+  
 
   // Run engine, and build the scene to render.
   gEngine().Run();
@@ -99,6 +117,8 @@ int main(int c, char* argv[])
     // Calculates the curvature.
     acc += 20.0f * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
 
+    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * Time::DeltaTime * Time::ScaleTime), Vector3(0.0f, 1.0f, 0.0f)); 
+
     gEngine().Update();
     gEngine().ProcessInput();
   }
@@ -106,6 +126,7 @@ int main(int c, char* argv[])
   // Finish.
   GameObject::DestroyAll();
   mesh.CleanUp();
+  cubeMesh.CleanUp();
   gEngine().CleanUp();
   return 0;
 }

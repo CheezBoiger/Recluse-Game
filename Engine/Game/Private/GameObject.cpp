@@ -66,6 +66,14 @@ GameObject& GameObject::operator=(GameObject&& obj)
 }
 
 
+void GameObject::Update()
+{
+  for (auto& it : m_Components) {
+    it.second->Update();
+  }
+}
+
+
 void GameObject::Serialize(IArchive& archive)
 {
 }

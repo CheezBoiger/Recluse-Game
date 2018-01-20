@@ -83,7 +83,8 @@ public:
   void                                Deserialize(IArchive& archive) override;
   void                                SetParent(GameObject* parent) { m_pParent = parent; }
   void                                SetName(std::string name) { m_Name = name; }
-  void                                AddChild(GameObject* child) { m_Children.push_back(child); }
+  void                                AddChild(GameObject* child) { child->SetParent(this); m_Children.push_back(child); }
+  void                                Update();
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
@@ -111,5 +112,6 @@ private:
   friend class GameObjectManager;
   friend class Component;
   friend class Scene;
+  friend class Engine;
 };
 } // Recluse

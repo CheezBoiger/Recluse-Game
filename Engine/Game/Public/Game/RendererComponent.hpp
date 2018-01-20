@@ -32,6 +32,7 @@ public:
   virtual void              OnCleanUp() override;
   virtual void              Serialize(IArchive& archive) override { }
   virtual void              Deserialize(IArchive& archive) override { }
+  virtual void              Update() override;
 
   void                      SetBaseRough(r32 rough) { mMaterial->Data()->_BaseRough = rough; }
   void                      SetBaseMetal(r32 metal) { mMaterial->Data()->_BaseMetal = metal; }

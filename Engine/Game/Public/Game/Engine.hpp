@@ -25,6 +25,7 @@
 #include "Renderer/CmdList.hpp"
 
 #include "Physics/Physics.hpp"
+#include "Audio/Audio.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Animation/Animation.hpp"
 #include "Audio/Audio.hpp"

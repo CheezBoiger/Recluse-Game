@@ -48,6 +48,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraViewFrustum.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/Component.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

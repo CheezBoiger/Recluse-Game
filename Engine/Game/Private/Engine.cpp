@@ -245,26 +245,8 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
   //
   // TODO(): Need to check if gameobject has parent, and if so, calculate 
   // its transform relative to parent's.
-  //
-  RendererComponent* render = object->GetComponent<RendererComponent>();
-  Transform* transform = object->GetComponent<Transform>();
-  if (render && transform) {
-    MeshDescriptor* descript = render->GetDescriptor();
-    MaterialDescriptor* material = render->GetMaterial();
-    ObjectBuffer* renderData = descript->ObjectData();
-    Matrix4 s = Matrix4::Scale(Matrix4::Identity(), transform->LocalScale);
-    Matrix4 t = Matrix4::Translate(Matrix4::Identity(), transform->Position + transform->LocalPosition);
-    Matrix4 r = (transform->LocalRotation * transform->Rotation).ToMatrix4();
-    renderData->_Model = s * r * t;
-    renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
-    renderData->_NormalMatrix[3][0] = 0.0f;
-    renderData->_NormalMatrix[3][1] = 0.0f;
-    renderData->_NormalMatrix[3][2] = 0.0f;
-    renderData->_NormalMatrix[3][3] = 1.0f;
-
-    material->Update();
-    descript->Update();
-  }
+  //  
+  object->Update();
 }
 
 
@@ -314,15 +296,19 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   // amortized time complex like this vector.
   std::vector<GameObject*> nodes;
   m_SceneObjectCount = 0;
-  nodes.push_back(m_pPushedScene->GetRoot());
+  SceneNode* root = m_pPushedScene->GetRoot();
+
+  for (size_t i = 0; i < root->GetChildCount(); ++i) {
+    nodes.push_back(root->GetChild(i));
+  }
+  
   while (!nodes.empty()) {
     GameObject* object = nodes.back();
     nodes.pop_back();
 
-    if (object != m_pPushedScene->GetRoot()) {
-      callback(this, object, m_SceneObjectCount);
-      m_SceneObjectCount++;
-    }
+    callback(this, object, m_SceneObjectCount);
+    m_SceneObjectCount++;
+
     // Now query its children.
     size_t child_count = object->GetChildrenCount();
     for (size_t i = 0; i < child_count; ++i) {
