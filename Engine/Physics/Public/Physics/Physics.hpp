@@ -18,14 +18,16 @@ class PhysX;
 class Physics : public EngineModule<Physics> {
 public:
   Physics()
-    : mDevice(nullptr) { }
+    : mDevice(nullptr)
+    , m_Accumulator(0.0f) { }
 
   void                            OnStartUp() override;
   void                            OnShutDown() override;
-  void                            UpdateState(r64 fixTime);
+  void                            UpdateState(r64 dt);
 
 private:
   PhysX*                          mDevice;
+  r32                             m_Accumulator;
 };
 
 

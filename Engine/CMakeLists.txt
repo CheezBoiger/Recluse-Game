@@ -13,10 +13,16 @@ endforeach()
 
 
 add_subdirectory(Renderer)
-add_subdirectory(Physics)
 add_subdirectory(UI)
 add_subdirectory(Game)
 add_subdirectory(Filesystem)
 add_subdirectory(Core)
-add_subdirectory(Audio)
 add_subdirectory(Animation)
+
+if (PHYSICS)
+  add_subdirectory(Physics)
+endif()
+
+if (AUDIO)
+  add_subdirectory(Audio)
+endif()

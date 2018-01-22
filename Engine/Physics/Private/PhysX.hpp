@@ -8,6 +8,11 @@
 #include "PxPhysicsAPI.h"
 #include "PxPhysics.h"
 
+#include "foundation/PxMath.h"
+
+#include "cudamanager/PxCudaContextManager.h"
+#include "cudamanager/PxCudaMemoryManager.h"
+
 using namespace physx;
 
 namespace Recluse {
@@ -47,17 +52,25 @@ public:
 class PhysX {
 public:
   PhysX()
-    : mPhysics(nullptr)
-    , mFoundation(nullptr) { }
+    : m_pPhysics(nullptr)
+    , m_pFoundation(nullptr)
+    , m_pPhysicsScene(nullptr) { }
 
-  b8                              Initialize();
-  void                            CleanUp();
+  b8                        Initialize();
+  void                      CleanUp();
+  void                      Update(r32 stepTime);
 
+  void                      SetScene(PxScene* pScene) { m_pPhysicsScene = pScene; }
 
-  physx::PxPhysics*               mPhysics;
-  physx::PxFoundation*            mFoundation;
-  physx::PxDefaultErrorCallback   mDefaultErrorCallback;
-  physx::PxDefaultAllocator       mDefaultAllocatorCallback;
-  physx::PxTolerancesScale        mTolerance;
+  PxScene*                  CreateScene(PxVec3 gravity, PxSimulationFilterShader& filter,
+                                        PxSceneFlags flags, u32 threads, b8 useGpu = false);
+
+private:
+  PxPhysics*                m_pPhysics;
+  PxFoundation*             m_pFoundation;
+  PxDefaultErrorCallback    m_DefaultErrorCallback;
+  PxDefaultAllocator        m_DefaultAllocatorCallback;
+  PxTolerancesScale         m_Tolerance;
+  PxScene*                  m_pPhysicsScene;
 };
 } // Recluse

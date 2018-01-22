@@ -56,5 +56,7 @@ private:
   DirectionalLight          m_PrimaryLight;
   std::string               m_SceneName;
   SceneNode                 m_Root;
+
+  // Physics based information may go here as well.
 };
 } // Recluse 

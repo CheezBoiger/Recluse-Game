@@ -102,6 +102,14 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   gFilesystem().StartUp();
   gRenderer().StartUp();
   gAnimation().StartUp();
+
+#if !defined FORCE_PHYSICS_OFF
+  gPhysics().StartUp();  
+#endif
+#if !defined FORCE_AUDIO_OFF
+  gAudio().StartUp();
+#endif
+
   gUI().StartUp();
 
   Window::SetKeyboardCallback(KeyCallback);
@@ -140,7 +148,14 @@ void Engine::CleanUp()
     gRenderer().FreeLightDescriptor(m_pLights);
     m_pLights = nullptr;
   }
+
   gUI().ShutDown();
+#if !defined FORCE_AUDIO_OFF
+  gAudio().ShutDown();
+#endif
+#if !defined FORCE_PHYSICS_OFF
+  gPhysics().ShutDown();
+#endif
   gAnimation().ShutDown();
   gRenderer().ShutDown();
   gFilesystem().ShutDown();
@@ -177,17 +192,14 @@ void Engine::Update()
   r64 tick = Time::DeltaTime * Time::ScaleTime;
   gAnimation().UpdateState(tick);
   gUI().UpdateState(tick);
-  UpdateGameLogic();
+#if !defined FORCE_AUDIO_OFF
+  gAudio().UpdateState(tick);
+#endif
+#if !defined FORCE_PHYSICS_OFF
+  gPhysics().UpdateState(Time::FixTime);
+#endif
 
-  m_TimeAccumulate += Time::DeltaTime;
-  // TODO(): needs to be on separate thread.
-  while (m_TimeAccumulate >= Time::FixTime) {
-    // TODO(): Instead of doing nothing, update the game state.
-    // Game objects have FixedUpdate() that may be used for a fixed tick
-    // calc.
-    m_TimeAccumulate -= Time::FixTime;
-    
-  }
+  UpdateGameLogic();
 
   // Update camera and screen info.
   GlobalBuffer* gCamBuffer = gRenderer().GlobalData();

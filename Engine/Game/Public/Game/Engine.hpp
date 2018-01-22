@@ -64,6 +64,8 @@ public:
   // window in order to see something!
   void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600);
   void                          CleanUp();
+  
+  // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.
   void                          SetControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
   void                          ProcessInput() { Window::PollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
 
@@ -109,7 +111,6 @@ private:
   ControlInputCallback          m_pControlInputFunc;
   r64                           m_GameMouseX;
   r64                           m_GameMouseY;
-  r64                           m_TimeAccumulate;
 
   Window                        m_Window;
   CmdList                       m_RenderCmdList;

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project("Recluse")
 
+# optional params during project build.
+option(PHYSICS             "Turns physics compilation and use ON/OFF" ON)
+option(AUDIO               "Turns audio compilation and use ON/OFF" ON)
 
 set(RECLUSE_NAME            "Recluse")
 set(RECLUSE_EXE             ${RECLUSE_NAME})
@@ -16,12 +19,23 @@ set(RECLUSE_OZZ_DIR         ${RECLUSE_LIB_DIR}/Ozz)
 set(RECLUSE_FREETYPE_DIR    ${RECLUSE_LIB_DIR}/FreeType)
 
 # Libraries that REQUIRE enviroment variables set up.
-set(RECLUSE_PHYSX_DIR       $ENV{PHYSXSDK})
-set(RECLUSE_WWISE_DIR       $ENV{WWISESDK})
+if (PHYSICS)
+  set(RECLUSE_PHYSX_DIR       $ENV{PHYSXSDK})
+  set(PHYSX_INCLUDE           ${RECLUSE_PHYSX_DIR}/include)
+else()
+  set(PHYSX_INCLUDE           "")
+  add_definitions(-DFORCE_PHYSICS_OFF=1)
+endif()
+
+if (AUDIO)
+  set(RECLUSE_WWISE_DIR       $ENV{WWISESDK})
+else()
+  add_definitions(-DFORCE_AUDIO_OFF=1)
+endif()
 
 set(RECLUSE_THIRDPARTY_INCLUDE_DIRS
   ${RECLUSE_FREETYPE_DIR}/include
-  ${RECLUSE_PHYSX_DIR}/include
+  ${PHYSX_INCLUDE}
 )
 
 set(RECLUSE_RENDERER     "Renderer")
@@ -62,13 +76,25 @@ set(RECLUSE_ENGINE_INCLUDE_DIRS
 set(RECLUSE_ENGINE_LINK_LIBRARIES
   ${RECLUSE_RENDERER}
   ${RECLUSE_GAME}
-  ${RECLUSE_PHYSICS}
   ${RECLUSE_ANIMATION}
   ${RECLUSE_CORE}
-  ${RECLUSE_AUDIO}
   ${RECLUSE_UI}
   ${RECLUSE_FILESYSTEM}
 )
+
+if (PHYSICS)
+  set(RECLUSE_ENGINE_LINK_LIBRARIES 
+    ${RECLUSE_ENGINE_LINK_LIBRARIES}
+    ${RECLUSE_PHYSICS}
+  )
+endif()
+
+if (AUDIO)
+  set(RECLUSE_ENGINE_LINK_LIBRARIES 
+    ${RECLUSE_ENGINE_LINK_LIBRARIES}
+    ${RECLUSE_AUDIO}
+  )
+endif()
 
 # find vulkan render API.
 find_package(Vulkan)
