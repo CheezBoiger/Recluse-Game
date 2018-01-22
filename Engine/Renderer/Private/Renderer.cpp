@@ -49,6 +49,8 @@ Renderer::Renderer()
   , m_Initialized(false)
   , m_pLights(nullptr)
   , m_pGlobal(nullptr)
+  , m_NeedsUpdate(false)
+  , m_AsyncBuild(false)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
@@ -109,6 +111,8 @@ void Renderer::Render()
 {
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
+  CheckCmdUpdate();
+
   VkCommandBuffer offscreenCmd = m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle();
   VkSemaphore waitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
   VkSemaphore signalSemas[] = { m_Offscreen._Semaphore->Handle() };
@@ -1638,6 +1642,10 @@ void Renderer::Build()
   BuildHDRCmdBuffer(m_HDR._CurrCmdBufferIndex);
   BuildShadowCmdBuffer(m_Offscreen._CurrCmdBufferIndex);
   m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
+
+  // Signal that no update is required.
+  m_NeedsUpdate = false;
+  m_AsyncBuild = false;
 }
 
 
@@ -2126,6 +2134,22 @@ void Renderer::SetUpFinalOutputs()
 }
 
 
+void Renderer::CheckCmdUpdate()
+{
+  if (m_NeedsUpdate) {
+   if (m_AsyncBuild) {
+      BuildAsync();
+    } else {
+      Build();
+    }
+  }
+
+  // just in case these were still flagged.
+  m_NeedsUpdate = false;
+  m_AsyncBuild = false;
+}
+
+
 void Renderer::RenderPrimaryShadows()
 {
 
@@ -2243,6 +2267,9 @@ void Renderer::BuildAsync()
     u32 idx = m_pRhi->CurrentImageIndex();
 
     inProgress = false;
+    // signal that no update is required.
+    m_NeedsUpdate = false;
+    m_AsyncBuild = false;
   });
 }
 

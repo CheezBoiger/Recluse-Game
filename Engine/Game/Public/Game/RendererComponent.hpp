@@ -34,10 +34,11 @@ public:
   virtual void              Deserialize(IArchive& archive) override { }
   virtual void              Update() override;
 
-  // Re initialize this renderer component, this will signal the renderer to 
+  // Reconfigure this renderer component, this will signal the renderer to 
   // update the cmd buffer, and re construct it's scene. It must be done in order
-  // to add new textures.
-  void                      ReInit();
+  // to add new textures. Recommended you do not call this function every frame, as it does
+  // hinder rendering performance.
+  void                      ReConfigure();
 
   void                      SetBaseRough(r32 rough) { mMaterial->Data()->_BaseRough = rough; }
   void                      SetBaseMetal(r32 metal) { mMaterial->Data()->_BaseMetal = metal; }
@@ -48,6 +49,7 @@ public:
   void                      SetRoughness(Texture2D* texture) { mMaterial->SetRoughness(texture); }
   void                      SetMetallic(Texture2D* texture) { mMaterial->SetMetallic(texture); }
   void                      SetAo(Texture2D* texture) { mMaterial->SetAo(texture); }
+  void                      SetEmissive(Texture2D* texture) { mMaterial->SetEmissive(texture);}
   void                      SetBaseColor(Vector4 color) { mMaterial->Data()->_Color = color; }  
 
   void                      EnableAlbedo(b8 enable) { mMaterial->Data()->_HasAlbedo = enable; }
@@ -59,14 +61,20 @@ public:
   void                      Enable(b8 enable);
 
   b8                        Enabled() const;
+  b8                        Dirty() const { return m_Dirty; }
   RenderObject*             RenderObj() { return mRenderObj; }
   MaterialDescriptor*       GetMaterial() { return mMaterial; }
   MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }
 
+  void                      SignalClean() { m_Dirty = false; }
+
 protected:
+  void                      TriggerDirty() { m_Dirty = true; }
+
   MaterialDescriptor*       mMaterial;
   RenderObject*             mRenderObj;
   MeshDescriptor*           mMeshDescriptor;
+  b8                        m_Dirty;
 };
 
 

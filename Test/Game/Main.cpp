@@ -4,6 +4,7 @@
 #include "Game/RendererComponent.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
+#include "Renderer/UserParams.hpp"
 
 #include "../DemoTextureLoad.hpp"
 
@@ -80,7 +81,6 @@ public:
     }
 
     transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT); 
-    Log() << "Position: " << transform->Position << "\t\t\r";
   }
 };
 
@@ -96,6 +96,14 @@ int main(int c, char* argv[])
   Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
   window->Show();
+
+  // Setting the renderer to vsync double buffering.
+  {
+    GpuConfigParams params;
+    params._Buffering = DOUBLE_BUFFER;
+    params._EnableVsync = true;
+    gRenderer().UpdateRendererConfigs(&params);
+  }
 
   // Add game object in scene.
   LoadTextures();
@@ -177,7 +185,7 @@ int main(int c, char* argv[])
     TextureCache::Get(RTEXT("RustedRough"), &tex);
     rc2->EnableRoughness(true);
     rc2->SetRoughness(tex);
-    rc2->ReInit();
+    rc2->ReConfigure(); // Must call ReConfigure to update textures and mesh on renderer components.
   }
   gameObj->Wake();
   obj2->Wake();
@@ -187,12 +195,13 @@ int main(int c, char* argv[])
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
 
-  Log() << "Timer Start: " << Time::CurrentTime();
+  Log() << "Timer Start: " << Time::CurrentTime() << " s\n";
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
     gEngine().Update();
     gEngine().ProcessInput();
+    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.
@@ -201,5 +210,8 @@ int main(int c, char* argv[])
   mesh.CleanUp();
   cubeMesh.CleanUp();
   gEngine().CleanUp();
+#if (_DEBUG)
+  Log() << "Game is cleaned up. Press Enter to continue...\n";
+#endif
   return 0;
 }

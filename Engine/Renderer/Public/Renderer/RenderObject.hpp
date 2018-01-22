@@ -73,6 +73,8 @@ public:
   void                    Resize(size_t newSize) { mMeshGroup.resize(newSize); }
   void                    Add(size_t idx, MeshData* data) { mMeshGroup[idx] = data; }
   void                    PushBack(MeshData* data) { mMeshGroup.push_back(data); }
+  void                    RemoveMesh(size_t idx) { mMeshGroup.erase(mMeshGroup.begin() + idx); }
+  void                    ClearOutMeshGroup() { mMeshGroup.clear(); }
 
   MeshData*               Get(size_t idx) { return mMeshGroup[idx]; }
   MeshData*               operator[](size_t idx) { return Get(idx); }

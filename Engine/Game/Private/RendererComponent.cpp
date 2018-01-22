@@ -63,11 +63,18 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 }
 
 
-void RendererComponent::ReInit()
+void RendererComponent::ReConfigure()
 {
   mRenderObj->Update();
   mRenderObj->SwapDescriptorSet();
-  R_DEBUG(rWarning, "RendererComponent reinitialized, this will signal renderer to re construct gpu render command buffer.\n");
+
+  MeshComponent* meshc = GetOwner()->GetComponent<MeshComponent>();
+  if (meshc) {
+    mRenderObj->ClearOutMeshGroup();
+    mRenderObj->PushBack(meshc->MeshRef()->Native());
+  }
+
+  TriggerDirty();
 }
 
 
@@ -136,5 +143,11 @@ void RendererComponent::Update()
   }
 
   mMaterial->Update();
+
+  if (Dirty()) {
+    // RendererComponent is signalling to the global renderer to rebuild it's
+    // command buffers, as it requires an update.
+    gRenderer().SignalCommandBufferRebuild(false);
+  }
 }
 } // Recluse

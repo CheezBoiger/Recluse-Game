@@ -195,6 +195,8 @@ public:
   // Enable HDR Post processing.
   void              EnableHDR(b8 enable);
 
+  void              SignalCommandBufferRebuild(b8 async) { m_NeedsUpdate = true; m_AsyncBuild = async; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -227,6 +229,7 @@ private:
   void              UpdateMaterials();
   void              RenderOverlay();
   void              RenderPrimaryShadows();
+  void              CheckCmdUpdate();
 
   Window*           m_pWindow;
   CmdList*          m_pCmdList;
@@ -260,8 +263,10 @@ private:
 
   RenderQuad        m_RenderQuad;
   UIOverlay*        m_pUI;
-  b8                m_Rendering      : 1;
-  b8                m_Initialized    : 1;
+  b8                m_Rendering       : 1;
+  b8                m_Initialized     : 1;
+  b8                m_NeedsUpdate     : 1;
+  b8                m_AsyncBuild      : 1;
 };
 
 Renderer&           gRenderer();
