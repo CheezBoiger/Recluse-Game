@@ -63,6 +63,11 @@ struct LightViewSpace {
 };
 
 
+struct LightGridBuffer {
+  
+};
+
+
 struct LightBuffer {
   static u32        MaxNumDirectionalLights();
   static u32        MaxNumPointLights();

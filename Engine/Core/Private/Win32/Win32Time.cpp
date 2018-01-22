@@ -23,6 +23,7 @@ void Time::OnStartUp()
   Frequency = r64(li.QuadPart);
   QueryPerformanceCounter(&li);
   AppStart = r64(li.QuadPart);
+  Update();
 }
 
 

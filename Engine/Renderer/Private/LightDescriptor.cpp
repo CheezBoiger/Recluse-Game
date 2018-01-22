@@ -45,8 +45,8 @@ LightDescriptor::LightDescriptor()
   , m_pLightViewBuffer(nullptr)
   , m_pFrameBuffer(nullptr)
   , m_PrimaryShadowEnable(true)
-  , m_rShadowViewportHeight(1024.0f)
-  , m_rShadowViewportWidth(1024.0f)
+  , m_rShadowViewportHeight(512.0f)
+  , m_rShadowViewportWidth(512.0f)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);

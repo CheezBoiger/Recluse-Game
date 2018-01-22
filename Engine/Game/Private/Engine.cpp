@@ -174,16 +174,19 @@ void Engine::Update()
     return;
   }
   // Render out the scene.
-  gAnimation().UpdateState(Time::DeltaTime);
-  gUI().UpdateState(Time::DeltaTime);
+  r64 tick = Time::DeltaTime * Time::ScaleTime;
+  gAnimation().UpdateState(tick);
+  gUI().UpdateState(tick);
   UpdateGameLogic();
 
   m_TimeAccumulate += Time::DeltaTime;
   // TODO(): needs to be on separate thread.
-  while (m_TimeAccumulate > Time::FixTime) {
-    // TODO(): Instead of sleeping, update the game state.
+  while (m_TimeAccumulate >= Time::FixTime) {
+    // TODO(): Instead of doing nothing, update the game state.
+    // Game objects have FixedUpdate() that may be used for a fixed tick
+    // calc.
     m_TimeAccumulate -= Time::FixTime;
-    UpdateRenderObjects();
+    
   }
 
   // Update camera and screen info.

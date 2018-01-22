@@ -12,11 +12,11 @@ namespace Recluse {
 
 void Transform::Update()
 {
-  if (LocalPosition == Position && LocalRotation == Rotation && !m_pGameObjectOwner->GetParent()) return;
+  if (LocalPosition == Position && LocalRotation == Rotation && !GetOwner()->GetParent()) return;
 
   // TODO(): Update the transform's front, right, and up vectors
   // based on the local rotation.
-  GameObject* parent = m_pGameObjectOwner->GetParent();
+  GameObject* parent = GetOwner()->GetParent();
 
   if (parent) {
     Matrix4 _T = Matrix4::Translate(Matrix4::Identity(), LocalPosition);

@@ -63,6 +63,14 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 }
 
 
+void RendererComponent::ReInit()
+{
+  mRenderObj->Update();
+  mRenderObj->SwapDescriptorSet();
+  R_DEBUG(rWarning, "RendererComponent reinitialized, this will signal renderer to re construct gpu render command buffer.\n");
+}
+
+
 void RendererComponent::OnInitialize(GameObject* owner)
 {
   if (mRenderObj) {
@@ -98,10 +106,22 @@ void RendererComponent::OnCleanUp()
 }
 
 
+void RendererComponent::Enable(b8 enable)
+{
+  mRenderObj->Renderable = enable;
+}
+
+
+b8 RendererComponent::Enabled() const
+{
+  return mRenderObj->Renderable;
+}
+
+
 void RendererComponent::Update()
 {
   // TODO(): Static objects don't necessarily need to be updated.
-  Transform* transform = m_pGameObjectOwner->GetComponent<Transform>();
+  Transform* transform = GetOwner()->GetComponent<Transform>();
   if (transform) {
     ObjectBuffer* renderData = mMeshDescriptor->ObjectData();
     Matrix4 model = transform->GetLocalToWorldMatrix();

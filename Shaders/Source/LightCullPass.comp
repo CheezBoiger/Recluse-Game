@@ -9,6 +9,7 @@ struct PointLight {
   vec4    position;
   vec4    color;
   float   range;
+  float   intensity;
   int     enable;
   ivec2   pad;
 };
@@ -23,7 +24,7 @@ struct LightGridInfo {
 
 
 #define WORKGROUP_SIZE        1024
-#define MAX_LIGHTS            128
+#define MAX_LIGHTS            64
 
 
 layout (set = 0, binding = 2) uniform GlobalBuffer {
@@ -54,6 +55,7 @@ layout (set = 1, binding = 0) buffer LightGrid {
 
 layout (set = 1, binding = 1) buffer LightIndices {
   vec4 light_indices[];
+  vec4 envmap_indices[];
 };
 
 
@@ -62,6 +64,7 @@ layout (set = 1, binding = 2) buffer Lights {
 };
 
 
+// Depth map from the previous frame.
 layout (set = 1, binding = 3) uniform sampler2D depth;
 
 

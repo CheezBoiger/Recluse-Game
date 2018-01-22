@@ -5,6 +5,8 @@
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
 
+#include "../DemoTextureLoad.hpp"
+
 using namespace Recluse;
 
 
@@ -23,44 +25,61 @@ void Controller()
 
 
 // Script to move our cobe object. This is added to gameObj.
-class MoveObjectScript : public IScript {
+class OrbitObjectScript : public IScript {
 public:
   r32     acc;
 
   void Awake() override
   {
-    Log() << "Waking: " + m_pGameObjectOwner->GetName() + "\n";
+    Log() << "Waking: " + GetOwner()->GetName() + "\n";
     acc = 0.0f;
-    if (m_pGameObjectOwner->GetParent()) {
-      m_pGameObjectOwner->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
+    if (GetOwner()->GetParent()) {
+      GetOwner()->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
+      GetOwner()->GetTransform()->LocalPosition = Vector3(1.5f, 0.0f, 0.0f);
     }
   }
 
   void Update() override 
   {
+#if 1
     // Test a swirling sphere...
-    Transform* transform = m_pGameObjectOwner->GetTransform();
+    Transform* transform = GetOwner()->GetTransform();
     r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
     // If object has parent, swirl in it's local position.
-    if (m_pGameObjectOwner->GetParent()) {
+    if (GetOwner()->GetParent()) {
       transform->LocalPosition.x = transform->LocalPosition.x
-        + sinf(Radians(acc)) * 1.0f * sDt;
+        - sinf(Radians(acc)) * 1.0f * sDt;
       transform->LocalPosition.y = transform->LocalPosition.y
-        + cosf(Radians(acc)) * 1.0f * sDt;
+        - cosf(Radians(acc)) * 1.0f * sDt;
       // Calculates the curvature.
-      acc += 20.0f * sDt;
+      acc += 30.0f * sDt;
 
       transform->LocalRotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
-    } else { // swirl in world position.
-      transform->Position.x = transform->Position.x
-        + sinf(Radians(acc)) * 1.0f * sDt;
-      transform->Position.z = transform->Position.z
-        + cosf(Radians(acc)) * 1.0f * sDt;
-      // Calculates the curvature.
-      acc += 20.0f * sDt;
-
-      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
     }
+#endif
+  }
+};
+
+
+class MoveScript : public IScript {
+public:
+
+  void Awake() override {
+    Transform* transform = GetOwner()->GetTransform();
+    transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
+  }
+  
+  void Update() override {
+    Transform* transform = GetOwner()->GetTransform();
+    r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    if (Keyboard::KeyPressed(KEY_CODE_O)) { 
+      transform->Position -= transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime); 
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_L)) { 
+      transform->Position += transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime);
+    }
+
+    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT); 
   }
 };
 
@@ -69,6 +88,7 @@ int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
   Mouse::Enable(false);
+  Mouse::Show(false);
   // Start up the engine and set the input controller.
   gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800);
   gEngine().SetControlInput(Controller);
@@ -77,6 +97,8 @@ int main(int c, char* argv[])
   window->Show();
 
   // Add game object in scene.
+  LoadTextures();
+
   Scene scene;
   GameObject* gameObj = GameObject::Instantiate();
   GameObject* obj2 = GameObject::Instantiate();
@@ -90,7 +112,7 @@ int main(int c, char* argv[])
     pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 15.0f;
+    pPrimary->_Intensity = 5.0f;
   }  
 
   // Camera set.
@@ -120,31 +142,42 @@ int main(int c, char* argv[])
 
   // Add component stuff.
   gameObj->SetName("Cube");
-  obj2->AddComponent<MoveObjectScript>();
+  obj2->AddComponent<MoveScript>();
   gameObj->AddComponent<MeshComponent>();
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
   meshComponent->SetMeshRef(&mesh);
 
   gameObj->AddComponent<RendererComponent>();
   gameObj->AddComponent<Transform>();
-  gameObj->AddComponent<MoveObjectScript>();
+  gameObj->AddComponent<OrbitObjectScript>();
 
   RendererComponent* rc = gameObj->GetComponent<RendererComponent>();
-  rc->SetBaseMetal(0.5f);
-  rc->SetBaseRough(0.5f);
-
-  Transform* transform = gameObj->GetComponent<Transform>();
-  transform->Position = Vector3(0.0f, 0.0f, 0.0f);
-  transform->LocalPosition = Vector3(-2.0f, 0.0f, 0.0f);
+  rc->SetBaseMetal(0.0f);
+  rc->SetBaseRough(1.0f);
 
   obj2->AddComponent<MeshComponent>();
   MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
   m2->SetMeshRef(&cubeMesh);
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
-  Transform* t2 = obj2->GetTransform();
-  t2->Position = Vector3(-2.0f, 0.0f, 0.0f);
 
+  RendererComponent* rc2 = obj2->GetComponent<RendererComponent>();
+  {
+    Texture2D* tex;
+    TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
+    rc2->EnableAlbedo(true);
+    rc2->SetAlbedo(tex);
+    TextureCache::Get(RTEXT("RustedNormal"), &tex);
+    rc2->EnableNormal(true);
+    rc2->SetNormal(tex);
+    TextureCache::Get(RTEXT("RustedMetal"), &tex);
+    rc2->EnableMetallic(true);
+    rc2->SetMetallic(tex);
+    TextureCache::Get(RTEXT("RustedRough"), &tex);
+    rc2->EnableRoughness(true);
+    rc2->SetRoughness(tex);
+    rc2->ReInit();
+  }
   gameObj->Wake();
   obj2->Wake();
 
@@ -153,6 +186,7 @@ int main(int c, char* argv[])
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
 
+  Log() << "Timer Start: " << Time::CurrentTime();
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
@@ -162,6 +196,7 @@ int main(int c, char* argv[])
   
   // Finish.
   GameObject::DestroyAll();
+  TextureCleanUp();
   mesh.CleanUp();
   cubeMesh.CleanUp();
   gEngine().CleanUp();

@@ -34,6 +34,11 @@ public:
   virtual void              Deserialize(IArchive& archive) override { }
   virtual void              Update() override;
 
+  // Re initialize this renderer component, this will signal the renderer to 
+  // update the cmd buffer, and re construct it's scene. It must be done in order
+  // to add new textures.
+  void                      ReInit();
+
   void                      SetBaseRough(r32 rough) { mMaterial->Data()->_BaseRough = rough; }
   void                      SetBaseMetal(r32 metal) { mMaterial->Data()->_BaseMetal = metal; }
   void                      SetBaseEmissive(r32 emissive) { mMaterial->Data()->_BaseEmissive = emissive; }
@@ -51,7 +56,9 @@ public:
   void                      EnableMetallic(b8 enable) { mMaterial->Data()->_HasMetallic = enable; }
   void                      EnableEmissive(b8 enable) { mMaterial->Data()->_HasEmissive = enable; }
   void                      EnableAo(b8 enable) { mMaterial->Data()->_HasAO = enable; }
+  void                      Enable(b8 enable);
 
+  b8                        Enabled() const;
   RenderObject*             RenderObj() { return mRenderObj; }
   MaterialDescriptor*       GetMaterial() { return mMaterial; }
   MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }

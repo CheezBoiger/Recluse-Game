@@ -30,7 +30,7 @@ class Component : public ISerializable {
 public:
   virtual ~Component() { }
 
-  GameObject*   GetOwner() { return m_pGameObjectOwner; }
+  inline GameObject*   GetOwner() { return m_pGameObjectOwner; }
 
   virtual void  Serialize(IArchive& archive) { }
   virtual void  Deserialize(IArchive& archive) { }
@@ -73,6 +73,7 @@ protected:
   virtual void  OnInitialize(GameObject* owner) { }
   virtual void  OnCleanUp() { }
 
+private:
   GameObject*   m_pGameObjectOwner;
 };
 
