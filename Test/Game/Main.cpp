@@ -73,13 +73,14 @@ public:
     Transform* transform = GetOwner()->GetTransform();
     r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
     if (Keyboard::KeyPressed(KEY_CODE_O)) { 
-      transform->Position -= transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime); 
+      transform->Position += transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime); 
     }
     if (Keyboard::KeyPressed(KEY_CODE_L)) { 
-      transform->Position += transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime);
+      transform->Position -= transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime);
     }
 
     transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT); 
+    Log() << "Position: " << transform->Position << "\t\t\r";
   }
 };
 
