@@ -107,40 +107,20 @@ int main(int c, char* argv[])
   gameObj->AddComponent<Transform>();
   gameObj->AddComponent<OrbitObjectScript>();
 
-  RendererComponent* rc = gameObj->GetComponent<RendererComponent>();
-  rc->SetBaseMetal(0.0f);
-  rc->SetBaseRough(1.0f);
-
   obj2->AddComponent<MeshComponent>();
   MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
   m2->SetMeshRef(&cubeMesh);
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-  RendererComponent* rc2 = obj2->GetComponent<RendererComponent>();
-  {
-    Texture2D* tex;
-    TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
-    rc2->EnableAlbedo(true);
-    rc2->SetAlbedo(tex);
-    TextureCache::Get(RTEXT("RustedNormal"), &tex);
-    rc2->EnableNormal(true);
-    rc2->SetNormal(tex);
-    TextureCache::Get(RTEXT("RustedMetal"), &tex);
-    rc2->EnableMetallic(true);
-    rc2->SetMetallic(tex);
-    TextureCache::Get(RTEXT("RustedRough"), &tex);
-    rc2->EnableRoughness(true);
-    rc2->SetRoughness(tex);
-    rc2->ReConfigure(); // Must call ReConfigure to update textures and mesh on renderer components.
-  }
-  gameObj->Wake();
-  obj2->Wake();
-
   // Run engine, and build the scene to render.
   gEngine().Run();
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
+
+  // Wake up objects
+  gameObj->Wake();
+  obj2->Wake();
 
   Log() << "Timer Start: " << Time::CurrentTime() << " s\n";
   // Game loop.
@@ -159,6 +139,7 @@ int main(int c, char* argv[])
   gEngine().CleanUp();
 #if (_DEBUG)
   Log() << "Game is cleaned up. Press Enter to continue...\n";
+  std::cin.ignore();
 #endif
   return 0;
 }

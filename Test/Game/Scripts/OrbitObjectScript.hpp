@@ -4,7 +4,7 @@
 #include "Game/Engine.hpp"
 #include "Game/MeshComponent.hpp"
 #include "Game/Scene/Scene.hpp"
-
+#include "Game/RendererComponent.hpp"
 
 using namespace Recluse;
 
@@ -22,6 +22,10 @@ public:
       GetOwner()->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
       GetOwner()->GetTransform()->LocalPosition = Vector3(1.5f, 0.0f, 0.0f);
     }
+
+    RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
+    rc->SetBaseMetal(0.0f);
+    rc->SetBaseRough(1.0f);
   }
 
   void Update() override

@@ -4,6 +4,7 @@
 #include "Game/Engine.hpp"
 #include "Game/MeshComponent.hpp"
 #include "Game/Scene/Scene.hpp"
+#include "../../DemoTextureLoad.hpp"
 
 
 using namespace Recluse;
@@ -20,6 +21,23 @@ public:
     Transform* transform = GetOwner()->GetTransform();
     transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
     transform->Scale = Vector3(5.0f, 5.0f, 5.0f);
+    RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
+    {
+      Texture2D* tex;
+      TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
+      rc->EnableAlbedo(true);
+      rc->SetAlbedo(tex);
+      TextureCache::Get(RTEXT("RustedNormal"), &tex);
+      rc->EnableNormal(true);
+      rc->SetNormal(tex);
+      TextureCache::Get(RTEXT("RustedMetal"), &tex);
+      rc->EnableMetallic(true);
+      rc->SetMetallic(tex);
+      TextureCache::Get(RTEXT("RustedRough"), &tex);
+      rc->EnableRoughness(true);
+      rc->SetRoughness(tex);
+      rc->ReConfigure(); // Must call ReConfigure to update textures and mesh on renderer components.
+    }
   }
 
   // This function is called every frame.
