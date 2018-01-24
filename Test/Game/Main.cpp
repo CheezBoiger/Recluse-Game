@@ -68,19 +68,32 @@ public:
   void Awake() override {
     Transform* transform = GetOwner()->GetTransform();
     transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
+    transform->Scale = Vector3(5.0f, 5.0f, 5.0f);
   }
   
   void Update() override {
     Transform* transform = GetOwner()->GetTransform();
     r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
     if (Keyboard::KeyPressed(KEY_CODE_O)) { 
-      transform->Position += transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime); 
+      transform->Position += transform->Forward() * 5.0f * sDt; 
     }
     if (Keyboard::KeyPressed(KEY_CODE_L)) { 
-      transform->Position -= transform->Forward() * 5.0f * static_cast<r32>(Time::DeltaTime);
+      transform->Position -= transform->Forward() * 5.0f * sDt;
     }
-
-    transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT); 
+    if (Keyboard::KeyPressed(KEY_CODE_K)) { 
+      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::UP);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_COLON)) {
+      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_I)) {
+      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::RIGHT);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_P)) { 
+      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::RIGHT);
+    }
+    //transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT);
+    Log() << "Up: " << transform->Up() << "\t\t\r"; 
   }
 };
 
@@ -96,6 +109,7 @@ int main(int c, char* argv[])
   Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
   window->Show();
+  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   // Setting the renderer to vsync double buffering.
   {
@@ -201,7 +215,7 @@ int main(int c, char* argv[])
     Time::Update();
     gEngine().Update();
     gEngine().ProcessInput();
-    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

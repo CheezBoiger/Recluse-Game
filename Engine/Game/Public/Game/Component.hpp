@@ -89,6 +89,7 @@ public:
     , LocalScale(Vector3(1.0, 1.0f, 1.0f))
     , Rotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
     , LocalRotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
+    , Scale(Vector3(1.0f, 1.0f, 1.0f))
     { }
 
   // Front axis of the object in world space.
@@ -106,6 +107,9 @@ public:
   // Local position, relative to the parent. If no parent is defined, this value is 
   // same as world space.
   Vector3       LocalPosition;
+
+  // Scale of the transform in world space.
+  Vector3       Scale;
   
   // Position of the transform in world space.
   Vector3       Position;

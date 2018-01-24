@@ -12,7 +12,7 @@ namespace Recluse {
 
 void Transform::Update()
 {
-  if (LocalPosition == Position && LocalRotation == Rotation && !GetOwner()->GetParent()) return;
+  if (LocalPosition == Position && LocalRotation == Rotation && LocalScale == Scale && !GetOwner()->GetParent()) return;
 
   // TODO(): Update the transform's front, right, and up vectors
   // based on the local rotation.
@@ -32,6 +32,7 @@ void Transform::Update()
   } else {
     LocalPosition = Position;
     LocalRotation = Rotation;
+    LocalScale = Scale;
     Matrix4 _T = Matrix4::Translate(Matrix4::Identity(), LocalPosition);
     Matrix4 _R = LocalRotation.ToMatrix4();
     Matrix4 _S = Matrix4::Scale(Matrix4::Identity(), LocalScale);

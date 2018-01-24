@@ -89,7 +89,7 @@ public:
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
-  GameObject*                         GetChild(size_t idx) { return m_Children[idx]; }
+  GameObject*                         GetChild(size_t idx) { if (m_Children.size() > idx) return m_Children[idx]; return nullptr; }
 
   Transform*                          GetTransform() { return GetComponent<Transform>(); }
   std::string                         GetName() const { return m_Name; }
