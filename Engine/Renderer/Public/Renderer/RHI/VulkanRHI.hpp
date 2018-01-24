@@ -165,7 +165,10 @@ public:
 
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
-  void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores);
+  // If no signals are specified, or signalSemaphoreCount is equal to 0, cmdbuffer will default
+  // to GraphicsFinished semaphore, which is used by the Present queue to present to the screen!
+  void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores, 
+                                  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores);
   
   // Present the rendered surface.
   void                          Present();
@@ -181,6 +184,9 @@ public:
 
   // Swap commandbuffer sets within this vulkan rhi. Be sure that the set is already built!
   void                          SwapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
+
+  // Obtain the Graphics Finished Semaphore from swapchain.
+  VkSemaphore                   GraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(); }
 
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!

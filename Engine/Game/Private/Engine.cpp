@@ -67,6 +67,12 @@ void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
 }
 
 
+Camera* Camera::GetMain()
+{
+  return gEngine().GetCamera();
+}
+
+
 Engine& gEngine()
 {
   static Engine engine;

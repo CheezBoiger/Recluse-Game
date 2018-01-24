@@ -442,11 +442,14 @@ void VulkanRHI::AcquireNextImage()
 }
 
 
-void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores)
+void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
+  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores)
 {
-  // TODO(): This must be set outside in the renderer scope, instead of in here. 
-  // more freedom for offscreen rendering that way.
-  VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
+  if (!signalSemaphores || !signalSemaphoreCount) {
+    R_DEBUG(rError, "Fatal! You must specify at least one signal semaphore when calling SubmitCurrSwapchainCmdBuffer (GraphicsFinishedSemaphore() if rendering is complete!)");
+    return;
+  }
+
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
   
   VkCommandBuffer cmdBuffer[] = { 
@@ -457,7 +460,7 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = cmdBuffer;
-  submitInfo.signalSemaphoreCount = 1;
+  submitInfo.signalSemaphoreCount = signalSemaphoreCount;
   submitInfo.pSignalSemaphores = signalSemaphores;
   submitInfo.waitSemaphoreCount = waitSemaphoreCount;
   submitInfo.pWaitSemaphores = waitSemaphores;

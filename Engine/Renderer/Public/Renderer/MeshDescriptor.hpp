@@ -6,6 +6,7 @@
 #include "IndexBuffer.hpp"
 #include "Core/Math/Common.hpp"
 #include "Core/Math/Matrix4.hpp"
+#include "Core/Math/Quaternion.hpp"
 
 namespace Recluse {
 

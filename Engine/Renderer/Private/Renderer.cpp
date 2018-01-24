@@ -31,6 +31,8 @@
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
 
+#include "UI/UI.hpp"
+
 #include <array>
 
 namespace Recluse {
@@ -173,8 +175,14 @@ void Renderer::Render()
     if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(hdrSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
-    // ssent our signal to our swapchain cmd buffers.
-    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &waitSemaphores);
+    // sent our signal to our swapchain cmd buffers.
+  
+    // TODO(): We want to hold off on signalling GraphicsFinished Semaphore, and instead 
+    // have it signal the SignalUI semaphore instead. UI Overlay will be the one to use
+    // GraphicsFinished Semaphore to signal end of frame rendering.
+    VkSemaphore signal = m_pRhi->GraphicsFinishedSemaphore();
+    VkSemaphore uiSig = m_pUI->Signal()->Handle();
+    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &waitSemaphores, 1, &signal);
 
     // Render the Overlay.
     RenderOverlay();

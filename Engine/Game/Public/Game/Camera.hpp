@@ -20,6 +20,9 @@ class GameObject;
 // as well as our fly view camera.
 class Camera {
 public:
+  // Get the main camera being used by the engine.
+  static Camera*        GetMain();
+
   // Movement for the camera.
   enum Movement {
     UP,

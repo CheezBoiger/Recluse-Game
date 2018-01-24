@@ -8,6 +8,10 @@
 
 #include "../DemoTextureLoad.hpp"
 
+// Scripts.
+#include "Scripts/MoveObjectScript.hpp"
+#include "Scripts/OrbitObjectScript.hpp"
+
 using namespace Recluse;
 
 
@@ -20,82 +24,10 @@ void Controller()
   if (Keyboard::KeyPressed(KEY_CODE_W)) { cam->Move(Camera::FORWARD, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_S)) { cam->Move(Camera::BACK, Time::DeltaTime); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
-  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
+  if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
+  if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
 }
 
-
-// Script to move our cobe object. This is added to gameObj.
-class OrbitObjectScript : public IScript {
-public:
-  r32     acc;
-
-  void Awake() override
-  {
-    Log() << "Waking: " + GetOwner()->GetName() + "\n";
-    acc = 0.0f;
-    if (GetOwner()->GetParent()) {
-      GetOwner()->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
-      GetOwner()->GetTransform()->LocalPosition = Vector3(1.5f, 0.0f, 0.0f);
-    }
-  }
-
-  void Update() override 
-  {
-#if 1
-    // Test a swirling sphere...
-    Transform* transform = GetOwner()->GetTransform();
-    r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    // If object has parent, swirl in it's local position.
-    if (GetOwner()->GetParent()) {
-      transform->LocalPosition.x = transform->LocalPosition.x
-        - sinf(Radians(acc)) * 1.0f * sDt;
-      transform->LocalPosition.y = transform->LocalPosition.y
-        - cosf(Radians(acc)) * 1.0f * sDt;
-      // Calculates the curvature.
-      acc += 30.0f * sDt;
-
-      transform->LocalRotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
-    }
-#endif
-  }
-};
-
-
-class MoveScript : public IScript {
-public:
-
-  void Awake() override {
-    Transform* transform = GetOwner()->GetTransform();
-    transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
-    transform->Scale = Vector3(5.0f, 5.0f, 5.0f);
-  }
-  
-  void Update() override {
-    Transform* transform = GetOwner()->GetTransform();
-    r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    if (Keyboard::KeyPressed(KEY_CODE_O)) { 
-      transform->Position += transform->Forward() * 5.0f * sDt; 
-    }
-    if (Keyboard::KeyPressed(KEY_CODE_L)) { 
-      transform->Position -= transform->Forward() * 5.0f * sDt;
-    }
-    if (Keyboard::KeyPressed(KEY_CODE_K)) { 
-      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::UP);
-    }
-    if (Keyboard::KeyPressed(KEY_CODE_COLON)) {
-      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
-    }
-    if (Keyboard::KeyPressed(KEY_CODE_I)) {
-      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::RIGHT);
-    }
-    if (Keyboard::KeyPressed(KEY_CODE_P)) { 
-      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::RIGHT);
-    }
-    //transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT);
-    Log() << "Up: " << transform->Up() << "\t\t\r"; 
-  }
-};
 
 
 int main(int c, char* argv[])
@@ -142,6 +74,7 @@ int main(int c, char* argv[])
   FirstPersonCamera cam(Radians(45.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
+  cam.SetSpeed(10.0f);
   cam.EnableBloom(true);
   cam.EnableAA(true);
   gEngine().SetCamera(&cam);
@@ -215,7 +148,7 @@ int main(int c, char* argv[])
     Time::Update();
     gEngine().Update();
     gEngine().ProcessInput();
-    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

@@ -20,6 +20,9 @@ public:
   void            CleanUp();
   FT_Library&     Handle() { return mLibrary; }
 
+  
+  FT_Face         CreateFace(const std::string ttf_path); 
+  void            FreeFace(FT_Face face);
 private:
   FT_Library      mLibrary;
 };

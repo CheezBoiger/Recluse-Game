@@ -112,6 +112,7 @@ namespace RendererPass {
 
 void LoadShader(std::string Filename, Shader* S)
 {
+  if (!S) { Log(rError) << "Shader module is null! Can not load a shader!\n"; }
   std::string Filepath = gFilesystem().CurrentAppDirectory();
   if (!S->Initialize(Filepath
       + "/" + ShadersPath + "/" + Filename)) {

@@ -48,20 +48,21 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
-layout (set = 1, binding = 0) buffer LightGrid {
-  LightGridInfo light_grid[];
-};
 
 
+
+// Light indices map.
 layout (set = 1, binding = 1) buffer LightIndices {
   vec4 light_indices[];
   vec4 envmap_indices[];
 };
 
-
-layout (set = 1, binding = 2) buffer Lights {
-  PointLight light_lookup[MAX_LIGHTS];
-};
+// The Light lookup table, for use in calculations.
+layout (set = 3, binding = 0) uniform LightBuffer {
+  DirectionLight  primaryLight;
+  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
+  PointLight      pointLights[MAX_POINT_LIGHTS];
+} gLightBuffer;
 
 
 // Depth map from the previous frame.

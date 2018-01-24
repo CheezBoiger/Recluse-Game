@@ -27,4 +27,25 @@ void FreeType::CleanUp()
     R_DEBUG(rError, "Failed to free up FreeType library!\n");
   }
 }
+
+
+FT_Face FreeType::CreateFace(const std::string ttf_path)
+{
+  FT_Face face = nullptr;
+
+  auto err = FT_New_Face(mLibrary, ttf_path.c_str(), 0, &face);
+  if (err != FT_Err_Unknown_File_Format) {
+    R_DEBUG(rError, "FreeType tried loading an unsupported font file...\n");
+  } else if (err) {
+    R_DEBUG(rError, "Unknown error triggered by FreeType!\n");
+  }
+
+  return face;
+}
+
+
+void FreeType::FreeFace(FT_Face face)
+{
+  FT_Done_Face(face);
+}
 } // Recluse

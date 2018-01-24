@@ -3,7 +3,7 @@
 
 #include "Core/Types.hpp"
 #include "Core/Utility/Vector.hpp"
-
+#include "RHI/VulkanConfigs.hpp"
 
 namespace Recluse {
 
@@ -12,6 +12,7 @@ class CommandBuffer;
 class FrameBuffer;
 class Texture;
 class Renderer;
+class Semaphore;
 
 // User Interface overlay, used to render out images, text, and/or
 // streams through screen space.
@@ -22,12 +23,16 @@ public:
   void                        CleanUp();
   void                        Render();
 
+  void                        BuildCmdBuffers();
+
+  Semaphore*                  Signal() { return m_pSemaphore; }
 private:
-  VulkanRHI*                  mRhiRef;
-  Texture*                    mColorTarget;
-  Texture*                    mDepthTarget;
-  std::vector<CommandBuffer*> mCmdBuffers;
-  std::vector<FrameBuffer*>   mFrameBuffers;
+  VulkanRHI*                  m_pRhiRef;
+  Texture*                    m_pColorTarget;
+  Texture*                    m_pDepthTarget;
+  Semaphore*                  m_pSemaphore;
+  std::vector<CommandBuffer*> m_CmdBuffers;
+  std::vector<VkFramebuffer>  m_FrameBuffers;
   friend Renderer;
 };
 } // Recluse
