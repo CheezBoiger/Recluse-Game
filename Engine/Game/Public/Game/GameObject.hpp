@@ -6,6 +6,7 @@
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Vector.hpp"
 #include "Core/Memory/SmartPointer.hpp"
+#include "Core/Logging/Log.hpp"
 
 #include "Component.hpp"
 #include "Scripts/Behavior.hpp"

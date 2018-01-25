@@ -16,14 +16,18 @@ namespace Recluse {
 class GameObjectManager {
   static u64            gGameObjectNumber;
 public:
-  GameObjectManager(size_t initSize = 2056) 
-    : m_GameObjects(initSize) { }
+  GameObjectManager(size_t initSize = 4096) 
+    : m_GameObjects(initSize)
+    , m_Occupied(0) { }
 
   GameObject* Allocate() {
-    m_GameObjects.push_back(std::move(GameObject()));
-    m_GameObjects[m_GameObjects.size() - 1].m_Id = 
+    if (m_Occupied >= m_GameObjects.size()) {
+      m_GameObjects.resize(m_Occupied << 1);
+    }
+    m_GameObjects[m_Occupied++] = std::move(GameObject());
+    m_GameObjects[m_Occupied - 1].m_Id = 
       std::hash<game_uuid_t>()(gGameObjectNumber++);
-    return &m_GameObjects.back();
+    return &m_GameObjects[m_Occupied - 1];
   }
 
   void      Deallocate(GameObject* object) {
@@ -38,6 +42,7 @@ public:
 private:
   // TODO(): Replace with custom pool memory allocator.
   std::vector<GameObject> m_GameObjects;
+  size_t                  m_Occupied;
 };
 
 

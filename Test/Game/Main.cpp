@@ -11,6 +11,9 @@
 // Scripts.
 #include "Scripts/MoveObjectScript.hpp"
 #include "Scripts/OrbitObjectScript.hpp"
+#include <array>
+#include <algorithm>
+#include <random>
 
 using namespace Recluse;
 
@@ -113,6 +116,27 @@ int main(int c, char* argv[])
   m2->SetMeshRef(&cubeMesh);
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
+
+#define objects 50
+  std::array<GameObject*, objects> gameObjs;
+  std::random_device device;
+  std::mt19937 twist(device());
+  std::uniform_real_distribution<r32> uni(-50.0f, 50.0f);
+
+  for (size_t i = 0; i <  gameObjs.size(); ++i) {
+    GameObject* obj = gameObjs[i];
+    obj = GameObject::Instantiate();
+    obj->AddComponent<Transform>();
+    obj->AddComponent<RendererComponent>();
+    obj->AddComponent<MeshComponent>();
+    MeshComponent* meshC = obj->GetComponent<MeshComponent>();
+    meshC->SetMeshRef(&mesh);
+    RendererComponent* rendererC = obj->GetComponent<RendererComponent>();
+    rendererC->ReConfigure();
+    Transform* transform = obj->GetComponent<Transform>();
+    transform->Position = Vector3(uni(twist), uni(twist), uni(twist));
+    scene.GetRoot()->AddChild(obj);
+  }
 
   // Run engine, and build the scene to render.
   gEngine().Run();

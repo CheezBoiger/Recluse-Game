@@ -14,8 +14,6 @@ void Transform::Update()
 {
   if (LocalPosition == Position && LocalRotation == Rotation && LocalScale == Scale && !GetOwner()->GetParent()) return;
 
-  // TODO(): Update the transform's front, right, and up vectors
-  // based on the local rotation.
   GameObject* parent = GetOwner()->GetParent();
 
   if (parent) {

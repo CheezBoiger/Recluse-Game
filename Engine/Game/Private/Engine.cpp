@@ -264,7 +264,8 @@ void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
 {
   // Perform updates to the game object.
   //
-  // TODO(): Need to multithread this!
+  // TODO(): To Better optimize transform calculations for our render objects, we will need to distribute our 
+  // rendering info in a separate memory block.
   //  
   object->Update();
 }
