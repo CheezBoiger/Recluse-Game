@@ -13,6 +13,7 @@ using namespace Recluse;
 // to move our object in 3D space. This is a simple demo to test how
 // scripts work in the engine.
 class MoveScript : public IScript {
+  RSCRIPT(MoveScript)
 public:
 
   // Initialization stage of the script component.

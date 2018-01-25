@@ -22,9 +22,18 @@ enum WindowType {
 };
 
 
+enum AntiAliasing {
+  AA_None,
+  AA_FXAA_2x,
+  AA_FXAA_4x,
+  AA_FXAA_8x
+};
+
+
 class GpuConfigParams {
 public:
   FrameBuffering  _Buffering;
+  AntiAliasing    _AA;
   r32             _Lod;
   u32             _EnableVsync;
 };

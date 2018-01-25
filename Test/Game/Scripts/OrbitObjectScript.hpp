@@ -11,6 +11,7 @@ using namespace Recluse;
 
 // Script to orbit a game object. This is a test demo script.
 class OrbitObjectScript : public IScript {
+  RSCRIPT(OrbitObjectScript);
 public:
   r32     acc;
 

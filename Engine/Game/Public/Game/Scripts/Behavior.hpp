@@ -4,7 +4,7 @@
 #include "Core/Types.hpp"
 #include "Core/Serialize.hpp"
 
-#include "Component.hpp"
+#include "Game/Component.hpp"
 
 #define RBEHAVIOR(behav) RCOMPONENT(behav)
 #define RSCRIPT(script) RBEHAVIOR(script)

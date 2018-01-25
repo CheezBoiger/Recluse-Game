@@ -188,6 +188,7 @@ public:
 
   // Check if this renderer is initialized with the window reference given.
   b8                Initialized() { return m_Initialized; }
+  b8                Antialiasing() { return m_AntiAliasing; }
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return m_pRhi; }
@@ -267,6 +268,7 @@ private:
   b8                m_Initialized     : 1;
   b8                m_NeedsUpdate     : 1;
   b8                m_AsyncBuild      : 1;
+  b8                m_AntiAliasing    : 1;
 };
 
 Renderer&           gRenderer();

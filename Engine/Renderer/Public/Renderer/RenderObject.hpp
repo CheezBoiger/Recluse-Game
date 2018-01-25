@@ -26,10 +26,10 @@ class VulkanRHI;
 class RenderObject {
 public:
   // The Mesh descriptor, used to define the renderobject in 3D space.
-  MeshDescriptor*         MeshDescriptorId;
+  MeshDescriptor*         _pMeshDescId;
 
   // The material of this Render Object.
-  MaterialDescriptor*               MaterialId;
+  MaterialDescriptor*               _pMaterialDescId;
 
   // Number of instances to draw meshdata within the render object.
   // Typically set to 1 (default is 1.)

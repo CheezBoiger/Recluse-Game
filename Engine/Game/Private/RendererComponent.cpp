@@ -90,8 +90,8 @@ void RendererComponent::OnInitialize(GameObject* owner)
   mMaterial->Initialize();
   mMeshDescriptor->Initialize();
 
-  mRenderObj->MeshDescriptorId = mMeshDescriptor;
-  mRenderObj->MaterialId = mMaterial;
+  mRenderObj->_pMeshDescId = mMeshDescriptor;
+  mRenderObj->_pMaterialDescId = mMaterial;
   mRenderObj->Initialize();
 
   // Check if MeshComponent is in game object.

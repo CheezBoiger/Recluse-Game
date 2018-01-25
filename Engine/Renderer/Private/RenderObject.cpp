@@ -22,8 +22,8 @@ namespace Recluse {
 
 
 RenderObject::RenderObject(MeshDescriptor* mesh, MaterialDescriptor* material)
-  : MaterialId(material)
-  , MeshDescriptorId(mesh)
+  : _pMaterialDescId(material)
+  , _pMeshDescId(mesh)
   , mCurrIdx(0)
   , Instances(1)
   , Renderable(true)
@@ -47,13 +47,13 @@ RenderObject::~RenderObject()
 
 void RenderObject::Initialize()
 {
-  if (!MeshDescriptorId || !MaterialId) {
+  if (!_pMeshDescId || !_pMaterialDescId) {
     Log(rError) << "A mesh descriptor AND material need to be set for this render object!\n"; 
     R_ASSERT(false, "No material or mesh descriptor set for this render object!");
     return;
   } 
 
-  if (!MaterialId->Native()) {
+  if (!_pMaterialDescId->Native()) {
     Log(rError) << "MaterialDescriptor buffer was not initialized prior to initializing this RenderObject! Halting process\n";
     R_ASSERT(false, "MaterialDescriptor Buffer was not intialized, can not continue this RenderObject intialization.\n");
     return;
@@ -77,7 +77,7 @@ void RenderObject::Initialize()
   mMaterialSets[0]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
   mMaterialSets[1]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
 
-  if (MeshDescriptorId->Skinned()) {
+  if (_pMeshDescId->Skinned()) {
     DescriptorSetLayout* BonesLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
     m_BonesSets[0] = mRhi->CreateDescriptorSet();
     m_BonesSets[1] = mRhi->CreateDescriptorSet();
@@ -122,14 +122,14 @@ void RenderObject::Update()
 void RenderObject::UpdateDescriptorSets(size_t idx)
 {
   Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
-  if (MaterialId->Sampler()) sampler = MaterialId->Sampler()->Handle();
+  if (_pMaterialDescId->Sampler()) sampler = _pMaterialDescId->Sampler()->Handle();
 
   Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
 
   // Mesh
   {
     VkDescriptorBufferInfo objBufferInfo = {};
-    objBufferInfo.buffer = MeshDescriptorId->NativeObjectBuffer()->NativeBuffer();
+    objBufferInfo.buffer = _pMeshDescId->NativeObjectBuffer()->NativeBuffer();
     objBufferInfo.offset = 0;
     objBufferInfo.range = sizeof(ObjectBuffer);
     VkWriteDescriptorSet MeshWriteSet = { };
@@ -144,7 +144,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
   }
 
   {
-    if (!MaterialId->Native()) { 
+    if (!_pMaterialDescId->Native()) { 
       Log(rWarning) << "Can not update render object material descriptor sets, material descriptor buffer is not initialized!\n";
       return; 
     }
@@ -152,8 +152,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     std::array<VkWriteDescriptorSet, 7> MaterialWriteSets;
     VkDescriptorImageInfo albedoInfo = {};
     albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Albedo()) {
-      albedoInfo.imageView = MaterialId->Albedo()->Handle()->View();
+    if (_pMaterialDescId->Albedo()) {
+      albedoInfo.imageView = _pMaterialDescId->Albedo()->Handle()->View();
     }
     else {
       albedoInfo.imageView = defaultTexture->View();
@@ -162,8 +162,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     VkDescriptorImageInfo metallicInfo = {};
     metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Metallic()) {
-      metallicInfo.imageView = MaterialId->Metallic()->Handle()->View();
+    if (_pMaterialDescId->Metallic()) {
+      metallicInfo.imageView = _pMaterialDescId->Metallic()->Handle()->View();
     }
     else {
       metallicInfo.imageView = defaultTexture->View();
@@ -172,8 +172,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     VkDescriptorImageInfo roughInfo = {};
     roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Roughness()) {
-      roughInfo.imageView = MaterialId->Roughness()->Handle()->View();
+    if (_pMaterialDescId->Roughness()) {
+      roughInfo.imageView = _pMaterialDescId->Roughness()->Handle()->View();
     }
     else {
       roughInfo.imageView = defaultTexture->View();
@@ -182,8 +182,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     VkDescriptorImageInfo normalInfo = {};
     normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Normal()) {
-      normalInfo.imageView = MaterialId->Normal()->Handle()->View();
+    if (_pMaterialDescId->Normal()) {
+      normalInfo.imageView = _pMaterialDescId->Normal()->Handle()->View();
     }
     else {
       normalInfo.imageView = defaultTexture->View();
@@ -192,8 +192,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     VkDescriptorImageInfo aoInfo = {};
     aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Ao()) {
-      aoInfo.imageView = MaterialId->Ao()->Handle()->View();
+    if (_pMaterialDescId->Ao()) {
+      aoInfo.imageView = _pMaterialDescId->Ao()->Handle()->View();
     }
     else {
       aoInfo.imageView = defaultTexture->View();
@@ -202,8 +202,8 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     VkDescriptorImageInfo emissiveInfo = {};
     emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (MaterialId->Emissive()) {
-      emissiveInfo.imageView = MaterialId->Emissive()->Handle()->View();
+    if (_pMaterialDescId->Emissive()) {
+      emissiveInfo.imageView = _pMaterialDescId->Emissive()->Handle()->View();
     }
     else {
       emissiveInfo.imageView = defaultTexture->View();
@@ -211,7 +211,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     emissiveInfo.sampler = sampler->Handle();
 
     VkDescriptorBufferInfo matBufferInfo = { };
-    matBufferInfo.buffer = MaterialId->Native()->NativeBuffer();
+    matBufferInfo.buffer = _pMaterialDescId->Native()->NativeBuffer();
     matBufferInfo.offset = 0;
     matBufferInfo.range = sizeof(MaterialBuffer);
 
@@ -275,9 +275,9 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
   }
 
   // Bones
-  if (MeshDescriptorId->Skinned()) {
+  if (_pMeshDescId->Skinned()) {
     VkDescriptorBufferInfo boneBufferInfo = { };
-    SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(MeshDescriptorId);
+    SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(_pMeshDescId);
     boneBufferInfo.buffer = sm->NativeBoneBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
     boneBufferInfo.range = sizeof(BonesBuffer);

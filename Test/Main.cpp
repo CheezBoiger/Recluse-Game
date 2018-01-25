@@ -47,9 +47,6 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
   if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->SetToCenter(); window->Show(); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_5)) { camera->EnableAA(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_6)) { camera->EnableAA(true); }
-
   if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
 }
 

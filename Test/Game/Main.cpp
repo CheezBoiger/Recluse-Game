@@ -39,17 +39,19 @@ int main(int c, char* argv[])
   gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800);
   gEngine().SetControlInput(Controller);
   Window* window = gEngine().GetWindow();
-  // Need to show the window in order to see something.
-  window->Show();
-  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   // Setting the renderer to vsync double buffering.
   {
     GpuConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
+    params._AA = AA_FXAA_2x;
     gRenderer().UpdateRendererConfigs(&params);
   }
+
+  // Need to show the window in order to see something.
+  window->Show();
+  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   // Add game object in scene.
   LoadTextures();
@@ -76,7 +78,6 @@ int main(int c, char* argv[])
     static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
   cam.SetSpeed(10.0f);
   cam.EnableBloom(true);
-  cam.EnableAA(true);
   gEngine().SetCamera(&cam);
 
   // Create a mesh object and initialize it.

@@ -224,7 +224,7 @@ void Engine::Update()
     gCamBuffer->_Gamma = m_pCamera->Gamma();
     gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
     gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled();
-    gCamBuffer->_EnableAA = m_pCamera->AA();
+    //gCamBuffer->_EnableAA = true; // Overwritten by renderer.
 
     m_CamFrustum.Update();
     gCamBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
@@ -252,9 +252,9 @@ void Engine::UpdateRenderObjects()
     RenderCmd& cmd = m_RenderCmdList[i];
     RenderObject* obj = cmd._pTarget;
 
-    if (obj && obj->MeshDescriptorId) {
-      obj->MaterialId->Update();
-      obj->MeshDescriptorId->Update();
+    if (obj && obj->_pMeshDescId) {
+      obj->_pMaterialDescId->Update();
+      obj->_pMeshDescId->Update();
     }
   }
 }

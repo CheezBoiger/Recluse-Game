@@ -53,6 +53,7 @@ Renderer::Renderer()
   , m_pGlobal(nullptr)
   , m_NeedsUpdate(false)
   , m_AsyncBuild(false)
+  , m_AntiAliasing(false)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
@@ -275,9 +276,9 @@ b8 Renderer::Initialize(Window* window)
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
       cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
-      VkDescriptorSet finalDescriptorSet = finalSet->Handle();    
+      VkDescriptorSet finalDescriptorSets[] = { finalSet->Handle() };    
 
-      cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Layout(), 0, 1, &finalDescriptorSet, 0, nullptr);
+      cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Layout(), 0, 1, finalDescriptorSets, 0, nullptr);
       VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
       VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
@@ -445,24 +446,32 @@ void Renderer::SetUpDescriptorSetLayouts()
 
     LightSetLayout->Initialize(LightLayout);
   }
+  // Final Layout pass.
+  {
+    DescriptorSetLayout* finalSetLayout = m_pRhi->CreateDescriptorSetLayout();
+    gResources().RegisterDescriptorSetLayout(FinalDescSetLayoutStr, finalSetLayout);
+  
+    std::array<VkDescriptorSetLayoutBinding, 2> finalBindings;
 
-  DescriptorSetLayout* finalSetLayout = m_pRhi->CreateDescriptorSetLayout();
-  gResources().RegisterDescriptorSetLayout(FinalDescSetLayoutStr, finalSetLayout);
+    finalBindings[0].binding = 0;
+    finalBindings[0].descriptorCount = 1;
+    finalBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    finalBindings[0].pImmutableSamplers = nullptr;
+    finalBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayoutBinding finalTextureSample = {};
-  finalTextureSample.binding = 0;
-  finalTextureSample.descriptorCount = 1;
-  finalTextureSample.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  finalTextureSample.pImmutableSamplers = nullptr;
-  finalTextureSample.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    finalBindings[1].binding = 1;
+    finalBindings[1].descriptorCount = 1;
+    finalBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    finalBindings[1].pImmutableSamplers = nullptr;
+    finalBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayoutCreateInfo finalLayoutInfo = {};
-  finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  finalLayoutInfo.bindingCount = 1;
-  finalLayoutInfo.pBindings = &finalTextureSample;
+    VkDescriptorSetLayoutCreateInfo finalLayoutInfo = {};
+    finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    finalLayoutInfo.bindingCount = static_cast<u32>(finalBindings.size());
+    finalLayoutInfo.pBindings = finalBindings.data();
 
-  finalSetLayout->Initialize(finalLayoutInfo);
-
+    finalSetLayout->Initialize(finalLayoutInfo);
+  }
   // HDR Layout pass.
   DescriptorSetLayout* hdrSetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(HDRGammaDescSetLayoutStr, hdrSetLayout);
@@ -1720,7 +1729,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         RenderObject* RenderObj = renderCmd._pTarget;
         if (!RenderObj->Renderable) continue;
 
-        b8 Skinned = RenderObj->MeshDescriptorId->Skinned();
+        b8 Skinned = RenderObj->_pMeshDescId->Skinned();
         GraphicsPipeline* Pipe = Skinned ? pbrPipeline : staticPbrPipeline;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -2070,7 +2079,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
         if (!obj) continue;
         if (!obj->Renderable) continue;
         
-        b8 skinned = obj->MeshDescriptorId->Skinned();
+        b8 skinned = obj->_pMeshDescId->Skinned();
         VkDescriptorSet descriptorSets[3];
         descriptorSets[0] = obj->CurrMeshSet()->Handle();
         descriptorSets[1] = lightViewSet->Handle();
@@ -2128,17 +2137,33 @@ void Renderer::SetUpFinalOutputs()
     renderTextureFinal.imageView = pbrColor->View();
   }
 
-  VkWriteDescriptorSet writeInfo = {};
-  writeInfo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo.descriptorCount = 1;
-  writeInfo.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo.dstBinding = 0;
-  writeInfo.pImageInfo = &renderTextureFinal;
-  writeInfo.pBufferInfo = nullptr;
-  writeInfo.pTexelBufferView = nullptr;
-  writeInfo.dstArrayElement = 0;
+  VkDescriptorBufferInfo renderTextureGlobalBuffer = { };
+  renderTextureGlobalBuffer.offset = 0;
+  renderTextureGlobalBuffer.range = sizeof(GlobalBuffer);
+  renderTextureGlobalBuffer.buffer = m_pGlobal->Handle()->NativeBuffer();
 
-  offscreenImageDescriptor->Update(1, &writeInfo);
+  std::array<VkWriteDescriptorSet, 2> writeInfo;
+  writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[0].descriptorCount = 1;
+  writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[0].dstBinding = 0;
+  writeInfo[0].pImageInfo = &renderTextureFinal;
+  writeInfo[0].pBufferInfo = nullptr;
+  writeInfo[0].pTexelBufferView = nullptr;
+  writeInfo[0].dstArrayElement = 0;
+  writeInfo[0].pNext = nullptr;
+
+  writeInfo[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[1].descriptorCount = 1;
+  writeInfo[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writeInfo[1].dstBinding = 1;
+  writeInfo[1].pImageInfo = nullptr;
+  writeInfo[1].pBufferInfo = &renderTextureGlobalBuffer;
+  writeInfo[1].pTexelBufferView = nullptr;
+  writeInfo[1].dstArrayElement = 0;
+  writeInfo[1].pNext = nullptr;
+
+  offscreenImageDescriptor->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
 }
 
 
@@ -2204,6 +2229,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
+  m_pGlobal->Data()->_EnableAA = m_AntiAliasing;
   m_pGlobal->Update();
 }
 
@@ -2231,6 +2257,16 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
 
     if (params->_EnableVsync >= 1) {
       presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    // TODO()::
+    switch (params->_AA) {
+      case AA_None: m_AntiAliasing = false; break;
+      case AA_FXAA_2x:
+      case AA_FXAA_4x:
+      case AA_FXAA_8x:
+      default:
+        m_AntiAliasing = true; break;
     }
   }
 
