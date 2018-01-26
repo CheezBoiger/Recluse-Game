@@ -32,7 +32,14 @@ void Controller()
 }
 
 
-
+/*
+  Requirements for rendering something on screen:
+    Material -> MaterialComponent.
+    Mesh -> MeshComponent
+    RendererComponent
+  Updating materials or meshes requires you call RendererComponent::ReConfigure() to 
+  update the object.
+*/
 int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
@@ -90,6 +97,11 @@ int main(int c, char* argv[])
 
   Mesh mesh;
   Mesh cubeMesh;
+  Material objMat;
+  Material obj2Mat;
+
+  objMat.Initialize();
+  obj2Mat.Initialize();
 
   {
     auto vertices = UVSphere::MeshInstance(1.0f, 64, 64);
@@ -107,6 +119,8 @@ int main(int c, char* argv[])
   gameObj->SetName("Cube");
   obj2->AddComponent<MoveScript>();
   gameObj->AddComponent<MeshComponent>();
+  gameObj->AddComponent<MaterialComponent>();
+  gameObj->GetComponent<MaterialComponent>()->SetMaterialRef(&objMat);
   MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
   meshComponent->SetMeshRef(&mesh);
 
@@ -117,30 +131,37 @@ int main(int c, char* argv[])
   obj2->AddComponent<MeshComponent>();
   MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
   m2->SetMeshRef(&cubeMesh);
+  obj2->AddComponent<MaterialComponent>();
+  obj2->GetComponent<MaterialComponent>()->SetMaterialRef(&obj2Mat);
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 300
+#define objects 30
   std::array<GameObject*, objects> gameObjs;
-  std::random_device device;
-  std::mt19937 twist(device());
-  std::uniform_real_distribution<r32> uni(-50.0f, 50.0f);
+  Material objsMat; objsMat.Initialize();
 
-  for (size_t i = 0; i <  gameObjs.size(); ++i) {
-    GameObject* obj = gameObjs[i];
-    obj = GameObject::Instantiate();
-    obj->AddComponent<Transform>();
-    obj->AddComponent<RendererComponent>();
-    obj->AddComponent<MeshComponent>();
-    MeshComponent* meshC = obj->GetComponent<MeshComponent>();
-    meshC->SetMeshRef(&mesh);
-    RendererComponent* rendererC = obj->GetComponent<RendererComponent>();
-    rendererC->ReConfigure();
-    Transform* transform = obj->GetComponent<Transform>();
-    transform->Position = Vector3(uni(twist), uni(twist), uni(twist));
-    scene.GetRoot()->AddChild(obj);
+  {
+    std::random_device device;
+    std::mt19937 twist(device());
+    std::uniform_real_distribution<r32> uni(-50.0f, 50.0f);
+
+    for (size_t i = 0; i <  gameObjs.size(); ++i) {
+      GameObject* obj = gameObjs[i];
+      obj = GameObject::Instantiate();
+      obj->AddComponent<Transform>();
+      obj->AddComponent<RendererComponent>();
+      obj->AddComponent<MeshComponent>();
+      MeshComponent* meshC = obj->GetComponent<MeshComponent>();
+      meshC->SetMeshRef(&mesh);
+      obj->AddComponent<MaterialComponent>();
+      obj->GetComponent<MaterialComponent>()->SetMaterialRef(&objsMat);
+      RendererComponent* rendererC = obj->GetComponent<RendererComponent>();
+      rendererC->ReConfigure();
+      Transform* transform = obj->GetComponent<Transform>();
+      transform->Position = Vector3(uni(twist), uni(twist), uni(twist));
+      scene.GetRoot()->AddChild(obj);
+    }
   }
-
   // Run engine, and build the scene to render.
   gEngine().Run();
   gEngine().PushScene(&scene);
@@ -163,6 +184,9 @@ int main(int c, char* argv[])
   GameObject::DestroyAll();
   TextureCleanUp();
   mesh.CleanUp();
+  objMat.CleanUp();
+  obj2Mat.CleanUp();
+  objsMat.CleanUp();
   cubeMesh.CleanUp();
   gEngine().CleanUp();
 #if (_DEBUG)

@@ -34,6 +34,8 @@ public:
     // TODO():
   }
 
+  size_t    NumOccupied() const { return m_Occupied; }
+
 
   void        Clear() {
     m_GameObjects.clear();

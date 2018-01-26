@@ -5,6 +5,7 @@
 #include "Renderer/UserParams.hpp"
 #include "Game/MeshComponent.hpp"
 #include "Game/RendererComponent.hpp"
+#include "Game/MaterialComponent.hpp"
 
 using namespace Recluse;
 

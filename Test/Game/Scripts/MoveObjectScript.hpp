@@ -3,6 +3,7 @@
 // Simple Move Object Script for Game Test.
 #include "Game/Engine.hpp"
 #include "Game/MeshComponent.hpp"
+#include "Game/MaterialComponent.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "../../DemoTextureLoad.hpp"
 
@@ -23,20 +24,21 @@ public:
     transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
     transform->Scale = Vector3(5.0f, 5.0f, 5.0f);
     RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
+    Material* mat = GetOwner()->GetComponent<MaterialComponent>()->GetMaterial();
     {
       Texture2D* tex;
       TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
-      rc->EnableAlbedo(true);
-      rc->SetAlbedo(tex);
+      mat->EnableAlbedo(true);
+      mat->SetAlbedo(tex);
       TextureCache::Get(RTEXT("RustedNormal"), &tex);
-      rc->EnableNormal(true);
-      rc->SetNormal(tex);
+      mat->EnableNormal(true);
+      mat->SetNormal(tex);
       TextureCache::Get(RTEXT("RustedMetal"), &tex);
-      rc->EnableMetallic(true);
-      rc->SetMetallic(tex);
+      mat->EnableMetallic(true);
+      mat->SetMetallic(tex);
       TextureCache::Get(RTEXT("RustedRough"), &tex);
-      rc->EnableRoughness(true);
-      rc->SetRoughness(tex);
+      mat->EnableRoughness(true);
+      mat->SetRoughness(tex);
       rc->ReConfigure(); // Must call ReConfigure to update textures and mesh on renderer components.
     }
   }

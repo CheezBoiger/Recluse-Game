@@ -38,6 +38,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/CameraComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/AudioSourceComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/MaterialComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
@@ -49,6 +50,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraViewFrustum.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Component.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/MaterialComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp
@@ -60,8 +62,9 @@ set(GAME_FILES
   
   ${SCENE_PUBLIC_DIR}/Scene.hpp
   ${SCENE_PUBLIC_DIR}/SceneCache.hpp
-
+  ${SCENE_PUBLIC_DIR}/ModelLoader.hpp
   ${SCENE_PRIVATE_DIR}/Scene.cpp
+  ${SCENE_PRIVATE_DIR}/ModelLoader.cpp
   
   ${SCRIPTS_PUBLIC_DIR}/Behavior.hpp
   ${SCRIPTS_PUBLIC_DIR}/ScriptCache.hpp
@@ -71,7 +74,11 @@ set(GAME_FILES
   ${VISIBLE_PRIVATE_DIR}/Octree.cpp
 
   ${RENDERING_PUBLIC_DIR}/TextureCache.hpp
+  ${RENDERING_PUBLIC_DIR}/MeshCache.hpp
+
   ${RENDERING_PRIVATE_DIR}/TextureCache.cpp
+  ${RENDERING_PRIVATE_DIR}/MeshCache.cpp
+
 )
 
 

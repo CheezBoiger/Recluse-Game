@@ -25,8 +25,9 @@ public:
     }
 
     RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
-    rc->SetBaseMetal(0.0f);
-    rc->SetBaseRough(1.0f);
+    Material* mat = GetOwner()->GetComponent<MaterialComponent>()->GetMaterial();
+    mat->SetBaseMetal(0.0f);
+    mat->SetBaseRough(1.0f);
   }
 
   void Update() override

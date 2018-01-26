@@ -47,18 +47,6 @@ RenderObject::~RenderObject()
 
 void RenderObject::Initialize()
 {
-  if (!_pMeshDescId || !_pMaterialDescId) {
-    Log(rError) << "A mesh descriptor AND material need to be set for this render object!\n"; 
-    R_ASSERT(false, "No material or mesh descriptor set for this render object!");
-    return;
-  } 
-
-  if (!_pMaterialDescId->Native()) {
-    Log(rError) << "MaterialDescriptor buffer was not initialized prior to initializing this RenderObject! Halting process\n";
-    R_ASSERT(false, "MaterialDescriptor Buffer was not intialized, can not continue this RenderObject intialization.\n");
-    return;
-  }
-
   if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1]) {
     R_DEBUG(rNotify, "This RenderObject is already initialized. Skipping...\n");
     return;
@@ -121,6 +109,18 @@ void RenderObject::Update()
 
 void RenderObject::UpdateDescriptorSets(size_t idx)
 {
+  if (!_pMeshDescId || !_pMaterialDescId) {
+    Log(rError) << "A mesh descriptor AND material need to be set for this render object in order to update!\n";
+    R_ASSERT(false, "No material or mesh descriptor set for this render object, can not update!");
+    return;
+  }
+
+  if (!_pMaterialDescId->Native()) {
+    Log(rError) << "MaterialDescriptor buffer was not initialized prior to initializing this RenderObject! Halting update\n";
+    R_ASSERT(false, "MaterialDescriptor Buffer was not intialized, can not continue this RenderObject update.\n");
+    return;
+  }
+
   Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
   if (_pMaterialDescId->Sampler()) sampler = _pMaterialDescId->Sampler()->Handle();
 

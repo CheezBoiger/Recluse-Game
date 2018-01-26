@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #pragma once 
 
 #include "Core/Types.hpp"
@@ -39,39 +39,17 @@ public:
   // to add new textures. Recommended you do not call this function every frame, as it does
   // hinder rendering performance.
   void                      ReConfigure();
-
-  void                      SetBaseRough(r32 rough) { mMaterial->Data()->_BaseRough = rough; }
-  void                      SetBaseMetal(r32 metal) { mMaterial->Data()->_BaseMetal = metal; }
-  void                      SetBaseEmissive(r32 emissive) { mMaterial->Data()->_BaseEmissive = emissive; }
-
-  void                      SetAlbedo(Texture2D* texture) { mMaterial->SetAlbedo(texture); }
-  void                      SetNormal(Texture2D* texture) { mMaterial->SetNormal(texture); }
-  void                      SetRoughness(Texture2D* texture) { mMaterial->SetRoughness(texture); }
-  void                      SetMetallic(Texture2D* texture) { mMaterial->SetMetallic(texture); }
-  void                      SetAo(Texture2D* texture) { mMaterial->SetAo(texture); }
-  void                      SetEmissive(Texture2D* texture) { mMaterial->SetEmissive(texture);}
-  void                      SetBaseColor(Vector4 color) { mMaterial->Data()->_Color = color; }  
-
-  void                      EnableAlbedo(b8 enable) { mMaterial->Data()->_HasAlbedo = enable; }
-  void                      EnableNormal(b8 enable) { mMaterial->Data()->_HasNormal = enable; }
-  void                      EnableRoughness(b8 enable) { mMaterial->Data()->_HasRoughness = enable; }
-  void                      EnableMetallic(b8 enable) { mMaterial->Data()->_HasMetallic = enable; }
-  void                      EnableEmissive(b8 enable) { mMaterial->Data()->_HasEmissive = enable; }
-  void                      EnableAo(b8 enable) { mMaterial->Data()->_HasAO = enable; }
   void                      Enable(b8 enable);
 
   b8                        Enabled() const;
   b8                        Dirty() const { return m_Dirty; }
   RenderObject*             RenderObj() { return mRenderObj; }
-  MaterialDescriptor*       GetMaterial() { return mMaterial; }
   MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }
 
   void                      SignalClean() { m_Dirty = false; }
 
 protected:
   void                      TriggerDirty() { m_Dirty = true; }
-
-  MaterialDescriptor*       mMaterial;
   RenderObject*             mRenderObj;
   MeshDescriptor*           mMeshDescriptor;
   b8                        m_Dirty;

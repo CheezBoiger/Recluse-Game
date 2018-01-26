@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "RendererComponent.hpp"
 #include "MeshComponent.hpp"
+#include "MaterialComponent.hpp"
 #include "GameObject.hpp"
 
 #include "Renderer/RenderObject.hpp"
@@ -15,27 +16,23 @@ namespace Recluse {
 
 
 RendererComponent::RendererComponent()
-  : mMaterial(nullptr)
-  , mRenderObj(nullptr)
+  : mRenderObj(nullptr)
   , mMeshDescriptor(nullptr)
 {
 }
 
 
 RendererComponent::RendererComponent(const RendererComponent& m)
-  : mMaterial(m.mMaterial)
-  , mMeshDescriptor(m.mMeshDescriptor)
+  : mMeshDescriptor(m.mMeshDescriptor)
   , mRenderObj(m.mRenderObj)
 {
 }
 
 
 RendererComponent::RendererComponent(RendererComponent&& m)
-  : mMaterial(m.mMaterial)
-  , mMeshDescriptor(m.mMeshDescriptor)
+  : mMeshDescriptor(m.mMeshDescriptor)
   , mRenderObj(m.mRenderObj)
 {
-  m.mMaterial = nullptr;
   m.mMeshDescriptor = nullptr;
   m.mRenderObj = nullptr;
 }
@@ -44,11 +41,9 @@ RendererComponent::RendererComponent(RendererComponent&& m)
 RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
   mRenderObj = obj.mRenderObj;
-  mMaterial = obj.mMaterial;
   mMeshDescriptor = obj.mMeshDescriptor;
 
   obj.mMeshDescriptor = nullptr;
-  obj.mMaterial = nullptr;
   obj.mRenderObj = nullptr;
   return (*this);
 }
@@ -57,7 +52,6 @@ RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
   mRenderObj = obj.mRenderObj;
-  mMaterial = obj.mMaterial;
   mMeshDescriptor = obj.mMeshDescriptor;
   return (*this);
 }
@@ -65,14 +59,21 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 
 void RendererComponent::ReConfigure()
 {
-  mRenderObj->Update();
-  mRenderObj->SwapDescriptorSet();
-
   MeshComponent* meshc = GetOwner()->GetComponent<MeshComponent>();
   if (meshc) {
     mRenderObj->ClearOutMeshGroup();
     mRenderObj->PushBack(meshc->MeshRef()->Native());
   }
+
+  MaterialComponent* materialComponent = GetOwner()->GetComponent<MaterialComponent>();
+  Material* material = Material::Default();
+  if (materialComponent) {
+    material = materialComponent->GetMaterial();
+  }
+
+  mRenderObj->_pMaterialDescId = material->Native();
+  mRenderObj->Update();
+  mRenderObj->SwapDescriptorSet();
 
   TriggerDirty();
 }
@@ -84,14 +85,19 @@ void RendererComponent::OnInitialize(GameObject* owner)
     Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
     return;
   }
+
+  MaterialComponent* mc = owner->GetComponent<MaterialComponent>();
+  Material* material = Material::Default();
+  if (mc) {
+    material = mc->GetMaterial();
+  }
+  
   mRenderObj = gRenderer().CreateRenderObject();
-  mMaterial = gRenderer().CreateMaterialDescriptor();
   mMeshDescriptor = gRenderer().CreateStaticMeshDescriptor();
-  mMaterial->Initialize();
   mMeshDescriptor->Initialize();
 
   mRenderObj->_pMeshDescId = mMeshDescriptor;
-  mRenderObj->_pMaterialDescId = mMaterial;
+  mRenderObj->_pMaterialDescId = material->Native();
   mRenderObj->Initialize();
 
   // Check if MeshComponent is in game object.
@@ -105,10 +111,8 @@ void RendererComponent::OnInitialize(GameObject* owner)
 void RendererComponent::OnCleanUp()
 {
   gRenderer().FreeRenderObject(mRenderObj);
-  gRenderer().FreeMaterialDescriptor(mMaterial);
   gRenderer().FreeMeshDescriptor(mMeshDescriptor);
   mRenderObj = nullptr;
-  mMaterial = nullptr;
   mMeshDescriptor = nullptr;
 }
 
@@ -141,8 +145,6 @@ void RendererComponent::Update()
 
     mMeshDescriptor->Update();
   }
-
-  mMaterial->Update();
 
   if (Dirty()) {
     // RendererComponent is signalling to the global renderer to rebuild it's

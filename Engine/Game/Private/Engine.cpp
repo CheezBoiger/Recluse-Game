@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Engine.hpp"
 #include "RendererComponent.hpp"
+#include "MaterialComponent.hpp"
 
 #include "Scene/Scene.hpp"
 #include "Core/Thread/CoreThread.hpp"
@@ -10,6 +11,8 @@
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/UserParams.hpp"
+
+#include "GameObjectManager.hpp"
 
 #include <queue>
 
@@ -127,6 +130,8 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
 
   gRenderer().PushCmdList(&m_RenderCmdList);
 
+  Material::InitializeDefault();
+
   if (fullscreen) {
     m_Window.SetToFullScreen();
   } else {
@@ -142,6 +147,8 @@ void Engine::CleanUp()
     m_Window.Close();
     Window::PollEvents();
   }
+
+  Material::CleanUpDefault();
 
   gUI().ShutDown();
 #if !defined FORCE_AUDIO_OFF
@@ -287,7 +294,7 @@ void Engine::BuildScene()
 {
   if (!m_pPushedScene) return;
   m_RenderCmdList.Clear();
-  m_RenderCmdList.Resize(2056);
+  m_RenderCmdList.Resize(gGameObjectManager().NumOccupied());
   TraverseScene(BuildSceneCallback);
   gRenderer().Build();
 }
