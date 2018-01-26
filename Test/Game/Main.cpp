@@ -49,6 +49,9 @@ int main(int c, char* argv[])
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
+    // TODO(): More objects equates to more performance penalty with shadows enabled, need 
+    // to optimize!
+    params._Shadows = SHADOWS_LOW;
     gRenderer().UpdateRendererConfigs(&params);
   }
 
@@ -117,7 +120,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 50
+#define objects 200
   std::array<GameObject*, objects> gameObjs;
   std::random_device device;
   std::mt19937 twist(device());

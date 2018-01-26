@@ -12,6 +12,7 @@
 #include "Resources.hpp"
 #include "RenderQuad.hpp"
 #include "GlobalDescriptor.hpp"
+#include "LightDescriptor.hpp"
 
 namespace Recluse {
 
@@ -94,10 +95,6 @@ public:
   // application change, as it will result warnings from the renderer!
   void              BuildAsync();
 
-  // Set the light material for this renderer. This will set the lights that are in the world
-  // scene. 
-  void              SetLightDescriptor(LightDescriptor*   material) { m_pLights = material; }
-
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
 
@@ -129,10 +126,6 @@ public:
   // Create a Sampler.
   TextureSampler*   CreateTextureSampler();
 
-  // Create a light material object, which holds all lights that affect this 
-  // scene. This will then be used for the light culling method of the renderer.
-  LightDescriptor*    CreateLightDescriptor();
-
   // Create a render object for the renderer to render?
   RenderObject*     CreateRenderObject();
 
@@ -140,15 +133,13 @@ public:
   MaterialDescriptor* CreateMaterialDescriptor();
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
+  LightBuffer*      LightData() { return m_pLights->Data(); }
 
   // Frees the render object.
   void              FreeRenderObject(RenderObject* renderObject);
 
   // Frees up the allocated mesh data object.
   void              FreeMeshData(MeshData* mesh);
-
-  // Frees up the allocated light material object.
-  void              FreeLightDescriptor(LightDescriptor* material);
 
   //  Frees up the allocated texture1d object.
   void              FreeTexture1D(Texture1D* texture);

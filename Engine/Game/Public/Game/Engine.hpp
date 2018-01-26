@@ -82,9 +82,6 @@ public:
   void                          BuildScene();
   void                          LoadSceneTransition();
 
-  LightBuffer*                  LightData() { return m_pLights->Data(); }
-  LightDescriptor*              LightDesc() { return m_pLights; }
-
   CmdList&                      RenderCommandList() { return m_RenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }
   r64                           GameMousePosY() const { return m_GameMouseY; }
@@ -105,7 +102,6 @@ private:
   void                          TraverseScene(GameObjectActionCallback callback);
 
   CCamViewFrustum               m_CamFrustum;
-  LightDescriptor*              m_pLights;
   Camera*                       m_pCamera;
   Scene*                        m_pPushedScene;
   ControlInputCallback          m_pControlInputFunc;

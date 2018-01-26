@@ -30,10 +30,19 @@ enum AntiAliasing {
 };
 
 
+enum ShadowDetail {
+  SHADOWS_NONE,
+  SHADOWS_LOW,
+  SHADOWS_MEDIUM,
+  SHADOWS_HIGH,
+};
+
+
 class GpuConfigParams {
 public:
   FrameBuffering  _Buffering;
   AntiAliasing    _AA;
+  ShadowDetail    _Shadows;
   r32             _Lod;
   u32             _EnableVsync;
 };

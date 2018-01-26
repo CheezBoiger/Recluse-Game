@@ -33,10 +33,6 @@ void ProcessInput()
   if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->EnableBloom(false); }
   if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
 
-  // Test albedo enabling.
-  if (Keyboard::KeyPressed(KEY_CODE_V)) { gEngine().LightDesc()->EnablePrimaryShadow(true);/*noAlbedo2 = !noAlbedo2;*/ }
-  if (Keyboard::KeyPressed(KEY_CODE_C)) { gEngine().LightDesc()->EnablePrimaryShadow(false);/*noAlbedo = !noAlbedo;*/ }
-
   // Camera projection changing.
   if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
   if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->SetProjection(Camera::PERSPECTIVE); }

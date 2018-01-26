@@ -148,6 +148,7 @@ void RendererComponent::Update()
     // RendererComponent is signalling to the global renderer to rebuild it's
     // command buffers, as it requires an update.
     gRenderer().SignalCommandBufferRebuild(false);
+    SignalClean();
   }
 }
 } // Recluse

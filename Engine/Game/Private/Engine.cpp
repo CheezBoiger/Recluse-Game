@@ -82,7 +82,6 @@ Engine& gEngine()
 
 Engine::Engine()
   : m_pCamera(nullptr)
-  , m_pLights(nullptr)
   , m_pPushedScene(nullptr)
   , m_GameMouseX(0.0)
   , m_GameMouseY(0.0)
@@ -126,12 +125,6 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   m_Window.Create(appName, width, height);
   gRenderer().Initialize(&m_Window);
 
-  // Set up lights.
-  m_pLights = gRenderer().CreateLightDescriptor();
-  m_pLights->Initialize();
-
-  gRenderer().SetLightDescriptor(m_pLights);
-
   gRenderer().PushCmdList(&m_RenderCmdList);
 
   if (fullscreen) {
@@ -148,11 +141,6 @@ void Engine::CleanUp()
   if (!m_Window.ShouldClose()) {
     m_Window.Close();
     Window::PollEvents();
-  }
-
-  if (m_pLights) {
-    gRenderer().FreeLightDescriptor(m_pLights);
-    m_pLights = nullptr;
   }
 
   gUI().ShutDown();
@@ -223,7 +211,7 @@ void Engine::Update()
     gCamBuffer->_Exposure = m_pCamera->Exposure();
     gCamBuffer->_Gamma = m_pCamera->Gamma();
     gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
-    gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled();
+    //gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled(); // overwritten by renderer.
     //gCamBuffer->_EnableAA = true; // Overwritten by renderer.
 
     m_CamFrustum.Update();
@@ -233,11 +221,6 @@ void Engine::Update()
     gCamBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
     gCamBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
     gCamBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
-  }
-
-  if (m_pLights) {
-    if (m_pCamera) m_pLights->SetViewerPosition(m_pCamera->Position());
-    m_pLights->Update();
   }
 
   gCore().Sync();
@@ -277,7 +260,7 @@ void Engine::UpdateGameLogic()
 
   {
     DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
-    LightBuffer* pLights = m_pLights->Data();
+    LightBuffer* pLights = gRenderer().LightData();
     pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
     pLights->_PrimaryLight._Color = pPrimary->_Color;
     pLights->_PrimaryLight._Direction = pPrimary->_Direction;

@@ -212,6 +212,10 @@ void Renderer::CleanUp()
   delete m_pGlobal;
   m_pGlobal = nullptr;
 
+  m_pLights->CleanUp();
+  delete m_pLights;
+  m_pLights = nullptr;
+
   if (m_pUI) {
     m_pUI->CleanUp();
     delete m_pUI;
@@ -259,6 +263,11 @@ b8 Renderer::Initialize(Window* window)
   SetUpDownscale(true);
   SetUpHDR(true);
   m_RenderQuad.Initialize(m_pRhi);
+
+  m_pLights = new LightDescriptor();
+  m_pLights->m_pRhi = m_pRhi;
+  m_pLights->Initialize();
+  m_pLights->Update();
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -2229,8 +2238,12 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 
 void Renderer::UpdateMaterials()
 {
+  // Update global data.
   m_pGlobal->Data()->_EnableAA = m_AntiAliasing;
   m_pGlobal->Update();
+
+  // Update lights in scene.
+  m_pLights->Update();
 }
 
 
@@ -2267,6 +2280,23 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
       case AA_FXAA_8x:
       default:
         m_AntiAliasing = true; break;
+    }
+
+    // TODO():
+    switch (params->_Shadows) {
+      case SHADOWS_NONE:
+      {
+        m_pLights->EnablePrimaryShadow(false);
+        m_pGlobal->Data()->_EnableShadows = false;
+      } break;
+      case SHADOWS_LOW:
+      case SHADOWS_MEDIUM:
+      case SHADOWS_HIGH:
+      default:
+      {
+        m_pLights->EnablePrimaryShadow(true);
+        m_pGlobal->Data()->_EnableShadows = true;
+      } break;
     }
   }
 
@@ -2321,22 +2351,6 @@ void Renderer::BuildAsync()
 void Renderer::WaitIdle()
 {
   m_pRhi->DeviceWaitIdle();
-}
-
-
-LightDescriptor* Renderer::CreateLightDescriptor()
-{
-  LightDescriptor* lMat = new LightDescriptor();
-  lMat->m_pRhi = m_pRhi;
-
-  return lMat;
-}
-
-
-void Renderer::FreeLightDescriptor(LightDescriptor* material)
-{
-  material->CleanUp();
-  delete material;
 }
 
 
