@@ -15,7 +15,6 @@ Core& gCore()
 void Core::OnStartUp()
 {
   Window::InitializeAPI();
-  Time::Instance().StartUp();
 }
 
 

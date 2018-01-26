@@ -18,8 +18,7 @@ class PhysX;
 class Physics : public EngineModule<Physics> {
 public:
   Physics()
-    : mDevice(nullptr)
-    , m_Accumulator(0.0f) { }
+    : mDevice(nullptr) { }
 
   void                            OnStartUp() override;
   void                            OnShutDown() override;
@@ -27,7 +26,6 @@ public:
 
 private:
   PhysX*                          mDevice;
-  r32                             m_Accumulator;
 };
 
 

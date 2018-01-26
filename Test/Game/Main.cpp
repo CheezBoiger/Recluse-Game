@@ -175,8 +175,8 @@ int main(int c, char* argv[])
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
-    gEngine().Update();
     gEngine().ProcessInput();
+    gEngine().Update();
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   

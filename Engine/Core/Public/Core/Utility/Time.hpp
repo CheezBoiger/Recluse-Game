@@ -31,5 +31,8 @@ public:
 
   // Fix time, in seconds, to which some engine modules rely on, such as physics.
   static r64 FixTime;
+
+  // Start up the time.
+  static void Start() { Time::Instance().StartUp(); }
 };
 } // Recluse

@@ -107,6 +107,7 @@ private:
   ControlInputCallback          m_pControlInputFunc;
   r64                           m_GameMouseX;
   r64                           m_GameMouseY;
+  r64                           m_dLag;
 
   Window                        m_Window;
   CmdList                       m_RenderCmdList;

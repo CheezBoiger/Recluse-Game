@@ -39,10 +39,6 @@ void Physics::OnShutDown()
 
 void Physics::UpdateState(r64 dt)
 {
-  m_Accumulator += static_cast<r32>(dt);
-  if (m_Accumulator < Time::FixTime) return;
-
-  m_Accumulator -= static_cast<r32>(dt);
-  mDevice->Update(static_cast<r32>(Time::FixTime));
+  mDevice->Update(static_cast<r32>(dt));
 }
 } // Recluse

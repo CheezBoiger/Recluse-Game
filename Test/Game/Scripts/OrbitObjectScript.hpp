@@ -21,7 +21,7 @@ public:
     acc = 0.0f;
     if (GetOwner()->GetParent()) {
       GetOwner()->GetTransform()->LocalScale = Vector3(0.4f, 0.4f, 0.4f);
-      GetOwner()->GetTransform()->LocalPosition = Vector3(1.5f, 0.0f, 0.0f);
+      GetOwner()->GetTransform()->LocalPosition = Vector3(2.0f, 0.0f, 0.0f);
     }
 
     RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();

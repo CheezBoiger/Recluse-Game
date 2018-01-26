@@ -92,6 +92,7 @@ Engine::Engine()
   , m_pControlInputFunc(nullptr)
   , m_Running(false)
   , m_Stopping(false)
+  , m_dLag(0.0)
 {
 }
 
@@ -169,6 +170,9 @@ void Engine::Run()
 {
   if (m_Running) return;
   // TODO(): Signal to continue thread works.
+
+  // Start up the time as the engine begins running.
+  Time::Start();
   m_Running = true;
 }
 
@@ -190,44 +194,20 @@ void Engine::Update()
     return;
   }
   // Render out the scene.
-  r64 tick = Time::DeltaTime * Time::ScaleTime;
-  gAnimation().UpdateState(tick);
-  gUI().UpdateState(tick);
+  r64 dt = Time::DeltaTime * Time::ScaleTime;
+  m_dLag += Time::DeltaTime;
+
+  while (m_dLag >= Time::FixTime) {
+    gAnimation().UpdateState(dt);
+    gUI().UpdateState(dt);
 #if !defined FORCE_AUDIO_OFF
-  gAudio().UpdateState(tick);
+    gAudio().UpdateState(dt);
 #endif
 #if !defined FORCE_PHYSICS_OFF
-  gPhysics().UpdateState(Time::FixTime);
+    gPhysics().UpdateState(Time::FixTime);
 #endif
-
-  UpdateGameLogic();
-
-  // Update camera and screen info.
-  GlobalBuffer* gCamBuffer = gRenderer().GlobalData();
-  if (m_pCamera) {
-    m_pCamera->Update();
-    m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
-
-    gCamBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
-    gCamBuffer->_Proj = m_pCamera->Projection();
-    gCamBuffer->_View = m_pCamera->View();
-    gCamBuffer->_ViewProj = gCamBuffer->_View * gCamBuffer->_Proj;
-    gCamBuffer->_ScreenSize[0] = m_Window.Width();
-    gCamBuffer->_ScreenSize[1] = m_Window.Height();
-    gCamBuffer->_BloomEnabled = m_pCamera->Bloom();
-    gCamBuffer->_Exposure = m_pCamera->Exposure();
-    gCamBuffer->_Gamma = m_pCamera->Gamma();
-    gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
-    //gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled(); // overwritten by renderer.
-    //gCamBuffer->_EnableAA = true; // Overwritten by renderer.
-
-    m_CamFrustum.Update();
-    gCamBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
-    gCamBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
-    gCamBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
-    gCamBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
-    gCamBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
-    gCamBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
+    UpdateGameLogic();
+    m_dLag -= Time::FixTime;
   }
 
   gCore().Sync();
@@ -273,6 +253,34 @@ void Engine::UpdateGameLogic()
     pLights->_PrimaryLight._Direction = pPrimary->_Direction;
     pLights->_PrimaryLight._Enable = pPrimary->_Enable;
     pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
+  }
+
+  // Update camera and screen info.
+  GlobalBuffer* gCamBuffer = gRenderer().GlobalData();
+  if (m_pCamera) {
+    m_pCamera->Update();
+    m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
+
+    gCamBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
+    gCamBuffer->_Proj = m_pCamera->Projection();
+    gCamBuffer->_View = m_pCamera->View();
+    gCamBuffer->_ViewProj = gCamBuffer->_View * gCamBuffer->_Proj;
+    gCamBuffer->_ScreenSize[0] = m_Window.Width();
+    gCamBuffer->_ScreenSize[1] = m_Window.Height();
+    gCamBuffer->_BloomEnabled = m_pCamera->Bloom();
+    gCamBuffer->_Exposure = m_pCamera->Exposure();
+    gCamBuffer->_Gamma = m_pCamera->Gamma();
+    gCamBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
+    //gCamBuffer->_EnableShadows = m_pLights->PrimaryShadowEnabled(); // overwritten by renderer.
+    //gCamBuffer->_EnableAA = true; // Overwritten by renderer.
+
+    m_CamFrustum.Update();
+    gCamBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
+    gCamBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
+    gCamBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
+    gCamBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
+    gCamBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
+    gCamBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
   }
 
   TraverseScene(UpdateGameObject);
