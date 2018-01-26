@@ -5,6 +5,9 @@
 
 #include "Game/MeshComponent.hpp"
 #include "Game/RendererComponent.hpp"
+#include "Game/MaterialComponent.hpp"
+#include "Game/Rendering/TextureCache.hpp"
+#include "Game/Rendering/MeshCache.hpp"
 #include "Game/Engine.hpp"
 
 
@@ -18,14 +21,18 @@ enum ModelResult {
 };
 
 
-struct ModelContainer {
-  std::vector<Mesh> Meshes;
+// Model is a container of meshes that correspond to materials.
+struct Model {
+  std::vector<Mesh>     Meshes;
+  std::vector<Material> Materials;
 };
 
 
 
 // Load a model Mesh and Material, as well as a Skinned mesh if applicable.
-ModelResult Load(const std::string* filename, Mesh* mesh);
+ModelResult Load(const std::string filename, Model* model);
+ModelResult LoadSkinned(const std::string filename, Model* model);
+ModelResult FreeModel(Model** model);
  
 } // Recluse
 } // Recluse
