@@ -14,6 +14,11 @@ out FRAG_IN {
 } frag_in;
 
 
+layout (set = 0, binding = 0) uniform UIBuffer {
+  mat4 model;
+} ui_buffer;
+
+
 void main()
 {
   gl_Position = vec4(position, 0.0, 1.0);

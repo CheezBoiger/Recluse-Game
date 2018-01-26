@@ -165,4 +165,11 @@ void CommandBuffer::PushConstants(VkPipelineLayout Layout, VkShaderStageFlags St
   ASSERT_RECORDING();
   vkCmdPushConstants(mHandle, Layout, StageFlags, Offset, Size, p_Values);
 }
+
+
+void CommandBuffer::CopyImageToBuffer(VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, u32 regionCount, VkBufferImageCopy* pRegions)
+{
+  ASSERT_RECORDING();
+  vkCmdCopyImageToBuffer(mHandle, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
+}
 } // Recluse

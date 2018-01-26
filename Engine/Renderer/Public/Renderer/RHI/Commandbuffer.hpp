@@ -28,6 +28,7 @@ public:
 
   void            CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
                     u32 regionCount, const VkBufferImageCopy* regions);
+  void            CopyImageToBuffer(VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, u32 regionCount, VkBufferImageCopy* pRegions);
 
   void            PipelineBarrier(VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,  VkDependencyFlags dependencyFlags,
                     u32 memoryBarrierCount, const VkMemoryBarrier* memoryBarriers, u32 bufferMemoryBarrierCount,

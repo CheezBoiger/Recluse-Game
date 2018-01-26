@@ -120,7 +120,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 200
+#define objects 300
   std::array<GameObject*, objects> gameObjs;
   std::random_device device;
   std::mt19937 twist(device());

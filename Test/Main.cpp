@@ -3,6 +3,8 @@
 #include "DemoTextureLoad.hpp"
 
 #include "Renderer/UserParams.hpp"
+#include "Game/MeshComponent.hpp"
+#include "Game/RendererComponent.hpp"
 
 using namespace Recluse;
 
@@ -49,6 +51,7 @@ void ProcessInput()
 #define SPHERE_SEGS 64
 #define PERFORMANCE_TEST 1
 
+// Simple Hello Cube example.
 int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
@@ -64,13 +67,58 @@ int main(int c, char* argv[])
     GpuConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
+    params._Shadows = SHADOWS_LOW;
     gRenderer().UpdateRendererConfigs(&params);
     window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
   }
+
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
 
-  // TODO(): Old test was obsolete, will define a new test here soon.
+  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), 
+    static_cast<r32>(window->Width()), 
+    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(5.0f, 5.0f, -5.0f), Vector3(0.0f, 0.0f, 0.0f));
+  gEngine().SetCamera(&camera);
 
+  // Create a game object.
+  GameObject* obj = GameObject::Instantiate();
+  // Create the scene.
+  Scene scene;
+  scene.GetRoot()->AddChild(obj);
+  // Set primary light.
+  {
+    DirectionalLight* pPrimary = scene.GetPrimaryLight();
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
+    pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
+    pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
+    pPrimary->_Enable = true;
+    pPrimary->_Intensity = 5.0f;
+  }
+
+  Mesh mesh;
+  {
+    auto boxVerts = Cube::MeshInstance();
+    auto boxIndic = Cube::IndicesInstance();
+    mesh.Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
+  }
+
+  obj->AddComponent<Transform>();
+  obj->AddComponent<MeshComponent>();
+  MeshComponent* mc = obj->GetComponent<MeshComponent>();
+  mc->SetMeshRef(&mesh);
+  obj->AddComponent<RendererComponent>();
+
+  gEngine().Run();
+  gEngine().PushScene(&scene);
+  gEngine().BuildScene();
+
+  while (gEngine().Running()) {
+    Time::Update();
+    gEngine().Update();
+    gEngine().ProcessInput();
+  }
+
+  mesh.CleanUp();
+  GameObject::DestroyAll();
   gEngine().CleanUp();
   return 0;
 }
