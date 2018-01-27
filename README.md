@@ -23,6 +23,6 @@ Furthurmore, you should have the following tools needed for build the project:
 - CMake (3.0 or up)
 - Visual Studio (64-bit build)
 
-PhysX needs to be already compiled and ready to go (both x64 debug and release), as the project links to it's DLLs.
+Bullet needs to be already compiled and ready to go (release is mainly used), as the project links to it's DLLs.
 once done, simply create a directory and use cmake to build (be sure to use -G "Visual Studio 15 Win64" to build
 x64 bit version of the product. 
