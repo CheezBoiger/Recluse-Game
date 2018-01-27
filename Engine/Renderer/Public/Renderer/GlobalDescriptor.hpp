@@ -39,12 +39,16 @@ struct GlobalBuffer {
   Vector4         _FPlane;
   Vector2         _MousePos;
   i32             _ScreenSize[2];
+  Vector3         _vSunDir;
+  r32             _vSunBrightness;
   r32             _Gamma;
   r32             _Exposure;
+  r32             _Rayleigh;
+  r32             _Mie;
+  r32             _MieDist;
   i32             _BloomEnabled;
   i32             _EnableShadows;
   i32             _EnableAA;
-  i32             _Pad[3];
 };
 
 

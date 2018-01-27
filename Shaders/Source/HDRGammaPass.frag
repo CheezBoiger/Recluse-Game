@@ -28,8 +28,12 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
   vec4  f_plane;
   vec2  mousePos;
   ivec2 screenSize;
+  vec4  vSun; // Sundir.xyz and w is brightness.
   float gamma;
   float exposure;
+  float fRayleigh;
+  float fMie;
+  float fMieDist;
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
