@@ -20,10 +20,10 @@ set(RECLUSE_FREETYPE_DIR    ${RECLUSE_LIB_DIR}/FreeType)
 
 # Libraries that REQUIRE enviroment variables set up.
 if (PHYSICS)
-  set(RECLUSE_PHYSX_DIR       $ENV{PHYSXSDK})
-  set(PHYSX_INCLUDE           ${RECLUSE_PHYSX_DIR}/include)
+  set(RECLUSE_BULLET_DIR       $ENV{BULLETSDK})
+  set(BULLET_INCLUDE           ${RECLUSE_BULLET_DIR}/include)
 else()
-  set(PHYSX_INCLUDE           "")
+  set(BULLET_INCLUDE           "")
   add_definitions(-DFORCE_PHYSICS_OFF=1)
 endif()
 
@@ -35,7 +35,7 @@ endif()
 
 set(RECLUSE_THIRDPARTY_INCLUDE_DIRS
   ${RECLUSE_FREETYPE_DIR}/include
-  ${PHYSX_INCLUDE}
+  ${BULLET_INCLUDE}
 )
 
 set(RECLUSE_RENDERER     "Renderer")

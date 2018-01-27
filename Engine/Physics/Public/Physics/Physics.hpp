@@ -12,20 +12,19 @@ namespace Recluse {
 
 
 class Actor;
-class PhysX;
+class BulletPhysics;
 
 // Our physics engine.
 class Physics : public EngineModule<Physics> {
 public:
-  Physics()
-    : mDevice(nullptr) { }
+  Physics() : m_pPhysics(nullptr) { }
 
   void                            OnStartUp() override;
   void                            OnShutDown() override;
-  void                            UpdateState(r64 dt);
 
+  void                            UpdateState(r64 dt);
 private:
-  PhysX*                          mDevice;
+  BulletPhysics*                  m_pPhysics;
 };
 
 
