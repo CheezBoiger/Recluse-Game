@@ -17,6 +17,7 @@
 #include "GlobalDescriptor.hpp"
 #include "StructuredBuffer.hpp"
 #include "VertexDescription.hpp"
+#include "SkyAtmosphere.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -54,6 +55,7 @@ Renderer::Renderer()
   , m_NeedsUpdate(false)
   , m_AsyncBuild(false)
   , m_AntiAliasing(false)
+  , m_pSky(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
@@ -208,6 +210,7 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->DeviceWaitIdle();
 
+  // We properly want to use smart ptrs...
   m_pGlobal->CleanUp();
   delete m_pGlobal;
   m_pGlobal = nullptr;
@@ -215,6 +218,10 @@ void Renderer::CleanUp()
   m_pLights->CleanUp();
   delete m_pLights;
   m_pLights = nullptr;
+  
+  m_pSky->CleanUp();
+  delete m_pSky;
+  m_pSky = nullptr;
 
   if (m_pUI) {
     m_pUI->CleanUp();
@@ -268,6 +275,9 @@ b8 Renderer::Initialize(Window* window)
   m_pLights->m_pRhi = m_pRhi;
   m_pLights->Initialize();
   m_pLights->Update();
+
+  m_pSky = new Sky();
+  m_pSky->Initialize();
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.

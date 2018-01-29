@@ -1,5 +1,6 @@
 #include "Game/Engine.hpp"
 
+#include "Game/PointLightComponent.hpp"
 #include "Game/MeshComponent.hpp"
 #include "Game/RendererComponent.hpp"
 #include "Game/Scene/Scene.hpp"
@@ -16,6 +17,8 @@
 #include <random>
 
 using namespace Recluse;
+
+#define MANUAL_INIT 1
 
 
 void Controller()
@@ -69,7 +72,24 @@ int main(int c, char* argv[])
   // Add game object in scene.
   LoadTextures();
 
+  // Camera set.
+  FirstPersonCamera cam(Radians(60.0f), 
+    static_cast<r32>(window->Width()), 
+    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
+  cam.SetSpeed(10.0f);
+  cam.EnableBloom(true);
+  gEngine().SetCamera(&cam);
+
+  ///////////////////////////////////////////////////////////////////////////////////
+  // Everything within initialization will normally be handled by Managers, for now
+  // we will be demonstrating manual initialization of various objects to render and
+  // control something on the display.
+  ///////////////////////////////////////////////////////////////////////////////////
+
+  // Create scene.
   Scene scene;
+#if defined(MANUAL_INIT)
+  // Add game objects into scene. This demonstrates parent-child transformation as well.
   GameObject* gameObj = GameObject::Instantiate();
   GameObject* obj2 = GameObject::Instantiate();
   scene.GetRoot()->AddChild(obj2);
@@ -83,18 +103,9 @@ int main(int c, char* argv[])
     pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 5.0f;
-  }  
-
-  // Camera set.
-  FirstPersonCamera cam(Radians(45.0f), 
-    static_cast<r32>(window->Width()), 
-    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
-  cam.SetSpeed(10.0f);
-  cam.EnableBloom(true);
-  gEngine().SetCamera(&cam);
+  }
 
   // Create a mesh object and initialize it.
-
   Mesh mesh;
   Mesh cubeMesh;
   Material objMat;
@@ -104,8 +115,10 @@ int main(int c, char* argv[])
   obj2Mat.Initialize();
 
   {
-    auto vertices = UVSphere::MeshInstance(1.0f, 64, 64);
-    auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), 64, 64);
+    // Increasing segments improves the sphere's quality
+    const u32 kSegments = 32;
+    auto vertices = UVSphere::MeshInstance(1.0f, kSegments, kSegments);
+    auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), kSegments, kSegments);
     mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
   }
   
@@ -136,7 +149,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 30
+#define objects 200
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
 
@@ -162,14 +175,18 @@ int main(int c, char* argv[])
       scene.GetRoot()->AddChild(obj);
     }
   }
-  // Run engine, and build the scene to render.
-  gEngine().Run();
-  gEngine().PushScene(&scene);
-  gEngine().BuildScene();
 
   // Wake up objects
   gameObj->Wake();
   obj2->Wake();
+
+#endif // defined(MANUAL_INIT)
+
+  // Run engine, and build the scene to render.
+  gEngine().Run();
+  gEngine().PushScene(&scene);
+  gEngine().BuildScene();
+  ///////////////////////////////////////////////////////////////////////////////////
 
   Log() << "Timer Start: " << Time::CurrentTime() << " s\n";
   // Game loop.
@@ -183,12 +200,19 @@ int main(int c, char* argv[])
   // Finish.
   GameObject::DestroyAll();
   TextureCleanUp();
+
+#if defined(MANUAL_INIT)
+  // Clean up of resources is required.
   mesh.CleanUp();
   objMat.CleanUp();
   obj2Mat.CleanUp();
   objsMat.CleanUp();
   cubeMesh.CleanUp();
+#endif // MANUAL_INIT
+
+  // Clean up engine
   gEngine().CleanUp();
+
 #if (_DEBUG)
   Log() << "Game is cleaned up. Press Enter to continue...\n";
   std::cin.ignore();

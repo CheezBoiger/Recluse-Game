@@ -26,7 +26,8 @@ void Transform::Update()
     if (parentTransform) { 
       m_LocalToWorldMatrix =  m_LocalToWorldMatrix * parentTransform->GetLocalToWorldMatrix();
     } 
-    Position = Vector3(m_LocalToWorldMatrix[0][3], m_LocalToWorldMatrix[1][3], m_LocalToWorldMatrix[2][3]);
+
+    Position = Vector3(m_LocalToWorldMatrix[3][0], m_LocalToWorldMatrix[3][1], m_LocalToWorldMatrix[3][2]);
   } else {
     LocalPosition = Position;
     LocalRotation = Rotation;

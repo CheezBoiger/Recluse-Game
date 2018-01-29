@@ -2,6 +2,7 @@
 #include "Engine.hpp"
 #include "RendererComponent.hpp"
 #include "MaterialComponent.hpp"
+#include "LightComponent.hpp"
 
 #include "Scene/Scene.hpp"
 #include "Core/Thread/CoreThread.hpp"
@@ -132,6 +133,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   gRenderer().PushCmdList(&m_RenderCmdList);
 
   Material::InitializeDefault();
+  LightComponent::Initialize();
 
   if (fullscreen) {
     m_Window.SetToFullScreen();
@@ -149,6 +151,7 @@ void Engine::CleanUp()
     Window::PollEvents();
   }
 
+  LightComponent::CleanUp();
   Material::CleanUpDefault();
 
   gUI().ShutDown();

@@ -5,6 +5,7 @@
 #include "Game/MeshComponent.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "Game/RendererComponent.hpp"
+#include "Game/PointLightComponent.hpp"
 
 using namespace Recluse;
 
@@ -24,10 +25,23 @@ public:
       GetOwner()->GetTransform()->LocalPosition = Vector3(2.0f, 0.0f, 0.0f);
     }
 
+    Texture2D* emission = nullptr;
+    TextureCache::Get("BoxEmissive", &emission);
+
     RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
     Material* mat = GetOwner()->GetComponent<MaterialComponent>()->GetMaterial();
+    mat->SetEmissive(emission);
     mat->SetBaseMetal(0.0f);
     mat->SetBaseRough(1.0f);
+    mat->SetBaseEmissive(30.0f);
+    mat->EnableEmissive(true);
+    rc->ReConfigure();
+
+    // Add a point light.
+    GetOwner()->AddComponent<PointLightComponent>();
+    PointLightComponent* pointLight = GetOwner()->GetComponent<PointLightComponent>();
+    pointLight->SetRange(50.0f);
+    pointLight->SetIntensity(10.0f);
   }
 
   void Update() override

@@ -41,6 +41,7 @@ class Texture2DArray;
 class TextureSampler;
 class UIOverlay;
 class RenderObject;
+class Sky;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -255,6 +256,7 @@ private:
 
   RenderQuad        m_RenderQuad;
   UIOverlay*        m_pUI;
+  Sky*              m_pSky;
   b8                m_Rendering       : 1;
   b8                m_Initialized     : 1;
   b8                m_NeedsUpdate     : 1;

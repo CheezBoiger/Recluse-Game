@@ -51,6 +51,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Component.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/MaterialComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/PointLightComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

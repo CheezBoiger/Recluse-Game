@@ -46,4 +46,7 @@ struct Vector4 {
   b8              operator==(const Vector4& other) const;
   b8              operator!=(const Vector4& other) const;
 };
+
+// Overload to let Log take in vector3 values.
+Log&              operator<<(Log& log, const Vector4& vec3);
 } // Recluse
