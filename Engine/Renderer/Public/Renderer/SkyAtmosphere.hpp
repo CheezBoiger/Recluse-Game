@@ -15,6 +15,7 @@ class GraphicsPipeline;
 class DescriptorSet;
 class DescriptorSetLayout;
 class Buffer;
+class FrameBuffer;
 
 
 // Sky, which renders the, well, sky, onto a cubemap. This cubemap is then 
@@ -31,35 +32,49 @@ public:
     , m_pPipeline(nullptr)
     , m_pCmdBuffer(nullptr)
     , m_pSampler(nullptr)
+    , m_pFrameBuffer(nullptr)
+    , m_bDirty(false)
      { }
 
   ~Sky();
 
   void                    Initialize();
   void                    CleanUp();
+  void                    MarkDirty() { m_bDirty = true; }
 
 
   Semaphore*              SignalSemaphore() { return m_pAtmosphereSema; }
   Texture*                GetCubeMap() { return m_pCubeMap; }
+  Sampler*                GetSampler() { return m_pSampler; }
+
+  i32                     NeedsRendering() { return m_bDirty; }
 
   // Render command should be used sparingly, as it forces the device to wait.
   // Call this every time skybox needs to be updated.
-  void                    Render(Semaphore* signal);
+  void                    Render();
 
 private:
-  void                    CreateRenderAttachments(VulkanRHI* rhi);
+  void                    CreateRenderAttachment(VulkanRHI* rhi);
   void                    CreateCubeMap(VulkanRHI* rhi);
   void                    CreateCommandBuffer(VulkanRHI* rhi);
   void                    BuildCmdBuffer(VulkanRHI* rhi);
   void                    CreateGraphicsPipeline(VulkanRHI* rhi);
+  void                    CreateFrameBuffer(VulkanRHI* rhi);
   
   // RenderTextures that will be used as attachments,
   // and will be loaded onto a cubemap for the skybox.
-  std::array<Texture*, 6> m_RenderTextures;
+  Texture*                m_RenderTexture;
   GraphicsPipeline*       m_pPipeline;
   Texture*                m_pCubeMap;
   Sampler*                m_pSampler;
   Semaphore*              m_pAtmosphereSema;
   CommandBuffer*          m_pCmdBuffer;
+  FrameBuffer*            m_pFrameBuffer;
+  i32                     m_bDirty;
+
+  struct ViewerBlock {
+    Matrix4             _InvView;
+    Matrix4             _InvProj;
+  } m_ViewerConsts;
 };
 } // Recluse 

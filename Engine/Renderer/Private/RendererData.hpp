@@ -97,6 +97,7 @@ extern std::string FinalDescSetLayoutStr;
 extern std::string FinalVertFileStr;
 extern std::string FinalFragFileStr;
 
+extern char const* kDefaultShaderEntryPointStr;
 
 namespace RendererPass {
 

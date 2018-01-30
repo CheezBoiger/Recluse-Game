@@ -148,6 +148,11 @@ void Renderer::Render()
   // Update materials before rendering the frame.
   UpdateMaterials();
 
+  // Check if sky needs to update it's cubemap.
+  if (m_pSky->NeedsRendering()) {
+    m_pSky->Render();
+  }
+
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
     while (m_Offscreen._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Recording() || !m_pRhi->CmdBuffersComplete()) {}

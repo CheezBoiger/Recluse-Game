@@ -185,10 +185,14 @@ public:
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return m_pRhi; }
 
+  GlobalDescriptor* GlobalNative() { return m_pGlobal; }
+
   // Enable HDR Post processing.
   void              EnableHDR(b8 enable);
 
   void              SignalCommandBufferRebuild(b8 async) { m_NeedsUpdate = true; m_AsyncBuild = async; }
+
+  RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame

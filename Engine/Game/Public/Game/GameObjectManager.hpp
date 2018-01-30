@@ -38,6 +38,7 @@ public:
 
 
   void        Clear() {
+    m_Occupied = 0;
     m_GameObjects.clear();
   }
 

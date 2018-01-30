@@ -106,6 +106,9 @@ std::string FinalDescSetLayoutStr       = "FinalSetLayout";
 std::string FinalVertFileStr            = "FinalPass.vert.spv";
 std::string FinalFragFileStr            = "FinalPass.frag.spv";
 
+// Default entry point on shaders.
+char const* kDefaultShaderEntryPointStr = "main";
+
 
 namespace RendererPass {
 
@@ -141,7 +144,7 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   PbrShaders[0].module = VertPBR->Handle();
   PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  PbrShaders[0].pName = "main";
+  PbrShaders[0].pName = kDefaultShaderEntryPointStr;
   PbrShaders[0].pNext = nullptr;
   PbrShaders[0].pSpecializationInfo = nullptr;
   PbrShaders[0].flags = 0;
@@ -149,7 +152,7 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   PbrShaders[1].module = FragPBR->Handle();
   PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  PbrShaders[1].pName = "main";
+  PbrShaders[1].pName = kDefaultShaderEntryPointStr;
   PbrShaders[1].pNext = nullptr;
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
@@ -222,7 +225,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
   ShaderModules[0].module = HdrVert->Handle();
-  ShaderModules[0].pName = "main";
+  ShaderModules[0].pName = kDefaultShaderEntryPointStr;
   ShaderModules[0].pNext = nullptr;
   ShaderModules[0].pSpecializationInfo = nullptr;
   ShaderModules[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -230,7 +233,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
 
   ShaderModules[1].flags = 0;
   ShaderModules[1].module = HdrFrag->Handle();
-  ShaderModules[1].pName = "main";
+  ShaderModules[1].pName = kDefaultShaderEntryPointStr;
   ShaderModules[1].pNext = nullptr;
   ShaderModules[1].pSpecializationInfo = nullptr;
   ShaderModules[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -306,7 +309,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
   ShaderModules[0].module = DbVert->Handle();
-  ShaderModules[0].pName = "main";
+  ShaderModules[0].pName = kDefaultShaderEntryPointStr;
   ShaderModules[0].pNext = nullptr;
   ShaderModules[0].pSpecializationInfo = nullptr;
   ShaderModules[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -314,7 +317,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 
   ShaderModules[1].flags = 0;
   ShaderModules[1].module = DbFrag->Handle();
-  ShaderModules[1].pName = "main";
+  ShaderModules[1].pName = kDefaultShaderEntryPointStr;
   ShaderModules[1].pNext = nullptr;
   ShaderModules[1].pSpecializationInfo = nullptr;
   ShaderModules[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -374,7 +377,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
   VkPipelineShaderStageCreateInfo FinalShaders[2];
   FinalShaders[0].flags = 0;
   FinalShaders[0].module = quadVert->Handle();
-  FinalShaders[0].pName = "main";
+  FinalShaders[0].pName = kDefaultShaderEntryPointStr;
   FinalShaders[0].pNext = nullptr;
   FinalShaders[0].pSpecializationInfo = nullptr;
   FinalShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -382,7 +385,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
 
   FinalShaders[1].flags = 0;
   FinalShaders[1].module = quadFrag->Handle();
-  FinalShaders[1].pName = "main";
+  FinalShaders[1].pName = kDefaultShaderEntryPointStr;
   FinalShaders[1].pNext = nullptr;
   FinalShaders[1].pSpecializationInfo = nullptr;
   FinalShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -448,7 +451,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
   std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;
   Shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   Shaders[0].flags = 0;
-  Shaders[0].pName = "main";
+  Shaders[0].pName = kDefaultShaderEntryPointStr;
   Shaders[0].pNext = nullptr;
   Shaders[0].pSpecializationInfo = nullptr;
   Shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
@@ -456,7 +459,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
 
   Shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   Shaders[1].flags = 0;
-  Shaders[1].pName = "main";
+  Shaders[1].pName = kDefaultShaderEntryPointStr;
   Shaders[1].pNext = nullptr;
   Shaders[1].pSpecializationInfo = nullptr;
   Shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
