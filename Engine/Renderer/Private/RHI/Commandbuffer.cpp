@@ -172,4 +172,11 @@ void CommandBuffer::CopyImageToBuffer(VkImage srcImage, VkImageLayout srcImageLa
   ASSERT_RECORDING();
   vkCmdCopyImageToBuffer(mHandle, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
 }
+
+
+void CommandBuffer::CopyImage(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageCopy* pRegions)
+{
+  ASSERT_RECORDING();
+  vkCmdCopyImage(mHandle, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
+}
 } // Recluse

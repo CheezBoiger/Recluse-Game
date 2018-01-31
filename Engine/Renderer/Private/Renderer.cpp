@@ -118,11 +118,14 @@ void Renderer::Render()
   // any rendering.
   CheckCmdUpdate();
 
+  // TODO(): Need to clean this up.
   VkCommandBuffer offscreenCmd = m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle();
+  VkCommandBuffer skyBuffers[] = { m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle(), m_pSky->CmdBuffer()->Handle() };
+  VkSemaphore skyWaits[] = { m_Offscreen._Semaphore->Handle(), m_pSky->SignalSemaphore()->Handle() };
   VkSemaphore waitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
   VkSemaphore signalSemas[] = { m_Offscreen._Semaphore->Handle() };
   VkSemaphore shadowSignal[] = { m_Offscreen._ShadowSema->Handle() };
-  VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+  VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT };
 
   VkSubmitInfo offscreenSI = {};
   offscreenSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -148,11 +151,6 @@ void Renderer::Render()
   // Update materials before rendering the frame.
   UpdateMaterials();
 
-  // Check if sky needs to update it's cubemap.
-  if (m_pSky->NeedsRendering()) {
-    m_pSky->Render();
-  }
-
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
     while (m_Offscreen._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
@@ -174,6 +172,18 @@ void Renderer::Render()
       m_pRhi->GraphicsSubmit(shadowSubmit);
 
       offscreenSI.pWaitSemaphores = shadowSignal;
+    }
+
+    // Check if sky needs to update it's cubemap.
+
+    if (m_pSky->NeedsRendering()) {
+      hdrSI.waitSemaphoreCount = 2;
+      hdrSI.pWaitSemaphores = skyWaits;
+      offscreenSI.commandBufferCount = 2;
+      offscreenSI.signalSemaphoreCount = 2;
+      offscreenSI.pSignalSemaphores = skyWaits;
+      offscreenSI.pCommandBuffers = skyBuffers;
+      m_pSky->MarkClean();
     }
 
     // Offscreen PBR Forward Rendering Pass.
@@ -283,6 +293,7 @@ b8 Renderer::Initialize(Window* window)
 
   m_pSky = new Sky();
   m_pSky->Initialize();
+  m_pSky->MarkDirty();
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -2313,6 +2324,12 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
         m_pGlobal->Data()->_EnableShadows = true;
       } break;
     }
+  }
+
+  if (params && presentMode == m_pRhi->SwapchainObject()->CurrentPresentMode()) {
+    // No need to reconstruct the swapchain, since these parameters won't affect
+    // the hardcoded pipeline.
+    return;
   }
 
   // Triple buffering atm, we will need to use user params to switch this.

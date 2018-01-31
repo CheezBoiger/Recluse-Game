@@ -28,6 +28,7 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._Exposure = 1.0f;
   m_Global._EnableShadows = false;
   m_Global._EnableAA = false;
+  m_Global._vSunBrightness = 1.0f;
 }
 
 

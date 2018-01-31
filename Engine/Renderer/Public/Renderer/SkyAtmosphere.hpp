@@ -41,6 +41,7 @@ public:
   void                    Initialize();
   void                    CleanUp();
   void                    MarkDirty() { m_bDirty = true; }
+  void                    MarkClean() { m_bDirty = false; }
 
 
   Semaphore*              SignalSemaphore() { return m_pAtmosphereSema; }
@@ -48,10 +49,7 @@ public:
   Sampler*                GetSampler() { return m_pSampler; }
 
   i32                     NeedsRendering() { return m_bDirty; }
-
-  // Render command should be used sparingly, as it forces the device to wait.
-  // Call this every time skybox needs to be updated.
-  void                    Render();
+  CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
 
 private:
   void                    CreateRenderAttachment(VulkanRHI* rhi);

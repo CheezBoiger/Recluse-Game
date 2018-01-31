@@ -24,9 +24,6 @@ const std::string Sky::kVertStr = "Atmosphere.vert.spv";
 const std::string Sky::kFragStr = "Atmosphere.frag.spv";
 const u32         Sky::kTextureSize = 512;
 
-// Submit information, used for rendering.
-VkSubmitInfo      submit =  { };
-
 void Sky::Initialize()
 {
   VulkanRHI* pRhi = gRenderer().RHI();
@@ -42,16 +39,6 @@ void Sky::Initialize()
   VkSemaphoreCreateInfo semaCi = { };
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_pAtmosphereSema->Initialize(semaCi);
-
-  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  VkCommandBuffer cmdbuf = m_pCmdBuffer->Handle();
-  submit.commandBufferCount = 1;
-  submit.pCommandBuffers = &cmdbuf;
-  submit.signalSemaphoreCount = 1;
-  submit.waitSemaphoreCount = 1;
-  submit.pWaitSemaphores = nullptr;
-  VkSemaphore signal = m_pAtmosphereSema->Handle();
-  submit.pSignalSemaphores = &signal;
 }
 
 
@@ -434,6 +421,32 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
   
     VkDeviceSize offsets = { 0 };
 
+    VkImageSubresourceRange subRange = { };
+    subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    VkImageMemoryBarrier imgMemBarrier = { };
+    imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgMemBarrier.subresourceRange = subRange;
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgMemBarrier.srcAccessMask = 0;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.image = m_pCubeMap->Image();
+
+    // set the cubemap image layout for transfer from our framebuffer.
+    cmdBuffer->PipelineBarrier(
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0, 
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+
     // For each face of cube:
     //   Render 
     //   Copy to cubemap face.
@@ -451,22 +464,89 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
     
       // TODO(): Perform copy to cubemap, here.
       // Barriers will be needed.
+      subRange.baseArrayLayer = 0;
+      subRange.baseMipLevel = 0;
+      subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      subRange.layerCount = 1;
+      subRange.levelCount = 1;
+
+      imgMemBarrier.image = m_RenderTexture->Image();
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      imgMemBarrier.subresourceRange = subRange;
+
+      // transfer color attachment to transfer.
+      cmdBuffer->PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
+
+      VkImageCopy imgCopy = { };
+      imgCopy.srcOffset = { 0, 0, 0 };
+      imgCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imgCopy.srcSubresource.baseArrayLayer = 0;
+      imgCopy.srcSubresource.mipLevel = 0;
+      imgCopy.srcSubresource.layerCount = 1;
+
+      imgCopy.dstOffset = { 0, 0, 0 };
+      imgCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imgCopy.dstSubresource.baseArrayLayer = static_cast<u32>(face);
+      imgCopy.dstSubresource.layerCount = 1;
+      imgCopy.dstSubresource.mipLevel = 0;
+
+      imgCopy.extent.width = kTextureSize;
+      imgCopy.extent.height = kTextureSize;
+      imgCopy.extent.depth = 1;
+
+      cmdBuffer->CopyImage(
+        m_RenderTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
+        m_pCubeMap->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+        1, &imgCopy
+      );
+
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+      cmdBuffer->PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0, 
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
     }
+
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    imgMemBarrier.image = m_pCubeMap->Image();
+    imgMemBarrier.subresourceRange = subRange;
+    
+    cmdBuffer->PipelineBarrier(
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+    
   cmdBuffer->End();
-}
-
-
-void Sky::Render()
-{
-  VulkanRHI* rhi = gRenderer().RHI();
-  // wait for swapchain ready semaphore. Can be rendered while scene is rendering.
-  VkSemaphore wait = rhi->SwapchainObject()->ImageAvailableSemaphore();
-  submit.pWaitSemaphores = &wait;
-
-  Log(rDebug) << "Sky triggered to render!\n";
-  rhi->GraphicsSubmit(submit);
-
-  m_bDirty = false;
 }
 
 

@@ -24,6 +24,7 @@ public:
 
   void            Begin(const VkCommandBufferBeginInfo& beginInfo);
   void            End();
+  void            CopyImage(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageCopy* pRegions);
   void            CopyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, const VkBufferCopy* regions);
 
   void            CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
