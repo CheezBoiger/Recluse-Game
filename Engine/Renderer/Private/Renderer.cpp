@@ -183,7 +183,7 @@ void Renderer::Render()
       offscreenSI.signalSemaphoreCount = 2;
       offscreenSI.pSignalSemaphores = skyWaits;
       offscreenSI.pCommandBuffers = skyBuffers;
-      m_pSky->MarkClean();
+      //m_pSky->MarkClean();
     }
 
     // Offscreen PBR Forward Rendering Pass.

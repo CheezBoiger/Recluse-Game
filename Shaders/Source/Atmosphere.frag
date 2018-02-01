@@ -36,6 +36,10 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
+// Nitrogen absorption profile. This is used to determine color of the air.
+vec3 Kr = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131);
+
+
 // camera view and projection.
 layout (push_constant) uniform Const {
   mat4 mInvView;
@@ -45,10 +49,14 @@ layout (push_constant) uniform Const {
 
 layout (location = 0) out vec4 FragColor;
 
+//
+// Functions from Florian Boesch 
+// http://codeflow.org/entries/2011/apr/13/advanced-webgl-part-2-sky-rendering/
+//
 
 vec3 GetWorldNormal()
 {
-  vec2 vViewport = vec2(gWorldBuffer.screenSize);
+  vec2 vViewport = vec2(512.0, 512.0);
   vec2 vFragCoord = gl_FragCoord.xy / vViewport;
   vFragCoord = (vFragCoord-0.5)*2.0;
   vec4 vDeviceNormal = vec4(vFragCoord, 0.0, 1.0);
@@ -68,16 +76,91 @@ float Phase(float alpha, float g)
 }
 
 
+float AtmosphericDepth(vec3 position, vec3 dir)
+{
+  float a = dot(dir, dir);
+  float b = 2.0 * dot(dir, position);
+  float c = dot(position, position) - 1.0;
+  float det = b * b - 4.0 * a * c;
+  float detSqrt = sqrt(det);
+  float q = (-b - detSqrt) * 0.5;
+  float t1 = c / q;
+  return t1;
+}
+
+
+float HorizonExtinction(vec3 position, vec3 dir, float radius)
+{
+  float u = dot(dir, -position);
+  if (u < 0.0) return 1.0;
+  
+  vec3 near = position + u * dir;
+  if (length(near) < radius) return 0.0;
+  else {
+    vec3 v2 = normalize(near) * radius - position;
+    float diff = acos(dot(normalize(v2), dir));
+    return smoothstep(0.0, 1.0, pow(diff * 2.0, 3.0));
+  }
+}
+
+
+vec3 Absorb(float dist, vec3 color, float factor)
+{
+  return color - color * pow(Kr, vec3(factor/dist));
+}
+
+
 void main()
 {
-  float fRayleigh = 1.0;
   vec3  vEyeDir = GetWorldNormal();
   float alpha = dot(vEyeDir, gWorldBuffer.vSun.xyz);
+  
+  // Rayleigh partices factor.
   float fRayleighFactor = Phase(alpha, -0.01) * gWorldBuffer.fRayleigh;
+  
+  // Mie factor to determine aerosol particles.
   float fMieFactor = Phase(alpha, gWorldBuffer.fMieDist) * gWorldBuffer.fMie;
-  float spot = smoothstep(0.0, 15.0, Phase(alpha, 0.9995)) * gWorldBuffer.vSun.w;
+  // Spot that forms the sun.
+  float spot = Phase(alpha, 0.9995) * gWorldBuffer.vSun.w;
   
+  float fSurfaceHeight = 0.15;
+  int iStepCount = 32;
+  vec3 vEyePos = vec3(0.0, fSurfaceHeight, 0.0);
+  float fEyeDepth = AtmosphericDepth(vEyePos, vEyeDir);
+  float fStepLength = fEyeDepth / float(iStepCount);
   
+  float fEyeExtinct = HorizonExtinction(vEyePos, vEyeDir, fSurfaceHeight - 0.15);
   
-  FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  vec3 vRayleighCollected = vec3(0.0);
+  vec3 vMieCollected = vec3(0.0);
+  float fScatterStrength = 1.0;
+  float fRayleighStength = 2.0;
+  float fMieStength = 10.0;
+  
+  for (int i = 0; i < iStepCount; ++i) {
+    float fSampleDist = fStepLength * float(i);
+    vec3 position = vEyePos + vEyeDir * fSampleDist;
+    float extinct = HorizonExtinction(position, gWorldBuffer.vSun.xyz, fSurfaceHeight - 0.35);
+    float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.vSun.xyz);
+    vec3 influx = Absorb(fSampleDepth, vec3(gWorldBuffer.vSun.w), fScatterStrength) * extinct;
+    vRayleighCollected += Absorb(fSampleDist, Kr * influx, fRayleighStength);
+    vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
+  }
+  
+  vRayleighCollected = (vRayleighCollected * fEyeExtinct) / float(iStepCount);
+  vMieCollected = (vMieCollected * fEyeExtinct) / float(iStepCount);
+
+  // TODO(): This should be the final color, not mie scattering alone...
+  vec3 color = vec3(spot * vMieCollected + fMieFactor * vMieCollected + fRayleighFactor * vRayleighCollected);
+
+  // TODO(): Testing Mie scattering first. Debugging Rayleigh...
+  FragColor = vec4(vMieCollected * fMieFactor, 1.0);
 }
+
+
+
+
+
+
+
+

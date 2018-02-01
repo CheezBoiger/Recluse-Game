@@ -22,8 +22,10 @@ class FrameBuffer;
 // used to sample to the final render texture.
 class Sky {
 public:
-  static const std::string  kVertStr;
-  static const std::string  kFragStr;
+  static const std::string  kAtmVertStr;
+  static const std::string  kAtmFragStr;
+  static const std::string  kSkyVertStr;
+  static const std::string  kSkyFragStr;
   static const u32          kTextureSize;
 
   Sky() 
@@ -33,6 +35,7 @@ public:
     , m_pCmdBuffer(nullptr)
     , m_pSampler(nullptr)
     , m_pFrameBuffer(nullptr)
+    , m_RenderTexture(nullptr)
     , m_bDirty(false)
      { }
 
@@ -69,10 +72,5 @@ private:
   CommandBuffer*          m_pCmdBuffer;
   FrameBuffer*            m_pFrameBuffer;
   i32                     m_bDirty;
-
-  struct ViewerBlock {
-    Matrix4             _InvView;
-    Matrix4             _InvProj;
-  } m_ViewerConsts;
 };
 } // Recluse 

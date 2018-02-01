@@ -20,8 +20,10 @@
 namespace Recluse {
 
 
-const std::string Sky::kVertStr = "Atmosphere.vert.spv";
-const std::string Sky::kFragStr = "Atmosphere.frag.spv";
+const std::string Sky::kAtmVertStr = "Atmosphere.vert.spv";
+const std::string Sky::kAtmFragStr = "Atmosphere.frag.spv";
+const std::string Sky::kSkyVertStr = "Sky.vert.spv";
+const std::string Sky::kSkyFragStr = "Sky.frag.spv";
 const u32         Sky::kTextureSize = 512;
 
 void Sky::Initialize()
@@ -45,11 +47,15 @@ void Sky::Initialize()
 Sky::~Sky()
 {
   if (m_pCubeMap) {
-    R_DEBUG(rError, "Skybox cube map was not properly cleaned up prioer to class descruction!\n");
+    R_DEBUG(rError, "Skybox cube map was not properly cleaned up prior to class descruction!\n");
   }
 
   if (m_RenderTexture) {
     R_DEBUG(rError, "Sky texture was not cleaned up prior to class destruction!\n");
+  }
+
+  if (m_pFrameBuffer) {
+    R_DEBUG(rError, "Sky frame buffer not cleaned up prior to class descruction!\n");
   }
 }
 
@@ -307,8 +313,8 @@ void Sky::CreateGraphicsPipeline(VulkanRHI* rhi)
   Shader* vert = rhi->CreateShader();
   Shader* frag = rhi->CreateShader();
   
-  RendererPass::LoadShader(kVertStr, vert);
-  RendererPass::LoadShader(kFragStr, frag);
+  RendererPass::LoadShader(kAtmVertStr, vert);
+  RendererPass::LoadShader(kAtmFragStr, frag);
 
   gpCi.renderPass = m_pFrameBuffer->RenderPass();
   gpCi.pColorBlendState = &blendCi;
@@ -408,7 +414,12 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
       Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::FRONT)
     };
 
-    m_ViewerConsts._InvProj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 
+    struct ViewerBlock {
+      Matrix4             _InvView;
+      Matrix4             _InvProj;
+    } viewerConsts;
+
+    viewerConsts._InvProj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 
       1.0f, 0.1f, static_cast<r32>(kTextureSize)).Inverse();
 
     // can't be doing this...
@@ -453,9 +464,10 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
     for (size_t face = 0; face < 6; ++face) {
       cmdBuffer->BeginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
+        viewerConsts._InvView = viewMatrices[face].Inverse();
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Layout(), 0, 1, &globalDesc, 0, nullptr);
-        m_ViewerConsts._InvView = viewMatrices[face].Inverse();
-        cmdBuffer->PushConstants(m_pPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &m_ViewerConsts);
+        viewerConsts._InvView = viewMatrices[face].Inverse();
+        cmdBuffer->PushConstants(m_pPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
         
         cmdBuffer->BindVertexBuffers(0, 1, &vertexbuf, &offsets);
         cmdBuffer->BindIndexBuffer(indexbuf, 0, VK_INDEX_TYPE_UINT32);

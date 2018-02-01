@@ -28,7 +28,13 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._Exposure = 1.0f;
   m_Global._EnableShadows = false;
   m_Global._EnableAA = false;
-  m_Global._vSunBrightness = 1.0f;
+
+  // Testing params.
+  m_Global._vSunBrightness = 99.0f;
+  m_Global._vSunDir = Vector3(0.0f, 0.0f, 1.0f);
+  m_Global._Mie = 10.5f;
+  m_Global._Rayleigh = 1.0f;
+  m_Global._MieDist = 0.999f;
 }
 
 
