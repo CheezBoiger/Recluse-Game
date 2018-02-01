@@ -69,7 +69,6 @@ VulkanRHI::~VulkanRHI()
 {
 }
 
-#define _NDEBUG 1
 
 b8 VulkanRHI::CreateContext()
 {
