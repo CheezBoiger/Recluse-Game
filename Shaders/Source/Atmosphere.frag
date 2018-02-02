@@ -30,6 +30,10 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float fRayleigh;
   float fMie;
   float fMieDist;
+  float fScatterStrength;
+  float fRayleighStength;
+  float fMieStength;
+  float fIntensity;
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
@@ -37,7 +41,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 
 // Nitrogen absorption profile. This is used to determine color of the air.
-vec3 Kr = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131);
+vec3 Kr = vec3(0.18867780436772762, 0.4978442963618773, 0.2616065586417131);
 
 
 // camera view and projection.
@@ -121,40 +125,40 @@ void main()
   // Mie factor to determine aerosol particles.
   float fMieFactor = Phase(alpha, gWorldBuffer.fMieDist) * gWorldBuffer.fMie;
   // Spot that forms the sun.
-  float spot = Phase(alpha, 0.9995) * gWorldBuffer.vSun.w;
+  float spot = smoothstep(0.0, 30.0, Phase(alpha, 0.9)) * gWorldBuffer.vSun.w;
+  vec3 vRayleighCollected = vec3(0.0);
+  vec3 vMieCollected = vec3(0.0);
   
-  float fSurfaceHeight = 0.15;
+  float fSurfaceHeight = 0.05;
+  float fScatterStrength = gWorldBuffer.fScatterStrength;
+  float fRayleighStength = gWorldBuffer.fRayleighStength;
+  float fMieStength = gWorldBuffer.fMieStength;
+  float fIntensity = gWorldBuffer.fIntensity;
+
   int iStepCount = 32;
   vec3 vEyePos = vec3(0.0, fSurfaceHeight, 0.0);
   float fEyeDepth = AtmosphericDepth(vEyePos, vEyeDir);
   float fStepLength = fEyeDepth / float(iStepCount);
   
-  float fEyeExtinct = HorizonExtinction(vEyePos, vEyeDir, fSurfaceHeight - 0.15);
-  
-  vec3 vRayleighCollected = vec3(0.0);
-  vec3 vMieCollected = vec3(0.0);
-  float fScatterStrength = 1.0;
-  float fRayleighStength = 2.0;
-  float fMieStength = 10.0;
-  
+  float fEyeExtinct = HorizonExtinction(vEyePos, vEyeDir, fSurfaceHeight - 0.15); 
   for (int i = 0; i < iStepCount; ++i) {
     float fSampleDist = fStepLength * float(i);
     vec3 position = vEyePos + vEyeDir * fSampleDist;
     float extinct = HorizonExtinction(position, gWorldBuffer.vSun.xyz, fSurfaceHeight - 0.35);
     float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.vSun.xyz);
-    vec3 influx = Absorb(fSampleDepth, vec3(gWorldBuffer.vSun.w), fScatterStrength) * extinct;
+    vec3 influx = Absorb(fSampleDepth, vec3(fIntensity), fScatterStrength) * extinct;
     vRayleighCollected += Absorb(fSampleDist, Kr * influx, fRayleighStength);
     vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
   }
   
-  vRayleighCollected = (vRayleighCollected * fEyeExtinct) / float(iStepCount);
-  vMieCollected = (vMieCollected * fEyeExtinct) / float(iStepCount);
+  vRayleighCollected = (vRayleighCollected ) / float(iStepCount);
+  vMieCollected = (vMieCollected) / float(iStepCount);
 
   // TODO(): This should be the final color, not mie scattering alone...
   vec3 color = vec3(spot * vMieCollected + fMieFactor * vMieCollected + fRayleighFactor * vRayleighCollected);
 
   // TODO(): Testing Mie scattering first. Debugging Rayleigh...
-  FragColor = vec4(vMieCollected * fMieFactor, 1.0);
+  FragColor = vec4(color, 1.0);
 }
 
 

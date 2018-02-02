@@ -35,6 +35,10 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float fRayleigh;
   float fMie;
   float fMieDist;
+  float fScatterStrength;
+  float fRayleighStength;
+  float fMieStength;
+  float fIntensity;
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;

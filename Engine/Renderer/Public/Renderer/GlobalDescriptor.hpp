@@ -46,6 +46,10 @@ struct GlobalBuffer {
   r32             _Rayleigh;
   r32             _Mie;
   r32             _MieDist;
+  r32             _fScatterStrength;
+  r32             _fRayleighStength;
+  r32             _fMieStength;
+  r32             _fIntensity;
   i32             _BloomEnabled;
   i32             _EnableShadows;
   i32             _EnableAA;
