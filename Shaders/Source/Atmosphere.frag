@@ -140,13 +140,11 @@ void main()
   float fEyeDepth = AtmosphericDepth(vEyePos, vEyeDir);
   float fStepLength = fEyeDepth / float(iStepCount);
   
-  float fEyeExtinct = HorizonExtinction(vEyePos, vEyeDir, fSurfaceHeight - 0.15); 
   for (int i = 0; i < iStepCount; ++i) {
     float fSampleDist = fStepLength * float(i);
     vec3 position = vEyePos + vEyeDir * fSampleDist;
-    float extinct = HorizonExtinction(position, gWorldBuffer.vSun.xyz, fSurfaceHeight - 0.35);
     float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.vSun.xyz);
-    vec3 influx = Absorb(fSampleDepth, vec3(fIntensity), fScatterStrength) * extinct;
+    vec3 influx = Absorb(fSampleDepth, vec3(fIntensity), fScatterStrength);
     vRayleighCollected += Absorb(fSampleDist, Kr * influx, fRayleighStength);
     vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
   }
