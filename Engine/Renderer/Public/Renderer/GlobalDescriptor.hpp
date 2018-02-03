@@ -39,7 +39,7 @@ struct GlobalBuffer {
   Vector4         _FPlane;
   Vector2         _MousePos;
   i32             _ScreenSize[2];
-  Vector3         _vSunDir;
+  Vector3         _vSunDir; // Sun direction, must be normalized!
   r32             _vSunBrightness;
   r32             _Gamma;
   r32             _Exposure;

@@ -76,7 +76,7 @@ int main(int c, char* argv[])
   FirstPersonCamera cam(Radians(60.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
-  cam.SetSpeed(10.0f);
+  cam.SetSpeed(50.0f);
   cam.EnableBloom(true);
   gEngine().SetCamera(&cam);
 

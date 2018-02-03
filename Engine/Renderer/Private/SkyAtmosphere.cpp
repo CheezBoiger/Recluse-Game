@@ -420,7 +420,7 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
     } viewerConsts;
 
     viewerConsts._InvProj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 
-      1.0f, 0.1f, static_cast<r32>(kTextureSize)).Inverse();
+      1.0f, 0.1f, static_cast<r32>(kTextureSize)).Transpose();
 
     // can't be doing this...
     GlobalDescriptor* global = gRenderer().GlobalNative();
@@ -464,9 +464,8 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
     for (size_t face = 0; face < 6; ++face) {
       cmdBuffer->BeginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
-        viewerConsts._InvView = viewMatrices[face].Inverse();
+        viewerConsts._InvView = viewMatrices[face].Transpose();
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Layout(), 0, 1, &globalDesc, 0, nullptr);
-        viewerConsts._InvView = viewMatrices[face].Inverse();
         cmdBuffer->PushConstants(m_pPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
         
         cmdBuffer->BindVertexBuffers(0, 1, &vertexbuf, &offsets);
