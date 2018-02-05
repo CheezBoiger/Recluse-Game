@@ -263,6 +263,7 @@ private:
   } m_Downscale;
 
   CommandBuffer*    m_pSkyboxCmdBuffer;
+  Semaphore*        m_SkyboxFinished;
   RenderQuad        m_RenderQuad;
   UIOverlay*        m_pUI;
   Sky*              m_pSky;

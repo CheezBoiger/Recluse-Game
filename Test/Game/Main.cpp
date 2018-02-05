@@ -76,7 +76,7 @@ int main(int c, char* argv[])
   FirstPersonCamera cam(Radians(60.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 0.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
-  cam.SetSpeed(50.0f);
+  cam.SetSpeed(10.0f);
   cam.EnableBloom(true);
   gEngine().SetCamera(&cam);
 
@@ -99,8 +99,8 @@ int main(int c, char* argv[])
   {
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-    pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f);
+    pPrimary->_Color = Vector4(1.0f, 0.7f, 0.5f, 1.0f);
+    pPrimary->_Direction = Vector4(0.0f, 0.0f, 1.0f);
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 5.0f;
   }

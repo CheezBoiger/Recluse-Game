@@ -143,7 +143,7 @@ void main()
   float fMieStength = gWorldBuffer.fMieStength;
   float fIntensity = gWorldBuffer.fIntensity;
 
-  int iStepCount = 16;
+  int iStepCount = 32;
   vec3 vEyePos = vec3(0.0, fSurfaceHeight, 0.0);
   float fEyeDepth = AtmosphericDepth(vEyePos, vEyeDir);
   float fStepLength = fEyeDepth / float(iStepCount);

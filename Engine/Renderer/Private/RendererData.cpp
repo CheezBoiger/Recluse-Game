@@ -483,8 +483,8 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
     VK_FALSE,
     VK_FALSE
   );
-  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
 
+  GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
   ShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
 
   Bindings = SkinnedVertexDescription::GetBindingDescription();
@@ -529,7 +529,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
   attrib.binding = 0;
   attrib.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attrib.location = 0;
-  attrib.offset = sizeof(Vector4);
+  attrib.offset = 0;
 
   VkPipelineVertexInputStateCreateInfo inputState = { };
   inputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -549,6 +549,31 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
     global->Layout(),
     skybox->Layout()
   };
+
+  VkPipelineRasterizationStateCreateInfo raster = CreateRasterInfo(
+    VK_POLYGON_MODE_FILL,
+    VK_FALSE,
+    VK_CULL_MODE_NONE,
+    VK_FRONT_FACE_CLOCKWISE,
+    1.0f,
+    VK_FALSE,
+    VK_FALSE
+  );
+
+  VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
+  depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencilCI.depthTestEnable = VK_TRUE;
+  depthStencilCI.depthWriteEnable = VK_TRUE;
+  depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+  depthStencilCI.depthBoundsTestEnable = VK_FALSE;
+  depthStencilCI.minDepthBounds = 0.0f;
+  depthStencilCI.maxDepthBounds = 1.0f;
+  depthStencilCI.stencilTestEnable = VK_FALSE;
+  depthStencilCI.back = {};
+  depthStencilCI.front = {};
+  
+  GraphicsPipelineInfo.pRasterizationState = &raster;
+  GraphicsPipelineInfo.pDepthStencilState = &depthStencilCI;
 
   VkPipelineLayoutCreateInfo pipelineLayout = { };
   pipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO; 

@@ -43,5 +43,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 void main()
 {
   frag_in.uvw = position.xyz;
-  gl_Position = gWorldBuffer.viewProj * position;
+  mat4 view = mat4(mat3(gWorldBuffer.view));
+  vec4 pos = gWorldBuffer.proj * view * position;
+  gl_Position = pos.xyww;
 }

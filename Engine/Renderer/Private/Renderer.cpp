@@ -57,6 +57,7 @@ Renderer::Renderer()
   , m_AntiAliasing(false)
   , m_pSky(nullptr)
   , m_pSkyboxCmdBuffer(nullptr)
+  , m_SkyboxFinished(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
@@ -138,12 +139,17 @@ void Renderer::Render()
   offscreenSI.pWaitSemaphores = waitSemas;
   offscreenSI.pWaitDstStageMask = waitFlags;
 
-  VkSubmitInfo skyboxSI = { };
-  skyboxSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO; 
+  VkSubmitInfo skyboxSI = offscreenSI;
+  VkSemaphore skyboxWaits[] = { m_Offscreen._Semaphore->Handle() };
+  VkSemaphore skyboxSignal[] = { m_SkyboxFinished->Handle() };
+  VkCommandBuffer skyboxCmd = m_pSkyboxCmdBuffer->Handle();
   skyboxSI.commandBufferCount = 1;
+  skyboxSI.pCommandBuffers = &skyboxCmd;
+  skyboxSI.pSignalSemaphores = skyboxSignal;
+  skyboxSI.pWaitSemaphores = skyboxWaits;
 
   VkSubmitInfo hdrSI = offscreenSI;
-  VkSemaphore hdrWaits[] = { m_Offscreen._Semaphore->Handle() };
+  VkSemaphore hdrWaits[] = { m_SkyboxFinished->Handle() };
   VkSemaphore hdrSignal[] = { m_HDR._Semaphore->Handle() };
   VkCommandBuffer hdrCmd = m_HDR._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
@@ -182,8 +188,8 @@ void Renderer::Render()
     // Check if sky needs to update it's cubemap.
 
     if (m_pSky->NeedsRendering()) {
-      hdrSI.waitSemaphoreCount = 2;
-      hdrSI.pWaitSemaphores = skyWaits;
+      skyboxSI.waitSemaphoreCount = 2;
+      skyboxSI.pWaitSemaphores = skyWaits;
       offscreenSI.commandBufferCount = 2;
       offscreenSI.signalSemaphoreCount = 2;
       offscreenSI.pSignalSemaphores = skyWaits;
@@ -195,7 +201,7 @@ void Renderer::Render()
     m_pRhi->GraphicsSubmit(offscreenSI);
  
     // Render Sky onto our render textures.
-    //m_pRhi->GraphicsSubmit(skyboxSI);
+    m_pRhi->GraphicsSubmit(skyboxSI);
 
     // High Dynamic Range and Gamma Pass.
     if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(hdrSI);
@@ -1765,6 +1771,11 @@ void Renderer::SetUpSkybox()
   // Create skybox Commandbuffer.
   m_pSkyboxCmdBuffer = m_pRhi->CreateCommandBuffer();
   m_pSkyboxCmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  m_SkyboxFinished = m_pRhi->CreateVkSemaphore();
+  VkSemaphoreCreateInfo sema = { };
+  sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  m_SkyboxFinished->Initialize(sema);
 }
 
 
@@ -1776,6 +1787,9 @@ void Renderer::CleanUpSkybox()
   // Cleanup commandbuffer for skybox.
   m_pRhi->FreeCommandBuffer(m_pSkyboxCmdBuffer);
   m_pSkyboxCmdBuffer = nullptr;
+
+  m_pRhi->FreeVkSemaphore(m_SkyboxFinished);
+  m_SkyboxFinished = nullptr;
 }
 
 

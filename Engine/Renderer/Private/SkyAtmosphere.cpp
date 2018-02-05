@@ -607,8 +607,8 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
     // 4                    POSITIVE_Z
     // 5                    NEGATIVE_Z
     std::array<Matrix4, 6> viewMatrices = {
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
       Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
+      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
       Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::RIGHT),
       Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::RIGHT),
       Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::RIGHT),

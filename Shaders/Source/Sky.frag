@@ -20,6 +20,10 @@ void main()
 {
   FragColor = texture(skyTexture, frag_in.uvw);
  
+  BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+  NormalColor = vec4(0.0, 0.0, 0.0, 1.0);
+  PositionColor = vec4(0.0, 0.0, 0.0, 1.0);
+  RoughMetalColor = vec4(0.0, 0.0, 0.0, 1.0);
   // We might just want to work with the final image.
   /*
   vec3 glow = FragColor.rgb;
