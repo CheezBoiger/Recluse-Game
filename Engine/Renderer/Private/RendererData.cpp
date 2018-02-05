@@ -4,6 +4,7 @@
 #include "Resources.hpp"
 #include "Core/Logging/Log.hpp"
 #include "Renderer.hpp"
+#include "SkyAtmosphere.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/Shader.hpp"
 #include "RHI/DescriptorSet.hpp"
@@ -49,6 +50,10 @@ std::string MaterialSetLayoutStr        = "MaterialDescriptorSetLayout";
 std::string BonesSetLayoutStr           = "BonesDescriptorSetLayout";
 std::string GlobalSetLayoutStr          = "GlobalDescriptorSetLayout";
 std::string LightSetLayoutStr           = "LightDescriptorSetLayout";
+
+std::string SkyboxPipelineStr           = "SkyboxPipeline";
+std::string SkyboxDescriptorSetStr      = "SkyboxSet";
+std::string SkyboxSetLayoutStr          = "SkyboxLayout";
 
 std::string ScaledSamplerStr            = "ScaledSampler";
 std::string RenderTarget2xHorizStr      = "RenderTarget2x";
@@ -506,6 +511,78 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
   Rhi->FreeShader(SmFrag);
 
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+}
+
+
+void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  Shader* vert = Rhi->CreateShader();
+  Shader* frag = Rhi->CreateShader();
+  VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
+
+  VkVertexInputBindingDescription vertInput = { };
+  vertInput.binding = 0;
+  vertInput.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+  vertInput.stride = sizeof(Vector4);
+
+  VkVertexInputAttributeDescription attrib = { };
+  attrib.binding = 0;
+  attrib.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  attrib.location = 0;
+  attrib.offset = sizeof(Vector4);
+
+  VkPipelineVertexInputStateCreateInfo inputState = { };
+  inputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  inputState.vertexAttributeDescriptionCount = 1;
+  inputState.vertexBindingDescriptionCount = 1;
+  inputState.pVertexBindingDescriptions = &vertInput;
+  inputState.pVertexAttributeDescriptions = &attrib;
+  GraphicsPipelineInfo.pVertexInputState = &inputState;
+
+  GraphicsPipeline* sky = Rhi->CreateGraphicsPipeline();
+  gResources().RegisterGraphicsPipeline(SkyboxPipelineStr, sky);
+  
+  DescriptorSetLayout* global = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr);
+  DescriptorSetLayout* skybox = gResources().GetDescriptorSetLayout(SkyboxSetLayoutStr);
+
+  VkDescriptorSetLayout layouts[] = { 
+    global->Layout(),
+    skybox->Layout()
+  };
+
+  VkPipelineLayoutCreateInfo pipelineLayout = { };
+  pipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO; 
+  pipelineLayout.setLayoutCount = 2;
+  pipelineLayout.pSetLayouts = layouts;
+  
+  LoadShader(Sky::kSkyVertStr, vert);
+  LoadShader(Sky::kSkyFragStr, frag);
+  
+  std::array<VkPipelineShaderStageCreateInfo, 2> shaders;
+  shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaders[0].flags = 0;
+  shaders[0].pName = kDefaultShaderEntryPointStr;
+  shaders[0].pNext = nullptr;
+  shaders[0].pSpecializationInfo = nullptr;
+  shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  shaders[0].module = vert->Handle();
+
+  shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaders[1].flags = 0;
+  shaders[1].pName = kDefaultShaderEntryPointStr;
+  shaders[1].pNext = nullptr;
+  shaders[1].pSpecializationInfo = nullptr;
+  shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  shaders[1].module = frag->Handle();
+
+  GraphicsPipelineInfo.stageCount = 2;
+  GraphicsPipelineInfo.pStages = shaders.data();
+  
+  GraphicsPipelineInfo.renderPass = gRenderer().SkyNative()->GetSkyboxRenderPass();
+  sky->Initialize(GraphicsPipelineInfo, pipelineLayout);
+
+  Rhi->FreeShader(vert);
+  Rhi->FreeShader(frag);
 }
 } // RendererPass
 } // Recluse

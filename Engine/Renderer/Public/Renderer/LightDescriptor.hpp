@@ -67,14 +67,17 @@ struct LightGridBuffer {
   
 };
 
+#define MAX_DIRECTIONAL_LIGHTS  8
+#define MAX_POINT_LIGHTS        128
+
 
 struct LightBuffer {
   static u32        MaxNumDirectionalLights();
   static u32        MaxNumPointLights();
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  _PrimaryLight;
-  DirectionalLight  _DirectionalLights [8];
-  PointLight        _PointLights       [64];
+  DirectionalLight  _DirectionalLights [MAX_DIRECTIONAL_LIGHTS];
+  PointLight        _PointLights       [MAX_POINT_LIGHTS];
 };
 
 

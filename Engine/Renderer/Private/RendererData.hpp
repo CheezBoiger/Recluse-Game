@@ -35,6 +35,10 @@ extern std::string PBRStaticVertFileStr;
 extern std::string PBRFragFileStr;
 extern std::string RenderTargetBrightStr;
 
+extern std::string SkyboxPipelineStr;
+extern std::string SkyboxDescriptorSetStr;
+extern std::string SkyboxSetLayoutStr;
+
 extern std::string MeshSetLayoutStr;
 extern std::string MaterialSetLayoutStr;
 extern std::string BonesSetLayoutStr;
@@ -116,5 +120,6 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
 
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
+void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 }
 } // Recluse

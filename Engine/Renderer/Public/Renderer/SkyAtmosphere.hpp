@@ -3,7 +3,8 @@
 
 #include "Core/Types.hpp"
 #include "Renderer/Renderer.hpp"
-
+#include "Core/Math/Vector4.hpp"
+#include "RHI/VulkanConfigs.hpp"
 #include <array>
 
 namespace Recluse {
@@ -16,6 +17,8 @@ class DescriptorSet;
 class DescriptorSetLayout;
 class Buffer;
 class FrameBuffer;
+class VertexBuffer;
+class IndexBuffer;
 
 
 // Sky, which renders the, well, sky, onto a cubemap. This cubemap is then 
@@ -27,6 +30,8 @@ public:
   static const std::string  kSkyVertStr;
   static const std::string  kSkyFragStr;
   static const u32          kTextureSize;
+  static std::array<Vector4, 36> kSkyBoxVertices;
+  static std::array<u32, 36> kSkyboxIndices;
 
   Sky() 
     : m_pCubeMap(nullptr)
@@ -37,6 +42,7 @@ public:
     , m_pFrameBuffer(nullptr)
     , m_RenderTexture(nullptr)
     , m_bDirty(false)
+    , m_SkyboxRenderPass(nullptr)
      { }
 
   ~Sky();
@@ -53,6 +59,13 @@ public:
 
   i32                     NeedsRendering() { return m_bDirty; }
   CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
+
+  // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
+  // This is the renderpass to say NO to clearing out the pbr pass.
+  VkRenderPass            GetSkyboxRenderPass() { return m_SkyboxRenderPass; }
+
+  VertexBuffer*           GetSkyboxVertexBuffer() { return &m_SkyboxVertBuf; }
+  IndexBuffer*            GetSkyboxIndexBuffer() { return &m_SkyboxIndBuf; }
 
 private:
   void                    CreateRenderAttachment(VulkanRHI* rhi);
@@ -71,6 +84,9 @@ private:
   Semaphore*              m_pAtmosphereSema;
   CommandBuffer*          m_pCmdBuffer;
   FrameBuffer*            m_pFrameBuffer;
+  VkRenderPass            m_SkyboxRenderPass;
+  VertexBuffer            m_SkyboxVertBuf;
+  IndexBuffer             m_SkyboxIndBuf;
   i32                     m_bDirty;
 };
 } // Recluse 

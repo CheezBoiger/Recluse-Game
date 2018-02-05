@@ -13,7 +13,7 @@ in FRAG_IN {
 } frag_in;
 
 #define MAX_DIRECTION_LIGHTS    8
-#define MAX_POINT_LIGHTS        64
+#define MAX_POINT_LIGHTS        128
 
 struct DirectionLight {
   vec4  direction;

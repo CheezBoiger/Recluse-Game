@@ -184,6 +184,7 @@ public:
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return m_pRhi; }
+  Sky*              SkyNative() { return m_pSky; }
 
   GlobalDescriptor* GlobalNative() { return m_pGlobal; }
 
@@ -216,13 +217,16 @@ private:
   void              SetUpFinalOutputs();
   void              SetUpRenderTextures(b8 fullSetup);
   void              SetUpOffscreen(b8 fullSetup);
+  void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
+  void              BuildSkyboxCmdBuffer();
   void              SetUpDownscale(b8 FullSetUp);
   void              CleanUpDownscale(b8 FullCleanUp);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
+  void              CleanUpSkybox();
   void              UpdateMaterials();
   void              RenderOverlay();
   void              RenderPrimaryShadows();
@@ -258,6 +262,7 @@ private:
     r32                           _Scale;
   } m_Downscale;
 
+  CommandBuffer*    m_pSkyboxCmdBuffer;
   RenderQuad        m_RenderQuad;
   UIOverlay*        m_pUI;
   Sky*              m_pSky;

@@ -25,13 +25,13 @@ namespace Recluse {
 
 u32 LightBuffer::MaxNumDirectionalLights()
 {
-  return 8;
+  return MAX_DIRECTIONAL_LIGHTS;
 }
 
 
 u32 LightBuffer::MaxNumPointLights()
 {
-  return 64;
+  return MAX_POINT_LIGHTS;
 }
 
 

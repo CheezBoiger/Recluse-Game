@@ -25,6 +25,67 @@ const std::string Sky::kAtmFragStr = "Atmosphere.frag.spv";
 const std::string Sky::kSkyVertStr = "Sky.vert.spv";
 const std::string Sky::kSkyFragStr = "Sky.frag.spv";
 const u32         Sky::kTextureSize = 512;
+std::array<Vector4, 36> Sky::kSkyBoxVertices = { 
+  // Front
+  Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, 1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, 1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
+  // Back
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  // Up
+  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  // Down
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  // Right
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
+  // Left
+  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f,  1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
+  Vector4(-1.0f, -1.0f,  1.0f, 1.0f),
+};
+
+
+std::array<u32, 36> Sky::kSkyboxIndices = {
+  0, 1, 2,
+  3, 4, 5,
+  6, 7, 8,
+  9, 10, 11,
+  12, 13, 14,
+  15, 16, 17,
+  18, 19, 20,
+  21, 22, 23,
+  24, 25, 26,
+  27, 28, 29,
+  30, 31, 32,
+  33, 34, 35
+};
+
 
 void Sky::Initialize()
 {
@@ -41,6 +102,10 @@ void Sky::Initialize()
   VkSemaphoreCreateInfo semaCi = { };
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_pAtmosphereSema->Initialize(semaCi);
+
+  m_SkyboxVertBuf.Initialize(pRhi, static_cast<u32>(kSkyBoxVertices.size()), 
+    sizeof(Vector4), kSkyBoxVertices.data());
+  m_SkyboxIndBuf.Initialize(pRhi, static_cast<u32>(kSkyboxIndices.size()), sizeof(u32), kSkyboxIndices.data());
 }
 
 
@@ -217,6 +282,142 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
   framebufferCi.pAttachments = &attachment;
 
   m_pFrameBuffer->Finalize(framebufferCi, renderpassCi);
+
+  // Create a renderpass for the pbr overlay.
+  Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
+  Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
+  Texture* pbrPosition = gResources().GetRenderTexture(PBRPositionAttachStr);
+  Texture* pbrRoughMetal = gResources().GetRenderTexture(PBRRoughMetalAttachStr);
+  Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
+  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
+
+  std::array<VkAttachmentDescription, 6> attachmentDescriptions;
+  VkSubpassDependency dependenciesNative[2];
+
+  attachmentDescriptions[0] = CreateAttachmentDescription(
+    pbrColor->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrColor->Samples()
+  );
+
+  attachmentDescriptions[1] = CreateAttachmentDescription(
+    pbrNormal->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrNormal->Samples()
+  );
+
+  attachmentDescriptions[2] = CreateAttachmentDescription(
+    RTBright->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    RTBright->Samples()
+  );
+
+  attachmentDescriptions[3] = CreateAttachmentDescription(
+    pbrPosition->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrPosition->Samples()
+  );
+
+  attachmentDescriptions[4] = CreateAttachmentDescription(
+    pbrRoughMetal->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrRoughMetal->Samples()
+  );
+
+  attachmentDescriptions[5] = CreateAttachmentDescription(
+    pbrDepth->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    pbrDepth->Samples()
+  );
+
+  dependenciesNative[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependenciesNative[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  std::array<VkAttachmentReference, 5> attachmentColors;
+  VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  attachmentColors[0].attachment = 0;
+  attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[1].attachment = 1;
+  attachmentColors[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[2].attachment = 2;
+  attachmentColors[2].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[3].attachment = 3;
+  attachmentColors[3].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[4].attachment = 4;
+  attachmentColors[4].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  VkSubpassDescription subpass = {};
+  subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+  subpass.pColorAttachments = attachmentColors.data();
+  subpass.pDepthStencilAttachment = &attachmentDepthRef;
+
+  VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
+    static_cast<u32>(attachmentDescriptions.size()),
+    attachmentDescriptions.data(),
+    2,
+    dependenciesNative,
+    1,
+    &subpass
+  );
+
+  VkResult result = 
+    vkCreateRenderPass(rhi->LogicDevice()->Native(), &renderpassCI, nullptr, &m_SkyboxRenderPass); 
+
+  if (result != VK_SUCCESS) {
+    Log(rError) << "Failed to create native renderpass for skybox!\n";
+  }
 }
 
 
@@ -595,5 +796,14 @@ void Sky::CleanUp()
     rhi->FreeTexture(m_RenderTexture);
     m_RenderTexture = nullptr;
   }
+
+  if (m_SkyboxRenderPass) {
+    vkDestroyRenderPass(rhi->LogicDevice()->Native(), m_SkyboxRenderPass, nullptr);
+    m_SkyboxRenderPass = nullptr;
+  }
+
+
+  m_SkyboxIndBuf.CleanUp();
+  m_SkyboxVertBuf.CleanUp();
 }
 } // Recluse 

@@ -41,7 +41,8 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 
 // Nitrogen absorption profile. This is used to determine color of the air.
-vec3 Kr = vec3(0.18867780436772762, 0.4978442963618773, 0.2616065586417131);
+vec3 Kr = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131);
+#define CONST_PI 3.14159
 
 
 // camera view and projection.
@@ -67,6 +68,12 @@ vec3 GetWorldNormal()
   vec4 vEyeNormal = normalize(viewer.mInvProj * vDeviceNormal);
   vec3 vWorldNormal = normalize(viewer.mInvView * vEyeNormal).xyz;
   return vWorldNormal;
+}
+
+
+float RayleighPhase(float mu)
+{
+  return 3.0 / (16.0 * CONST_PI) * (1 + mu * mu);
 }
 
 
@@ -119,23 +126,24 @@ void main()
   vec3  vEyeDir = GetWorldNormal();
   float alpha = dot(vEyeDir, gWorldBuffer.vSun.xyz);
   
-  // Rayleigh partices factor.
+  // Rayleigh air particles factor.
   float fRayleighFactor = Phase(alpha, -0.01) * gWorldBuffer.fRayleigh;
   
   // Mie factor to determine aerosol particles.
   float fMieFactor = Phase(alpha, gWorldBuffer.fMieDist) * gWorldBuffer.fMie;
   // Spot that forms the sun.
-  float spot = smoothstep(0.0, 30.0, Phase(alpha, 0.9)) * gWorldBuffer.vSun.w;
+  float spot = smoothstep(0.0, 15.0, alpha) * gWorldBuffer.vSun.w; 
+  
   vec3 vRayleighCollected = vec3(0.0);
   vec3 vMieCollected = vec3(0.0);
   
-  float fSurfaceHeight = 0.05;
+  float fSurfaceHeight = 0.5;
   float fScatterStrength = gWorldBuffer.fScatterStrength;
   float fRayleighStength = gWorldBuffer.fRayleighStength;
   float fMieStength = gWorldBuffer.fMieStength;
   float fIntensity = gWorldBuffer.fIntensity;
 
-  int iStepCount = 32;
+  int iStepCount = 16;
   vec3 vEyePos = vec3(0.0, fSurfaceHeight, 0.0);
   float fEyeDepth = AtmosphericDepth(vEyePos, vEyeDir);
   float fStepLength = fEyeDepth / float(iStepCount);
@@ -153,7 +161,7 @@ void main()
   vMieCollected = (vMieCollected) / float(iStepCount);
 
   // TODO(): This should be the final color, not mie scattering alone...
-  vec3 color = vec3(spot * vMieCollected + fMieFactor * vMieCollected + fRayleighFactor * vRayleighCollected);
+  vec3 color = vec3(fMieFactor * vMieCollected + fRayleighFactor * vRayleighCollected);
 
   // TODO(): Testing Mie scattering first. Debugging Rayleigh...
   FragColor = vec4(color, 1.0);

@@ -56,6 +56,7 @@ Renderer::Renderer()
   , m_AsyncBuild(false)
   , m_AntiAliasing(false)
   , m_pSky(nullptr)
+  , m_pSkyboxCmdBuffer(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(2);
@@ -137,6 +138,10 @@ void Renderer::Render()
   offscreenSI.pWaitSemaphores = waitSemas;
   offscreenSI.pWaitDstStageMask = waitFlags;
 
+  VkSubmitInfo skyboxSI = { };
+  skyboxSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO; 
+  skyboxSI.commandBufferCount = 1;
+
   VkSubmitInfo hdrSI = offscreenSI;
   VkSemaphore hdrWaits[] = { m_Offscreen._Semaphore->Handle() };
   VkSemaphore hdrSignal[] = { m_HDR._Semaphore->Handle() };
@@ -188,6 +193,9 @@ void Renderer::Render()
 
     // Offscreen PBR Forward Rendering Pass.
     m_pRhi->GraphicsSubmit(offscreenSI);
+ 
+    // Render Sky onto our render textures.
+    //m_pRhi->GraphicsSubmit(skyboxSI);
 
     // High Dynamic Range and Gamma Pass.
     if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(hdrSI);
@@ -234,6 +242,7 @@ void Renderer::CleanUp()
   delete m_pLights;
   m_pLights = nullptr;
   
+  CleanUpSkybox();
   m_pSky->CleanUp();
   delete m_pSky;
   m_pSky = nullptr;
@@ -274,26 +283,29 @@ b8 Renderer::Initialize(Window* window)
   SetUpRenderTextures(true);
   SetUpFrameBuffers();
   SetUpDescriptorSetLayouts();
-  SetUpGraphicsPipelines();
+  m_RenderQuad.Initialize(m_pRhi);
+
   GlobalDescriptor* gMat = new GlobalDescriptor();
   gMat->m_pRhi = m_pRhi;
   gMat->Initialize();
   gMat->Update();
   m_pGlobal = gMat;
+
+  m_pSky = new Sky();
+  m_pSky->Initialize();
+  m_pSky->MarkDirty();
+
+  SetUpSkybox();
+  SetUpGraphicsPipelines();
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
   SetUpHDR(true);
-  m_RenderQuad.Initialize(m_pRhi);
 
   m_pLights = new LightDescriptor();
   m_pLights->m_pRhi = m_pRhi;
   m_pLights->Initialize();
   m_pLights->Update();
-
-  m_pSky = new Sky();
-  m_pSky->Initialize();
-  m_pSky->MarkDirty();
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -360,11 +372,13 @@ void Renderer::SetUpDescriptorSetLayouts()
   DescriptorSetLayout* MaterialSetLayout = m_pRhi->CreateDescriptorSetLayout();
   DescriptorSetLayout* LightSetLayout = m_pRhi->CreateDescriptorSetLayout();
   DescriptorSetLayout* BonesSetLayout = m_pRhi->CreateDescriptorSetLayout();
+  DescriptorSetLayout* SkySetLayout = m_pRhi->CreateDescriptorSetLayout();
   gResources().RegisterDescriptorSetLayout(GlobalSetLayoutStr, GlobalSetLayout);
   gResources().RegisterDescriptorSetLayout(MeshSetLayoutStr, MeshSetLayout);
   gResources().RegisterDescriptorSetLayout(MaterialSetLayoutStr, MaterialSetLayout);
   gResources().RegisterDescriptorSetLayout(LightSetLayoutStr, LightSetLayout);
   gResources().RegisterDescriptorSetLayout(BonesSetLayoutStr, BonesSetLayout);
+  gResources().RegisterDescriptorSetLayout(SkyboxSetLayoutStr, SkySetLayout);
 
   // Global and Mesh Layout.
   {
@@ -457,6 +471,23 @@ void Renderer::SetUpDescriptorSetLayouts()
     BoneLayout.bindingCount = static_cast<u32>(BonesBindings.size());
     BoneLayout.pBindings = BonesBindings.data();
     BonesSetLayout->Initialize(BoneLayout);
+  }
+
+  // Skybox samplerCube.
+  {
+    VkDescriptorSetLayoutBinding skyboxBind = { };
+    skyboxBind.binding = 0;
+    skyboxBind.descriptorCount = 1;
+    skyboxBind.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    skyboxBind.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    skyboxBind.pImmutableSamplers = nullptr;
+    VkDescriptorSetLayoutCreateInfo info = { };
+    info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    info.flags = 0;
+    info.bindingCount = 1;
+    info.pBindings = &skyboxBind;
+    info.pNext = nullptr;
+    SkySetLayout->Initialize(info);
   }
 
   // Light layout.
@@ -601,12 +632,14 @@ void Renderer::CleanUpDescriptorSetLayouts()
   DescriptorSetLayout* MaterialSetLayout = gResources().UnregisterDescriptorSetLayout(MaterialSetLayoutStr);
   DescriptorSetLayout* LightSetLayout = gResources().UnregisterDescriptorSetLayout(LightSetLayoutStr);
   DescriptorSetLayout* BonesSetLayout = gResources().UnregisterDescriptorSetLayout(BonesSetLayoutStr);
+  DescriptorSetLayout* SkySetLayout = gResources().UnregisterDescriptorSetLayout(SkyboxSetLayoutStr);
 
   m_pRhi->FreeDescriptorSetLayout(GlobalSetLayout);
   m_pRhi->FreeDescriptorSetLayout(MeshSetLayout);
   m_pRhi->FreeDescriptorSetLayout(MaterialSetLayout);
   m_pRhi->FreeDescriptorSetLayout(LightSetLayout);
   m_pRhi->FreeDescriptorSetLayout(BonesSetLayout);
+  m_pRhi->FreeDescriptorSetLayout(SkySetLayout);
 
   DescriptorSetLayout* LightViewLayout = gResources().UnregisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
   m_pRhi->FreeDescriptorSetLayout(LightViewLayout);
@@ -1065,6 +1098,7 @@ void Renderer::SetUpGraphicsPipelines()
   }
     
   RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpSkyboxPass(RHI(), Filepath, GraphicsPipelineInfo);
 
   // Set to quad rendering format.
   colorBlendCI.logicOpEnable = VK_FALSE;
@@ -1119,6 +1153,9 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* GlowPipeline = gResources().UnregisterGraphicsPipeline(GlowPipelineStr);
   m_pRhi->FreeGraphicsPipeline(GlowPipeline);
+
+  GraphicsPipeline* SkyPipeline = gResources().UnregisterGraphicsPipeline(SkyboxPipelineStr);
+  m_pRhi->FreeGraphicsPipeline(SkyPipeline);
 
   GraphicsPipeline* ShadowMapPipeline = gResources().UnregisterGraphicsPipeline(ShadowMapPipelineStr);
   GraphicsPipeline* DynamicShadowMapPipline = gResources().UnregisterGraphicsPipeline(DynamicShadowMapPipelineStr);
@@ -1693,11 +1730,118 @@ void Renderer::Build()
   BuildOffScreenBuffer(m_Offscreen._CurrCmdBufferIndex);
   BuildHDRCmdBuffer(m_HDR._CurrCmdBufferIndex);
   BuildShadowCmdBuffer(m_Offscreen._CurrCmdBufferIndex);
+  BuildSkyboxCmdBuffer();
   m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
 
   // Signal that no update is required.
   m_NeedsUpdate = false;
   m_AsyncBuild = false;
+}
+
+
+void Renderer::SetUpSkybox()
+{
+  DescriptorSet* skyboxSet = m_pRhi->CreateDescriptorSet();
+  gResources().RegisterDescriptorSet(SkyboxDescriptorSetStr, skyboxSet);
+  DescriptorSetLayout* layout = gResources().GetDescriptorSetLayout(SkyboxSetLayoutStr);
+
+  Texture* cubemap = m_pSky->GetCubeMap();
+  VkDescriptorImageInfo image = { };
+  image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image.imageView = cubemap->View();
+  image.sampler = m_pSky->GetSampler()->Handle();
+
+  VkWriteDescriptorSet write = { };
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.descriptorCount = 1;
+  write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  write.dstArrayElement = 0;
+  write.dstBinding = 0;
+  write.pImageInfo = &image;
+
+  skyboxSet->Allocate(m_pRhi->DescriptorPool(), layout);
+  skyboxSet->Update(1, &write);
+
+  // Create skybox Commandbuffer.
+  m_pSkyboxCmdBuffer = m_pRhi->CreateCommandBuffer();
+  m_pSkyboxCmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+}
+
+
+void Renderer::CleanUpSkybox()
+{
+  DescriptorSet* skyboxSet = gResources().UnregisterDescriptorSet(SkyboxDescriptorSetStr);
+  m_pRhi->FreeDescriptorSet(skyboxSet);
+
+  // Cleanup commandbuffer for skybox.
+  m_pRhi->FreeCommandBuffer(m_pSkyboxCmdBuffer);
+  m_pSkyboxCmdBuffer = nullptr;
+}
+
+
+void Renderer::BuildSkyboxCmdBuffer()
+{
+  if (m_pSkyboxCmdBuffer) {
+    m_pRhi->DeviceWaitIdle();
+    m_pSkyboxCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  }
+
+  VkCommandBufferBeginInfo beginInfo = { };
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  
+  CommandBuffer* buf = m_pSkyboxCmdBuffer;
+  FrameBuffer* skyFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
+  GraphicsPipeline* skyPipeline = gResources().GetGraphicsPipeline(SkyboxPipelineStr);
+  DescriptorSet* global = m_pGlobal->Set();
+  DescriptorSet* skybox = gResources().GetDescriptorSet(SkyboxDescriptorSetStr);
+
+  VkDescriptorSet descriptorSets[] = {
+    global->Handle(),
+    skybox->Handle()
+  };  
+
+  buf->Begin(beginInfo);
+    std::array<VkClearValue, 6> clearValues;
+    clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[5].depthStencil = { 1.0f, 0 };
+
+    VkViewport viewport = {};
+    viewport.height = (r32)m_pWindow->Height();
+    viewport.width = (r32)m_pWindow->Width();
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    viewport.y = 0.0f;
+    viewport.x = 0.0f;
+
+    VkRenderPassBeginInfo renderBegin = { };
+    renderBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderBegin.framebuffer = skyFrameBuffer->Handle();
+    renderBegin.renderPass = m_pSky->GetSkyboxRenderPass();
+    renderBegin.clearValueCount = static_cast<u32>(clearValues.size());
+    renderBegin.pClearValues = clearValues.data();
+    renderBegin.renderArea.offset = { 0, 0 };
+    renderBegin.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+    
+    // Start the renderpass.
+    buf->BeginRenderPass(renderBegin, VK_SUBPASS_CONTENTS_INLINE);
+      buf->SetViewPorts(0, 1, &viewport);
+      buf->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Pipeline());
+      buf->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Layout(), 0, 2, descriptorSets, 0, nullptr);
+      VertexBuffer* vertexbuffer = m_pSky->GetSkyboxVertexBuffer();
+      IndexBuffer* idxBuffer = m_pSky->GetSkyboxIndexBuffer();
+
+      VkDeviceSize offsets[] =  { 0 };
+      VkBuffer vert = vertexbuffer->Handle()->NativeBuffer();
+      VkBuffer ind = idxBuffer->Handle()->NativeBuffer();
+      buf->BindVertexBuffers(0 , 1, &vert, offsets);  
+      buf->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
+      buf->DrawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
+    buf->EndRenderPass();
+  buf->End();
 }
 
 
