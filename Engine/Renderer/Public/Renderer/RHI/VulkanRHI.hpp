@@ -146,7 +146,7 @@ public:
   void                          AcquireNextImage();
 
   // Submit a command buffer to the graphics queue.
-  void                          GraphicsSubmit(const VkSubmitInfo& submitInfo);
+  void                          GraphicsSubmit(const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Wait until the graphics queue has completely finished all submittals.
   void                          GraphicsWaitIdle();

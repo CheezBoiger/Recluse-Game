@@ -422,15 +422,20 @@ void VulkanRHI::SetUpSwapchainRenderPass()
 }
 
 
-void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo)
+void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo, const VkFence fence)
 {
-  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, fence);
   if (result != VK_SUCCESS) {
     if (result == VK_ERROR_DEVICE_LOST)  {
       R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?\n");
       return;
     }
     R_DEBUG(rError, "Unsuccessful graphics queue submit!\n");
+  }
+
+  if (fence) {
+    vkWaitForFences(LogicDevice()->Native(), 1, &fence, VK_TRUE, UINT64_MAX);
+    vkResetFences(LogicDevice()->Native(), 1, &fence);
   }
 }
 

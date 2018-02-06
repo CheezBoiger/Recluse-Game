@@ -186,7 +186,6 @@ void Renderer::Render()
     }
 
     // Check if sky needs to update it's cubemap.
-
     if (m_pSky->NeedsRendering()) {
       skyboxSI.waitSemaphoreCount = 2;
       skyboxSI.pWaitSemaphores = skyWaits;
@@ -199,7 +198,7 @@ void Renderer::Render()
 
     // Offscreen PBR Forward Rendering Pass.
     m_pRhi->GraphicsSubmit(offscreenSI);
- 
+
     // Render Sky onto our render textures.
     m_pRhi->GraphicsSubmit(skyboxSI);
 
@@ -2424,6 +2423,16 @@ void Renderer::UpdateMaterials()
 {
   // Update global data.
   m_pGlobal->Data()->_EnableAA = m_AntiAliasing;
+  Vector4 vec4 = m_pLights->Data()->_PrimaryLight._Direction;
+  // Left handed coordinate system, need to flip the z.
+  Vector3 sunDir = Vector3(vec4.x, vec4.y, -vec4.z);
+  if (m_pGlobal->Data()->_vSunDir != sunDir && sunDir != Vector3()) {
+    m_pGlobal->Data()->_vSunDir = sunDir;
+    Log() << m_pGlobal->Data()->_vSunDir << "\n";
+    m_pSky->MarkDirty();
+  }
+
+  // Update the global descriptor.
   m_pGlobal->Update();
 
   // Update lights in scene.

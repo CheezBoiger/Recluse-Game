@@ -100,7 +100,7 @@ int main(int c, char* argv[])
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 0.7f, 0.5f, 1.0f);
-    pPrimary->_Direction = Vector4(0.0f, 0.0f, 1.0f);
+    pPrimary->_Direction = Vector3(-0.3f, 0.0f, -1.0f).Normalize();
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 5.0f;
   }
