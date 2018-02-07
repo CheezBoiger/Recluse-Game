@@ -41,6 +41,8 @@ struct GlobalBuffer {
   i32             _ScreenSize[2];
   Vector3         _vSunDir; // Sun direction, must be normalized!
   r32             _vSunBrightness;
+  r32             _fEngineTime; // Current time passed within the engine.
+  r32             _fDeltaTime;  // Elapsed time between frames.
   r32             _Gamma;
   r32             _Exposure;
   r32             _Rayleigh;
@@ -53,6 +55,7 @@ struct GlobalBuffer {
   i32             _BloomEnabled;
   i32             _EnableShadows;
   i32             _EnableAA;
+  i32             _Pad[2];
 };
 
 

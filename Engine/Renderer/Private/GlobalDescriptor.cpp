@@ -28,6 +28,8 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._Exposure = 1.0f;
   m_Global._EnableShadows = false;
   m_Global._EnableAA = false;
+  m_Global._fDeltaTime = 0.0f;
+  m_Global._fEngineTime = 0.0f;
 
   // Testing params.
   m_Global._vSunBrightness = 30.0f;

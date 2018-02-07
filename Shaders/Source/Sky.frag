@@ -28,6 +28,8 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.
+  float fEngineTime; // total current time of the engine. 
+  float fDeltaTime; // elapsed time between frames.
   float gamma;
   float exposure;
   float fRayleigh;
@@ -40,6 +42,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
+  ivec2 pad;
 } gWorldBuffer;
 
 
