@@ -2428,7 +2428,6 @@ void Renderer::UpdateMaterials()
   Vector3 sunDir = Vector3(vec4.x, vec4.y, -vec4.z);
   if (m_pGlobal->Data()->_vSunDir != sunDir && sunDir != Vector3()) {
     m_pGlobal->Data()->_vSunDir = sunDir;
-    Log() << m_pGlobal->Data()->_vSunDir << "\n";
     m_pSky->MarkDirty();
   }
 
