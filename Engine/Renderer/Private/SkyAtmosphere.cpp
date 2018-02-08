@@ -296,7 +296,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
     pbrColor->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
@@ -307,7 +307,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[1] = CreateAttachmentDescription(
     pbrNormal->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
@@ -318,7 +318,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
     RTBright->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
@@ -329,7 +329,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[3] = CreateAttachmentDescription(
     pbrPosition->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
@@ -340,7 +340,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[4] = CreateAttachmentDescription(
     pbrRoughMetal->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
@@ -351,7 +351,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 
   attachmentDescriptions[5] = CreateAttachmentDescription(
     pbrDepth->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
