@@ -149,12 +149,12 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 5000
+#define objects 3000
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);
   objsMat.SetBaseRough(0.2f);
-  objsMat.SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+  objsMat.SetBaseColor(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
   {
     std::random_device device;
     std::mt19937 twist(device());

@@ -7,7 +7,7 @@ layout (location = 0) out vec4 vFragColor;
 layout (location = 1) out vec4 vBrightColor;
 
 #define MAX_DIRECTION_LIGHTS    8
-#define MAX_POINT_LIGHTS        128
+#define MAX_POINT_LIGHTS        256
 
 struct DirectionLight {
   vec4  direction;
@@ -313,13 +313,18 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
 
 void main()
 {
-  vec3 fragPosition = texture(position, frag_in.uv).rgb;
-  vec3 fragAlbedo = texture(albedo, frag_in.uv).rgb;
-  vec3 fragEmissive = texture(emission, frag_in.uv).rgb;
-  float emIntensity = texture(emission, frag_in.uv).a;
-  
   float fragRoughness = texture(roughMetal, frag_in.uv).r;
   float fragMetallic = texture(roughMetal, frag_in.uv).g;
+  
+  // 0 roughness equates to no surface to render with light. Speeds up performance.
+  // TODO(): We need a stencil surface to determine what parts of the 
+  // image to render with light. This is not a good way.
+  if (fragRoughness <= 0) { discard; }
+  
+  vec3 fragAlbedo = texture(albedo, frag_in.uv).rgb;  
+  vec3 fragPosition = texture(position, frag_in.uv).rgb;
+  vec3 fragEmissive = texture(emission, frag_in.uv).rgb;
+  float emIntensity = texture(emission, frag_in.uv).a;
   
   vec3 N = texture(normal, frag_in.uv).rgb;
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - fragPosition);
