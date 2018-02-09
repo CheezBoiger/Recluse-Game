@@ -188,8 +188,8 @@ void VulkanRHI::Initialize(HWND windowHandle)
   mPhysicalDeviceProperties = props;
 
   // Descriptor pool maxes.
-  BuildDescriptorPool(UINT16_MAX, UINT16_MAX);
-  CreateOcclusionQueryPool(UINT16_MAX);
+  BuildDescriptorPool(UINT16_MAX << 1, UINT16_MAX << 1);
+  CreateOcclusionQueryPool(UINT8_MAX);
 
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
@@ -844,7 +844,7 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   poolSizes[1].descriptorCount = maxCount;
 
   poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  poolSizes[2].descriptorCount = maxCount;
+  poolSizes[2].descriptorCount = 10;
 
   VkDescriptorPoolCreateInfo descriptorPoolCI = { };
   descriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

@@ -149,14 +149,16 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 200
+#define objects 5000
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
-
+  objsMat.SetBaseMetal(0.6f);
+  objsMat.SetBaseRough(0.2f);
+  objsMat.SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
   {
     std::random_device device;
     std::mt19937 twist(device());
-    std::uniform_real_distribution<r32> uni(-50.0f, 50.0f);
+    std::uniform_real_distribution<r32> uni(-500.0f, 500.0f);
 
     for (size_t i = 0; i <  gameObjs.size(); ++i) {
       GameObject* obj = gameObjs[i];
@@ -199,7 +201,6 @@ int main(int c, char* argv[])
     light->_Direction = Vector3(
       sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
       cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
-
     gEngine().Update();
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }

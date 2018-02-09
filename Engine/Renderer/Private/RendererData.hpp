@@ -20,20 +20,29 @@ extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
 extern std::string LightViewDescriptorSetLayoutStr;
 
-extern std::string PBRPipelineStr;
-extern std::string PBRStaticPipelineStr;
-extern std::string PBRLayoutStr;
-extern std::string PBRColorAttachStr;
-extern std::string PBRNormalAttachStr;
-extern std::string PBRPositionAttachStr;
-extern std::string PBRRoughMetalAttachStr;
-extern std::string PBRSamplerStr;
-extern std::string PBRDepthAttachStr;
-extern std::string PBRFrameBufferStr;
-extern std::string PBRVertFileStr;
-extern std::string PBRStaticVertFileStr;
-extern std::string PBRFragFileStr;
-extern std::string RenderTargetBrightStr;
+extern std::string gbuffer_PipelineStr;
+extern std::string gbuffer_StaticPipelineStr;
+extern std::string gbuffer_LayoutStr;
+extern std::string gbuffer_AlbedoAttachStr;
+extern std::string gbuffer_NormalAttachStr;
+extern std::string gbuffer_PositionAttachStr;
+extern std::string gbuffer_RoughMetalAttachStr;
+extern std::string gbuffer_EmissionAttachStr;
+extern std::string gbuffer_SamplerStr;
+extern std::string gbuffer_DepthAttachStr;
+extern std::string gbuffer_FrameBufferStr;
+extern std::string gbuffer_VertFileStr;
+extern std::string gbuffer_StaticVertFileStr;
+extern std::string gbuffer_FragFileStr;
+
+extern std::string pbr_PipelineStr;
+extern std::string pbr_FrameBufferStr;
+extern std::string pbr_DescLayoutStr;
+extern std::string pbr_DescSetStr;
+extern std::string pbr_FinalTextureStr;
+extern std::string pbr_BrightTextureStr;
+extern std::string pbr_VertStr;
+extern std::string pbr_FragStr;
 
 extern std::string SkyboxPipelineStr;
 extern std::string SkyboxDescriptorSetStr;
@@ -114,7 +123,9 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 // Set up the HDR Gamma pass.
 void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpGBufferPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 

@@ -1,16 +1,10 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#version 430 
+#version 430
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-in FRAG_IN {
-  vec3  position;
-  float lodBias;
-  vec3  normal;
-  float pad1;
-  vec2  texcoord0;
-  vec2  texcoord1;
-} frag_in;
+layout (location = 0) out vec4 vFragColor;
+layout (location = 1) out vec4 vBrightColor;
 
 #define MAX_DIRECTION_LIGHTS    8
 #define MAX_POINT_LIGHTS        128
@@ -35,8 +29,11 @@ struct PointLight {
 };
 
 
-// Global const buffer ALWAYS bound to descriptor set 0, or the 
-// first descriptor set.
+in FRAG_IN {
+  vec2 uv;
+} frag_in;
+
+
 layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
@@ -68,61 +65,25 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   ivec2 pad;
 } gWorldBuffer;
 
-
-layout (set = 1, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;
-  float lod;          // Level of Detail
-  int   hasBones; 
-} objBuffer;
+layout (set = 1, binding = 0) uniform sampler2D albedo;
+layout (set = 1, binding = 1) uniform sampler2D normal;
+layout (set = 1, binding = 2) uniform sampler2D position;
+layout (set = 1, binding = 3) uniform sampler2D roughMetal;
+layout (set = 1, binding = 4) uniform sampler2D emission;
 
 
-layout (set = 2, binding = 0) uniform MaterialBuffer {
-  vec4  color;
-  float opaque;
-  float metal;
-  float rough;
-  float emissive;
-  int   hasAlbedo;
-  int   hasMetallic;
-  int   hasRoughness;
-  int   hasNormal;
-  int   hasEmissive;
-  int   hasAO;
-  int   isTransparent;
-  int   pad;
-} matBuffer;
-
-
-layout (set = 2, binding = 1) uniform sampler2D albedo;
-layout (set = 2, binding = 2) uniform sampler2D metallic;
-layout (set = 2, binding = 3) uniform sampler2D roughness;
-layout (set = 2, binding = 4) uniform sampler2D normal;
-layout (set = 2, binding = 5) uniform sampler2D ao;
-layout (set = 2, binding = 6) uniform sampler2D emissive;
-
-
-layout (set = 3, binding = 0) uniform LightBuffer {
+layout (set = 2, binding = 0) uniform LightBuffer {
   DirectionLight  primaryLight;
   DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
   PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
 
-layout (set = 3, binding = 1) uniform sampler2D globalShadow;
+layout (set = 2, binding = 1) uniform sampler2D globalShadow;
 
 
-layout (set = 4, binding = 0) uniform LightSpace {
+layout (set = 3, binding = 0) uniform LightSpace {
   mat4 viewProj;
 } lightSpace;
-
-
-// TODO(): Need to addin gridLights buffer, for light culling, too.
-
-layout (location = 0) out vec4 FinalColor;
-layout (location = 1) out vec4 NormalColor;
-layout (location = 2) out vec4 BrightColor;
-layout (location = 3) out vec4 PositionColor;
-layout (location = 4) out vec4 RoughMetalColor;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,9 +193,9 @@ vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 
 
 // TODO():
-vec3 CookTorrBRDFPoint(PointLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
 {
-  vec3 L = light.position.xyz - frag_in.position;
+  vec3 L = light.position.xyz - vPosition;
   float distance = length(L);
   // Return if range is less than the distance between light and fragment.
   if (light.range < distance) { return vec3(0.0); }
@@ -306,7 +267,7 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
 
 // TODO(): This will eventually be integrated into Directional, as we will need to 
 // support more shadow maps (using a Sampler2DArray.)
-vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
 {
   vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
@@ -334,7 +295,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, floa
     
     color += LambertDiffuse(kD, Albedo);
     if (gWorldBuffer.enableShadows >= 1) {
-      vec4 shadowClip = lightSpace.viewProj * vec4(frag_in.position, 1.0);
+      vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
       color *= shadowFactor;
       if (shadowFactor >= 0.51) {
@@ -350,86 +311,28 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, floa
 }
 
 
-////////////////////////////////////////////////////////////////////
-
-mat3 BiTangentFrame(vec3 Normal, vec3 Position, vec2 UV)
-{
-  vec3 dp1 = dFdx(Position);
-  vec3 dp2 = dFdy(Position);
-  
-  vec2 duv1 = dFdx(UV);
-  vec2 duv2 = dFdy(UV);
-  
-  vec3 N = normalize(Normal);
-  vec3 T = normalize(dp1 * duv2.t - dp2 * duv1.t);
-  vec3 B = -normalize(cross(N, T));
-  
-  return mat3(T, B, N);
-}
-
-
-vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
-{
-  vec3 tNormal = texture(normal, TexCoord, objBuffer.lod).rgb * 2.0 - 1.0;
-  mat3 TBN = BiTangentFrame(N, V, TexCoord);
-  return normalize(TBN * tNormal);
-}
-
-
 void main()
 {
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
-  vec3 fragAlbedo = vec3(0.0);
-  vec3 fragNormal = vec3(0.0);
-  vec3 fragEmissive = vec3(0.0);
-  vec3 outColor = vec3(0.0);
+  vec3 fragPosition = texture(position, frag_in.uv).rgb;
+  vec3 fragAlbedo = texture(albedo, frag_in.uv).rgb;
+  vec3 fragEmissive = texture(emission, frag_in.uv).rgb;
+  float emIntensity = texture(emission, frag_in.uv).a;
   
-  float fragMetallic = 0.01;
-  float fragRoughness = 0.1;
-  float fragAO = 0.0;  
+  float fragRoughness = texture(roughMetal, frag_in.uv).r;
+  float fragMetallic = texture(roughMetal, frag_in.uv).g;
   
-  if (matBuffer.hasAlbedo >= 1) {
-    fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
-  } else {
-    fragAlbedo = matBuffer.color.rgb;
-  }
-    
-  if (matBuffer.hasMetallic >= 1) {
-    fragMetallic = texture(metallic, frag_in.texcoord0, objBuffer.lod).r;
-  } else {
-    fragMetallic = matBuffer.metal;
-  }
+  vec3 N = texture(normal, frag_in.uv).rgb;
+  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - fragPosition);
   
-  if (matBuffer.hasRoughness >= 1) {
-    fragRoughness = texture(roughness, frag_in.texcoord0, objBuffer.lod).r;
-  } else {
-    fragRoughness = matBuffer.rough;
-  }
-  
-  if (matBuffer.hasNormal >= 1) {
-    fragNormal = GetNormal(frag_in.normal, frag_in.position, frag_in.texcoord0);
-  } else {
-    fragNormal = frag_in.normal;
-  }
-  
-  if (matBuffer.hasAO >= 1) {
-    fragAO = texture(ao, frag_in.texcoord0, objBuffer.lod).r;
-  }
-  
-  if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb;
-  }   
-  
-  vec3 N = normalize(fragNormal);
-
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
+  vec3 outColor = vec3(0.0);
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
-    outColor += CookTorrBRDFPrimary(light, fragAlbedo, V, N, fragRoughness, fragMetallic); 
+    outColor += CookTorrBRDFPrimary(light, fragPosition, fragAlbedo, V, N, fragRoughness, fragMetallic); 
     outColor = max(outColor, ambient);
   }
   
@@ -443,25 +346,16 @@ void main()
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
-    outColor += CookTorrBRDFPoint(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    outColor += CookTorrBRDFPoint(light, fragPosition, fragAlbedo, V, N, fragRoughness, fragMetallic);
     
-  }
-    
-  // We might wanna set a debug param here...
-  float opaque = 1.0;
-  if (matBuffer.isTransparent >= 1) {
-    opaque = matBuffer.opaque;
   }
   
-  outColor = (fragEmissive * matBuffer.emissive) + outColor;
-  FinalColor = vec4(outColor, opaque);
-  NormalColor = vec4(fragNormal, 1.0);
-  PositionColor = vec4(frag_in.position, 1.0);
-  RoughMetalColor = vec4(fragRoughness, fragMetallic, 0.0, 1.0);
-
-  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - frag_in.position) * 0.5;
+  outColor = fragEmissive + outColor;
+  vFragColor = vec4(outColor, 1.0);
+  
+  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - fragPosition) * 0.5;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));
-  BrightColor = vec4(glow, 1.0);
+  vBrightColor = vec4(glow, 1.0);
 }

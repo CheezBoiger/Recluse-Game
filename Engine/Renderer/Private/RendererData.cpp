@@ -29,20 +29,30 @@ std::string ShadowMapVertFileStr              = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr              = "ShadowMapping.frag.spv";
 std::string LightViewDescriptorSetLayoutStr   = "LightViewDescriptorLayout";
 
-std::string PBRPipelineStr              = "PBRPipeline";
-std::string PBRStaticPipelineStr        = "PBRStaticPipeline";
-std::string PBRLayoutStr                = "PBRLayout";
-std::string PBRColorAttachStr           = "PBRColor";
-std::string PBRNormalAttachStr          = "PBRNormal";
-std::string PBRPositionAttachStr        = "PBRPosition";
-std::string PBRRoughMetalAttachStr      = "PBRRoughMetal";
-std::string PBRDepthAttachStr           = "PBRDepth";
-std::string PBRSamplerStr               = "PBRSampler";
-std::string PBRFrameBufferStr           = "PBRFrameBuffer";
-std::string PBRVertFileStr              = "PBRPass.vert.spv";
-std::string PBRStaticVertFileStr        = "StaticPBRPass.vert.spv";
-std::string PBRFragFileStr              = "PBRPass.frag.spv";
-std::string RenderTargetBrightStr       = "RenderTargetBright";
+std::string gbuffer_PipelineStr               = "GBufferPipeline";
+std::string gbuffer_StaticPipelineStr         = "StaticGBufferPipeline";
+std::string gbuffer_LayoutStr                 = "GBufferLayout";
+std::string gbuffer_AlbedoAttachStr           = "AlbedoColor";
+std::string gbuffer_NormalAttachStr           = "NormalColor";
+std::string gbuffer_PositionAttachStr         = "PositionColor";
+std::string gbuffer_RoughMetalAttachStr       = "RoughMetalColor";
+std::string gbuffer_EmissionAttachStr         = "EmissionColor";
+std::string gbuffer_DepthAttachStr            = "GBufferDepth";
+std::string gbuffer_SamplerStr                = "GBufferSampler";
+std::string gbuffer_FrameBufferStr            = "GBufferFrameBuffer";
+std::string gbuffer_VertFileStr               = "GBuffer.vert.spv";
+std::string gbuffer_StaticVertFileStr         = "StaticGBuffer.vert.spv";
+std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
+
+std::string pbr_PipelineStr                   = "PBRPipeline";
+std::string pbr_FrameBufferStr                = "PBRFrameBuffer";
+std::string pbr_DescLayoutStr                 = "PBRDescLayout";
+std::string pbr_DescSetStr                    = "PBRDescSet";
+std::string pbr_FinalTextureStr               = "RenderTargetColor";
+std::string pbr_BrightTextureStr              = "RenderTargetBright";
+std::string pbr_VertStr                       = "PBR.vert.spv";
+std::string pbr_FragStr                       = "PBR.frag.spv";
+
 std::string RenderTargetBlurHoriz4xStr  = "RTBlurHoriz4xTemp";
 std::string FrameBuffer4xHorizStr       = "FrameBufferHoriz4xStr";
 std::string MeshSetLayoutStr            = "MeshDescriptorSetLayout";
@@ -129,25 +139,25 @@ void LoadShader(std::string Filename, Shader* S)
 }
 
 
-void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpGBufferPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   // PbrForward Pipeline Creation.
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* PbrForwardPipeline = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* PbrStaticPipeline = Rhi->CreateGraphicsPipeline();
-  FrameBuffer* PbrFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
-  Shader* VertPBR = Rhi->CreateShader();
-  Shader* FragPBR = Rhi->CreateShader();
+  GraphicsPipeline* GBufferPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* GBufferStaticPipeline = Rhi->CreateGraphicsPipeline();
+  FrameBuffer* GBufferFrameBuffer = gResources().GetFrameBuffer(gbuffer_FrameBufferStr);
+  Shader* VertGBuffer = Rhi->CreateShader();
+  Shader* FragGBuffer = Rhi->CreateShader();
 
-  gResources().RegisterGraphicsPipeline(PBRPipelineStr, PbrForwardPipeline);
-  gResources().RegisterGraphicsPipeline(PBRStaticPipelineStr, PbrStaticPipeline);
+  gResources().RegisterGraphicsPipeline(gbuffer_PipelineStr, GBufferPipeline);
+  gResources().RegisterGraphicsPipeline(gbuffer_StaticPipelineStr, GBufferStaticPipeline);
 
-  LoadShader(PBRVertFileStr, VertPBR);
-  LoadShader(PBRFragFileStr, FragPBR);
+  LoadShader(gbuffer_VertFileStr, VertGBuffer);
+  LoadShader(gbuffer_FragFileStr, FragGBuffer);
 
   VkPipelineShaderStageCreateInfo PbrShaders[2];
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[0].module = VertPBR->Handle();
+  PbrShaders[0].module = VertGBuffer->Handle();
   PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
   PbrShaders[0].pName = kDefaultShaderEntryPointStr;
   PbrShaders[0].pNext = nullptr;
@@ -155,24 +165,22 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   PbrShaders[0].flags = 0;
 
   PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[1].module = FragPBR->Handle();
+  PbrShaders[1].module = FragGBuffer->Handle();
   PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
   PbrShaders[1].pName = kDefaultShaderEntryPointStr;
   PbrShaders[1].pNext = nullptr;
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = PbrFrameBuffer->RenderPass();
+  GraphicsInfo.renderPass = GBufferFrameBuffer->RenderPass();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
-  std::array<VkDescriptorSetLayout, 6> DLayouts;
+  std::array<VkDescriptorSetLayout, 4> DLayouts;
   DLayouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
   DLayouts[1] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
   DLayouts[2] = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr)->Layout();
-  DLayouts[3] = gResources().GetDescriptorSetLayout(LightSetLayoutStr)->Layout();
-  DLayouts[4]= gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
-  DLayouts[5] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
+  DLayouts[3] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -182,7 +190,7 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   PipelineLayout.pushConstantRangeCount = 0;
 
   // Initialize pbr forward pipeline.
-  PbrForwardPipeline->Initialize(GraphicsInfo, PipelineLayout);
+  GBufferPipeline->Initialize(GraphicsInfo, PipelineLayout);
 
   // Static pipeline creation.
   auto Bindings = StaticVertexDescription::GetBindingDescription();
@@ -197,16 +205,16 @@ void SetUpPBRForwardPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGr
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
 
-  Rhi->FreeShader(VertPBR);
-  VertPBR = Rhi->CreateShader();
-  LoadShader(PBRStaticVertFileStr, VertPBR);
+  Rhi->FreeShader(VertGBuffer);
+  VertGBuffer = Rhi->CreateShader();
+  LoadShader(gbuffer_StaticVertFileStr, VertGBuffer);
   
-  PbrShaders[0].module = VertPBR->Handle();
+  PbrShaders[0].module = VertGBuffer->Handle();
   PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size() - 1); // We don't need bone buffer.
-  PbrStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
+  GBufferStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
   
-  Rhi->FreeShader(VertPBR);
-  Rhi->FreeShader(FragPBR);
+  Rhi->FreeShader(VertGBuffer);
+  Rhi->FreeShader(FragGBuffer);
 }
 
 
@@ -257,6 +265,93 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
   Rhi->FreeShader(HdrVert);
   gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
 
+}
+
+
+void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
+  gResources().RegisterGraphicsPipeline(pbr_PipelineStr, pbr_Pipeline);
+
+  FrameBuffer* pbr_FrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);  
+
+  Shader* VertPBR = Rhi->CreateShader();
+  Shader* FragPBR = Rhi->CreateShader();
+
+  LoadShader(pbr_VertStr, VertPBR);
+  LoadShader(pbr_FragStr, FragPBR);
+
+  VkPipelineShaderStageCreateInfo PbrShaders[2];
+  PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[0].module = VertPBR->Handle();
+  PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  PbrShaders[0].pName = kDefaultShaderEntryPointStr;
+  PbrShaders[0].pNext = nullptr;
+  PbrShaders[0].pSpecializationInfo = nullptr;
+  PbrShaders[0].flags = 0;
+
+  PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[1].module = FragPBR->Handle();
+  PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  PbrShaders[1].pName = kDefaultShaderEntryPointStr;
+  PbrShaders[1].pNext = nullptr;
+  PbrShaders[1].flags = 0;
+  PbrShaders[1].pSpecializationInfo = nullptr;
+
+  GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPass();
+  GraphicsInfo.stageCount = 2;
+  GraphicsInfo.pStages = PbrShaders;
+
+  std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
+  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+    VK_FALSE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+    VK_FALSE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+    static_cast<u32>(colorBlendAttachments.size()),
+    colorBlendAttachments.data(),
+    VK_FALSE,
+    VK_LOGIC_OP_COPY
+  );
+
+  GraphicsInfo.pColorBlendState = &colorBlendCI;
+
+  std::array<VkDescriptorSetLayout, 4> layouts;
+  layouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
+  layouts[1] = gResources().GetDescriptorSetLayout(pbr_DescLayoutStr)->Layout();
+  layouts[2] = gResources().GetDescriptorSetLayout(LightSetLayoutStr)->Layout();
+  layouts[3] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+
+  VkPipelineLayoutCreateInfo PipelineLayout = {};
+  PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+  PipelineLayout.pSetLayouts = layouts.data();
+  PipelineLayout.pPushConstantRanges = 0;
+  PipelineLayout.pushConstantRangeCount = 0;
+
+  pbr_Pipeline->Initialize(GraphicsInfo, PipelineLayout);
+
+  Rhi->FreeShader(VertPBR);
+  Rhi->FreeShader(FragPBR);
 }
 
 
@@ -582,7 +677,39 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
   
   LoadShader(Sky::kSkyVertStr, vert);
   LoadShader(Sky::kSkyFragStr, frag);
+
+  std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
+  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+    static_cast<u32>(colorBlendAttachments.size()),
+    colorBlendAttachments.data(),
+    VK_FALSE,
+    VK_LOGIC_OP_COPY
+  );
   
+  GraphicsPipelineInfo.pColorBlendState = &colorBlendCI;
+
   std::array<VkPipelineShaderStageCreateInfo, 2> shaders;
   shaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaders[0].flags = 0;

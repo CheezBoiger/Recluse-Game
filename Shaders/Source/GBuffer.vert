@@ -56,7 +56,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 } objBuffer;
 
 
-layout (set = 5, binding = 0) uniform BonesBuffer {
+layout (set = 3, binding = 0) uniform BonesBuffer {
   mat4 bones[MAX_BONES];
 } boneBuffer;
 

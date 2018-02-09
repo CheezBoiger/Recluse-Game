@@ -284,80 +284,44 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
   m_pFrameBuffer->Finalize(framebufferCi, renderpassCi);
 
   // Create a renderpass for the pbr overlay.
-  Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
-  Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
-  Texture* pbrPosition = gResources().GetRenderTexture(PBRPositionAttachStr);
-  Texture* pbrRoughMetal = gResources().GetRenderTexture(PBRRoughMetalAttachStr);
-  Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
-  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
+  Texture* pbr_Color = gResources().GetRenderTexture(pbr_FinalTextureStr);
+  Texture* pbr_Bright = gResources().GetRenderTexture(pbr_BrightTextureStr);
+  Texture* pbr_Depth = gResources().GetRenderTexture(gbuffer_DepthAttachStr);
 
-  std::array<VkAttachmentDescription, 6> attachmentDescriptions;
+  std::array<VkAttachmentDescription, 3> attachmentDescriptions;
   VkSubpassDependency dependenciesNative[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    pbrColor->Format(),
+    pbr_Color->Format(),
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrColor->Samples()
+    pbr_Color->Samples()
   );
 
   attachmentDescriptions[1] = CreateAttachmentDescription(
-    pbrNormal->Format(),
+    pbr_Bright->Format(),
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrNormal->Samples()
+    pbr_Bright->Samples()
   );
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
-    RTBright->Format(),
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_LOAD,
-    VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    RTBright->Samples()
-  );
-
-  attachmentDescriptions[3] = CreateAttachmentDescription(
-    pbrPosition->Format(),
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_LOAD,
-    VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrPosition->Samples()
-  );
-
-  attachmentDescriptions[4] = CreateAttachmentDescription(
-    pbrRoughMetal->Format(),
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_LOAD,
-    VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrRoughMetal->Samples()
-  );
-
-  attachmentDescriptions[5] = CreateAttachmentDescription(
-    pbrDepth->Format(),
+    pbr_Depth->Format(),
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrDepth->Samples()
+    pbr_Depth->Samples()
   );
 
   dependenciesNative[0] = CreateSubPassDependency(
@@ -380,22 +344,13 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
-  std::array<VkAttachmentReference, 5> attachmentColors;
+  std::array<VkAttachmentReference, 2> attachmentColors;
   VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   attachmentColors[1].attachment = 1;
   attachmentColors[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-  attachmentColors[2].attachment = 2;
-  attachmentColors[2].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-  attachmentColors[3].attachment = 3;
-  attachmentColors[3].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-  attachmentColors[4].attachment = 4;
-  attachmentColors[4].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;

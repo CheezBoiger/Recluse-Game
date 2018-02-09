@@ -259,6 +259,7 @@ void Renderer::CleanUp()
   }
 
   m_RenderQuad.CleanUp();
+  CleanUpPBR();
   CleanUpHDR(true);
   CleanUpDownscale(true);
   CleanUpOffscreen(true);
@@ -306,6 +307,7 @@ b8 Renderer::Initialize(Window* window)
   SetUpOffscreen(true);
   SetUpDownscale(true);
   SetUpHDR(true);
+  SetUpPBR();
 
   m_pLights = new LightDescriptor();
   m_pLights->m_pRhi = m_pRhi;
@@ -460,6 +462,55 @@ void Renderer::SetUpDescriptorSetLayouts()
     MaterialLayout.pBindings = MaterialBindings.data();
 
     MaterialSetLayout->Initialize(MaterialLayout);
+  }
+
+  // PBR descriptor layout.
+  {
+    DescriptorSetLayout* pbr_Layout = m_pRhi->CreateDescriptorSetLayout();
+    gResources().RegisterDescriptorSetLayout(pbr_DescLayoutStr, pbr_Layout);
+    std::array<VkDescriptorSetLayoutBinding, 5> bindings;
+
+    // Albedo
+    bindings[0].binding = 0;
+    bindings[0].descriptorCount = 1;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[0].pImmutableSamplers = nullptr;
+    bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  
+
+    // Normal
+    bindings[1].binding = 1;
+    bindings[1].descriptorCount = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[1].pImmutableSamplers = nullptr;
+    bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  
+
+    // Position
+    bindings[2].binding = 2;
+    bindings[2].descriptorCount = 1;
+    bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[2].pImmutableSamplers = nullptr;
+    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // Rough Metal
+    bindings[3].binding = 3;
+    bindings[3].descriptorCount = 1;
+    bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[3].pImmutableSamplers = nullptr;
+    bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    // Emission
+    bindings[4].binding = 4;
+    bindings[4].descriptorCount = 1;
+    bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[4].pImmutableSamplers = nullptr;
+    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+
+    VkDescriptorSetLayoutCreateInfo PbrLayout = { };
+    PbrLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    PbrLayout.bindingCount = static_cast<u32>(bindings.size());
+    PbrLayout.pBindings = bindings.data();
+    pbr_Layout->Initialize(PbrLayout);
   }
 
   // Bones Layout.
@@ -660,20 +711,26 @@ void Renderer::CleanUpDescriptorSetLayouts()
 
   DescriptorSetLayout* GlowLayout = gResources().UnregisterDescriptorSetLayout(GlowDescriptorSetLayoutStr);
   m_pRhi->FreeDescriptorSetLayout(GlowLayout);
+
+  DescriptorSetLayout* PbrLayout = gResources().UnregisterDescriptorSetLayout(pbr_DescLayoutStr);
+  m_pRhi->FreeDescriptorSetLayout(PbrLayout);
 }
 
 
 void Renderer::SetUpFrameBuffers()
 {
-  Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
-  Texture* pbrNormal = gResources().GetRenderTexture(PBRNormalAttachStr);
-  Texture* pbrPosition = gResources().GetRenderTexture(PBRPositionAttachStr);
-  Texture* pbrRoughMetal = gResources().GetRenderTexture(PBRRoughMetalAttachStr);
-  Texture* pbrDepth = gResources().GetRenderTexture(PBRDepthAttachStr);
-  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
+  Texture* gbuffer_Albedo = gResources().GetRenderTexture(gbuffer_AlbedoAttachStr);
+  Texture* gbuffer_Normal = gResources().GetRenderTexture(gbuffer_NormalAttachStr);
+  Texture* gbuffer_Position = gResources().GetRenderTexture(gbuffer_PositionAttachStr);
+  Texture* gbuffer_RoughMetal = gResources().GetRenderTexture(gbuffer_RoughMetalAttachStr);
+  Texture* gbuffer_Emission = gResources().GetRenderTexture(gbuffer_EmissionAttachStr);
+  Texture* gbuffer_Depth = gResources().GetRenderTexture(gbuffer_DepthAttachStr);
 
-  FrameBuffer* pbrFrameBuffer = m_pRhi->CreateFrameBuffer();
-  gResources().RegisterFrameBuffer(PBRFrameBufferStr, pbrFrameBuffer);
+  FrameBuffer* gbuffer_FrameBuffer = m_pRhi->CreateFrameBuffer();
+  gResources().RegisterFrameBuffer(gbuffer_FrameBufferStr, gbuffer_FrameBuffer);
+
+  FrameBuffer* pbr_FrameBuffer = m_pRhi->CreateFrameBuffer();
+  gResources().RegisterFrameBuffer(pbr_FrameBufferStr, pbr_FrameBuffer);
 
   FrameBuffer* hdrFrameBuffer = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
@@ -682,69 +739,69 @@ void Renderer::SetUpFrameBuffers()
   VkSubpassDependency dependencies[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    pbrColor->Format(),
+    gbuffer_Albedo->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrColor->Samples()
+    gbuffer_Albedo->Samples()
   );
 
   attachmentDescriptions[1] = CreateAttachmentDescription(
-    pbrNormal->Format(),
+    gbuffer_Normal->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrNormal->Samples()
+    gbuffer_Normal->Samples()
   );
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
-    RTBright->Format(),
+    gbuffer_Position->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    RTBright->Samples()
+    gbuffer_Position->Samples()
   );
 
   attachmentDescriptions[3] = CreateAttachmentDescription(
-    pbrPosition->Format(),
+    gbuffer_RoughMetal->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrPosition->Samples()
+    gbuffer_RoughMetal->Samples()
   );
 
   attachmentDescriptions[4] = CreateAttachmentDescription(
-    pbrRoughMetal->Format(),
+    gbuffer_Emission->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrRoughMetal->Samples()
+    gbuffer_Emission->Samples()
   );
 
   attachmentDescriptions[5] = CreateAttachmentDescription(
-    pbrDepth->Format(),
+    gbuffer_Depth->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbrDepth->Samples()
+    gbuffer_Depth->Samples()
   );
 
   dependencies[0] = CreateSubPassDependency(
@@ -800,12 +857,12 @@ void Renderer::SetUpFrameBuffers()
   );
 
   std::array<VkImageView, 6> attachments;
-  attachments[0] = pbrColor->View();
-  attachments[1] = pbrNormal->View();
-  attachments[2] = RTBright->View();
-  attachments[3] = pbrPosition->View();
-  attachments[4] = pbrRoughMetal->View();
-  attachments[5] = pbrDepth->View();
+  attachments[0] = gbuffer_Albedo->View();
+  attachments[1] = gbuffer_Normal->View();
+  attachments[2] = gbuffer_Position->View();
+  attachments[3] = gbuffer_RoughMetal->View();
+  attachments[4] = gbuffer_Emission->View();
+  attachments[5] = gbuffer_Depth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
     m_pWindow->Width(),
@@ -816,7 +873,78 @@ void Renderer::SetUpFrameBuffers()
     1
   );
 
-  pbrFrameBuffer->Finalize(framebufferCI, renderpassCI);
+  gbuffer_FrameBuffer->Finalize(framebufferCI, renderpassCI);
+
+  // pbr framebuffer.
+  {
+    Texture* pbr_Bright = gResources().GetRenderTexture(pbr_BrightTextureStr);
+    Texture* pbr_Final = gResources().GetRenderTexture(pbr_FinalTextureStr);
+    std::array<VkAttachmentDescription, 3> pbrAttachmentDescriptions;
+    pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
+      pbr_Final->Format(),
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+     pbr_Final->Samples()
+    );
+
+    pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
+      pbr_Bright->Format(),
+      VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_CLEAR,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      pbr_Bright->Samples()
+    );
+
+    pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
+      gbuffer_Depth->Format(),
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Depth->Samples()
+    );
+
+    VkSubpassDescription pbrSubpass = {};
+    pbrSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 1);
+    pbrSubpass.pColorAttachments = attachmentColors.data();
+    attachmentDepthRef.attachment = 2;
+    pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
+
+    VkRenderPassCreateInfo pbrRenderpassCI = CreateRenderPassInfo(
+      static_cast<u32>(pbrAttachmentDescriptions.size()),
+      pbrAttachmentDescriptions.data(),
+      2,
+      dependencies,
+      1,
+      &pbrSubpass
+    );
+
+    std::array<VkImageView, 3> pbrAttachments;
+    pbrAttachments[0] = pbr_Final->View();
+    pbrAttachments[1] = pbr_Bright->View();
+    pbrAttachments[2] = gbuffer_Depth->View();
+
+    VkFramebufferCreateInfo pbrFramebufferCI = CreateFrameBufferInfo(
+      m_pWindow->Width(),
+      m_pWindow->Height(),
+      nullptr, // Finalize() call handles this for us.
+      static_cast<u32>(pbrAttachments.size()),
+      pbrAttachments.data(),
+      1
+    );
+
+    pbr_FrameBuffer->Finalize(pbrFramebufferCI, pbrRenderpassCI);
+  }
   
   // No need to render any depth, as we are only writing on a 2d surface.
   Texture* hdrColor = gResources().GetRenderTexture(HDRGammaColorAttachStr);
@@ -1102,7 +1230,7 @@ void Renderer::SetUpGraphicsPipelines()
     R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
   }
     
-  RendererPass::SetUpPBRForwardPass(RHI(), Filepath, GraphicsPipelineInfo);
+  RendererPass::SetUpGBufferPass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpSkyboxPass(RHI(), Filepath, GraphicsPipelineInfo);
 
   // Set to quad rendering format.
@@ -1123,6 +1251,8 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+
+  RendererPass::SetUpPhysicallyBasedPass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpDownScalePass(RHI(), Filepath, GraphicsPipelineInfo);
   RendererPass::SetUpHDRGammaPass(RHI(), Filepath, GraphicsPipelineInfo);
   colorBlendAttachments[0].blendEnable = VK_FALSE;
@@ -1132,11 +1262,14 @@ void Renderer::SetUpGraphicsPipelines()
 
 void Renderer::CleanUpGraphicsPipelines()
 {
-  GraphicsPipeline* PbrPipeline = gResources().UnregisterGraphicsPipeline(PBRPipelineStr);
-  m_pRhi->FreeGraphicsPipeline(PbrPipeline);
+  GraphicsPipeline* gbuffer_Pipeline = gResources().UnregisterGraphicsPipeline(gbuffer_PipelineStr);
+  m_pRhi->FreeGraphicsPipeline(gbuffer_Pipeline);
 
-  GraphicsPipeline* PbrStaticPipeline = gResources().UnregisterGraphicsPipeline(PBRStaticPipelineStr);
-  m_pRhi->FreeGraphicsPipeline(PbrStaticPipeline);
+  GraphicsPipeline* pbr_Pipeline = gResources().UnregisterGraphicsPipeline(pbr_PipelineStr);
+  m_pRhi->FreeGraphicsPipeline(pbr_Pipeline);
+
+  GraphicsPipeline* gbuffer_StaticPipeline = gResources().UnregisterGraphicsPipeline(gbuffer_StaticPipelineStr);
+  m_pRhi->FreeGraphicsPipeline(gbuffer_StaticPipeline);
 
   GraphicsPipeline* QuadPipeline = gResources().UnregisterGraphicsPipeline(FinalPipelineStr);
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
@@ -1176,8 +1309,11 @@ void Renderer::CleanUpGraphicsPipelines()
 
 void Renderer::CleanUpFrameBuffers()
 {
-  FrameBuffer* pbrFrameBuffer = gResources().UnregisterFrameBuffer(PBRFrameBufferStr);
-  m_pRhi->FreeFrameBuffer(pbrFrameBuffer);
+  FrameBuffer* gbuffer_FrameBuffer = gResources().UnregisterFrameBuffer(gbuffer_FrameBufferStr);
+  m_pRhi->FreeFrameBuffer(gbuffer_FrameBuffer);
+
+  FrameBuffer* pbr_FrameBuffer = gResources().UnregisterFrameBuffer(pbr_FrameBufferStr);
+  m_pRhi->FreeFrameBuffer(pbr_FrameBuffer);
 
   FrameBuffer* hdrFrameBuffer = gResources().UnregisterFrameBuffer(HDRGammaFrameBufferStr);
   m_pRhi->FreeFrameBuffer(hdrFrameBuffer);
@@ -1214,26 +1350,32 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   Texture* RenderTarget8xFinal = m_pRhi->CreateTexture();
   Texture* RenderTarget16xScaled = m_pRhi->CreateTexture();
   Texture* RenderTarget16xFinal = m_pRhi->CreateTexture();
-  Texture* RenderTargetBright = m_pRhi->CreateTexture();
+
+  Texture* pbr_Final = m_pRhi->CreateTexture();
+  Texture* pbr_Bright = m_pRhi->CreateTexture();
   Texture* GlowTarget = m_pRhi->CreateTexture();
 
-  Texture* pbrColor = m_pRhi->CreateTexture();
-  Texture* pbrNormal = m_pRhi->CreateTexture();
-  Texture* pbrPosition = m_pRhi->CreateTexture();
-  Texture* pbrRoughMetal = m_pRhi->CreateTexture();
-  Texture* pbrDepth = m_pRhi->CreateTexture();
-  Sampler* pbrSampler = m_pRhi->CreateSampler();
-  Texture* hdrTexture = m_pRhi->CreateTexture();
-  Sampler* hdrSampler = m_pRhi->CreateSampler();
+  Texture* gbuffer_Albedo = m_pRhi->CreateTexture();
+  Texture* gbuffer_Normal = m_pRhi->CreateTexture();
+  Texture* gbuffer_Position = m_pRhi->CreateTexture();
+  Texture* gbuffer_RoughMetal = m_pRhi->CreateTexture();
+  Texture* gbuffer_Emission = m_pRhi->CreateTexture();
+  Texture* gbuffer_Depth = m_pRhi->CreateTexture();
+  Sampler* gbuffer_Sampler = m_pRhi->CreateSampler();
 
-  gResources().RegisterSampler(HDRGammaSamplerStr, hdrSampler);
-  gResources().RegisterRenderTexture(HDRGammaColorAttachStr, hdrTexture);
-  gResources().RegisterRenderTexture(PBRColorAttachStr, pbrColor);
-  gResources().RegisterRenderTexture(PBRNormalAttachStr, pbrNormal);
-  gResources().RegisterRenderTexture(PBRPositionAttachStr, pbrPosition);
-  gResources().RegisterRenderTexture(PBRRoughMetalAttachStr, pbrRoughMetal);
-  gResources().RegisterRenderTexture(PBRDepthAttachStr, pbrDepth);
-  gResources().RegisterRenderTexture(RenderTargetBrightStr, RenderTargetBright);
+  Texture* hdr_Texture = m_pRhi->CreateTexture();
+  Sampler* hdr_Sampler = m_pRhi->CreateSampler();
+
+  gResources().RegisterSampler(HDRGammaSamplerStr, hdr_Sampler);
+  gResources().RegisterRenderTexture(HDRGammaColorAttachStr, hdr_Texture);
+  gResources().RegisterRenderTexture(gbuffer_AlbedoAttachStr, gbuffer_Albedo);
+  gResources().RegisterRenderTexture(gbuffer_NormalAttachStr, gbuffer_Normal);
+  gResources().RegisterRenderTexture(gbuffer_PositionAttachStr, gbuffer_Position);
+  gResources().RegisterRenderTexture(gbuffer_RoughMetalAttachStr, gbuffer_RoughMetal);
+  gResources().RegisterRenderTexture(gbuffer_EmissionAttachStr, gbuffer_Emission);
+  gResources().RegisterRenderTexture(gbuffer_DepthAttachStr, gbuffer_Depth);
+  gResources().RegisterRenderTexture(pbr_FinalTextureStr, pbr_Final);
+  gResources().RegisterRenderTexture(pbr_BrightTextureStr, pbr_Bright);
   gResources().RegisterRenderTexture(RenderTarget2xHorizStr, renderTarget2xScaled);
   gResources().RegisterRenderTexture(RenderTarget2xFinalStr, RenderTarget2xFinal);
   gResources().RegisterRenderTexture(RenderTarget4xScaledStr, renderTarget4xScaled);
@@ -1243,7 +1385,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(RenderTarget16xScaledStr, RenderTarget16xScaled);
   gResources().RegisterRenderTexture(RenderTarget16xFinalStr, RenderTarget16xFinal);
   gResources().RegisterRenderTexture(RenderTargetGlowStr, GlowTarget);
-  gResources().RegisterSampler(PBRSamplerStr, pbrSampler);
+  gResources().RegisterSampler(gbuffer_SamplerStr, gbuffer_Sampler);
   
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
@@ -1273,9 +1415,10 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.subresourceRange.layerCount = 1;
   cViewInfo.subresourceRange.levelCount = 1;
 
-  pbrColor->Initialize(cImageInfo, cViewInfo);
-  pbrNormal->Initialize(cImageInfo, cViewInfo);
-  RenderTargetBright->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
+  pbr_Bright->Initialize(cImageInfo, cViewInfo);
+  pbr_Final->Initialize(cImageInfo, cViewInfo);
   GlowTarget->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
@@ -1303,15 +1446,16 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
   cImageInfo.extent.height = m_pWindow->Height();
-  pbrPosition->Initialize(cImageInfo, cViewInfo);
-  pbrRoughMetal->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
+  gbuffer_RoughMetal->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
   cImageInfo.extent.height = m_pWindow->Height();
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  hdrTexture->Initialize(cImageInfo, cViewInfo);
+  hdr_Texture->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
@@ -1323,7 +1467,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = m_pRhi->DepthFormat();
   cViewInfo.subresourceRange.aspectMask = m_pRhi->DepthAspectFlags();
 
-  pbrDepth->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Depth->Initialize(cImageInfo, cViewInfo);
 
   VkSamplerCreateInfo samplerCI = { };
   samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1341,8 +1485,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   samplerCI.minLod = 0.0f;
   samplerCI.unnormalizedCoordinates = VK_FALSE;
 
-  pbrSampler->Initialize(samplerCI);
-  hdrSampler->Initialize(samplerCI);
+  gbuffer_Sampler->Initialize(samplerCI);
+  hdr_Sampler->Initialize(samplerCI);
   if (fullSetup) {
     Sampler* defaultSampler = m_pRhi->CreateSampler();
     defaultSampler->Initialize(samplerCI);
@@ -1406,27 +1550,32 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   m_pRhi->FreeTexture(RenderTarget16xFinal);
   m_pRhi->FreeTexture(GlowTarget);
 
-  Texture* pbrColor = gResources().UnregisterRenderTexture(PBRColorAttachStr);
-  Texture* pbrNormal = gResources().UnregisterRenderTexture(PBRNormalAttachStr);
-  Texture* pbrPosition = gResources().UnregisterRenderTexture(PBRPositionAttachStr);
-  Texture* pbrRoughMetal = gResources().UnregisterRenderTexture(PBRRoughMetalAttachStr);
-  Texture* pbrDepth = gResources().UnregisterRenderTexture(PBRDepthAttachStr);
-  Texture* RenderTargetBright = gResources().UnregisterRenderTexture(RenderTargetBrightStr);
-  Sampler* pbrSampler = gResources().UnregisterSampler(PBRSamplerStr);
+  Texture* gbuffer_Albedo = gResources().UnregisterRenderTexture(gbuffer_AlbedoAttachStr);
+  Texture* gbuffer_Normal = gResources().UnregisterRenderTexture(gbuffer_NormalAttachStr);
+  Texture* gbuffer_Position = gResources().UnregisterRenderTexture(gbuffer_PositionAttachStr);
+  Texture* gbuffer_RoughMetal = gResources().UnregisterRenderTexture(gbuffer_RoughMetalAttachStr);
+  Texture* gbuffer_Emission = gResources().UnregisterRenderTexture(gbuffer_EmissionAttachStr);
+  Texture* gbuffer_Depth = gResources().UnregisterRenderTexture(gbuffer_DepthAttachStr);
+  Sampler* gbuffer_Sampler = gResources().UnregisterSampler(gbuffer_SamplerStr);
 
-  Texture* hdrTexture = gResources().UnregisterRenderTexture(HDRGammaColorAttachStr);
-  Sampler* hdrSampler = gResources().UnregisterSampler(HDRGammaSamplerStr);
+  Texture* pbr_Bright = gResources().UnregisterRenderTexture(pbr_BrightTextureStr);
+  Texture* pbr_Final = gResources().UnregisterRenderTexture(pbr_FinalTextureStr);
+
+  Texture* hdr_Texture = gResources().UnregisterRenderTexture(HDRGammaColorAttachStr);
+  Sampler* hdr_Sampler = gResources().UnregisterSampler(HDRGammaSamplerStr);
   
-  m_pRhi->FreeTexture(hdrTexture);
-  m_pRhi->FreeSampler(hdrSampler);
+  m_pRhi->FreeTexture(hdr_Texture);
+  m_pRhi->FreeSampler(hdr_Sampler);
 
-  m_pRhi->FreeTexture(pbrColor);
-  m_pRhi->FreeTexture(pbrNormal);
-  m_pRhi->FreeTexture(pbrPosition);
-  m_pRhi->FreeTexture(pbrRoughMetal);
-  m_pRhi->FreeTexture(pbrDepth);
-  m_pRhi->FreeTexture(RenderTargetBright);
-  m_pRhi->FreeSampler(pbrSampler);
+  m_pRhi->FreeTexture(gbuffer_Albedo);
+  m_pRhi->FreeTexture(gbuffer_Normal);
+  m_pRhi->FreeTexture(gbuffer_Position);
+  m_pRhi->FreeTexture(gbuffer_RoughMetal);
+  m_pRhi->FreeTexture(gbuffer_Emission);
+  m_pRhi->FreeTexture(gbuffer_Depth);
+  m_pRhi->FreeSampler(gbuffer_Sampler);
+  m_pRhi->FreeTexture(pbr_Bright);
+  m_pRhi->FreeTexture(pbr_Final);
 
   if (fullCleanup) {
     Texture* defaultTexture = gResources().UnregisterRenderTexture(DefaultTextureStr);
@@ -1507,8 +1656,7 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   DBDS16xFinal->Allocate(m_pRhi->DescriptorPool(), Layout);
   GlowDS->Allocate(m_pRhi->DescriptorPool(), GlowLayout);
 
-  Texture* PBRColor = gResources().GetRenderTexture(PBRColorAttachStr);
-  Texture* RTBright = gResources().GetRenderTexture(RenderTargetBrightStr);
+  Texture* RTBright = gResources().GetRenderTexture(pbr_BrightTextureStr);
   Texture* Color2x = gResources().GetRenderTexture(RenderTarget2xHorizStr);
   Texture* Color2xFinal = gResources().GetRenderTexture(RenderTarget2xFinalStr);
   Texture* Color4x = gResources().GetRenderTexture(RenderTarget4xScaledStr);
@@ -1517,11 +1665,11 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Texture* Color8xFinal = gResources().GetRenderTexture(RenderTarget8xFinalStr);
   Texture* Color16x = gResources().GetRenderTexture(RenderTarget16xScaledStr);
   Texture* Color16xFinal = gResources().GetRenderTexture(RenderTarget16xFinalStr);
-  Sampler* PBRSampler = gResources().GetSampler(PBRSamplerStr);
+  Sampler* gbuffer_Sampler = gResources().GetSampler(gbuffer_SamplerStr);
   Sampler* DownscaleSampler = gResources().GetSampler(ScaledSamplerStr);
 
   VkDescriptorImageInfo Img = { };
-  Img.sampler = PBRSampler->Handle();
+  Img.sampler = gbuffer_Sampler->Handle();
   Img.imageView = RTBright->View();
   Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   
@@ -1556,17 +1704,17 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
   Img.imageView = Color2xFinal->View();
 
   VkDescriptorImageInfo Img1 = { };
-  Img1.sampler = PBRSampler->Handle();
+  Img1.sampler = gbuffer_Sampler->Handle();
   Img1.imageView = Color4xFinal->View();
   Img1.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkDescriptorImageInfo Img2 = { };
-  Img2.sampler = PBRSampler->Handle();
+  Img2.sampler = gbuffer_Sampler->Handle();
   Img2.imageView = Color8xFinal->View();
   Img2.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkDescriptorImageInfo Img3 = { };
-  Img3.sampler = PBRSampler->Handle();
+  Img3.sampler = gbuffer_Sampler->Handle();
   Img3.imageView = Color16xFinal->View();
   Img3.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -1664,13 +1812,13 @@ void Renderer::SetUpHDR(b8 fullSetUp)
   hdrBufferInfo.buffer = m_pGlobal->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
-  pbrImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
-  pbrImageInfo.imageView = gResources().GetRenderTexture(PBRColorAttachStr)->View();
+  pbrImageInfo.sampler = gResources().GetSampler(gbuffer_SamplerStr)->Handle();
+  pbrImageInfo.imageView = gResources().GetRenderTexture(pbr_FinalTextureStr)->View();
   pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
   VkDescriptorImageInfo bloomImageInfo = { };
-  bloomImageInfo.sampler = gResources().GetSampler(PBRSamplerStr)->Handle();
+  bloomImageInfo.sampler = gResources().GetSampler(gbuffer_SamplerStr)->Handle();
   bloomImageInfo.imageView = gResources().GetRenderTexture(RenderTargetGlowStr)->View();
   bloomImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -1803,7 +1951,7 @@ void Renderer::BuildSkyboxCmdBuffer()
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   
   CommandBuffer* buf = m_pSkyboxCmdBuffer;
-  FrameBuffer* skyFrameBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
+  FrameBuffer* skyFrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);
   GraphicsPipeline* skyPipeline = gResources().GetGraphicsPipeline(SkyboxPipelineStr);
   DescriptorSet* global = m_pGlobal->Set();
   DescriptorSet* skybox = gResources().GetDescriptorSet(SkyboxDescriptorSetStr);
@@ -1814,13 +1962,10 @@ void Renderer::BuildSkyboxCmdBuffer()
   };  
 
   buf->Begin(beginInfo);
-    std::array<VkClearValue, 6> clearValues;
+    std::array<VkClearValue, 3> clearValues;
     clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
     clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-    clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-    clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-    clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-    clearValues[5].depthStencil = { 1.0f, 0 };
+    clearValues[2].depthStencil = { 1.0f, 0 };
 
     VkViewport viewport = {};
     viewport.height = (r32)m_pWindow->Height();
@@ -1870,9 +2015,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   } 
 
   CommandBuffer* cmdBuffer = m_Offscreen._CmdBuffers[cmdBufferIndex];
-  FrameBuffer* pbrBuffer = gResources().GetFrameBuffer(PBRFrameBufferStr);
-  GraphicsPipeline* pbrPipeline = gResources().GetGraphicsPipeline(PBRPipelineStr);
-  GraphicsPipeline* staticPbrPipeline = gResources().GetGraphicsPipeline(PBRStaticPipelineStr);
+  FrameBuffer* gbuffer_FrameBuffer = gResources().GetFrameBuffer(gbuffer_FrameBufferStr);
+  GraphicsPipeline* gbuffer_Pipeline = gResources().GetGraphicsPipeline(gbuffer_PipelineStr);
+  GraphicsPipeline* gbuffer_StaticPipeline = gResources().GetGraphicsPipeline(gbuffer_StaticPipelineStr);
+  FrameBuffer* pbr_FrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);
 
   if (cmdBuffer && !cmdBuffer->Recording()) {
 
@@ -1892,14 +2038,14 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[5].depthStencil = { 1.0f, 0 };
 
-  VkRenderPassBeginInfo pbrRenderPassInfo = {};
-  pbrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  pbrRenderPassInfo.framebuffer = pbrBuffer->Handle();
-  pbrRenderPassInfo.renderPass = pbrBuffer->RenderPass();
-  pbrRenderPassInfo.pClearValues = clearValues.data();
-  pbrRenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-  pbrRenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
-  pbrRenderPassInfo.renderArea.offset = { 0, 0 };
+  VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
+  gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->Handle();
+  gbuffer_RenderPassInfo.renderPass = gbuffer_FrameBuffer->RenderPass();
+  gbuffer_RenderPassInfo.pClearValues = clearValues.data();
+  gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
+  gbuffer_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  gbuffer_RenderPassInfo.renderArea.offset = { 0, 0 };
 
   VkViewport viewport =  { };
   viewport.height = (r32)m_pWindow->Height();
@@ -1912,7 +2058,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   VkDescriptorSet DescriptorSets[6];
 
   cmdBuffer->Begin(beginInfo);
-    cmdBuffer->BeginRenderPass(pbrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     if (m_pCmdList) {
       for (size_t i = 0; i < m_pCmdList->Size(); ++i) {
         RenderCmd& renderCmd = m_pCmdList->Get(i);
@@ -1922,22 +2068,20 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         if (!RenderObj->Renderable) continue;
 
         b8 Skinned = RenderObj->_pMeshDescId->Skinned();
-        GraphicsPipeline* Pipe = Skinned ? pbrPipeline : staticPbrPipeline;
+        GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
 
         DescriptorSets[0] = m_pGlobal->Set()->Handle();
         DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
         DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
-        DescriptorSets[3] = m_pLights->Set()->Handle();
-        DescriptorSets[4] = m_pLights->m_pLightViewDescriptorSet->Handle();
-        DescriptorSets[5] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
+        DescriptorSets[3] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
 
         // Bind materials.
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
           Pipe->Layout(), 
           0,
-          (Skinned ? 6 : 5), 
+          (Skinned ? 4 : 3), 
           DescriptorSets, 
           0, 
           nullptr
@@ -1976,6 +2120,41 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       }
     }
   cmdBuffer->EndRenderPass();
+
+
+  // Start the next pass. The PBR Pass.
+  std::array<VkClearValue, 3> clearValuesPBR;
+  clearValuesPBR[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValuesPBR[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValuesPBR[2].depthStencil = { 1.0f, 0 };
+
+  VkRenderPassBeginInfo pbr_RenderPassInfo = {};
+  pbr_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO; 
+  pbr_RenderPassInfo.framebuffer = pbr_FrameBuffer->Handle();
+  pbr_RenderPassInfo.renderPass = pbr_FrameBuffer->RenderPass();
+  pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
+  pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
+  pbr_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
+
+    cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+      GraphicsPipeline* pbr_Pipeline = gResources().GetGraphicsPipeline(pbr_PipelineStr);
+      VkDescriptorSet sets[4] = {
+        m_pGlobal->Set()->Handle(),
+        gResources().GetDescriptorSet(pbr_DescSetStr)->Handle(),
+        m_pLights->Set()->Handle(),
+        m_pLights->ViewSet()->Handle()
+      };
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Layout(), 0, 4, sets, 0, nullptr);
+      VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
+      VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
+      VkDeviceSize offsets[] = { 0 };
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
 
@@ -2214,7 +2393,7 @@ void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-      cmdBuffer->EndRenderPass();
+    cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
 
@@ -2303,30 +2482,125 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
 }
 
 
+void Renderer::SetUpPBR()
+{
+  Sampler* pbr_Sampler = gResources().GetSampler(gbuffer_SamplerStr);
+
+  DescriptorSetLayout* pbr_Layout = gResources().GetDescriptorSetLayout(pbr_DescLayoutStr);
+  DescriptorSet* pbr_Set = m_pRhi->CreateDescriptorSet();
+  gResources().RegisterDescriptorSet(pbr_DescSetStr, pbr_Set);
+
+  VkDescriptorImageInfo albedo = {};
+  albedo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  albedo.imageView = gResources().GetRenderTexture(gbuffer_AlbedoAttachStr)->View();
+  albedo.sampler = pbr_Sampler->Handle();
+
+  VkDescriptorImageInfo normal = {};
+  normal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  normal.imageView = gResources().GetRenderTexture(gbuffer_NormalAttachStr)->View();
+  normal.sampler = pbr_Sampler->Handle();
+
+  VkDescriptorImageInfo position = {};
+  position.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  position.imageView = gResources().GetRenderTexture(gbuffer_PositionAttachStr)->View();
+  position.sampler = pbr_Sampler->Handle();
+
+  VkDescriptorImageInfo roughmetal = {};
+  roughmetal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  roughmetal.imageView = gResources().GetRenderTexture(gbuffer_RoughMetalAttachStr)->View();
+  roughmetal.sampler = pbr_Sampler->Handle();
+
+  VkDescriptorImageInfo emission = {};
+  emission.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  emission.imageView = gResources().GetRenderTexture(gbuffer_EmissionAttachStr)->View();
+  emission.sampler = pbr_Sampler->Handle();
+
+  std::array<VkWriteDescriptorSet, 5> writeInfo;
+  writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[0].descriptorCount = 1;
+  writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[0].dstBinding = 0;
+  writeInfo[0].pImageInfo = &albedo;
+  writeInfo[0].pBufferInfo = nullptr;
+  writeInfo[0].pTexelBufferView = nullptr;
+  writeInfo[0].dstArrayElement = 0;
+  writeInfo[0].pNext = nullptr;
+
+  writeInfo[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[1].descriptorCount = 1;
+  writeInfo[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[1].dstBinding = 1;
+  writeInfo[1].pImageInfo = &normal;
+  writeInfo[1].pBufferInfo = nullptr;
+  writeInfo[1].pTexelBufferView = nullptr;
+  writeInfo[1].dstArrayElement = 0;
+  writeInfo[1].pNext = nullptr;
+
+  writeInfo[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[2].descriptorCount = 1;
+  writeInfo[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[2].dstBinding = 2;
+  writeInfo[2].pImageInfo = &position;
+  writeInfo[2].pBufferInfo = nullptr;
+  writeInfo[2].pTexelBufferView = nullptr;
+  writeInfo[2].dstArrayElement = 0;
+  writeInfo[2].pNext = nullptr;
+
+  writeInfo[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[3].descriptorCount = 1;
+  writeInfo[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[3].dstBinding = 3;
+  writeInfo[3].pImageInfo = &roughmetal;
+  writeInfo[3].pBufferInfo = nullptr;
+  writeInfo[3].pTexelBufferView = nullptr;
+  writeInfo[3].dstArrayElement = 0;
+  writeInfo[3].pNext = nullptr;
+
+  writeInfo[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[4].descriptorCount = 1;
+  writeInfo[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[4].dstBinding = 4;
+  writeInfo[4].pImageInfo = &emission;
+  writeInfo[4].pBufferInfo = nullptr;
+  writeInfo[4].pTexelBufferView = nullptr;
+  writeInfo[4].dstArrayElement = 0;
+  writeInfo[4].pNext = nullptr;
+  
+  pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
+  pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+}
+
+
+void Renderer::CleanUpPBR()
+{
+  DescriptorSet* pbr_Set = gResources().UnregisterDescriptorSet(pbr_DescSetStr);
+  m_pRhi->FreeDescriptorSet(pbr_Set);
+}
+
+
 void Renderer::SetUpFinalOutputs()
 {
+  Texture* pbr_Final = gResources().GetRenderTexture(pbr_FinalTextureStr);
+  Texture* hdr_Color = gResources().GetRenderTexture(HDRGammaColorAttachStr);
+
+  Sampler* hdr_Sampler = gResources().GetSampler(HDRGammaSamplerStr);
+  Sampler* pbr_Sampler = gResources().GetSampler(gbuffer_SamplerStr);
+
   DescriptorSetLayout* finalSetLayout = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr);
   DescriptorSet* offscreenImageDescriptor = m_pRhi->CreateDescriptorSet();
   gResources().RegisterDescriptorSet(FinalDescSetStr, offscreenImageDescriptor);
   offscreenImageDescriptor->Allocate(m_pRhi->DescriptorPool(), finalSetLayout);
-
-  Texture* pbrColor = gResources().GetRenderTexture(PBRColorAttachStr);
-  Texture* hdrColor = gResources().GetRenderTexture(
-  HDRGammaColorAttachStr
-  );
-  Sampler* hdrSampler = gResources().GetSampler(HDRGammaSamplerStr);
-  Sampler* pbrSampler = gResources().GetSampler(PBRSamplerStr);
 
   // TODO(): Final texture must be the hdr post process texture instead!
   VkDescriptorImageInfo renderTextureFinal = {};
   renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   if (m_HDR._Enabled) {
-    renderTextureFinal.sampler = hdrSampler->Handle();
-    renderTextureFinal.imageView = hdrColor->View();
+    renderTextureFinal.sampler = hdr_Sampler->Handle();
+    renderTextureFinal.imageView = hdr_Color->View();
   } else {
-    renderTextureFinal.sampler = pbrSampler->Handle();
-    renderTextureFinal.imageView = pbrColor->View();
+    renderTextureFinal.sampler = pbr_Sampler->Handle();
+    renderTextureFinal.imageView = pbr_Final->View();
   }
 
   VkDescriptorBufferInfo renderTextureGlobalBuffer = { };
@@ -2503,6 +2777,7 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
 
   m_pUI->CleanUp();
 
+  CleanUpPBR();
   CleanUpHDR(false);
   CleanUpDownscale(false);
   CleanUpOffscreen(false);
@@ -2518,6 +2793,7 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
   SetUpOffscreen(false);
   SetUpDownscale(false);
   SetUpHDR(false);
+  SetUpPBR();
 
   m_pUI->Initialize(m_pRhi);
   if (m_pCmdList->Size() > 0) {

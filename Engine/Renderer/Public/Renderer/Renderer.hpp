@@ -217,6 +217,7 @@ private:
   void              SetUpFinalOutputs();
   void              SetUpRenderTextures(b8 fullSetup);
   void              SetUpOffscreen(b8 fullSetup);
+  void              SetUpPBR();
   void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
@@ -226,6 +227,7 @@ private:
   void              CleanUpDownscale(b8 FullCleanUp);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
+  void              CleanUpPBR();
   void              CleanUpSkybox();
   void              UpdateMaterials();
   void              RenderOverlay();
