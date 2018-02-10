@@ -44,6 +44,9 @@ Renderer& gRenderer() {
 }
 
 
+VkFence cpuFence;
+
+
 Renderer::Renderer()
   : m_pRhi(nullptr)
   , m_pCmdList(nullptr)
@@ -58,15 +61,15 @@ Renderer::Renderer()
   , m_pSky(nullptr)
   , m_pSkyboxCmdBuffer(nullptr)
   , m_SkyboxFinished(nullptr)
+  , m_TotalCmdBuffers(2)
+  , m_CurrCmdBufferIdx(0)
 {
   m_HDR._Enabled = true;
-  m_Offscreen._CmdBuffers.resize(2);
-  m_Offscreen._ShadowCmdBuffers.resize(2);
-  m_Offscreen._CurrCmdBufferIndex = 0;
+  m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
+  m_Offscreen._ShadowCmdBuffers.resize(m_TotalCmdBuffers);
+  m_HDR._CmdBuffers.resize(m_TotalCmdBuffers);
+  m_Pbr._CmdBuffers.resize(m_TotalCmdBuffers);
 
-  m_HDR._CmdBuffers.resize(2);
-  m_Offscreen._CurrCmdBufferIndex = 0;
-  
   m_Downscale._Horizontal = 0;
   m_Downscale._Strength = 1.0f;
   m_Downscale._Scale = 1.0f;
@@ -116,94 +119,98 @@ void Renderer::EndFrame()
 
 void Renderer::Render()
 {
+  static u32 bPreviousFrame = false;
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
   CheckCmdUpdate();
 
   // TODO(): Need to clean this up.
-  VkCommandBuffer offscreenCmd = m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle();
-  VkCommandBuffer skyBuffers[] = { m_Offscreen._CmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle(), m_pSky->CmdBuffer()->Handle() };
-  VkSemaphore skyWaits[] = { m_Offscreen._Semaphore->Handle(), m_pSky->SignalSemaphore()->Handle() };
-  VkSemaphore waitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
-  VkSemaphore signalSemas[] = { m_Offscreen._Semaphore->Handle() };
-  VkSemaphore shadowSignal[] = { m_Offscreen._ShadowSema->Handle() };
+  VkCommandBuffer offscreen_CmdBuffers[3] = { 
+    m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Handle(), 
+    nullptr,
+    nullptr
+  };
+  VkSemaphore offscreen_WaitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
+  VkSemaphore offscreen_SignalSemas[] = { m_Offscreen._Semaphore->Handle() };
+
+  VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffers[CurrentCmdBufferIdx()]->Handle() };
+  VkSemaphore pbr_SignalSemas[] = { m_Pbr._Sema->Handle() };
   VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT };
 
   VkSubmitInfo offscreenSI = {};
   offscreenSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  offscreenSI.pCommandBuffers = &offscreenCmd;
-  offscreenSI.commandBufferCount = 1;
+  offscreenSI.pCommandBuffers = offscreen_CmdBuffers;
+  offscreenSI.commandBufferCount = 1; // assuming rendering no shadows at first.
   offscreenSI.signalSemaphoreCount = 1;
-  offscreenSI.pSignalSemaphores = signalSemas;
+  offscreenSI.pSignalSemaphores = offscreen_SignalSemas;
   offscreenSI.waitSemaphoreCount = 1;
-  offscreenSI.pWaitSemaphores = waitSemas;
+  offscreenSI.pWaitSemaphores = offscreen_WaitSemas;
   offscreenSI.pWaitDstStageMask = waitFlags;
 
+  // pbr pass, waits for gbuffer, shadow, and sky rendering, to finish.
+  VkSubmitInfo pbrSi = { };
+  pbrSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  pbrSi.commandBufferCount = 1;
+  pbrSi.pCommandBuffers = pbr_CmdBuffers;
+  pbrSi.signalSemaphoreCount = 1;
+  pbrSi.waitSemaphoreCount = 1;
+  pbrSi.pWaitSemaphores = offscreen_SignalSemas;
+  pbrSi.pSignalSemaphores = pbr_SignalSemas;
+  pbrSi.pWaitDstStageMask = waitFlags;
+
+  // skybox, waits for pbr to finish rendering.
   VkSubmitInfo skyboxSI = offscreenSI;
-  VkSemaphore skyboxWaits[] = { m_Offscreen._Semaphore->Handle() };
-  VkSemaphore skyboxSignal[] = { m_SkyboxFinished->Handle() };
-  VkCommandBuffer skyboxCmd = m_pSkyboxCmdBuffer->Handle();
+  VkSemaphore skybox_SignalSemas[] = { m_SkyboxFinished->Handle() };
+  VkCommandBuffer skybox_CmdBuffer = m_pSkyboxCmdBuffer->Handle();
   skyboxSI.commandBufferCount = 1;
-  skyboxSI.pCommandBuffers = &skyboxCmd;
-  skyboxSI.pSignalSemaphores = skyboxSignal;
-  skyboxSI.pWaitSemaphores = skyboxWaits;
+  skyboxSI.pCommandBuffers = &skybox_CmdBuffer;
+  skyboxSI.pSignalSemaphores = skybox_SignalSemas;
+  skyboxSI.pWaitSemaphores = pbr_SignalSemas;
 
+  // Postprocessing, HDR waits for skybox to finish rendering onto scene.
   VkSubmitInfo hdrSI = offscreenSI;
-  VkSemaphore hdrWaits[] = { m_SkyboxFinished->Handle() };
-  VkSemaphore hdrSignal[] = { m_HDR._Semaphore->Handle() };
-  VkCommandBuffer hdrCmd = m_HDR._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Handle();
+  VkSemaphore hdr_SignalSemas[] = { m_HDR._Semaphore->Handle() };
+  VkCommandBuffer hdrCmd = m_HDR._CmdBuffers[CurrentCmdBufferIdx()]->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
-  hdrSI.pSignalSemaphores = hdrSignal;
-  hdrSI.pWaitSemaphores = hdrWaits;
+  hdrSI.pSignalSemaphores = hdr_SignalSemas;
+  hdrSI.pWaitSemaphores = skybox_SignalSemas;
 
-  VkSemaphore waitSemaphores = m_HDR._Semaphore->Handle();
-  if (!m_HDR._Enabled) waitSemaphores = m_Offscreen._Semaphore->Handle();
+  VkSemaphore  hdr_Sema = m_HDR._Semaphore->Handle();
+  VkSemaphore* final_WaitSemas = &hdr_Sema;
+  if (!m_HDR._Enabled) final_WaitSemas = skybox_SignalSemas;
 
   // Update materials before rendering the frame.
   UpdateMaterials();
 
+  // Wait for fences before starting next frame.
+  if (bPreviousFrame) {
+    vkWaitForFences(m_pRhi->LogicDevice()->Native(), 1, &cpuFence, VK_TRUE, UINT64_MAX);
+    vkResetFences(m_pRhi->LogicDevice()->Native(), 1, &cpuFence);
+  }
+
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-    while (m_Offscreen._CmdBuffers[m_HDR._CurrCmdBufferIndex]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
+    while (m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
 
     // Render shadow map here. Primary shadow map is our concern.
     if (m_pLights->PrimaryShadowEnabled()) {
-      VkCommandBuffer shadowbuf[] = { m_Offscreen._ShadowCmdBuffers[m_Offscreen._CurrCmdBufferIndex]->Handle() };
-
-      VkSubmitInfo shadowSubmit = { };
-      shadowSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-      shadowSubmit.pCommandBuffers = shadowbuf;
-      shadowSubmit.commandBufferCount = 1;
-      shadowSubmit.signalSemaphoreCount = 1;
-      shadowSubmit.waitSemaphoreCount = 1;
-      shadowSubmit.pWaitSemaphores = waitSemas;
-      shadowSubmit.pSignalSemaphores = shadowSignal;
-      shadowSubmit.pWaitDstStageMask = waitFlags;
-      // Submit shadow rendering.
-      m_pRhi->GraphicsSubmit(shadowSubmit);
-
-      offscreenSI.pWaitSemaphores = shadowSignal;
+      offscreen_CmdBuffers[offscreenSI.commandBufferCount] = m_Offscreen._ShadowCmdBuffers[CurrentCmdBufferIdx()]->Handle();
+      offscreenSI.commandBufferCount += 1; // Add shadow buffer to render.
     }
 
     // Check if sky needs to update it's cubemap.
     if (m_pSky->NeedsRendering()) {
-      skyboxSI.waitSemaphoreCount = 2;
-      skyboxSI.pWaitSemaphores = skyWaits;
-      offscreenSI.commandBufferCount = 2;
-      offscreenSI.signalSemaphoreCount = 2;
-      offscreenSI.pSignalSemaphores = skyWaits;
-      offscreenSI.pCommandBuffers = skyBuffers;
+      offscreen_CmdBuffers[offscreenSI.commandBufferCount] = m_pSky->CmdBuffer()->Handle();
+      offscreenSI.commandBufferCount += 1; // Add sky render buffer.
       m_pSky->MarkClean();
     }
 
-    // Offscreen PBR Forward Rendering Pass.
-    m_pRhi->GraphicsSubmit(offscreenSI);
-
-    // Render Sky onto our render textures.
-    m_pRhi->GraphicsSubmit(skyboxSI);
+    VkSubmitInfo submits[] { offscreenSI, pbrSi, skyboxSI };
+    // Submit to renderqueue.
+    m_pRhi->GraphicsSubmit(3, submits);
 
     // High Dynamic Range and Gamma Pass.
-    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(hdrSI);
+    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(1, &hdrSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
     // sent our signal to our swapchain cmd buffers.
@@ -213,11 +220,11 @@ void Renderer::Render()
     // GraphicsFinished Semaphore to signal end of frame rendering.
     VkSemaphore signal = m_pRhi->GraphicsFinishedSemaphore();
     VkSemaphore uiSig = m_pUI->Signal()->Handle();
-    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &waitSemaphores, 1, &signal);
+    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, final_WaitSemas, 1, &signal, cpuFence); // cpuFence will need to wait until overlay is finished.
 
     // Render the Overlay.
     RenderOverlay();
-
+    bPreviousFrame = true;
   EndFrame();
 
 
@@ -269,6 +276,8 @@ void Renderer::CleanUp()
   CleanUpFrameBuffers();
   CleanUpRenderTextures(true);
 
+  vkDestroyFence(m_pRhi->LogicDevice()->Native(), cpuFence, nullptr);
+
   if (m_pRhi) {
     m_pRhi->CleanUp();
     delete m_pRhi;
@@ -313,6 +322,11 @@ b8 Renderer::Initialize(Window* window)
   m_pLights->m_pRhi = m_pRhi;
   m_pLights->Initialize();
   m_pLights->Update();
+
+  VkFenceCreateInfo fenceCi = { };
+  fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  
+  vkCreateFence(m_pRhi->LogicDevice()->Native(), &fenceCi, nullptr, &cpuFence);
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -1587,15 +1601,72 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 }
 
 
+void Renderer::BuildPbrCmdBuffer(u32 currCmdIdx) 
+{
+  CommandBuffer* cmdBuffer = m_Pbr._CmdBuffers[currCmdIdx];
+  if (cmdBuffer) {
+    cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  }
+
+  FrameBuffer* pbr_FrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);
+
+  VkViewport viewport = {};
+  viewport.height = (r32)m_pWindow->Height();
+  viewport.width = (r32)m_pWindow->Width();
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.y = 0.0f;
+  viewport.x = 0.0f;
+
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+  // Start the next pass. The PBR Pass.
+  std::array<VkClearValue, 3> clearValuesPBR;
+  clearValuesPBR[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValuesPBR[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValuesPBR[2].depthStencil = { 1.0f, 0 };
+
+  VkRenderPassBeginInfo pbr_RenderPassInfo = {};
+  pbr_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  pbr_RenderPassInfo.framebuffer = pbr_FrameBuffer->Handle();
+  pbr_RenderPassInfo.renderPass = pbr_FrameBuffer->RenderPass();
+  pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
+  pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
+  pbr_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
+
+  cmdBuffer->Begin(beginInfo);
+    cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    GraphicsPipeline* pbr_Pipeline = gResources().GetGraphicsPipeline(pbr_PipelineStr);
+    VkDescriptorSet sets[4] = {
+      m_pGlobal->Set()->Handle(),
+      gResources().GetDescriptorSet(pbr_DescSetStr)->Handle(),
+      m_pLights->Set()->Handle(),
+      m_pLights->ViewSet()->Handle()
+    };
+    cmdBuffer->SetViewPorts(0, 1, &viewport);
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Layout(), 0, 4, sets, 0, nullptr);
+    VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
+    VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
+    VkDeviceSize offsets[] = { 0 };
+    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+  cmdBuffer->End();
+}
+
+
 void Renderer::SetUpOffscreen(b8 fullSetup)
 {
   if (fullSetup) {
     m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
-    m_Offscreen._ShadowSema = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCI = { };
     semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     m_Offscreen._Semaphore->Initialize(semaCI);
-    m_Offscreen._ShadowSema->Initialize(semaCI);
 
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
@@ -1611,7 +1682,6 @@ void Renderer::CleanUpOffscreen(b8 fullCleanup)
 {
   if (fullCleanup) {
     m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
-    m_pRhi->FreeVkSemaphore(m_Offscreen._ShadowSema);
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_pRhi->FreeCommandBuffer(m_Offscreen._CmdBuffers[i]);
       m_pRhi->FreeCommandBuffer(m_Offscreen._ShadowCmdBuffers[i]);
@@ -1880,9 +1950,10 @@ void Renderer::Build()
 {
   m_pRhi->GraphicsWaitIdle();
 
-  BuildOffScreenBuffer(m_Offscreen._CurrCmdBufferIndex);
-  BuildHDRCmdBuffer(m_HDR._CurrCmdBufferIndex);
-  BuildShadowCmdBuffer(m_Offscreen._CurrCmdBufferIndex);
+  BuildOffScreenBuffer(CurrentCmdBufferIdx());
+  BuildHDRCmdBuffer(CurrentCmdBufferIdx());
+  BuildShadowCmdBuffer(CurrentCmdBufferIdx());
+  BuildPbrCmdBuffer(CurrentCmdBufferIdx());
   BuildSkyboxCmdBuffer();
   m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
 
@@ -1943,7 +2014,6 @@ void Renderer::CleanUpSkybox()
 void Renderer::BuildSkyboxCmdBuffer()
 {
   if (m_pSkyboxCmdBuffer) {
-    m_pRhi->DeviceWaitIdle();
     m_pSkyboxCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
 
@@ -2018,11 +2088,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   FrameBuffer* gbuffer_FrameBuffer = gResources().GetFrameBuffer(gbuffer_FrameBufferStr);
   GraphicsPipeline* gbuffer_Pipeline = gResources().GetGraphicsPipeline(gbuffer_PipelineStr);
   GraphicsPipeline* gbuffer_StaticPipeline = gResources().GetGraphicsPipeline(gbuffer_StaticPipelineStr);
-  FrameBuffer* pbr_FrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);
 
   if (cmdBuffer && !cmdBuffer->Recording()) {
-
-    m_pRhi->DeviceWaitIdle();
     cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
 
@@ -2120,41 +2187,6 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       }
     }
   cmdBuffer->EndRenderPass();
-
-
-  // Start the next pass. The PBR Pass.
-  std::array<VkClearValue, 3> clearValuesPBR;
-  clearValuesPBR[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValuesPBR[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValuesPBR[2].depthStencil = { 1.0f, 0 };
-
-  VkRenderPassBeginInfo pbr_RenderPassInfo = {};
-  pbr_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO; 
-  pbr_RenderPassInfo.framebuffer = pbr_FrameBuffer->Handle();
-  pbr_RenderPassInfo.renderPass = pbr_FrameBuffer->RenderPass();
-  pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
-  pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
-  pbr_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
-  pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
-
-    cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-      GraphicsPipeline* pbr_Pipeline = gResources().GetGraphicsPipeline(pbr_PipelineStr);
-      VkDescriptorSet sets[4] = {
-        m_pGlobal->Set()->Handle(),
-        gResources().GetDescriptorSet(pbr_DescSetStr)->Handle(),
-        m_pLights->Set()->Handle(),
-        m_pLights->ViewSet()->Handle()
-      };
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Layout(), 0, 4, sets, 0, nullptr);
-      VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
-      VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
-      VkDeviceSize offsets[] = { 0 };
-      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
 
@@ -2568,6 +2600,16 @@ void Renderer::SetUpPBR()
   
   pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
   pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+
+  for (size_t i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
+    m_Pbr._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
+    m_Pbr._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  }
+
+  m_Pbr._Sema = m_pRhi->CreateVkSemaphore();
+  VkSemaphoreCreateInfo semaCi = {};
+  semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  m_Pbr._Sema->Initialize(semaCi);
 }
 
 
@@ -2575,6 +2617,12 @@ void Renderer::CleanUpPBR()
 {
   DescriptorSet* pbr_Set = gResources().UnregisterDescriptorSet(pbr_DescSetStr);
   m_pRhi->FreeDescriptorSet(pbr_Set);
+
+  for (size_t i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
+    m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffers[i]);
+  }
+
+  m_pRhi->FreeVkSemaphore(m_Pbr._Sema);
 }
 
 

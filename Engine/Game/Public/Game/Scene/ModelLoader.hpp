@@ -23,8 +23,8 @@ enum ModelResult {
 
 // Model is a container of meshes that correspond to materials.
 struct Model {
-  std::vector<Mesh>     Meshes;
-  std::vector<Material> Materials;
+  std::vector<Mesh*>     Meshes;
+  std::vector<Material*> Materials;
 };
 
 

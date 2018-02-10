@@ -286,8 +286,8 @@ void VulkanRHI::QueryFromSwapchain()
 
 void VulkanRHI::CreateDepthAttachment()
 {
-  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
-  mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
+  mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
   mSwapchainInfo.mDepthUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
   VkImageCreateInfo imageCI = { };
@@ -422,20 +422,15 @@ void VulkanRHI::SetUpSwapchainRenderPass()
 }
 
 
-void VulkanRHI::GraphicsSubmit(const VkSubmitInfo& submitInfo, const VkFence fence)
+void VulkanRHI::GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
-  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), 1, &submitInfo, fence);
+  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), count, submitInfo, fence);
   if (result != VK_SUCCESS) {
     if (result == VK_ERROR_DEVICE_LOST)  {
       R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?\n");
       return;
     }
     R_DEBUG(rError, "Unsuccessful graphics queue submit!\n");
-  }
-
-  if (fence) {
-    vkWaitForFences(LogicDevice()->Native(), 1, &fence, VK_TRUE, UINT64_MAX);
-    vkResetFences(LogicDevice()->Native(), 1, &fence);
   }
 }
 
@@ -448,7 +443,7 @@ void VulkanRHI::AcquireNextImage()
 
 
 void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
-  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores)
+  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence)
 {
   if (!signalSemaphores || !signalSemaphoreCount) {
     R_DEBUG(rError, "Fatal! You must specify at least one signal semaphore when calling SubmitCurrSwapchainCmdBuffer (GraphicsFinishedSemaphore() if rendering is complete!)");
@@ -471,7 +466,7 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
 
-  GraphicsSubmit(submitInfo);
+  GraphicsSubmit(1, &submitInfo, fence);
 }
 
 

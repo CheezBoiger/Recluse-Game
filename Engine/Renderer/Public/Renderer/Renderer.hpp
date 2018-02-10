@@ -220,6 +220,7 @@ private:
   void              SetUpPBR();
   void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
+  void              BuildPbrCmdBuffer(u32 cmdBufferIdx);
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
   void              BuildSkyboxCmdBuffer();
@@ -233,6 +234,7 @@ private:
   void              RenderOverlay();
   void              RenderPrimaryShadows();
   void              CheckCmdUpdate();
+  inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
 
   Window*           m_pWindow;
   CmdList*          m_pCmdList;
@@ -246,14 +248,16 @@ private:
   struct {
     std::vector<CommandBuffer*>   _CmdBuffers;
     std::vector<CommandBuffer*>   _ShadowCmdBuffers;
-    u32                           _CurrCmdBufferIndex;
     Semaphore*                    _Semaphore;
-    Semaphore*                    _ShadowSema;
   } m_Offscreen; 
 
   struct {
     std::vector<CommandBuffer*>   _CmdBuffers;
-    u32                           _CurrCmdBufferIndex;
+    Semaphore*                    _Sema;
+  } m_Pbr;
+
+  struct {
+    std::vector<CommandBuffer*>   _CmdBuffers;
     Semaphore*                    _Semaphore;
     b8                            _Enabled;
   } m_HDR;
@@ -269,6 +273,8 @@ private:
   RenderQuad        m_RenderQuad;
   UIOverlay*        m_pUI;
   Sky*              m_pSky;
+  u32               m_CurrCmdBufferIdx;
+  u32               m_TotalCmdBuffers;
   b8                m_Rendering       : 1;
   b8                m_Initialized     : 1;
   b8                m_NeedsUpdate     : 1;

@@ -63,7 +63,7 @@ void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  rhi->GraphicsSubmit(submitInfo);
+  rhi->GraphicsSubmit(1, &submitInfo);
   rhi->GraphicsWaitIdle();
 
   rhi->FreeCommandBuffer(cmdBuffer);

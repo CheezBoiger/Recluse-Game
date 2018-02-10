@@ -146,7 +146,7 @@ public:
   void                          AcquireNextImage();
 
   // Submit a command buffer to the graphics queue.
-  void                          GraphicsSubmit(const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void                          GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Wait until the graphics queue has completely finished all submittals.
   void                          GraphicsWaitIdle();
@@ -168,7 +168,7 @@ public:
   // If no signals are specified, or signalSemaphoreCount is equal to 0, cmdbuffer will default
   // to GraphicsFinished semaphore, which is used by the Present queue to present to the screen!
   void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores, 
-                                  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores);
+                                  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence = nullptr);
   
   // Present the rendered surface.
   void                          Present();

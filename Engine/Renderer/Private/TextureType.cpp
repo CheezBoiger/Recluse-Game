@@ -167,7 +167,7 @@ void Texture2D::Update(Image const& Image)
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  mRhi->GraphicsSubmit(submit);
+  mRhi->GraphicsSubmit(1, &submit);
   mRhi->GraphicsWaitIdle();
 
   buffer.Free();

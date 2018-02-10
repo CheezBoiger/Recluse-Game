@@ -35,6 +35,28 @@ void Controller()
 }
 
 
+class ExplodeScript : public IScript {
+public:
+  r32     speed;
+  Vector3 direction;
+
+  void Awake() override {
+    std::random_device device;
+    std::mt19937 twist(device());
+    std::uniform_real_distribution<r32> uni(-1.0f, 1.0f);
+
+    GetOwner()->GetTransform()->Position = Vector3();
+    speed = 2.0f;
+    direction = Vector3(uni(twist), uni(twist), uni(twist)).Normalize();
+  }
+
+  void Update() override {
+    r32 s = speed * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    GetOwner()->GetComponent<Transform>()->Position += direction * s;
+  }
+};
+
+
 /*
   Requirements for rendering something on screen:
     Material -> MaterialComponent.
@@ -149,7 +171,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 3000
+#define objects 1000
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);
@@ -171,10 +193,12 @@ int main(int c, char* argv[])
       obj->AddComponent<MaterialComponent>();
       obj->GetComponent<MaterialComponent>()->SetMaterialRef(&objsMat);
       RendererComponent* rendererC = obj->GetComponent<RendererComponent>();
+      obj->AddComponent<ExplodeScript>();
       rendererC->ReConfigure();
       Transform* transform = obj->GetComponent<Transform>();
       transform->Position = Vector3(uni(twist), uni(twist), uni(twist));
       scene.GetRoot()->AddChild(obj);
+      obj->Wake();
     }
   }
 

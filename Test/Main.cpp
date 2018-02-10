@@ -121,5 +121,9 @@ int main(int c, char* argv[])
   mesh.CleanUp();
   GameObject::DestroyAll();
   gEngine().CleanUp();
+#if (_DEBUG)
+  Log() << "Engine modules cleaned up, press enter to continue...\n";
+  std::cin.ignore();
+#endif
   return 0;
 }
