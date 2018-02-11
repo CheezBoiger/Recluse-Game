@@ -1413,7 +1413,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -1425,7 +1425,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -1436,10 +1436,14 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.subresourceRange.levelCount = 1;
 
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
+  gbuffer_RoughMetal->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+
+  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
-  pbr_Bright->Initialize(cImageInfo, cViewInfo);
-  pbr_Final->Initialize(cImageInfo, cViewInfo);
-  GlowTarget->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
   cImageInfo.extent.width = m_pWindow->Width()    >> 1;
@@ -1462,13 +1466,11 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   RenderTarget16xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget16xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-  cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
   cImageInfo.extent.height = m_pWindow->Height();
-  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
-  gbuffer_RoughMetal->Initialize(cImageInfo, cViewInfo);
-  gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
+  GlowTarget->Initialize(cImageInfo, cViewInfo);
+  pbr_Bright->Initialize(cImageInfo, cViewInfo);
+  pbr_Final->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -1477,10 +1479,10 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   hdr_Texture->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.extent.width = m_pWindow->Width();
   cImageInfo.extent.height = m_pWindow->Height();
-  cViewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.usage = m_pRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.format = m_pRhi->DepthFormat();
 
