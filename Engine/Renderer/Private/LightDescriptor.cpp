@@ -104,7 +104,7 @@ LightDescriptor::~LightDescriptor()
 }
 
 
-void LightDescriptor::Initialize()
+void LightDescriptor::Initialize(ShadowDetail shadowDetail)
 {
   if (!m_pRhi) {
     R_DEBUG(rError, "RHI owner not set for light material upon initialization!\n");
@@ -143,8 +143,8 @@ void LightDescriptor::Initialize()
     VkImageCreateInfo ImageCi = {};
     ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     ImageCi.arrayLayers = 1;
-    ImageCi.extent.width = 16384;//12288;
-    ImageCi.extent.height = 16384;//12288;
+    ImageCi.extent.width = 512 << shadowDetail;
+    ImageCi.extent.height = 512 << shadowDetail;
     ImageCi.extent.depth = 1;
     ImageCi.format = VK_FORMAT_D32_SFLOAT;
     ImageCi.imageType = VK_IMAGE_TYPE_2D;

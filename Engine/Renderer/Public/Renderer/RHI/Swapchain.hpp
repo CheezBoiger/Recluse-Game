@@ -26,7 +26,7 @@ public:
   Swapchain();
   ~Swapchain();
 
-  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
+  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent,
                                             i32 graphicsIndex, i32 presentationIndex, i32 computeIndex);
 
   void                          CleanUp();

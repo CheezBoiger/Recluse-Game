@@ -103,7 +103,7 @@ Engine::~Engine()
 }
 
 
-void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
+void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, const GpuConfigParams* params)
 {
   if (m_Running) return;
 
@@ -128,7 +128,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height)
   Window::SetMouseButtonCallback(MouseButtonClick);
 
   m_Window.Create(appName, width, height);
-  gRenderer().Initialize(&m_Window);
+  gRenderer().Initialize(&m_Window, params);
 
   gRenderer().PushCmdList(&m_RenderCmdList);
 

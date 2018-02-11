@@ -7,6 +7,8 @@
 #include "Core/Math/Matrix3.hpp"
 #include "Core/Math/Vector4.hpp"
 
+#include "Renderer/UserParams.hpp"
+
 namespace Recluse {
 
 class VulkanRHI;
@@ -95,7 +97,7 @@ public:
   void                Update();
 
   // Initialize. 
-  void                Initialize();
+  void                Initialize(ShadowDetail shadowDetail);
 
   // Cleanup.
   void                CleanUp();
@@ -112,7 +114,6 @@ public:
 
   void                SetShadowViewport(r32 width, r32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
   
-
   void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
 
   b8                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }

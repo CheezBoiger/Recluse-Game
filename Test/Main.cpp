@@ -61,17 +61,21 @@ int main(int c, char* argv[])
 
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
   gEngine().SetControlInput(ProcessInput);
-  Window* window = gEngine().GetWindow();    
-  window->Show();
 
   {
+    // In order to update the renderer during runtime, you can pass gpu configs to the
+    // renderer directly.
     GpuConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
-    params._Shadows = SHADOWS_LOW;
+    params._AA = AA_None;
+    params._Shadows = SHADOWS_NONE;
     gRenderer().UpdateRendererConfigs(&params);
-    window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
   }
+
+  Window* window = gEngine().GetWindow();    
+  window->Show();
+  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
 

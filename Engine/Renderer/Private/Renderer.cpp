@@ -287,13 +287,17 @@ void Renderer::CleanUp()
 }
 
 
-b8 Renderer::Initialize(Window* window)
+b8 Renderer::Initialize(Window* window, const GpuConfigParams* params)
 {
   if (!window) return false;
   if (m_Initialized) return true;
+
+  if (!params) {
+    params = &kDefaultGpuConfigs;
+  }
   
   m_pWindow = window;
-  m_pRhi->Initialize(window->Handle());
+  m_pRhi->Initialize(window->Handle(), params);
 
   SetUpRenderTextures(true);
   SetUpFrameBuffers();
@@ -320,7 +324,7 @@ b8 Renderer::Initialize(Window* window)
 
   m_pLights = new LightDescriptor();
   m_pLights->m_pRhi = m_pRhi;
-  m_pLights->Initialize();
+  m_pLights->Initialize(params->_Shadows);
   m_pLights->Update();
 
   VkFenceCreateInfo fenceCi = { };
@@ -357,6 +361,8 @@ b8 Renderer::Initialize(Window* window)
       cmdBuffer.DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer.EndRenderPass();
   });
+
+  UpdateRuntimeConfigs(params);
 
   if (!m_pUI) {
     m_pUI = new UIOverlay();
@@ -1836,8 +1842,6 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
 
 void Renderer::CleanUpDownscale(b8 FullCleanUp)
 {
-  if (FullCleanUp) {
-  }
 
   DescriptorSet* DBDS2x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2x);
   m_pRhi->FreeDescriptorSet(DBDS2x);
@@ -2767,7 +2771,39 @@ void Renderer::RenderOverlay()
 }
 
 
-void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
+void Renderer::UpdateRuntimeConfigs(const GpuConfigParams* params)
+{
+  // TODO()::
+  switch (params->_AA) {
+    case AA_None: m_AntiAliasing = false; break;
+    case AA_FXAA_2x:
+    case AA_FXAA_4x:
+    case AA_FXAA_8x:
+    default:
+      m_AntiAliasing = true; break;
+    }
+
+    switch (params->_Shadows) {
+    case SHADOWS_NONE:
+    {
+      m_pLights->EnablePrimaryShadow(false);
+      m_pGlobal->Data()->_EnableShadows = false;
+    } break;
+    case SHADOWS_VERY_LOW:
+    case SHADOWS_LOW:
+    case SHADOWS_MEDIUM:
+    case SHADOWS_HIGH:
+    case SHADOWS_ULTRA:
+    default:
+    {
+      m_pLights->EnablePrimaryShadow(true);
+      m_pGlobal->Data()->_EnableShadows = true;
+    } break;
+  }
+}
+
+
+void Renderer::UpdateRendererConfigs(const GpuConfigParams* params)
 {
   m_pRhi->DeviceWaitIdle();
 
@@ -2776,42 +2812,17 @@ void Renderer::UpdateRendererConfigs(GpuConfigParams* params)
 
   if (params) {
     switch (params->_Buffering) {
-      case SINGLE_BUFFER: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
-      case DOUBLE_BUFFER: presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break;
-      case TRIPLE_BUFFER: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
-      default: presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode(); break;
+    case SINGLE_BUFFER: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
+    case DOUBLE_BUFFER: presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break;
+    case TRIPLE_BUFFER: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
+    default: presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode(); break;
     }
 
     if (params->_EnableVsync >= 1) {
       presentMode = VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    // TODO()::
-    switch (params->_AA) {
-      case AA_None: m_AntiAliasing = false; break;
-      case AA_FXAA_2x:
-      case AA_FXAA_4x:
-      case AA_FXAA_8x:
-      default:
-        m_AntiAliasing = true; break;
-    }
-
-    // TODO():
-    switch (params->_Shadows) {
-      case SHADOWS_NONE:
-      {
-        m_pLights->EnablePrimaryShadow(false);
-        m_pGlobal->Data()->_EnableShadows = false;
-      } break;
-      case SHADOWS_LOW:
-      case SHADOWS_MEDIUM:
-      case SHADOWS_HIGH:
-      default:
-      {
-        m_pLights->EnablePrimaryShadow(true);
-        m_pGlobal->Data()->_EnableShadows = true;
-      } break;
-    }
+    UpdateRuntimeConfigs(params);
   }
 
   if (params && presentMode == m_pRhi->SwapchainObject()->CurrentPresentMode()) {

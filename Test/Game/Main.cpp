@@ -46,7 +46,7 @@ public:
     std::uniform_real_distribution<r32> uni(-1.0f, 1.0f);
 
     GetOwner()->GetTransform()->Position = Vector3();
-    speed = 2.0f;
+    speed = uni(twist) * 10.0f;
     direction = Vector3(uni(twist), uni(twist), uni(twist)).Normalize();
   }
 
@@ -70,23 +70,22 @@ int main(int c, char* argv[])
   Log::DisplayToConsole(true);
   Mouse::Enable(false);
   Mouse::Show(false);
-  // Start up the engine and set the input controller.
-  gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800);
-  gEngine().SetControlInput(Controller);
-  Window* window = gEngine().GetWindow();
 
-  // Setting the renderer to vsync double buffering.
+  // Setting the renderer to vsync double buffering when starting up the engine,
+  // Inputting gpu params is optional, and can pass nullptr if you prefer default.
   {
     GpuConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    // TODO(): More objects equates to more performance penalty with shadows enabled, need 
-    // to optimize!
-    params._Shadows = SHADOWS_LOW;
-    gRenderer().UpdateRendererConfigs(&params);
+    params._Shadows = SHADOWS_ULTRA;
+
+    // Start up the engine and set the input controller.
+    gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
+    gEngine().SetControlInput(Controller);
   }
 
+  Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
   window->Show();
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
@@ -171,7 +170,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 1000
+#define objects 10
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);

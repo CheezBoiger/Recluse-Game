@@ -54,13 +54,15 @@ public:
   Renderer();
   ~Renderer();
 
-  b8                Initialize(Window* window);
+  b8                Initialize(Window* window, const GpuConfigParams* params = nullptr);
   b8                Rendering() const { return m_Rendering; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
   // just plain recreate the renderer scene.
-  void              UpdateRendererConfigs(GpuConfigParams* params);
+  // NOTE(): Only shadow disable/enable is allowed when changing shadow quality at runtime, otherwise you
+  // need to restart the engine to change quality.
+  void              UpdateRendererConfigs(const GpuConfigParams* params);
 
   // Clean up the renderer. This will "render" the renderer inactive.
   void              CleanUp();
@@ -226,6 +228,7 @@ private:
   void              BuildSkyboxCmdBuffer();
   void              SetUpDownscale(b8 FullSetUp);
   void              CleanUpDownscale(b8 FullCleanUp);
+  void              UpdateRuntimeConfigs(const GpuConfigParams* params);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
   void              CleanUpPBR();
@@ -275,6 +278,7 @@ private:
   Sky*              m_pSky;
   u32               m_CurrCmdBufferIdx;
   u32               m_TotalCmdBuffers;
+  
   b8                m_Rendering       : 1;
   b8                m_Initialized     : 1;
   b8                m_NeedsUpdate     : 1;

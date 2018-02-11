@@ -26,7 +26,7 @@ Swapchain::~Swapchain()
 
 
 void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
-      i32 graphicsIndex, i32 presentationIndex, i32 computeIndex)
+      VkPresentModeKHR desiredPresent, i32 graphicsIndex, i32 presentationIndex, i32 computeIndex)
 {
   mGraphicsQueueIndex = graphicsIndex;
   mPresentationQueueIndex = presentationIndex;
@@ -44,17 +44,14 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.QuerySwapchainSurfaceFormats(surface);
   VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
 
-  VkPresentModeKHR desiredPresentMode = VK_PRESENT_MODE_FIFO_KHR;
-  for (VkPresentModeKHR mode : presentModes) {
-    if (mode == VK_PRESENT_MODE_FIFO_KHR) {
-      desiredPresentMode = mode;
-    }
-    
-    if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
-      desiredPresentMode = mode;
-      break;
-    }
-  }
+  VkPresentModeKHR desiredPresentMode = desiredPresent;
+
+  // Don't know why, but let's remove this for now...
+  //for (VkPresentModeKHR mode : presentModes) {
+  //  if (mode == desiredPresent) {
+  //    desiredPresentMode = mode;
+  //  }
+  //}
 
   ReCreate(surface, surfaceFormats[0], desiredPresentMode, capabilities);
 }

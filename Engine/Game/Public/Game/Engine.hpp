@@ -25,6 +25,7 @@
 #include "Renderer/GlobalDescriptor.hpp"
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/CmdList.hpp"
+#include "Renderer/UserParams.hpp"
 
 #include "Physics/Physics.hpp"
 #include "Audio/Audio.hpp"
@@ -64,7 +65,8 @@ public:
   // Start up the engine with an initial window size. As the window is initialized 
   // along with the start up, be sure to manually call the Show() function from the 
   // window in order to see something!
-  void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600);
+  // GpuConfigParams is an optional setting for initial start up of the renderer, you may pass nullptr for default settings.
+  void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600, const GpuConfigParams* params = nullptr);
   void                          CleanUp();
   
   // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.

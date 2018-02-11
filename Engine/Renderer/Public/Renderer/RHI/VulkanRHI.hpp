@@ -8,6 +8,8 @@
 #include "PhysicalDevice.hpp"
 #include "LogicalDevice.hpp"
 
+#include "Renderer/UserParams.hpp"
+
 #include <functional>
 
 
@@ -69,7 +71,7 @@ public:
 
   // Initialize this RHI object. Must be done before calling any function
   // in this object.
-  void                          Initialize(HWND windowHandle);
+  void                          Initialize(HWND windowHandle, const GpuConfigParams* params);
 
   // Clean up this object. This must be called once done with this RHI
   // object. BE SURE TO FREE UP ANY OBJECTS CREATED FROM THIS RHI OBJECT BEFORE

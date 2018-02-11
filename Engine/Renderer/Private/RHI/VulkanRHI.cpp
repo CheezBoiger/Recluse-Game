@@ -24,6 +24,24 @@ PhysicalDevice                VulkanRHI::gPhysicalDevice;
 std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
+VkPresentModeKHR GetPresentMode(const GpuConfigParams* params)
+{
+  VkPresentModeKHR mode;
+  switch (params->_Buffering) {
+    case SINGLE_BUFFER: mode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
+    case DOUBLE_BUFFER: mode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break; 
+    case TRIPLE_BUFFER: mode = VK_PRESENT_MODE_MAILBOX_KHR; break;
+    default: mode = VK_PRESENT_MODE_FIFO_KHR; break;
+  }
+
+  if (params->_EnableVsync >= 1) {
+   mode = VK_PRESENT_MODE_FIFO_KHR;
+  }
+
+  return mode;
+}
+
+
 Semaphore::~Semaphore()
 {
   if (mSema) {
@@ -112,7 +130,7 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 }
 
 
-void VulkanRHI::Initialize(HWND windowHandle)
+void VulkanRHI::Initialize(HWND windowHandle, const GpuConfigParams* params)
 { 
   if (!windowHandle) {
     R_DEBUG(rError, "Renderer can not initialize with a null window handle!\n");
@@ -166,7 +184,8 @@ void VulkanRHI::Initialize(HWND windowHandle)
     return;
   }
   
-  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface,
+  VkPresentModeKHR presentMode = GetPresentMode(params);
+  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode,
     graphicsIndex, presentationIndex, computeIndex);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
