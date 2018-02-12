@@ -75,10 +75,10 @@ set(GAME_FILES
   ${VISIBLE_PRIVATE_DIR}/Octree.cpp
 
   ${RENDERING_PUBLIC_DIR}/TextureCache.hpp
-  ${RENDERING_PUBLIC_DIR}/MeshCache.hpp
+  ${RENDERING_PUBLIC_DIR}/RendererResourcesCache.hpp
 
   ${RENDERING_PRIVATE_DIR}/TextureCache.cpp
-  ${RENDERING_PRIVATE_DIR}/MeshCache.cpp
+  ${RENDERING_PRIVATE_DIR}/RendererResourcesCache.cpp
 
 )
 

@@ -109,6 +109,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, 
 
   // NOTE(): Always start up the core first, before starting anything else up.
   gCore().StartUp();
+  gCore().ThrPool().RunAll();
   gFilesystem().StartUp();
   gRenderer().StartUp();
   gAnimation().StartUp();
@@ -164,6 +165,7 @@ void Engine::CleanUp()
   gAnimation().ShutDown();
   gRenderer().ShutDown();
   gFilesystem().ShutDown();
+  gCore().ThrPool().StopAll();
   gCore().ShutDown();
   m_Running = false;
 }

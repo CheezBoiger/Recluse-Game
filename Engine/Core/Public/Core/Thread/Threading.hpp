@@ -6,6 +6,7 @@
 #include <mutex>
 #include <queue>
 #include <vector>
+#include <list>
 #include <functional>
 
 
@@ -15,46 +16,51 @@ namespace Recluse {
 
 class ThreadPool;
 
+enum ThreadResult {
+  ThrResultInProgress,
+  ThrResultSuccess,
+  ThrResultFail,
+  ThrResultIncomplete
+};
+
 typedef u64 thread_id_t;
 typedef u32 error_t;
-typedef error_t(*thr_work_func_t)(void);
+typedef std::function<void()> thr_work_func_t;
+typedef std::function<void(thread_id_t)> thread_func_t;
 
 class Thread {
   // Id 0 is not a valid id.
   static thread_id_t currentId;
 public:
-  Thread() 
-    : mId(++currentId) { }
+  Thread() { }
 
-  void                            Start(thr_work_func_t entry);
-  thread_id_t                     ID() const { return mId; }
+  void                            Run(thread_func_t func, thread_id_t id);
+
+  void                            Join() { mThread.join(); }
+  void                            Detach() { mThread.detach(); }
+  thread_id_t                     GetId() { return m_Id; }
 
 private:
-  thread_id_t                     mId;
   std::thread                     mThread;
+  thread_id_t                     m_Id;
 };
 
 
 // ThreadPool object, used for engine modules in need of assistance, for quicker task completion.
 class ThreadPool {
-  enum ThreadResult {
-    ThrResultInProgress,
-    ThrResultSuccess,
-    ThrResultFail,
-    ThrResultIncomplete
-  };
 
 public:
   ThreadPool(u32 InitThreadCount = 2) 
-    : m_CurrentTaskCount(0) { }
+    : m_CurrentTaskCount(0)
+    , m_ThreadWorkers(InitThreadCount)
+    , m_SignalStop(true) { }
 
-  void                  Run();
-  void                  AddJob(thr_work_func_t WorkFunc);
-  void                  ClearJobs();
+  void                  RunAll();
+  void                  AddTask(thr_work_func_t WorkFunc);
+  void                  ClearTasks();
   void                  StopAll();  
 
   b8                    AllDone() const;
-  b8                    Finished() const;
 
   void                  WaitAll();
 
@@ -69,8 +75,12 @@ private:
 
   std::vector<Thread>     m_ThreadWorkers;
   std::queue<ThreadJob>   m_ThreadJobs;
-  std::mutex              m_Mutex;
+  std::list<ThreadJob>    m_ProgressJobs;
+  std::mutex              m_JobMutex;
+  std::mutex              m_ProgressMutex;
   std::condition_variable m_Cond;
   u32                     m_CurrentTaskCount;
+  u32                     m_BusyThreadCount;
+  u32                     m_SignalStop;
 };
 } // Recluse

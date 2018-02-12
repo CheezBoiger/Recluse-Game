@@ -1,8 +1,4 @@
 #include "Game/Engine.hpp"
-
-#include "Game/PointLightComponent.hpp"
-#include "Game/MeshComponent.hpp"
-#include "Game/RendererComponent.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
@@ -121,7 +117,7 @@ int main(int c, char* argv[])
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.14f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector3(0.0f, -0.001f, 1.0f).Normalize();
+    pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 5.0f;
   }
@@ -170,7 +166,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 10
+#define objects 1500
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);
@@ -225,7 +221,7 @@ int main(int c, char* argv[])
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
     gEngine().Update();
-    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

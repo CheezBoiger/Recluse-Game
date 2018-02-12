@@ -34,7 +34,7 @@ public:
 
   // Syncronize threads.
   // TODO():
-  void Sync() { }
+  void Sync();
 
 private:
   ThreadPool      m_Pool;

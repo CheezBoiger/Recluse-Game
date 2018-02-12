@@ -16,6 +16,10 @@
 #include "Component.hpp"
 #include "LightComponent.hpp"
 #include "PointLightComponent.hpp"
+#include "MaterialComponent.hpp"
+#include "MeshComponent.hpp"
+#include "RendererComponent.hpp"
+#include "PointLightComponent.hpp"
 #include "CameraViewFrustum.hpp"
 #include "Core/Logging/Log.hpp"
 
