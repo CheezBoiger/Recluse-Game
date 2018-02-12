@@ -133,7 +133,7 @@ int main(int c, char* argv[])
 
   {
     // Increasing segments improves the sphere's quality
-    const u32 kSegments = 32;
+    const u32 kSegments = 48;
     auto vertices = UVSphere::MeshInstance(1.0f, kSegments, kSegments);
     auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), kSegments, kSegments);
     mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
