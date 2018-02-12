@@ -26,7 +26,6 @@ extern std::string gbuffer_LayoutStr;
 extern std::string gbuffer_AlbedoAttachStr;
 extern std::string gbuffer_NormalAttachStr;
 extern std::string gbuffer_PositionAttachStr;
-extern std::string gbuffer_RoughMetalAttachStr;
 extern std::string gbuffer_EmissionAttachStr;
 extern std::string gbuffer_SamplerStr;
 extern std::string gbuffer_DepthAttachStr;

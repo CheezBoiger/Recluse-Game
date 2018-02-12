@@ -68,8 +68,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 layout (set = 1, binding = 0) uniform sampler2D albedo;
 layout (set = 1, binding = 1) uniform sampler2D normal;
 layout (set = 1, binding = 2) uniform sampler2D position;
-layout (set = 1, binding = 3) uniform sampler2D roughMetal;
-layout (set = 1, binding = 4) uniform sampler2D emission;
+layout (set = 1, binding = 3) uniform sampler2D emission;
 
 
 layout (set = 2, binding = 0) uniform LightBuffer {
@@ -313,18 +312,16 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
 
 void main()
 {
-  float fragRoughness = texture(roughMetal, frag_in.uv).r;
-  float fragMetallic = texture(roughMetal, frag_in.uv).g;
-  
-  // 0 roughness equates to no surface to render with light. Speeds up performance.
+  float fragRoughness = texture(position, frag_in.uv).a;
+    // 0 roughness equates to no surface to render with light. Speeds up performance.
   // TODO(): We need a stencil surface to determine what parts of the 
   // image to render with light. This is not a good way.
   if (fragRoughness <= 0) { discard; }
   
+  float fragMetallic = texture(emission, frag_in.uv).a; 
   vec3 fragAlbedo = texture(albedo, frag_in.uv).rgb;  
   vec3 fragPosition = texture(position, frag_in.uv).rgb;
   vec3 fragEmissive = texture(emission, frag_in.uv).rgb;
-  float emIntensity = texture(emission, frag_in.uv).a;
   
   vec3 N = texture(normal, frag_in.uv).rgb;
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - fragPosition);

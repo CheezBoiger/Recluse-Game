@@ -83,8 +83,7 @@ layout (set = 2, binding = 6) uniform sampler2D emissive;
 layout (location = 0) out vec4 AlbedoColor;
 layout (location = 1) out vec4 NormalColor;
 layout (location = 2) out vec4 PositionColor;
-layout (location = 3) out vec4 RoughMetalColor;
-layout (location = 4) out vec4 EmissionColor;
+layout (location = 3) out vec4 EmissionColor;
 
 
 ////////////////////////////////////////////////////////////////////
@@ -165,8 +164,7 @@ void main()
   
   AlbedoColor = vec4(fragAlbedo, 1.0);
   NormalColor = vec4(fragNormal, 1.0);
-  PositionColor = vec4(frag_in.position, 1.0);
-  RoughMetalColor = vec4(fragRoughness, fragMetallic, 0.0, 1.0);
-  EmissionColor = vec4(fragEmissive * matBuffer.emissive, 1.0);
+  PositionColor = vec4(frag_in.position, fragRoughness);
+  EmissionColor = vec4(fragEmissive * matBuffer.emissive, fragMetallic);
 
 }

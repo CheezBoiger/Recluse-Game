@@ -488,7 +488,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   {
     DescriptorSetLayout* pbr_Layout = m_pRhi->CreateDescriptorSetLayout();
     gResources().RegisterDescriptorSetLayout(pbr_DescLayoutStr, pbr_Layout);
-    std::array<VkDescriptorSetLayoutBinding, 5> bindings;
+    std::array<VkDescriptorSetLayoutBinding, 4> bindings;
 
     // Albedo
     bindings[0].binding = 0;
@@ -511,19 +511,12 @@ void Renderer::SetUpDescriptorSetLayouts()
     bindings[2].pImmutableSamplers = nullptr;
     bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-    // Rough Metal
+    // Emission
     bindings[3].binding = 3;
     bindings[3].descriptorCount = 1;
     bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[3].pImmutableSamplers = nullptr;
     bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    // Emission
-    bindings[4].binding = 4;
-    bindings[4].descriptorCount = 1;
-    bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    bindings[4].pImmutableSamplers = nullptr;
-    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 
     VkDescriptorSetLayoutCreateInfo PbrLayout = { };
@@ -742,7 +735,6 @@ void Renderer::SetUpFrameBuffers()
   Texture* gbuffer_Albedo = gResources().GetRenderTexture(gbuffer_AlbedoAttachStr);
   Texture* gbuffer_Normal = gResources().GetRenderTexture(gbuffer_NormalAttachStr);
   Texture* gbuffer_Position = gResources().GetRenderTexture(gbuffer_PositionAttachStr);
-  Texture* gbuffer_RoughMetal = gResources().GetRenderTexture(gbuffer_RoughMetalAttachStr);
   Texture* gbuffer_Emission = gResources().GetRenderTexture(gbuffer_EmissionAttachStr);
   Texture* gbuffer_Depth = gResources().GetRenderTexture(gbuffer_DepthAttachStr);
 
@@ -755,7 +747,7 @@ void Renderer::SetUpFrameBuffers()
   FrameBuffer* hdrFrameBuffer = m_pRhi->CreateFrameBuffer();
   gResources().RegisterFrameBuffer(HDRGammaFrameBufferStr, hdrFrameBuffer);
 
-  std::array<VkAttachmentDescription, 6> attachmentDescriptions;
+  std::array<VkAttachmentDescription, 5> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
@@ -792,17 +784,6 @@ void Renderer::SetUpFrameBuffers()
   );
 
   attachmentDescriptions[3] = CreateAttachmentDescription(
-    gbuffer_RoughMetal->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
-    VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    gbuffer_RoughMetal->Samples()
-  );
-
-  attachmentDescriptions[4] = CreateAttachmentDescription(
     gbuffer_Emission->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -813,7 +794,7 @@ void Renderer::SetUpFrameBuffers()
     gbuffer_Emission->Samples()
   );
 
-  attachmentDescriptions[5] = CreateAttachmentDescription(
+  attachmentDescriptions[4] = CreateAttachmentDescription(
     gbuffer_Depth->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -844,7 +825,7 @@ void Renderer::SetUpFrameBuffers()
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
-  std::array<VkAttachmentReference, 5> attachmentColors;
+  std::array<VkAttachmentReference, 4> attachmentColors;
   VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -857,9 +838,6 @@ void Renderer::SetUpFrameBuffers()
 
   attachmentColors[3].attachment = 3;
   attachmentColors[3].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-  attachmentColors[4].attachment = 4;
-  attachmentColors[4].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -876,13 +854,12 @@ void Renderer::SetUpFrameBuffers()
     &subpass
   );
 
-  std::array<VkImageView, 6> attachments;
+  std::array<VkImageView, 5> attachments;
   attachments[0] = gbuffer_Albedo->View();
   attachments[1] = gbuffer_Normal->View();
   attachments[2] = gbuffer_Position->View();
-  attachments[3] = gbuffer_RoughMetal->View();
-  attachments[4] = gbuffer_Emission->View();
-  attachments[5] = gbuffer_Depth->View();
+  attachments[3] = gbuffer_Emission->View();
+  attachments[4] = gbuffer_Depth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
     m_pWindow->Width(),
@@ -1137,7 +1114,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.back = { };
   depthStencilCI.front = { };
 
-  std::array<VkPipelineColorBlendAttachmentState, 5> colorBlendAttachments;
+  std::array<VkPipelineColorBlendAttachmentState, 4> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -1161,7 +1138,7 @@ void Renderer::SetUpGraphicsPipelines()
   );
 
   colorBlendAttachments[2] = CreateColorBlendAttachmentState(
-    VK_TRUE,
+    VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1172,7 +1149,7 @@ void Renderer::SetUpGraphicsPipelines()
   );
 
   colorBlendAttachments[3] = CreateColorBlendAttachmentState(
-    VK_TRUE,
+    VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1182,16 +1159,7 @@ void Renderer::SetUpGraphicsPipelines()
     VK_BLEND_OP_ADD
   );
 
-  colorBlendAttachments[4] = CreateColorBlendAttachmentState(
-    VK_TRUE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
+
 
 
   VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
@@ -1391,7 +1359,6 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(gbuffer_AlbedoAttachStr, gbuffer_Albedo);
   gResources().RegisterRenderTexture(gbuffer_NormalAttachStr, gbuffer_Normal);
   gResources().RegisterRenderTexture(gbuffer_PositionAttachStr, gbuffer_Position);
-  gResources().RegisterRenderTexture(gbuffer_RoughMetalAttachStr, gbuffer_RoughMetal);
   gResources().RegisterRenderTexture(gbuffer_EmissionAttachStr, gbuffer_Emission);
   gResources().RegisterRenderTexture(gbuffer_DepthAttachStr, gbuffer_Depth);
   gResources().RegisterRenderTexture(pbr_FinalTextureStr, pbr_Final);
@@ -1575,7 +1542,6 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   Texture* gbuffer_Albedo = gResources().UnregisterRenderTexture(gbuffer_AlbedoAttachStr);
   Texture* gbuffer_Normal = gResources().UnregisterRenderTexture(gbuffer_NormalAttachStr);
   Texture* gbuffer_Position = gResources().UnregisterRenderTexture(gbuffer_PositionAttachStr);
-  Texture* gbuffer_RoughMetal = gResources().UnregisterRenderTexture(gbuffer_RoughMetalAttachStr);
   Texture* gbuffer_Emission = gResources().UnregisterRenderTexture(gbuffer_EmissionAttachStr);
   Texture* gbuffer_Depth = gResources().UnregisterRenderTexture(gbuffer_DepthAttachStr);
   Sampler* gbuffer_Sampler = gResources().UnregisterSampler(gbuffer_SamplerStr);
@@ -1592,7 +1558,6 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
   m_pRhi->FreeTexture(gbuffer_Albedo);
   m_pRhi->FreeTexture(gbuffer_Normal);
   m_pRhi->FreeTexture(gbuffer_Position);
-  m_pRhi->FreeTexture(gbuffer_RoughMetal);
   m_pRhi->FreeTexture(gbuffer_Emission);
   m_pRhi->FreeTexture(gbuffer_Depth);
   m_pRhi->FreeSampler(gbuffer_Sampler);
@@ -2103,13 +2068,12 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-  std::array<VkClearValue, 6> clearValues;
+  std::array<VkClearValue, 5> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[5].depthStencil = { 1.0f, 0 };
+  clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -2543,17 +2507,12 @@ void Renderer::SetUpPBR()
   position.imageView = gResources().GetRenderTexture(gbuffer_PositionAttachStr)->View();
   position.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo roughmetal = {};
-  roughmetal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  roughmetal.imageView = gResources().GetRenderTexture(gbuffer_RoughMetalAttachStr)->View();
-  roughmetal.sampler = pbr_Sampler->Handle();
-
   VkDescriptorImageInfo emission = {};
   emission.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   emission.imageView = gResources().GetRenderTexture(gbuffer_EmissionAttachStr)->View();
   emission.sampler = pbr_Sampler->Handle();
 
-  std::array<VkWriteDescriptorSet, 5> writeInfo;
+  std::array<VkWriteDescriptorSet, 4> writeInfo;
   writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeInfo[0].descriptorCount = 1;
   writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -2588,21 +2547,11 @@ void Renderer::SetUpPBR()
   writeInfo[3].descriptorCount = 1;
   writeInfo[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   writeInfo[3].dstBinding = 3;
-  writeInfo[3].pImageInfo = &roughmetal;
+  writeInfo[3].pImageInfo = &emission;
   writeInfo[3].pBufferInfo = nullptr;
   writeInfo[3].pTexelBufferView = nullptr;
   writeInfo[3].dstArrayElement = 0;
   writeInfo[3].pNext = nullptr;
-
-  writeInfo[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[4].descriptorCount = 1;
-  writeInfo[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[4].dstBinding = 4;
-  writeInfo[4].pImageInfo = &emission;
-  writeInfo[4].pBufferInfo = nullptr;
-  writeInfo[4].pTexelBufferView = nullptr;
-  writeInfo[4].dstArrayElement = 0;
-  writeInfo[4].pNext = nullptr;
   
   pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
   pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());

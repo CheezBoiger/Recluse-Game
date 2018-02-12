@@ -35,7 +35,6 @@ std::string gbuffer_LayoutStr                 = "GBufferLayout";
 std::string gbuffer_AlbedoAttachStr           = "AlbedoColor";
 std::string gbuffer_NormalAttachStr           = "NormalColor";
 std::string gbuffer_PositionAttachStr         = "PositionColor";
-std::string gbuffer_RoughMetalAttachStr       = "RoughMetalColor";
 std::string gbuffer_EmissionAttachStr         = "EmissionColor";
 std::string gbuffer_DepthAttachStr            = "GBufferDepth";
 std::string gbuffer_SamplerStr                = "GBufferSampler";
