@@ -22,6 +22,18 @@ void ComputePipeline::Initialize(VkComputePipelineCreateInfo& info,
 }
 
 
+ComputePipeline::~ComputePipeline()
+{
+  if (mLayout) {
+    R_DEBUG(rWarning, "Compute pipeline layout was not properly cleaned up, prior to ComputePipeline destruction!\n");
+  }
+
+  if (mPipeline) {
+    R_DEBUG(rWarning, "Compute pipeline was not properly cleaned up, prior to ComputePipeline destruction!\n");
+  }
+}
+
+
 void ComputePipeline::CleanUp()
 {
   if (mLayout) {

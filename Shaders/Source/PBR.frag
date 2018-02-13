@@ -7,7 +7,7 @@ layout (location = 0) out vec4 vFragColor;
 layout (location = 1) out vec4 vBrightColor;
 
 #define MAX_DIRECTION_LIGHTS    8
-#define MAX_POINT_LIGHTS        128
+#define MAX_POINT_LIGHTS        64
 
 struct DirectionLight {
   vec4  direction;

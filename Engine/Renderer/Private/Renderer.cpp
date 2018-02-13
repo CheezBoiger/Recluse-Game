@@ -1347,7 +1347,6 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   Texture* gbuffer_Albedo = m_pRhi->CreateTexture();
   Texture* gbuffer_Normal = m_pRhi->CreateTexture();
   Texture* gbuffer_Position = m_pRhi->CreateTexture();
-  Texture* gbuffer_RoughMetal = m_pRhi->CreateTexture();
   Texture* gbuffer_Emission = m_pRhi->CreateTexture();
   Texture* gbuffer_Depth = m_pRhi->CreateTexture();
   Sampler* gbuffer_Sampler = m_pRhi->CreateSampler();
@@ -1404,7 +1403,6 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.subresourceRange.levelCount = 1;
 
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
-  gbuffer_RoughMetal->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;

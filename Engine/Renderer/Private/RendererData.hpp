@@ -43,6 +43,12 @@ extern std::string pbr_BrightTextureStr;
 extern std::string pbr_VertStr;
 extern std::string pbr_FragStr;
 
+// Work in progress.
+extern std::string cluster_FrustumPipelineStr;
+extern std::string cluster_LightCullPipelineStr;
+extern std::string cluster_LightGridStr;
+extern std::string cluster_FrustumTextureStr;
+
 extern std::string SkyboxPipelineStr;
 extern std::string SkyboxDescriptorSetStr;
 extern std::string SkyboxSetLayoutStr;

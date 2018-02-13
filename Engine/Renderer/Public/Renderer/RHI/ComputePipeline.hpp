@@ -16,6 +16,8 @@ public:
     : mPipeline(VK_NULL_HANDLE)
     , mLayout(VK_NULL_HANDLE) { }
 
+  ~ComputePipeline();
+
   void              Initialize(VkComputePipelineCreateInfo& info, 
                       const VkPipelineLayoutCreateInfo& layout);
   void              CleanUp();
