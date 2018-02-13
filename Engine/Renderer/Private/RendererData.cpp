@@ -657,7 +657,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
   VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
   depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   depthStencilCI.depthTestEnable = VK_TRUE;
-  depthStencilCI.depthWriteEnable = VK_TRUE;
+  depthStencilCI.depthWriteEnable = VK_FALSE;
   depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
   depthStencilCI.depthBoundsTestEnable = VK_FALSE;
   depthStencilCI.minDepthBounds = 0.0f;

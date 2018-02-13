@@ -1116,7 +1116,7 @@ void Renderer::SetUpGraphicsPipelines()
 
   std::array<VkPipelineColorBlendAttachmentState, 4> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
-    VK_TRUE,
+    VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1127,7 +1127,7 @@ void Renderer::SetUpGraphicsPipelines()
   );
 
   colorBlendAttachments[1] = CreateColorBlendAttachmentState(
-    VK_TRUE,
+    VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1224,6 +1224,7 @@ void Renderer::SetUpGraphicsPipelines()
   // Set to quad rendering format.
   colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
+  depthStencilCI.depthWriteEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
   colorBlendCI.attachmentCount = 1; 
   rasterizerCI.cullMode = VK_CULL_MODE_NONE;
