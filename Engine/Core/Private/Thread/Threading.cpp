@@ -25,27 +25,28 @@ void ThreadPool::RunAll()
     m_ThreadWorkers[i].Run([&] (thread_id_t id) -> void {
       R_DEBUG(rNotify, "Thread " + std::to_string(i) + " starting...\n");
       while (!m_SignalStop) {
-        { 
+        {
+          std::unique_lock<std::mutex> grd(m_JobMutex);
           if (!m_ThreadJobs.empty()) {
             ThreadJob job = m_ThreadJobs.front();
             job.CurrThreadId = id;
             job.Result = ThrResultInProgress;
 
             {
-              std::lock_guard<std::mutex> grd(m_JobMutex);
-              m_ThreadJobs.pop();
-              
+              m_ThreadJobs.pop();    
             }
 
+            grd.unlock();
+
             {
-              std::lock_guard<std::mutex> grd(m_ProgressMutex);
+              std::unique_lock<std::mutex> grd(m_ProgressMutex);
               m_ProgressJobs.push_back(job);
             }
 
             if (job.Work) { job.Work(); }
 
             {
-              std::lock_guard<std::mutex> grd(m_ProgressMutex);
+              std::unique_lock<std::mutex> grd(m_ProgressMutex);
               for (auto it = m_ProgressJobs.begin(); it != m_ProgressJobs.end(); ++it) {
                 if (it->CurrThreadId == id) {
                   m_ProgressJobs.erase(it);
@@ -55,7 +56,8 @@ void ThreadPool::RunAll()
             }
           }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
     }, static_cast<thread_id_t>(i));
   }
@@ -64,7 +66,14 @@ void ThreadPool::RunAll()
 
 void ThreadPool::WaitAll()
 {
-  while (!m_ThreadJobs.empty() || !m_ProgressJobs.empty()) { }
+  // Spin lock to acquire the lock. This will cause the main thread to wait for threads to 
+  // finish their work, before moving forward.
+  while (true) {
+    std::unique_lock<std::mutex> lck(m_JobMutex);
+    if (lck.owns_lock() && m_ThreadJobs.empty()) {
+      break;
+    }
+  }
 }
 
 
@@ -75,9 +84,8 @@ void ThreadPool::AddTask(thr_work_func_t func)
   job.Result = ThrResultIncomplete;
   job.Work = func;
 
-  m_JobMutex.lock();
+  std::unique_lock<std::mutex> grd(m_JobMutex);
   m_ThreadJobs.push(job);
-  m_JobMutex.unlock();
 }
 
 

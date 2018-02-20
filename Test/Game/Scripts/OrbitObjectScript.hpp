@@ -33,7 +33,7 @@ public:
     mat->SetEmissive(emission);
     mat->SetBaseMetal(0.0f);
     mat->SetBaseRough(1.0f);
-    mat->SetBaseEmissive(40.0f);
+    mat->SetBaseEmissive(10.0f);
     mat->EnableEmissive(true);
     rc->ReConfigure();
 

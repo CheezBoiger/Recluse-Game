@@ -72,6 +72,7 @@ VulkanRHI::VulkanRHI()
   , mSurface(VK_NULL_HANDLE)
   , mCmdPool(VK_NULL_HANDLE)
   , mComputeCmdPool(VK_NULL_HANDLE)
+  , m_TransferCmdPool(VK_NULL_HANDLE)
   , mDescriptorPool(VK_NULL_HANDLE)
   , mOccQueryPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
@@ -140,25 +141,32 @@ void VulkanRHI::Initialize(HWND windowHandle, const GpuConfigParams* params)
   mWindow = windowHandle;
 
   mSurface = gContext.CreateSurface(windowHandle);
+
+  // TODO(): Instead of just querying queue family indices, have the physical
+  // device output queue family indices and the number of queues you can create 
+  // with it. Graphics, Compute, and Presentation all share the same queue! Transfer
+  // has its own queue.
   i32 presentationIndex;
   i32 graphicsIndex;
   i32 computeIndex;
+  i32 transferIndex;
+
   b8 result = gPhysicalDevice.FindQueueFamilies(mSurface, 
-    &presentationIndex, &graphicsIndex, &computeIndex);
+    &presentationIndex, &graphicsIndex, &transferIndex, &computeIndex);
   
   if (!result) {
     R_DEBUG(rError, "Failed to find proper queue families in vulkan context!\n");
     return;
   } 
   
-  std::set<i32> queueFamilies = { presentationIndex, graphicsIndex, computeIndex };
+  std::set<i32> queueFamilies = { presentationIndex, graphicsIndex, computeIndex, transferIndex };
   std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
-  r32 priority = 1.0f;
+  r32 priorities[] = { 1.0f };
   for (i32 queueFamily : queueFamilies) {
     VkDeviceQueueCreateInfo qInfo = { };
     qInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    qInfo.pQueuePriorities = &priority;
-    qInfo.queueCount = 1;
+    qInfo.pQueuePriorities = priorities;
+    qInfo.queueCount = 1; // Need to change to accomadate more than one queue.
     qInfo.queueFamilyIndex = queueFamily;
     deviceQueueCreateInfos.push_back(qInfo);
   }
@@ -186,7 +194,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GpuConfigParams* params)
   
   VkPresentModeKHR presentMode = GetPresentMode(params);
   mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode,
-    graphicsIndex, presentationIndex, computeIndex);
+    graphicsIndex, presentationIndex, transferIndex, computeIndex);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -200,6 +208,12 @@ void VulkanRHI::Initialize(HWND windowHandle, const GpuConfigParams* params)
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.ComputeIndex());
 
   if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to create secondary command pool!\n");
+  }
+
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.TransferIndex());
+
+  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
@@ -237,6 +251,11 @@ void VulkanRHI::CleanUp()
   if (mComputeCmdPool) {
     vkDestroyCommandPool(mLogicalDevice.Native(), mComputeCmdPool, nullptr);
     mComputeCmdPool = VK_NULL_HANDLE;
+  }
+
+  if (m_TransferCmdPool) {
+    vkDestroyCommandPool(mLogicalDevice.Native(), m_TransferCmdPool, nullptr);
+    m_TransferCmdPool = VK_NULL_HANDLE;
   }
 
   if (mDescriptorPool) {
@@ -518,6 +537,21 @@ void VulkanRHI::ComputeSubmit(const VkSubmitInfo& submitInfo)
   if (vkQueueSubmit(mSwapchain.ComputeQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
     R_DEBUG(rError, "Compute failed to submit task!\n");
   }
+}
+
+
+void VulkanRHI::TransferSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+{
+  VkResult result = vkQueueSubmit(mSwapchain.TransferQueue(), count, submitInfo, fence);
+  if (result != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to submit to transfer queue!\n");
+  }
+}
+
+
+void VulkanRHI::TransferWaitIdle()
+{
+  vkQueueWaitIdle(mSwapchain.TransferQueue());
 }
 
 

@@ -127,6 +127,8 @@ public:
   // Get the command pool on the compute side.
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
 
+  VkCommandPool                 TransferCmdPool() { return m_TransferCmdPool; }
+
   // Get the descriptor pool that is used to create our descriptor sets.
   VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
 
@@ -149,6 +151,12 @@ public:
 
   // Submit a command buffer to the graphics queue.
   void                          GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+
+  // Submit a command buffer to the transfer queue.
+  void                          TransferSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+
+  // Wait until transfer queue has completely finished all submittals.
+  void                          TransferWaitIdle();
 
   // Wait until the graphics queue has completely finished all submittals.
   void                          GraphicsWaitIdle();
@@ -223,6 +231,7 @@ private:
   VkSurfaceKHR                  mSurface;
   VkCommandPool                 mCmdPool;
   VkCommandPool                 mComputeCmdPool;
+  VkCommandPool                 m_TransferCmdPool;
   VkDescriptorPool              mDescriptorPool;
   VkQueryPool                   mOccQueryPool;
   VkPhysicalDeviceProperties    mPhysicalDeviceProperties;

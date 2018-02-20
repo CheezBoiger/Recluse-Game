@@ -17,7 +17,7 @@ std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhys
 
 
 b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
-    i32* presentation, i32* graphics, i32* compute) const
+    i32* presentation, i32* graphics, i32* transfer, i32* compute) const
 {
   if (!handle) {
     R_DEBUG(rError, "No handle is set to query queue families from!\n");
@@ -42,6 +42,10 @@ b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
 
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
       *compute = i;
+    }
+
+    if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+      *transfer = i;
     }
 
     ++i;

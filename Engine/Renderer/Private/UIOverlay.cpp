@@ -38,8 +38,8 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
     Shader* vert = rhi->CreateShader();
     Shader* frag = rhi->CreateShader();
 
-    RendererPass::LoadShader("UIPass.vert.spv", vert);
-    RendererPass::LoadShader("UIPass.frag.spv", frag);
+    RendererPass::LoadShader("UI.vert.spv", vert);
+    RendererPass::LoadShader("UI.frag.spv", frag);
     //pipeline->Initialize(pipeCI, layoutCI);
 
     rhi->FreeShader(vert);

@@ -23,7 +23,7 @@ public:
   std::vector<VkPresentModeKHR>             QuerySwapchainPresentModes(VkSurfaceKHR surface) const;
 
   b8                                        FindQueueFamilies(VkSurfaceKHR surface,
-                                              i32* presentation, i32* graphics, i32* compute) const;
+                                              i32* presentation, i32* graphics, i32* transfer, i32* compute) const;
   u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
   VkPhysicalDeviceFeatures                  GetFeatures() const;
   VkPhysicalDeviceProperties                GetDeviceProperties() const { return properties; }

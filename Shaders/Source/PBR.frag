@@ -355,7 +355,7 @@ void main()
   outColor = fragEmissive + outColor;
   vFragColor = vec4(outColor, 1.0);
   
-  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - fragPosition) * 0.5;
+  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - fragPosition) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));

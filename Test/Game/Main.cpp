@@ -35,6 +35,7 @@ class ExplodeScript : public IScript {
 public:
   r32     speed;
   Vector3 direction;
+  r32     bExplosionTriggered;
 
   void Awake() override {
     std::random_device device;
@@ -42,13 +43,21 @@ public:
     std::uniform_real_distribution<r32> uni(-1.0f, 1.0f);
 
     GetOwner()->GetTransform()->Position = Vector3();
+    GetOwner()->GetTransform()->Scale = Vector3(5.0f, 5.0f, 5.0f);
     speed = uni(twist) * 10.0f;
     direction = Vector3(uni(twist), uni(twist), uni(twist)).Normalize();
+    bExplosionTriggered = false;
   }
 
   void Update() override {
-    r32 s = speed * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
-    GetOwner()->GetComponent<Transform>()->Position += direction * s;
+    if (Keyboard::KeyPressed(KEY_CODE_Y)) {
+      bExplosionTriggered = true;
+    }
+
+    if (bExplosionTriggered) {
+      r32 s = speed * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+      GetOwner()->GetComponent<Transform>()->Position += direction * s;
+    }
   }
 };
 
@@ -117,9 +126,9 @@ int main(int c, char* argv[])
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.14f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
+    pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 5.0f;
+    pPrimary->_Intensity = 10.0f;
   }
 
   // Create a mesh object and initialize it.
@@ -166,12 +175,12 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 1000
+#define objects 200
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);
   objsMat.SetBaseRough(0.2f);
-  objsMat.SetBaseColor(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
+  objsMat.SetBaseColor(Vector4(0.95f, 0.0f, 0.0f, 1.0f));
   {
     std::random_device device;
     std::mt19937 twist(device());
@@ -220,8 +229,20 @@ int main(int c, char* argv[])
     //light->_Direction = Vector3(
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
+    if (Keyboard::KeyPressed(KEY_CODE_G)) {
+      MaterialComponent* mat = obj2->GetComponent<MaterialComponent>();
+      MeshComponent* meshc = obj2->GetComponent<MeshComponent>();
+      meshc->SetMeshRef(&mesh);
+      mat->GetMaterial()->EnableAlbedo(false);
+      obj2->GetComponent<RendererComponent>()->ReConfigure();
+    }
+
     gEngine().Update();
-    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+
+    // Testing threads.
+    gCore().ThrPool().AddTask([]() -> void {
+      Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    });
   }
   
   // Finish.

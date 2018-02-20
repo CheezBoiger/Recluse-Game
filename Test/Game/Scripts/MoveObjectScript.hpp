@@ -22,8 +22,8 @@ public:
   void Awake() override {
     Transform* transform = GetOwner()->GetTransform();
     transform->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3::UP);
-    transform->Scale = Vector3(15.0f, 15.0f, 15.0f);
-    transform->Position = Vector3(0.0f, -15.0f, 0.0f);
+    transform->Scale = Vector3(20.0f, 20.0f, 20.0f);
+    transform->Position = Vector3(0.0f, -20.0f, 0.0f);
     RendererComponent* rc = GetOwner()->GetComponent<RendererComponent>();
 
     Material* mat = GetOwner()->GetComponent<MaterialComponent>()->GetMaterial();

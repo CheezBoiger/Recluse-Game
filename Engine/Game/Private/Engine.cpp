@@ -147,6 +147,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, 
 void Engine::CleanUp()
 {
   if (m_Running) return;
+  gCore().ThrPool().StopAll();
   if (!m_Window.ShouldClose()) {
     m_Window.Close();
     Window::PollEvents();
@@ -165,7 +166,6 @@ void Engine::CleanUp()
   gAnimation().ShutDown();
   gRenderer().ShutDown();
   gFilesystem().ShutDown();
-  gCore().ThrPool().StopAll();
   gCore().ShutDown();
   m_Running = false;
 }

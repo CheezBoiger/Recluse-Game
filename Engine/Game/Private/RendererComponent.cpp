@@ -74,8 +74,6 @@ void RendererComponent::ReConfigure()
   mRenderObj->_pMaterialDescId = material->Native();
   mRenderObj->Update();
   mRenderObj->SwapDescriptorSet();
-
-  TriggerDirty();
 }
 
 
@@ -144,13 +142,6 @@ void RendererComponent::Update()
     renderData->_NormalMatrix[3][3] = 1.0f;
 
     mMeshDescriptor->Update();
-  }
-
-  if (Dirty()) {
-    // RendererComponent is signalling to the global renderer to rebuild it's
-    // command buffers, as it requires an update.
-    gRenderer().SignalCommandBufferRebuild(false);
-    SignalClean();
   }
 }
 } // Recluse

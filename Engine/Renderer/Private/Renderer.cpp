@@ -55,20 +55,16 @@ Renderer::Renderer()
   , m_Initialized(false)
   , m_pLights(nullptr)
   , m_pGlobal(nullptr)
-  , m_NeedsUpdate(false)
-  , m_AsyncBuild(false)
   , m_AntiAliasing(false)
   , m_pSky(nullptr)
   , m_pSkyboxCmdBuffer(nullptr)
   , m_SkyboxFinished(nullptr)
-  , m_TotalCmdBuffers(2)
+  , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
   m_Offscreen._ShadowCmdBuffers.resize(m_TotalCmdBuffers);
-  m_HDR._CmdBuffers.resize(m_TotalCmdBuffers);
-  m_Pbr._CmdBuffers.resize(m_TotalCmdBuffers);
 
   m_Downscale._Horizontal = 0;
   m_Downscale._Strength = 1.0f;
@@ -120,9 +116,6 @@ void Renderer::EndFrame()
 void Renderer::Render()
 {
   static u32 bPreviousFrame = false;
-  // TODO(): Signal a beginning and end callback or so, when performing 
-  // any rendering.
-  CheckCmdUpdate();
 
   // TODO(): Need to clean this up.
   VkCommandBuffer offscreen_CmdBuffers[3] = { 
@@ -133,7 +126,7 @@ void Renderer::Render()
   VkSemaphore offscreen_WaitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
   VkSemaphore offscreen_SignalSemas[] = { m_Offscreen._Semaphore->Handle() };
 
-  VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffers[CurrentCmdBufferIdx()]->Handle() };
+  VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffer->Handle() };
   VkSemaphore pbr_SignalSemas[] = { m_Pbr._Sema->Handle() };
   VkPipelineStageFlags waitFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT };
 
@@ -170,7 +163,7 @@ void Renderer::Render()
   // Postprocessing, HDR waits for skybox to finish rendering onto scene.
   VkSubmitInfo hdrSI = offscreenSI;
   VkSemaphore hdr_SignalSemas[] = { m_HDR._Semaphore->Handle() };
-  VkCommandBuffer hdrCmd = m_HDR._CmdBuffers[CurrentCmdBufferIdx()]->Handle();
+  VkCommandBuffer hdrCmd = m_HDR._CmdBuffer->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
   hdrSI.pSignalSemaphores = hdr_SignalSemas;
   hdrSI.pWaitSemaphores = skybox_SignalSemas;
@@ -237,6 +230,10 @@ void Renderer::Render()
   computeSubmit.waitSemaphoreCount = 0;
 
   m_pRhi->ComputeSubmit(computeSubmit);
+
+  // TODO(): Signal a beginning and end callback or so, when performing 
+  // any rendering.
+  CheckCmdUpdate();
 }
 
 
@@ -1468,6 +1465,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   samplerCI.compareEnable = VK_FALSE;
   samplerCI.mipLodBias = 0.0f;
   samplerCI.maxAnisotropy = 16.0f;
+  samplerCI.anisotropyEnable = VK_FALSE;
   samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
   samplerCI.maxLod = 1.0f;
   samplerCI.minLod = 0.0f;
@@ -1573,9 +1571,9 @@ void Renderer::CleanUpRenderTextures(b8 fullCleanup)
 }
 
 
-void Renderer::BuildPbrCmdBuffer(u32 currCmdIdx) 
+void Renderer::BuildPbrCmdBuffer() 
 {
-  CommandBuffer* cmdBuffer = m_Pbr._CmdBuffers[currCmdIdx];
+  CommandBuffer* cmdBuffer = m_Pbr._CmdBuffer;
   if (cmdBuffer) {
     cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
@@ -1833,10 +1831,8 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
 void Renderer::SetUpHDR(b8 fullSetUp)
 {
   if (fullSetUp) {
-    for (size_t i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
-      m_HDR._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-      m_HDR._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    }
+    m_HDR._CmdBuffer = m_pRhi->CreateCommandBuffer();
+    m_HDR._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     m_HDR._Semaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCi = { };
     semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1903,10 +1899,8 @@ void Renderer::CleanUpHDR(b8 fullCleanUp)
   if (fullCleanUp) {
     m_pRhi->FreeVkSemaphore(m_HDR._Semaphore);
 
-    for (size_t i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
-      m_pRhi->FreeCommandBuffer(m_HDR._CmdBuffers[i]);
-      m_HDR._CmdBuffers[i] = nullptr;
-    }
+    m_pRhi->FreeCommandBuffer(m_HDR._CmdBuffer);
+    m_HDR._CmdBuffer = nullptr;
 
     m_HDR._Semaphore = nullptr;
   }
@@ -1921,15 +1915,11 @@ void Renderer::Build()
   m_pRhi->GraphicsWaitIdle();
 
   BuildOffScreenBuffer(CurrentCmdBufferIdx());
-  BuildHDRCmdBuffer(CurrentCmdBufferIdx());
+  BuildHDRCmdBuffer();
   BuildShadowCmdBuffer(CurrentCmdBufferIdx());
-  BuildPbrCmdBuffer(CurrentCmdBufferIdx());
+  BuildPbrCmdBuffer();
   BuildSkyboxCmdBuffer();
   m_pRhi->RebuildCommandBuffers(m_pRhi->CurrentSwapchainCmdBufferSet());
-
-  // Signal that no update is required.
-  m_NeedsUpdate = false;
-  m_AsyncBuild = false;
 }
 
 
@@ -2065,7 +2055,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   std::array<VkClearValue, 5> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -2160,14 +2150,9 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 }
 
 
-void Renderer::BuildHDRCmdBuffer(u32 cmdBufferIndex)
+void Renderer::BuildHDRCmdBuffer()
 {
-  if (cmdBufferIndex >= m_HDR._CmdBuffers.size()) {
-    R_DEBUG(rError, "Attempted to build HDR cmd buffer. Index out of bounds!\n");
-    return;
-  }
-
-  CommandBuffer* cmdBuffer = m_HDR._CmdBuffers[cmdBufferIndex];
+  CommandBuffer* cmdBuffer = m_HDR._CmdBuffer;
   if (!cmdBuffer) return;
 
   VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
@@ -2418,7 +2403,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
 
   VkCommandBufferBeginInfo begin = { };
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   // No need to record as it is already recording?
   if (cmdBuffer->Recording()) return;
@@ -2555,10 +2540,8 @@ void Renderer::SetUpPBR()
   pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
   pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
 
-  for (size_t i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
-    m_Pbr._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-    m_Pbr._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-  }
+  m_Pbr._CmdBuffer = m_pRhi->CreateCommandBuffer();
+  m_Pbr._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   m_Pbr._Sema = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo semaCi = {};
@@ -2572,9 +2555,7 @@ void Renderer::CleanUpPBR()
   DescriptorSet* pbr_Set = gResources().UnregisterDescriptorSet(pbr_DescSetStr);
   m_pRhi->FreeDescriptorSet(pbr_Set);
 
-  for (size_t i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
-    m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffers[i]);
-  }
+  m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffer);
 
   m_pRhi->FreeVkSemaphore(m_Pbr._Sema);
 }
@@ -2637,6 +2618,12 @@ void Renderer::SetUpFinalOutputs()
 
 void Renderer::CheckCmdUpdate()
 {
+  u32 idx = CurrentCmdBufferIdx() + 1;
+  if (idx >= m_TotalCmdBuffers) idx = 0;
+
+  BuildOffScreenBuffer(idx);
+  BuildShadowCmdBuffer(idx);
+#if 0
   if (m_NeedsUpdate) {
    if (m_AsyncBuild) {
       BuildAsync();
@@ -2644,10 +2631,8 @@ void Renderer::CheckCmdUpdate()
       Build();
     }
   }
-
-  // just in case these were still flagged.
-  m_NeedsUpdate = false;
-  m_AsyncBuild = false;
+#endif
+  m_CurrCmdBufferIdx = idx;
 }
 
 
@@ -2824,9 +2809,6 @@ void Renderer::BuildAsync()
     u32 idx = m_pRhi->CurrentImageIndex();
 
     inProgress = false;
-    // signal that no update is required.
-    m_NeedsUpdate = false;
-    m_AsyncBuild = false;
   });
 }
 

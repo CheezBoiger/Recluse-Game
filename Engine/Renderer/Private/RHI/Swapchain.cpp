@@ -26,16 +26,19 @@ Swapchain::~Swapchain()
 
 
 void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
-      VkPresentModeKHR desiredPresent, i32 graphicsIndex, i32 presentationIndex, i32 computeIndex)
+      VkPresentModeKHR desiredPresent, i32 graphicsIndex, i32 presentationIndex, i32 transferIndex, i32 computeIndex)
 {
   mGraphicsQueueIndex = graphicsIndex;
   mPresentationQueueIndex = presentationIndex;
   mComputeQueueIndex = computeIndex;
+  m_TransferQueueIndex = transferIndex;
   mOwner = device.Native();
 
+  // TODO(): Read initialize() call from vulkan context, queue index will change in the future.
   vkGetDeviceQueue(mOwner, graphicsIndex, 0, &mGraphicsQueue);
   vkGetDeviceQueue(mOwner, mPresentationQueueIndex, 0, &mPresentationQueue);
   vkGetDeviceQueue(mOwner, computeIndex, 0, &mComputeQueue);
+  vkGetDeviceQueue(mOwner, m_TransferQueueIndex, 0, &m_TransferQueue);
 
   CreateSemaphores();
   CreateComputeFence();

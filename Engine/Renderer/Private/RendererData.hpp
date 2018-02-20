@@ -49,6 +49,10 @@ extern std::string cluster_LightCullPipelineStr;
 extern std::string cluster_LightGridStr;
 extern std::string cluster_FrustumTextureStr;
 
+extern std::string hiz_FullTexture;
+extern std::string hiz_2xTex;
+extern std::string hiz_4xTex;
+
 extern std::string SkyboxPipelineStr;
 extern std::string SkyboxDescriptorSetStr;
 extern std::string SkyboxSetLayoutStr;

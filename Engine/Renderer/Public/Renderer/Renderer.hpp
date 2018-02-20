@@ -193,8 +193,6 @@ public:
   // Enable HDR Post processing.
   void              EnableHDR(b8 enable);
 
-  void              SignalCommandBufferRebuild(b8 async) { m_NeedsUpdate = true; m_AsyncBuild = async; }
-
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
 protected:
@@ -222,9 +220,9 @@ private:
   void              SetUpPBR();
   void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
-  void              BuildPbrCmdBuffer(u32 cmdBufferIdx);
+  void              BuildPbrCmdBuffer();
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
-  void              BuildHDRCmdBuffer(u32 cmdBufferIndex);
+  void              BuildHDRCmdBuffer();
   void              BuildSkyboxCmdBuffer();
   void              SetUpDownscale(b8 FullSetUp);
   void              CleanUpDownscale(b8 FullCleanUp);
@@ -255,12 +253,12 @@ private:
   } m_Offscreen; 
 
   struct {
-    std::vector<CommandBuffer*>   _CmdBuffers;
+    CommandBuffer*                _CmdBuffer;
     Semaphore*                    _Sema;
   } m_Pbr;
 
   struct {
-    std::vector<CommandBuffer*>   _CmdBuffers;
+    CommandBuffer*                _CmdBuffer;
     Semaphore*                    _Semaphore;
     b8                            _Enabled;
   } m_HDR;
@@ -281,8 +279,6 @@ private:
   
   b8                m_Rendering       : 1;
   b8                m_Initialized     : 1;
-  b8                m_NeedsUpdate     : 1;
-  b8                m_AsyncBuild      : 1;
   b8                m_AntiAliasing    : 1;
 };
 
