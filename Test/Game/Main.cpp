@@ -55,7 +55,7 @@ public:
     }
 
     if (bExplosionTriggered) {
-      r32 s = speed * static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+      r32 s = speed * static_cast<r32>(Time::FixTime * Time::ScaleTime);
       GetOwner()->GetComponent<Transform>()->Position += direction * s;
     }
   }

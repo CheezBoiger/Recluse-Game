@@ -49,7 +49,7 @@ public:
   // This function is called every frame.
   void Update() override {
     Transform* transform = GetOwner()->GetTransform();
-    r32 sDt = static_cast<r32>(Time::DeltaTime * Time::ScaleTime);
+    r32 sDt = static_cast<r32>(Time::FixTime * Time::ScaleTime);
     if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
       transform->Position += transform->Forward() * 5.0f * sDt;
     }

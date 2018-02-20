@@ -56,8 +56,6 @@ void ThreadPool::RunAll()
             }
           }
         }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
       }
     }, static_cast<thread_id_t>(i));
   }
