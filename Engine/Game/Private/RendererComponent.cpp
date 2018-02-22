@@ -134,14 +134,15 @@ void RendererComponent::Update()
   if (transform) {
     ObjectBuffer* renderData = mMeshDescriptor->ObjectData();
     Matrix4 model = transform->GetLocalToWorldMatrix();
-    renderData->_Model = model;
-    renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
-    renderData->_NormalMatrix[3][0] = 0.0f;
-    renderData->_NormalMatrix[3][1] = 0.0f;
-    renderData->_NormalMatrix[3][2] = 0.0f;
-    renderData->_NormalMatrix[3][3] = 1.0f;
-
-    mMeshDescriptor->Update();
+    if (renderData->_Model != model) {
+      renderData->_Model = model;
+      renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
+      renderData->_NormalMatrix[3][0] = 0.0f;
+      renderData->_NormalMatrix[3][1] = 0.0f;
+      renderData->_NormalMatrix[3][2] = 0.0f;
+      renderData->_NormalMatrix[3][3] = 1.0f;
+      mMeshDescriptor->SignalUpdate();
+    }
   }
 }
 } // Recluse

@@ -47,9 +47,12 @@ void MeshDescriptor::Initialize()
 
 void MeshDescriptor::Update()
 {
-  m_pObjectBuffer->Map();
-    memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
-  m_pObjectBuffer->UnMap();
+  if (m_bNeedsUpdate) {
+    m_pObjectBuffer->Map();
+      memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
+    m_pObjectBuffer->UnMap();
+    m_bNeedsUpdate = false;
+  }
 }
 
 

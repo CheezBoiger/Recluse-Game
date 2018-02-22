@@ -62,6 +62,8 @@ public:
   void            SetEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
   void            SetTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
 
+  void            SignalUpdate() { m_bNeedsUpdate = true; }
+
   MaterialBuffer* Data() { return &m_MaterialData; }
   Buffer*         Native() { return m_pBuffer; }
 
@@ -77,7 +79,6 @@ public:
   TextureSampler* Sampler() { return m_pSampler; }
 
 private:
-
   MaterialBuffer  m_MaterialData;
   Buffer*         m_pBuffer;
 
@@ -89,6 +90,7 @@ private:
   Texture2D*      m_pEmissive;
 
   TextureSampler* m_pSampler;
+  u32             m_bNeedsUpdate;
   VulkanRHI*      m_pRhi;
   friend class Renderer;
 };

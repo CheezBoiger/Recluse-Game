@@ -38,6 +38,7 @@ class Texture1D;
 class Texture2D;
 class Texture3D;
 class Texture2DArray;
+class TextureCubeArray;
 class TextureSampler;
 class UIOverlay;
 class RenderObject;
@@ -120,6 +121,8 @@ public:
   // Create a 2D Array texture surface.
   Texture2DArray*   CreateTexture2DArray();
 
+  TextureCubeArray* CreateTextureCubeArray();
+
   // Create a 3D texture surface.
   Texture3D*        CreateTexture3D();
 
@@ -152,6 +155,8 @@ public:
 
   // Frees up the allocated texture2darray object.
   void              FreeTexture2DArray(Texture2DArray* texture);
+
+  void              FreeTextureCubeArray(TextureCubeArray* texture);
 
   // Frees up the allocated texture3d object.
   void              FreeTexture3D(Texture3D* texture);
@@ -231,7 +236,7 @@ private:
   void              CleanUpHDR(b8 fullCleanup);
   void              CleanUpPBR();
   void              CleanUpSkybox();
-  void              UpdateMaterials();
+  void              UpdateSceneDescriptors();
   void              RenderOverlay();
   void              RenderPrimaryShadows();
   void              CheckCmdUpdate();

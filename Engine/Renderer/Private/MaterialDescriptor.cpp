@@ -26,6 +26,7 @@ MaterialDescriptor::MaterialDescriptor()
   , m_pEmissive(nullptr)
   , m_pSampler(nullptr)
   , m_pBuffer(nullptr)
+  , m_bNeedsUpdate(true)
 { 
   m_MaterialData._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   m_MaterialData._Opacity = 1.0f;
@@ -69,9 +70,12 @@ void MaterialDescriptor::Initialize()
 
 void MaterialDescriptor::Update()
 {
-  m_pBuffer->Map();
-    memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
-  m_pBuffer->UnMap();
+  if (m_bNeedsUpdate) {
+    m_pBuffer->Map();
+      memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
+    m_pBuffer->UnMap();
+    m_bNeedsUpdate = false;
+  }
 }
 
 

@@ -172,8 +172,8 @@ void Renderer::Render()
   VkSemaphore* final_WaitSemas = &hdr_Sema;
   if (!m_HDR._Enabled) final_WaitSemas = skybox_SignalSemas;
 
-  // Update materials before rendering the frame.
-  UpdateMaterials();
+  // Update the scene descriptors before rendering the frame.
+  UpdateSceneDescriptors();
 
   // Wait for fences before starting next frame.
   if (bPreviousFrame) {
@@ -2680,7 +2680,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 }
 
 
-void Renderer::UpdateMaterials()
+void Renderer::UpdateSceneDescriptors()
 {
   // Update global data.
   m_pGlobal->Data()->_EnableAA = m_AntiAliasing;
@@ -2697,6 +2697,21 @@ void Renderer::UpdateMaterials()
 
   // Update lights in scene.
   m_pLights->Update();
+
+  // Update mesh descriptors in cmd list.
+  for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
+    RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
+    if (rnd_cmd._pTarget && rnd_cmd._pTarget->_pMeshDescId) {
+      rnd_cmd._pTarget->_pMeshDescId->Update();
+    }
+  }
+
+  for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
+    RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
+    if (rnd_cmd._pTarget && rnd_cmd._pTarget->_pMaterialDescId) {
+      rnd_cmd._pTarget->_pMaterialDescId->Update();
+    }
+  }
 }
 
 

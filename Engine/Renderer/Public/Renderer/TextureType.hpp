@@ -21,13 +21,18 @@ public:
     TEXTURE_2D,
     TEXTURE_2D_ARRAY,
     TEXTURE_3D,
+    TEXTURE_3D_ARRAY,
     TEXTURE_CUBE,
+    TEXTURE_CUBE_ARRAY
   };
 
   Texture* Handle() { return texture; }
   VulkanRHI* GetRhi() { return mRhi; }
   
   Type TexType() const { return m_TexType; }
+
+  // Stores texture image in a separate file. This varies on what the texture type is.
+  virtual void  CacheToFile(std::string path) { }
 
   // Name of Texture.
   std::string   _Name;
@@ -101,6 +106,14 @@ public:
 class TextureCube : public TextureBase {
 public:
   TextureCube() : TextureBase(TEXTURE_CUBE) { }
+};
+
+
+// Cube Map array texture object.
+class TextureCubeArray : public TextureBase {
+public:
+  TextureCubeArray() : TextureBase(TEXTURE_CUBE_ARRAY) { }
+
 };
 
 

@@ -101,7 +101,7 @@ int main(int c, char* argv[])
   // Camera set.
   FirstPersonCamera cam(Radians(60.0f), 
     static_cast<r32>(window->Width()), 
-    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(0.0f, 1.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
+    static_cast<r32>(window->Height()), 0.001f, 2000.0f, Vector3(0.0f, 1.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
   cam.SetSpeed(30.0f);
   cam.EnableBloom(true);
   gEngine().SetCamera(&cam);
@@ -142,7 +142,7 @@ int main(int c, char* argv[])
 
   {
     // Increasing segments improves the sphere's quality
-    const u32 kSegments = 48;
+    const u32 kSegments = 32;
     auto vertices = UVSphere::MeshInstance(1.0f, kSegments, kSegments);
     auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), kSegments, kSegments);
     mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
@@ -175,7 +175,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 200
+#define objects 400
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);
@@ -206,6 +206,20 @@ int main(int c, char* argv[])
     }
   }
 
+  // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.
+  Scene scene2;
+  scene2.GetRoot()->AddChild(obj2);
+
+  // Set primary light.
+  {
+    DirectionalLight* pPrimary = scene2.GetPrimaryLight();
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.14f, 1.0f);
+    pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+    pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
+    pPrimary->_Enable = true;
+    pPrimary->_Intensity = 5.0f;
+  }
+
   // Wake up objects
   gameObj->Wake();
   obj2->Wake();
@@ -230,11 +244,13 @@ int main(int c, char* argv[])
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
     if (Keyboard::KeyPressed(KEY_CODE_G)) {
-      MaterialComponent* mat = obj2->GetComponent<MaterialComponent>();
-      MeshComponent* meshc = obj2->GetComponent<MeshComponent>();
-      meshc->SetMeshRef(&mesh);
-      mat->GetMaterial()->EnableAlbedo(false);
-      obj2->GetComponent<RendererComponent>()->ReConfigure();
+      gEngine().PushScene(&scene2);
+      gEngine().BuildScene();
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_H)) {
+      gEngine().PushScene(&scene);
+      gEngine().BuildScene();
     }
 
     gEngine().Update();

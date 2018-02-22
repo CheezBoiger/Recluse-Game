@@ -46,6 +46,7 @@ public:
   void          SetVisible(b8 enable) { m_Visible = enable; }
   void          SetRenderable(b8 enable) { m_Renderable = enable; }
   void          SetTranslucent(b8 enable) { m_Translucent = enable; }
+  void          SignalUpdate() { m_bNeedsUpdate = true; }
 
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
 
@@ -60,6 +61,7 @@ public:
 protected:
   ObjectBuffer  m_ObjectData;
   Buffer*       m_pObjectBuffer;
+  u32           m_bNeedsUpdate;
 
   b8            m_Visible;
   b8            m_Renderable;
@@ -81,7 +83,7 @@ public:
   
   virtual void  Initialize() override;
   virtual void  CleanUp() override;
-  virtual void  Update() override;
+  virtual void  Update() override;  
 
   BonesBuffer*  BonesData() { return &m_BonesData; }
   Buffer*       NativeBoneBuffer() { return m_pBonesBuffer; }

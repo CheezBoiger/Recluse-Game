@@ -17,8 +17,8 @@ struct Material {
   static void               InitializeDefault() { _sDefault.Initialize(); _sDefault.Native()->Update(); }
   static void               CleanUpDefault() { _sDefault.CleanUp(); }
   static Material*          Default() { return &_sDefault; }
-#define MARK_DIRTY_MATERIAL() m_bNeedsUpdate = true
-  Material() : m_pDesc(nullptr), m_bNeedsUpdate(true) { }
+#define MARK_DIRTY_MATERIAL() m_pDesc->SignalUpdate();
+  Material() : m_pDesc(nullptr) { }
 
   void                      Initialize();
   void                      CleanUp();
@@ -42,13 +42,11 @@ struct Material {
   void                      EnableEmissive(b8 enable) { m_pDesc->Data()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(); }
   void                      EnableAo(b8 enable) { m_pDesc->Data()->_HasAO = enable; MARK_DIRTY_MATERIAL(); }
 
-  void                      Update() { if (m_bNeedsUpdate) { m_pDesc->Update(); m_bNeedsUpdate = false; } }
   // Returns the native descriptor.
   MaterialDescriptor*       Native() { return m_pDesc; }
 
 private:
   MaterialDescriptor*       m_pDesc;
-  b8                        m_bNeedsUpdate;
 };
 
 
@@ -61,7 +59,7 @@ public:
   Material*     GetMaterial() { return m_pRef; }
 
 
-  void          Update() override { if (m_pRef) { m_pRef->Update(); } }
+  void          Update() override { }
 
 private:
   Material*     m_pRef;
