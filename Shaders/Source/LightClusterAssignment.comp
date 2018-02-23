@@ -59,27 +59,6 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
-
-
-
-// Light indices map.
-layout (set = 1, binding = 1) buffer LightIndices {
-  vec4 light_indices[];
-  vec4 envmap_indices[];
-};
-
-// The Light lookup table, for use in calculations.
-layout (set = 3, binding = 0) uniform LightBuffer {
-  DirectionLight  primaryLight;
-  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
-  PointLight      pointLights[MAX_POINT_LIGHTS];
-} gLightBuffer;
-
-
-// Depth map from the previous frame.
-layout (set = 1, binding = 3) uniform sampler2D depth;
-
-
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 64) in;
 
 

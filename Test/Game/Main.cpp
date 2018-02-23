@@ -175,7 +175,7 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 400
+#define objects 300
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
   objsMat.SetBaseMetal(0.6f);

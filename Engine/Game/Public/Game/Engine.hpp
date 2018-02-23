@@ -105,9 +105,9 @@ public:
 private:
 
   void                          Stop();
-  void                          UpdateRenderObjects();
   void                          UpdateGameLogic();
   void                          TraverseScene(GameObjectActionCallback callback);
+  void                          SortCmdLists();
 
   CCamViewFrustum               m_CamFrustum;
   Camera*                       m_pCamera;

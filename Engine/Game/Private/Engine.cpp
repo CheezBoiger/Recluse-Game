@@ -95,6 +95,21 @@ Engine::Engine()
   , m_Stopping(false)
   , m_dLag(0.0)
 {
+  m_RenderCmdList.SetSortFunc([] (RenderCmd& cmd1, RenderCmd& cmd2) -> bool {
+    if (!cmd1._pTarget || !cmd2._pTarget) return false;
+    if (!cmd1._pTarget->Renderable || !cmd2._pTarget->Renderable) return false;
+    Camera* camera = Camera::GetMain();
+    MeshDescriptor* mesh1 = cmd1._pTarget->_pMeshDescId;
+    MeshDescriptor* mesh2 = cmd2._pTarget->_pMeshDescId;
+    Matrix4 m1 = mesh1->ObjectData()->_Model;
+    Matrix4 m2 = mesh2->ObjectData()->_Model;
+  
+    Vector3 cam_pos = camera->Position();
+    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
+    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
+    
+    return v1.Magnitude() < v2.Magnitude();
+  });
 }
 
 
@@ -215,23 +230,9 @@ void Engine::Update()
     m_dLag -= Time::FixTime;
   }
 
+  SortCmdLists();
   gCore().Sync();
   gRenderer().Render();
-}
-
-
-void Engine::UpdateRenderObjects()
-{
-  // TODO(): RenderObject updated, We need to use RenderObject Now.
-  for (u32 i = 0; i < m_RenderCmdList.Size(); ++i) {
-    RenderCmd& cmd = m_RenderCmdList[i];
-    RenderObject* obj = cmd._pTarget;
-
-    if (obj && obj->_pMeshDescId) {
-      obj->_pMaterialDescId->Update();
-      obj->_pMeshDescId->Update();
-    }
-  }
 }
 
 
@@ -342,4 +343,9 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   }
 }
 
+
+void Engine::SortCmdLists()
+{
+  m_RenderCmdList.Sort();
+}
 } // Recluse

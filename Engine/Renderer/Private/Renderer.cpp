@@ -2622,7 +2622,11 @@ void Renderer::CheckCmdUpdate()
   if (idx >= m_TotalCmdBuffers) idx = 0;
 
   BuildOffScreenBuffer(idx);
-  BuildShadowCmdBuffer(idx);
+  
+  if (m_pLights->PrimaryShadowEnabled()) {
+    BuildShadowCmdBuffer(idx);
+  }
+
 #if 0
   if (m_NeedsUpdate) {
    if (m_AsyncBuild) {

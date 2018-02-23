@@ -46,17 +46,18 @@ public:
   // Get the name of this scene!
   std::string               Name() const { return m_SceneName; }
 
+  // Update the scene.
+  void                      Update() { }
+
   void                      Serialize(IArchive& archive) override { }
   void                      Deserialize(IArchive& archive) override  { }
 
   DirectionalLight*         GetPrimaryLight() { return &m_PrimaryLight; }
 
-  
 private:
   DirectionalLight          m_PrimaryLight;
   std::string               m_SceneName;
   SceneNode                 m_Root;
-
   // Physics based information may go here as well.
 };
 } // Recluse 
