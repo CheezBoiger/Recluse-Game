@@ -80,10 +80,10 @@ layout (set = 2, binding = 5) uniform sampler2D ao;
 layout (set = 2, binding = 6) uniform sampler2D emissive;
 
 
-layout (location = 0) out vec4 AlbedoColor;
-layout (location = 1) out vec4 NormalColor;
-layout (location = 2) out vec4 PositionColor;
-layout (location = 3) out vec4 EmissionColor;
+layout (location = 0) out vec4 rt0;
+layout (location = 1) out vec4 rt1;
+layout (location = 2) out vec4 rt2;
+layout (location = 3) out vec4 rt3;
 
 
 ////////////////////////////////////////////////////////////////////
@@ -109,6 +109,34 @@ vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
   vec3 tNormal = texture(normal, TexCoord, objBuffer.lod).rgb * 2.0 - 1.0;
   mat3 TBN = BiTangentFrame(N, V, TexCoord);
   return normalize(TBN * tNormal);
+}
+
+
+vec2 EncodeNormal(vec3 n)
+{
+  vec2 enc = normalize(n.xy) * (sqrt(-n.z * 0.5 + 0.5));
+  enc = enc * 0.5 + 0.5;
+  return enc;
+}
+
+
+struct GBuffer
+{
+  vec3 albedo;
+  vec3 normal;
+  vec3 pos;
+  vec3 emission;
+  float roughness;
+  float metallic;
+};
+
+
+void WriteGBuffer(GBuffer gbuffer)
+{
+  rt0 = vec4(gbuffer.albedo, 1.0);
+  rt1 = vec4(EncodeNormal(gbuffer.normal), gbuffer.roughness, gbuffer.metallic);
+  rt2 = vec4(gbuffer.pos, 1.0);
+  rt3 = vec4(gbuffer.emission, 1.0);
 }
 
 
@@ -155,16 +183,14 @@ void main()
   }   
   
   vec3 N = normalize(fragNormal);
-    
-  // We might wanna set a debug param here...
-  float opaque = 1.0;
-  if (matBuffer.isTransparent >= 1) {
-    opaque = matBuffer.opaque;
-  }
   
-  AlbedoColor = vec4(fragAlbedo, 1.0);
-  NormalColor = vec4(fragNormal, 1.0);
-  PositionColor = vec4(frag_in.position, fragRoughness);
-  EmissionColor = vec4(fragEmissive * matBuffer.emissive, fragMetallic);
-
+  GBuffer gbuffer;
+  gbuffer.albedo = fragAlbedo;
+  gbuffer.pos = frag_in.position;
+  gbuffer.normal = N;
+  gbuffer.emission = fragEmissive * matBuffer.emissive;
+  gbuffer.metallic = fragMetallic;
+  gbuffer.roughness = fragRoughness;
+  
+  WriteGBuffer(gbuffer);
 }

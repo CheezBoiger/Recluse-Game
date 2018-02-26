@@ -324,8 +324,9 @@ void VulkanRHI::QueryFromSwapchain()
 
 void VulkanRHI::CreateDepthAttachment()
 {
-  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
-  mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+  // TODO(): Set up D32_SFLOAT_S8_UINT as well.
+  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
+  mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
   mSwapchainInfo.mDepthUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
   VkImageCreateInfo imageCI = { };

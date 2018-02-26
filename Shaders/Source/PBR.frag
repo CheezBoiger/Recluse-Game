@@ -6,7 +6,7 @@
 layout (location = 0) out vec4 vFragColor;
 layout (location = 1) out vec4 vBrightColor;
 
-#define MAX_DIRECTION_LIGHTS    8
+#define MAX_DIRECTION_LIGHTS    4
 #define MAX_POINT_LIGHTS        64
 
 struct DirectionLight {
@@ -65,10 +65,11 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   ivec2 pad;
 } gWorldBuffer;
 
-layout (set = 1, binding = 0) uniform sampler2D albedo;
-layout (set = 1, binding = 1) uniform sampler2D normal;
-layout (set = 1, binding = 2) uniform sampler2D position;
-layout (set = 1, binding = 3) uniform sampler2D emission;
+layout (set = 1, binding = 0) uniform sampler2D rt0;
+layout (set = 1, binding = 1) uniform sampler2D rt1;
+layout (set = 1, binding = 2) uniform sampler2D rt2;
+layout (set = 1, binding = 3) uniform sampler2D rt3;
+layout (set = 1, binding = 4) uniform sampler2D rtDepth;
 
 
 layout (set = 2, binding = 0) uniform LightBuffer {
@@ -83,6 +84,51 @@ layout (set = 2, binding = 1) uniform sampler2D globalShadow;
 layout (set = 3, binding = 0) uniform LightSpace {
   mat4 viewProj;
 } lightSpace;
+
+
+struct GBuffer
+{
+  vec3 albedo;
+  vec3 normal;
+  vec3 pos;
+  vec3 emission;
+  float roughness;
+  float metallic;
+};
+
+
+vec3 DecodeNormal(vec4 enc)
+{
+  vec4 nn = enc * vec4(2.0, 2.0, 0.0, 0.0) + vec4(-1.0, -1.0, 1.0, -1.0);
+  float l = dot(nn.xyz, -nn.xyw);
+  nn.z = l;
+  nn.xy *= sqrt(l);
+  return nn.xyz * 2.0 + vec3(0.0, 0.0, -1.0);
+}
+
+
+GBuffer ReadGBuffer(vec2 uv)
+{
+  GBuffer gbuffer;
+  vec4 albedoFrag = texture(rt0, uv);
+  vec4 normalFrag = texture(rt1, uv);
+  vec4 positionFrag = texture(rt2, uv);
+  vec4 emissionFrag = texture(rt3, uv);
+  
+  gbuffer.albedo = albedoFrag.rgb;
+  gbuffer.normal = DecodeNormal(vec4(normalFrag.rg, 0.0, 0.0));
+  gbuffer.pos = positionFrag.rgb;
+  gbuffer.emission = emissionFrag.rgb;
+  gbuffer.roughness = normalFrag.b;
+  gbuffer.metallic = normalFrag.a;
+
+  // 0 roughness equates to no surface to render with light. Speeds up performance.
+  // TODO(): We need a stencil surface to determine what parts of the 
+  // image to render with light. This is not a good way.
+  if (texture(rtDepth, uv).r == 1.0) { discard; }
+  
+  return gbuffer;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,19 +358,10 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
 
 void main()
 {
-  float fragRoughness = texture(position, frag_in.uv).a;
-    // 0 roughness equates to no surface to render with light. Speeds up performance.
-  // TODO(): We need a stencil surface to determine what parts of the 
-  // image to render with light. This is not a good way.
-  if (fragRoughness <= 0) { discard; }
-  
-  float fragMetallic = texture(emission, frag_in.uv).a; 
-  vec3 fragAlbedo = texture(albedo, frag_in.uv).rgb;  
-  vec3 fragPosition = texture(position, frag_in.uv).rgb;
-  vec3 fragEmissive = texture(emission, frag_in.uv).rgb;
-  
-  vec3 N = texture(normal, frag_in.uv).rgb;
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - fragPosition);
+  GBuffer gbuffer = ReadGBuffer(frag_in.uv);
+
+  vec3 N = gbuffer.normal;
+  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - gbuffer.pos);
   
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
@@ -332,30 +369,30 @@ void main()
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
-    vec3 ambient = light.ambient.rgb * fragAlbedo;
+    vec3 ambient = light.ambient.rgb * gbuffer.albedo;
     outColor += ambient;
-    outColor += CookTorrBRDFPrimary(light, fragPosition, fragAlbedo, V, N, fragRoughness, fragMetallic); 
+    outColor += CookTorrBRDFPrimary(light, gbuffer.pos, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic); 
     outColor = max(outColor, ambient);
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
     DirectionLight light = gLightBuffer.directionLights[i];
     if (light.enable <= 0) { continue; }
-    outColor += light.ambient.rgb * fragAlbedo;
-    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    outColor += light.ambient.rgb * gbuffer.albedo;
+    outColor += CookTorrBRDFDirectional(light, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
-    outColor += CookTorrBRDFPoint(light, fragPosition, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    outColor += CookTorrBRDFPoint(light, gbuffer.pos, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic);
     
   }
   
-  outColor = fragEmissive + outColor;
+  outColor = gbuffer.emission + outColor;
   vFragColor = vec4(outColor, 1.0);
   
-  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - fragPosition) * 0.2;
+  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));

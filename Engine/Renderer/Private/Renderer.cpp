@@ -485,7 +485,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   {
     DescriptorSetLayout* pbr_Layout = m_pRhi->CreateDescriptorSetLayout();
     gResources().RegisterDescriptorSetLayout(pbr_DescLayoutStr, pbr_Layout);
-    std::array<VkDescriptorSetLayoutBinding, 4> bindings;
+    std::array<VkDescriptorSetLayoutBinding, 5> bindings;
 
     // Albedo
     bindings[0].binding = 0;
@@ -515,6 +515,12 @@ void Renderer::SetUpDescriptorSetLayouts()
     bindings[3].pImmutableSamplers = nullptr;
     bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    // Depth
+    bindings[4].binding = 4;
+    bindings[4].descriptorCount = 1;
+    bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[4].pImmutableSamplers = nullptr;
+    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
     VkDescriptorSetLayoutCreateInfo PbrLayout = { };
     PbrLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -2496,7 +2502,12 @@ void Renderer::SetUpPBR()
   emission.imageView = gResources().GetRenderTexture(gbuffer_EmissionAttachStr)->View();
   emission.sampler = pbr_Sampler->Handle();
 
-  std::array<VkWriteDescriptorSet, 4> writeInfo;
+  VkDescriptorImageInfo depth = { };
+  depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  depth.imageView = gResources().GetRenderTexture(gbuffer_DepthAttachStr)->View();
+  depth.sampler = pbr_Sampler->Handle();
+
+  std::array<VkWriteDescriptorSet, 5> writeInfo;
   writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeInfo[0].descriptorCount = 1;
   writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -2536,6 +2547,16 @@ void Renderer::SetUpPBR()
   writeInfo[3].pTexelBufferView = nullptr;
   writeInfo[3].dstArrayElement = 0;
   writeInfo[3].pNext = nullptr;
+
+  writeInfo[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeInfo[4].descriptorCount = 1;
+  writeInfo[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeInfo[4].dstBinding = 4;
+  writeInfo[4].pImageInfo = &depth;
+  writeInfo[4].pBufferInfo = nullptr;
+  writeInfo[4].pTexelBufferView = nullptr;
+  writeInfo[4].dstArrayElement = 0;
+  writeInfo[4].pNext = nullptr;
   
   pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
   pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
