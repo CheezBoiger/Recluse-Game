@@ -171,7 +171,7 @@ void Sky::CreateCubeMap(VulkanRHI* rhi)
   VkImageCreateInfo imgCi = {};
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  imgCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgCi.format = VK_FORMAT_R8G8B8A8_SRGB;
   imgCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
   imgCi.imageType = VK_IMAGE_TYPE_2D;
@@ -186,7 +186,7 @@ void Sky::CreateCubeMap(VulkanRHI* rhi)
 
   VkImageViewCreateInfo viewCi = {};
   viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  viewCi.format = VK_FORMAT_R8G8B8A8_SRGB;
   viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   viewCi.subresourceRange.baseArrayLayer = 0;
   viewCi.subresourceRange.baseMipLevel = 0;

@@ -1383,7 +1383,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -1395,7 +1395,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
   cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -1413,6 +1413,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
 
+  // TODO(): Need to replace position render target, as we can take advantage of 
+  // depth buffer and clip space fragment coordinates.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;

@@ -160,8 +160,8 @@ void main()
     vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
   }
   
-  vRayleighCollected = (vRayleighCollected ) / float(iStepCount);
-  vMieCollected = (vMieCollected) / float(iStepCount);
+  vRayleighCollected = (vRayleighCollected * pow(fEyeDepth, 16.0)) / float(iStepCount);
+  vMieCollected = (vMieCollected * pow(fEyeDepth, 2.0)) / float(iStepCount);
 
   // TODO(): This should be the final color, not mie scattering alone...
   vec3 color = vec3(fMieFactor * vMieCollected + fRayleighFactor * vRayleighCollected);

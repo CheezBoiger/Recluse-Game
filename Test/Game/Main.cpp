@@ -124,7 +124,7 @@ int main(int c, char* argv[])
   // Set primary light.
   {
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.14f, 1.0f);
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.3f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
     pPrimary->_Enable = true;
@@ -213,7 +213,7 @@ int main(int c, char* argv[])
   // Set primary light.
   {
     DirectionalLight* pPrimary = scene2.GetPrimaryLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.14f, 1.0f);
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.3f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
     pPrimary->_Enable = true;

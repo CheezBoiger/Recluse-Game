@@ -34,12 +34,12 @@ GlobalDescriptor::GlobalDescriptor()
   // Testing params.
   m_Global._vSunBrightness = 30.0f;
   m_Global._vSunDir = Vector3(-1.0f, 0.0f, 0.0f).Normalize();
-  m_Global._Mie = 0.1f;
+  m_Global._Mie = 0.01f;
   m_Global._Rayleigh = 1.0f;
   m_Global._MieDist = 0.997f;
-  m_Global._fIntensity = 1.3f;
+  m_Global._fIntensity = 1.0f;
   m_Global._fMieStength = 0.1f;
-  m_Global._fRayleighStength = 1.0f;
+  m_Global._fRayleighStength = 50.0f;
   m_Global._fScatterStrength = 1.0f;
   
 }
