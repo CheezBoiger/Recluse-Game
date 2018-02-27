@@ -126,6 +126,7 @@ struct GBuffer
   vec3 normal;
   vec3 pos;
   vec3 emission;
+  float emissionStrength;
   float roughness;
   float metallic;
 };
@@ -133,10 +134,10 @@ struct GBuffer
 
 void WriteGBuffer(GBuffer gbuffer)
 {
-  rt0 = vec4(gbuffer.albedo, 1.0);
-  rt1 = vec4(EncodeNormal(gbuffer.normal), gbuffer.roughness, gbuffer.metallic);
-  rt2 = vec4(gbuffer.pos, 1.0);
-  rt3 = vec4(gbuffer.emission, 1.0);
+  rt0 = vec4(gbuffer.albedo, gbuffer.roughness);
+  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
+  rt2 = vec4(gbuffer.pos, gbuffer.emissionStrength);
+  rt3 = vec4(gbuffer.emission, gbuffer.metallic);
 }
 
 
@@ -188,7 +189,8 @@ void main()
   gbuffer.albedo = fragAlbedo;
   gbuffer.pos = frag_in.position;
   gbuffer.normal = N;
-  gbuffer.emission = fragEmissive * matBuffer.emissive;
+  gbuffer.emission = fragEmissive;
+  gbuffer.emissionStrength = matBuffer.emissive;
   gbuffer.metallic = fragMetallic;
   gbuffer.roughness = fragRoughness;
   

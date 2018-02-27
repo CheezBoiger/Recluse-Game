@@ -92,6 +92,7 @@ struct GBuffer
   vec3 normal;
   vec3 pos;
   vec3 emission;
+  float emissionStrength;
   float roughness;
   float metallic;
 };
@@ -111,16 +112,17 @@ GBuffer ReadGBuffer(vec2 uv)
 {
   GBuffer gbuffer;
   vec4 albedoFrag = texture(rt0, uv);
-  vec4 normalFrag = texture(rt1, uv);
+  vec4 normalFrag = texture(rt1, uv) * 2.0 - 1.0;
   vec4 positionFrag = texture(rt2, uv);
   vec4 emissionFrag = texture(rt3, uv);
   
   gbuffer.albedo = albedoFrag.rgb;
-  gbuffer.normal = DecodeNormal(vec4(normalFrag.rg, 0.0, 0.0));
+  gbuffer.normal = normalFrag.rgb;
   gbuffer.pos = positionFrag.rgb;
+  gbuffer.emissionStrength = positionFrag.a;
   gbuffer.emission = emissionFrag.rgb;
-  gbuffer.roughness = normalFrag.b;
-  gbuffer.metallic = normalFrag.a;
+  gbuffer.roughness = albedoFrag.a;
+  gbuffer.metallic = emissionFrag.a;
 
   // 0 roughness equates to no surface to render with light. Speeds up performance.
   // TODO(): We need a stencil surface to determine what parts of the 
@@ -389,7 +391,7 @@ void main()
     
   }
   
-  outColor = gbuffer.emission + outColor;
+  outColor = gbuffer.emissionStrength * gbuffer.emission + outColor;
   vFragColor = vec4(outColor, 1.0);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;

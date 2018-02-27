@@ -253,6 +253,11 @@ int main(int c, char* argv[])
       gEngine().BuildScene();
     }
 
+    if (Keyboard::KeyPressed(KEY_CODE_J)) {
+      obj2->GetComponent<MeshComponent>()->SetMeshRef(&mesh);
+      obj2->GetComponent<RendererComponent>()->ReConfigure();
+    }
+
     gEngine().Update();
 
     // Testing threads.

@@ -1406,13 +1406,17 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.subresourceRange.levelCount = 1;
 
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
+  gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+
+  gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-
+  cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   gbuffer_Position->Initialize(cImageInfo, cViewInfo);
-  gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
-  gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
   cImageInfo.extent.width = m_pWindow->Width()    >> 1;
