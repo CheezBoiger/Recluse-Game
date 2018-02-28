@@ -39,8 +39,8 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._MieDist = 0.997f;
   m_Global._fIntensity = 1.0f;
   m_Global._fMieStength = 0.1f;
-  m_Global._fRayleighStength = 50.0f;
-  m_Global._fScatterStrength = 1.0f;
+  m_Global._fRayleighStength = 5.0f;
+  m_Global._fScatterStrength = 5.0f;
   
 }
 

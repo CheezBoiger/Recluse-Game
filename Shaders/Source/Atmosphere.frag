@@ -44,7 +44,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 
 
 // Nitrogen absorption profile. This is used to determine color of the air.
-vec3 Kr = vec3(0.08867780436772762, 0.1978442963618773, 0.6616065586417131);
+vec3 Kr = vec3(0.18867780436772762, 0.2978442963618773, 0.7616065586417131);
 #define CONST_PI 3.14159
 
 

@@ -16,6 +16,7 @@ MeshDescriptor::MeshDescriptor()
   , m_Static(true) 
   , m_Skinned(false)
   , m_pRhi(nullptr)
+  , m_bNeedsUpdate(true)
 {
   m_ObjectData._HasBones = false;
   m_ObjectData._LoD = 0.0f;
