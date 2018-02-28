@@ -231,7 +231,7 @@ void Engine::Update()
   }
 
   SortCmdLists();
-  gCore().Sync();
+  //gCore().Sync();
   gRenderer().Render();
 }
 
@@ -262,34 +262,40 @@ void Engine::UpdateGameLogic()
   }
 
   // Update camera and screen info.
-  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
-  if (m_pCamera) {
-    m_pCamera->Update();
-    m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
+  //gCore().ThrPool().AddTask([&] () -> void {
+    GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
+    if (m_pCamera) {
+      m_pCamera->Update();
+      m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
 
-    gGlobalBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
-    gGlobalBuffer->_Proj = m_pCamera->Projection();
-    gGlobalBuffer->_View = m_pCamera->View();
-    gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
-    gGlobalBuffer->_ScreenSize[0] = m_Window.Width();
-    gGlobalBuffer->_ScreenSize[1] = m_Window.Height();
-    gGlobalBuffer->_BloomEnabled = m_pCamera->Bloom();
-    gGlobalBuffer->_Exposure = m_pCamera->Exposure();
-    gGlobalBuffer->_Gamma = m_pCamera->Gamma();
-    gGlobalBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
-    gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
-    gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
+      gGlobalBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
+      gGlobalBuffer->_Proj = m_pCamera->Projection();
+      gGlobalBuffer->_View = m_pCamera->View();
+      gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
+      gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
+      gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
+      gGlobalBuffer->_ScreenSize[0] = m_Window.Width();
+      gGlobalBuffer->_ScreenSize[1] = m_Window.Height();
+      gGlobalBuffer->_BloomEnabled = m_pCamera->Bloom();
+      gGlobalBuffer->_Exposure = m_pCamera->Exposure();
+      gGlobalBuffer->_Gamma = m_pCamera->Gamma();
+      gGlobalBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
+      gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
+      gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
 
-    m_CamFrustum.Update();
-    gGlobalBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
-    gGlobalBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
-    gGlobalBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
-    gGlobalBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
-    gGlobalBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
-    gGlobalBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
-  }
+      m_CamFrustum.Update();
+      gGlobalBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
+      gGlobalBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
+      gGlobalBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
+      gGlobalBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
+      gGlobalBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
+      gGlobalBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
+    }
+  //});
 
-  TraverseScene(UpdateGameObject);
+  //gCore().ThrPool().AddTask([&]() -> void {
+    TraverseScene(UpdateGameObject);
+  //});
 }
 
 

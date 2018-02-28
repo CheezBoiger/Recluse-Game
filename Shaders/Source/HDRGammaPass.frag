@@ -18,6 +18,8 @@ layout (set = 0, binding = 1) uniform sampler2D bloomSurface;
 layout (set = 0, binding = 2) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
+  mat4  invView;
+  mat4  invProj;
   mat4  viewProj;
   vec4  cameraPos;
   vec4  l_plane;

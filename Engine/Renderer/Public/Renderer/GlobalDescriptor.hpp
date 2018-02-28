@@ -29,6 +29,8 @@ class FrameBuffer;
 struct GlobalBuffer {
   Matrix4         _View;
   Matrix4         _Proj;
+  Matrix4         _InvView;
+  Matrix4         _InvProj;
   Matrix4         _ViewProj;
   Vector4         _CameraPos;
   Vector4         _LPlane;

@@ -19,6 +19,8 @@ layout (location = 5) in ivec4  boneIDs;
 layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
+  mat4  invView;
+  mat4  invProj;
   mat4  viewProj;
   vec4  cameraPos;
   vec4  l_plane;
