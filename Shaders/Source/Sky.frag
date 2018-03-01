@@ -53,11 +53,12 @@ void main()
  
   vBrightColor = vec4(0.0, 0.0, 0.0, 1.0);
   // We might just want to work with the final image.
+  vec3 pos = normalize(frag_in.uvw);
+  float bright = dot(pos, -gWorldBuffer.vSun.xyz);
 
-  vec3 glow = (vFragColor.rgb - vec3(0.7)) * gWorldBuffer.vSun.w;
+  vec3 glow = vFragColor.rgb * bright;
   glow = max(glow, vec3(0.0));
-  glow = glow * 0.02;
+  glow = glow * gWorldBuffer.vSun.w;
   glow = clamp(glow, vec3(0.0), vec3(1.0));
   vBrightColor = vec4(glow, 1.0);
-
 }

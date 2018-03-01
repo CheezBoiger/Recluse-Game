@@ -138,7 +138,7 @@ GBuffer ReadGBuffer(vec2 uv)
 ////////////////////////////////////////////////////////////////////////////////
 // Shadowing.
 
-#define SHADOW_FACTOR 0.05
+#define SHADOW_FACTOR 0.0
 #define SHADOW_BIAS   0.00001
 
 float textureProj(vec4 P, vec2 offset)
@@ -346,10 +346,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
-      color *= shadowFactor;
-      if (shadowFactor >= 0.51) {
-        color += BRDF(D, F, G, NoL, NoV);
-      }
+      color += shadowFactor * BRDF(D, F, G, NoL, NoV);
     } else {
       color += BRDF(D, F, G, NoL, NoV);
     }
