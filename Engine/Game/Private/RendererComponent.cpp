@@ -71,9 +71,7 @@ void RendererComponent::ReConfigure()
     material = materialComponent->GetMaterial();
   }
 
-  mRenderObj->_pMaterialDescId = material->Native();
-  mRenderObj->Update();
-  mRenderObj->SwapDescriptorSet();
+  mRenderObj->SetMaterialDescriptor( material->Native() );
 }
 
 
@@ -94,8 +92,8 @@ void RendererComponent::OnInitialize(GameObject* owner)
   mMeshDescriptor = gRenderer().CreateStaticMeshDescriptor();
   mMeshDescriptor->Initialize();
 
-  mRenderObj->_pMeshDescId = mMeshDescriptor;
-  mRenderObj->_pMaterialDescId = material->Native();
+  mRenderObj->SetMeshDescriptor( mMeshDescriptor );
+  mRenderObj->SetMaterialDescriptor( material->Native() );
   mRenderObj->Initialize();
 
   // Check if MeshComponent is in game object.

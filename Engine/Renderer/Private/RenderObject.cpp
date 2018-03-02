@@ -103,7 +103,12 @@ void RenderObject::CleanUp()
 
 void RenderObject::Update()
 {
-  UpdateDescriptorSets(((mCurrIdx == 0) ? 1 : 0));
+  if (m_bNeedsUpdate) {
+    R_DEBUG(rDebug, "Updating Render Obj.\n");
+    UpdateDescriptorSets(((mCurrIdx == 0) ? 1 : 0));
+    SwapDescriptorSet();
+    m_bNeedsUpdate = false;
+  }
 }
 
 

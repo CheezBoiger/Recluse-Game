@@ -138,7 +138,7 @@ void WriteGBuffer(GBuffer gbuffer)
 {
   rt0 = vec4(gbuffer.albedo, gbuffer.roughness);
   rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
-  rt2 = vec4(gbuffer.pos, gbuffer.emissionStrength);
+  rt2 = vec4(gbuffer.emissionStrength, 1.0, 0.0, 0.0);
   rt3 = vec4(gbuffer.emission, gbuffer.metallic);
 }
 

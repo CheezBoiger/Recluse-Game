@@ -124,11 +124,11 @@ int main(int c, char* argv[])
   // Set primary light.
   {
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.3f, 1.0f);
+    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 10.0f;
+    pPrimary->_Intensity = 5.0f;
   }
 
   // Create a mesh object and initialize it.
@@ -175,12 +175,12 @@ int main(int c, char* argv[])
   obj2->AddComponent<RendererComponent>();
   obj2->AddComponent<Transform>();
 
-#define objects 300
+#define objects 400
   std::array<GameObject*, objects> gameObjs;
   Material objsMat; objsMat.Initialize();
-  objsMat.SetBaseMetal(0.6f);
-  objsMat.SetBaseRough(0.2f);
-  objsMat.SetBaseColor(Vector4(0.95f, 0.0f, 0.0f, 1.0f));
+  objsMat.SetBaseMetal(0.7f);
+  objsMat.SetBaseRough(0.7f);
+  objsMat.SetBaseColor(Vector4(0.9f, 0.2f, 0.2f, 1.0f));
   {
     std::random_device device;
     std::mt19937 twist(device());
@@ -213,7 +213,7 @@ int main(int c, char* argv[])
   // Set primary light.
   {
     DirectionalLight* pPrimary = scene2.GetPrimaryLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.3f, 1.0f);
+    pPrimary->_Ambient = Vector4(0.3f, 0.3f, 0.66f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
     pPrimary->_Enable = true;

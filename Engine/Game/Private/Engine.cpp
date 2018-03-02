@@ -99,8 +99,8 @@ Engine::Engine()
     if (!cmd1._pTarget || !cmd2._pTarget) return false;
     if (!cmd1._pTarget->Renderable || !cmd2._pTarget->Renderable) return false;
     Camera* camera = Camera::GetMain();
-    MeshDescriptor* mesh1 = cmd1._pTarget->_pMeshDescId;
-    MeshDescriptor* mesh2 = cmd2._pTarget->_pMeshDescId;
+    MeshDescriptor* mesh1 = cmd1._pTarget->GetMeshDescriptor();
+    MeshDescriptor* mesh2 = cmd2._pTarget->GetMeshDescriptor();
     Matrix4 m1 = mesh1->ObjectData()->_Model;
     Matrix4 m2 = mesh2->ObjectData()->_Model;
   

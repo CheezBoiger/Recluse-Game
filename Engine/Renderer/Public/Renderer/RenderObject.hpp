@@ -25,12 +25,7 @@ class VulkanRHI;
 // create multiple render objects to define meshes with separate mesh descriptors and/or materials!
 class RenderObject {
 public:
-  // The Mesh descriptor, used to define the renderobject in 3D space.
-  MeshDescriptor*         _pMeshDescId;
-
-  // The material of this Render Object.
-  MaterialDescriptor*               _pMaterialDescId;
-
+#define SIGNAL_RENDER_OBJECT_UPDATE() m_bNeedsUpdate = true
   // Number of instances to draw meshdata within the render object.
   // Typically set to 1 (default is 1.)
   u32                     Instances;
@@ -71,13 +66,18 @@ public:
   void                    SwapDescriptorSet() { mCurrIdx = mCurrIdx == 0 ? 1 : 0; }
 
   void                    Resize(size_t newSize) { mMeshGroup.resize(newSize); }
-  void                    Add(size_t idx, MeshData* data) { mMeshGroup[idx] = data; }
-  void                    PushBack(MeshData* data) { mMeshGroup.push_back(data); }
-  void                    RemoveMesh(size_t idx) { mMeshGroup.erase(mMeshGroup.begin() + idx); }
-  void                    ClearOutMeshGroup() { mMeshGroup.clear(); }
+  void                    Add(size_t idx, MeshData* data) { mMeshGroup[idx] = data; SIGNAL_RENDER_OBJECT_UPDATE(); }
+  void                    PushBack(MeshData* data) { mMeshGroup.push_back(data); SIGNAL_RENDER_OBJECT_UPDATE(); }
+  void                    RemoveMesh(size_t idx) { mMeshGroup.erase(mMeshGroup.begin() + idx); SIGNAL_RENDER_OBJECT_UPDATE(); }
+  void                    ClearOutMeshGroup() { mMeshGroup.clear(); SIGNAL_RENDER_OBJECT_UPDATE(); }
+  void                    SetMeshDescriptor(MeshDescriptor* md) { _pMeshDescId = md; SIGNAL_RENDER_OBJECT_UPDATE(); }
+  void                    SetMaterialDescriptor(MaterialDescriptor* md) { _pMaterialDescId = md; SIGNAL_RENDER_OBJECT_UPDATE(); }
 
   MeshData*               Get(size_t idx) { return mMeshGroup[idx]; }
   MeshData*               operator[](size_t idx) { return Get(idx); }
+
+  MeshDescriptor*         GetMeshDescriptor() { return _pMeshDescId; }
+  MaterialDescriptor*     GetMaterialDescriptor() { return _pMaterialDescId; }
 
 protected:  
 
@@ -91,8 +91,14 @@ private:
   DescriptorSet*          mMeshSets           [2];
   DescriptorSet*          mMaterialSets       [2];
   DescriptorSet*          m_BonesSets         [2];
+  // The Mesh descriptor, used to define the renderobject in 3D space.
+  MeshDescriptor*         _pMeshDescId;
+
+  // The material of this Render Object.
+  MaterialDescriptor*     _pMaterialDescId;
   size_t                  mCurrIdx;
   VulkanRHI*              mRhi;
+  u32                     m_bNeedsUpdate;
   friend class Renderer;
 };
 } // Recluse

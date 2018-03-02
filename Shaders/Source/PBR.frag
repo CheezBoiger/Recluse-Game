@@ -120,8 +120,8 @@ GBuffer ReadGBuffer(vec2 uv)
   
   gbuffer.albedo = albedoFrag.rgb;
   gbuffer.normal = normalFrag.rgb;
-  gbuffer.pos = positionFrag.rgb;
-  gbuffer.emissionStrength = positionFrag.a;
+  gbuffer.pos = positionFrag.rgb; // TODO(): Replace with other info, we are reconstructing position already.
+  gbuffer.emissionStrength = positionFrag.r;
   gbuffer.emission = emissionFrag.rgb;
   gbuffer.roughness = albedoFrag.a;
   gbuffer.metallic = emissionFrag.a;
@@ -129,7 +129,16 @@ GBuffer ReadGBuffer(vec2 uv)
   // 0 roughness equates to no surface to render with light. Speeds up performance.
   // TODO(): We need a stencil surface to determine what parts of the 
   // image to render with light. This is not a good way.
-  if (texture(rtDepth, uv).r == 1.0) { discard; }
+  if (positionFrag.g < 1.0) { discard; }
+
+  float z = texture(rtDepth, uv).r;
+  float x = uv.x * 2.0 - 1.0;
+  float y = uv.y * 2.0 - 1.0;
+  vec4 vProjectedPos = vec4(x, y, z, 1.0);
+  vec4 vViewPos = gWorldBuffer.invProj * vProjectedPos;
+  vViewPos /= vViewPos.w;
+  vec4 vWorldPos = gWorldBuffer.invView * vViewPos;
+  gbuffer.pos = vWorldPos.xyz;
   
   return gbuffer;
 }

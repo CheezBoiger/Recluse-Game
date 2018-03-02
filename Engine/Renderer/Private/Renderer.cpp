@@ -1412,13 +1412,12 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
-
+  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
   // TODO(): Need to replace position render target, as we can take advantage of 
   // depth buffer and clip space fragment coordinates.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
 
   // Initialize downscaled render textures.
   cImageInfo.extent.width = m_pWindow->Width()    >> 1;
@@ -2732,16 +2731,23 @@ void Renderer::UpdateSceneDescriptors()
   // Update mesh descriptors in cmd list.
   for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
     RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
-    if (rnd_cmd._pTarget && rnd_cmd._pTarget->_pMeshDescId) {
+    if (!rnd_cmd._pTarget) {
+      continue;
+    }
+
+    rnd_cmd._pTarget->Update();
+
+    if (rnd_cmd._pTarget->_pMeshDescId) {
       rnd_cmd._pTarget->_pMeshDescId->Update();
+    }
+
+    if (rnd_cmd._pTarget->_pMaterialDescId) {
+      rnd_cmd._pTarget->_pMaterialDescId->Update();
     }
   }
 
   for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
     RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
-    if (rnd_cmd._pTarget && rnd_cmd._pTarget->_pMaterialDescId) {
-      rnd_cmd._pTarget->_pMaterialDescId->Update();
-    }
   }
 }
 
