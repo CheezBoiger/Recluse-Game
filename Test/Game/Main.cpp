@@ -259,11 +259,7 @@ int main(int c, char* argv[])
     }
 
     gEngine().Update();
-
-    // Testing threads.
-    //gCore().ThrPool().AddTask([]() -> void {
-      //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
-    //});
+    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

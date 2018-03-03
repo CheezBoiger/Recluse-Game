@@ -68,7 +68,7 @@ void Texture2D::Update(Image const& Image)
 {
   VkDeviceSize imageSize = Image.MemorySize();
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  stagingBuffer.SetOwner( mRhi->LogicDevice()->Native() );
 
   VkBufferCreateInfo stagingCI = {};
   stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -84,7 +84,7 @@ void Texture2D::Update(Image const& Image)
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->LogicDevice()->Native());
-  buffer.Allocate(mRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.Allocate(mRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -150,7 +150,7 @@ void Texture2D::Update(Image const& Image)
   imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
   buffer.PipelineBarrier(
-    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
     0, nullptr,
     0, nullptr,
@@ -167,8 +167,8 @@ void Texture2D::Update(Image const& Image)
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  mRhi->GraphicsSubmit(1, &submit);
-  mRhi->GraphicsWaitIdle();
+  mRhi->TransferSubmit(1, &submit);
+  mRhi->TransferWaitIdle();
 
   buffer.Free();
   stagingBuffer.CleanUp();
