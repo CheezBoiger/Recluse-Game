@@ -57,6 +57,18 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 }
 
 
+void RendererComponent::EnableShadow(b8 enable)
+{
+  mRenderObj->_bEnableShadow = enable;
+}
+
+
+b8 RendererComponent::ShadowEnabled() const
+{
+  return mRenderObj->_bEnableShadow;
+}
+
+
 void RendererComponent::ReConfigure()
 {
   MeshComponent* meshc = GetOwner()->GetComponent<MeshComponent>();

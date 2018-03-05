@@ -40,9 +40,11 @@ public:
   // hinder rendering performance.
   void                      ReConfigure();
   void                      Enable(b8 enable);
+  void                      EnableShadow(b8 enable);
 
   b8                        Enabled() const;
   b8                        Dirty() const { return m_Dirty; }
+  b8                        ShadowEnabled() const;
   RenderObject*             RenderObj() { return mRenderObj; }
   MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }
 

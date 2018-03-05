@@ -27,6 +27,7 @@ RenderObject::RenderObject(MeshDescriptor* mesh, MaterialDescriptor* material)
   , mCurrIdx(0)
   , Instances(1)
   , Renderable(true)
+  , _bEnableShadow(true)
 {
   mMeshSets[0] = nullptr;
   mMeshSets[1] = nullptr;

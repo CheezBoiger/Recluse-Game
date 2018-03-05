@@ -33,6 +33,11 @@ public:
   // Is this object renderable? If not, the renderer will ignore it.
   b8                      Renderable;
 
+  // Checks if shadow is enabled for this Command. If false, renderer
+  // will opt out from rendering shadows for this render object. No shadow is produced from this object when set
+  // false. This can speed up performance.
+  b8                      _bEnableShadow;
+
   RenderObject(MeshDescriptor* mesh = nullptr, 
                 MaterialDescriptor* material = nullptr);
 

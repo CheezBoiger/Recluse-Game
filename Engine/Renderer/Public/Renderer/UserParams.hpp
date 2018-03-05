@@ -32,11 +32,20 @@ enum AntiAliasing {
 
 enum ShadowDetail {
   SHADOWS_NONE = 0,
-  SHADOWS_VERY_LOW = 1,
+  SHADOWS_POTATO = 1,
   SHADOWS_LOW = 2,
   SHADOWS_MEDIUM = 3,
   SHADOWS_HIGH = 4,
   SHADOWS_ULTRA = 5
+};
+
+
+// TODO(): No effect yet, until we at least make our textures in the future.
+enum TextureQuality {
+  TEXTURE_QUALITY_LOW,
+  TEXTURE_QUALITY_MEDIUM,
+  TEXTURE_QUALITY_HIGH,
+  TEXTURE_QUALITY_ULTRA
 };
 
 
@@ -47,6 +56,10 @@ public:
   FrameBuffering  _Buffering;
   // Determine the antialiasing quality of the renderer.
   AntiAliasing    _AA;
+
+  // Quality of textures ingame.
+  TextureQuality  _TextureQuality;
+
   // Determines the quality and details of shadows in the game world.
   // This will have a performance impact the better the quality. 
   // NOTE(): You must restart the game in order for qualities to take effect!
@@ -63,6 +76,7 @@ public:
 const GpuConfigParams kDefaultGpuConfigs = {
   DOUBLE_BUFFER,
   AA_None,
+  TEXTURE_QUALITY_ULTRA,
   SHADOWS_NONE,
   1.0f,
   true

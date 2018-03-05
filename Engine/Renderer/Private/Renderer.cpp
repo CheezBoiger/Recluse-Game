@@ -2445,7 +2445,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
         RenderCmd& renderCmd = (*m_pCmdList)[i];
         RenderObject* obj = renderCmd._pTarget;
         if (!obj) continue;
-        if (!obj->Renderable) continue;
+        if (!obj->Renderable || !obj->_bEnableShadow) continue;
         
         b8 skinned = obj->_pMeshDescId->Skinned();
         VkDescriptorSet descriptorSets[3];
@@ -2776,7 +2776,7 @@ void Renderer::UpdateRuntimeConfigs(const GpuConfigParams* params)
       m_pLights->EnablePrimaryShadow(false);
       m_pGlobal->Data()->_EnableShadows = false;
     } break;
-    case SHADOWS_VERY_LOW:
+    case SHADOWS_POTATO:
     case SHADOWS_LOW:
     case SHADOWS_MEDIUM:
     case SHADOWS_HIGH:
