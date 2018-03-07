@@ -258,6 +258,12 @@ int main(int c, char* argv[])
       obj2->GetComponent<RendererComponent>()->ReConfigure();
     }
 
+    if (Keyboard::KeyPressed(KEY_CODE_K)) {
+      obj2->GetComponent<MeshComponent>()->SetMeshRef(&cubeMesh);
+      obj2->GetComponent<RendererComponent>()->ReConfigure();
+    }
+
+
     gEngine().Update();
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }

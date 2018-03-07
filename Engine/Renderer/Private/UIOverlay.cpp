@@ -14,8 +14,49 @@
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_IMPLEMENTATION
+#define NK_PRIVATE
+#include "nuklear.hpp"
 
 namespace Recluse {
+
+
+// Primitive canvas definition used by nuklear gui.
+struct NkCanvas
+{
+  struct nk_command_buffer*  _pCmds;
+  struct nk_vec2              _vItemSpacing;
+  struct nk_vec2              _vPanelSpacing;
+  struct nk_style_item       _windowBackground;
+};
+
+
+struct NkObject 
+{
+  nk_context              _ctx;
+  std::vector<NkCanvas>   _canvasObjects;
+};
+
+
+void    InitializeNkObject(NkObject* obj)
+{
+  // TODO:
+}
+
+
+void  CleanUpNkObject(NkObject* obj)
+{
+  // TODO:
+}
+
+
+NkObject* gNkDevice()
+{
+  static NkObject nk;
+  return &nk;
+}
+
 
 void UIOverlay::Render()
 {
@@ -45,11 +86,18 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
 
   InitializeFrameBuffer();
   SetUpGraphicsPipeline();
+
+  // After initialization of our graphics gui pipeline, it's time to 
+  // initialize nuklear.
+  InitializeNkObject(gNkDevice());
 }
 
 
 void UIOverlay::CleanUp()
 {
+  // Allow us to clean up and release our nk context and object.
+  CleanUpNkObject(gNkDevice());  
+
   m_pRhi->FreeVkSemaphore(m_pSemaphore);
   m_pSemaphore = nullptr;
 
@@ -72,6 +120,7 @@ void UIOverlay::CleanUp()
 
 void UIOverlay::InitializeFrameBuffer()
 {
+  // TODO:
 }
 
 
@@ -98,5 +147,6 @@ void UIOverlay::SetUpGraphicsPipeline()
 
 void UIOverlay::BuildCmdBuffers(CmdList* cmdList)
 {
+  // TODO:
 }
 } // Recluse

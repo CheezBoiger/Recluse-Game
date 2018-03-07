@@ -1408,6 +1408,12 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
   gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  GlowTarget->Initialize(cImageInfo, cViewInfo);
+  pbr_Bright->Initialize(cImageInfo, cViewInfo);
+  pbr_Final->Initialize(cImageInfo, cViewInfo);
+
   cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
   cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
@@ -1439,12 +1445,6 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.extent.height = m_pWindow->Height()  >> 4;
   RenderTarget16xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget16xFinal->Initialize(cImageInfo, cViewInfo);
-
-  cImageInfo.extent.width = m_pWindow->Width();
-  cImageInfo.extent.height = m_pWindow->Height();
-  GlowTarget->Initialize(cImageInfo, cViewInfo);
-  pbr_Bright->Initialize(cImageInfo, cViewInfo);
-  pbr_Final->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
