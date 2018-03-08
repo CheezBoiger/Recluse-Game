@@ -3,12 +3,14 @@
 
 #include "Logging/Log.hpp"
 #include "Exception.hpp"
+#include <atomic>
 
 
 namespace Recluse {
 
 
 thread_id_t Thread::currentId = 0;
+std::atomic_uint32_t a_BusyThreadCount = 0;
 
 
 void Thread::Run(thread_func_t entry, thread_id_t id)
@@ -41,6 +43,7 @@ void ThreadPool::RunAll()
             {
               std::unique_lock<std::mutex> grd(m_ProgressMutex);
               m_ProgressJobs.push_back(job);
+              a_BusyThreadCount++;
             }
 
             if (job.Work) { job.Work(); }
@@ -50,6 +53,7 @@ void ThreadPool::RunAll()
               for (auto it = m_ProgressJobs.begin(); it != m_ProgressJobs.end(); ++it) {
                 if (it->CurrThreadId == id) {
                   m_ProgressJobs.erase(it);
+                  --a_BusyThreadCount;
                   break;
                 }
               }   
@@ -67,11 +71,13 @@ void ThreadPool::WaitAll()
   // Spin lock to acquire the lock. This will cause the main thread to wait for threads to 
   // finish their work, before moving forward.
   while (true) {
-    std::unique_lock<std::mutex> lck(m_JobMutex);
-    if (lck.owns_lock() && m_ThreadJobs.empty()) {
+    // Check for any busy threads.
+    R_DEBUG(rVerbose, "Spinlock syncing...\n");
+    if (!a_BusyThreadCount) { 
       break;
     }
   }
+  R_DEBUG(rVerbose, "Thread sync complete.\n");
 }
 
 
@@ -82,7 +88,6 @@ void ThreadPool::AddTask(thr_work_func_t func)
   job.Result = ThrResultIncomplete;
   job.Work = func;
 
-  std::unique_lock<std::mutex> grd(m_JobMutex);
   m_ThreadJobs.push(job);
 }
 

@@ -125,11 +125,11 @@ protected:
 // First person camera. This camera affects the movement of how the 
 // player sees the world around them. These will likely be deprecated 
 // as a result of our game object being constructed.
-class FirstPersonCamera : public Camera {
+class FlyViewCamera : public Camera {
 public:
   static r32          MAX_YAW;
 
-  FirstPersonCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
+  FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
     Vector3 pos, Vector3 dir);
 
   virtual Matrix4     View() override;
@@ -161,18 +161,6 @@ protected:
   r32                 m_ConstainedPitch;
   b8                  m_FirstLook;
   b8                  m_Locked;
-};
-
-
-// Fly view camera, for other cool effects such as cutscenes and crap.
-class FlyViewCamera : public FirstPersonCamera {
-public:
-  FlyViewCamera(r32 fov, r32 aspect, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 dir, r32 speed = 10.0f);
-  virtual void        Move(Movement movement, r64 dt) override;
-
-protected:
-  
 };
 
 

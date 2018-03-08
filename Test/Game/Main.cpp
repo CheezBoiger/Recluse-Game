@@ -99,7 +99,7 @@ int main(int c, char* argv[])
   LoadTextures();
 
   // Camera set.
-  FirstPersonCamera cam(Radians(60.0f), 
+  FlyViewCamera cam(Radians(60.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 2000.0f, Vector3(0.0f, 1.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
   cam.SetSpeed(30.0f);
@@ -142,7 +142,7 @@ int main(int c, char* argv[])
 
   {
     // Increasing segments improves the sphere's quality
-    const u32 kSegments = 32;
+    const u32 kSegments = 64;
     auto vertices = UVSphere::MeshInstance(1.0f, kSegments, kSegments);
     auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), kSegments, kSegments);
     mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
@@ -265,7 +265,7 @@ int main(int c, char* argv[])
 
 
     gEngine().Update();
-    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

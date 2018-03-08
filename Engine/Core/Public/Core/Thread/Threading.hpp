@@ -53,6 +53,7 @@ public:
   ThreadPool(u32 InitThreadCount = 2) 
     : m_CurrentTaskCount(0)
     , m_ThreadWorkers(InitThreadCount)
+    , m_BusyThreadCount(0)
     , m_SignalStop(true) { }
 
   void                  RunAll();

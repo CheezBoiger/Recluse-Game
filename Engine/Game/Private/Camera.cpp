@@ -63,7 +63,7 @@ void Camera::Update()
 }
 
 
-FirstPersonCamera::FirstPersonCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
+FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
   r32 zNear, r32 zFar, Vector3 pos, Vector3 dir)
   : m_X_Sensitivity(0.1f)
   , m_Y_Sensitivity(0.1f)
@@ -81,7 +81,7 @@ FirstPersonCamera::FirstPersonCamera(r32 fov, r32 pixelWidth, r32 pixelHeight,
 }
 
 
-Matrix4 FirstPersonCamera::View()
+Matrix4 FlyViewCamera::View()
 {
   if (m_Locked) {
     return Matrix4::LookAt(m_Position, m_LookAt, m_WorldUp);
@@ -90,7 +90,7 @@ Matrix4 FirstPersonCamera::View()
 }
 
 
-void FirstPersonCamera::Move(Movement movement, r64 dt)
+void FlyViewCamera::Move(Movement movement, r64 dt)
 {
   // Delta time velocity.
   r32 Velocity = m_Speed * (r32)dt;
@@ -123,7 +123,7 @@ void FirstPersonCamera::Move(Movement movement, r64 dt)
 }
 
 
-void FirstPersonCamera::Update()
+void FlyViewCamera::Update()
 {
   if (!m_Locked) {
     m_Front.x = cosf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
@@ -139,7 +139,7 @@ void FirstPersonCamera::Update()
 }
 
 
-void FirstPersonCamera::Look(r64 x, r64 y)
+void FlyViewCamera::Look(r64 x, r64 y)
 {
   if (m_FirstLook) {
     m_LastX = (r32)x;
