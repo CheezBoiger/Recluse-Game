@@ -265,7 +265,7 @@ int main(int c, char* argv[])
 
 
     gEngine().Update();
-    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
   // Finish.

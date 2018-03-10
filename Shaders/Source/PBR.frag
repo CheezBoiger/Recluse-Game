@@ -351,15 +351,15 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
-    color += LambertDiffuse(kD, Albedo);
+    
+    color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV);
+    
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
-      color += shadowFactor * BRDF(D, F, G, NoL, NoV);
-    } else {
-      color += BRDF(D, F, G, NoL, NoV);
+      color *= shadowFactor;
     }
-  
+
     color *= NoL;
   }
   return color * radiance;
@@ -399,7 +399,7 @@ void main()
     
   }
   
-  outColor = gbuffer.emissionStrength * gbuffer.emission + outColor;
+  outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + outColor;
   vFragColor = vec4(outColor, 1.0);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;

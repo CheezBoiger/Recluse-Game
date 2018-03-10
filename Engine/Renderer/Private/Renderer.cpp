@@ -1380,10 +1380,11 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
 
+  // TODO(): Need to make this more adaptable, as intel chips have trouble with srgb optimal tiling.
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -1395,7 +1396,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -1410,11 +1411,13 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
   cImageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
   cViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   GlowTarget->Initialize(cImageInfo, cViewInfo);
   pbr_Bright->Initialize(cImageInfo, cViewInfo);
   pbr_Final->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
 
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
