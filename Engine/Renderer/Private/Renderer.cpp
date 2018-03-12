@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #include "Renderer.hpp"
 #include "CmdList.hpp"
 #include "Vertex.hpp"

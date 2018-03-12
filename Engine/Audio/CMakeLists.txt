@@ -50,7 +50,7 @@ set(AUDIO_LIBS
   ${WWISE_LIB_DIR}/AkSpatialAudio.lib
   ${WWISE_LIB_DIR}/AkStereoDelayFX.lib
   ${WWISE_LIB_DIR}/AkStreamMgr.lib
-  ${WWISE_LIB_DIR}/AkSynthOne.lib
+  ${WWISE_LIB_DIR}/AkSynthOneSource.lib
   ${WWISE_LIB_DIR}/AktimeStretchFX.lib
   ${WWISE_LIB_DIR}/AkToneSource.lib
   ${WWISE_LIB_DIR}/AkTremoloFX.lib

@@ -24,5 +24,9 @@ if (PHYSICS)
 endif()
 
 if (AUDIO)
+  if (WIN32)
+    # Enable unicode api calling for WWise.
+    add_definitions(-DUNICODE=1)
+  endif()
   add_subdirectory(Audio)
 endif()

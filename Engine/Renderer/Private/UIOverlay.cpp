@@ -17,6 +17,9 @@
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_IMPLEMENTATION
 #define NK_PRIVATE
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
 #include "nuklear.hpp"
 
 namespace Recluse {
@@ -42,10 +45,26 @@ struct NkObject
 void    InitializeNkObject(NkObject* obj)
 {
   // TODO:
+  nk_init_default(&obj->_ctx, 0); 
+  R_DEBUG(rNotify, "GUI Nuklear initialized.\n");
 }
 
 
 void  CleanUpNkObject(NkObject* obj)
+{
+  // TODO:
+  nk_free(&obj->_ctx);
+  R_DEBUG(rNotify, "Finished cleaning up Nuklear Gui.\n");
+}
+
+
+void NkFontAtlasBegin(struct nk_font_atlas** atlas)
+{
+  // TODO:
+}
+
+
+void NkFontAtlasEnd()
 {
   // TODO:
 }
@@ -90,6 +109,8 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
   // After initialization of our graphics gui pipeline, it's time to 
   // initialize nuklear.
   InitializeNkObject(gNkDevice());
+
+  // TODO: Fonts should be stashed and loaded on an atlas in gpu memory.
 }
 
 
