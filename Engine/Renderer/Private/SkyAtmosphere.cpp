@@ -25,6 +25,7 @@ const std::string Sky::kAtmFragStr = "Atmosphere.frag.spv";
 const std::string Sky::kSkyVertStr = "Sky.vert.spv";
 const std::string Sky::kSkyFragStr = "Sky.frag.spv";
 const u32         Sky::kTextureSize = 512;
+const Vector3     Sky::kDefaultAirColor = Vector3(0.18867780436772762f, 0.2978442963618773f, 0.7616065586417131f);
 std::array<Vector4, 36> Sky::kSkyBoxVertices = { 
   // Front
   Vector4(-1.0f, -1.0f, 1.0f, 1.0f),

@@ -27,6 +27,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.
+  vec4  vAirColor;
   float fEngineTime; // total current time of the engine. 
   float fDeltaTime; // elapsed time between frames.
   float gamma;
@@ -122,7 +123,7 @@ float HorizonExtinction(vec3 position, vec3 dir, float radius)
 
 vec3 Absorb(float dist, vec3 color, float factor)
 {
-  return color - color * pow(Kr, vec3(factor/dist));
+  return color - color * pow(gWorldBuffer.vAirColor.rgb, vec3(factor/dist));
 }
 
 
@@ -158,7 +159,7 @@ void main()
     vec3 position = vEyePos + vEyeDir * fSampleDist;
     float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.vSun.xyz);
     vec3 influx = Absorb(fSampleDepth, vec3(fIntensity), fScatterStrength);
-    vRayleighCollected += Absorb(fSampleDist, Kr * influx, fRayleighStength);
+    vRayleighCollected += Absorb(fSampleDist, gWorldBuffer.vAirColor.rgb * influx, fRayleighStength);
     vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
   }
   

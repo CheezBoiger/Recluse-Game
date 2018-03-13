@@ -3,6 +3,7 @@
 #include "Resources.hpp"
 #include "RendererData.hpp"
 #include "TextureType.hpp"
+#include "SkyAtmosphere.hpp"
 
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Buffer.hpp"
@@ -41,6 +42,7 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._fMieStength = 0.1f;
   m_Global._fRayleighStength = 5.0f;
   m_Global._fScatterStrength = 1000.0f;
+  m_Global._vAirColor = Sky::kDefaultAirColor;
   
 }
 

@@ -31,7 +31,8 @@ public:
   static const std::string  kSkyFragStr;
   static const u32          kTextureSize;
   static std::array<Vector4, 36> kSkyBoxVertices;
-  static std::array<u32, 36> kSkyboxIndices;
+  static std::array<u32, 36>  kSkyboxIndices;
+  static const Vector3      kDefaultAirColor;
 
   Sky() 
     : m_pCubeMap(nullptr)
@@ -67,6 +68,9 @@ public:
   VertexBuffer*           GetSkyboxVertexBuffer() { return &m_SkyboxVertBuf; }
   IndexBuffer*            GetSkyboxIndexBuffer() { return &m_SkyboxIndBuf; }
 
+  Vector3                 GetAirColor() const { return m_vAirColor; }
+  void                    SetAirColor(Vector3 color) { m_vAirColor = color; }
+
 private:
   void                    CreateRenderAttachment(VulkanRHI* rhi);
   void                    CreateCubeMap(VulkanRHI* rhi);
@@ -88,5 +92,6 @@ private:
   VertexBuffer            m_SkyboxVertBuf;
   IndexBuffer             m_SkyboxIndBuf;
   i32                     m_bDirty;
+  Vector3                 m_vAirColor;
 };
 } // Recluse 

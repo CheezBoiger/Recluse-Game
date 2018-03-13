@@ -30,6 +30,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.
+  vec4  vAirColor;
   float fEngineTime; // total current time of the engine. 
   float fDeltaTime; // elapsed time between frames.
   float gamma;

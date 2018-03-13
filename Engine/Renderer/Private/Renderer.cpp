@@ -2718,10 +2718,14 @@ void Renderer::UpdateSceneDescriptors()
   // Update global data.
   m_pGlobal->Data()->_EnableAA = m_AntiAliasing;
   Vector4 vec4 = m_pLights->Data()->_PrimaryLight._Direction;
+  Vector4 vAirColor = m_pGlobal->Data()->_vAirColor;
   // Left handed coordinate system, need to flip the z.
   Vector3 sunDir = Vector3(vec4.x, vec4.y, -vec4.z);
-  if (m_pGlobal->Data()->_vSunDir != sunDir && sunDir != Vector3()) {
+  Vector3 airColor = Vector3(vAirColor.x, vAirColor.y, vAirColor.z);
+  if (m_pGlobal->Data()->_vSunDir != sunDir && sunDir != Vector3() ||
+    m_pSky->GetAirColor() != airColor) {
     m_pGlobal->Data()->_vSunDir = sunDir;
+    m_pSky->SetAirColor(airColor);
     m_pSky->MarkDirty();
   }
 
