@@ -44,3 +44,4 @@ add_executable(${REGRESSIONS_NAME}
 
 
 target_link_libraries(${REGRESSIONS_NAME} ${RECLUSE_ENGINE_LINK_LIBRARIES})
+copy_engine_dependencies_to_exe(${REGRESSIONS_NAME})

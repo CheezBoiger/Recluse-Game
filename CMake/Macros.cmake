@@ -14,3 +14,12 @@ macro(configure_files src dst)
     endif()
   endforeach()
 endmacro()
+
+
+macro(copy_engine_dependencies_to_exe target)
+  # Most likely copying shader data and dependencies that are needed to run the engine.
+  add_custom_command(TARGET ${target}
+                      COMMAND ${CMAKE_COMMAND} -E copy_directory
+                      ${CMAKE_SOURCE_DIR}/Shaders/Bin $<TARGET_FILE_DIR:${target}>/Shaders
+  )
+endmacro()

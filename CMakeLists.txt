@@ -96,6 +96,8 @@ if (AUDIO)
   )
 endif()
 
+include(CMake/Macros.cmake)
+
 # find vulkan render API.
 find_package(Vulkan)
 

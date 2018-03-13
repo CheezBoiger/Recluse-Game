@@ -40,3 +40,7 @@ target_link_libraries(${RECLUSE_TEST}
 target_link_libraries(${RECLUSE_GAME_TEST}
   ${RECLUSE_ENGINE_LINK_LIBRARIES}
 )
+
+
+copy_engine_dependencies_to_exe(${RECLUSE_TEST})
+copy_engine_dependencies_to_exe(${RECLUSE_GAME_TEST})
