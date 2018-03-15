@@ -63,5 +63,9 @@ protected:
 class SkinnedRendererComponent : public RendererComponent {
 public:
   
+  virtual void OnInitialize(GameObject* owner) override;
+  virtual void OnCleanUp() override;
+
+protected:
 };
 } // Recluse

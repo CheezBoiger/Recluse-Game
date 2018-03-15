@@ -7,6 +7,8 @@
 #include "Core/Utility/Time.hpp"
 #include "Core/Utility/Vector.hpp"
 
+#include "PhysicsConfigs.hpp"
+
 
 namespace Recluse {
 
@@ -17,14 +19,13 @@ class BulletPhysics;
 // Our physics engine.
 class Physics : public EngineModule<Physics> {
 public:
-  Physics() : m_pPhysics(nullptr) { }
+  Physics() { }
 
   void                            OnStartUp() override;
   void                            OnShutDown() override;
 
   void                            UpdateState(r64 dt);
 private:
-  BulletPhysics*                  m_pPhysics;
 };
 
 

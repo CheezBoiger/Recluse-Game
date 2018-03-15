@@ -14,13 +14,23 @@ namespace Recluse {
 
 class BulletPhysics {
 public:
-
+  BulletPhysics()
+    : m_pWorld(nullptr) { }
 
   void        Initialize();
   void        CleanUp();
 
   void        Update(r64 dt);
-private:
+  void        SetWorld(btDynamicsWorld* world) { m_pWorld = world; }
+
+  btDynamicsWorld*    GetCurrentWorld() { return m_pWorld; }
+
   
+
+private:
+  btDynamicsWorld*        m_pWorld;
 };
+
+
+BulletPhysics& gBulletEngine();
 } // Recluse

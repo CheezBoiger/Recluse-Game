@@ -224,7 +224,7 @@ void Engine::Update()
     gAudio().UpdateState(dt);
 #endif
 #if !defined FORCE_PHYSICS_OFF
-    gPhysics().UpdateState(Time::FixTime);
+    gPhysics().UpdateState(dt);
 #endif
     UpdateGameLogic();
     m_dLag -= Time::FixTime;

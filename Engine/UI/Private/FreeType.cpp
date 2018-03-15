@@ -25,6 +25,8 @@ void FreeType::CleanUp()
   FT_Error error = FT_Done_FreeType(mLibrary);
   if (error != FT_Err_Ok) {
     R_DEBUG(rError, "Failed to free up FreeType library!\n");
+  } else {
+    R_DEBUG(rNotify, "FreeType successfully cleaned up.\n");
   }
 }
 

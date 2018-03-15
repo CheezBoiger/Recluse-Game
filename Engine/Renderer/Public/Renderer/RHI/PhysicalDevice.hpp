@@ -25,6 +25,8 @@ public:
   b8                                        FindQueueFamilies(VkSurfaceKHR surface,
                                               i32* presentation, i32* graphics, i32* transfer, i32* compute) const;
   u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
+  VkResult                                  GetImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage,
+                                              VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) const;
   VkPhysicalDeviceFeatures                  GetFeatures() const;
   VkPhysicalDeviceProperties                GetDeviceProperties() const { return properties; }
   VkPhysicalDeviceMemoryProperties          GetMemoryProperties() const { return memoryProperties; }

@@ -22,7 +22,7 @@ Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear
   , m_OrthoScale(1.0f)
   , m_Bloom(false)
   , m_Gamma(2.2f)
-  , m_Exposure(1.0f)
+  , m_Exposure(4.5f)
   , m_WorldUp(Vector3::UP)
   , m_FrustumCull(false)
 {

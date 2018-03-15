@@ -23,23 +23,19 @@ void Physics::OnStartUp()
     R_DEBUG(rWarning, "Renderer is not active! Physics will carry on however...\n");
   }
 
-  m_pPhysics = new BulletPhysics();
-  m_pPhysics->Initialize();
+  gBulletEngine().Initialize();
 
-  R_DEBUG(rNotify, "PhysX Device is successfully initialized.\n");
+  R_DEBUG(rNotify, "Physics Engine is successfully initialized.\n");
 }
 
 
 void Physics::OnShutDown()
 {
-  m_pPhysics->CleanUp();
-  delete m_pPhysics;
-  m_pPhysics = nullptr;
+  gBulletEngine().CleanUp();
 }
 
 
 void Physics::UpdateState(r64 dt)
 {
-  m_pPhysics->Update(dt);
 }
 } // Recluse

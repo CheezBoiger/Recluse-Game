@@ -51,22 +51,22 @@ public:
     Transform* transform = GetOwner()->GetTransform();
     r32 sDt = static_cast<r32>(Time::FixTime * Time::ScaleTime);
     if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
-      transform->Position += transform->Forward() * 5.0f * sDt;
+      transform->Position += transform->Forward() * 15.0f * sDt;
     }
     if (Keyboard::KeyPressed(KEY_CODE_DOWN_ARROW)) {
-      transform->Position -= transform->Forward() * 5.0f * sDt;
+      transform->Position -= transform->Forward() * 15.0f * sDt;
     }
     if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
-      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::UP);
+      transform->Rotation *= Quaternion::AngleAxis(-Radians(60.0f * sDt), Vector3::UP);
     }
     if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) {
-      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::UP);
+      transform->Rotation *= Quaternion::AngleAxis(Radians(60.0f * sDt), Vector3::UP);
     }
     if (Keyboard::KeyPressed(KEY_CODE_Q)) {
-      transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::RIGHT);
+      transform->Rotation *= Quaternion::AngleAxis(Radians(60.0f * sDt), Vector3::RIGHT);
     }
     if (Keyboard::KeyPressed(KEY_CODE_E)) {
-      transform->Rotation *= Quaternion::AngleAxis(-Radians(20.0f * sDt), Vector3::RIGHT);
+      transform->Rotation *= Quaternion::AngleAxis(-Radians(60.0f * sDt), Vector3::RIGHT);
     }
     //transform->Rotation *= Quaternion::AngleAxis(Radians(20.0f * sDt), Vector3::FRONT);
   }

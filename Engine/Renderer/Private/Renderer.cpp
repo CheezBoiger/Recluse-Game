@@ -95,6 +95,7 @@ void Renderer::OnShutDown()
   // Shutdown globals.
   VulkanRHI::gPhysicalDevice.CleanUp();
   VulkanRHI::gContext.CleanUp();
+  R_DEBUG(rNotify, "Vulkan Renderer successfully cleaned up.\n");
 }
 
 

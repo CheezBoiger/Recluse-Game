@@ -53,9 +53,18 @@ set(BULLET_LIBS
   optimized ${RECLUSE_BULLET_DIR}/lib/Release/Bullet3Geometry.lib
   optimized ${RECLUSE_BULLET_DIR}/lib/Release/BulletCollision.lib
   optimized ${RECLUSE_BULLET_DIR}/lib/Release/BulletDynamics.lib
+  optimized ${RECLUSE_BULLET_DIR}/lib/Release/LinearMath.lib
 )
 
+# For now...
 set(BULLET_LIBS_DEBUG
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/Bullet3Collision_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/Bullet3Common_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/Bullet3Dynamics_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/Bullet3Geometry_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/BulletCollision_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/BulletDynamics_Debug.lib
+  debug ${RECLUSE_BULLET_DIR}/lib/Debug/LinearMath_Debug.lib
 )
 
 target_link_libraries(${RECLUSE_PHYSICS}

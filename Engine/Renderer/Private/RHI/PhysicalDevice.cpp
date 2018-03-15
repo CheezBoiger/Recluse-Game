@@ -104,6 +104,13 @@ u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) cons
 }
 
 
+VkResult PhysicalDevice::GetImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, 
+  VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) const
+{
+  return vkGetPhysicalDeviceImageFormatProperties(handle, format, type, tiling, usage, flags, pImageFormatProperties);
+}
+
+
 void PhysicalDevice::Initialize(VkPhysicalDevice device)
 {
   handle = device;
