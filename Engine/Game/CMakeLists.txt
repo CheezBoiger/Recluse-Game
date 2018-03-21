@@ -39,6 +39,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/AudioSourceComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MaterialComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/PhysicsComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
@@ -52,6 +53,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/Component.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/MaterialComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/PointLightComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/PhysicsComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp
@@ -76,9 +78,11 @@ set(GAME_FILES
 
   ${RENDERING_PUBLIC_DIR}/TextureCache.hpp
   ${RENDERING_PUBLIC_DIR}/RendererResourcesCache.hpp
+  ${RENDERING_PUBLIC_DIR}/Skybox.hpp
 
   ${RENDERING_PRIVATE_DIR}/TextureCache.cpp
   ${RENDERING_PRIVATE_DIR}/RendererResourcesCache.cpp
+  ${RENDERING_PRIVATE_DIR}/Skybox.cpp
 
 )
 

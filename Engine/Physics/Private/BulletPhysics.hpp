@@ -25,7 +25,7 @@ public:
 
   btDynamicsWorld*    GetCurrentWorld() { return m_pWorld; }
 
-  
+  void        ClearWorld();
 
 private:
   btDynamicsWorld*        m_pWorld;

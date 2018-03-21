@@ -118,7 +118,7 @@ Engine::~Engine()
 }
 
 
-void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, const GpuConfigParams* params)
+void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
 {
   if (m_Running) return;
 
@@ -290,18 +290,28 @@ void Engine::UpdateGameLogic()
     gGlobalBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
   }
 
-  TraverseScene(UpdateGameObject);
+  for ( u32 i = 0; i < m_SceneObjectCount; ++i ) {
+    GameObject* object = m_cachedGameObjects[i];
+    if ( object ) {
+      object->Update();
+    }
+  }
+
+ //TraverseScene(UpdateGameObject);
 }
 
 
 void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
 { 
   CmdList& list = engine->RenderCommandList();
+  auto&     cache = engine->GetGameObjectCache();
   // Perform updates to the game object.
   RendererComponent* render = object->GetComponent<RendererComponent>();
   if (render) {
     list[currNum]._pTarget = render->RenderObj();
   }
+  
+  cache[currNum] = object;
 }
 
 
@@ -310,6 +320,7 @@ void Engine::BuildScene()
   if (!m_pPushedScene) return;
   m_RenderCmdList.Clear();
   m_RenderCmdList.Resize(gGameObjectManager().NumOccupied());
+  m_cachedGameObjects.resize(gGameObjectManager().NumOccupied());
   TraverseScene(BuildSceneCallback);
   gRenderer().Build();
 }

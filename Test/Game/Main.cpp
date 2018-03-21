@@ -19,7 +19,7 @@ using namespace Recluse;
 
 void Controller()
 {
-  Camera* cam = gEngine().GetCamera();
+  Camera* cam = Camera::GetMain();
   if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
   if (Keyboard::KeyPressed(KEY_CODE_A)) { cam->Move(Camera::LEFT, Time::DeltaTime); }
   if (Keyboard::KeyPressed(KEY_CODE_D)) { cam->Move(Camera::RIGHT, Time::DeltaTime); } 
@@ -28,6 +28,19 @@ void Controller()
 
   if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
   if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
+
+  if (Keyboard::KeyPressed(KEY_CODE_T)) {
+    GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
+    config._AA = AA_None;
+    gRenderer().UpdateRendererConfigs(&config);
+  }
+
+  if (Keyboard::KeyPressed(KEY_CODE_R)) {
+    GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
+    config._AA = AA_FXAA_2x;
+    gRenderer().UpdateRendererConfigs(&config);
+  }
+
 }
 
 
@@ -79,11 +92,11 @@ int main(int c, char* argv[])
   // Setting the renderer to vsync double buffering when starting up the engine,
   // Inputting gpu params is optional, and can pass nullptr if you prefer default.
   {
-    GpuConfigParams params;
+    GraphicsConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = SHADOWS_ULTRA;
+    params._Shadows = SHADOWS_HIGH;
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);

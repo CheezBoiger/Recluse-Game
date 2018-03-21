@@ -25,7 +25,7 @@ class ReflectionProbe;
 class GraphicsPipeline;
 class ComputePipeline;
 class GpuParams;
-class GpuConfigParams;
+class GraphicsConfigParams;
 class MeshData;
 class MeshDescriptor;
 class SkinnedMeshDescriptor;
@@ -55,7 +55,7 @@ public:
   Renderer();
   ~Renderer();
 
-  b8                Initialize(Window* window, const GpuConfigParams* params = nullptr);
+  b8                Initialize(Window* window, const GraphicsConfigParams* params = nullptr);
   b8                Rendering() const { return m_Rendering; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
@@ -63,7 +63,7 @@ public:
   // just plain recreate the renderer scene.
   // NOTE(): Only shadow disable/enable is allowed when changing shadow quality at runtime, otherwise you
   // need to restart the engine to change quality.
-  void              UpdateRendererConfigs(const GpuConfigParams* params);
+  void              UpdateRendererConfigs(const GraphicsConfigParams* params);
 
   // Clean up the renderer. This will "render" the renderer inactive.
   void              CleanUp();
@@ -195,6 +195,9 @@ public:
 
   GlobalDescriptor* GlobalNative() { return m_pGlobal; }
 
+  // Get current graphics configurations.
+  GraphicsConfigParams& CurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
+
   // Enable HDR Post processing.
   void              EnableHDR(b8 enable);
 
@@ -231,7 +234,7 @@ private:
   void              BuildSkyboxCmdBuffer();
   void              SetUpDownscale(b8 FullSetUp);
   void              CleanUpDownscale(b8 FullCleanUp);
-  void              UpdateRuntimeConfigs(const GpuConfigParams* params);
+  void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
   void              SetUpHDR(b8 fullSetup);
   void              CleanUpHDR(b8 fullCleanup);
   void              CleanUpPBR();
@@ -277,6 +280,7 @@ private:
   CommandBuffer*    m_pSkyboxCmdBuffer;
   Semaphore*        m_SkyboxFinished;
   RenderQuad        m_RenderQuad;
+  GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*        m_pUI;
   Sky*              m_pSky;
   u32               m_CurrCmdBufferIdx;

@@ -24,7 +24,7 @@ PhysicalDevice                VulkanRHI::gPhysicalDevice;
 std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
-VkPresentModeKHR GetPresentMode(const GpuConfigParams* params)
+VkPresentModeKHR GetPresentMode(const GraphicsConfigParams* params)
 {
   VkPresentModeKHR mode;
   switch (params->_Buffering) {
@@ -131,7 +131,7 @@ b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 }
 
 
-void VulkanRHI::Initialize(HWND windowHandle, const GpuConfigParams* params)
+void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params)
 { 
   if (!windowHandle) {
     R_DEBUG(rError, "Renderer can not initialize with a null window handle!\n");

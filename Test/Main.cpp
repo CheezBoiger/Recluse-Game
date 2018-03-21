@@ -65,7 +65,7 @@ int main(int c, char* argv[])
   {
     // In order to update the renderer during runtime, you can pass gpu configs to the
     // renderer directly.
-    GpuConfigParams params;
+    GraphicsConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_None;

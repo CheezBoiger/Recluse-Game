@@ -27,6 +27,27 @@ struct bt_physics_manager
 } bt_manager;
 
 
+class RecluseCollisionDispatcher : public btCollisionDispatcher 
+{
+public:
+  RecluseCollisionDispatcher(btDefaultCollisionConfiguration* config)
+  : btCollisionDispatcher(config) { }
+
+  // Perform necessary response by recluse, to give bullet understanding on how to register
+  // collisions to game objects.
+  bool needsResponse(const btCollisionObject* body0, const btCollisionObject* body1) override
+  {
+    bool respond = btCollisionDispatcher::needsResponse(body0, body1);
+    if (respond)
+    {
+      R_DEBUG(rNotify, "Collision Response. Must act on it.\n");
+    }
+
+    return respond;
+  }
+};
+
+
 BulletPhysics& gBulletEngine()
 {
   static BulletPhysics bullet;
@@ -38,10 +59,12 @@ BulletPhysics& gBulletEngine()
 void BulletPhysics::Initialize()
 {
   bt_manager._pCollisionConfiguration = new btDefaultCollisionConfiguration();
-  bt_manager._pDispatcher = new btCollisionDispatcher(bt_manager._pCollisionConfiguration);
+  bt_manager._pDispatcher = new RecluseCollisionDispatcher(bt_manager._pCollisionConfiguration);
   bt_manager._pOverlappingPairCache = new btDbvtBroadphase();
   bt_manager._pSolver = new btSequentialImpulseConstraintSolver();
   R_DEBUG(rNotify, "Bullet Sdk initialized.\n");
+
+  
 }
 
 
@@ -57,6 +80,7 @@ void BulletPhysics::CleanUp()
 
 void BulletPhysics::Update(r64 dt)
 {
+  // TODO(): Needs assert.
   if (!m_pWorld) { return; }
 
   m_pWorld->stepSimulation(btScalar(dt), 10, btScalar(Time::FixTime));

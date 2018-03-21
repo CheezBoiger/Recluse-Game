@@ -49,7 +49,7 @@ enum TextureQuality {
 };
 
 
-class GpuConfigParams {
+class GraphicsConfigParams {
 public:
   // Determine draw buffering, and number of back buffers the renderer will use.
   // This allows for smoother quality of frame transitions (theoretically).
@@ -73,7 +73,7 @@ public:
 };
 
 
-const GpuConfigParams kDefaultGpuConfigs = {
+const GraphicsConfigParams kDefaultGpuConfigs = {
   DOUBLE_BUFFER,
   AA_None,
   TEXTURE_QUALITY_ULTRA,

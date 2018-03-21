@@ -285,7 +285,7 @@ void Renderer::CleanUp()
 }
 
 
-b8 Renderer::Initialize(Window* window, const GpuConfigParams* params)
+b8 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 {
   if (!window) return false;
   if (m_Initialized) return true;
@@ -2766,8 +2766,9 @@ void Renderer::RenderOverlay()
 }
 
 
-void Renderer::UpdateRuntimeConfigs(const GpuConfigParams* params)
+void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
 {
+  m_currentGraphicsConfigs = *params;
   // TODO()::
   switch (params->_AA) {
     case AA_None: m_AntiAliasing = false; break;
@@ -2798,7 +2799,7 @@ void Renderer::UpdateRuntimeConfigs(const GpuConfigParams* params)
 }
 
 
-void Renderer::UpdateRendererConfigs(const GpuConfigParams* params)
+void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 {
   m_pRhi->DeviceWaitIdle();
 

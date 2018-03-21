@@ -70,7 +70,7 @@ public:
   // along with the start up, be sure to manually call the Show() function from the 
   // window in order to see something!
   // GpuConfigParams is an optional setting for initial start up of the renderer, you may pass nullptr for default settings.
-  void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600, const GpuConfigParams* params = nullptr);
+  void                          StartUp(std::string appName, b8 fullscreen, i32 width = 800, i32 height = 600, const GraphicsConfigParams* params = nullptr);
   void                          CleanUp();
   
   // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.
@@ -89,6 +89,7 @@ public:
   void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
   void                          BuildScene();
   void                          LoadSceneTransition();
+  std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; } 
 
   CmdList&                      RenderCommandList() { return m_RenderCmdList; }
   r64                           GameMousePosX() const { return m_GameMouseX; }
@@ -109,6 +110,7 @@ private:
   void                          TraverseScene(GameObjectActionCallback callback);
   void                          SortCmdLists();
 
+  std::vector<GameObject*>      m_cachedGameObjects;
   CCamViewFrustum               m_CamFrustum;
   Camera*                       m_pCamera;
   Scene*                        m_pPushedScene;
