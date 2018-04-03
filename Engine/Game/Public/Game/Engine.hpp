@@ -78,53 +78,51 @@ public:
   void                          ProcessInput() { Window::PollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
 
   void                          Run();
-  void                          SignalStop() { m_Stopping = true; }
+  void                          SignalStop() { m_stopping = true; }
   Camera*                       GetCamera() { return m_pCamera; }
-  Window*                       GetWindow() { return &m_Window; }
+  Window*                       GetWindow() { return &m_window; }
 
   void                          Update();
-  void                          SetCamera(Camera* camera) { m_pCamera = camera; m_CamFrustum.SetCamera(m_pCamera); }
+  void                          SetCamera(Camera* camera) { m_pCamera = camera; m_camFrustum.SetCamera(m_pCamera); }
 
   // Push the new scene to into this engine for extraction.
   void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
   void                          BuildScene();
   void                          LoadSceneTransition();
-  std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; } 
+  std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; }
+  std::vector<game_uuid_t>&     GetGameObjectKeys() { return m_cachedGameObjectKeys; } 
 
-  CmdList&                      RenderCommandList() { return m_RenderCmdList; }
-  r64                           GameMousePosX() const { return m_GameMouseX; }
-  r64                           GameMousePosY() const { return m_GameMouseY; }
-  void                          SetGameMouseX(r64 x) { m_GameMouseX = x; }
-  void                          SetGameMouseY(r64 y) { m_GameMouseY = y; }
+  r64                           GameMousePosX() const { return m_gameMouseX; }
+  r64                           GameMousePosY() const { return m_gameMouseY; }
+  void                          SetGameMouseX(r64 x) { m_gameMouseX = x; }
+  void                          SetGameMouseY(r64 y) { m_gameMouseY = y; }
 
-  u32                           GetSceneObjectCount() const { return m_SceneObjectCount; }
+  u32                           GetSceneObjectCount() const { return m_sceneObjectCount; }
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
-  b8                            Running() { return m_Running; }
+  b8                            Running() { return m_running; }
 
 private:
 
   void                          Stop();
   void                          UpdateGameLogic();
   void                          TraverseScene(GameObjectActionCallback callback);
-  void                          SortCmdLists();
 
   std::vector<GameObject*>      m_cachedGameObjects;
-  CCamViewFrustum               m_CamFrustum;
+  std::vector<game_uuid_t>      m_cachedGameObjectKeys;
+  CCamViewFrustum               m_camFrustum;
   Camera*                       m_pCamera;
   Scene*                        m_pPushedScene;
   ControlInputCallback          m_pControlInputFunc;
-  r64                           m_GameMouseX;
-  r64                           m_GameMouseY;
+  r64                           m_gameMouseX;
+  r64                           m_gameMouseY;
   r64                           m_dLag;
 
-  Window                        m_Window;
-  CmdList                       m_RenderCmdList;
-  CmdList                       m_DeferredCmdList;
-  u32                           m_SceneObjectCount;
-  b8                            m_Running : 1;
-  b8                            m_Stopping : 1;
+  Window                        m_window;
+  u32                           m_sceneObjectCount;
+  b8                            m_running : 1;
+  b8                            m_stopping : 1;
 };
 
 

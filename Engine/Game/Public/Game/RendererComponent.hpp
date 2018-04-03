@@ -6,6 +6,9 @@
 
 #include "Renderer/MaterialDescriptor.hpp"
 
+#include <unordered_map>
+
+
 namespace Recluse {
 
 
@@ -13,6 +16,8 @@ class RenderObject;
 class MeshDescriptor;
 class Renderer;
 class MaterialDescriptor;
+class MeshComponent;
+class MaterialComponent;
 class Mesh;
 
 
@@ -21,6 +26,7 @@ class Mesh;
 class RendererComponent : public Component {
   RCOMPONENT(RendererComponent)
 public:
+
   virtual ~RendererComponent() { }
   RendererComponent();
   RendererComponent(const RendererComponent& m);
@@ -43,18 +49,22 @@ public:
   void                      EnableShadow(b8 enable);
 
   b8                        Enabled() const;
-  b8                        Dirty() const { return m_Dirty; }
+  b8                        Dirty() const { return m_bDirty; }
   b8                        ShadowEnabled() const;
-  RenderObject*             RenderObj() { return mRenderObj; }
-  MeshDescriptor*           GetDescriptor() { return mMeshDescriptor; }
+  RenderObject*             RenderObj() { return m_renderObj; }
+  MeshDescriptor*           GetDescriptor() { return m_meshDescriptor; }
 
-  void                      SignalClean() { m_Dirty = false; }
+  void                      SignalClean() { m_bDirty = false; }
+  void                      SetMaterialComponent(MaterialComponent* material) { m_materialRef = material; }
+  void                      SetMeshComponent(MeshComponent* mesh) { m_meshRef = mesh; }
 
 protected:
-  void                      TriggerDirty() { m_Dirty = true; }
-  RenderObject*             mRenderObj;
-  MeshDescriptor*           mMeshDescriptor;
-  b8                        m_Dirty;
+  void                      TriggerDirty() { m_bDirty = true; }
+  RenderObject*             m_renderObj;
+  MeshDescriptor*           m_meshDescriptor;
+  MaterialComponent*        m_materialRef;
+  MeshComponent*            m_meshRef;
+  b8                        m_bDirty;
 };
 
 

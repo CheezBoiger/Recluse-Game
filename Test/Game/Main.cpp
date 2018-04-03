@@ -6,8 +6,6 @@
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
-#include "Scripts/MoveObjectScript.hpp"
-#include "Scripts/OrbitObjectScript.hpp"
 #include <array>
 #include <algorithm>
 #include <random>
@@ -43,35 +41,76 @@ void Controller()
 
 }
 
+Mesh* mesh;
 
-class ExplodeScript : public IScript {
+
+class CubeObject : public GameObject
+{
 public:
-  r32     speed;
-  Vector3 direction;
-  r32     bExplosionTriggered;
 
-  void Awake() override {
-    std::random_device device;
-    std::mt19937 twist(device());
-    std::uniform_real_distribution<r32> uni(-1.0f, 1.0f);
+  CubeObject()
+  {
+    m_pMeshComponent = new MeshComponent();
+    m_pMaterialComponent = new MaterialComponent();
+    m_pRendererComponent = new RendererComponent();
 
-    GetOwner()->GetTransform()->Position = Vector3();
-    GetOwner()->GetTransform()->Scale = Vector3(5.0f, 5.0f, 5.0f);
-    speed = uni(twist) * 10.0f;
-    direction = Vector3(uni(twist), uni(twist), uni(twist)).Normalize();
-    bExplosionTriggered = false;
+    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->SetMeshRef(mesh);
+
+    m_mat.Initialize();
+    Texture2D* tex;
+    TextureCache::Get("RustedAlbedo", &tex); 
+
+    m_mat.SetAlbedo(tex);
+    m_mat.EnableAlbedo(true);
+
+    TextureCache::Get("RustedNormal", &tex);
+    m_mat.SetNormal(tex);
+    m_mat.EnableNormal(true);
+
+    TextureCache::Get("RustedMetal", &tex);
+    m_mat.SetMetallic(tex);
+    m_mat.EnableMetallic(true);
+
+    TextureCache::Get("RustedRough", &tex);
+    m_mat.SetRoughness(tex);
+    m_mat.EnableRoughness(true);
+
+    m_pMaterialComponent->SetMaterialRef(&m_mat);
+    m_pMaterialComponent->Initialize(this);
+
+    
+
+    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->Initialize(this);
   }
 
-  void Update() override {
-    if (Keyboard::KeyPressed(KEY_CODE_Y)) {
-      bExplosionTriggered = true;
-    }
 
-    if (bExplosionTriggered) {
-      r32 s = speed * static_cast<r32>(Time::FixTime * Time::ScaleTime);
-      GetOwner()->GetComponent<Transform>()->Position += direction * s;
-    }
+  void Awake() override 
+  {
   }
+
+  void Update(r32 tick) override
+  {
+    Transform* transform = GetTransform();
+    transform->Position.x += 1.0f * tick;
+  }
+
+  void CleanUp() override
+  {
+    m_pMeshComponent->CleanUp();
+    m_pMaterialComponent->CleanUp();
+    m_pRendererComponent->CleanUp();
+
+    m_mat.CleanUp();
+  }
+
+private:
+  RendererComponent*  m_pRendererComponent;
+  MeshComponent*      m_pMeshComponent;
+  MaterialComponent*  m_pMaterialComponent;
+  Material            m_mat;
 };
 
 
@@ -125,14 +164,20 @@ int main(int c, char* argv[])
   // control something on the display.
   ///////////////////////////////////////////////////////////////////////////////////
 
+  {
+    mesh = new Mesh();
+    auto boxVerts = Cube::MeshInstance();
+    auto boxIndic = Cube::IndicesInstance();
+    mesh->Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
+  }
+
   // Create scene.
   Scene scene;
+  CubeObject* cube = new CubeObject();
+ // CubeObject* cube2 = new CubeObject();
+ 
 #if defined(MANUAL_INIT)
   // Add game objects into scene. This demonstrates parent-child transformation as well.
-  GameObject* gameObj = GameObject::Instantiate();
-  GameObject* obj2 = GameObject::Instantiate();
-  scene.GetRoot()->AddChild(obj2);
-  obj2->AddChild(gameObj);
 
   // Set primary light.
   {
@@ -144,84 +189,8 @@ int main(int c, char* argv[])
     pPrimary->_Intensity = 5.0f;
   }
 
-  // Create a mesh object and initialize it.
-  Mesh mesh;
-  Mesh cubeMesh;
-  Material objMat;
-  Material obj2Mat;
-
-  objMat.Initialize();
-  obj2Mat.Initialize();
-
-  {
-    // Increasing segments improves the sphere's quality
-    const u32 kSegments = 64;
-    auto vertices = UVSphere::MeshInstance(1.0f, kSegments, kSegments);
-    auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), kSegments, kSegments);
-    mesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data()); 
-  }
-  
-  {
-    auto vertices = Cube::MeshInstance();
-    auto indices = Cube::IndicesInstance();
-    cubeMesh.Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data());
-  }
-
-  // Add component stuff.
-  gameObj->SetName("Cube");
-  obj2->AddComponent<MoveScript>();
-  gameObj->AddComponent<MeshComponent>();
-  gameObj->AddComponent<MaterialComponent>();
-  gameObj->GetComponent<MaterialComponent>()->SetMaterialRef(&objMat);
-  MeshComponent* meshComponent = gameObj->GetComponent<MeshComponent>();
-  meshComponent->SetMeshRef(&mesh);
-
-  gameObj->AddComponent<RendererComponent>();
-  gameObj->AddComponent<Transform>();
-  gameObj->AddComponent<OrbitObjectScript>();
-
-  obj2->AddComponent<MeshComponent>();
-  MeshComponent* m2 = obj2->GetComponent<MeshComponent>();
-  m2->SetMeshRef(&cubeMesh);
-  obj2->AddComponent<MaterialComponent>();
-  obj2->GetComponent<MaterialComponent>()->SetMaterialRef(&obj2Mat);
-  obj2->AddComponent<RendererComponent>();
-  obj2->AddComponent<Transform>();
-
-#define objects 400
-  std::array<GameObject*, objects> gameObjs;
-  Material objsMat; objsMat.Initialize();
-  objsMat.SetBaseMetal(0.7f);
-  objsMat.SetBaseRough(0.7f);
-  objsMat.SetBaseColor(Vector4(0.9f, 0.2f, 0.2f, 1.0f));
-  {
-    std::random_device device;
-    std::mt19937 twist(device());
-    std::uniform_real_distribution<r32> uni(-500.0f, 500.0f);
-
-    for (size_t i = 0; i <  gameObjs.size(); ++i) {
-      GameObject* obj = gameObjs[i];
-      obj = GameObject::Instantiate();
-      obj->AddComponent<Transform>();
-      obj->AddComponent<RendererComponent>();
-      obj->AddComponent<MeshComponent>();
-      MeshComponent* meshC = obj->GetComponent<MeshComponent>();
-      meshC->SetMeshRef(&mesh);
-      obj->AddComponent<MaterialComponent>();
-      obj->GetComponent<MaterialComponent>()->SetMaterialRef(&objsMat);
-      RendererComponent* rendererC = obj->GetComponent<RendererComponent>();
-      obj->AddComponent<ExplodeScript>();
-      rendererC->ReConfigure();
-      Transform* transform = obj->GetComponent<Transform>();
-      transform->Position = Vector3(uni(twist), uni(twist), uni(twist));
-      scene.GetRoot()->AddChild(obj);
-      obj->Wake();
-    }
-  }
-
   // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.
   Scene scene2;
-  scene2.GetRoot()->AddChild(obj2);
 
   // Set primary light.
   {
@@ -230,12 +199,10 @@ int main(int c, char* argv[])
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 5.0f;
+    pPrimary->_Intensity = 2.0f;
   }
 
-  // Wake up objects
-  gameObj->Wake();
-  obj2->Wake();
+  scene2.GetRoot()->AddChild(cube);
 
 #endif // defined(MANUAL_INIT)
 
@@ -266,37 +233,19 @@ int main(int c, char* argv[])
       gEngine().BuildScene();
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_J)) {
-      obj2->GetComponent<MeshComponent>()->SetMeshRef(&mesh);
-      obj2->GetComponent<RendererComponent>()->ReConfigure();
-    }
-
-    if (Keyboard::KeyPressed(KEY_CODE_K)) {
-      obj2->GetComponent<MeshComponent>()->SetMeshRef(&cubeMesh);
-      obj2->GetComponent<RendererComponent>()->ReConfigure();
-    }
-
 
     gEngine().Update();
-    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
+  cube->CleanUp();
+  delete cube;
   // Finish.
-  GameObject::DestroyAll();
+  mesh->CleanUp();
+  delete mesh;
   TextureCleanUp();
-
-#if defined(MANUAL_INIT)
-  // Clean up of resources is required.
-  mesh.CleanUp();
-  objMat.CleanUp();
-  obj2Mat.CleanUp();
-  objsMat.CleanUp();
-  cubeMesh.CleanUp();
-#endif // MANUAL_INIT
-
   // Clean up engine
   gEngine().CleanUp();
-
 #if (_DEBUG)
   Log() << "Game is cleaned up. Press Enter to continue...\n";
   std::cin.ignore();

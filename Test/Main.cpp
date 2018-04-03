@@ -85,10 +85,9 @@ int main(int c, char* argv[])
   gEngine().SetCamera(&camera);
 
   // Create a game object.
-  GameObject* obj = GameObject::Instantiate();
   // Create the scene.
   Scene scene;
-  scene.GetRoot()->AddChild(obj);
+
   // Set primary light.
   {
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
@@ -106,12 +105,6 @@ int main(int c, char* argv[])
     mesh.Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
   }
 
-  obj->AddComponent<Transform>();
-  obj->AddComponent<MeshComponent>();
-  MeshComponent* mc = obj->GetComponent<MeshComponent>();
-  mc->SetMeshRef(&mesh);
-  obj->AddComponent<RendererComponent>();
-
   gEngine().Run();
   gEngine().PushScene(&scene);
   gEngine().BuildScene();
@@ -123,7 +116,6 @@ int main(int c, char* argv[])
   }
 
   mesh.CleanUp();
-  GameObject::DestroyAll();
   gEngine().CleanUp();
 #if (_DEBUG)
   Log() << "Engine modules cleaned up, press enter to continue...\n";

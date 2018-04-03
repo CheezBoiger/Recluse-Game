@@ -87,29 +87,14 @@ Engine& gEngine()
 Engine::Engine()
   : m_pCamera(nullptr)
   , m_pPushedScene(nullptr)
-  , m_GameMouseX(0.0)
-  , m_GameMouseY(0.0)
-  , m_SceneObjectCount(0)
+  , m_gameMouseX(0.0)
+  , m_gameMouseY(0.0)
+  , m_sceneObjectCount(0)
   , m_pControlInputFunc(nullptr)
-  , m_Running(false)
-  , m_Stopping(false)
+  , m_running(false)
+  , m_stopping(false)
   , m_dLag(0.0)
 {
-  m_RenderCmdList.SetSortFunc([] (RenderCmd& cmd1, RenderCmd& cmd2) -> bool {
-    if (!cmd1._pTarget || !cmd2._pTarget) return false;
-    if (!cmd1._pTarget->Renderable || !cmd2._pTarget->Renderable) return false;
-    Camera* camera = Camera::GetMain();
-    MeshDescriptor* mesh1 = cmd1._pTarget->GetMeshDescriptor();
-    MeshDescriptor* mesh2 = cmd2._pTarget->GetMeshDescriptor();
-    Matrix4 m1 = mesh1->ObjectData()->_Model;
-    Matrix4 m2 = mesh2->ObjectData()->_Model;
-  
-    Vector3 cam_pos = camera->Position();
-    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
-    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
-    
-    return v1.Magnitude() < v2.Magnitude();
-  });
 }
 
 
@@ -120,7 +105,7 @@ Engine::~Engine()
 
 void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
 {
-  if (m_Running) return;
+  if (m_running) return;
 
   // NOTE(): Always start up the core first, before starting anything else up.
   gCore().StartUp();
@@ -143,28 +128,30 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, 
   Window::SetMousePositionCallback(MousePositionMove);
   Window::SetMouseButtonCallback(MouseButtonClick);
 
-  m_Window.Create(appName, width, height);
-  gRenderer().Initialize(&m_Window, params);
-
-  gRenderer().PushCmdList(&m_RenderCmdList);
+  m_window.Create(appName, width, height);
+  gRenderer().Initialize(&m_window, params);
 
   Material::InitializeDefault();
   LightComponent::Initialize();
 
   if (fullscreen) {
-    m_Window.SetToFullScreen();
+    m_window.SetToFullScreen();
   } else {
-    m_Window.SetToCenter();
+    m_window.SetToCenter();
   }
+    
+
+  m_cachedGameObjects.resize(1024);
+  m_cachedGameObjectKeys.resize(1024);
 }
 
 
 void Engine::CleanUp()
 {
-  if (m_Running) return;
+  if (m_running) return;
   gCore().ThrPool().StopAll();
-  if (!m_Window.ShouldClose()) {
-    m_Window.Close();
+  if (!m_window.ShouldClose()) {
+    m_window.Close();
     Window::PollEvents();
   }
 
@@ -182,34 +169,34 @@ void Engine::CleanUp()
   gRenderer().ShutDown();
   gFilesystem().ShutDown();
   gCore().ShutDown();
-  m_Running = false;
+  m_running = false;
 }
 
 
 void Engine::Run()
 {
-  if (m_Running) return;
+  if (m_running) return;
   // TODO(): Signal to continue thread works.
 
   // Start up the time as the engine begins running.
   Time::Start();
-  m_Running = true;
+  m_running = true;
 }
 
 
 void Engine::Stop()
 {
-  if (!m_Running) return;
+  if (!m_running) return;
   // TODO(): Signal to stop thread works.
 
   gRenderer().WaitIdle();
-  m_Running = false;
+  m_running = false;
 }
 
 
 void Engine::Update()
 {
-  if (m_Window.ShouldClose() || m_Stopping) {
+  if (m_window.ShouldClose() || m_stopping) {
     Stop();
     return;
   }
@@ -218,6 +205,7 @@ void Engine::Update()
   m_dLag += Time::DeltaTime;
 
   while (m_dLag >= Time::FixTime) {
+    UpdateGameLogic();
     gAnimation().UpdateState(dt);
     gUI().UpdateState(dt);
 #if !defined FORCE_AUDIO_OFF
@@ -226,29 +214,29 @@ void Engine::Update()
 #if !defined FORCE_PHYSICS_OFF
     gPhysics().UpdateState(dt);
 #endif
-    UpdateGameLogic();
     m_dLag -= Time::FixTime;
   }
 
-  SortCmdLists();
   gRenderer().Render();
-}
-
-
-void UpdateGameObject(Engine* engine, GameObject* object, size_t currNum)
-{
-  // Perform updates to the game object.
-  //
-  // TODO(): To Better optimize transform calculations for our render objects, we will need to distribute our 
-  // rendering info in a separate memory block.
-  //  
-  object->Update();
 }
 
 
 void Engine::UpdateGameLogic()
 {
   if (!m_pPushedScene) return;
+
+  for ( u32 i = 0; i < m_sceneObjectCount; ++i ) {
+    GameObject* object = m_cachedGameObjects[i];
+    if ( object ) {
+      object->Update(static_cast<r32>(Time::FixTime));
+    }
+  }
+
+  Transform::UpdateComponents(m_cachedGameObjectKeys.data(), 
+    static_cast<u32>(m_cachedGameObjectKeys.size()));
+  RendererComponent::UpdateComponents(m_cachedGameObjectKeys.data(), 
+    static_cast<u32>(m_cachedGameObjectKeys.size()));
+        
 
   {
     DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
@@ -264,7 +252,7 @@ void Engine::UpdateGameLogic()
   GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
   if (m_pCamera) {
     m_pCamera->Update();
-    m_pCamera->SetAspect(((r32)m_Window.Width() / (r32)m_Window.Height()));
+    m_pCamera->SetAspect(((r32)m_window.Width() / (r32)m_window.Height()));
 
     gGlobalBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
     gGlobalBuffer->_Proj = m_pCamera->Projection();
@@ -272,8 +260,8 @@ void Engine::UpdateGameLogic()
     gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
     gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
     gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
-    gGlobalBuffer->_ScreenSize[0] = m_Window.Width();
-    gGlobalBuffer->_ScreenSize[1] = m_Window.Height();
+    gGlobalBuffer->_ScreenSize[0] = m_window.Width();
+    gGlobalBuffer->_ScreenSize[1] = m_window.Height();
     gGlobalBuffer->_BloomEnabled = m_pCamera->Bloom();
     gGlobalBuffer->_Exposure = m_pCamera->Exposure();
     gGlobalBuffer->_Gamma = m_pCamera->Gamma();
@@ -281,20 +269,13 @@ void Engine::UpdateGameLogic()
     gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
     gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
 
-    m_CamFrustum.Update();
-    gGlobalBuffer->_LPlane = m_CamFrustum._Planes[CCamViewFrustum::PLEFT];
-    gGlobalBuffer->_RPlane = m_CamFrustum._Planes[CCamViewFrustum::PRIGHT];
-    gGlobalBuffer->_TPlane = m_CamFrustum._Planes[CCamViewFrustum::PTOP];
-    gGlobalBuffer->_BPlane = m_CamFrustum._Planes[CCamViewFrustum::PBOTTOM];
-    gGlobalBuffer->_NPlane = m_CamFrustum._Planes[CCamViewFrustum::PNEAR];
-    gGlobalBuffer->_FPlane = m_CamFrustum._Planes[CCamViewFrustum::PFAR];
-  }
-
-  for ( u32 i = 0; i < m_SceneObjectCount; ++i ) {
-    GameObject* object = m_cachedGameObjects[i];
-    if ( object ) {
-      object->Update();
-    }
+    m_camFrustum.Update();
+    gGlobalBuffer->_LPlane = m_camFrustum._Planes[CCamViewFrustum::PLEFT];
+    gGlobalBuffer->_RPlane = m_camFrustum._Planes[CCamViewFrustum::PRIGHT];
+    gGlobalBuffer->_TPlane = m_camFrustum._Planes[CCamViewFrustum::PTOP];
+    gGlobalBuffer->_BPlane = m_camFrustum._Planes[CCamViewFrustum::PBOTTOM];
+    gGlobalBuffer->_NPlane = m_camFrustum._Planes[CCamViewFrustum::PNEAR];
+    gGlobalBuffer->_FPlane = m_camFrustum._Planes[CCamViewFrustum::PFAR];
   }
 
  //TraverseScene(UpdateGameObject);
@@ -303,26 +284,33 @@ void Engine::UpdateGameLogic()
 
 void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
 { 
-  CmdList& list = engine->RenderCommandList();
   auto&     cache = engine->GetGameObjectCache();
-  // Perform updates to the game object.
-  RendererComponent* render = object->GetComponent<RendererComponent>();
-  if (render) {
-    list[currNum]._pTarget = render->RenderObj();
+  auto&     cachedKeys = engine->GetGameObjectKeys();
+
+  if (currNum >= cache.size()) {
+    cache.resize(cache.size() << 1);
+    cachedKeys.resize(cachedKeys.size() << 1);
   }
-  
+
   cache[currNum] = object;
+  cachedKeys[currNum] = object->GetId();
+  
+  
 }
 
 
 void Engine::BuildScene()
 {
   if (!m_pPushedScene) return;
-  m_RenderCmdList.Clear();
-  m_RenderCmdList.Resize(gGameObjectManager().NumOccupied());
-  m_cachedGameObjects.resize(gGameObjectManager().NumOccupied());
+  m_cachedGameObjects.clear();
+  m_cachedGameObjectKeys.clear();
+  m_cachedGameObjectKeys.resize(1);
+  m_cachedGameObjects.resize(1);
+
   TraverseScene(BuildSceneCallback);
   gRenderer().Build();
+  gRenderer().PushRenderIds(m_cachedGameObjectKeys.data(), 
+    static_cast<u32>(m_cachedGameObjectKeys.size()));
 }
 
 
@@ -332,7 +320,7 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   // TODO(): Probably want to make a real stack allocator that doesn't have a terrible
   // amortized time complex like this vector.
   std::vector<GameObject*> nodes;
-  m_SceneObjectCount = 0;
+  m_sceneObjectCount = 0;
   SceneNode* root = m_pPushedScene->GetRoot();
 
   for (size_t i = 0; i < root->GetChildCount(); ++i) {
@@ -343,8 +331,8 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     GameObject* object = nodes.back();
     nodes.pop_back();
 
-    callback(this, object, m_SceneObjectCount);
-    m_SceneObjectCount++;
+    callback(this, object, m_sceneObjectCount);
+    m_sceneObjectCount++;
 
     // Now query its children.
     size_t child_count = object->GetChildrenCount();
@@ -353,11 +341,5 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
       nodes.push_back(child);
     }
   }
-}
-
-
-void Engine::SortCmdLists()
-{
-  m_RenderCmdList.Sort();
 }
 } // Recluse

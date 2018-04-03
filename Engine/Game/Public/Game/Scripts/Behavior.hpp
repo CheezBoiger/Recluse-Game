@@ -22,9 +22,6 @@ protected:
   // Mandatory that this update function is defined.
   virtual void  Update() override { }
 
-  // Optional fixed update, called from the physics engine updates.
-  virtual void  FixedUpdate() override { }
-
   virtual void Awake() override { }
 };
 
@@ -44,9 +41,6 @@ public:
 
   // Mandatory that this update function is defined.
   virtual void  Update() override { }
-
-  // Optional fixed update, called from the physics engine updates.
-  virtual void  FixedUpdate() override { }
 
   // when object is enabled, perform necessary actions.
   virtual void  OnEnable() { }

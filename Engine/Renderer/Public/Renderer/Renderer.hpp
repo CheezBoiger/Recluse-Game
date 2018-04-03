@@ -13,6 +13,8 @@
 #include "RenderQuad.hpp"
 #include "GlobalDescriptor.hpp"
 #include "LightDescriptor.hpp"
+#include "CmdList.hpp"
+#include "RenderCmd.hpp"
 
 namespace Recluse {
 
@@ -50,7 +52,6 @@ class Sky;
 // stuff on screen, and to display pretty graphics!
 class Renderer : public EngineModule<Renderer> {
 public:
-  // Definition of the UI Overlay for which to render onto.
 
   Renderer();
   ~Renderer();
@@ -78,13 +79,9 @@ public:
   // Callback used for EngineModule<> set up.
   void              OnShutDown() override;
 
-  // Push the command list into the renderer. This is the list used to figure out what 
-  // renderable objects to draw and texture on the screen.
-  void              PushCmdList(CmdList* cmdList) { m_pCmdList = cmdList; }
-
-  // Push the deferred list into the renderer, this is the list used for commands to be called
-  // after gbuffer offscreen rendering. This is mainly used for UI overlay rendering.
-  void              PushDeferredCmdList(CmdList* cmdList) { m_pDeferredCmdList = cmdList; }
+  void              PushRenderIds(uuid64* renderobjs, u32 count);
+  
+  void              PushDeferredRenderIds(uuid64* renderobjs, u32 count);
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
@@ -132,8 +129,9 @@ public:
   // Create a Sampler.
   TextureSampler*   CreateTextureSampler();
 
-  // Create a render object for the renderer to render?
-  RenderObject*     CreateRenderObject();
+  // Create a render object for the renderer to render? Must assign a uuid to the render object
+  // prior to it's creation.
+  RenderObject*     CreateRenderObject(uuid64 obj_uuid);
 
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
@@ -178,8 +176,13 @@ public:
   TextureCube*      BakeEnvironmentMap(const Vector3& position);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
-  // to render our mesh object with fast global illumination.
+  // to render our mesh object with fast global illumination. This generates an irradiance
+  // mapped light probe.
   LightProbe*       BakeLightProbe(const TextureCube* envmap);
+
+  // Offline reflections probe baking. We can effectively use this probe in the scene to render 
+  // our mesh object. Generates a specular image based prefilter map.
+  ReflectionProbe*  BakeReflectionProbe(const TextureCube* envmap);
 
   // Window reference.
   Window*           WindowRef() { return m_pWindow; }
@@ -245,9 +248,11 @@ private:
   void              CheckCmdUpdate();
   inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
 
+  void              BuildCmdLists();
+
   Window*           m_pWindow;
-  CmdList*          m_pCmdList;
-  CmdList*          m_pDeferredCmdList;
+  CmdList           m_cmdList;
+  CmdList           m_deferredCmdList;
   GlobalDescriptor* m_pGlobal;
   LightDescriptor*  m_pLights;
 
@@ -276,6 +281,11 @@ private:
     r32                           _Strength;
     r32                           _Scale;
   } m_Downscale;
+
+  struct {
+    uuid64* keys;
+    u32     count;
+  } m_renderObjKeys;
 
   CommandBuffer*    m_pSkyboxCmdBuffer;
   Semaphore*        m_SkyboxFinished;

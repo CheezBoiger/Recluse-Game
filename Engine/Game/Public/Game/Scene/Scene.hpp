@@ -9,6 +9,8 @@
 #include "Game/GameObject.hpp"
 #include "Renderer/LightDescriptor.hpp"
 
+#include "Game/Rendering/Skybox.hpp"
+
 #include <set>
 
 namespace Recluse {
@@ -56,8 +58,15 @@ public:
 
 private:
   DirectionalLight          m_PrimaryLight;
+  Skybox                    m_skybox;
+
   std::string               m_SceneName;
   SceneNode                 m_Root;
+  // Global illumination Lighting information cache.
+  //std::vector<LightProbe*>       m_lightProbes;
+  //std::vector<ReflectionProbe*>  m_reflectionProbes;
+
+
   // Physics based information may go here as well.
 };
 } // Recluse 

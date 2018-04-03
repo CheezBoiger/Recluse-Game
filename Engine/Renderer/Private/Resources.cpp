@@ -1,5 +1,6 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #include "Resources.hpp"
+#include "RenderObject.hpp"
 
 #include "RHI/ComputePipeline.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -8,6 +9,7 @@
 #include "RHI/Texture.hpp"
 
 #include "Core/Exception.hpp"
+
 
 #include <unordered_map>
 #include <algorithm>
@@ -23,6 +25,7 @@ std::unordered_map<std::string, Texture*> RenderTextureMap;
 std::unordered_map<std::string, Sampler*> SamplerMap;
 std::unordered_map<std::string, DescriptorSetLayout*> DescriptorSetLayoutMap;
 std::unordered_map<std::string, DescriptorSet* > DescriptorSetMap;
+std::unordered_map<uuid64, RenderObject*> RenderObjects;
 
 resource_id_t Resources::idCount = 0;
 
@@ -267,5 +270,37 @@ DescriptorSet* Resources::UnregisterDescriptorSet(std::string str)
   }
 
   return set;
+}
+
+
+RenderObject* Resources::GetRenderObject(uuid64 uuid)
+{
+  RenderObject* obj = nullptr;
+  if (RenderObjects.find(uuid) != RenderObjects.end()) {
+    obj = RenderObjects[uuid];
+  }
+  return obj;
+}
+
+
+RenderObject* Resources::UnregisterRenderObject(uuid64 uuid)
+{
+  RenderObject* obj = nullptr;
+  if (RenderObjects.find(uuid) != RenderObjects.end()) {
+    obj = RenderObjects[uuid];
+    RenderObjects.erase(uuid);
+  }
+  return obj;
+}
+
+
+b8  Resources::RegisterRenderObject(RenderObject* obj)
+{
+  if (!obj) return false;
+  if (RenderObjects.find(obj->GetUUID()) == RenderObjects.end()) {
+    RenderObjects[obj->GetUUID()] = obj;
+    return true;
+  }
+  return false;
 }
 } // Recluse

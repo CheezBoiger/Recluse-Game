@@ -22,6 +22,9 @@ typedef double            r64;
 
 typedef char              tchar;
 
+
+// Globally unique identifier.
+typedef u64               uuid64;
 } // Recluse
 
 #define RTEXT(s)          u8##s

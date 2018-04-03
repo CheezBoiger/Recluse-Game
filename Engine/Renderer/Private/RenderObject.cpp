@@ -21,9 +21,11 @@
 namespace Recluse {
 
 
-RenderObject::RenderObject(MeshDescriptor* mesh, MaterialDescriptor* material)
+RenderObject::RenderObject(uuid64 uuid,
+  MeshDescriptor* mesh, MaterialDescriptor* material)
   : _pMaterialDescId(material)
   , _pMeshDescId(mesh)
+  , m_uuid(uuid)
   , mCurrIdx(0)
   , Instances(1)
   , Renderable(true)

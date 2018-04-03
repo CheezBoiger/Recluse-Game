@@ -38,7 +38,7 @@ public:
   // false. This can speed up performance.
   b8                      _bEnableShadow;
 
-  RenderObject(MeshDescriptor* mesh = nullptr, 
+  RenderObject(uuid64 uuid, MeshDescriptor* mesh = nullptr, 
                 MaterialDescriptor* material = nullptr);
 
   ~RenderObject();
@@ -53,6 +53,8 @@ public:
   // Updates the descriptor set that is not the current index of this
   // render object. 
   void                    Update();
+
+  uuid64                  GetUUID() const { return m_uuid; }
 
   // The currently used descriptor set.
   DescriptorSet*          CurrMeshSet() { return mMeshSets[mCurrIdx]; }
@@ -102,6 +104,9 @@ private:
   // The material of this Render Object.
   MaterialDescriptor*     _pMaterialDescId;
   size_t                  mCurrIdx;
+
+  // UUID identifer that corresponds to this render object.
+  uuid64                  m_uuid;
   VulkanRHI*              mRhi;
   u32                     m_bNeedsUpdate;
   friend class Renderer;

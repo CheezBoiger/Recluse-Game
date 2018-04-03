@@ -7,14 +7,46 @@
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Memory/SmartPointer.hpp"
 #include <algorithm>
+#include <unordered_map>
 
 namespace Recluse {
 
 typedef u64 component_t;
 
-#define RCOMPONENT(cls) friend class GameObject; \
+#define RCOMPONENT(cls) private: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
+    friend class GameObject; \
     static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
-    static const tchar* GetName() { return #cls; } 
+    static const tchar* GetName() { return #cls; } \
+    public: static void UpdateComponents(uuid64* keys, u32 count) { \
+              for (u32 i = 0; i < count; ++i) { \
+                uuid64 key = keys[i]; \
+                auto it = _k##cls##s.find(key); \
+                if (it == _k##cls##s.end()) continue; \
+                cls* comp = _k##cls##s[key]; \
+                comp->Update(); \
+              } \
+            } \
+    private:
+
+#define REGISTER_COMPONENT(cls, pComp) { \
+          uuid64 uuid = GetOwner()->GetId(); \
+          auto it = _k##cls##s.find(uuid); \
+          if (it == _k##cls##s.end()) { \
+            _k##cls##s[uuid] = pComp; \
+          } \
+       }
+
+#define UNREGISTER_COMPONENT(cls) { \
+          uuid64 uuid = GetOwner()->GetId(); \
+          auto it = _k##cls##s.find(uuid); \
+          if (it != _k##cls##s.end()) { \
+          } \
+        }
+
+
+#define DEFINE_COMPONENT_MAP(cls) std::unordered_map<uuid64, cls*> cls::_k##cls##s
+                                
+    
 
 class GameObject;
 
@@ -37,13 +69,15 @@ public:
 
 protected:
   Component()
-    : m_pGameObjectOwner(nullptr) { }
+    : m_pGameObjectOwner(nullptr)
+    , m_bEnabled(false) { }
 
   template<typename T>
   static APtr<Component> Create() {
     return APtr<Component>(T());
   }
 
+public:
   // Perform early initialization of abstract component, then call OnInitialize() if any.
   void          Initialize(GameObject* owner) {
     m_pGameObjectOwner = owner;
@@ -54,19 +88,21 @@ protected:
     OnInitialize(m_pGameObjectOwner);
   }
 
-  // Mandatory that this update function is defined.
-  virtual void  Update() { }
-
-  // Optional fixed update, called from the physics engine updates.
-  virtual void  FixedUpdate() { }
-
-  virtual void  Awake() { }
-
   // Perform early clean up of abstract component, then call OnCleanUp() if any.
   void          CleanUp() {
     // Perform actions necessary for component clean up.
     OnCleanUp();
   }
+
+  b8            Enabled() const { return m_bEnabled; }
+
+  void          Enable(b8 enable) { m_bEnabled = enable; }
+
+protected:
+  // Mandatory that this update function is defined.
+  virtual void  Update() { }
+
+  virtual void  Awake() { }
 
   // Overrideable callbacks, in case component needs to initialize additional 
   // objects.
@@ -75,6 +111,9 @@ protected:
 
 private:
   GameObject*   m_pGameObjectOwner;
+  // Is component enabled? If so, the managers responsible for updating it will 
+  // proceed to do so.
+  b8            m_bEnabled;
 };
 
 
@@ -129,10 +168,12 @@ public:
   Matrix4       GetLocalToWorldMatrix() const { return m_LocalToWorldMatrix; }
   Matrix4       GetWorldToLocalMatrix() const { return m_WorldToLocalMatrix; }
 
+  void          OnInitialize(GameObject* owner) override;
+  void          OnCleanUp() override;
+
 protected:
   // TODO():
   void          Update() override;
-  void          FixedUpdate() override { }
 
   Matrix4       m_LocalToWorldMatrix;
   Matrix4       m_WorldToLocalMatrix;

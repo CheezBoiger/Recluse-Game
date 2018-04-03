@@ -11,7 +11,7 @@ using namespace Recluse;
 
 
 // Script to orbit a game object. This is a test demo script.
-class OrbitObjectScript : public IScript {
+class OrbitObjectScript : public GameObject {
   RSCRIPT(OrbitObjectScript);
 public:
   r32     acc;
@@ -44,11 +44,11 @@ public:
     pointLight->SetIntensity(10.0f);
   }
 
-  void Update() override
+  void Update(r32 tick) override
   {
 #if 1
     // Test a swirling sphere...
-    Transform* transform = GetOwner()->GetTransform();
+    Transform* transform = GetTransform();
     r32 sDt = static_cast<r32>(Time::FixTime * Time::ScaleTime);
     // If object has parent, swirl in it's local position.
     if (GetOwner()->GetParent()) {

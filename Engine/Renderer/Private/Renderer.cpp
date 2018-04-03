@@ -49,8 +49,6 @@ VkFence cpuFence;
 
 Renderer::Renderer()
   : m_pRhi(nullptr)
-  , m_pCmdList(nullptr)
-  , m_pDeferredCmdList(nullptr)
   , m_Rendering(false)
   , m_Initialized(false)
   , m_pLights(nullptr)
@@ -69,6 +67,25 @@ Renderer::Renderer()
   m_Downscale._Horizontal = 0;
   m_Downscale._Strength = 1.0f;
   m_Downscale._Scale = 1.0f;
+
+  m_renderObjKeys.keys = nullptr;
+  m_renderObjKeys.count = 0;
+
+  m_cmdList.SetSortFunc([&](RenderCmd& cmd1, RenderCmd& cmd2) -> bool {
+    if (!cmd1._pTarget || !cmd2._pTarget) return false;
+    if (!cmd1._pTarget->Renderable || !cmd2._pTarget->Renderable) return false;
+    MeshDescriptor* mesh1 = cmd1._pTarget->GetMeshDescriptor();
+    MeshDescriptor* mesh2 = cmd2._pTarget->GetMeshDescriptor();
+    Matrix4 m1 = mesh1->ObjectData()->_Model;
+    Matrix4 m2 = mesh2->ObjectData()->_Model;
+
+    Vector4 native_pos = m_pGlobal->Data()->_CameraPos;
+    Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
+    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
+    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
+
+    return v1.Magnitude() < v2.Magnitude();
+  });
 }
 
 
@@ -117,6 +134,11 @@ void Renderer::EndFrame()
 void Renderer::Render()
 {
   static u32 bPreviousFrame = false;
+
+  // TODO(): Signal a beginning and end callback or so, when performing 
+  // any rendering.
+  BuildCmdLists();
+  CheckCmdUpdate();
 
   // TODO(): Need to clean this up.
   VkCommandBuffer offscreen_CmdBuffers[3] = { 
@@ -231,10 +253,6 @@ void Renderer::Render()
   computeSubmit.waitSemaphoreCount = 0;
 
   m_pRhi->ComputeSubmit(computeSubmit);
-
-  // TODO(): Signal a beginning and end callback or so, when performing 
-  // any rendering.
-  CheckCmdUpdate();
 }
 
 
@@ -2100,66 +2118,63 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    if (m_pCmdList) {
-      for (size_t i = 0; i < m_pCmdList->Size(); ++i) {
-        RenderCmd& renderCmd = m_pCmdList->Get(i);
-        // Need to notify that this render command does not have a render object.
-        if (!renderCmd._pTarget) continue;
-        RenderObject* RenderObj = renderCmd._pTarget;
-        if (!RenderObj->Renderable) continue;
+    for (size_t i = 0; i < m_cmdList.Size(); ++i) {
+      RenderCmd& renderCmd = m_cmdList.Get(i);
+      // Need to notify that this render command does not have a render object.
+      if (!renderCmd._pTarget) continue;
+      RenderObject* RenderObj = renderCmd._pTarget;
+      if (!RenderObj->Renderable) continue;
 
-        b8 Skinned = RenderObj->_pMeshDescId->Skinned();
-        GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
-        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-        cmdBuffer->SetViewPorts(0, 1, &viewport);
+      b8 Skinned = RenderObj->_pMeshDescId->Skinned();
+      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
 
-        DescriptorSets[0] = m_pGlobal->Set()->Handle();
-        DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
-        DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
-        DescriptorSets[3] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
+      DescriptorSets[0] = m_pGlobal->Set()->Handle();
+      DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
+      DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
+      DescriptorSets[3] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
 
-        // Bind materials.
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-          Pipe->Layout(), 
-          0,
-          (Skinned ? 4 : 3), 
-          DescriptorSets, 
-          0, 
-          nullptr
-        );
+      // Bind materials.
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        Pipe->Layout(), 
+        0,
+        (Skinned ? 4 : 3), 
+        DescriptorSets, 
+        0, 
+        nullptr
+      );
   
-        // Set up the render group.
-        for (size_t idx = 0; idx < RenderObj->Size(); ++idx) {
-          MeshData* data = (*RenderObj)[idx];
+      // Set up the render group.
+      for (size_t idx = 0; idx < RenderObj->Size(); ++idx) {
+        MeshData* data = (*RenderObj)[idx];
 
-          if (!data) {
-            R_DEBUG(rWarning, "Null data in render object group!, skipping...\n");
-            continue;
-          }
+        if (!data) {
+          R_DEBUG(rWarning, "Null data in render object group!, skipping...\n");
+          continue;
+        }
 
-          VertexBuffer* vertexBuffer = data->VertexData();
-          IndexBuffer* indexBuffer = data->IndexData();
-          VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
+        VertexBuffer* vertexBuffer = data->VertexData();
+        IndexBuffer* indexBuffer = data->IndexData();
+        VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
 
-          VkDeviceSize offsets[] = { 0 };
-          cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+        VkDeviceSize offsets[] = { 0 };
+        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
 
-          if (indexBuffer) {
-            VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
-            cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-            cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), RenderObj->Instances, 0, 0, 0);
-          } else {
-            cmdBuffer->Draw(vertexBuffer->VertexCount(), RenderObj->Instances, 0, 0);
-          }
+        if (indexBuffer) {
+          VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
+          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), RenderObj->Instances, 0, 0, 0);
+        } else {
+          cmdBuffer->Draw(vertexBuffer->VertexCount(), RenderObj->Instances, 0, 0);
         }
       }
     }
 
-    if (m_pDeferredCmdList) {
-      for (size_t i = 0; i < m_pDeferredCmdList->Size(); ++i) {
 
-      }
-    }
+  for (size_t i = 0; i < m_deferredCmdList.Size(); ++i) {
+
+  }
   cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
@@ -2445,8 +2460,8 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   // Create the shadow rendering pass.
   cmdBuffer->Begin(begin);
     cmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
-      for (size_t i = 0; i < m_pCmdList->Size(); ++i) {
-        RenderCmd& renderCmd = (*m_pCmdList)[i];
+      for (size_t i = 0; i < m_cmdList.Size(); ++i) {
+        RenderCmd& renderCmd = m_cmdList[i];
         RenderObject* obj = renderCmd._pTarget;
         if (!obj) continue;
         if (!obj->Renderable || !obj->_bEnableShadow) continue;
@@ -2698,10 +2713,11 @@ void Renderer::FreeMeshData(MeshData* mesh)
 }
 
 
-RenderObject* Renderer::CreateRenderObject()
+RenderObject* Renderer::CreateRenderObject(uuid64 uuid)
 {
-  RenderObject* obj = new RenderObject(nullptr, nullptr);
+  RenderObject* obj = new RenderObject(uuid, nullptr, nullptr);
   obj->mRhi = m_pRhi;
+  gResources().RegisterRenderObject(obj);
   return obj;
 }
 
@@ -2710,6 +2726,7 @@ void Renderer::FreeRenderObject(RenderObject* obj)
 {
   if (!obj) return;
   obj->CleanUp();
+  gResources().UnregisterRenderObject(obj->GetUUID());
   delete obj;
 }
 
@@ -2737,8 +2754,8 @@ void Renderer::UpdateSceneDescriptors()
   m_pLights->Update();
 
   // Update mesh descriptors in cmd list.
-  for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
-    RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
+  for (size_t idx = 0; idx < m_cmdList.Size(); ++idx) {
+    RenderCmd& rnd_cmd = m_cmdList.Get(idx);
     if (!rnd_cmd._pTarget) {
       continue;
     }
@@ -2754,8 +2771,8 @@ void Renderer::UpdateSceneDescriptors()
     }
   }
 
-  for (size_t idx = 0; idx < m_pCmdList->Size(); ++idx) {
-    RenderCmd& rnd_cmd = m_pCmdList->Get(idx);
+  for (size_t idx = 0; idx < m_cmdList.Size(); ++idx) {
+    RenderCmd& rnd_cmd = m_cmdList.Get(idx);
   }
 }
 
@@ -2851,7 +2868,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   SetUpPBR();
 
   m_pUI->Initialize(m_pRhi);
-  if (m_pCmdList->Size() > 0) {
+  if (m_cmdList.Size() > 0) {
     Build();
   }
 }
@@ -2981,5 +2998,28 @@ void Renderer::EnableHDR(b8 enable)
     m_HDR._Enabled = enable;
     UpdateRendererConfigs(nullptr);
   }
+}
+
+
+void Renderer::PushRenderIds(uuid64* renderobjs, u32 count)
+{
+  m_renderObjKeys.count = count;
+  m_renderObjKeys.keys = renderobjs;
+}
+
+
+void Renderer::BuildCmdLists()
+{
+  R_ASSERT(m_renderObjKeys.keys, "Null render keys.");
+  R_ASSERT(m_renderObjKeys.count >= 0, "Negative render key count");
+  m_cmdList.Clear();
+  m_cmdList.Resize(m_renderObjKeys.count);
+  // TODO(): Add deferred cmd list to sort and rebuild
+
+  for (u32 i = 0; i < m_renderObjKeys.count; ++i) {
+    m_cmdList[i]._pTarget = gResources().GetRenderObject(m_renderObjKeys.keys[i]);
+  }
+
+  m_cmdList.Sort();
 }
 } // Recluse

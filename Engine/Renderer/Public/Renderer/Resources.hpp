@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"
@@ -15,6 +15,7 @@ class DescriptorSetLayout;
 class DescriptorSet;
 class MaterialDescriptor;
 class Mesh;
+class RenderObject;
 
 typedef size_t resource_id_t;
 
@@ -34,6 +35,7 @@ public:
   Sampler*              GetSampler(std::string str);
   DescriptorSetLayout*  GetDescriptorSetLayout(std::string str);
   DescriptorSet*        GetDescriptorSet(std::string str);
+  RenderObject*         GetRenderObject(uuid64 uuid);
 
   b8                    RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline);
   b8                    RegisterComputePipeline(std::string str, ComputePipeline* pipeline);
@@ -42,6 +44,8 @@ public:
   b8                    RegisterSampler(std::string str, Sampler* sampler);
   b8                    RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout);
   b8                    RegisterDescriptorSet(std::string str, DescriptorSet* set);
+
+  b8                    RegisterRenderObject(RenderObject* obj);
   
   GraphicsPipeline*     UnregisterGraphicsPipeline(std::string str);
   ComputePipeline*      UnregisterComputePipeline(std::string str);
@@ -50,6 +54,7 @@ public:
   Sampler*              UnregisterSampler(std::string str);
   DescriptorSetLayout*  UnregisterDescriptorSetLayout(std::string str);
   DescriptorSet*        UnregisterDescriptorSet(std::string str);
+  RenderObject*         UnregisterRenderObject(uuid64 uuid);
 };
 
 

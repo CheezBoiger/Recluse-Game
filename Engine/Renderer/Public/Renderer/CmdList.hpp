@@ -3,7 +3,7 @@
 
 #include "Core/Types.hpp"
 #include "Core/Utility/Vector.hpp"
-
+#include "RenderCmd.hpp"
 
 #include <functional>
 
@@ -29,6 +29,8 @@ public:
 
   void                    Resize(size_t newSize) { mRenderList.resize(newSize); }
   void                    SetSortFunc(RenderCmdCompareFunc compare) { mCompare = compare; }
+  void                    PushBack(RenderCmd cmd) { mRenderList.push_back(cmd); }
+  void                    Erase(u32 i) { mRenderList.erase(mRenderList.begin() + i); }
   // Sort using alg.
   void                    Sort();  
   void                    Clear() { mRenderList.clear(); }

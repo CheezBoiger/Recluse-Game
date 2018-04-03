@@ -7,78 +7,48 @@
 namespace Recluse {
 
 
-GameObject* GameObject::Instantiate()
-{
-  return gGameObjectManager().Allocate();
-}
+game_uuid_t GameObject::sGameObjectCount = 0;
 
 
-void GameObject::DestroyAll()
-{
-  gGameObjectManager().Clear();
-}
-
-
-GameObject::GameObject(game_uuid_t id)
+GameObject::GameObject()
   : m_pParent(nullptr)
-  , m_Id(id)
-  , m_Name("Default Name")
+  , m_id(std::hash<game_uuid_t>()(sGameObjectCount++))
+  , m_name("Default Name")
 {
+  m_transform.Initialize(this);
 }
 
 
 GameObject::~GameObject()
 {
-  for (auto& component : m_Components) {
-    component.second->CleanUp();
-  }
+  m_transform.CleanUp();
 }
 
 
 GameObject::GameObject(GameObject&& obj)
-  : m_Id(obj.m_Id)
+  : m_id(obj.m_id)
   , m_pParent(obj.m_pParent)
-  , m_Components(std::move(obj.m_Components))
-  , m_Children(std::move(obj.m_Children))
-  , m_Name(std::move(obj.m_Name))
+  , m_children(std::move(obj.m_children))
+  , m_name(std::move(obj.m_name))
 {
-  obj.m_Id = 0;
+  obj.m_id = 0;
   obj.m_pParent = nullptr;
-  obj.m_Components.clear();
-  obj.m_Children.clear();
-  obj.m_Name.clear();
+  obj.m_children.clear();
+  obj.m_name.clear();
 }
 
 
 GameObject& GameObject::operator=(GameObject&& obj)
 {
-  m_Id = obj.m_Id;
+  m_id = obj.m_id;
   m_pParent = obj.m_pParent;
-  m_Name = std::move(obj.m_Name);
-  m_Components = std::move(obj.m_Components);
-  m_Children = std::move(obj.m_Children);
+  m_name = std::move(obj.m_name);
+  m_children = std::move(obj.m_children);
 
-  obj.m_Id = 0;
+  obj.m_id = 0;
   obj.m_pParent = nullptr;
-  obj.m_Components.clear();
-  obj.m_Children.clear();
+  obj.m_children.clear();
   return (*this);
-}
-
-
-void GameObject::Update()
-{
-  for (auto& it : m_Components) {
-    it.second->Update();
-  }
-}
-
-
-void GameObject::Wake()
-{
-  for (auto& it : m_Components) {
-    it.second->Awake();
-  }
 }
 
 

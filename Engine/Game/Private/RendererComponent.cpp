@@ -15,134 +15,151 @@
 namespace Recluse {
 
 
+DEFINE_COMPONENT_MAP(RendererComponent);
+
+
 RendererComponent::RendererComponent()
-  : mRenderObj(nullptr)
-  , mMeshDescriptor(nullptr)
+  : m_renderObj(nullptr)
+  , m_meshDescriptor(nullptr)
+  , m_materialRef(nullptr)
+  , m_meshRef(nullptr)
 {
 }
 
 
 RendererComponent::RendererComponent(const RendererComponent& m)
-  : mMeshDescriptor(m.mMeshDescriptor)
-  , mRenderObj(m.mRenderObj)
+  : m_meshDescriptor(m.m_meshDescriptor)
+  , m_renderObj(m.m_renderObj)
+  , m_materialRef(m.m_materialRef)
+  , m_meshRef(m.m_meshRef)
 {
 }
 
 
 RendererComponent::RendererComponent(RendererComponent&& m)
-  : mMeshDescriptor(m.mMeshDescriptor)
-  , mRenderObj(m.mRenderObj)
+  : m_meshDescriptor(m.m_meshDescriptor)
+  , m_renderObj(m.m_renderObj)
+  , m_materialRef(m.m_materialRef)
+  , m_meshRef(m.m_meshRef)
 {
-  m.mMeshDescriptor = nullptr;
-  m.mRenderObj = nullptr;
+  m.m_meshDescriptor = nullptr;
+  m.m_renderObj = nullptr;
+  m.m_materialRef = nullptr;
+  m.m_meshRef = nullptr;
 }
 
 
 RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
-  mRenderObj = obj.mRenderObj;
-  mMeshDescriptor = obj.mMeshDescriptor;
+  m_renderObj = obj.m_renderObj;
+  m_meshDescriptor = obj.m_meshDescriptor;
+  m_materialRef = obj.m_materialRef;
+  m_meshRef = obj.m_meshRef;
 
-  obj.mMeshDescriptor = nullptr;
-  obj.mRenderObj = nullptr;
+  obj.m_meshDescriptor = nullptr;
+  obj.m_renderObj = nullptr;
+  obj.m_materialRef = nullptr;
+  obj.m_meshRef = nullptr;
   return (*this);
 }
 
 
 RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
-  mRenderObj = obj.mRenderObj;
-  mMeshDescriptor = obj.mMeshDescriptor;
+  m_renderObj = obj.m_renderObj;
+  m_meshDescriptor = obj.m_meshDescriptor;
+  m_meshRef = obj.m_meshRef;
+  m_materialRef = obj.m_materialRef;
   return (*this);
 }
 
 
 void RendererComponent::EnableShadow(b8 enable)
 {
-  mRenderObj->_bEnableShadow = enable;
+  m_renderObj->_bEnableShadow = enable;
 }
 
 
 b8 RendererComponent::ShadowEnabled() const
 {
-  return mRenderObj->_bEnableShadow;
+  return m_renderObj->_bEnableShadow;
 }
 
 
 void RendererComponent::ReConfigure()
 {
-  MeshComponent* meshc = GetOwner()->GetComponent<MeshComponent>();
-  if (meshc) {
-    mRenderObj->ClearOutMeshGroup();
-    mRenderObj->PushBack(meshc->MeshRef()->Native());
+  if (m_meshRef) {
+    m_renderObj->ClearOutMeshGroup();
+    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
   }
 
-  MaterialComponent* materialComponent = GetOwner()->GetComponent<MaterialComponent>();
   Material* material = Material::Default();
-  if (materialComponent) {
-    material = materialComponent->GetMaterial();
+  if (m_materialRef) {
+    material = m_materialRef->GetMaterial();
   }
 
-  mRenderObj->SetMaterialDescriptor( material->Native() );
+  m_renderObj->SetMaterialDescriptor( material->Native() );
 }
 
 
 void RendererComponent::OnInitialize(GameObject* owner)
 {
-  if (mRenderObj) {
+  if (m_renderObj) {
     Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
     return;
   }
 
-  MaterialComponent* mc = owner->GetComponent<MaterialComponent>();
   Material* material = Material::Default();
-  if (mc) {
-    material = mc->GetMaterial();
+  if (m_materialRef && m_materialRef->GetMaterial()) {
+    material = m_materialRef->GetMaterial();
   }
   
-  mRenderObj = gRenderer().CreateRenderObject();
-  mMeshDescriptor = gRenderer().CreateStaticMeshDescriptor();
-  mMeshDescriptor->Initialize();
+  m_renderObj = gRenderer().CreateRenderObject(owner->GetId());
+  m_meshDescriptor = gRenderer().CreateStaticMeshDescriptor();
+  m_meshDescriptor->Initialize();
 
-  mRenderObj->SetMeshDescriptor( mMeshDescriptor );
-  mRenderObj->SetMaterialDescriptor( material->Native() );
-  mRenderObj->Initialize();
+  m_renderObj->SetMeshDescriptor( m_meshDescriptor );
+  m_renderObj->SetMaterialDescriptor( material->Native() );
+  m_renderObj->Initialize();
 
   // Check if MeshComponent is in game object.
-  MeshComponent* mesh = owner->GetComponent<MeshComponent>();
-  if (mesh) {
-    mRenderObj->PushBack(mesh->MeshRef()->Native());
+  if (m_meshRef && m_meshRef->MeshRef()) {
+    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
   }
+
+  REGISTER_COMPONENT(RendererComponent, this);
 }
 
 
 void RendererComponent::OnCleanUp()
 {
-  gRenderer().FreeRenderObject(mRenderObj);
-  gRenderer().FreeMeshDescriptor(mMeshDescriptor);
-  mRenderObj = nullptr;
-  mMeshDescriptor = nullptr;
+  gRenderer().FreeRenderObject(m_renderObj);
+  gRenderer().FreeMeshDescriptor(m_meshDescriptor);
+  m_renderObj = nullptr;
+  m_meshDescriptor = nullptr;
+
+  UNREGISTER_COMPONENT(RendererComponent);
 }
 
 
 void RendererComponent::Enable(b8 enable)
 {
-  mRenderObj->Renderable = enable;
+  m_renderObj->Renderable = enable;
 }
 
 
 b8 RendererComponent::Enabled() const
 {
-  return mRenderObj->Renderable;
+  return m_renderObj->Renderable;
 }
 
 
 void RendererComponent::Update()
 {
   // TODO(): Static objects don't necessarily need to be updated.
-  Transform* transform = GetOwner()->GetComponent<Transform>();
+  Transform* transform = GetOwner()->GetTransform();
   if (transform) {
-    ObjectBuffer* renderData = mMeshDescriptor->ObjectData();
+    ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
     Matrix4 model = transform->GetLocalToWorldMatrix();
     if (renderData->_Model != model) {
       renderData->_Model = model;
@@ -151,7 +168,7 @@ void RendererComponent::Update()
       renderData->_NormalMatrix[3][1] = 0.0f;
       renderData->_NormalMatrix[3][2] = 0.0f;
       renderData->_NormalMatrix[3][3] = 1.0f;
-      mMeshDescriptor->SignalUpdate();
+      m_meshDescriptor->SignalUpdate();
     }
   }
 }

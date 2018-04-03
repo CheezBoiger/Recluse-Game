@@ -21,7 +21,7 @@ public:
 
   GameObject* Allocate() {
     m_GameObjects.push_back(std::move(GameObject()));
-    m_GameObjects.back().m_Id = 
+    m_GameObjects.back().m_id = 
       std::hash<game_uuid_t>()(gGameObjectNumber++);
     return &m_GameObjects.back();
   }
