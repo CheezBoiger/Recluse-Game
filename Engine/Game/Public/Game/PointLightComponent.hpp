@@ -12,6 +12,7 @@ namespace Recluse {
 
 class PointLightComponent : public Recluse::LightComponent {
   RCOMPONENT(PointLightComponent);
+  
 public:
   static std::queue<u32>  sAvailablePointLightIds;
 

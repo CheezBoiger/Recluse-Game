@@ -15,6 +15,8 @@ namespace Recluse {
 std::queue<u32> PointLightComponent::sAvailablePointLightIds;
 std::queue<u32> LightComponent::sAvailableDirectionalLightIds;
 
+DEFINE_COMPONENT_MAP(PointLightComponent);
+
 
 void LightComponent::Initialize()
 {
@@ -52,6 +54,8 @@ void PointLightComponent::OnInitialize(GameObject* owner)
   m_NativeLight->_Range = 1.0f;
   m_NativeLight->_Intensity = 1.0f;
   m_NativeLight->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+  REGISTER_COMPONENT(PointLightComponent, this);
 }
 
 
@@ -64,6 +68,7 @@ void PointLightComponent::OnCleanUp()
   // Push back light id as it is now available.
   sAvailablePointLightIds.push(m_Id);
   m_NativeLight->_Enable = false;
+  UNREGISTER_COMPONENT(PointLightComponent);
 }
 
 

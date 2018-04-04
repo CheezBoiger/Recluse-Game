@@ -42,13 +42,15 @@ void Controller()
 }
 
 Mesh* mesh;
+Material* material;
 
 
-class CubeObject : public GameObject
+// Spehere object example, on how to set up and update a game object for the engine.
+class SphereObject : public GameObject
 {
 public:
 
-  CubeObject()
+  SphereObject()
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -57,26 +59,7 @@ public:
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
-    m_mat.Initialize();
-    Texture2D* tex;
-    TextureCache::Get("RustedAlbedo", &tex); 
-
-    m_mat.SetAlbedo(tex);
-    m_mat.EnableAlbedo(true);
-
-    TextureCache::Get("RustedNormal", &tex);
-    m_mat.SetNormal(tex);
-    m_mat.EnableNormal(true);
-
-    TextureCache::Get("RustedMetal", &tex);
-    m_mat.SetMetallic(tex);
-    m_mat.EnableMetallic(true);
-
-    TextureCache::Get("RustedRough", &tex);
-    m_mat.SetRoughness(tex);
-    m_mat.EnableRoughness(true);
-
-    m_pMaterialComponent->SetMaterialRef(&m_mat);
+    m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
 
     
@@ -84,6 +67,13 @@ public:
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+
+    std::random_device r;
+    std::mt19937 twist(r());
+    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    Transform* trans = GetTransform();
+    trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
+    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
 
@@ -94,7 +84,7 @@ public:
   void Update(r32 tick) override
   {
     Transform* transform = GetTransform();
-    transform->Position.x += 1.0f * tick;
+    transform->Position += m_vRandDir * tick;
   }
 
   void CleanUp() override
@@ -102,15 +92,13 @@ public:
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
-
-    m_mat.CleanUp();
   }
 
 private:
+  Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
-  Material            m_mat;
 };
 
 
@@ -135,7 +123,7 @@ int main(int c, char* argv[])
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = SHADOWS_HIGH;
+    params._Shadows = SHADOWS_ULTRA;
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
@@ -166,15 +154,43 @@ int main(int c, char* argv[])
 
   {
     mesh = new Mesh();
-    auto boxVerts = Cube::MeshInstance();
-    auto boxIndic = Cube::IndicesInstance();
+    u32 g = 32;
+    auto boxVerts = UVSphere::MeshInstance(1.0f, g, g);
+    auto boxIndic = UVSphere::IndicesInstance(static_cast<u32>(boxVerts.size()), g, g);
     mesh->Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
+  }
+
+  {
+    material = new Material();
+    material->Initialize();
+    Texture2D* tex;
+    TextureCache::Get("RustedAlbedo", &tex);
+
+    material->SetAlbedo(tex);
+    material->EnableAlbedo(true);
+
+    TextureCache::Get("RustedNormal", &tex);
+    material->SetNormal(tex);
+    material->EnableNormal(true);
+
+    TextureCache::Get("RustedMetal", &tex);
+    material->SetMetallic(tex);
+    material->EnableMetallic(true);
+
+    TextureCache::Get("RustedRough", &tex);
+    material->SetRoughness(tex);
+    material->EnableRoughness(true);
   }
 
   // Create scene.
   Scene scene;
-  CubeObject* cube = new CubeObject();
- // CubeObject* cube2 = new CubeObject();
+  
+  std::vector<SphereObject*> spheres;
+  #define SPHERE_COUNT 100
+  for (u32 i = 0; i < SPHERE_COUNT; ++i) {
+    spheres.push_back(new SphereObject());
+    scene.GetRoot()->AddChild(spheres[i]);
+  }
  
 #if defined(MANUAL_INIT)
   // Add game objects into scene. This demonstrates parent-child transformation as well.
@@ -201,8 +217,6 @@ int main(int c, char* argv[])
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 2.0f;
   }
-
-  scene2.GetRoot()->AddChild(cube);
 
 #endif // defined(MANUAL_INIT)
 
@@ -235,14 +249,17 @@ int main(int c, char* argv[])
 
 
     gEngine().Update();
-    //Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
+    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
-  cube->CleanUp();
-  delete cube;
+  for (u32 i = 0; i < SPHERE_COUNT; ++i) {
+    delete spheres[i];
+  }
   // Finish.
   mesh->CleanUp();
   delete mesh;
+  material->CleanUp();
+  delete material;
   TextureCleanUp();
   // Clean up engine
   gEngine().CleanUp();

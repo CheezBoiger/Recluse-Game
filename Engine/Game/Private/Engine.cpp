@@ -234,9 +234,14 @@ void Engine::UpdateGameLogic()
 
   Transform::UpdateComponents(m_cachedGameObjectKeys.data(), 
     static_cast<u32>(m_cachedGameObjectKeys.size()));
-  RendererComponent::UpdateComponents(m_cachedGameObjectKeys.data(), 
-    static_cast<u32>(m_cachedGameObjectKeys.size()));
-        
+  std::thread worker0 = std::thread([&] () -> void {
+    RendererComponent::UpdateComponents(m_cachedGameObjectKeys.data(), 
+      static_cast<u32>(m_cachedGameObjectKeys.size()));
+  });
+  std::thread worker1 = std::thread([&] () -> void {
+    PointLightComponent::UpdateComponents(m_cachedGameObjectKeys.data(),
+      static_cast<u32>(m_cachedGameObjectKeys.size()));
+  });
 
   {
     DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
@@ -278,6 +283,8 @@ void Engine::UpdateGameLogic()
     gGlobalBuffer->_FPlane = m_camFrustum._Planes[CCamViewFrustum::PFAR];
   }
 
+  worker0.join();
+  worker1.join();
  //TraverseScene(UpdateGameObject);
 }
 
