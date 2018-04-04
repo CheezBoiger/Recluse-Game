@@ -286,9 +286,9 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
   if (_pMeshDescId->Skinned()) {
     VkDescriptorBufferInfo boneBufferInfo = { };
     SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(_pMeshDescId);
-    boneBufferInfo.buffer = sm->NativeBoneBuffer()->NativeBuffer();
+    boneBufferInfo.buffer = sm->NativeJointBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
-    boneBufferInfo.range = sizeof(BonesBuffer);
+    boneBufferInfo.range = sizeof(JointsBuffer);
     VkWriteDescriptorSet BoneWriteSet = { };
     BoneWriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     BoneWriteSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

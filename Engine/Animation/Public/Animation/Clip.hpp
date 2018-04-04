@@ -8,42 +8,39 @@
 
 #include <vector>
 
+#include "Skeleton.hpp"
+
 
 namespace Recluse {
 
 
-struct TranslationKey {
-  r32           _rTimeStamp;
-  u32           _uJointTrack;
-  Vector3       _vTranslation;
+// The joint pose that represents current position and orientation
+// of a joint at a specified key frame.
+struct JointPose 
+{
+  Quaternion  _rot;
+  Vector3     _trans;
+  Vector3     _scale;
 };
 
 
-struct RotationKey {
-  r32           _rTimeStamp;
-  u32           _uJointTrack;
-  Quaternion    _qRotation;
-};
-
-
-struct ScaleKey {
-  r32           _rTimeStamp;
-  u32           _uJointTrack;
-  Vector3       _vScale;
+// A Sample of an animation at some certain key frame.
+struct AnimSample 
+{
+  JointPose*  _aLocalPoses;
+  Matrix4*    _aGlobalPoses;
 };
 
 
 // Single instance of an animation clip. This may represent a "walk," "run,", "shoot," etc...
-struct AnimationClip {
+struct AnimationClip 
+{
   // Duration of this animation clip.
   r32                           _rDuration;
-
-  r32                           _rNumJointTracks;
-
-  // Transformation keys, held in a data oriented manner. These
-  // containers represent key frames in an animation clip.
-  std::vector<TranslationKey>   _Tranlations;
-  std::vector<RotationKey>      _Rotations;
-  std::vector<ScaleKey>         _Scales;
+  r32                           _fps;
+  u32                           _frameCount;
+  u32                           _skeletonId;
+  AnimSample*                   _aAnimSamples;
+  u32                           _bLooping;
 };
 } // Recluse

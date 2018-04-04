@@ -11,7 +11,7 @@ layout (location = 4) in vec4   boneWeights;
 layout (location = 5) in ivec4  boneIDs;
 
 
-#define MAX_BONES     64
+#define MAX_BONES     128
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 

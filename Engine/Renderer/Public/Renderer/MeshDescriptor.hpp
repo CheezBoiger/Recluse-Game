@@ -24,8 +24,8 @@ struct ObjectBuffer {
 };
 
 
-struct BonesBuffer {
-  Matrix4 _Bones[64];
+struct JointsBuffer {
+  Matrix4 _mJoints[128];
 };
 
 
@@ -85,12 +85,12 @@ public:
   virtual void  CleanUp() override;
   virtual void  Update() override;  
 
-  BonesBuffer*  BonesData() { return &m_BonesData; }
-  Buffer*       NativeBoneBuffer() { return m_pBonesBuffer; }
+  JointsBuffer*  JointsData() { return &m_jointsData; }
+  Buffer*       NativeJointBuffer() { return m_pJointsBuffer; }
 
 private:
-  BonesBuffer   m_BonesData;
-  Buffer*       m_pBonesBuffer;
+  JointsBuffer   m_jointsData;
+  Buffer*       m_pJointsBuffer;
   friend class  Renderer;
 };
 } // Recluse

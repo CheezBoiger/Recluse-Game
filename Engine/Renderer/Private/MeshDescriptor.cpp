@@ -68,7 +68,7 @@ void MeshDescriptor::CleanUp()
 
 
 SkinnedMeshDescriptor::SkinnedMeshDescriptor()
-  : m_pBonesBuffer(nullptr)
+  : m_pJointsBuffer(nullptr)
   , MeshDescriptor()
 {
   m_Skinned = true;
@@ -77,7 +77,7 @@ SkinnedMeshDescriptor::SkinnedMeshDescriptor()
 
 SkinnedMeshDescriptor::~SkinnedMeshDescriptor()
 {
-  if (m_pBonesBuffer) {
+  if (m_pJointsBuffer) {
     R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
   }
 }
@@ -88,13 +88,13 @@ void SkinnedMeshDescriptor::Initialize()
   MeshDescriptor::Initialize();
 
   VkBufferCreateInfo bonesCI = {};
-  VkDeviceSize bonesSize = sizeof(BonesBuffer);
+  VkDeviceSize bonesSize = sizeof(JointsBuffer);
   bonesCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bonesCI.size = bonesSize;
 
-  m_pBonesBuffer = m_pRhi->CreateBuffer();
-  m_pBonesBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pJointsBuffer = m_pRhi->CreateBuffer();
+  m_pJointsBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 
@@ -102,9 +102,9 @@ void SkinnedMeshDescriptor::Update()
 {
   MeshDescriptor::Update();
 
-  m_pBonesBuffer->Map();
-    memcpy(m_pBonesBuffer->Mapped(), &m_BonesData, sizeof(BonesBuffer));
-  m_pBonesBuffer->UnMap();
+  m_pJointsBuffer->Map();
+    memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointsBuffer));
+  m_pJointsBuffer->UnMap();
 }
 
 
@@ -112,9 +112,9 @@ void SkinnedMeshDescriptor::CleanUp()
 {
   MeshDescriptor::CleanUp();
 
-  if (m_pBonesBuffer) {
-    m_pRhi->FreeBuffer(m_pBonesBuffer);
-    m_pBonesBuffer = nullptr;
+  if (m_pJointsBuffer) {
+    m_pRhi->FreeBuffer(m_pJointsBuffer);
+    m_pJointsBuffer = nullptr;
   }
 }
 } // Recluse
