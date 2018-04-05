@@ -70,6 +70,8 @@ set(GAME_FILES
   ${SCENE_PRIVATE_DIR}/ModelLoader.cpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.hpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.cpp
+  ${SCENE_PRIVATE_DIR}/json.hpp
+  ${SCENE_PRIVATE_DIR}/stb_image_write.hpp
   
   ${SCRIPTS_PUBLIC_DIR}/Behavior.hpp
   ${SCRIPTS_PUBLIC_DIR}/ScriptCache.hpp

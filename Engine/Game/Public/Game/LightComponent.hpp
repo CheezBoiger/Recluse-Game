@@ -15,8 +15,10 @@ class LightComponent : public Component {
 protected:
   static std::queue<u32>  sAvailableDirectionalLightIds;
 
-  static void Initialize();
-  static void CleanUp();
+  // Global Clean up and initialization of light data, since this data structure keeps
+  // track of light key references. Determines which light keys to assign.
+  static void GlobalInitialize();
+  static void GlobalCleanUp();
 
 public:
   enum LightType {

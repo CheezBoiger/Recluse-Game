@@ -23,14 +23,13 @@ struct Material {
   void                      Initialize();
   void                      CleanUp();
 
-  void                      SetBaseRough(r32 rough) { m_pDesc->Data()->_BaseRough = rough; MARK_DIRTY_MATERIAL(); }
-  void                      SetBaseMetal(r32 metal) { m_pDesc->Data()->_BaseMetal = metal; MARK_DIRTY_MATERIAL(); }
+  void                      SetRoughnessFactor(r32 rough) { m_pDesc->Data()->_roughFactor = rough; MARK_DIRTY_MATERIAL(); }
+  void                      SetMetallicFactor(r32 metal) { m_pDesc->Data()->_metalFactor = metal; MARK_DIRTY_MATERIAL(); }
   void                      SetBaseEmissive(r32 emissive) { m_pDesc->Data()->_BaseEmissive = emissive; MARK_DIRTY_MATERIAL(); }
 
   void                      SetAlbedo(Texture2D* texture) { m_pDesc->SetAlbedo(texture); MARK_DIRTY_MATERIAL(); }
   void                      SetNormal(Texture2D* texture) { m_pDesc->SetNormal(texture); MARK_DIRTY_MATERIAL(); }
-  void                      SetRoughness(Texture2D* texture) { m_pDesc->SetRoughness(texture); MARK_DIRTY_MATERIAL(); }
-  void                      SetMetallic(Texture2D* texture) { m_pDesc->SetMetallic(texture); MARK_DIRTY_MATERIAL(); }
+  void                      SetRoughnessMetallic(Texture2D* texture) { m_pDesc->SetRoughnessMetallic(texture); MARK_DIRTY_MATERIAL(); }
   void                      SetAo(Texture2D* texture) { m_pDesc->SetAo(texture); MARK_DIRTY_MATERIAL(); }
   void                      SetEmissive(Texture2D* texture) { m_pDesc->SetEmissive(texture); MARK_DIRTY_MATERIAL(); }
   void                      SetBaseColor(Vector4 color) { m_pDesc->Data()->_Color = color; MARK_DIRTY_MATERIAL(); }

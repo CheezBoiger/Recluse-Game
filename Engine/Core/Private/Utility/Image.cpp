@@ -1,7 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Utility/Image.hpp"
-
-#include "stb_image.hpp"
+#include "Utility/stb_image.hpp"
 
 namespace Recluse {
 
@@ -14,19 +13,19 @@ Image::~Image()
 
 b8 Image::Load(const tchar* imgpath)
 {
-  mData = stbi_load(imgpath, &mWidth, &mHeight, &mChannels, STBI_rgb_alpha);
-  if (!mData) return false;
+  _data = stbi_load(imgpath, &_width, &_height, &_channels, STBI_rgb_alpha);
+  if (!_data) return false;
 
-  mMemorySize = mWidth * mHeight * 4;
+  _memorySize = _width * _height * 4;
   return true;
 }
 
 
 b8 Image::CleanUp()
 {
-  if (mData) {
-    stbi_image_free(mData);
-    mData = nullptr;
+  if (_data) {
+    stbi_image_free(_data);
+    _data = nullptr;
     return false;
   }
   return false;

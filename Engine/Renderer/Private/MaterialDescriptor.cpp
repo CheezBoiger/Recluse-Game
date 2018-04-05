@@ -19,8 +19,7 @@ namespace Recluse {
 
 MaterialDescriptor::MaterialDescriptor()
   : m_pAlbedo(nullptr)
-  , m_pMetallic(nullptr)
-  , m_pRoughness(nullptr)
+  , m_pRoughnessMetallic(nullptr)
   , m_pNormal(nullptr)
   , m_pAo(nullptr)
   , m_pEmissive(nullptr)
@@ -38,8 +37,8 @@ MaterialDescriptor::MaterialDescriptor()
   m_MaterialData._BaseEmissive = 0.0f;
   m_MaterialData._HasRoughness = false;
   m_MaterialData._IsTransparent = false;
-  m_MaterialData._BaseMetal = 0.0f;
-  m_MaterialData._BaseRough = 1.0f;
+  m_MaterialData._metalFactor = 0.0f;
+  m_MaterialData._roughFactor = 1.0f;
   m_MaterialData._Pad = 0;
 }
 

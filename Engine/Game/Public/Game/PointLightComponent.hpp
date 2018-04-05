@@ -10,7 +10,7 @@
 namespace Recluse {
 
 
-class PointLightComponent : public Recluse::LightComponent {
+class PointLightComponent : public LightComponent {
   RCOMPONENT(PointLightComponent);
   
 public:

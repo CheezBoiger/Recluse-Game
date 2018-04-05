@@ -11,10 +11,9 @@ namespace Recluse {
 // surface. This is the very representation of some image.
 
 // TODO(): Need to accomodate textured cubes.
-class Image {
-public:
+struct Image {
   Image()
-    : mWidth(0), mHeight(0), mChannels(0), mData(nullptr), mMemorySize(0) { }
+    : _width(0), _height(0), _channels(0), _data(nullptr), _memorySize(0) { }
 
   ~Image();
 
@@ -23,18 +22,17 @@ public:
   // Clean up image data. Returns true if image was cleaned up. Returns false if
   // no image data was cleaned up (which could mean there was no data to begin with.)
   b8            CleanUp();
-  b8            ContainsData() const { if (mData) return true; return false; }
+  b8            ContainsData() const { if (_data) return true; return false; }
 
-  i32           Height() const { return mHeight; }
-  i32           Width() const { return mWidth; }
-  const u8*     Data() const { return mData; }
-  u64           MemorySize() const { return mMemorySize; }         
+  i32           Height() const { return _height; }
+  i32           Width() const { return _width; }
+  const u8*     Data() const { return _data; }
+  u64           MemorySize() const { return _memorySize; }         
 
-private:
-  u64           mMemorySize;
-  i32           mWidth;
-  i32           mHeight;
-  i32           mChannels;
-  u8*           mData;
+  u64           _memorySize;
+  i32           _width;
+  i32           _height;
+  i32           _channels;
+  u8*           _data;
 };
 } // Recluse

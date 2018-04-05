@@ -42,8 +42,6 @@ void Controller()
 }
 
 Mesh* mesh;
-Material* material;
-
 
 // Spehere object example, on how to set up and update a game object for the engine.
 class SphereObject : public GameObject
@@ -59,10 +57,10 @@ public:
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
+    Material* material = nullptr;
+    MaterialCache::Get("RustySample", &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
-
-    
 
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -161,32 +159,31 @@ int main(int c, char* argv[])
   }
 
   {
-    material = new Material();
+    Material* material = new Material();
     material->Initialize();
     Texture2D* tex;
     TextureCache::Get("RustedAlbedo", &tex);
 
     material->SetAlbedo(tex);
+    material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     material->EnableAlbedo(true);
-
+    material->SetRoughnessFactor(1.0f);
+    material->SetMetallicFactor(1.0f);
     TextureCache::Get("RustedNormal", &tex);
     material->SetNormal(tex);
     material->EnableNormal(true);
 
-    TextureCache::Get("RustedMetal", &tex);
-    material->SetMetallic(tex);
-    material->EnableMetallic(true);
-
     TextureCache::Get("RustedRough", &tex);
-    material->SetRoughness(tex);
+    material->SetRoughnessMetallic(tex);
     material->EnableRoughness(true);
+    MaterialCache::Cache("RustySample", material);
   }
 
   // Create scene.
   Scene scene;
   
   std::vector<SphereObject*> spheres;
-  #define SPHERE_COUNT 100
+  #define SPHERE_COUNT 64
   for (u32 i = 0; i < SPHERE_COUNT; ++i) {
     spheres.push_back(new SphereObject());
     scene.GetRoot()->AddChild(spheres[i]);
@@ -253,13 +250,13 @@ int main(int c, char* argv[])
   }
   
   for (u32 i = 0; i < SPHERE_COUNT; ++i) {
+    spheres[i]->CleanUp();
     delete spheres[i];
   }
   // Finish.
   mesh->CleanUp();
   delete mesh;
-  material->CleanUp();
-  delete material;
+  MaterialCache::CleanUpAll();
   TextureCleanUp();
   // Clean up engine
   gEngine().CleanUp();

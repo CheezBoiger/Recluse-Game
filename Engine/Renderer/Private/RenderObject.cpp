@@ -157,7 +157,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
       return; 
     }
 
-    std::array<VkWriteDescriptorSet, 7> MaterialWriteSets;
+    std::array<VkWriteDescriptorSet, 6> MaterialWriteSets;
     VkDescriptorImageInfo albedoInfo = {};
     albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     if (_pMaterialDescId->Albedo()) {
@@ -168,25 +168,15 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     }
     albedoInfo.sampler = sampler->Handle();
 
-    VkDescriptorImageInfo metallicInfo = {};
-    metallicInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (_pMaterialDescId->Metallic()) {
-      metallicInfo.imageView = _pMaterialDescId->Metallic()->Handle()->View();
+    VkDescriptorImageInfo roughMetalInfo = {};
+    roughMetalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (_pMaterialDescId->RoughnessMetallic()) {
+      roughMetalInfo.imageView = _pMaterialDescId->RoughnessMetallic()->Handle()->View();
     }
     else {
-      metallicInfo.imageView = defaultTexture->View();
+      roughMetalInfo.imageView = defaultTexture->View();
     }
-    metallicInfo.sampler = sampler->Handle();
-
-    VkDescriptorImageInfo roughInfo = {};
-    roughInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (_pMaterialDescId->Roughness()) {
-      roughInfo.imageView = _pMaterialDescId->Roughness()->Handle()->View();
-    }
-    else {
-      roughInfo.imageView = defaultTexture->View();
-    }
-    roughInfo.sampler = sampler->Handle();
+    roughMetalInfo.sampler = sampler->Handle();
 
     VkDescriptorImageInfo normalInfo = {};
     normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -236,7 +226,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     MaterialWriteSets[1].descriptorCount = 1;
     MaterialWriteSets[1].dstArrayElement = 0;
     MaterialWriteSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    MaterialWriteSets[1].pImageInfo = &metallicInfo;
+    MaterialWriteSets[1].pImageInfo = &roughMetalInfo;
     MaterialWriteSets[1].pNext = nullptr;
 
     MaterialWriteSets[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -244,7 +234,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     MaterialWriteSets[2].descriptorCount = 1;
     MaterialWriteSets[2].dstArrayElement = 0;
     MaterialWriteSets[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    MaterialWriteSets[2].pImageInfo = &roughInfo;
+    MaterialWriteSets[2].pImageInfo = &normalInfo;
     MaterialWriteSets[2].pNext = nullptr;
 
     MaterialWriteSets[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -252,7 +242,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     MaterialWriteSets[3].descriptorCount = 1;
     MaterialWriteSets[3].dstArrayElement = 0;
     MaterialWriteSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    MaterialWriteSets[3].pImageInfo = &normalInfo;
+    MaterialWriteSets[3].pImageInfo = &aoInfo;
     MaterialWriteSets[3].pNext = nullptr;
 
     MaterialWriteSets[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -260,24 +250,16 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     MaterialWriteSets[4].descriptorCount = 1;
     MaterialWriteSets[4].dstArrayElement = 0;
     MaterialWriteSets[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    MaterialWriteSets[4].pImageInfo = &aoInfo;
+    MaterialWriteSets[4].pImageInfo = &emissiveInfo;
     MaterialWriteSets[4].pNext = nullptr;
 
     MaterialWriteSets[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    MaterialWriteSets[5].dstBinding = 6;
+    MaterialWriteSets[5].dstBinding = 0;
     MaterialWriteSets[5].descriptorCount = 1;
     MaterialWriteSets[5].dstArrayElement = 0;
-    MaterialWriteSets[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    MaterialWriteSets[5].pImageInfo = &emissiveInfo;
+    MaterialWriteSets[5].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    MaterialWriteSets[5].pBufferInfo = &matBufferInfo;
     MaterialWriteSets[5].pNext = nullptr;
-
-    MaterialWriteSets[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    MaterialWriteSets[6].dstBinding = 0;
-    MaterialWriteSets[6].descriptorCount = 1;
-    MaterialWriteSets[6].dstArrayElement = 0;
-    MaterialWriteSets[6].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    MaterialWriteSets[6].pBufferInfo = &matBufferInfo;
-    MaterialWriteSets[6].pNext = nullptr;
 
     mMaterialSets[idx]->Update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
   }

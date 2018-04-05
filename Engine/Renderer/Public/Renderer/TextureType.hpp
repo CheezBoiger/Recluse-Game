@@ -9,7 +9,7 @@ namespace Recluse {
 class VulkanRHI;
 class Texture;
 class Sampler;
-class Image;
+struct Image;
 
 
 struct TextureBase {

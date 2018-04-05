@@ -18,7 +18,7 @@ std::queue<u32> LightComponent::sAvailableDirectionalLightIds;
 DEFINE_COMPONENT_MAP(PointLightComponent);
 
 
-void LightComponent::Initialize()
+void LightComponent::GlobalInitialize()
 {
   u32 pointLightCount = LightBuffer::MaxNumPointLights();
   u32 dirLightCount = LightBuffer::MaxNumDirectionalLights();
@@ -33,7 +33,7 @@ void LightComponent::Initialize()
 }
 
 
-void LightComponent::CleanUp()
+void LightComponent::GlobalCleanUp()
 {
   // uhh? what to clean up? Renderer takes care of this shat.
 }

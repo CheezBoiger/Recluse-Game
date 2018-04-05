@@ -21,6 +21,7 @@
 #include "RendererComponent.hpp"
 #include "PointLightComponent.hpp"
 #include "CameraViewFrustum.hpp"
+#include "Rendering/RendererResourcesCache.hpp"
 #include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"

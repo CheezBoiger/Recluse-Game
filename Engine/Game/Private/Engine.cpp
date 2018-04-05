@@ -132,7 +132,7 @@ void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, 
   gRenderer().Initialize(&m_window, params);
 
   Material::InitializeDefault();
-  LightComponent::Initialize();
+  LightComponent::GlobalInitialize();
 
   if (fullscreen) {
     m_window.SetToFullScreen();
@@ -155,7 +155,7 @@ void Engine::CleanUp()
     Window::PollEvents();
   }
 
-  LightComponent::CleanUp();
+  LightComponent::GlobalCleanUp();
   Material::CleanUpDefault();
 
   gUI().ShutDown();

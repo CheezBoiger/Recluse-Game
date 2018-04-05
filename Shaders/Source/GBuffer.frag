@@ -76,11 +76,10 @@ layout (set = 2, binding = 0) uniform MaterialBuffer {
 
 
 layout (set = 2, binding = 1) uniform sampler2D albedo;
-layout (set = 2, binding = 2) uniform sampler2D metallic;
-layout (set = 2, binding = 3) uniform sampler2D roughness;
-layout (set = 2, binding = 4) uniform sampler2D normal;
-layout (set = 2, binding = 5) uniform sampler2D ao;
-layout (set = 2, binding = 6) uniform sampler2D emissive;
+layout (set = 2, binding = 2) uniform sampler2D roughnessMetallic;
+layout (set = 2, binding = 3) uniform sampler2D normal;
+layout (set = 2, binding = 4) uniform sampler2D ao;
+layout (set = 2, binding = 5) uniform sampler2D emissive;
 
 
 layout (location = 0) out vec4 rt0;
@@ -137,45 +136,40 @@ struct GBuffer
 
 void WriteGBuffer(GBuffer gbuffer)
 {
-  rt0 = vec4(gbuffer.albedo, gbuffer.roughness);
+  rt0 = vec4(gbuffer.albedo, 1.0);
   rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
-  rt2 = vec4(gbuffer.emissionStrength, 1.0, 0.0, 0.0);
-  rt3 = vec4(gbuffer.emission, gbuffer.metallic);
+  rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
+  rt3 = vec4(gbuffer.emission, 1.0);
 }
 
 
 void main()
-{
-  vec3 fragAlbedo = vec3(0.0);
-  vec3 fragNormal = vec3(0.0);
+{ 
+  vec3 fragAlbedo = matBuffer.color.rgb;
+  vec3 fragNormal = frag_in.normal;
   vec3 fragEmissive = vec3(0.0);
 
-  float fragMetallic = 0.01;
-  float fragRoughness = 0.1;
+  float fragMetallic  = matBuffer.metal;
+  float fragRoughness = matBuffer.rough;
   float fragAO = 0.0;  // still WIP
   
   if (matBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
-  } else {
-    fragAlbedo = matBuffer.color.rgb;
-  }
-    
-  if (matBuffer.hasMetallic >= 1) {
-    fragMetallic = texture(metallic, frag_in.texcoord0, objBuffer.lod).r;
-  } else {
-    fragMetallic = matBuffer.metal;
   }
   
-  if (matBuffer.hasRoughness >= 1) {
-    fragRoughness = texture(roughness, frag_in.texcoord0, objBuffer.lod).r;
-  } else {
-    fragRoughness = matBuffer.rough;
+  if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
+    vec4 roughMetal = texture(roughnessMetallic, frag_in.texcoord0, objBuffer.lod);
+    if (matBuffer.hasMetallic >= 1) {
+      fragMetallic *= roughMetal.g;
+    }
+  
+    if (matBuffer.hasRoughness >= 1) {
+      fragRoughness *= roughMetal.b;
+    }
   }
   
   if (matBuffer.hasNormal >= 1) {
     fragNormal = GetNormal(frag_in.normal, frag_in.position, frag_in.texcoord0);
-  } else {
-    fragNormal = frag_in.normal;
   }
   
   if (matBuffer.hasAO >= 1) {

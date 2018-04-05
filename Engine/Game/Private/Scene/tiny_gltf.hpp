@@ -908,11 +908,11 @@ class TinyGLTF {
 #include "./json.hpp"
 
 #ifndef TINYGLTF_NO_STB_IMAGE
-#include "./stb_image.h"
+#include "Core/Utility/stb_image.hpp"
 #endif
 
 #ifndef TINYGLTF_NO_STB_IMAGE_WRITE
-#include "./stb_image_write.h"
+#include "./stb_image_write.hpp"
 #endif
 
 #ifdef __clang__

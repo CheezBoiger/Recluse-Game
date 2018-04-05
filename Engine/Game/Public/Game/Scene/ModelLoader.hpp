@@ -7,12 +7,12 @@
 #include "Game/RendererComponent.hpp"
 #include "Game/MaterialComponent.hpp"
 #include "Game/Rendering/TextureCache.hpp"
-#include "Game/Rendering/MeshCache.hpp"
+#include "Game/Rendering/RendererResourcesCache.hpp"
 #include "Game/Engine.hpp"
 
 
 namespace Recluse {
-namespace Model {
+namespace ModelLoader {
 
 
 enum ModelResult {
@@ -21,10 +21,17 @@ enum ModelResult {
 };
 
 
+struct Primitive {
+  Mesh*     _meshRef;
+  Material* _materialRef;
+};
+
+
 // Model is a container of meshes that correspond to materials.
 struct Model {
-  std::vector<Mesh*>     Meshes;
-  std::vector<Material*> Materials;
+  std::vector<Mesh*>        meshes;
+  std::vector<Material*>    materials;
+  std::vector<Texture2D*>   textures;
 };
 
 
@@ -34,5 +41,5 @@ ModelResult Load(const std::string filename, Model* model);
 ModelResult LoadSkinned(const std::string filename, Model* model);
 ModelResult FreeModel(Model** model);
  
-} // Recluse
+} // ModelLoader
 } // Recluse
