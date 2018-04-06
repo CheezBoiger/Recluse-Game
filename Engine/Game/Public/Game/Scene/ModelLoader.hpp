@@ -22,10 +22,10 @@ enum ModelResult {
 
 
 struct Primitive {
-  Mesh*     _meshRef;
-  Material* _materialRef;
-  u32       _firstIndex;
-  u32       _indexCount;
+  Mesh*           _meshRef;
+  Material*       _materialRef;
+  u32             _firstIndex;
+  u32             _indexCount;
 };
 
 

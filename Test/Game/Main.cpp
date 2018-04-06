@@ -55,15 +55,21 @@ public:
     m_pRendererComponent = new RendererComponent();
 
     Mesh* mesh = nullptr;
-    MeshCache::Get("Sphere", &mesh);
+    MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = nullptr;
-    MaterialCache::Get("Material_MR", &material);
+    MaterialCache::Get(
+#if 0
+      "RustySample"
+#else
+      "Material_MR"
+#endif
+      , &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
-    material->SetBaseEmissive(0.1f);
+    material->SetBaseEmissive(0.3f);
 
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -73,6 +79,8 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
+    trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->Scale = Vector3(10.0f, 10.0f, 10.0f);
     //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
@@ -86,7 +94,7 @@ public:
   {
     Transform* transform = GetTransform();
     //transform->Position += m_vRandDir * tick;
-    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
+    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
     transform->Rotation = transform->Rotation * q;
   }
 
@@ -208,7 +216,7 @@ int main(int c, char* argv[])
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 2.0f;
+    pPrimary->_Intensity = 5.0f;
   }
 
   // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.

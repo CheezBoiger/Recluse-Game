@@ -100,7 +100,7 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 }
 
 
-void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, const Matrix4& parentMatrix, const r32 scale)
+void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   Vector3 t;
   Matrix4 R;
@@ -139,7 +139,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, const Ma
   }
   if (!node.children.empty()) {
     for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadNode(model.nodes[node.children[i]], model, localMatrix, scale);
+      LoadNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
     }
   }
 
@@ -147,13 +147,16 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, const Ma
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
-    //Mesh* pMesh = new Mesh();
+    Mesh* pMesh = new Mesh();
 
     std::vector<StaticVertex> vertices;
     std::vector<u32>          indices;
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
+      u32   vertexStart = static_cast<u32>(vertices.size());
+      u32   indexStart  = static_cast<u32>(indices.size());
+      u32   indexCount  = 0;
       if (primitive.indices < 0) continue;
       R_ASSERT(primitive.attributes.find("POSITION") != primitive.attributes.end(), "No position values within mesh!");
 
@@ -186,6 +189,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, const Ma
           vertex.position = Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
           vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]), 1.0f);
           vertex.texcoord0 = Vector2(&bufferTexCoords[value * 2]);
+          vertex.texcoord0.y = vertex.texcoord0.y - 1.0f;
           vertex.texcoord1 = Vector2();
           vertices.push_back(vertex);
         }
@@ -196,10 +200,43 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, const Ma
         const tinygltf::Accessor& indAccessor = model.accessors[primitive.indices];
         const tinygltf::BufferView& iBufView = model.bufferViews[indAccessor.bufferView];
         const tinygltf::Buffer& iBuf = model.buffers[iBufView.buffer];
+        indexCount = static_cast<u32>(indAccessor.count);
 
         // TODO(): In progress. 
+        switch (indAccessor.componentType) { 
+          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
+          {
+            const u32* buf = (const u32*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+            for (size_t index = 0; index < indAccessor.count; ++index) { 
+              indices.push_back(buf[index] + vertexStart);
+            }
+          } break;
+          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+          {
+            const u16* buf = (const u16*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+            for (size_t index = 0; index < indAccessor.count; ++index) {
+              indices.push_back(((u32)buf[index]) + vertexStart);
+            }
+          } break;
+          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
+          {
+          } break;
+        };
       }
+      
+      Primitive prim;
+      prim._meshRef = pMesh;
+      prim._materialRef = engineModel->materials[primitive.material];
+
+
+      // TODO():
+      //    Still need to add start and index count.
+      engineModel->primitives.push_back(prim);
     }
+
+    pMesh->Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data());
+    MeshCache::Cache(mesh.name, pMesh);
+    engineModel->meshes.push_back(pMesh);
   }
 }
 
@@ -226,7 +263,7 @@ ModelResult Load(const std::string path, Model* model)
   tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
     tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];  
-    LoadNode(node, gltfModel, Matrix4(), 1.0);
+    LoadNode(node, gltfModel, model, Matrix4(), 1.0);
   }
   return Model_Success;
 }
