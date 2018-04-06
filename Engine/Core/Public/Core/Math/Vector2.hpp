@@ -14,6 +14,8 @@ struct Vector2 {
   struct { r32 x, y; };
 
   Vector2(r32 x = 0.0f, r32 y = 0.0f) : x(x), y(y) { }
+  Vector2(const r32* rawDat)
+    : Vector2(rawDat[0], rawDat[1]) { }
 
   Vector2 Normalize() const;
 

@@ -19,6 +19,10 @@ struct Vector4 {
   Vector4(const Vector3& other, r32 w = 0.0f)
     : Vector4(other.x, other.y, other.z, w)  { }
 
+  Vector4(const r32* rawDat)
+    : Vector4(rawDat[0], rawDat[1], rawDat[2], rawDat[3]) 
+  { }
+
   static Vector4  Lerp(const Vector4& p0, const Vector4& p1, const r32 t);
 
   Vector4         Normalize() const;

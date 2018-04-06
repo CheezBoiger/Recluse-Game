@@ -7,7 +7,6 @@ namespace Recluse {
 
 Image::~Image()
 {
-  CleanUp();
 }
 
 

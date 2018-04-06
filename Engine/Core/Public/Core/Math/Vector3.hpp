@@ -25,6 +25,10 @@ struct Vector3 {
   Vector3(const Vector2& other, r32 z = 0.0f)
     : x(other.x), y(other.y), z(z) { }
 
+  Vector3(const r32* rawDat)
+    : Vector3(rawDat[0], rawDat[1], rawDat[2]) 
+  { }
+
   static Vector3  Lerp(const Vector3& a, const Vector3& b, const r32 t);
   
   Vector3         Normalize() const;

@@ -24,6 +24,8 @@ enum ModelResult {
 struct Primitive {
   Mesh*     _meshRef;
   Material* _materialRef;
+  u32       _firstIndex;
+  u32       _indexCount;
 };
 
 
@@ -32,6 +34,7 @@ struct Model {
   std::vector<Mesh*>        meshes;
   std::vector<Material*>    materials;
   std::vector<Texture2D*>   textures;
+  std::vector<Primitive>    primitives;
 };
 
 

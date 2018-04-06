@@ -44,6 +44,20 @@ struct Matrix4 {
     Data[3][0] = a30; Data[3][1] = a31; Data[3][2] = a32; Data[3][3] = a33;
   }
 
+  Matrix4(const r32* rawDat)
+    : Matrix4(rawDat[0],  rawDat[1],  rawDat[2],    rawDat[3],
+              rawDat[4],  rawDat[5],  rawDat[6],    rawDat[7],
+              rawDat[8],  rawDat[9],  rawDat[10],   rawDat[11],
+              rawDat[12], rawDat[13], rawDat[14],   rawDat[15]) 
+  { }
+
+  Matrix4(const r64* rawDat)
+    : Matrix4(static_cast<r32>(rawDat[0]),  static_cast<r32>(rawDat[1]),  static_cast<r32>(rawDat[2]),    static_cast<r32>(rawDat[3]),
+              static_cast<r32>(rawDat[4]),  static_cast<r32>(rawDat[5]),  static_cast<r32>(rawDat[6]),    static_cast<r32>(rawDat[7]),
+              static_cast<r32>(rawDat[8]),  static_cast<r32>(rawDat[9]),  static_cast<r32>(rawDat[10]),   static_cast<r32>(rawDat[11]),
+              static_cast<r32>(rawDat[12]), static_cast<r32>(rawDat[13]), static_cast<r32>(rawDat[14]),   static_cast<r32>(rawDat[15])) 
+  { }
+
   // Retrieve the Perspective matrix, which is in left hand coordinates.
   static Matrix4          Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar);
 

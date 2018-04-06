@@ -3,6 +3,8 @@
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
 
+
+#include "Game/Scene/ModelLoader.hpp"
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
@@ -41,8 +43,6 @@ void Controller()
 
 }
 
-Mesh* mesh;
-
 // Spehere object example, on how to set up and update a game object for the engine.
 class SphereObject : public GameObject
 {
@@ -54,13 +54,16 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
 
+    Mesh* mesh = nullptr;
+    MeshCache::Get("Sphere", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = nullptr;
-    MaterialCache::Get("RustySample", &material);
+    MaterialCache::Get("Material_MR", &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
+    material->SetBaseEmissive(0.1f);
 
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -70,8 +73,8 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
-    trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
-    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+    //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
+    //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
 
@@ -82,7 +85,9 @@ public:
   void Update(r32 tick) override
   {
     Transform* transform = GetTransform();
-    transform->Position += m_vRandDir * tick;
+    //transform->Position += m_vRandDir * tick;
+    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
+    transform->Rotation = transform->Rotation * q;
   }
 
   void CleanUp() override
@@ -151,12 +156,16 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   {
-    mesh = new Mesh();
+    Mesh* mesh = new Mesh();
     u32 g = 32;
     auto boxVerts = UVSphere::MeshInstance(1.0f, g, g);
     auto boxIndic = UVSphere::IndicesInstance(static_cast<u32>(boxVerts.size()), g, g);
     mesh->Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
+    MeshCache::Cache("Sphere", mesh);
   }
+
+  ModelLoader::Model model;
+  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
 
   {
     Material* material = new Material();
@@ -183,7 +192,7 @@ int main(int c, char* argv[])
   Scene scene;
   
   std::vector<SphereObject*> spheres;
-  #define SPHERE_COUNT 64
+  #define SPHERE_COUNT 1
   for (u32 i = 0; i < SPHERE_COUNT; ++i) {
     spheres.push_back(new SphereObject());
     scene.GetRoot()->AddChild(spheres[i]);
@@ -199,7 +208,7 @@ int main(int c, char* argv[])
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
     pPrimary->_Enable = true;
-    pPrimary->_Intensity = 5.0f;
+    pPrimary->_Intensity = 2.0f;
   }
 
   // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.
@@ -254,9 +263,8 @@ int main(int c, char* argv[])
     delete spheres[i];
   }
   // Finish.
-  mesh->CleanUp();
-  delete mesh;
   MaterialCache::CleanUpAll();
+  MeshCache::CleanUpAll();
   TextureCleanUp();
   // Clean up engine
   gEngine().CleanUp();

@@ -5,6 +5,7 @@
 #include "Core/Serialize.hpp"
 
 #include "MaterialComponent.hpp"
+#include "MeshComponent.hpp"
 #include "RendererComponent.hpp"
 #include "TextureCache.hpp"
 
@@ -19,11 +20,45 @@ struct Material;
 
 class MeshCache {
 public:
-  static void       CleanUpAll();
+  static void       CleanUpAll() {
+    // TODO(): Automate cleaning up all materials within this cache.
+    for (auto& it : m_Cache) {
+      Mesh* mesh = it.second;
+      mesh->CleanUp();
+      delete mesh;
+    }
+    m_Cache.clear();
+  }
 
-  static b8         Cache(std::string name, Mesh* mesh);
-  static b8         UnCache(std::string name, Mesh** out);
-  static b8         Get(std::string name, Mesh** out);
+  static b8         Cache(std::string name, Mesh* mesh) {
+    if (m_Cache.find(name) != m_Cache.end()) {
+      return false;
+    }
+    m_Cache[name] = mesh;
+    return true;
+  }
+
+  static b8         UnCache(std::string name, Mesh** out) {
+    auto it = m_Cache.find(name);
+    if (it != m_Cache.end()) {
+      Mesh* pMesh = it->second;
+      *out = pMesh;
+      m_Cache.erase(it);
+      return true;
+    }
+
+    return false;
+  }
+
+  static b8         Get(std::string name, Mesh** out) {
+    auto it = m_Cache.find(name);
+    if (it != m_Cache.end()) {
+      *out = it->second;
+      return true;
+    }
+
+    return false;
+  }
 
 private:
   static std::unordered_map<std::string, Mesh*> m_Cache;

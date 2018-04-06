@@ -3,6 +3,7 @@
 
 
 #if defined(_WIN32)
+ #define _CRT_SECURE_NO_WARNINGS 1
  #include <Windows.h>
  #include <windowsx.h>
  #define RECLUSE_OS_WIN32      "win32"
