@@ -175,7 +175,7 @@ float FilterPCF(vec4 sc)
 
   float shadowFactor = 0.0;
   float count = 0.0;
-  float range = 2.0;
+  float range = 1.5;
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {

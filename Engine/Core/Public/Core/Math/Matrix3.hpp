@@ -3,11 +3,15 @@
 
 
 #include "Core/Types.hpp"
+#include "Vector3.hpp"
 
 
 namespace Recluse {
 
 class Log;
+struct Matrix4;
+struct Vector3;
+
 
 struct Matrix3 {
   r32         Data[3][3];
@@ -25,6 +29,11 @@ struct Matrix3 {
     Data[2][0] = a20; Data[2][1] = a21; Data[2][2] = a22;
   }
 
+  Matrix3(const Matrix4& other);
+
+
+  static Matrix3 ToMatrix3(const Matrix4& other);
+
   r32         Determinant() const;
   Matrix3     Transpose() const;
   Matrix3     Inverse() const;
@@ -33,6 +42,8 @@ struct Matrix3 {
   Matrix3     operator*(const Matrix3& other) const;
   Matrix3     operator+(const Matrix3& other) const;
   Matrix3     operator-(const Matrix3& other) const;
+
+  Vector3     operator*(const Vector3& other) const;
 
   Matrix3     operator*(const r32 scaler) const;
 

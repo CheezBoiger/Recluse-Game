@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Matrix3.hpp"
+#include "Math/Matrix4.hpp"
 #include "Logging/Log.hpp"
 #include "Exception.hpp"
 
@@ -128,5 +129,29 @@ Log& operator<<(Log& log, const Matrix3& mat3)
     log << "\n";
   }
   return log;
+}
+
+
+Matrix3::Matrix3(const Matrix4& other)
+{
+  Data[0][0] = other.Data[0][0]; Data[0][1] = other.Data[0][1]; Data[0][2] = other.Data[0][2];
+  Data[1][0] = other.Data[1][0]; Data[1][1] = other.Data[1][1]; Data[1][2] = other.Data[1][2];
+  Data[2][0] = other.Data[2][0]; Data[2][1] = other.Data[2][1]; Data[2][2] = other.Data[2][2];
+}
+
+
+Matrix3 Matrix3::ToMatrix3(const Matrix4& other)
+{
+  return Matrix3(other);
+}
+
+
+Vector3 Matrix3::operator*(const Vector3& other) const
+{
+  return Vector3(
+    Data[0][0] * other.x + Data[0][1] * other.y + Data[0][2] * other.z,
+    Data[1][0] * other.x + Data[1][1] * other.y + Data[1][2] * other.z,
+    Data[2][0] * other.x + Data[2][1] * other.y + Data[2][2] * other.z
+  );
 }
 } // Recluse

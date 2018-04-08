@@ -70,6 +70,7 @@ struct Matrix4 {
   Matrix4                 operator*(const Matrix4& other) const;
   Matrix4                 operator+(const Matrix4& other) const;
   Matrix4                 operator-(const Matrix4& other) const;
+  Vector4                 operator*(const Vector4& other) const;
 
   Matrix4                 operator*(const r32 scaler) const;  
 

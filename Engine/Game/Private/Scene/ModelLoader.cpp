@@ -186,8 +186,8 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
      
         for (size_t value = 0; value < positionAccessor.count; ++value) {
           StaticVertex vertex;
-          vertex.position = Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
-          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]), 1.0f);
+          vertex.position = localMatrix * Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
+          vertex.normal = Vector4(Matrix3(localMatrix) * Vector3(&bufferNormals[value * 3]), 1.0f);
           vertex.texcoord0 = Vector2(&bufferTexCoords[value * 2]);
           vertex.texcoord0.y = vertex.texcoord0.y - 1.0f;
           vertex.texcoord1 = Vector2();

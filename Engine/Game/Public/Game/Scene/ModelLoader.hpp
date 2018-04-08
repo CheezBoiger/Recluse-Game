@@ -3,6 +3,9 @@
 
 #include "Core/Types.hpp"
 
+#include "Animation/Skeleton.hpp"
+#include "Animation/Animation.hpp"
+
 #include "Game/MeshComponent.hpp"
 #include "Game/RendererComponent.hpp"
 #include "Game/MaterialComponent.hpp"

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Core/Serialize.hpp"
-
+#include "Core/Math/Matrix4.hpp"
 #include <map>
 
 namespace Recluse {
@@ -11,7 +11,7 @@ namespace Recluse {
 
 struct Joint 
 {
-  Matrix4       _mInvBindPose;
+  Matrix4       _InvBindPose;
   u8            _iParent;
   const tchar*  _name;
 };

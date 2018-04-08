@@ -69,8 +69,8 @@ public:
       , &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
-    material->SetBaseEmissive(0.3f);
-
+    material->SetBaseEmissive(1.0f);
+    material->SetRoughnessFactor(0.1f);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
@@ -79,7 +79,10 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
-    trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    // TODO(): Flip because helmet mesh vertices are counter clockwise. 
+    //          Will need to create a pipeline to allow renderer component to determine
+    //          winding order and topology for a game object.
+    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(0.0f, 0.0f, 1.0f));
     trans->Scale = Vector3(10.0f, 10.0f, 10.0f);
     //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -94,8 +97,22 @@ public:
   {
     Transform* transform = GetTransform();
     //transform->Position += m_vRandDir * tick;
-    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
+    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
+
+    if (Keyboard::KeyPressed(KEY_CODE_0)) {
+      Mesh* m = nullptr;
+      MeshCache::Get("Sphere", &m);
+      m_pMeshComponent->SetMeshRef(m);
+      m_pRendererComponent->ReConfigure();
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_1)) {
+      Mesh* m = nullptr;
+      MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &m);
+      m_pMeshComponent->SetMeshRef(m);
+      m_pRendererComponent->ReConfigure();
+    }
   }
 
   void CleanUp() override
@@ -111,6 +128,75 @@ private:
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
 };
+
+
+// Spehere object example, on how to set up and update a game object for the engine.
+class CubeObject : public GameObject
+{
+public:
+
+  CubeObject()
+  {
+    m_pMeshComponent = new MeshComponent();
+    m_pMaterialComponent = new MaterialComponent();
+    m_pRendererComponent = new RendererComponent();
+
+    Mesh* mesh = nullptr;
+    MeshCache::Get("Cube", &mesh);
+    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->SetMeshRef(mesh);
+
+    Material* material = nullptr;
+    MaterialCache::Get(
+#if 1
+      "RustySample"
+#else
+      "Material_MR"
+#endif
+      , &material);
+    m_pMaterialComponent->SetMaterialRef(material);
+    m_pMaterialComponent->Initialize(this);
+    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->Initialize(this);
+    
+    std::random_device r;
+    std::mt19937 twist(r());
+    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    Transform* trans = GetTransform();
+    trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->Scale = Vector3(50.0f, 50.0f, 50.0f);
+    trans->Position = Vector3(0.0f, -60.0f, 0.0f);
+    //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+  }
+
+
+  void Awake() override
+  {
+  }
+
+  void Update(r32 tick) override
+  {
+    Transform* transform = GetTransform();
+    //transform->Position += m_vRandDir * tick;
+    //Quaternion q = Quaternion::AngleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
+    //transform->Rotation = transform->Rotation * q;
+  }
+
+  void CleanUp() override
+  {
+    m_pMeshComponent->CleanUp();
+    m_pMaterialComponent->CleanUp();
+    m_pRendererComponent->CleanUp();
+  }
+
+private:
+  Vector3             m_vRandDir;
+  RendererComponent*  m_pRendererComponent;
+  MeshComponent*      m_pMeshComponent;
+  MaterialComponent*  m_pMaterialComponent;
+};
+
 
 
 /*
@@ -166,10 +252,10 @@ int main(int c, char* argv[])
   {
     Mesh* mesh = new Mesh();
     u32 g = 32;
-    auto boxVerts = UVSphere::MeshInstance(1.0f, g, g);
-    auto boxIndic = UVSphere::IndicesInstance(static_cast<u32>(boxVerts.size()), g, g);
+    auto boxVerts = Cube::MeshInstance();/* UVSphere::MeshInstance(1.0f, g, g);*/
+    auto boxIndic = Cube::IndicesInstance();/*UVSphere::IndicesInstance(static_cast<u32>(boxVerts.size()), g, g);*/
     mesh->Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
-    MeshCache::Cache("Sphere", mesh);
+    MeshCache::Cache("Cube", mesh);
   }
 
   ModelLoader::Model model;
@@ -205,6 +291,9 @@ int main(int c, char* argv[])
     spheres.push_back(new SphereObject());
     scene.GetRoot()->AddChild(spheres[i]);
   }
+
+  CubeObject* cube = new CubeObject();
+  scene.GetRoot()->AddChild(cube);
  
 #if defined(MANUAL_INIT)
   // Add game objects into scene. This demonstrates parent-child transformation as well.
@@ -214,7 +303,7 @@ int main(int c, char* argv[])
     DirectionalLight* pPrimary = scene.GetPrimaryLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
     pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector3(0.01f, -1.0f, 0.0f).Normalize();
+    pPrimary->_Direction = Vector3(1.0f, -0.5f, 0.0f).Normalize();
     pPrimary->_Enable = true;
     pPrimary->_Intensity = 5.0f;
   }
@@ -270,6 +359,8 @@ int main(int c, char* argv[])
     spheres[i]->CleanUp();
     delete spheres[i];
   }
+  cube->CleanUp();
+  delete cube;
   // Finish.
   MaterialCache::CleanUpAll();
   MeshCache::CleanUpAll();

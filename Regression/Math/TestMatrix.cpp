@@ -24,6 +24,21 @@ b8 BasicMatrixMath()
   Log() << "Identity: \n" << identity << "\n"; 
   TASSERT_E(mat, identity);
 
+  Log(rNotify) << "Test 4x4 * 4x1:\n";
+  Matrix4 testMat(
+    2.0f, 5.0f,   1.0,    -1.0,
+    4.0f, 6.6f,   23.0f,  0.0f,
+    0.0f, 30.0f, -1.0f,   5.0f,
+    9.2f, 1.0f,   1.0f,   1.0f
+  );
+
+  Vector4 vec(4.0f, 2.0f, 1.0f, 1.0f);
+
+  Vector4 ans = testMat * vec;
+  Vector4 sol = Vector4(18.0f, 52.2f, 64.0f, 40.8f);
+  Log() << "ans: " << ans << "\nsol: " << sol << "\n";
+  TASSERT_E(ans, sol);
+
   return true;
 }
 } // Test
