@@ -13,7 +13,9 @@ bool noAlbedo2 = false;
 bool noAlbedo = false;
 
 // TODO(): This just demonstrates key input. Normally you would use it for,
-// say, moving a character and such.
+// say, moving a character and such. Be advised, THIS IS ONLY USED for overriding 
+// engine input. It would be wise to create you own game object that controls the
+// camera instead.
 void ProcessInput()
 {
   Camera* camera = gEngine().GetCamera();
@@ -60,6 +62,7 @@ int main(int c, char* argv[])
   Mouse::Show(false);
 
   gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
+  // Optional: You may add an input callback to override the engine update.
   gEngine().SetControlInput(ProcessInput);
 
   {

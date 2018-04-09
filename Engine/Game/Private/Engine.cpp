@@ -228,7 +228,7 @@ void Engine::UpdateGameLogic()
   for ( u32 i = 0; i < m_sceneObjectCount; ++i ) {
     GameObject* object = m_cachedGameObjects[i];
     if ( object ) {
-      object->Update(static_cast<r32>(Time::FixTime));
+      object->Update(static_cast<r32>(Time::FixTime * Time::ScaleTime));
     }
   }
 

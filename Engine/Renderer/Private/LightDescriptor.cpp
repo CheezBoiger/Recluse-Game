@@ -45,8 +45,8 @@ LightDescriptor::LightDescriptor()
   , m_pLightViewBuffer(nullptr)
   , m_pFrameBuffer(nullptr)
   , m_PrimaryShadowEnable(true)
-  , m_rShadowViewportHeight(512.0f)
-  , m_rShadowViewportWidth(512.0f)
+  , m_rShadowViewportHeight(100.0f)
+  , m_rShadowViewportWidth(100.0f)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -175,7 +175,7 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
     m_pShadowSampler = m_pRhi->CreateSampler();
     VkSamplerCreateInfo SamplerCi = { };
     SamplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     SamplerCi.addressModeV = SamplerCi.addressModeU;
     SamplerCi.addressModeW = SamplerCi.addressModeV;
     SamplerCi.anisotropyEnable = VK_FALSE;

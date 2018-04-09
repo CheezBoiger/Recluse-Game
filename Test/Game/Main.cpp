@@ -14,41 +14,43 @@
 
 using namespace Recluse;
 
-#define MANUAL_INIT 1
 
-
-void Controller()
+// Main camera is an object in the scene.
+class MainCamera : public GameObject 
 {
-  Camera* cam = Camera::GetMain();
-  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
-  if (Keyboard::KeyPressed(KEY_CODE_A)) { cam->Move(Camera::LEFT, Time::DeltaTime); }
-  if (Keyboard::KeyPressed(KEY_CODE_D)) { cam->Move(Camera::RIGHT, Time::DeltaTime); } 
-  if (Keyboard::KeyPressed(KEY_CODE_W)) { cam->Move(Camera::FORWARD, Time::DeltaTime); }
-  if (Keyboard::KeyPressed(KEY_CODE_S)) { cam->Move(Camera::BACK, Time::DeltaTime); }
+public:
+  void Update(r32 tick) override
+  {
+    Camera* cam = Camera::GetMain();
+    if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
+    if (Keyboard::KeyPressed(KEY_CODE_A)) { cam->Move(Camera::LEFT, Time::DeltaTime); }
+    if (Keyboard::KeyPressed(KEY_CODE_D)) { cam->Move(Camera::RIGHT, Time::DeltaTime); }
+    if (Keyboard::KeyPressed(KEY_CODE_W)) { cam->Move(Camera::FORWARD, Time::DeltaTime); }
+    if (Keyboard::KeyPressed(KEY_CODE_S)) { cam->Move(Camera::BACK, Time::DeltaTime); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
-  if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; } 
+    if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
+    if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; }
 
-  if (Keyboard::KeyPressed(KEY_CODE_T)) {
-    GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
-    config._AA = AA_None;
-    gRenderer().UpdateRendererConfigs(&config);
-  }
+    if (Keyboard::KeyPressed(KEY_CODE_T)) {
+      GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
+      config._AA = AA_None;
+      gRenderer().UpdateRendererConfigs(&config);
+    }
 
-  if (Keyboard::KeyPressed(KEY_CODE_R)) {
-    GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
-    config._AA = AA_FXAA_2x;
-    gRenderer().UpdateRendererConfigs(&config);
-  }
-
-}
+    if (Keyboard::KeyPressed(KEY_CODE_R)) {
+      GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
+      config._AA = AA_FXAA_2x;
+      gRenderer().UpdateRendererConfigs(&config);
+    }
+  } 
+};
 
 // Spehere object example, on how to set up and update a game object for the engine.
-class SphereObject : public GameObject
+class HelmetObject : public GameObject
 {
 public:
 
-  SphereObject()
+  HelmetObject()
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -83,9 +85,9 @@ public:
     //          Will need to create a pipeline to allow renderer component to determine
     //          winding order and topology for a game object.
     trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(0.0f, 0.0f, 1.0f));
-    trans->Scale = Vector3(10.0f, 10.0f, 10.0f);
+    //trans->Scale = Vector3(10.0f, 10.0f, 10.0f);
     //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
-    //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
 
@@ -165,8 +167,8 @@ public:
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
     trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
-    trans->Scale = Vector3(50.0f, 50.0f, 50.0f);
-    trans->Position = Vector3(0.0f, -60.0f, 0.0f);
+    trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
+    trans->Position = Vector3(0.0f, -7.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -224,7 +226,6 @@ int main(int c, char* argv[])
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
-    gEngine().SetControlInput(Controller);
   }
 
   Window* window = gEngine().GetWindow();
@@ -282,20 +283,21 @@ int main(int c, char* argv[])
     MaterialCache::Cache("RustySample", material);
   }
 
+  MainCamera* mainCam = new MainCamera();
   // Create scene.
   Scene scene;
+  scene.GetRoot()->AddChild(mainCam);
   
-  std::vector<SphereObject*> spheres;
-  #define SPHERE_COUNT 1
-  for (u32 i = 0; i < SPHERE_COUNT; ++i) {
-    spheres.push_back(new SphereObject());
-    scene.GetRoot()->AddChild(spheres[i]);
+  std::vector<HelmetObject*> helmets;
+  #define HELM_COUNT 1
+  for (u32 i = 0; i < HELM_COUNT; ++i) {
+    helmets.push_back(new HelmetObject());
+    scene.GetRoot()->AddChild(helmets[i]);
   }
 
   CubeObject* cube = new CubeObject();
   scene.GetRoot()->AddChild(cube);
- 
-#if defined(MANUAL_INIT)
+
   // Add game objects into scene. This demonstrates parent-child transformation as well.
 
   // Set primary light.
@@ -310,6 +312,7 @@ int main(int c, char* argv[])
 
   // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.
   Scene scene2;
+  scene2.GetRoot()->AddChild(mainCam);
 
   // Set primary light.
   {
@@ -321,7 +324,6 @@ int main(int c, char* argv[])
     pPrimary->_Intensity = 2.0f;
   }
 
-#endif // defined(MANUAL_INIT)
 
   // Run engine, and build the scene to render.
   gEngine().Run();
@@ -355,12 +357,16 @@ int main(int c, char* argv[])
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
-  for (u32 i = 0; i < SPHERE_COUNT; ++i) {
-    spheres[i]->CleanUp();
-    delete spheres[i];
+  for (u32 i = 0; i < HELM_COUNT; ++i) {
+    helmets[i]->CleanUp();
+    delete helmets[i];
   }
   cube->CleanUp();
   delete cube;
+
+  mainCam->CleanUp();
+  delete mainCam;
+
   // Finish.
   MaterialCache::CleanUpAll();
   MeshCache::CleanUpAll();

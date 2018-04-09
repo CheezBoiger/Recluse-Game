@@ -88,8 +88,8 @@ b8 RendererComponent::ShadowEnabled() const
 
 void RendererComponent::ReConfigure()
 {
-  if (m_meshRef) {
-    m_renderObj->ClearOutMeshGroup();
+  m_renderObj->ClearOutMeshGroup();
+  if (m_meshRef && m_meshRef->MeshRef()) {
     m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
   }
 

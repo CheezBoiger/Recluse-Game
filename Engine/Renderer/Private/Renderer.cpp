@@ -2744,6 +2744,8 @@ void Renderer::UpdateSceneDescriptors()
   m_pGlobal->Update();
 
   // Update lights in scene.
+  Vector4 vViewerPos = m_pGlobal->Data()->_CameraPos;
+  m_pLights->SetViewerPosition(Vector3(vViewerPos.x, vViewerPos.y, vViewerPos.z));
   m_pLights->Update();
 
   // Update mesh descriptors in cmd list.
