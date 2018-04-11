@@ -1,8 +1,8 @@
 # Pretty Pictures
 Current state of the Game Engine and it's graphics:
 
+![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/Helmet.png)
 ![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/Moonlight.png)
-![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/ShadowsTest.png)
 # How To Build
 Building this application is actually a bit time consuming, but the end product should be to just run the game.
 
