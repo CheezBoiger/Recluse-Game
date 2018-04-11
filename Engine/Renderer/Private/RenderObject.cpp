@@ -27,8 +27,8 @@ RenderObject::RenderObject(uuid64 uuid,
   , _pMeshDescId(mesh)
   , m_uuid(uuid)
   , mCurrIdx(0)
-  , Instances(1)
-  , Renderable(true)
+  , _uInstances(1)
+  , _bRenderable(true)
   , _bEnableShadow(true)
 {
   mMeshSets[0] = nullptr;

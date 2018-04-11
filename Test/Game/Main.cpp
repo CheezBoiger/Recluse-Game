@@ -71,7 +71,7 @@ public:
       , &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
-    material->SetBaseEmissive(1.0f);
+    material->SetEmissiveFactor(1.0f);
     material->SetRoughnessFactor(0.1f);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -85,8 +85,8 @@ public:
     //          Will need to create a pipeline to allow renderer component to determine
     //          winding order and topology for a game object.
     trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(0.0f, 0.0f, 1.0f));
-    //trans->Scale = Vector3(10.0f, 10.0f, 10.0f);
-    //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
+    trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
+    trans->Position = Vector3(0.0f, 1.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -98,22 +98,18 @@ public:
   void Update(r32 tick) override
   {
     Transform* transform = GetTransform();
-    //transform->Position += m_vRandDir * tick;
+    // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
 
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
-      Mesh* m = nullptr;
-      MeshCache::Get("Sphere", &m);
-      m_pMeshComponent->SetMeshRef(m);
-      m_pRendererComponent->ReConfigure();
+      Material* material = m_pMaterialComponent->GetMaterial();
+      material->EnableAo(false);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
-      Mesh* m = nullptr;
-      MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &m);
-      m_pMeshComponent->SetMeshRef(m);
-      m_pRendererComponent->ReConfigure();
+      Material* material = m_pMaterialComponent->GetMaterial();
+      material->EnableAo(true);
     }
   }
 
@@ -168,7 +164,7 @@ public:
     Transform* trans = GetTransform();
     trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
-    trans->Position = Vector3(0.0f, -7.0f, 0.0f);
+    trans->Position = Vector3(0.0f, -5.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -240,7 +236,7 @@ int main(int c, char* argv[])
   FlyViewCamera cam(Radians(60.0f), 
     static_cast<r32>(window->Width()), 
     static_cast<r32>(window->Height()), 0.001f, 2000.0f, Vector3(0.0f, 1.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
-  cam.SetSpeed(30.0f);
+  cam.SetSpeed(10.0f);
   cam.EnableBloom(true);
   gEngine().SetCamera(&cam);
 

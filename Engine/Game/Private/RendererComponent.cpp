@@ -144,13 +144,13 @@ void RendererComponent::OnCleanUp()
 
 void RendererComponent::Enable(b8 enable)
 {
-  m_renderObj->Renderable = enable;
+  m_renderObj->_bRenderable = enable;
 }
 
 
 b8 RendererComponent::Enabled() const
 {
-  return m_renderObj->Renderable;
+  return m_renderObj->_bRenderable;
 }
 
 

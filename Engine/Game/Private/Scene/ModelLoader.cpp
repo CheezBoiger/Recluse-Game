@@ -80,6 +80,11 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
       engineMat->EnableMetallic(true);
     }
 
+    if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
+      engineMat->SetAo(engineModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()]);
+      engineMat->EnableAo(true);
+    }
+
     if (mat.values.find("roughnessFactor") != mat.values.end()) {
       engineMat->SetRoughnessFactor(static_cast<r32>(mat.values["roughnessFactor"].Factor()));
     } 

@@ -25,7 +25,7 @@ struct Material {
 
   void                      SetRoughnessFactor(r32 rough) { m_pDesc->Data()->_roughFactor = rough; MARK_DIRTY_MATERIAL(); }
   void                      SetMetallicFactor(r32 metal) { m_pDesc->Data()->_metalFactor = metal; MARK_DIRTY_MATERIAL(); }
-  void                      SetBaseEmissive(r32 emissive) { m_pDesc->Data()->_BaseEmissive = emissive; MARK_DIRTY_MATERIAL(); }
+  void                      SetEmissiveFactor(r32 emissive) { m_pDesc->Data()->_emissiveFactor = emissive; MARK_DIRTY_MATERIAL(); }
 
   void                      SetAlbedo(Texture2D* texture) { m_pDesc->SetAlbedo(texture); MARK_DIRTY_MATERIAL(); }
   void                      SetNormal(Texture2D* texture) { m_pDesc->SetNormal(texture); MARK_DIRTY_MATERIAL(); }

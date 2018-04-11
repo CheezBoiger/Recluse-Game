@@ -30,6 +30,7 @@ public:
 private:
   void                        InitializeFrameBuffer();
   void                        SetUpGraphicsPipeline();
+  void                        CreateAttachmentTextures();
 
   VulkanRHI*                  m_pRhi;
   Texture*                    m_pColorTarget;

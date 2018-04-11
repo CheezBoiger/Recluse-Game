@@ -3,6 +3,7 @@
 
 #include "Core/Types.hpp"
 #include "RHI/VulkanRHI.hpp"
+#include "UserParams.hpp"
 
 
 namespace Recluse {
@@ -43,19 +44,27 @@ extern std::string pbr_BrightTextureStr;
 extern std::string pbr_VertStr;
 extern std::string pbr_FragStr;
 
+extern std::string aa_PipelineStr;
+extern std::string aa_FrameBufferStr;
+extern std::string aa_DescLayoutStr;
+extern std::string aa_outputTextureStr;
+extern std::string aa_fragStr;
+
 // Work in progress.
 extern std::string cluster_FrustumPipelineStr;
 extern std::string cluster_LightCullPipelineStr;
 extern std::string cluster_LightGridStr;
 extern std::string cluster_FrustumTextureStr;
 
+extern std::string renderquad_vertStr;
+
 extern std::string hiz_FullTexture;
 extern std::string hiz_2xTex;
 extern std::string hiz_4xTex;
 
-extern std::string SkyboxPipelineStr;
-extern std::string SkyboxDescriptorSetStr;
-extern std::string SkyboxSetLayoutStr;
+extern std::string skybox_pipelineStr;
+extern std::string skybox_descriptorSetStr;
+extern std::string skybox_setLayoutStr;
 
 extern std::string MeshSetLayoutStr;
 extern std::string MaterialSetLayoutStr;
@@ -104,20 +113,20 @@ extern std::string DownscaleBlurFragFileStr;
 
 extern std::string RenderTargetVelocityStr;
 
-extern std::string HDRGammaPipelineStr;
-extern std::string HDRGammaColorAttachStr;
-extern std::string HDRGammaFrameBufferStr;
-extern std::string HDRGammaSamplerStr;
-extern std::string HDRGammaDescSetStr;
-extern std::string HDRGammaDescSetLayoutStr;
-extern std::string HDRGammaVertFileStr;
-extern std::string HDRGammaFragFileStr;
+extern std::string hdr_gamma_pipelineStr;
+extern std::string hdr_gamma_colorAttachStr;
+extern std::string hdr_gamma_frameBufferStr;
+extern std::string hdr_gamma_samplerStr;
+extern std::string hdr_gamma_descSetStr;
+extern std::string hdr_gamma_descSetLayoutStr;
+extern std::string hdr_gamma_vertFileStr;
+extern std::string hdr_gamma_fragFileStr;
 
-extern std::string FinalPipelineStr;
-extern std::string FinalDescSetStr;
-extern std::string FinalDescSetLayoutStr;
-extern std::string FinalVertFileStr;
-extern std::string FinalFragFileStr;
+extern std::string final_PipelineStr;
+extern std::string final_DescSetStr;
+extern std::string final_DescSetLayoutStr;
+extern std::string final_VertFileStr;
+extern std::string final_FragFileStr;
 
 extern char const* kDefaultShaderEntryPointStr;
 
@@ -127,19 +136,22 @@ namespace RendererPass {
 void LoadShader(std::string Filename, Shader* S);
 
 // Set up the downscale pass.
-void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 // Set up the HDR Gamma pass.
-void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpGBufferPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
+
 }
 } // Recluse

@@ -52,7 +52,7 @@ public:
 
 
   b8            Visible() const { return m_Visible; }
-  b8            Renderable() const { return m_Renderable; }
+  b8            _bRenderable() const { return m_Renderable; }
   b8            Translucent() const { return m_Translucent; }
   b8            Static() const { return m_Static; }
   b8            Skinned() const { return m_Skinned; }

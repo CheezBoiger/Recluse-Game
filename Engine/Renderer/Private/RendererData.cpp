@@ -60,9 +60,21 @@ std::string BonesSetLayoutStr           = "BonesDescriptorSetLayout";
 std::string GlobalSetLayoutStr          = "GlobalDescriptorSetLayout";
 std::string LightSetLayoutStr           = "LightDescriptorSetLayout";
 
-std::string SkyboxPipelineStr           = "SkyboxPipeline";
-std::string SkyboxDescriptorSetStr      = "SkyboxSet";
-std::string SkyboxSetLayoutStr          = "SkyboxLayout";
+std::string skybox_pipelineStr           = "SkyboxPipeline";
+std::string skybox_descriptorSetStr      = "SkyboxSet";
+std::string skybox_setLayoutStr          = "SkyboxLayout";
+
+std::string aa_PipelineStr                = "AA Pipeline";
+std::string aa_FrameBufferStr             = "AA FrameBuffer";
+std::string aa_DescLayoutStr              = "AA Desc Layout";
+std::string aa_outputTextureStr           = "AA Texture Output";
+
+std::string renderquad_vertStr            = "RenderQuad.vert.spv";
+// Must check with the renderer specs.
+std::string aa_fragStr                    = "";
+
+std::string fxaa_fragStr                  = "FXAA.frag.spv";
+std::string smaa_fragStr                  = "SMAA.frag.spv";
 
 std::string ScaledSamplerStr            = "ScaledSampler";
 std::string RenderTarget2xHorizStr      = "RenderTarget2x";
@@ -105,20 +117,20 @@ std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
 
 std::string RenderTargetVelocityStr     = "VelocityMap";
 
-std::string HDRGammaPipelineStr         = "HDRGammaPipeline";
-std::string HDRGammaColorAttachStr      = "HDRGammaColor";
-std::string HDRGammaFrameBufferStr      = "HDRGammaFrameBuffer";
-std::string HDRGammaSamplerStr          = "HDRGammaSampler";
-std::string HDRGammaDescSetStr          = "HDRGammaSet";
-std::string HDRGammaDescSetLayoutStr    = "HDRGammaSetLayout";
-std::string HDRGammaVertFileStr         = "HDRGammaPass.vert.spv";
-std::string HDRGammaFragFileStr         = "HDRGammaPass.frag.spv";
+std::string hdr_gamma_pipelineStr         = "HDRGammaPipeline";
+std::string hdr_gamma_colorAttachStr      = "HDRGammaColor";
+std::string hdr_gamma_frameBufferStr      = "HDRGammaFrameBuffer";
+std::string hdr_gamma_samplerStr          = "HDRGammaSampler";
+std::string hdr_gamma_descSetStr          = "HDRGammaSet";
+std::string hdr_gamma_descSetLayoutStr    = "HDRGammaSetLayout";
+std::string hdr_gamma_vertFileStr         = "HDRGammaPass.vert.spv";
+std::string hdr_gamma_fragFileStr         = "HDRGammaPass.frag.spv";
 
-std::string FinalPipelineStr            = "FinalPipeline";
-std::string FinalDescSetStr             = "FinalSet";
-std::string FinalDescSetLayoutStr       = "FinalSetLayout";
-std::string FinalVertFileStr            = "FinalPass.vert.spv";
-std::string FinalFragFileStr            = "FinalPass.frag.spv";
+std::string final_PipelineStr            = "FinalPipeline";
+std::string final_DescSetStr             = "FinalSet";
+std::string final_DescSetLayoutStr       = "FinalSetLayout";
+std::string final_VertFileStr            = "FinalPass.vert.spv";
+std::string final_FragFileStr            = "FinalPass.frag.spv";
 
 // Default entry point on shaders.
 char const* kDefaultShaderEntryPointStr = "main";
@@ -138,7 +150,7 @@ void LoadShader(std::string Filename, Shader* S)
 }
 
 
-void SetUpGBufferPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   // PbrForward Pipeline Creation.
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
@@ -217,21 +229,21 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraph
 }
 
 
-void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
   VkPipelineLayoutCreateInfo hdrLayout = {};
   VkDescriptorSetLayout hdrSetLayout[1]; 
-  hdrSetLayout[0] = gResources().GetDescriptorSetLayout(HDRGammaDescSetLayoutStr)->Layout();
+  hdrSetLayout[0] = gResources().GetDescriptorSetLayout(hdr_gamma_descSetLayoutStr)->Layout();
 
   Shader* HdrFrag = Rhi->CreateShader();
   Shader* HdrVert = Rhi->CreateShader();
 
-  LoadShader(HDRGammaVertFileStr, HdrVert);
-  LoadShader(HDRGammaFragFileStr, HdrFrag);
+  LoadShader(hdr_gamma_vertFileStr, HdrVert);
+  LoadShader(hdr_gamma_fragFileStr, HdrFrag);
 
-  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(HDRGammaFrameBufferStr);
+  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(hdr_gamma_frameBufferStr);
   GraphicsInfo.renderPass = hdrBuffer->RenderPass();
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
@@ -262,12 +274,12 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGrap
 
   Rhi->FreeShader(HdrFrag);
   Rhi->FreeShader(HdrVert);
-  gResources().RegisterGraphicsPipeline(HDRGammaPipelineStr, hdrPipeline);
+  gResources().RegisterGraphicsPipeline(hdr_gamma_pipelineStr, hdrPipeline);
 
 }
 
 
-void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
@@ -354,7 +366,7 @@ void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const std::string& Filepath, const
 }
 
 
-void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
 
@@ -456,7 +468,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const std::string& Filepath, const VkGra
 }
 
 
-void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   Shader* quadVert = Rhi->CreateShader();
@@ -466,10 +478,10 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
   VkPipelineInputAssemblyStateCreateInfo n = { };
 
   GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(FinalPipelineStr, quadPipeline);
+  gResources().RegisterGraphicsPipeline(final_PipelineStr, quadPipeline);
 
-  LoadShader(FinalVertFileStr, quadVert);
-  LoadShader(FinalFragFileStr, quadFrag);
+  LoadShader(final_VertFileStr, quadVert);
+  LoadShader(final_FragFileStr, quadFrag);
 
   GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
 
@@ -496,7 +508,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
   VkPipelineLayoutCreateInfo finalLayout = {};
   finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   finalLayout.setLayoutCount = 1;
-  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(FinalDescSetLayoutStr)->Layout();
+  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(final_DescSetLayoutStr)->Layout();
   finalLayout.pSetLayouts = &finalL;
   finalLayout.pushConstantRangeCount = 0;
   finalLayout.pPushConstantRanges = nullptr;
@@ -508,7 +520,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphic
 }
 
 
-void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
   GraphicsPipeline* ShadowMapPipeline = Rhi->CreateGraphicsPipeline();
@@ -608,7 +620,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const std::string& Filepath, con
 }
 
 
-void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   Shader* vert = Rhi->CreateShader();
   Shader* frag = Rhi->CreateShader();
@@ -634,10 +646,10 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
   GraphicsPipelineInfo.pVertexInputState = &inputState;
 
   GraphicsPipeline* sky = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(SkyboxPipelineStr, sky);
+  gResources().RegisterGraphicsPipeline(skybox_pipelineStr, sky);
   
   DescriptorSetLayout* global = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr);
-  DescriptorSetLayout* skybox = gResources().GetDescriptorSetLayout(SkyboxSetLayoutStr);
+  DescriptorSetLayout* skybox = gResources().GetDescriptorSetLayout(skybox_setLayoutStr);
 
   VkDescriptorSetLayout layouts[] = { 
     global->Layout(),
@@ -735,5 +747,18 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const std::string& Filepath, const VkGraphi
   Rhi->FreeShader(vert);
   Rhi->FreeShader(frag);
 }
+
+
+void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa)
+{
+  std::string aaFrag = "";
+  switch (aa) {
+    case AA_FXAA_2x: 
+    case AA_FXAA_4x:
+    case AA_FXAA_8x: aaFrag = fxaa_fragStr; break;
+    default: aaFrag = ""; break;
+  };
+}
+
 } // RendererPass
 } // Recluse

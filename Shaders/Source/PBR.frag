@@ -83,10 +83,11 @@ layout (set = 2, binding = 0) uniform LightBuffer {
 
 layout (set = 2, binding = 1) uniform sampler2D globalShadow;
 
-
 layout (set = 3, binding = 0) uniform LightSpace {
   mat4 viewProj;
 } lightSpace;
+
+//layout (set = 4, binding = 0) uniform samplerCubeArray envMaps;
 
 
 struct GBuffer
@@ -98,6 +99,7 @@ struct GBuffer
   float emissionStrength;
   float roughness;
   float metallic;
+  float ao;
 };
 
 
@@ -124,7 +126,8 @@ GBuffer ReadGBuffer(vec2 uv)
   gbuffer.emission          = emissionFrag.rgb;
   gbuffer.emissionStrength  = erm.r;
   gbuffer.roughness         = erm.g;
-  gbuffer.metallic          = erm.b;
+  gbuffer.metallic          = erm.b;              // metallic
+  gbuffer.ao                = albedoFrag.a;       // ao
 
   // 0 roughness equates to no surface to render with light. Speeds up performance.
   // TODO(): We need a stencil surface to determine what parts of the 
@@ -148,7 +151,7 @@ GBuffer ReadGBuffer(vec2 uv)
 // Shadowing.
 
 #define SHADOW_FACTOR 0.0
-#define SHADOW_BIAS   0.00001
+#define SHADOW_BIAS   0.0000001
 
 float textureProj(vec4 P, vec2 offset)
 {
@@ -169,13 +172,13 @@ float textureProj(vec4 P, vec2 offset)
 float FilterPCF(vec4 sc)
 {
   ivec2 texDim = textureSize(globalShadow, 0);
-  float scale = 1.5;
+  float scale = 0.5;
   float dx = scale * 1.0 / float(texDim.x);
   float dy = scale * 1.0 / float(texDim.y);
 
   float shadowFactor = 0.0;
   float count = 0.0;
-  float range = 1.5;
+  float range = 3.5;
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {
@@ -399,7 +402,7 @@ void main()
     
   }
   
-  outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + outColor;
+  outColor = gbuffer.emissionStrength * gbuffer.emission + (outColor * gbuffer.ao);
   vFragColor = vec4(outColor, 1.0);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;

@@ -131,13 +131,14 @@ struct GBuffer
   float emissionStrength;
   float roughness;
   float metallic;
+  float ao;
 };
 
 
 void WriteGBuffer(GBuffer gbuffer)
 {
-  rt0 = vec4(gbuffer.albedo, 1.0);
-  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
+  rt0 = vec4(gbuffer.albedo, gbuffer.ao);
+  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 1.0);
   rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
   rt3 = vec4(gbuffer.emission, 1.0);
 }
@@ -151,7 +152,7 @@ void main()
 
   float fragMetallic  = matBuffer.metal;
   float fragRoughness = matBuffer.rough;
-  float fragAO = 0.0;  // still WIP
+  float fragAO = 1.0;  // still WIP
   
   if (matBuffer.hasAlbedo >= 1) {
     fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
@@ -190,6 +191,7 @@ void main()
   gbuffer.emissionStrength = matBuffer.emissive;
   gbuffer.metallic = fragMetallic;
   gbuffer.roughness = fragRoughness;
+  gbuffer.ao = fragAO;
   
   WriteGBuffer(gbuffer);
 }

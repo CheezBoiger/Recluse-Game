@@ -29,7 +29,7 @@ struct MaterialBuffer {
   r32     _Opacity;         // opacity [0.0, 1.0]
   r32     _metalFactor;      // object base metalness [0.0, 1.0]
   r32     _roughFactor;      // object base roughness [0.0, 1.0]
-  r32     _BaseEmissive;   // emissive base [0.0, inf]
+  r32     _emissiveFactor;   // emissive base [0.0, inf]
   u32     _HasAlbedo;      // does object have albedo map?
   u32     _HasMetallic;    // does object have metalness map?
   u32     _HasRoughness;   // does object have roughness map?

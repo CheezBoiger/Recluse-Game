@@ -28,10 +28,10 @@ public:
 #define SIGNAL_RENDER_OBJECT_UPDATE() m_bNeedsUpdate = true
   // Number of instances to draw meshdata within the render object.
   // Typically set to 1 (default is 1.)
-  u32                     Instances;
+  u32                     _uInstances;
 
   // Is this object renderable? If not, the renderer will ignore it.
-  b8                      Renderable;
+  b8                      _bRenderable;
 
   // Checks if shadow is enabled for this Command. If false, renderer
   // will opt out from rendering shadows for this render object. No shadow is produced from this object when set

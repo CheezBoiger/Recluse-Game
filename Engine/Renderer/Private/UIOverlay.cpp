@@ -103,6 +103,7 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_pSemaphore->Initialize(semaCi);
 
+  CreateAttachmentTextures();
   InitializeFrameBuffer();
   SetUpGraphicsPipeline();
 
@@ -163,6 +164,12 @@ void UIOverlay::SetUpGraphicsPipeline()
     m_pRhi->FreeShader(vert);
     m_pRhi->FreeShader(frag);
   }
+}
+
+
+void UIOverlay::CreateAttachmentTextures()
+{
+  
 }
 
 
