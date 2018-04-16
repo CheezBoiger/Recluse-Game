@@ -20,6 +20,7 @@ extern std::string DynamicShadowMapPipelineStr;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
 extern std::string LightViewDescriptorSetLayoutStr;
+extern std::string illumination_reflectProbeDescLayoutStr;
 
 extern std::string gbuffer_PipelineStr;
 extern std::string gbuffer_StaticPipelineStr;

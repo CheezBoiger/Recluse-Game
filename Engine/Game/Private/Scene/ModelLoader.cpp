@@ -105,6 +105,13 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 }
 
 
+void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
+{
+  for (size_t i = 0, count = vertices.size(); i < count - 2; i += 3)
+    std::swap(vertices[i], vertices[i + 2]);
+}
+
+
 void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   Vector3 t;
@@ -193,9 +200,12 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           StaticVertex vertex;
           vertex.position = localMatrix * Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
           vertex.normal = Vector4(Matrix3(localMatrix) * Vector3(&bufferNormals[value * 3]), 1.0f);
-          vertex.texcoord0 = Vector2(&bufferTexCoords[value * 2]);
-          vertex.texcoord0.y = vertex.texcoord0.y - 1.0f;
+          vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
+          vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
+
+          vertex.position.y *= -1.0f;
+          vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
         }
       }
@@ -225,6 +235,10 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           } break;
           case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
           {
+            const u8* buf = (const u8*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+            for (size_t index = 0; index < indAccessor.count; ++index) {
+              indices.push_back(((u32)buf[index]) + vertexStart);
+            }
           } break;
         };
       }

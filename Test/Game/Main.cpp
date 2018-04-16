@@ -81,12 +81,8 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
-    // TODO(): Flip because helmet mesh vertices are counter clockwise. 
-    //          Will need to create a pipeline to allow renderer component to determine
-    //          winding order and topology for a game object.
-    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(0.0f, 0.0f, 1.0f));
     trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
-    trans->Position = Vector3(0.0f, 1.0f, 0.0f);
+    trans->Position = Vector3(0.0f, 0.45f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -140,7 +136,7 @@ public:
     m_pRendererComponent = new RendererComponent();
 
     Mesh* mesh = nullptr;
-    MeshCache::Get("Cube", &mesh);
+    MeshCache::Get("NativeCube", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
@@ -252,12 +248,11 @@ int main(int c, char* argv[])
     auto boxVerts = Cube::MeshInstance();/* UVSphere::MeshInstance(1.0f, g, g);*/
     auto boxIndic = Cube::IndicesInstance();/*UVSphere::IndicesInstance(static_cast<u32>(boxVerts.size()), g, g);*/
     mesh->Initialize(boxVerts.size(), sizeof(StaticVertex), boxVerts.data(), true, boxIndic.size(), boxIndic.data());
-    MeshCache::Cache("Cube", mesh);
+    MeshCache::Cache("NativeCube", mesh);
   }
 
   ModelLoader::Model model;
   ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
-
   {
     Material* material = new Material();
     material->Initialize();
@@ -366,7 +361,7 @@ int main(int c, char* argv[])
   // Finish.
   MaterialCache::CleanUpAll();
   MeshCache::CleanUpAll();
-  TextureCleanUp();
+  TextureCache::CleanUpAll();
   // Clean up engine
   gEngine().CleanUp();
 #if (_DEBUG)

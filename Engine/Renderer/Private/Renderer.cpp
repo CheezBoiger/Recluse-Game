@@ -575,6 +575,28 @@ void Renderer::SetUpDescriptorSetLayouts()
     SkySetLayout->Initialize(info);
   }
 
+  // Global Illumination reflection probe layout.
+  {
+    DescriptorSetLayout* globalIllumLayout = m_pRhi->CreateDescriptorSetLayout();
+    gResources().RegisterDescriptorSetLayout(illumination_reflectProbeDescLayoutStr,
+      globalIllumLayout);
+    
+    std::array<VkDescriptorSetLayoutBinding, 1> globalIllum;
+    globalIllum[0].binding = 0;
+    globalIllum[0].descriptorCount = 1;
+    globalIllum[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[0].pImmutableSamplers = nullptr;
+    globalIllum[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    
+    VkDescriptorSetLayoutCreateInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    info.flags = 0;
+    info.bindingCount = static_cast<u32>(globalIllum.size());
+    info.pBindings = globalIllum.data();
+    info.pNext = nullptr;
+    globalIllumLayout->Initialize(info);
+  }
+
   // Light layout.
   {
     std::array<VkDescriptorSetLayoutBinding, 2> LightBindings;
@@ -718,6 +740,7 @@ void Renderer::CleanUpDescriptorSetLayouts()
   DescriptorSetLayout* LightSetLayout = gResources().UnregisterDescriptorSetLayout(LightSetLayoutStr);
   DescriptorSetLayout* BonesSetLayout = gResources().UnregisterDescriptorSetLayout(BonesSetLayoutStr);
   DescriptorSetLayout* SkySetLayout = gResources().UnregisterDescriptorSetLayout(skybox_setLayoutStr);
+  DescriptorSetLayout* GlobalIllumLayout = gResources().UnregisterDescriptorSetLayout(illumination_reflectProbeDescLayoutStr);
 
   m_pRhi->FreeDescriptorSetLayout(GlobalSetLayout);
   m_pRhi->FreeDescriptorSetLayout(MeshSetLayout);
@@ -725,6 +748,7 @@ void Renderer::CleanUpDescriptorSetLayouts()
   m_pRhi->FreeDescriptorSetLayout(LightSetLayout);
   m_pRhi->FreeDescriptorSetLayout(BonesSetLayout);
   m_pRhi->FreeDescriptorSetLayout(SkySetLayout);
+  m_pRhi->FreeDescriptorSetLayout(GlobalIllumLayout);
 
   DescriptorSetLayout* LightViewLayout = gResources().UnregisterDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
   m_pRhi->FreeDescriptorSetLayout(LightViewLayout);
@@ -1101,7 +1125,7 @@ void Renderer::SetUpGraphicsPipelines()
      VK_POLYGON_MODE_FILL,
       VK_FALSE, 
       VK_CULL_MODE_BACK_BIT,
-      VK_FRONT_FACE_CLOCKWISE,
+      VK_FRONT_FACE_COUNTER_CLOCKWISE,
       1.0f,
       VK_FALSE,
       VK_FALSE
@@ -1425,12 +1449,11 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
   gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-  GlowTarget->Initialize(cImageInfo, cViewInfo);
-  pbr_Bright->Initialize(cImageInfo, cViewInfo);
   pbr_Final->Initialize(cImageInfo, cViewInfo);
+
 
   cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -1444,6 +1467,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
+  pbr_Bright->Initialize(cImageInfo, cViewInfo);
+  GlowTarget->Initialize(cImageInfo, cViewInfo);
   // Initialize downscaled render textures.
   cImageInfo.extent.width = m_pWindow->Width()    >> 1;
   cImageInfo.extent.height = m_pWindow->Height()  >> 1;

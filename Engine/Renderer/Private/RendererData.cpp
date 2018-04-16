@@ -28,6 +28,7 @@ std::string DynamicShadowMapVertFileStr       = "DynamicShadowMapping.vert.spv";
 std::string ShadowMapVertFileStr              = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr              = "ShadowMapping.frag.spv";
 std::string LightViewDescriptorSetLayoutStr   = "LightViewDescriptorLayout";
+std::string illumination_reflectProbeDescLayoutStr = "reflectionProbeDescLayout";
 
 std::string gbuffer_PipelineStr               = "GBufferPipeline";
 std::string gbuffer_StaticPipelineStr         = "StaticGBufferPipeline";
@@ -584,7 +585,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
     VK_POLYGON_MODE_FILL,
     VK_FALSE,
     VK_CULL_MODE_FRONT_BIT,
-    VK_FRONT_FACE_CLOCKWISE,
+    VK_FRONT_FACE_COUNTER_CLOCKWISE,
     1.0f,
     VK_FALSE,
     VK_FALSE
