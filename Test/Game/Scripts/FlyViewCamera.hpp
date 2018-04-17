@@ -26,7 +26,7 @@ public:
     , m_yaw(90.0f)
     , m_pitch(0.0f)
     , bFirstLook(true)
-    , m_constrainPitch(89.0f)
+    , m_constrainPitch(Radians(89.0f))
     , m_lastX(0.0f)
     , m_lastY(0.0f)
     , m_speed(5.0f)
