@@ -88,8 +88,13 @@ public:
 
   // Push the new scene to into this engine for extraction.
   void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
+
+  // Build up the scene for the engine to update on.
   void                          BuildScene();
+
+  // Transitions from one scene to another if needed. This is optional.
   void                          LoadSceneTransition();
+
   std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; }
   std::vector<game_uuid_t>&     GetGameObjectKeys() { return m_cachedGameObjectKeys; } 
 

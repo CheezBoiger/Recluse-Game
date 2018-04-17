@@ -15,9 +15,11 @@ namespace Recluse {
 
 class GameObject;
 
+
 // Virtual camera, which implements the pinhole theory.
 // This is an inheritable class, so we can generate our FPS camera from,
 // as well as our fly view camera.
+// TODO(): Camera must turn into a component, which will read from a gameobject instead.
 class Camera {
 public:
   // Get the main camera being used by the engine.
@@ -37,6 +39,8 @@ public:
     ORTHO,
     PERSPECTIVE
   };
+
+  virtual ~Camera() { }
 
   Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
     Vector3 pos, Vector3 lookAt);

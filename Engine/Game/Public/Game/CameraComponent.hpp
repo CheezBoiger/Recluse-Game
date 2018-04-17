@@ -15,8 +15,8 @@ public:
   // Get the main camera being rendered through.
   static Camera&  GetMainCamera();
 
-
+  void Update() override;
 private:
-  Camera          m_Camera;
+  Camera*          m_pCamera;
 };
 } // Recluse

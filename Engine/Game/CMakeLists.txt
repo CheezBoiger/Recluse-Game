@@ -36,7 +36,8 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/PointLightComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/DirectionLightComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/CameraComponent.hpp
-  ${RECLUSE_GAME_PUBLIC_DIR}/AudioSourceComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/AudioComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/AnimationComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MaterialComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/PhysicsComponent.hpp
@@ -54,6 +55,8 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/MaterialComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/PointLightComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/PhysicsComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/AudioComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/AnimationComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

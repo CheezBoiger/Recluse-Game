@@ -42,7 +42,7 @@ public:
       config._AA = AA_FXAA_2x;
       gRenderer().UpdateRendererConfigs(&config);
     }
-  } 
+  }
 };
 
 // Spehere object example, on how to set up and update a game object for the engine.
@@ -57,22 +57,23 @@ public:
     m_pRendererComponent = new RendererComponent();
 
     Mesh* mesh = nullptr;
-    MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    MeshCache::Get("lantern lantern_base", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = nullptr;
     MaterialCache::Get(
-#if 0
-      "RustySample"
+#if 1
+      "StingrayPBS1SG"
 #else
       "Material_MR"
 #endif
       , &material);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
-    material->SetEmissiveFactor(1.0f);
-    material->SetRoughnessFactor(0.1f);
+    //material->SetEmissiveFactor(1.0f);
+    //material->SetRoughnessFactor(1.0f);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
@@ -81,8 +82,8 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
-    trans->Position = Vector3(0.0f, 0.45f, 0.0f);
+    trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
+    trans->Position = Vector3(0.0f, 0.05f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -97,16 +98,6 @@ public:
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
-
-    if (Keyboard::KeyPressed(KEY_CODE_0)) {
-      Material* material = m_pMaterialComponent->GetMaterial();
-      material->EnableAo(false);
-    }
-
-    if (Keyboard::KeyPressed(KEY_CODE_1)) {
-      Material* material = m_pMaterialComponent->GetMaterial();
-      material->EnableAo(true);
-    }
   }
 
   void CleanUp() override
@@ -253,6 +244,7 @@ int main(int c, char* argv[])
 
   ModelLoader::Model model;
   ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
+  ModelLoader::Load("Assets/lantern.gltf", &model);
   {
     Material* material = new Material();
     material->Initialize();
