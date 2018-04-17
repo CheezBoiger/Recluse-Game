@@ -239,7 +239,7 @@ Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
 Matrix4 Matrix4::LookAt(const Vector3& eye, const Vector3& center, const Vector3& up)
 {
   Vector3 front((center - eye).Normalize());
-  Vector3 right((up.Cross(front).Normalize()));
+  Vector3 right(up.Cross(front).Normalize());
   Vector3 u(front.Cross(right));
   return Matrix4(
     right.x,          u.x,          front.x,        0.0f,

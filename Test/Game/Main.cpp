@@ -276,7 +276,7 @@ int main(int c, char* argv[])
 
   ModelLoader::Model model;
   ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
-  ModelLoader::Load("Assets/lantern.gltf", &model);
+  ModelLoader::Load("Assets/Lantern/lantern.gltf", &model);
   {
     Material* material = new Material();
     material->Initialize();
