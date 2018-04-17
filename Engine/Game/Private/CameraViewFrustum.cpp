@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "CameraViewFrustum.hpp"
+#include "Component.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
 #include "Camera.hpp"
@@ -33,7 +34,7 @@ void CCamViewFrustum::ConfigureFrustum()
 }
 
 
-void CCamViewFrustum::Update()
+void CCamViewFrustum::Update(Transform* transform)
 {
   if (!m_pCamera) {
     R_DEBUG(rError, "No camera set to calc frustums from!\n");
@@ -43,13 +44,13 @@ void CCamViewFrustum::Update()
   if (!m_pCamera->Culling()) return;
   ConfigureFrustum();
   
-  Vector3 l = m_pCamera->LookDir();
-  Vector3 p = m_pCamera->Position();
-  Vector3 u = m_pCamera->Up();
+  Vector3 l = transform->Forward();
+  Vector3 p = transform->Position;
+  Vector3 u = transform->Up();
 
   Vector3 Nc, Fc, X, Y, Z;
 
-  Z = m_pCamera->Front().Normalize();
+  Z = transform->Forward();
   X = -(u ^ Z).Normalize();
   Y = Z ^ X;
 

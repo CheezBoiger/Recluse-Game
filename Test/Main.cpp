@@ -18,15 +18,8 @@ bool noAlbedo = false;
 // camera instead.
 void ProcessInput()
 {
-  Camera* camera = gEngine().GetCamera();
+  Camera* camera = Camera::GetMain();;
   Window* window = gEngine().GetWindow();
-
-  if (Keyboard::KeyPressed(KEY_CODE_SHIFT)) { FlyViewCamera* fpsCamera = reinterpret_cast<FlyViewCamera*>(camera); fpsCamera->SetSpeed(500.0f); }
-  if (Keyboard::KeyReleased(KEY_CODE_SHIFT)) { FlyViewCamera* fpsCamera = reinterpret_cast<FlyViewCamera*>(camera); fpsCamera->SetSpeed(50.0f); }
-  if (Keyboard::KeyPressed(KEY_CODE_W)) { camera->Move(Camera::FORWARD, Time::DeltaTime); }
-  if (Keyboard::KeyPressed(KEY_CODE_S)) { camera->Move(Camera::BACK, Time::DeltaTime); }
-  if (Keyboard::KeyPressed(KEY_CODE_D)) { camera->Move(Camera::RIGHT, Time::DeltaTime); }
-  if (Keyboard::KeyPressed(KEY_CODE_A)) { camera->Move(Camera::LEFT, Time::DeltaTime); }
 
   // Test Gamma correction
   if (Keyboard::KeyPressed(KEY_CODE_G)) { camera->SetGamma(camera->Gamma() + (r32)(5.0 * Time::DeltaTime)); }
@@ -81,11 +74,6 @@ int main(int c, char* argv[])
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
-
-  Camera camera(Camera::PERSPECTIVE, Radians(45.0f), 
-    static_cast<r32>(window->Width()), 
-    static_cast<r32>(window->Height()), 0.001f, 1000.0f, Vector3(5.0f, 5.0f, -5.0f), Vector3(0.0f, 0.0f, 0.0f));
-  gEngine().SetCamera(&camera);
 
   // Create a game object.
   // Create the scene.

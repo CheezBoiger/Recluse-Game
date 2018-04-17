@@ -6,6 +6,7 @@
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Ray.hpp"
+#include "Component.hpp"
 
 #include "Core/Utility/Vector.hpp"
 
@@ -17,13 +18,14 @@ class GameObject;
 
 
 // Virtual camera, which implements the pinhole theory.
-// This is an inheritable class, so we can generate our FPS camera from,
-// as well as our fly view camera.
-// TODO(): Camera must turn into a component, which will read from a gameobject instead.
-class Camera {
+class Camera : public Component {
+  static Camera* s_pMainCamera;
+  RCOMPONENT(Camera)
 public:
   // Get the main camera being used by the engine.
   static Camera*        GetMain();
+
+  static void           SetMain(Camera* pCam);
 
   // Movement for the camera.
   enum Movement {
@@ -40,39 +42,21 @@ public:
     PERSPECTIVE
   };
 
-  virtual ~Camera() { }
+  ~Camera() { }
 
-  Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 lookAt);
+  Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar);
 
-  virtual Matrix4     View();
-  virtual Matrix4     Projection();
+  Matrix4     View() { return m_viewMatrix; }
+  Matrix4     Projection() { return m_projectionMatrix; }
 
   // Update camera's coordinate view space.
-  virtual void        Update();
+  void        Update();
 
-  void                SetPosition(Vector3 nPos) { m_Position = nPos; }
-  void                InvertWorldUp() { m_WorldUp = -m_WorldUp; }
-  void                SetLookAt(Vector3 lookAt) { m_LookAt = lookAt; }
   void                SetAspect(r32 aspect) { m_Aspect = aspect; }
   void                SetPixelWidth(r32 width) { m_PixelWidth = width; }
   void                SetPixelHeight(r32 height) { m_PixelHeight = height; }
   void                SetFoV(r32 fov) { m_Fov = fov; }
   void                SetProjection(Project proj) { m_ProjType = proj; }
-
-  virtual void        Look(r64 x, r64 y) { }
-  virtual void        Move(Movement move, r64 dt) { }
-  Vector3             Position() const { return m_Position; }
-  Vector3             LookDir() const { return m_LookAt; }
-  Vector3             WorldUp() const { return m_WorldUp; }
-  Quaternion          Rotation() const { return m_Rotation; }
-  
-  Ray                 GetDirectionRay() {  
-    Ray camRay;
-    camRay.Origin = m_Position;
-    camRay.Direction = m_Front.Normalize();
-    return camRay;
-  }
   
   Project             CurrentProject() const { return m_ProjType; }
 
@@ -83,10 +67,6 @@ public:
   r32                 Near() const { return m_ZNear; }
   r32                 Far() const { return m_ZFar; }
   r32                 OrthoScale() const { return m_OrthoScale; }
-
-  Vector3             Front() const { return m_Front; }
-  Vector3             Right() const { return m_Right; }
-  Vector3             Up() const { return m_Up; }
 
   r32                 Exposure() const { return m_Exposure; }
   r32                 Gamma() const { return m_Gamma; }
@@ -100,16 +80,8 @@ public:
   void                EnableFrustumCull(b8 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 protected:
-  Vector3             m_WorldUp;  
-
-  // Camera coordinates.
-  Vector3             m_Front;
-  Vector3             m_Right;
-  Vector3             m_Up;
-
-  Vector3             m_Position;
-  Vector3             m_LookAt;
-  Quaternion          m_Rotation;
+  Matrix4             m_projectionMatrix;
+  Matrix4             m_viewMatrix;
   Project             m_ProjType;
   r32                 m_OrthoScale;
   r32                 m_Fov;
@@ -123,54 +95,5 @@ protected:
   r32                 m_Exposure;
   b8                  m_Bloom       : 1;
   b8                  m_FrustumCull : 1;
-};
-
-
-// First person camera. This camera affects the movement of how the 
-// player sees the world around them. These will likely be deprecated 
-// as a result of our game object being constructed.
-class FlyViewCamera : public Camera {
-public:
-  static r32          MAX_YAW;
-
-  FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
-    Vector3 pos, Vector3 dir);
-
-  virtual Matrix4     View() override;
-
-  void                SetSpeed(r32 s) { m_Speed = s; }
-  virtual void        Update() override;
-  virtual void        Move(Movement movement, r64 dt) override;
-  void                Look(r64 x, r64 y) override;
-  void                SetSensitivityX(r32 x) { m_X_Sensitivity = x; }
-  void                SetSensitivityY(r32 y) { m_Y_Sensitivity = y; }
-  void                LockTarget(b8 enable) { m_Locked = enable; }
-  r32                 Yaw() const { return m_Yaw; }
-  r32                 Pitch() const { return m_Pitch; }
-  r32                 SensitivityX() const { return m_X_Sensitivity; }
-  r32                 SensitivityY() const { return m_Y_Sensitivity; }
-  r32                 Speed() const { return m_Speed; }
-  b8                  Locked() const { return m_Locked; }
-
-
-protected:
-
-  r32                 m_Speed;
-  r32                 m_LastX;
-  r32                 m_LastY;
-  r32                 m_X_Sensitivity;
-  r32                 m_Y_Sensitivity;
-  r32                 m_Yaw;
-  r32                 m_Pitch;  
-  r32                 m_ConstainedPitch;
-  b8                  m_FirstLook;
-  b8                  m_Locked;
-};
-
-
-// ArcBall style camera. Allows you to rotate camera around a certain target point.
-class ArcBallCamera final : public Camera {
-public:
-
 };
 } // Recluse

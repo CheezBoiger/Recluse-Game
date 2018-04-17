@@ -4,48 +4,42 @@
 #include "Core/Logging/Log.hpp"
 #include "Core/Math/Common.hpp"
 
+#include "Engine.hpp"
+
 
 namespace Recluse {
 
 
-Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar, 
-  Vector3 pos, Vector3 lookAt)
+Camera* Camera::s_pMainCamera = nullptr;
+
+
+Camera* Camera::GetMain()
+{
+  return s_pMainCamera;
+}
+
+
+void Camera::SetMain(Camera* pCam)
+{
+  if (!pCam) return;
+  s_pMainCamera = pCam;
+}
+
+
+Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar)
   : m_ProjType(type)
   , m_Fov(fov)
   , m_PixelWidth(pixelWidth)
   , m_PixelHeight(pixelHeight)
   , m_Aspect(pixelWidth / pixelHeight)
-  , m_Position(pos)
-  , m_LookAt(lookAt)
   , m_ZNear(zNear)
   , m_ZFar(zFar)
   , m_OrthoScale(1.0f)
   , m_Bloom(false)
   , m_Gamma(2.2f)
   , m_Exposure(4.5f)
-  , m_WorldUp(Vector3::UP)
   , m_FrustumCull(false)
 {
-}
-
-
-Matrix4 Camera::Projection()
-{
-  if (m_ProjType == ORTHO) { 
-    return Matrix4::Ortho((m_PixelWidth * 0.01f) * m_OrthoScale, 
-                          (m_PixelHeight * 0.01f) * m_OrthoScale, 
-                          m_ZNear, 
-                          m_ZFar);
-  }
-
-  return Matrix4::Perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
-}
-
-
-Matrix4 Camera::View()
-{
-  // View matrix with standard look up.
-  return Matrix4::LookAt(m_Position, m_LookAt, m_WorldUp);
 }
 
 
@@ -57,12 +51,63 @@ void Camera::ResetAspect()
 
 void Camera::Update()
 {
-  m_Front = (m_LookAt - m_Position).Normalize();
-  m_Right = m_Front.Cross(m_WorldUp).Normalize();
-  m_Up = m_Right.Cross(m_Front).Normalize();
+  if (!GetOwner()) return;
+
+  Transform* transform = GetOwner()->GetTransform();
+  Vector3 pos = transform->Position;
+  Vector3 right = transform->Right();
+  Vector3 up = transform->Up();
+  Vector3 front = transform->Forward();
+
+  // Update camera and screen info.
+  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
+  Window* pWindow = gEngine().GetWindow();
+
+  m_viewMatrix = Matrix4(
+     right.x,          up.x,         front.x,        0.0f,
+     right.y,          up.y,         front.y,        0.0f,
+     right.z,          up.z,         front.z,        0.0f,
+    -right.Dot(pos),  -up.Dot(pos), -front.Dot(pos), 1.0f
+  );
+
+  m_projectionMatrix = Matrix4();
+  if (m_ProjType == ORTHO) {
+    m_projectionMatrix = Matrix4::Ortho((m_PixelWidth * 0.01f) * m_OrthoScale,
+      (m_PixelHeight * 0.01f) * m_OrthoScale,
+      m_ZNear,
+      m_ZFar);
+  } else {
+    m_projectionMatrix = Matrix4::Perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
+  }
+
+  SetAspect(((r32)pWindow->Width() / (r32)pWindow->Height()));
+
+  gGlobalBuffer->_CameraPos = Vector4(pos, 1.0f);
+  gGlobalBuffer->_Proj = m_projectionMatrix;
+  gGlobalBuffer->_View = m_viewMatrix;
+  gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
+  gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
+  gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
+  gGlobalBuffer->_ScreenSize[0] = pWindow->Width();
+  gGlobalBuffer->_ScreenSize[1] = pWindow->Height();
+  gGlobalBuffer->_BloomEnabled = Bloom();
+  gGlobalBuffer->_Exposure = Exposure();
+  gGlobalBuffer->_Gamma = Gamma();
+  gGlobalBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
+  gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
+  gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
+
+  // TODO(): Move cam frustum to camera.
+  //m_camFrustum.Update();
+  //gGlobalBuffer->_LPlane = m_camFrustum._Planes[CCamViewFrustum::PLEFT];
+  //gGlobalBuffer->_RPlane = m_camFrustum._Planes[CCamViewFrustum::PRIGHT];
+  //gGlobalBuffer->_TPlane = m_camFrustum._Planes[CCamViewFrustum::PTOP];
+  //gGlobalBuffer->_BPlane = m_camFrustum._Planes[CCamViewFrustum::PBOTTOM];
+  //gGlobalBuffer->_NPlane = m_camFrustum._Planes[CCamViewFrustum::PNEAR];
+  //gGlobalBuffer->_FPlane = m_camFrustum._Planes[CCamViewFrustum::PFAR];
 }
 
-
+#if 0
 FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
   r32 zNear, r32 zFar, Vector3 pos, Vector3 dir)
   : m_X_Sensitivity(0.1f)
@@ -83,59 +128,17 @@ FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight,
 
 Matrix4 FlyViewCamera::View()
 {
-  if (m_Locked) {
-    return Matrix4::LookAt(m_Position, m_LookAt, m_WorldUp);
-  }
-  return Matrix4::LookAt(m_Position, m_Front + m_Position, m_WorldUp);
+  return Matrix4();
 }
 
 
 void FlyViewCamera::Move(Movement movement, r64 dt)
 {
-  // Delta time velocity.
-  r32 Velocity = m_Speed * (r32)dt;
-
-  switch (movement) {
-    case FORWARD:
-    {
-      m_Position += m_Front * Velocity;
-    } break;
-    case BACK:
-    {
-      m_Position -= m_Front * Velocity;
-    } break;
-    case LEFT:
-    {
-      m_Position += m_Right * Velocity;
-    } break;
-    case RIGHT:
-    {
-      m_Position -= m_Right * Velocity;
-    } break;
-    case UP:
-    {
-    } break;
-    case DOWN:
-    {
-    } break;
-    default: break;
-  }
 }
 
 
 void FlyViewCamera::Update()
 {
-  if (!m_Locked) {
-    m_Front.x = cosf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
-    m_Front.y = sinf(Radians(m_Pitch));
-    m_Front.z = sinf(Radians(m_Yaw)) * cosf(Radians(m_Pitch));
-  } else {
-    m_Front = m_LookAt - m_Position;
-  }
-
-  m_Front = m_Front.Normalize();
-  m_Right = m_Front.Cross(m_WorldUp).Normalize();
-  m_Up = m_Right.Cross(m_Front).Normalize();
 }
 
 
@@ -165,4 +168,5 @@ void FlyViewCamera::Look(r64 x, r64 y)
     m_Pitch = -m_ConstainedPitch;
   }
 }
+#endif
 } // Recluse

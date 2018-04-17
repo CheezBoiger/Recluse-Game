@@ -80,11 +80,9 @@ public:
 
   void                          Run();
   void                          SignalStop() { m_stopping = true; }
-  Camera*                       GetCamera() { return m_pCamera; }
   Window*                       GetWindow() { return &m_window; }
 
   void                          Update();
-  void                          SetCamera(Camera* camera) { m_pCamera = camera; m_camFrustum.SetCamera(m_pCamera); }
 
   // Push the new scene to into this engine for extraction.
   void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
@@ -117,8 +115,6 @@ private:
 
   std::vector<GameObject*>      m_cachedGameObjects;
   std::vector<game_uuid_t>      m_cachedGameObjectKeys;
-  CCamViewFrustum               m_camFrustum;
-  Camera*                       m_pCamera;
   Scene*                        m_pPushedScene;
   ControlInputCallback          m_pControlInputFunc;
   r64                           m_gameMouseX;

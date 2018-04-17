@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #pragma once 
 
 #include "Core/Types.hpp"
@@ -9,6 +9,7 @@ namespace Recluse {
 
 
 class Camera;
+class Transform;
 class AABB;
 
 typedef struct CCamViewFrustum CFrustum;
@@ -45,7 +46,7 @@ public:
   
   // TODO(): Update() function to calculate camera view frustum
   // which will be used to send to global material.
-  void        Update();
+  void        Update(Transform* transform);
 
 
   b8          Intersect(const AABB* aabb);

@@ -6,6 +6,7 @@
 
 #include "Game/Scene/ModelLoader.hpp"
 #include "../DemoTextureLoad.hpp"
+#include "Scripts/FlyViewCamera.hpp"
 
 // Scripts.
 #include <array>
@@ -14,43 +15,12 @@
 
 using namespace Recluse;
 
-
-// Main camera is an object in the scene.
-class MainCamera : public GameObject 
-{
-public:
-  void Update(r32 tick) override
-  {
-    Camera* cam = Camera::GetMain();
-    if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
-    if (Keyboard::KeyPressed(KEY_CODE_A)) { cam->Move(Camera::LEFT, Time::DeltaTime); }
-    if (Keyboard::KeyPressed(KEY_CODE_D)) { cam->Move(Camera::RIGHT, Time::DeltaTime); }
-    if (Keyboard::KeyPressed(KEY_CODE_W)) { cam->Move(Camera::FORWARD, Time::DeltaTime); }
-    if (Keyboard::KeyPressed(KEY_CODE_S)) { cam->Move(Camera::BACK, Time::DeltaTime); }
-
-    if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
-    if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; }
-
-    if (Keyboard::KeyPressed(KEY_CODE_T)) {
-      GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
-      config._AA = AA_None;
-      gRenderer().UpdateRendererConfigs(&config);
-    }
-
-    if (Keyboard::KeyPressed(KEY_CODE_R)) {
-      GraphicsConfigParams config = gRenderer().CurrentGraphicsConfigs();
-      config._AA = AA_FXAA_2x;
-      gRenderer().UpdateRendererConfigs(&config);
-    }
-  }
-};
-
-// Spehere object example, on how to set up and update a game object for the engine.
-class HelmetObject : public GameObject
+// Lantern object example, on how to set up and update a game object for the engine.
+class LanternObject : public GameObject
 {
 public:
 
-  HelmetObject()
+  LanternObject()
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -89,6 +59,76 @@ public:
 
 
   void Awake() override 
+  {
+  }
+
+  void Update(r32 tick) override
+  {
+    Transform* transform = GetTransform();
+    // transform->Position += m_vRandDir * tick;
+    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
+    transform->Rotation = transform->Rotation * q;
+  }
+
+  void CleanUp() override
+  {
+    m_pMeshComponent->CleanUp();
+    m_pMaterialComponent->CleanUp();
+    m_pRendererComponent->CleanUp();
+  }
+
+private:
+  Vector3             m_vRandDir;
+  RendererComponent*  m_pRendererComponent;
+  MeshComponent*      m_pMeshComponent;
+  MaterialComponent*  m_pMaterialComponent;
+};
+
+
+// Helmet object example, on how to set up and update a game object for the engine.
+class HelmetObject : public GameObject
+{
+public:
+
+  HelmetObject()
+  {
+    m_pMeshComponent = new MeshComponent();
+    m_pMaterialComponent = new MaterialComponent();
+    m_pRendererComponent = new RendererComponent();
+
+    Mesh* mesh = nullptr;
+    //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->SetMeshRef(mesh);
+
+    Material* material = nullptr;
+    MaterialCache::Get(
+#if 0
+      "StingrayPBS1SG"
+#else
+      "Material_MR"
+#endif
+      , &material);
+    m_pMaterialComponent->SetMaterialRef(material);
+    m_pMaterialComponent->Initialize(this);
+    //material->SetEmissiveFactor(1.0f);
+    //material->SetRoughnessFactor(1.0f);
+    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->Initialize(this);
+
+    std::random_device r;
+    std::mt19937 twist(r());
+    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    Transform* trans = GetTransform();
+    trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
+    trans->Position = Vector3(-4.0f, 1.0f, 0.0f);
+    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+  }
+
+
+  void Awake() override
   {
   }
 
@@ -219,14 +259,6 @@ int main(int c, char* argv[])
   // Add game object in scene.
   LoadTextures();
 
-  // Camera set.
-  FlyViewCamera cam(Radians(60.0f), 
-    static_cast<r32>(window->Width()), 
-    static_cast<r32>(window->Height()), 0.001f, 2000.0f, Vector3(0.0f, 1.0f, -10.0f), Vector3(0.0f, 0.0f, 0.0f));
-  cam.SetSpeed(10.0f);
-  cam.EnableBloom(true);
-  gEngine().SetCamera(&cam);
-
   ///////////////////////////////////////////////////////////////////////////////////
   // Everything within initialization will normally be handled by Managers, for now
   // we will be demonstrating manual initialization of various objects to render and
@@ -279,7 +311,9 @@ int main(int c, char* argv[])
   }
 
   CubeObject* cube = new CubeObject();
+  LanternObject* lantern = new LanternObject();
   scene.GetRoot()->AddChild(cube);
+  scene.GetRoot()->AddChild(lantern);
 
   // Add game objects into scene. This demonstrates parent-child transformation as well.
 
@@ -325,6 +359,8 @@ int main(int c, char* argv[])
     //light->_Direction = Vector3(
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
+
+    // Scene transitions.
     if (Keyboard::KeyPressed(KEY_CODE_G)) {
       gEngine().PushScene(&scene2);
       gEngine().BuildScene();
@@ -340,12 +376,18 @@ int main(int c, char* argv[])
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
+
+  // Clean up all game objects with done.
   for (u32 i = 0; i < HELM_COUNT; ++i) {
     helmets[i]->CleanUp();
     delete helmets[i];
   }
+
   cube->CleanUp();
   delete cube;
+
+  lantern->CleanUp();
+  delete lantern;
 
   mainCam->CleanUp();
   delete mainCam;

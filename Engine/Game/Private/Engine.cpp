@@ -50,9 +50,8 @@ void WindowResized(Window* window, i32 width, i32 height)
 
 void MousePositionMove(Window* window, r64 x, r64 y)
 {
-  Camera* camera = gEngine().GetCamera();
+  Camera* camera = Camera::GetMain();
   if (camera && !Mouse::Enabled()) {
-    camera->Look(x, y);
     gEngine().SetGameMouseX(x);
     gEngine().SetGameMouseY(y);
   }
@@ -71,12 +70,6 @@ void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
 }
 
 
-Camera* Camera::GetMain()
-{
-  return gEngine().GetCamera();
-}
-
-
 Engine& gEngine()
 {
   static Engine engine;
@@ -85,8 +78,7 @@ Engine& gEngine()
 
 
 Engine::Engine()
-  : m_pCamera(nullptr)
-  , m_pPushedScene(nullptr)
+  : m_pPushedScene(nullptr)
   , m_gameMouseX(0.0)
   , m_gameMouseY(0.0)
   , m_sceneObjectCount(0)
@@ -234,6 +226,8 @@ void Engine::UpdateGameLogic()
 
   Transform::UpdateComponents(m_cachedGameObjectKeys.data(), 
     static_cast<u32>(m_cachedGameObjectKeys.size()));
+  Camera::GetMain()->Update();
+
   std::thread worker0 = std::thread([&] () -> void {
     RendererComponent::UpdateComponents(m_cachedGameObjectKeys.data(), 
       static_cast<u32>(m_cachedGameObjectKeys.size()));
@@ -253,35 +247,7 @@ void Engine::UpdateGameLogic()
     pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
   }
 
-  // Update camera and screen info.
-  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
-  if (m_pCamera) {
-    m_pCamera->Update();
-    m_pCamera->SetAspect(((r32)m_window.Width() / (r32)m_window.Height()));
-
-    gGlobalBuffer->_CameraPos = Vector4(m_pCamera->Position(), 1.0f);
-    gGlobalBuffer->_Proj = m_pCamera->Projection();
-    gGlobalBuffer->_View = m_pCamera->View();
-    gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
-    gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
-    gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
-    gGlobalBuffer->_ScreenSize[0] = m_window.Width();
-    gGlobalBuffer->_ScreenSize[1] = m_window.Height();
-    gGlobalBuffer->_BloomEnabled = m_pCamera->Bloom();
-    gGlobalBuffer->_Exposure = m_pCamera->Exposure();
-    gGlobalBuffer->_Gamma = m_pCamera->Gamma();
-    gGlobalBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
-    gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
-    gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
-
-    m_camFrustum.Update();
-    gGlobalBuffer->_LPlane = m_camFrustum._Planes[CCamViewFrustum::PLEFT];
-    gGlobalBuffer->_RPlane = m_camFrustum._Planes[CCamViewFrustum::PRIGHT];
-    gGlobalBuffer->_TPlane = m_camFrustum._Planes[CCamViewFrustum::PTOP];
-    gGlobalBuffer->_BPlane = m_camFrustum._Planes[CCamViewFrustum::PBOTTOM];
-    gGlobalBuffer->_NPlane = m_camFrustum._Planes[CCamViewFrustum::PNEAR];
-    gGlobalBuffer->_FPlane = m_camFrustum._Planes[CCamViewFrustum::PFAR];
-  }
+  
 
   worker0.join();
   worker1.join();
