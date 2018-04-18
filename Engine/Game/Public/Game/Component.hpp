@@ -12,6 +12,7 @@
 namespace Recluse {
 
 typedef u64 component_t;
+class Transform;
 
 #define RCOMPONENT(cls) private: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
     friend class GameObject; \
@@ -97,6 +98,8 @@ public:
   b8            Enabled() const { return m_bEnabled; }
 
   void          Enable(b8 enable) { m_bEnabled = enable; }
+
+  Transform*    GetTransform();
 
 protected:
   // Mandatory that this update function is defined.

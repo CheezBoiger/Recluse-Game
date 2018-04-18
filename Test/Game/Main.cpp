@@ -139,6 +139,10 @@ public:
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
+#if FOLLOW_CAMERA_FORWARD
+    Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
+    transform->Rotation = targ * Quaternion::AngleAxis(Radians(180.0f), Vector3::UP);
+#endif
   }
 
   void CleanUp() override

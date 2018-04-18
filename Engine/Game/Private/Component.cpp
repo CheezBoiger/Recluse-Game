@@ -13,6 +13,13 @@ namespace Recluse {
 DEFINE_COMPONENT_MAP(Transform);
 
 
+Transform* Component::GetTransform()
+{
+  if (!GetOwner()) return nullptr;
+  return GetOwner()->GetTransform();
+}
+
+
 void Transform::Update()
 {
   if (LocalPosition == Position && LocalRotation == Rotation && LocalScale == Scale && !GetOwner()->GetParent()) return;

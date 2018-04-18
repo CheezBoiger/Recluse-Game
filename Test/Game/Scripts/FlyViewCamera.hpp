@@ -45,17 +45,17 @@ public:
     transform->Position = Vector3(5.0f, 10.0f, -10.0f);
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir, Vector3::UP);
-    Log() << transform->Rotation << "\n";
     Vector3 euler = transform->Rotation.ToEulerAngles();
-    m_pitch = -euler.y;
+    m_pitch = euler.y;
     m_yaw = euler.x;
+    Log() << "Pitch: " << m_pitch << " rads\n";
   }
 
   void Update(r32 tick) override
   {
     if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
     Transform* transform = GetTransform();
-#if 1
+
     if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->Position -= transform->Right() * m_speed * tick; }
     if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * m_speed * tick; }
     if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Forward() * m_speed * tick; }
@@ -86,11 +86,8 @@ public:
     if (m_pitch < -m_constrainPitch) {
       m_pitch = -m_constrainPitch;
     }
-
     Vector3 euler = Vector3(0.0f, m_pitch, m_yaw);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
-    Log() << m_pitch << "\n";
-#endif
   }
 
 private:
