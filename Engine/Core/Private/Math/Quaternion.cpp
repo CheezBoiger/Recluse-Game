@@ -9,6 +9,68 @@
 namespace Recluse {
 
 
+  Quaternion Quaternion::LookRotation(const Vector3& dir, const Vector3& upwards)
+  {
+    // Implementation from 
+    // https://gist.github.com/aeroson/043001ca12fe29ee911e
+    // modified for left hand coordinate systems that is Recluse.
+    Vector3 forward = dir.Normalize();
+    Vector3 right = upwards.Cross(forward).Normalize();
+    Vector3 up = forward.Cross(right);
+
+    r32 m00 = right.x;
+    r32 m01 = right.y;
+    r32 m02 = right.z;
+    r32 m10 = up.x;
+    r32 m11 = up.y;
+    r32 m12 = up.z;
+    r32 m20 = forward.x;
+    r32 m21 = forward.y;
+    r32 m22 = forward.z;
+
+    r32 num8 = (m00 + m11) + m22;
+    Quaternion ret;
+
+    if (num8 > 0.0f) {
+      r32 num = sqrtf(num8 + 1.0f);
+      ret.w = num * 0.5f;
+      num = 0.5f / num;
+      ret.x = (m12 - m21) * num;
+      ret.y = (m20 - m02) * num;
+      ret.z = (m01 - m10) * num;
+      return ret;
+    }
+
+    if ((m00 >= m11) && (m00 >= m22)) {
+      r32 num7 = sqrtf(((1.0f + m00) - m11) - m22);
+      r32 num4 = 0.5f * num7;
+      ret.x = 0.5f * num7;
+      ret.y = (m01 + m10) * num4;
+      ret.z = (m02 + m20) * num4;
+      ret.w = (m12 - m21) * num4;
+      return ret;
+    }
+
+    if (m11 > m22) {
+      r32 num6 = sqrtf(((1.0f + m11) - m00) - m22);
+      r32 num3 = 0.5f / num6;
+      ret.x = (m10 + m01) * num3;
+      ret.y = 0.5f * num6;
+      ret.z = (m21 + m12) * num3;
+      ret.w = (m20 - m02) * num3;
+      return ret;
+    }
+
+    r32 num5 = sqrtf(((1.0f + m22) - m00) - m11);
+    r32 num2 = 0.5f / num5;
+    ret.x = (m20 + m02) * num2;
+    ret.y = (m21 + m12) * num2;
+    ret.z = 0.5f * num5;
+    ret.w = (m01 - m10) * num2;
+    return ret;
+  }
+
+
 r32 Quaternion::Norm() const
 {
   return sqrtf(x*x + y*y + z*z + w*w);

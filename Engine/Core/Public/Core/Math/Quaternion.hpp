@@ -22,6 +22,7 @@ struct Quaternion {
   static Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);
   static Quaternion EulerAnglesToQuaternion(const Vector3& euler);
   static Quaternion Matrix4ToQuaternion(const Matrix4& rot);  
+  static Quaternion LookRotation(const Vector3&dir, const Vector3& up);
   
   Quaternion        operator+(const Quaternion& other) const;
   Quaternion        operator-(const Quaternion& other) const;

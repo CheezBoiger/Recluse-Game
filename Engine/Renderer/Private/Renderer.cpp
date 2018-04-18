@@ -1125,7 +1125,7 @@ void Renderer::SetUpGraphicsPipelines()
      VK_POLYGON_MODE_FILL,
       VK_FALSE, 
       VK_CULL_MODE_BACK_BIT,
-      VK_FRONT_FACE_CLOCKWISE,
+      VK_FRONT_FACE_COUNTER_CLOCKWISE,
       1.0f,
       VK_FALSE,
       VK_FALSE

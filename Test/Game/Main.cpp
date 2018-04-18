@@ -114,6 +114,7 @@ public:
     m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
+    material->SetEmissiveFactor(1.0f);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);

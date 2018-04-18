@@ -11,8 +11,8 @@ Vector3 Vector3::UP = Vector3(0.0f, 1.0f, 0.0f);
 Vector3 Vector3::DOWN = Vector3(0.0f, -1.0f, 0.0f);
 Vector3 Vector3::LEFT = Vector3(-1.0f, 0.0f, 0.0f);
 Vector3 Vector3::RIGHT = Vector3(1.0f, 0.0f, 0.0f);
-Vector3 Vector3::FRONT = Vector3(0.0f, 0.0f, -1.0f);
-Vector3 Vector3::BACK = Vector3(0.0f, 0.0f, 1.0f);
+Vector3 Vector3::FRONT = Vector3(0.0f, 0.0f, 1.0f);
+Vector3 Vector3::BACK = Vector3(0.0f, 0.0f, -1.0f);
 Vector3 Vector3::ZERO = Vector3(0.0f, 0.0f, 0.0f);
 
 
