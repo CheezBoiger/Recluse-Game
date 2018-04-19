@@ -85,6 +85,7 @@ public:
     if (m_pitch < -m_constrainPitch) {
       m_pitch = -m_constrainPitch;
     }
+
     Vector3 euler = Vector3(0.0f, m_pitch, m_yaw);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
   }

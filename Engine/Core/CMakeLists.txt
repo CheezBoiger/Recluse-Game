@@ -22,6 +22,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Math/Sphere.hpp
   ${RECLUSE_CORE_PUB_DIR}/Math/Box.hpp
   ${RECLUSE_CORE_PUB_DIR}/Math/Plane.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Math/DualQuaternion.hpp
 
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Matrix3.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Matrix4.cpp
@@ -32,6 +33,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Plane.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Sphere.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Math/Box.cpp
+  ${RECLUSE_CORE_PRIVATE_DIR}/Math/DualQuaternion.cpp
   #${RECLUSE_CORE_PRIVATE_DIR}/Math/Ray.cpp
 
 
