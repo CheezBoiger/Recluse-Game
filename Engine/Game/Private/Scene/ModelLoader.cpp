@@ -131,6 +131,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
                   static_cast<r32>(rq[1]),
                   static_cast<r32>(rq[2]),
                   static_cast<r32>(rq[3]));
+    q = q.Inverse();
     R = q.ToMatrix4();
   }
 
@@ -204,8 +205,6 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
 
-          vertex.position.y *= -1.0f;
-          vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
         }
       }
@@ -246,7 +245,8 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
       Primitive prim;
       prim._meshRef = pMesh;
       prim._materialRef = engineModel->materials[primitive.material];
-
+      prim._firstIndex = indexStart;
+      prim._indexCount = indexCount;
 
       // TODO():
       //    Still need to add start and index count.

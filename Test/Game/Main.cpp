@@ -27,7 +27,6 @@ public:
     m_pRendererComponent = new RendererComponent();
 
     Mesh* mesh = nullptr;
-    //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
     MeshCache::Get("lantern lantern_base", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
@@ -44,7 +43,7 @@ public:
     m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    //m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
 
@@ -113,7 +112,8 @@ public:
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
-    //material->SetRoughnessFactor(1.0f);
+    material->SetRoughnessFactor(1.0f);
+    material->SetMetallicFactor(1.0f);
     material->SetEmissiveFactor(1.0f);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -135,13 +135,15 @@ public:
 
   void Update(r32 tick) override
   {
+#define FOLLOW_CAMERA_FORWARD 1
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
 #if FOLLOW_CAMERA_FORWARD
+    // Have helmet rotate with camera look around.
     Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
-    transform->Rotation = targ * Quaternion::AngleAxis(Radians(180.0f), Vector3::UP);
+    transform->Rotation = targ;
 #endif
   }
 
@@ -282,6 +284,7 @@ int main(int c, char* argv[])
   ModelLoader::Model model;
   ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
   ModelLoader::Load("Assets/Lantern/lantern.gltf", &model);
+
   {
     Material* material = new Material();
     material->Initialize();

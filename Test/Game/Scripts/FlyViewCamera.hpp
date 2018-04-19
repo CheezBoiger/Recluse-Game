@@ -46,9 +46,8 @@ public:
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir, Vector3::UP);
     Vector3 euler = transform->Rotation.ToEulerAngles();
-    m_pitch = euler.y;
-    m_yaw = euler.x;
-    Log() << "Pitch: " << m_pitch << " rads\n";
+    m_pitch = -euler.y;
+    m_yaw = -euler.x;
   }
 
   void Update(r32 tick) override

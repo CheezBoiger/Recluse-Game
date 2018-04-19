@@ -224,17 +224,14 @@ void Engine::UpdateGameLogic()
     }
   }
 
-  Transform::UpdateComponents(m_cachedGameObjectKeys.data(), 
-    static_cast<u32>(m_cachedGameObjectKeys.size()));
+  Transform::UpdateComponents();
   Camera::GetMain()->Update();
 
   std::thread worker0 = std::thread([&] () -> void {
-    RendererComponent::UpdateComponents(m_cachedGameObjectKeys.data(), 
-      static_cast<u32>(m_cachedGameObjectKeys.size()));
+    RendererComponent::UpdateComponents();
   });
   std::thread worker1 = std::thread([&] () -> void {
-    PointLightComponent::UpdateComponents(m_cachedGameObjectKeys.data(),
-      static_cast<u32>(m_cachedGameObjectKeys.size()));
+    PointLightComponent::UpdateComponents();
   });
 
   {

@@ -18,12 +18,9 @@ class Transform;
     friend class GameObject; \
     static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
     static const tchar* GetName() { return #cls; } \
-    public: static void UpdateComponents(uuid64* keys, u32 count) { \
-              for (u32 i = 0; i < count; ++i) { \
-                uuid64 key = keys[i]; \
-                auto it = _k##cls##s.find(key); \
-                if (it == _k##cls##s.end()) continue; \
-                cls* comp = _k##cls##s[key]; \
+    public: static void UpdateComponents() { \
+              for (auto& it : _k##cls##s) { \
+                cls* comp = it.second; \
                 comp->Update(); \
               } \
             } \
