@@ -161,11 +161,11 @@ void main()
   if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
     vec4 roughMetal = texture(roughnessMetallic, frag_in.texcoord0, objBuffer.lod);
     if (matBuffer.hasMetallic >= 1) {
-      fragMetallic *= roughMetal.g;
+      fragMetallic *= roughMetal.b;
     }
   
     if (matBuffer.hasRoughness >= 1) {
-      fragRoughness *= roughMetal.b;
+      fragRoughness *= clamp(roughMetal.g, 0.04, 1.0);
     }
   }
   

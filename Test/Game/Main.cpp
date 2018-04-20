@@ -135,7 +135,7 @@ public:
 
   void Update(r32 tick) override
   {
-#define FOLLOW_CAMERA_FORWARD 1
+#define FOLLOW_CAMERA_FORWARD 0
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
