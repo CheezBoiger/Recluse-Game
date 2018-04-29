@@ -15,3 +15,4 @@
  #define R_EXCEPT(e, s)
 #endif
 
+#define R_DEBUG_ENABLED _DEBUG || _NDEBUG

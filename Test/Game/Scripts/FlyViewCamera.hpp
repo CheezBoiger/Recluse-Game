@@ -1,4 +1,5 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
+#pragma once
 #include "Game/Engine.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
@@ -78,14 +79,14 @@ public:
 
     m_yaw += xoffset;
     m_pitch += yoffset;
-
+#if 0 // Constrains the pitch to prevent having the camera flip downside.
     if (m_pitch > m_constrainPitch) {
       m_pitch = m_constrainPitch;
     }
     if (m_pitch < -m_constrainPitch) {
       m_pitch = -m_constrainPitch;
     }
-
+#endif
     Vector3 euler = Vector3(0.0f, m_pitch, m_yaw);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
   }
