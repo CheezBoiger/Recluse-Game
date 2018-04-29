@@ -15,11 +15,18 @@ class DescriptorSet;
 class VulkanRHI;
 
 
+struct PrimitiveInfo {
+  u32                 _startIdx;
+  u32                 _idxCount;
+  MaterialDescriptor* _pMaterialDescriptor;
+};
+
+
 // A Render object is the forfront of rendering an object on the screen.
 // This object is read and used by the renderer to determine object
 // rendering. It is a container that references render groups. Keep in mind,
 // This render object defines models set in one model space, which all share the 
-// same mesh descriptor! (ex. submeshes.)
+// same mesh descriptor! (ex. submeshes -> primitives)
 //
 // NOTE(): All mesh data in this render object must share the same mesh descriptor and material, otherwise
 // create multiple render objects to define meshes with separate mesh descriptors and/or materials!
@@ -110,5 +117,11 @@ private:
   VulkanRHI*              mRhi;
   u32                     m_bNeedsUpdate;
   friend class Renderer;
+};
+
+
+class SkinnedRenderObject : public RenderObject {
+public:
+  
 };
 } // Recluse

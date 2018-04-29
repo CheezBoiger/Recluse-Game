@@ -225,7 +225,7 @@ void Engine::UpdateGameLogic()
   }
 
   Transform::UpdateComponents();
-  Camera::GetMain()->Update();
+  if (Camera::GetMain()) Camera::GetMain()->Update();
 
   std::thread worker0 = std::thread([&] () -> void {
     RendererComponent::UpdateComponents();
