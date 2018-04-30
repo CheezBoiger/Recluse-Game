@@ -15,6 +15,7 @@ class DescriptorSet;
 class VulkanRHI;
 
 
+// Primitive information for render object.
 struct PrimitiveInfo {
   u32                 _startIdx;
   u32                 _idxCount;

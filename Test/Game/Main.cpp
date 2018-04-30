@@ -27,6 +27,11 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
+    m_pPhysicsComponent = new PhysicsComponent();
+
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(1.5f, 1.5f, 1.5f));
+    m_pPhysicsComponent->SetCollider(m_pCollider);
+    m_pPhysicsComponent->Initialize(this);
 
     Mesh* mesh = nullptr;
     //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
@@ -57,8 +62,11 @@ public:
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
-    trans->Position = Vector3(-4.0f, 1.0f, 0.0f);
+    trans->Position = Vector3(-4.0f, 10.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+
+    //m_pPhysicsComponent->SetMass(1.0f);
+    m_pPhysicsComponent->SetPosition(trans->Position);
   }
 
 
@@ -85,10 +93,13 @@ public:
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
+    m_pPhysicsComponent->CleanUp();
 
     delete m_pMeshComponent;
     delete m_pMaterialComponent;
     delete m_pRendererComponent;
+    delete m_pPhysicsComponent;
+    delete m_pCollider;
   }
 
 private:
@@ -96,6 +107,8 @@ private:
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
+  PhysicsComponent*   m_pPhysicsComponent;
+  Collider*           m_pCollider;
 };
 
 
@@ -109,6 +122,12 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
+    m_pPhysicsComponent = new PhysicsComponent();
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(4.0f, 4.0f, 4.0f));
+
+    m_pPhysicsComponent->SetCollider(m_pCollider);
+    m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->SetMass(0.0f);
 
     Mesh* mesh = nullptr;
     MeshCache::Get("NativeCube", &mesh);
@@ -137,6 +156,8 @@ public:
     trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
     trans->Position = Vector3(0.0f, -5.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+
+    m_pPhysicsComponent->SetPosition(trans->Position);
   }
 
 
@@ -157,10 +178,13 @@ public:
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
+    m_pPhysicsComponent->CleanUp();
 
     delete m_pMeshComponent;
     delete m_pMaterialComponent;
     delete m_pRendererComponent;
+    delete m_pPhysicsComponent;
+    delete m_pCollider;
   }
 
 private:
@@ -168,6 +192,8 @@ private:
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
+  PhysicsComponent*   m_pPhysicsComponent;
+  Collider*           m_pCollider;
 };
 
 

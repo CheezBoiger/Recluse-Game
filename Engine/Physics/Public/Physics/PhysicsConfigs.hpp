@@ -13,4 +13,18 @@ namespace Recluse {
 struct physics_configs_t {
   Vector3       _vGravity;
 };
+
+
+class PhysicsObject {
+  static uuid64 genIdx;
+public:
+  PhysicsObject()
+    : m_uuid(genIdx++) { }
+
+  virtual ~PhysicsObject() { }
+
+  uuid64                GetUUID() const { return m_uuid; }
+private:
+  uuid64                m_uuid;
+};
 } // Recluse

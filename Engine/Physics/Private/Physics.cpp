@@ -29,6 +29,22 @@ void Physics::OnStartUp()
 }
 
 
+RigidBody* Physics::CreateRigidBody(Collider* collider)
+{
+#if !FORCE_PHYSICS_OFF
+  return gBulletEngine().CreateRigidBody(Vector3(0.0f, 50.0f, 0.0f), collider);
+#else
+  return nullptr;
+#endif
+}
+
+
+Collider* Physics::CreateBoxCollider(const Vector3& scale)
+{
+  return gBulletEngine().CreateBoxCollider(scale);
+}
+
+
 void Physics::OnShutDown()
 {
   gBulletEngine().CleanUp();
@@ -37,5 +53,24 @@ void Physics::OnShutDown()
 
 void Physics::UpdateState(r64 dt)
 {
+  gBulletEngine().Update(dt);
+}
+
+
+void Physics::FreeRigidBody(RigidBody* body)
+{
+  gBulletEngine().FreeRigidBody(body);
+}
+
+
+void Physics::SetMass(RigidBody* body, r32 mass)
+{
+  gBulletEngine().SetMass(body, mass);
+}
+
+
+void Physics::SetPosition(RigidBody* body, const Vector3& newPos)
+{
+  gBulletEngine().SetPosition(body, newPos);
 }
 } // Recluse

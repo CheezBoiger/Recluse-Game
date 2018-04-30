@@ -3,6 +3,8 @@
 #include "RendererComponent.hpp"
 #include "MaterialComponent.hpp"
 #include "LightComponent.hpp"
+#include "PhysicsComponent.hpp"
+#include "AudioComponent.hpp"
 
 #include "Scene/Scene.hpp"
 #include "Core/Thread/CoreThread.hpp"
@@ -224,7 +226,9 @@ void Engine::UpdateGameLogic()
     }
   }
 
+  PhysicsComponent::UpdateComponents();
   Transform::UpdateComponents();
+
   if (Camera::GetMain()) Camera::GetMain()->Update();
 
   std::thread worker0 = std::thread([&] () -> void {

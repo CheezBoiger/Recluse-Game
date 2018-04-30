@@ -9,6 +9,9 @@
 
 #include "PhysicsConfigs.hpp"
 
+#include "Collider.hpp"
+#include "RigidBody.hpp"
+
 
 namespace Recluse {
 
@@ -23,6 +26,14 @@ public:
 
   void                            OnStartUp() override;
   void                            OnShutDown() override;
+
+
+  virtual RigidBody*              CreateRigidBody(Collider* collider);
+  virtual Collider*               CreateBoxCollider(const Vector3& scale);
+  void                            FreeRigidBody(RigidBody* body);
+
+  void                            SetMass(RigidBody* body, r32 mass);
+  void                            SetPosition(RigidBody* body, const Vector3& newPos);
 
   void                            UpdateState(r64 dt);
 private:

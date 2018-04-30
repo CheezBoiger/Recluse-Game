@@ -17,6 +17,7 @@
 #include "LightComponent.hpp"
 #include "PointLightComponent.hpp"
 #include "MaterialComponent.hpp"
+#include "PhysicsComponent.hpp"
 #include "MeshComponent.hpp"
 #include "RendererComponent.hpp"
 #include "PointLightComponent.hpp"
