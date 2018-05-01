@@ -26,11 +26,14 @@ public:
   void Update() override;
   virtual void OnInitialize(GameObject* owner) override;  
   virtual void OnCleanUp() override;
+  void OnEnable() override;
 
   void SetCollider(Collider* collider) { m_pCollider = collider; }
   void SetPosition(const Vector3& newPos);
   void SetMass(r32 mass);
   r32 GetMass() const { return m_mass; }
+  void UpdateFromGameObject();
+
 
   Collider*   GetCollider() { return m_pCollider; }
 

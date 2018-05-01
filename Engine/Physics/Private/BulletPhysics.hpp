@@ -40,7 +40,10 @@ public:
 
   void                  FreeCollider(Collider* collider);
   void                  SetMass(RigidBody* body, r32 mass);
+  void                  ActivateRigidBody(RigidBody* body);
+  void                  DeactivateRigidBody(RigidBody* body);
 
+  void                  SetWorldGravity(const Vector3& gravity);
 
   void                  SetPosition(RigidBody* body, const Vector3& newPos);
 

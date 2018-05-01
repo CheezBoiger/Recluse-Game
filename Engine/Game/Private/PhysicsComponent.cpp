@@ -45,4 +45,18 @@ void PhysicsComponent::SetPosition(const Vector3& newPos)
 {
   m_pRigidBody->SetPosition(newPos);
 }
+
+
+void PhysicsComponent::OnEnable()
+{
+  Enabled() ? gPhysics().ActivateRigidBody(m_pRigidBody) : gPhysics().DeactivateRigidBody(m_pRigidBody); 
+}
+
+
+void PhysicsComponent::UpdateFromGameObject()
+{
+  Transform* transform = GetTransform();
+  m_pRigidBody->m_vPosition = transform->Position;
+  m_pRigidBody->m_qRotation = transform->Rotation;
+}
 } // Recluse

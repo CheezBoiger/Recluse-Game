@@ -237,4 +237,32 @@ void BulletPhysics::SetPosition(RigidBody* body, const Vector3& newPos)
   transform.setOrigin(btVector3(newPos.x, newPos.y, newPos.z));
   obj->setWorldTransform(transform);
 }
+
+
+void BulletPhysics::ActivateRigidBody(RigidBody* body)
+{
+  if (!body) return;
+  uuid64 key = body->GetUUID();
+  btRigidBody* rb = kRigidBodyMap[key].native;
+  rb->activate();
+}
+
+
+void BulletPhysics::DeactivateRigidBody(RigidBody* body)
+{
+  if (!body) return;
+  uuid64 key = body->GetUUID();
+  btRigidBody* rb = kRigidBodyMap[key].native;
+  rb->setActivationState(WANTS_DEACTIVATION);
+}
+
+
+void BulletPhysics::SetWorldGravity(const Vector3& gravity)
+{
+  bt_manager._pWorld->setGravity(btVector3(
+    btScalar(gravity.x),
+    btScalar(gravity.y),
+    btScalar(gravity.z))
+  );
+}
 } // Recluse

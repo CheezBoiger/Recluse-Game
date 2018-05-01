@@ -94,7 +94,7 @@ public:
 
   b8            Enabled() const { return m_bEnabled; }
 
-  void          Enable(b8 enable) { m_bEnabled = enable; }
+  void          Enable(b8 enable) { m_bEnabled = enable; OnEnable(); }
 
   Transform*    GetTransform();
 
@@ -108,6 +108,7 @@ protected:
   // objects.
   virtual void  OnInitialize(GameObject* owner) { }
   virtual void  OnCleanUp() { }
+  virtual void  OnEnable() { }
 
 private:
   GameObject*   m_pGameObjectOwner;

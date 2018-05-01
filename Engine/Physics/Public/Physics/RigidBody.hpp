@@ -27,7 +27,6 @@ public:
     onCollisionCallback(nullptr) { }
 
   void ObjectCollided();
-  void Update();
   void EnableKinematic(b8 enable);
 
   void SetPosition(const Vector3& newPos);

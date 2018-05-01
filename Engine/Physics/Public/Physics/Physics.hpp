@@ -22,20 +22,23 @@ class BulletPhysics;
 // Our physics engine.
 class Physics : public EngineModule<Physics> {
 public:
+  virtual ~Physics() { }
   Physics() { }
 
-  void                            OnStartUp() override;
-  void                            OnShutDown() override;
+  virtual void                            OnStartUp() override;
+  virtual void                            OnShutDown() override;
 
 
   virtual RigidBody*              CreateRigidBody(Collider* collider);
   virtual Collider*               CreateBoxCollider(const Vector3& scale);
-  void                            FreeRigidBody(RigidBody* body);
+  virtual void                            FreeRigidBody(RigidBody* body);
 
-  void                            SetMass(RigidBody* body, r32 mass);
-  void                            SetPosition(RigidBody* body, const Vector3& newPos);
+  virtual void                            SetMass(RigidBody* body, r32 mass);
+  virtual void                            SetPosition(RigidBody* body, const Vector3& newPos);
+  virtual void                            ActivateRigidBody(RigidBody* body);
+  virtual void                            DeactivateRigidBody(RigidBody* body);
 
-  void                            UpdateState(r64 dt);
+  virtual void                            UpdateState(r64 dt);
 private:
 };
 

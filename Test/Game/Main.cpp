@@ -29,7 +29,7 @@ public:
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
 
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(1.5f, 1.5f, 1.5f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.5f, 0.5f, 0.5f));
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
 
@@ -66,7 +66,8 @@ public:
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
 
     //m_pPhysicsComponent->SetMass(1.0f);
-    m_pPhysicsComponent->SetPosition(trans->Position);
+    m_pPhysicsComponent->SetPosition(trans->Position);    
+    m_pPhysicsComponent->Enable(false);
   }
 
 
@@ -86,6 +87,7 @@ public:
     Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
     transform->Rotation = targ;
 #endif
+    if (Keyboard::KeyPressed(KEY_CODE_V)) m_pPhysicsComponent->Enable(true);
   }
 
   void CleanUp() override
@@ -123,7 +125,7 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(4.0f, 4.0f, 4.0f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(5.0f, 5.0f, 5.0f));
 
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);

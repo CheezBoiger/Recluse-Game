@@ -73,4 +73,16 @@ void Physics::SetPosition(RigidBody* body, const Vector3& newPos)
 {
   gBulletEngine().SetPosition(body, newPos);
 }
+
+
+void Physics::ActivateRigidBody(RigidBody* body)
+{
+  gBulletEngine().ActivateRigidBody(body);
+}
+
+
+void Physics::DeactivateRigidBody(RigidBody* body)
+{
+  gBulletEngine().DeactivateRigidBody(body);
+}
 } // Recluse
