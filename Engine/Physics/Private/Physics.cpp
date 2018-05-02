@@ -7,7 +7,6 @@
 #include "Core/Core.hpp"
 #include "Renderer/Renderer.hpp"
 
-#include "BulletPhysics.hpp"
 
 namespace Recluse {
 
@@ -69,12 +68,6 @@ void Physics::SetMass(RigidBody* body, r32 mass)
 }
 
 
-void Physics::SetPosition(RigidBody* body, const Vector3& newPos)
-{
-  gBulletEngine().SetPosition(body, newPos);
-}
-
-
 void Physics::ActivateRigidBody(RigidBody* body)
 {
   gBulletEngine().ActivateRigidBody(body);
@@ -84,5 +77,11 @@ void Physics::ActivateRigidBody(RigidBody* body)
 void Physics::DeactivateRigidBody(RigidBody* body)
 {
   gBulletEngine().DeactivateRigidBody(body);
+}
+
+
+void Physics::SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot)
+{
+  gBulletEngine().SetTransform(body, pos, rot);
 }
 } // Recluse

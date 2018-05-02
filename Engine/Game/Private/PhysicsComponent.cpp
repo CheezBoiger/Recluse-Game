@@ -29,8 +29,8 @@ void PhysicsComponent::Update()
 {
   R_ASSERT(m_pRigidBody, "No rigidbody assigned to this physics component.");
   Transform* transform = GetOwner()->GetTransform();
-  transform->Position = m_pRigidBody->m_vPosition;
-  transform->Rotation = transform->Rotation * m_pRigidBody->m_qRotation;
+  transform->Position = m_pRigidBody->m_vPosition - m_relOffset;
+  transform->Rotation = m_pRigidBody->m_qRotation;
 }
 
 
@@ -41,9 +41,9 @@ void PhysicsComponent::SetMass(r32 mass)
 }
 
 
-void PhysicsComponent::SetPosition(const Vector3& newPos)
+void PhysicsComponent::SetTransform(const Vector3& newPos, const Quaternion& newRot)
 {
-  m_pRigidBody->SetPosition(newPos);
+  m_pRigidBody->SetTransform(newPos + m_relOffset, newRot);
 }
 
 
@@ -56,7 +56,27 @@ void PhysicsComponent::OnEnable()
 void PhysicsComponent::UpdateFromGameObject()
 {
   Transform* transform = GetTransform();
-  m_pRigidBody->m_vPosition = transform->Position;
+  m_pRigidBody->m_vPosition = transform->Position + m_relOffset;
   m_pRigidBody->m_qRotation = transform->Rotation;
+  gPhysics().SetTransform(m_pRigidBody, 
+    m_pRigidBody->m_vPosition, 
+    m_pRigidBody->m_qRotation);
+}
+
+
+void PhysicsComponent::SetRelativeOffset(const Vector3& offset)
+{
+  m_pRigidBody->m_vPosition = m_pRigidBody->m_vPosition - m_relOffset;
+  m_relOffset = offset;
+  m_pRigidBody->m_vPosition = m_pRigidBody->m_vPosition + m_relOffset;
+  m_pRigidBody->SetTransform(m_pRigidBody->m_vPosition, m_pRigidBody->m_qRotation);
+}
+
+
+void PhysicsComponent::UpdateFromPreviousGameLogic()
+{
+  for (auto& component : _kPhysicsComponents) {
+    component.second->UpdateFromGameObject();
+  }
 }
 } // Recluse

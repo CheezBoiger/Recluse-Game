@@ -8,6 +8,7 @@
 #include "btBulletDynamicsCommon.h"
 #include "Core/Types.hpp"
 #include "Core/Math/Vector3.hpp"
+#include "Core/Math/Quaternion.hpp"
 
 
 namespace Recluse {
@@ -45,8 +46,7 @@ public:
 
   void                  SetWorldGravity(const Vector3& gravity);
 
-  void                  SetPosition(RigidBody* body, const Vector3& newPos);
-
+  void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot);
 private:
   btDynamicsWorld*        m_pWorld;
 };

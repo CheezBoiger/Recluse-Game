@@ -64,10 +64,6 @@ public:
     trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
     trans->Position = Vector3(-4.0f, 10.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-
-    //m_pPhysicsComponent->SetMass(1.0f);
-    m_pPhysicsComponent->SetPosition(trans->Position);    
-    m_pPhysicsComponent->Enable(false);
   }
 
 
@@ -87,7 +83,18 @@ public:
     Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
     transform->Rotation = targ;
 #endif
-    if (Keyboard::KeyPressed(KEY_CODE_V)) m_pPhysicsComponent->Enable(true);
+    if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
+      transform->Position.x += 1.0f * tick;
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_DOWN_ARROW)) {
+      transform->Position.x -= 1.0f * tick;
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) {
+      transform->Position.z += 1.0f * tick;
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
+      transform->Position.z -= 1.0f * tick;
+    }
   }
 
   void CleanUp() override
@@ -158,8 +165,6 @@ public:
     trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
     trans->Position = Vector3(0.0f, -5.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-
-    m_pPhysicsComponent->SetPosition(trans->Position);
   }
 
 

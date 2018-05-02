@@ -228,14 +228,23 @@ void BulletPhysics::SetMass(RigidBody* body, r32 mass)
 }
 
 
-void BulletPhysics::SetPosition(RigidBody* body, const Vector3& newPos)
+void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Quaternion& newRot)
 {
   if (!body) return;
   uuid64 key = body->GetUUID();
   btRigidBody* obj = kRigidBodyMap[key].native;
   btTransform transform = obj->getWorldTransform();
   transform.setOrigin(btVector3(newPos.x, newPos.y, newPos.z));
+  transform.setRotation(btQuaternion(
+    btScalar(newRot.x),
+    btScalar(newRot.y),
+    btScalar(newRot.z),
+    btScalar(newRot.w)));
+
+  // TODO(): We shouldn't always have to update the transforms, should check if object is 
+  // static or not moving in physics...
   obj->setWorldTransform(transform);
+  obj->activate();
 }
 
 

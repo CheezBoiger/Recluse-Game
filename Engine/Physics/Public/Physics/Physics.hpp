@@ -34,9 +34,9 @@ public:
   virtual void                            FreeRigidBody(RigidBody* body);
 
   virtual void                            SetMass(RigidBody* body, r32 mass);
-  virtual void                            SetPosition(RigidBody* body, const Vector3& newPos);
   virtual void                            ActivateRigidBody(RigidBody* body);
   virtual void                            DeactivateRigidBody(RigidBody* body);
+  virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot);
 
   virtual void                            UpdateState(r64 dt);
 private:

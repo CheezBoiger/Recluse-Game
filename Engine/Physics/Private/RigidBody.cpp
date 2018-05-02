@@ -17,8 +17,8 @@ void RigidBody::SetMass(r32 mass)
 }
 
 
-void RigidBody::SetPosition(const Vector3& newPos) 
+void RigidBody::SetTransform(const Vector3& newPos, const Quaternion& newRot) 
 {
-  gPhysics().SetPosition(this, newPos);
+  gPhysics().SetTransform(this, newPos, newRot);
 }
 } // Recluse 

@@ -29,7 +29,7 @@ public:
   void ObjectCollided();
   void EnableKinematic(b8 enable);
 
-  void SetPosition(const Vector3& newPos);
+  void SetTransform(const Vector3& newPos, const Quaternion& newRot);
   void SetMass(r32 mass);
   b8                    Kinematic() const { return m_bKinematic; }
 

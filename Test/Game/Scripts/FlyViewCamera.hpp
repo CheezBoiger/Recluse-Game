@@ -43,7 +43,7 @@ public:
     pCam->EnableBloom(true);
     Camera::SetMain(pCam);
 
-    transform->Position = Vector3(1.0f, 10.0f, 1.0f);
+    transform->Position = Vector3(10.0f, 10.0f, 10.0f);
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir, Vector3::UP);
     Vector3 euler = transform->Rotation.ToEulerAngles();

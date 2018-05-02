@@ -4,6 +4,7 @@
 #include "Core/Types.hpp"
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Vector4.hpp"
+#include "Core/Math/Quaternion.hpp"
 #include "Core/Core.hpp"
 
 

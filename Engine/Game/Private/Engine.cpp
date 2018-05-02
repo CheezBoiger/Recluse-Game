@@ -202,11 +202,13 @@ void Engine::Update()
     UpdateGameLogic();
     gAnimation().UpdateState(dt);
     gUI().UpdateState(dt);
+
 #if !defined FORCE_AUDIO_OFF
     gAudio().UpdateState(dt);
 #endif
 #if !defined FORCE_PHYSICS_OFF
     gPhysics().UpdateState(dt);
+    PhysicsComponent::UpdateComponents();
 #endif
     m_dLag -= Time::FixTime;
   }
@@ -226,7 +228,7 @@ void Engine::UpdateGameLogic()
     }
   }
 
-  PhysicsComponent::UpdateComponents();
+  PhysicsComponent::UpdateFromPreviousGameLogic();
   Transform::UpdateComponents();
 
   if (Camera::GetMain()) Camera::GetMain()->Update();
