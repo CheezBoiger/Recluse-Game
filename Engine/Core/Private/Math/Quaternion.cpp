@@ -202,12 +202,12 @@ Quaternion Quaternion::AngleAxis(const r32 radians, const Vector3& axis)
 Quaternion Quaternion::EulerAnglesToQuaternion(const Vector3& euler)
 {
   Quaternion q;
-  r32 t0 = cosf(euler.x * 0.5f);
-  r32 t1 = sinf(euler.x * 0.5f);
-  r32 t2 = cosf(euler.y * 0.5f);
-  r32 t3 = sinf(euler.y * 0.5f);
-  r32 t4 = cosf(euler.z * 0.5f);
-  r32 t5 = sinf(euler.z * 0.5f);
+  r32 t0 = cosf(euler.z * 0.5f);
+  r32 t1 = sinf(euler.z * 0.5f);
+  r32 t2 = cosf(euler.x * 0.5f);
+  r32 t3 = sinf(euler.x * 0.5f);
+  r32 t4 = cosf(euler.y * 0.5f);
+  r32 t5 = sinf(euler.y * 0.5f);
 
   q.w = t0*t2*t4 + t1*t3*t5;
   q.x = t0*t3*t4 - t1*t2*t5;
@@ -223,15 +223,18 @@ Vector3 Quaternion::ToEulerAngles() const
   Vector3 eulerAngles;
   r32 ysqrt = y * y;
 
-  r32 t0 = 2.0f * (w * x + y * z);
+  // roll
+  r32 t0 = 2.0f * (w * x +  y * z);
   r32 t1 = 1.0f - 2.0f * (x * x + ysqrt);
   eulerAngles.x = atan2f(t0, t1);
 
-  r32 t2 = 2.0f * (w * y - z * x);
+  // pitch
+  r32 t2 = 2.0f * (w * y - x * z);
   t2 = t2 > 1.0f ? 1.0f : t2;
   t2 = t2 < -1.0f ? -1.0f : t2;
   eulerAngles.y = asinf(t2);
 
+  // yaw
   r32 t3 = 2.0f * (w * z + x * y);
   r32 t4 = 1.0f - 2.0f * (ysqrt + z * z);
   eulerAngles.z = atan2f(t3, t4);

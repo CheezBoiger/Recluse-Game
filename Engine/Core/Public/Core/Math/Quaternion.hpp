@@ -46,6 +46,10 @@ struct Quaternion {
   Quaternion        Inverse() const;
   Quaternion        Normalize() const;
 
+  // Converts quaternion components to euler angles with components:
+  // x -> pitch
+  // y -> yaw
+  // z -> roll
   Vector3           ToEulerAngles() const;
   Matrix4           ToMatrix4() const;
 

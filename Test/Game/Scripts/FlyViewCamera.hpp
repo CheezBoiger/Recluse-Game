@@ -27,7 +27,7 @@ public:
     , m_yaw(0.0f)
     , m_pitch(0.0f)
     , bFirstLook(true)
-    , m_constrainPitch(Radians(89.0f))
+    , m_constrainPitch(Radians(90.0f))
     , m_lastX(0.0f)
     , m_lastY(0.0f)
     , m_speed(5.0f)
@@ -43,12 +43,13 @@ public:
     pCam->EnableBloom(true);
     Camera::SetMain(pCam);
 
-    transform->Position = Vector3(5.0f, 10.0f, -10.0f);
+    transform->Position = Vector3(1.0f, 10.0f, 1.0f);
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir, Vector3::UP);
     Vector3 euler = transform->Rotation.ToEulerAngles();
-    m_pitch = -euler.y;
-    m_yaw = -euler.x;
+    m_pitch = euler.x;
+    m_yaw = euler.y;
+    m_roll = euler.z;
   }
 
   void Update(r32 tick) override
@@ -69,7 +70,7 @@ public:
       bFirstLook = false;
     }
 
-    r32 xoffset = (r32)Mouse::X() - m_lastX;
+    r32 xoffset = m_lastX - (r32)Mouse::X();
     r32 yoffset = (r32)Mouse::Y() - m_lastY;
     m_lastX = (r32)Mouse::X();
     m_lastY = (r32)Mouse::Y();
@@ -79,15 +80,8 @@ public:
 
     m_yaw += xoffset;
     m_pitch += yoffset;
-#if 0 // Constrains the pitch to prevent having the camera flip downside.
-    if (m_pitch > m_constrainPitch) {
-      m_pitch = m_constrainPitch;
-    }
-    if (m_pitch < -m_constrainPitch) {
-      m_pitch = -m_constrainPitch;
-    }
-#endif
-    Vector3 euler = Vector3(0.0f, m_pitch, m_yaw);
+
+    Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
   }
 
@@ -100,6 +94,7 @@ private:
   r32     m_ySensitivity;
   r32     m_pitch;
   r32     m_yaw;
+  r32     m_roll;
   r32     m_constrainPitch;
   r32     m_speed;
 };
