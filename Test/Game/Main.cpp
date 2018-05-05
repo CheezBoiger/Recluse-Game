@@ -29,7 +29,8 @@ public:
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
 
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.5f, 0.5f, 0.5f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, -0.1f, 0.0f));
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
 
@@ -59,11 +60,14 @@ public:
 
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
-    trans->Position = Vector3(-4.0f, 10.0f, 0.0f);
+    trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
+    trans->Rotation = Quaternion::AngleAxis(Radians(45.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+    
+    m_pPhysicsComponent->Enable(false);
   }
 
 
@@ -76,8 +80,8 @@ public:
 #define FOLLOW_CAMERA_FORWARD 0
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
-    Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
-    transform->Rotation = transform->Rotation * q;
+    //Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
+    //transform->Rotation = transform->Rotation * q;
 #if FOLLOW_CAMERA_FORWARD
     // Have helmet rotate with camera look around.
     Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
@@ -94,6 +98,10 @@ public:
     }
     if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
       transform->Position.z -= 1.0f * tick;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_V)) {
+      m_pPhysicsComponent->Enable(true);
     }
   }
 
@@ -159,7 +167,7 @@ public:
     
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
     Transform* trans = GetTransform();
     trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
@@ -286,7 +294,7 @@ int main(int c, char* argv[])
   scene.GetRoot()->AddChild(mainCam);
   
   std::vector<HelmetObject*> helmets;
-  #define HELM_COUNT 1
+  #define HELM_COUNT 100
   for (u32 i = 0; i < HELM_COUNT; ++i) {
     helmets.push_back(new HelmetObject());
     scene.GetRoot()->AddChild(helmets[i]);

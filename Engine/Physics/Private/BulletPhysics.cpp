@@ -125,11 +125,14 @@ RigidBody* BulletPhysics::CreateRigidBody(const Vector3& centerOfMassOffset, Col
     )
   );
 
+  btVector3 localInertia(0, 0, 0);
+  pShape->calculateLocalInertia(1.0f, localInertia);
+
   btRigidBody::btRigidBodyConstructionInfo info(
     1.f,
     pMotionState,
     pShape,
-    btVector3(0.f, 0.f, 0.f)
+    localInertia
   );
 
   btRigidBody* pNativeBody = new btRigidBody(info);
@@ -221,8 +224,11 @@ void BulletPhysics::SetMass(RigidBody* body, r32 mass)
   if (!body) return;
   uuid64 key = body->GetUUID();
   btRigidBody* obj = kRigidBodyMap[key].native;
+
   bt_manager._pWorld->removeRigidBody(obj);
   btVector3 inertia;
+  btCollisionShape* shape = obj->getCollisionShape();
+  shape->calculateLocalInertia(btScalar(mass), inertia);
   obj->setMassProps(btScalar(mass), inertia);
   bt_manager._pWorld->addRigidBody(obj);
 }
@@ -244,7 +250,7 @@ void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Q
   // TODO(): We shouldn't always have to update the transforms, should check if object is 
   // static or not moving in physics...
   obj->setWorldTransform(transform);
-  obj->activate();
+  if (body->Activated()) obj->activate();
 }
 
 
@@ -253,6 +259,7 @@ void BulletPhysics::ActivateRigidBody(RigidBody* body)
   if (!body) return;
   uuid64 key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
+  body->m_bActivated = true;
   rb->activate();
 }
 
@@ -262,6 +269,7 @@ void BulletPhysics::DeactivateRigidBody(RigidBody* body)
   if (!body) return;
   uuid64 key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
+  body->m_bActivated = false;
   rb->setActivationState(WANTS_DEACTIVATION);
 }
 

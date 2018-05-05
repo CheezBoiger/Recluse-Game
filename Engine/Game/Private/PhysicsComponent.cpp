@@ -66,10 +66,14 @@ void PhysicsComponent::UpdateFromGameObject()
 
 void PhysicsComponent::SetRelativeOffset(const Vector3& offset)
 {
+  m_relOffset = offset;
+/*
+if (!m_pRigidBody) return;
   m_pRigidBody->m_vPosition = m_pRigidBody->m_vPosition - m_relOffset;
   m_relOffset = offset;
   m_pRigidBody->m_vPosition = m_pRigidBody->m_vPosition + m_relOffset;
   m_pRigidBody->SetTransform(m_pRigidBody->m_vPosition, m_pRigidBody->m_qRotation);
+*/
 }
 
 

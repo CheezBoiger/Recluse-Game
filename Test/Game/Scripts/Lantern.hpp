@@ -169,10 +169,11 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.1f, 0.1f, 0.1f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 0.4f, 0.2f));
 
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.3f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
@@ -200,7 +201,7 @@ public:
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
-    trans->Position = Vector3(0.0f, 0.5f, 0.0f);
+    trans->Position = Vector3(-4.0f, 5.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
 
     m_pCage = new LanternCage();

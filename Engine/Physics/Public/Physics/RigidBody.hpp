@@ -13,6 +13,9 @@ namespace Recluse {
 typedef void(*OnCollisionCallback)();
 
 
+class Collider;
+
+
 enum ContactType {
   START_COLLISION,
   DURING_COLLISION,
@@ -23,8 +26,9 @@ enum ContactType {
 //
 class RigidBody : public PhysicsObject {
 public:
-  RigidBody() : 
-    onCollisionCallback(nullptr) { }
+  RigidBody() 
+    : onCollisionCallback(nullptr)
+    , m_bActivated(true) { }
 
   void ObjectCollided();
   void EnableKinematic(b8 enable);
@@ -32,6 +36,7 @@ public:
   void SetTransform(const Vector3& newPos, const Quaternion& newRot);
   void SetMass(r32 mass);
   b8                    Kinematic() const { return m_bKinematic; }
+  b8                    Activated() const { return m_bActivated; }
 
 
   OnCollisionCallback   onCollisionCallback;
@@ -39,6 +44,7 @@ public:
   Vector3               m_vPosition;
   Quaternion            m_qRotation;
   b8                    m_bKinematic;
+  b8                    m_bActivated;
 
 };
 } // Recluse

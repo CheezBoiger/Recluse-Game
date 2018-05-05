@@ -31,7 +31,6 @@ public:
   void OnEnable() override;
 
   void SetCollider(Collider* collider) { m_pCollider = collider; }
-  void SetTransform(const Vector3& newPos, const Quaternion& newRot);
   void SetMass(r32 mass);
   void SetRelativeOffset(const Vector3& offset);
   r32 GetMass() const { return m_mass; }
@@ -42,7 +41,12 @@ public:
 
   RigidBody* m_pRigidBody;
   Collider*  m_pCollider;
+
 private:
+
+  void SetTransform(const Vector3& newPos, const Quaternion& newRot);
+
+
   Vector3     m_relOffset;
   r32         m_mass;
 };
