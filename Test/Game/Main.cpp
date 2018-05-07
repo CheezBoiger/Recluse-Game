@@ -106,7 +106,7 @@ public:
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_B) && Keyboard::KeyPressed(KEY_CODE_SHIFT)) {
-      m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3(0.0f, 0.0f, 0.0f));
+      m_pPhysicsComponent->ApplyImpulse(m_vRandDir, Vector3(0.0f, 0.0f, 0.0f));
     }
   }
 

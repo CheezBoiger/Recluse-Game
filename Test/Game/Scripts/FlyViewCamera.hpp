@@ -61,8 +61,8 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * m_speed * tick; }
     if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Forward() * m_speed * tick; }
     if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Forward() * m_speed * tick; }
-    if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 4.0 * Time::DeltaTime; }
-    if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 4.0 * Time::DeltaTime; }
+    if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 1.0 * Time::DeltaTime; }
+    if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 1.0 * Time::DeltaTime; }
 
     if (bFirstLook) {
       m_lastX = (r32)Mouse::X();

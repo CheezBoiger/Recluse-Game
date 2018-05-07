@@ -195,36 +195,36 @@ void Engine::Update()
     return;
   }
   // Render out the scene.
-  r64 dt = Time::DeltaTime * Time::ScaleTime;
-  m_dLag += Time::DeltaTime;
+  r64 dt = Time::DeltaTime;
+  r64 tick = Time::FixTime * Time::ScaleTime;
+  //m_dLag += Time::DeltaTime;
 
-  while (m_dLag >= Time::FixTime) {
-    UpdateGameLogic();
-    gAnimation().UpdateState(dt);
-    gUI().UpdateState(dt);
+  gAnimation().UpdateState(dt);
+  gUI().UpdateState(dt);
 
 #if !defined FORCE_AUDIO_OFF
-    gAudio().UpdateState(dt);
+  gAudio().UpdateState(dt);
 #endif
+
+  UpdateGameLogic(tick);
+
 #if !defined FORCE_PHYSICS_OFF
-    gPhysics().UpdateState(dt);
-    PhysicsComponent::UpdateComponents();
-#endif
-    m_dLag -= Time::FixTime;
-  }
+  gPhysics().UpdateState(dt, tick);
+  PhysicsComponent::UpdateComponents();
+#endif 
 
   gRenderer().Render();
 }
 
 
-void Engine::UpdateGameLogic()
+void Engine::UpdateGameLogic(r64 tick)
 {
   if (!m_pPushedScene) return;
 
   for ( u32 i = 0; i < m_sceneObjectCount; ++i ) {
     GameObject* object = m_cachedGameObjects[i];
     if ( object ) {
-      object->Update(static_cast<r32>(Time::FixTime * Time::ScaleTime));
+      object->Update(static_cast<r32>(tick));
     }
   }
 

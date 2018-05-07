@@ -30,7 +30,7 @@ public:
 
 
   virtual RigidBody*                      CreateRigidBody(Collider* collider,
-                                            const Vector3& centerOfMassOffset = Vector3(0.0f, 50.0f, 0.0f)) { return nullptr; }
+                                            const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
 
   virtual Collider*                       CreateBoxCollider(const Vector3& scale) { return nullptr; }
   virtual Collider*                       CreateSphereCollider() { return nullptr; }
@@ -47,7 +47,7 @@ public:
   virtual void                            DeactivateRigidBody(RigidBody* body) { }
   virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
 
-  virtual void                            UpdateState(r64 dt) { }
+  virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
 private:
 };
 

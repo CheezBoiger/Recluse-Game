@@ -7,10 +7,13 @@
 #include "PhysicsConfigs.hpp"
 
 
+#include <functional>
+
+
 namespace Recluse {
 
 
-typedef void(*OnCollisionCallback)();
+typedef std::function<void()> OnCollisionCallback;
 
 
 class Collider;

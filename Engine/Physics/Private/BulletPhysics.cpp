@@ -3,6 +3,7 @@
 #include "Core/Exception.hpp"
 #include "Core/Utility/Time.hpp"
 #include "Core/Exception.hpp"
+#include "Core/Logging/Log.hpp"
 
 #include "Renderer/Renderer.hpp"
 #include "Collider.hpp"
@@ -186,12 +187,11 @@ void BulletPhysics::FreeRigidBody(RigidBody* body)
 }
 
 
-void BulletPhysics::UpdateState(r64 dt)
+void BulletPhysics::UpdateState(r64 dt, r64 tick)
 {
   // TODO(): Needs assert.
   if (!bt_manager._pWorld) { return; }
-
-  bt_manager._pWorld->stepSimulation(btScalar(dt), 10, btScalar(Time::FixTime));
+  bt_manager._pWorld->stepSimulation(btScalar(dt), 10, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
   u32 numManifolds = pDispatcher->getNumManifolds();
   for (u32 i = 0; i < numManifolds; ++i) {

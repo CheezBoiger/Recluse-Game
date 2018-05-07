@@ -28,7 +28,7 @@ public:
   void                  Initialize();
   void                  CleanUp();
 
-  void                  UpdateState(r64 dt) override;
+  void                  UpdateState(r64 dt, r64 fixedTime) override;
   void                  SetWorld(btDynamicsWorld* world) { m_pWorld = world; }
 
   void                  OnStartUp() override;
@@ -37,7 +37,7 @@ public:
   btDynamicsWorld*      GetCurrentWorld() { return m_pWorld; }
 
   void                  ClearWorld() { }
-  RigidBody*            CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset = Vector3(0.0f, 50.0f, 0.0)) override;
+  RigidBody*            CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
   void                  FreeRigidBody(RigidBody* body) override;
   Collider*             CreateBoxCollider(const Vector3& scale) override;
   Collider*             CreateSphereCollider() override { return nullptr; }

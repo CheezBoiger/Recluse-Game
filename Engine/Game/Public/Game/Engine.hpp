@@ -111,7 +111,7 @@ public:
 private:
 
   void                          Stop();
-  void                          UpdateGameLogic();
+  void                          UpdateGameLogic(r64 gameTick);
   void                          TraverseScene(GameObjectActionCallback callback);
 
   std::vector<GameObject*>      m_cachedGameObjects;
