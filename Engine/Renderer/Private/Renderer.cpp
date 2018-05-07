@@ -1454,10 +1454,22 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
 
-
-  cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
-  cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+  // For the normal component in the gbuffer we use 10 bits for r, g, and b channels, and 2 bits for alpha.
+  // If this is not supported properly, we can go with less precision.
+  VkImageFormatProperties imgFmtProps;
+  VkResult result = VulkanRHI::gPhysicalDevice.GetImageFormatProperties(VK_FORMAT_A2B10G10R10_UNORM_PACK32, 
+    VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
+    0, &imgFmtProps);
   cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  if (result == VK_ERROR_FORMAT_NOT_SUPPORTED) { 
+    Log(rWarning) << "Graphics GBuffer R10G10B10A2 format for optimal tiling not supported! Switching to R8G8B8A8 format.\n";
+    cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+    cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  }
+
+  cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+
 
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
   gbuffer_Position->Initialize(cImageInfo, cViewInfo);
