@@ -77,6 +77,12 @@ if (!m_pRigidBody) return;
 }
 
 
+void PhysicsComponent::ApplyImpulse(const Vector3& impulse, const Vector3& relPos)
+{
+  gPhysics().ApplyImpulse(m_pRigidBody, impulse, relPos);
+}
+
+
 void PhysicsComponent::UpdateFromPreviousGameLogic()
 {
   for (auto& component : _kPhysicsComponents) {

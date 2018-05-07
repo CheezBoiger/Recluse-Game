@@ -75,6 +75,7 @@ public:
   {
   }
 
+  // Updating game logic...
   void Update(r32 tick) override
   {
 #define FOLLOW_CAMERA_FORWARD 0
@@ -102,6 +103,10 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
       m_pPhysicsComponent->Enable(true);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_B) && Keyboard::KeyPressed(KEY_CODE_SHIFT)) {
+      m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3(0.0f, 0.0f, 0.0f));
     }
   }
 

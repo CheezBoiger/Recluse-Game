@@ -3,6 +3,7 @@
 
 #include "Collider.hpp"
 #include "Collision.hpp"
+#include "Physics.hpp"
 
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
@@ -19,38 +20,39 @@ class Collider;
 class CollisionShape;
 
 
-class BulletPhysics {
+class BulletPhysics : public Physics, public EngineModule<BulletPhysics> {
 public:
   BulletPhysics()
     : m_pWorld(nullptr) { }
 
-  void        Initialize();
-  void        CleanUp();
+  void                  Initialize();
+  void                  CleanUp();
 
-  void        Update(r64 dt);
-  void        SetWorld(btDynamicsWorld* world) { m_pWorld = world; }
+  void                  UpdateState(r64 dt) override;
+  void                  SetWorld(btDynamicsWorld* world) { m_pWorld = world; }
 
-  btDynamicsWorld*    GetCurrentWorld() { return m_pWorld; }
+  void                  OnStartUp() override;
+  void                  OnShutDown() override;
 
-  void                  ClearWorld();
+  btDynamicsWorld*      GetCurrentWorld() { return m_pWorld; }
 
-  RigidBody*            CreateRigidBody(const Vector3& centerOfMassOffset, Collider* shape);
-  void                  FreeRigidBody(RigidBody* body);
-  Collider*             CreateBoxCollider(const Vector3& scale);
-  Collider*             CreateSphereCollider();
+  void                  ClearWorld() { }
+  RigidBody*            CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset = Vector3(0.0f, 50.0f, 0.0)) override;
+  void                  FreeRigidBody(RigidBody* body) override;
+  Collider*             CreateBoxCollider(const Vector3& scale) override;
+  Collider*             CreateSphereCollider() override { return nullptr; }
 
-  void                  FreeCollider(Collider* collider);
-  void                  SetMass(RigidBody* body, r32 mass);
-  void                  ActivateRigidBody(RigidBody* body);
-  void                  DeactivateRigidBody(RigidBody* body);
+  void                  ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
 
-  void                  SetWorldGravity(const Vector3& gravity);
+  void                  FreeCollider(Collider* collider) override { }
+  void                  SetMass(RigidBody* body, r32 mass) override;
+  void                  ActivateRigidBody(RigidBody* body) override;
+  void                  DeactivateRigidBody(RigidBody* body) override;
 
-  void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot);
+  void                  SetWorldGravity(const Vector3& gravity) override;
+
+  void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
 private:
   btDynamicsWorld*        m_pWorld;
 };
-
-
-BulletPhysics& gBulletEngine();
 } // Recluse

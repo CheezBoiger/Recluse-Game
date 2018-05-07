@@ -25,20 +25,29 @@ public:
   virtual ~Physics() { }
   Physics() { }
 
-  virtual void                            OnStartUp() override;
-  virtual void                            OnShutDown() override;
+  virtual void                            OnStartUp() override { }
+  virtual void                            OnShutDown() override { }
 
 
-  virtual RigidBody*              CreateRigidBody(Collider* collider);
-  virtual Collider*               CreateBoxCollider(const Vector3& scale);
-  virtual void                            FreeRigidBody(RigidBody* body);
+  virtual RigidBody*                      CreateRigidBody(Collider* collider,
+                                            const Vector3& centerOfMassOffset = Vector3(0.0f, 50.0f, 0.0f)) { return nullptr; }
 
-  virtual void                            SetMass(RigidBody* body, r32 mass);
-  virtual void                            ActivateRigidBody(RigidBody* body);
-  virtual void                            DeactivateRigidBody(RigidBody* body);
-  virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot);
+  virtual Collider*                       CreateBoxCollider(const Vector3& scale) { return nullptr; }
+  virtual Collider*                       CreateSphereCollider() { return nullptr; }
+  virtual void                            FreeRigidBody(RigidBody* body) { }
 
-  virtual void                            UpdateState(r64 dt);
+
+  virtual void                            FreeCollider(Collider* collider) { }
+  virtual void                            SetWorldGravity(const Vector3& gravity) { }
+
+  virtual void                            SetMass(RigidBody* body, r32 mass) { }
+  virtual void                            ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) { }
+  virtual void                            ApplyForce(RigidBody* body, const Vector3& force) { }
+  virtual void                            ActivateRigidBody(RigidBody* body) { } 
+  virtual void                            DeactivateRigidBody(RigidBody* body) { }
+  virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
+
+  virtual void                            UpdateState(r64 dt) { }
 private:
 };
 

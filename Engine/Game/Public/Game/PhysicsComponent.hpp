@@ -33,6 +33,8 @@ public:
   void SetCollider(Collider* collider) { m_pCollider = collider; }
   void SetMass(r32 mass);
   void SetRelativeOffset(const Vector3& offset);
+  void ApplyForce(const Vector3& force);
+  void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
   r32 GetMass() const { return m_mass; }
   void UpdateFromGameObject();
 

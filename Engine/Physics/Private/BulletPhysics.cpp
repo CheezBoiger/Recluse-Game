@@ -4,6 +4,7 @@
 #include "Core/Utility/Time.hpp"
 #include "Core/Exception.hpp"
 
+#include "Renderer/Renderer.hpp"
 #include "Collider.hpp"
 #include "BoxCollider.hpp"
 #include "RigidBody.hpp"
@@ -65,10 +66,21 @@ btCollisionShape* GetCollisionShape(Collider* shape)
 }
 
 
-BulletPhysics& gBulletEngine()
+void BulletPhysics::OnStartUp()
 {
-  static BulletPhysics bullet;
-  return bullet;
+  if (!gRenderer().IsActive()) {
+    R_DEBUG(rWarning, "Renderer is not active! Physics will carry on however...\n");
+  }
+
+  Initialize();
+
+  R_DEBUG(rNotify, "Physics Engine is successfully initialized.\n");
+}
+
+
+void BulletPhysics::OnShutDown()
+{
+  CleanUp();
 }
 
 
@@ -115,7 +127,7 @@ void BulletPhysics::CleanUp()
 }
 
 
-RigidBody* BulletPhysics::CreateRigidBody(const Vector3& centerOfMassOffset, Collider* shape)
+RigidBody* BulletPhysics::CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset)
 {
   RigidBody* rigidbody = new RigidBody();
   btCollisionShape* pShape = GetCollisionShape(shape);
@@ -174,7 +186,7 @@ void BulletPhysics::FreeRigidBody(RigidBody* body)
 }
 
 
-void BulletPhysics::Update(r64 dt)
+void BulletPhysics::UpdateState(r64 dt)
 {
   // TODO(): Needs assert.
   if (!bt_manager._pWorld) { return; }
@@ -281,5 +293,15 @@ void BulletPhysics::SetWorldGravity(const Vector3& gravity)
     btScalar(gravity.y),
     btScalar(gravity.z))
   );
+}
+
+
+void BulletPhysics::ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos)
+{
+  R_ASSERT(body, "Rigid Body was null.");
+  uuid64 k = body->GetUUID();
+  btRigidBody* rb = kRigidBodyMap[k].native;
+  rb->applyImpulse(btVector3(btScalar(impulse.x), btScalar(impulse.y), btScalar(impulse.z)), 
+    btVector3(btScalar(relPos.x), btScalar(relPos.y), btScalar(relPos.z)));
 }
 } // Recluse
