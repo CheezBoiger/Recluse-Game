@@ -50,6 +50,14 @@ public:
     m_pitch = euler.x;
     m_yaw = euler.y;
     m_roll = euler.z;
+
+    // Anything in contact with this flying camera will get pushed aside.
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
+    m_pPhysicsComponent = new PhysicsComponent();
+    m_pPhysicsComponent->SetCollider(m_pCollider);
+    m_pPhysicsComponent->Initialize(this);
+  
+    m_pPhysicsComponent->SetMass(0.0f);
   }
 
   void Update(r32 tick) override
@@ -85,6 +93,14 @@ public:
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
   }
 
+  void CleanUp() override 
+  {
+    m_pPhysicsComponent->CleanUp();
+
+    delete m_pPhysicsComponent;
+    delete m_pCollider;
+  }
+
 private:
   Camera * pCam;
   b8      bFirstLook;
@@ -97,4 +113,6 @@ private:
   r32     m_roll;
   r32     m_constrainPitch;
   r32     m_speed;
+  PhysicsComponent* m_pPhysicsComponent;
+  Collider*         m_pCollider;
 };

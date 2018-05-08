@@ -45,6 +45,10 @@ extern std::string pbr_BrightTextureStr;
 extern std::string pbr_VertStr;
 extern std::string pbr_FragStr;
 
+extern std::string pbr_forwardPipelineStr;
+extern const char* pbr_forwardVertStr;
+extern const char* pbr_forwardFragStr;
+
 extern std::string aa_PipelineStr;
 extern std::string aa_FrameBufferStr;
 extern std::string aa_DescLayoutStr;

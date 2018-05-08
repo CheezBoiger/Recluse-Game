@@ -169,11 +169,11 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 0.4f, 0.2f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 1.0f, 0.4f));
 
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.3f, 0.0f));
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 1.0f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
