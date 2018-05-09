@@ -92,7 +92,7 @@ public:
     OnCleanUp();
   }
 
-  b8            Enabled() const { return m_bEnabled; }
+  b32            Enabled() const { return m_bEnabled; }
 
   void          Enable(b8 enable) { m_bEnabled = enable; OnEnable(); }
 
@@ -114,7 +114,7 @@ private:
   GameObject*   m_pGameObjectOwner;
   // Is component enabled? If so, the managers responsible for updating it will 
   // proceed to do so.
-  b8            m_bEnabled;
+  b32            m_bEnabled;
 };
 
 

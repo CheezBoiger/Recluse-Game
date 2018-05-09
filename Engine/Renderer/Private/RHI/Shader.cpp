@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-b8 Shader::Initialize(const std::string& binaryPath)
+b32 Shader::Initialize(const std::string& binaryPath)
 {
   if (binaryPath.empty()) return false;
   

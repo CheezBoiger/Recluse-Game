@@ -15,7 +15,7 @@ public:
   // enable pbr sky, this will render the sky instead of defining one. Uses
   // the primary light information from scene to render out where the sun/moon should
   // go.
-  b8            _bRenderPbrSky;
+  b32            _bRenderPbrSky;
 
   // If pbr sky rendering is disabled, then user wants to 
   // paste a cubemap sky instead. This must be defined then!

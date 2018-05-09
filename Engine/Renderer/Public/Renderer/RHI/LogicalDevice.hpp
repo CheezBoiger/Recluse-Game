@@ -17,7 +17,7 @@ public:
     : handle(VK_NULL_HANDLE) { }
 
 
-  b8                    Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
+  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
   void                  CleanUp();
 
   // Performs a manual flush of mapped memory writes to make them visible to the host. This

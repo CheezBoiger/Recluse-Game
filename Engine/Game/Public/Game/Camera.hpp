@@ -70,14 +70,14 @@ public:
 
   r32                 Exposure() const { return m_Exposure; }
   r32                 Gamma() const { return m_Gamma; }
-  b8                  Bloom() const { return m_Bloom; }
-  b8                  Culling() const { return m_FrustumCull; }
+  b32                 Bloom() const { return m_Bloom; }
+  b32                 Culling() const { return m_FrustumCull; }
 
   void                ResetAspect();
   void                SetExposure(r32 exposure) { m_Exposure = exposure; }
   void                SetGamma(r32 gamma) { m_Gamma = gamma; }
-  void                EnableBloom(b8 enable) { m_Bloom = enable; }
-  void                EnableFrustumCull(b8 enable) { m_FrustumCull = enable; }
+  void                EnableBloom(b32 enable) { m_Bloom = enable; }
+  void                EnableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 protected:
   Matrix4             m_projectionMatrix;
@@ -93,7 +93,7 @@ protected:
 
   r32                 m_Gamma;
   r32                 m_Exposure;
-  b8                  m_Bloom       : 1;
-  b8                  m_FrustumCull : 1;
+  b32                 m_Bloom;
+  b32                 m_FrustumCull;
 };
 } // Recluse

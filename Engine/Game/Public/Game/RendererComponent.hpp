@@ -45,12 +45,12 @@ public:
   // to add new textures. Recommended you do not call this function every frame, as it does
   // hinder rendering performance.
   void                      ReConfigure();
-  void                      Enable(b8 enable);
-  void                      EnableShadow(b8 enable);
+  void                      Enable(b32 enable);
+  void                      EnableShadow(b32 enable);
 
-  b8                        Enabled() const;
-  b8                        Dirty() const { return m_bDirty; }
-  b8                        ShadowEnabled() const;
+  b32                        Enabled() const;
+  b32                        Dirty() const { return m_bDirty; }
+  b32                        ShadowEnabled() const;
   RenderObject*             RenderObj() { return m_renderObj; }
   MeshDescriptor*           GetDescriptor() { return m_meshDescriptor; }
 
@@ -64,7 +64,7 @@ protected:
   MeshDescriptor*           m_meshDescriptor;
   MaterialComponent*        m_materialRef;
   MeshComponent*            m_meshRef;
-  b8                        m_bDirty;
+  b32                       m_bDirty;
 };
 
 

@@ -26,7 +26,7 @@ public:
   void  SetIntensity(r32 intensity) override { m_NativeLight->_Intensity = intensity; }
   void  SetColor(const Vector4& color) override { m_NativeLight->_Color = color; }
   void  SetRange(r32 range) { m_NativeLight->_Range = range; }
-  void  SetEnable(b8 enable) { m_NativeLight->_Enable = enable; }
+  void  SetEnable(b32 enable) { m_NativeLight->_Enable = enable; }
   
 private:
   PointLight* m_NativeLight;  

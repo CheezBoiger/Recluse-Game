@@ -56,8 +56,8 @@ public:
   Renderer();
   ~Renderer();
 
-  b8                Initialize(Window* window, const GraphicsConfigParams* params = nullptr);
-  b8                Rendering() const { return m_Rendering; }
+  b32                Initialize(Window* window, const GraphicsConfigParams* params = nullptr);
+  b32                Rendering() const { return m_Rendering; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
@@ -189,8 +189,8 @@ public:
   UIOverlay*        Overlay() { return m_pUI; }  
 
   // Check if this renderer is initialized with the window reference given.
-  b8                Initialized() { return m_Initialized; }
-  b8                Antialiasing() { return m_AntiAliasing; }
+  b32                Initialized() { return m_Initialized; }
+  b32                Antialiasing() { return m_AntiAliasing; }
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return m_pRhi; }
@@ -202,7 +202,7 @@ public:
   GraphicsConfigParams& CurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
 
   // Enable HDR Post processing.
-  void              EnableHDR(b8 enable);
+  void              EnableHDR(b32 enable);
 
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
@@ -222,12 +222,12 @@ private:
   void              CleanUpDescriptorSetLayouts();
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
-  void              CleanUpRenderTextures(b8 fullCleanup);
-  void              CleanUpOffscreen(b8 fullCleanup);
+  void              CleanUpRenderTextures(b32 fullCleanup);
+  void              CleanUpOffscreen(b32 fullCleanup);
   void              CleanUpFinalOutputs();
   void              SetUpFinalOutputs();
-  void              SetUpRenderTextures(b8 fullSetup);
-  void              SetUpOffscreen(b8 fullSetup);
+  void              SetUpRenderTextures(b32 fullSetup);
+  void              SetUpOffscreen(b32 fullSetup);
   void              SetUpPBR();
   void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
@@ -235,11 +235,11 @@ private:
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer();
   void              BuildSkyboxCmdBuffer();
-  void              SetUpDownscale(b8 FullSetUp);
-  void              CleanUpDownscale(b8 FullCleanUp);
+  void              SetUpDownscale(b32 FullSetUp);
+  void              CleanUpDownscale(b32 FullCleanUp);
   void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
-  void              SetUpHDR(b8 fullSetup);
-  void              CleanUpHDR(b8 fullCleanup);
+  void              SetUpHDR(b32 fullSetup);
+  void              CleanUpHDR(b32 fullCleanup);
   void              CleanUpPBR();
   void              CleanUpSkybox();
   void              UpdateSceneDescriptors();
@@ -287,18 +287,19 @@ private:
     u32     count;
   } m_renderObjKeys;
 
-  CommandBuffer*    m_pSkyboxCmdBuffer;
-  Semaphore*        m_SkyboxFinished;
-  RenderQuad        m_RenderQuad;
+  CommandBuffer*        m_pSkyboxCmdBuffer;
+  Semaphore*            m_SkyboxFinished;
+  RenderQuad            m_RenderQuad;
   GraphicsConfigParams  m_currentGraphicsConfigs;
-  UIOverlay*        m_pUI;
-  Sky*              m_pSky;
-  u32               m_CurrCmdBufferIdx;
-  u32               m_TotalCmdBuffers;
-  
-  b8                m_Rendering       : 1;
-  b8                m_Initialized     : 1;
-  b8                m_AntiAliasing    : 1;
+  UIOverlay*            m_pUI;
+  Sky*                  m_pSky;
+  u32                   m_CurrCmdBufferIdx;
+
+  u32                   m_TotalCmdBuffers;
+
+  b32                   m_Rendering : 1;
+  b32                   m_Initialized : 1;
+  b32                   m_AntiAliasing : 1;
 };
 
 Renderer&           gRenderer();

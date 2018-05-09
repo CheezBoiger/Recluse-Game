@@ -44,7 +44,7 @@ Resources& gResources()
 }
 
 
-b8 Resources::RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline)
+b32 Resources::RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline)
 { 
   if (GraphicsPipelineMap.find(str) == GraphicsPipelineMap.end()) {
     GraphicsPipelineMap[str] = pipeline;
@@ -55,7 +55,7 @@ b8 Resources::RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeli
 }
 
 
-b8 Resources::RegisterComputePipeline(std::string str, ComputePipeline* pipeline)
+b32 Resources::RegisterComputePipeline(std::string str, ComputePipeline* pipeline)
 {
   if (ComputePipelineMap.find(str) == ComputePipelineMap.end()) {
     ComputePipelineMap[str] = pipeline; 
@@ -66,7 +66,7 @@ b8 Resources::RegisterComputePipeline(std::string str, ComputePipeline* pipeline
 }
 
 
-b8 Resources::RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer)
+b32 Resources::RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer)
 {
   if (FrameBuffers.find(str) == FrameBuffers.end()) {
     FrameBuffers[str] = framebuffer;
@@ -77,7 +77,7 @@ b8 Resources::RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer)
 }
 
 
-b8 Resources::RegisterRenderTexture(std::string str, Texture* texture)
+b32 Resources::RegisterRenderTexture(std::string str, Texture* texture)
 {
   if (RenderTextureMap.find(str) == RenderTextureMap.end()) {
     RenderTextureMap[str] = texture;
@@ -87,7 +87,7 @@ b8 Resources::RegisterRenderTexture(std::string str, Texture* texture)
 }
 
 
-b8 Resources::RegisterSampler(std::string str, Sampler* sampler)
+b32 Resources::RegisterSampler(std::string str, Sampler* sampler)
 {
   if (SamplerMap.find(str) == SamplerMap.end()) {
     SamplerMap[str] = sampler;
@@ -98,7 +98,7 @@ b8 Resources::RegisterSampler(std::string str, Sampler* sampler)
 }
 
 
-b8 Resources::RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout)
+b32 Resources::RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout)
 {
   if (DescriptorSetLayoutMap.find(str) == DescriptorSetLayoutMap.end()) {
     DescriptorSetLayoutMap[str] = layout;
@@ -108,7 +108,7 @@ b8 Resources::RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* 
 }
 
 
-b8 Resources::RegisterDescriptorSet(std::string str, DescriptorSet* set)
+b32 Resources::RegisterDescriptorSet(std::string str, DescriptorSet* set)
 {
   if (DescriptorSetMap.find(str) == DescriptorSetMap.end()) {
     DescriptorSetMap[str] = set;
@@ -294,7 +294,7 @@ RenderObject* Resources::UnregisterRenderObject(uuid64 uuid)
 }
 
 
-b8  Resources::RegisterRenderObject(RenderObject* obj)
+b32  Resources::RegisterRenderObject(RenderObject* obj)
 {
   if (!obj) return false;
   if (RenderObjects.find(obj->GetUUID()) == RenderObjects.end()) {

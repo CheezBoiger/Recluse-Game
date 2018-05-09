@@ -15,7 +15,7 @@ public:
 
   ~Shader();
 
-  b8                  Initialize(const std::string& binaryPath);
+  b32                  Initialize(const std::string& binaryPath);
   void                CleanUp();
   VkShaderModule      Handle() { return mModule; }
 

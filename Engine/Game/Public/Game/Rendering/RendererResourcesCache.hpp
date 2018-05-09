@@ -30,7 +30,7 @@ public:
     m_Cache.clear();
   }
 
-  static b8         Cache(std::string name, Mesh* mesh) {
+  static b32         Cache(std::string name, Mesh* mesh) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -38,7 +38,7 @@ public:
     return true;
   }
 
-  static b8         UnCache(std::string name, Mesh** out) {
+  static b32         UnCache(std::string name, Mesh** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       Mesh* pMesh = it->second;
@@ -50,7 +50,7 @@ public:
     return false;
   }
 
-  static b8         Get(std::string name, Mesh** out) {
+  static b32         Get(std::string name, Mesh** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;
@@ -77,7 +77,7 @@ public:
     m_Cache.clear();
   }
 
-  static b8         Cache(std::string name, Material* mat) {
+  static b32         Cache(std::string name, Material* mat) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -85,7 +85,7 @@ public:
     return true;
   }
 
-  static b8         UnCache(std::string name, Material** out) {
+  static b32         UnCache(std::string name, Material** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       Material* pMat = it->second;
@@ -97,7 +97,7 @@ public:
     return false;
   }
 
-  static b8         Get(std::string name, Material** out) {
+  static b32         Get(std::string name, Material** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;

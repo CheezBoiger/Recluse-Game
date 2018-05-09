@@ -69,7 +69,7 @@ public:
   r32             _Lod;
   // Allow vertical sync to reduce tearing of frames. This may have a slight impact
   // in input response.
-  u32             _EnableVsync;
+  b32             _EnableVsync;
 };
 
 

@@ -17,7 +17,7 @@ public:
   Mesh() : m_pData(nullptr)  { }
 
   // Initialize the mesh object.
-  void            Initialize(size_t elementCount, size_t sizeType, void* data, b8 isStatic, size_t indexCount, void* indices);
+  void            Initialize(size_t elementCount, size_t sizeType, void* data, b32 isStatic, size_t indexCount, void* indices);
 
   // Clean up the mesh object when no longer being used.
   void            CleanUp();

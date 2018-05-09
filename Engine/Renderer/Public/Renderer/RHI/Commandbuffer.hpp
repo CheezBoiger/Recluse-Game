@@ -57,11 +57,11 @@ public:
   void            Reset(const VkCommandBufferResetFlags flags);
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }
-  b8              Recording() { return mRecording; }
+  b32             Recording() { return mRecording; }
 
 private:
   VkCommandBuffer mHandle;
   VkCommandPool   mPoolOwner;
-  b8              mRecording;
+  b32             mRecording;
 };
 } // Recluse 

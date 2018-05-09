@@ -66,7 +66,7 @@ public:
   MaterialBuffer* Data() { return &m_MaterialData; }
   Buffer*         Native() { return m_pBuffer; }
 
-  b8              Transparent() const { return m_MaterialData._IsTransparent; }
+  b32              Transparent() const { return m_MaterialData._IsTransparent; }
 
   Texture2D*      Albedo() { return m_pAlbedo; }
   Texture2D*      RoughnessMetallic() { return m_pRoughnessMetallic; }

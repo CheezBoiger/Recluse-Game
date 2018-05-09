@@ -89,7 +89,7 @@ VulkanRHI::~VulkanRHI()
 }
 
 
-b8 VulkanRHI::CreateContext()
+b32 VulkanRHI::CreateContext()
 {
 // Enable debug mode, should we decide to enable validation layers.
 #if defined(_DEBUG) || defined(_NDEBUG)
@@ -99,7 +99,7 @@ b8 VulkanRHI::CreateContext()
 }
 
 
-b8 VulkanRHI::FindPhysicalDevice()
+b32 VulkanRHI::FindPhysicalDevice()
 {
   std::vector<VkPhysicalDevice>& devices = gContext.EnumerateGpus();
   for (const auto& device : devices) {
@@ -120,7 +120,7 @@ b8 VulkanRHI::FindPhysicalDevice()
 }
 
 
-b8 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
+b32 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 {
   std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::GetExtensionProperties(device);
   std::set<std::string> requiredExtensions(Extensions.begin(), Extensions.end());

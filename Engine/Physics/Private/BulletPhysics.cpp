@@ -263,6 +263,7 @@ void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Q
   // static or not moving in physics...
   obj->setWorldTransform(transform);
   if (body->Activated()) obj->activate();
+  
 }
 
 
@@ -303,5 +304,11 @@ void BulletPhysics::ApplyImpulse(RigidBody* body, const Vector3& impulse, const 
   btRigidBody* rb = kRigidBodyMap[k].native;
   rb->applyImpulse(btVector3(btScalar(impulse.x), btScalar(impulse.y), btScalar(impulse.z)), 
     btVector3(btScalar(relPos.x), btScalar(relPos.y), btScalar(relPos.z)));
+}
+
+
+b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance)
+{
+  return true;
 }
 } // Recluse

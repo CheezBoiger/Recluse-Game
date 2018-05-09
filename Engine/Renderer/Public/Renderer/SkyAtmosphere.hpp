@@ -58,7 +58,7 @@ public:
   Texture*                GetCubeMap() { return m_pCubeMap; }
   Sampler*                GetSampler() { return m_pSampler; }
 
-  i32                     NeedsRendering() { return m_bDirty; }
+  b32                     NeedsRendering() { return m_bDirty; }
   CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
@@ -91,7 +91,7 @@ private:
   VkRenderPass            m_SkyboxRenderPass;
   VertexBuffer            m_SkyboxVertBuf;
   IndexBuffer             m_SkyboxIndBuf;
-  i32                     m_bDirty;
+  b32                     m_bDirty;
   Vector3                 m_vAirColor;
 };
 } // Recluse 

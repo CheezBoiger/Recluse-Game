@@ -304,7 +304,7 @@ void Renderer::CleanUp()
 }
 
 
-b8 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
+b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 {
   if (!window) return false;
   if (m_Initialized) return true;
@@ -1372,7 +1372,7 @@ void Renderer::CleanUpFrameBuffers()
 }
 
 
-void Renderer::SetUpRenderTextures(b8 fullSetup)
+void Renderer::SetUpRenderTextures(b32 fullSetup)
 {
   Texture* renderTarget2xScaled = m_pRhi->CreateTexture();
   Texture* RenderTarget2xFinal = m_pRhi->CreateTexture();
@@ -1586,7 +1586,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 }
 
 
-void Renderer::CleanUpRenderTextures(b8 fullCleanup)
+void Renderer::CleanUpRenderTextures(b32 fullCleanup)
 {
   Texture* renderTarget2xScaled = gResources().UnregisterRenderTexture(RenderTarget2xHorizStr);
   Texture* RenderTarget2xFinal = gResources().UnregisterRenderTexture(RenderTarget2xFinalStr);
@@ -1702,7 +1702,7 @@ void Renderer::BuildPbrCmdBuffer()
 }
 
 
-void Renderer::SetUpOffscreen(b8 fullSetup)
+void Renderer::SetUpOffscreen(b32 fullSetup)
 {
   if (fullSetup) {
     m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
@@ -1720,7 +1720,7 @@ void Renderer::SetUpOffscreen(b8 fullSetup)
 }
 
 
-void Renderer::CleanUpOffscreen(b8 fullCleanup)
+void Renderer::CleanUpOffscreen(b32 fullCleanup)
 {
   if (fullCleanup) {
     m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
@@ -1732,7 +1732,7 @@ void Renderer::CleanUpOffscreen(b8 fullCleanup)
 }
 
 
-void Renderer::SetUpDownscale(b8 FullSetUp)
+void Renderer::SetUpDownscale(b32 FullSetUp)
 {
   if (FullSetUp) {
   }
@@ -1876,7 +1876,7 @@ void Renderer::SetUpDownscale(b8 FullSetUp)
 }
 
 
-void Renderer::CleanUpDownscale(b8 FullCleanUp)
+void Renderer::CleanUpDownscale(b32 FullCleanUp)
 {
 
   DescriptorSet* DBDS2x = gResources().UnregisterDescriptorSet(DownscaleBlurDescriptorSet2x);
@@ -1900,7 +1900,7 @@ void Renderer::CleanUpDownscale(b8 FullCleanUp)
 }
 
 
-void Renderer::SetUpHDR(b8 fullSetUp)
+void Renderer::SetUpHDR(b32 fullSetUp)
 {
   if (fullSetUp) {
     m_HDR._CmdBuffer = m_pRhi->CreateCommandBuffer();
@@ -1966,7 +1966,7 @@ void Renderer::SetUpHDR(b8 fullSetUp)
 }
 
 
-void Renderer::CleanUpHDR(b8 fullCleanUp)
+void Renderer::CleanUpHDR(b32 fullCleanUp)
 {
   if (fullCleanUp) {
     m_pRhi->FreeVkSemaphore(m_HDR._Semaphore);
@@ -3033,7 +3033,7 @@ void Renderer::FreeMeshDescriptor(MeshDescriptor* descriptor)
 }
 
 
-void Renderer::EnableHDR(b8 enable)
+void Renderer::EnableHDR(b32 enable)
 {
   if (m_HDR._Enabled != enable) {
     m_HDR._Enabled = enable;

@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-void Mesh::Initialize(size_t elementCount, size_t sizeType, void* data, b8 isStatic, size_t indexCount, void* indices)
+void Mesh::Initialize(size_t elementCount, size_t sizeType, void* data, b32 isStatic, size_t indexCount, void* indices)
 {
   m_pData = gRenderer().CreateMeshData();
   m_pData->Initialize(elementCount, sizeType, data, isStatic, indexCount, indices);

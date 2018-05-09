@@ -27,6 +27,6 @@ public:
   void Playback(const char* name);
   
   // Check if component is playing back a clip.
-  b8    PlayingBack(const char* name);
+  b32    PlayingBack(const char* name);
 };
 } // Recluse

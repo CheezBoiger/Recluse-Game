@@ -116,7 +116,7 @@ public:
   
   void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
 
-  b8                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
+  b32                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
 private:
   void                InitializeNativeLights();
@@ -156,7 +156,7 @@ private:
   // Vulkan Rhi.
   VulkanRHI*          m_pRhi;
 
-  b8                  m_PrimaryShadowEnable;
+  b32                  m_PrimaryShadowEnable;
 
   friend class Renderer;
 };

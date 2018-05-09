@@ -11,7 +11,7 @@
 namespace Recluse {
 
 
-b8                        Window::initialized = false;
+b32                        Window::bInitialized = false;
 WindowResizeCallback      Window::gWindowResizeCallback = nullptr;
 KeyboardCallback          Window::gKeyboardCallback = nullptr;
 MouseButtonCallback       Window::gMouseButtonCallback = nullptr;
@@ -21,9 +21,9 @@ u32                       Window::kFullscreenHeight = 0;
 u32                       Window::kFullscreenWidth = 0;
 
 
-b8 Window::Initialized()
+b32 Window::Initialized()
 {
-  return initialized;
+  return bInitialized;
 }
 
 
@@ -257,9 +257,9 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
 }
 
 
-b8 Window::InitializeAPI()
+b32 Window::InitializeAPI()
 {
-  if (initialized) return true;
+  if (bInitialized) return true;
 
   WNDCLASSEXW winclass = { };
   winclass.cbSize = sizeof(WNDCLASSEXW);
@@ -273,13 +273,13 @@ b8 Window::InitializeAPI()
   if (!RegisterClassExW(&winclass)) return false;
 
   Mouse::cursor = GetCursor();
-  initialized = true;
+  bInitialized = true;
 
   // Set up window fullscreen constants.
   kFullscreenWidth = GetSystemMetrics(SM_CXSCREEN);
   kFullscreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-  return initialized;
+  return bInitialized;
 }
 
 
@@ -301,7 +301,7 @@ Window::~Window()
 }
 
 
-b8 Window::Create(std::string title, i32 width, i32 height)
+b32 Window::Create(std::string title, i32 width, i32 height)
 {
   m_PosX = 0;
   m_PosY = 0;
@@ -420,7 +420,7 @@ void Window::SetToFullScreen()
 }
 
 
-void Window::SetToWindowed(i32 width, i32 height, b8 borderless)
+void Window::SetToWindowed(i32 width, i32 height, b32 borderless)
 {
   if (mFullScreen && gHooked) { 
     UnhookWindowsHookEx(gFullScreenHook);

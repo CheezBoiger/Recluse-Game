@@ -23,6 +23,6 @@ struct RenderCmd {
 
   RenderObject*     _pTarget;
   
-  b8                _Debug;
+  b32               _Debug;
 };
 } // Recluse

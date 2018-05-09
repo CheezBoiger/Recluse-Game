@@ -16,7 +16,7 @@ public:
     , mDebugEnabled(false) { }
 
 
-  b8                              CreateInstance();
+  b32                              CreateInstance();
   VkInstance                      CurrentInstance() { return mInstance; }
   VkSurfaceKHR                    CreateSurface(HWND handle);
 
@@ -33,6 +33,6 @@ private:
   VkInstance                      mInstance;
   std::vector<VkPhysicalDevice>   mGpus;
   VkDebugReportCallbackEXT        mDebugReportCallback;
-  b8                              mDebugEnabled;
+  b32                              mDebugEnabled;
 };
 } // Recluse

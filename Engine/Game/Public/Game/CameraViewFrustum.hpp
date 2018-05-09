@@ -49,10 +49,10 @@ public:
   void        Update(Transform* transform);
 
 
-  b8          Intersect(const AABB* aabb);
+  b32          Intersect(const AABB* aabb);
 
   // Check if AABB object is inside this frustum.
-  b8          InsideFrustum(const AABB* aabb);
+  b32          InsideFrustum(const AABB* aabb);
 
   void        SetCamera(Camera* camera);
   Camera*     GetCamera() const { return m_pCamera; }

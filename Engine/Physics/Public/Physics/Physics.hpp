@@ -48,6 +48,7 @@ public:
   virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
 
   virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
+  virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance) { return false; }
 private:
 };
 

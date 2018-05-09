@@ -16,7 +16,7 @@ namespace Recluse {
 // for our game object. This is what is used to define a script for the 
 // game object.
 struct IBehavior : public Component {
-  b8      _Enabled; 
+  b32      _Enabled; 
 
 protected:
   // Mandatory that this update function is defined.

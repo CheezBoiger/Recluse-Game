@@ -29,7 +29,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 
-b8 Context::CreateInstance()
+b32 Context::CreateInstance()
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -133,7 +133,7 @@ void Context::EnableDebugMode()
   vkEnumerateInstanceLayerProperties(&count, layerPropertiesVector.data());
 
   for (const char* layerName : validationLayers) {
-    b8 layerFound = false;
+    b32 layerFound = false;
     for (const auto& layerProperties : layerPropertiesVector) {
       if (strcmp(layerName, layerProperties.layerName) == 0) {
         layerFound = true;

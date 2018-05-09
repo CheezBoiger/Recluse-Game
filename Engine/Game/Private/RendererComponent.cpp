@@ -74,13 +74,13 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 }
 
 
-void RendererComponent::EnableShadow(b8 enable)
+void RendererComponent::EnableShadow(b32 enable)
 {
   m_renderObj->_bEnableShadow = enable;
 }
 
 
-b8 RendererComponent::ShadowEnabled() const
+b32 RendererComponent::ShadowEnabled() const
 {
   return m_renderObj->_bEnableShadow;
 }
@@ -142,13 +142,13 @@ void RendererComponent::OnCleanUp()
 }
 
 
-void RendererComponent::Enable(b8 enable)
+void RendererComponent::Enable(b32 enable)
 {
   m_renderObj->_bRenderable = enable;
 }
 
 
-b8 RendererComponent::Enabled() const
+b32 RendererComponent::Enabled() const
 {
   return m_renderObj->_bRenderable;
 }

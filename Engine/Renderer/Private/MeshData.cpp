@@ -17,7 +17,7 @@ MeshData::~MeshData()
 
 
 void MeshData::Initialize(size_t elementCount, size_t sizeType, void* data,
-  b8 isStatic, size_t indexCount, void* indices)
+  b32 isStatic, size_t indexCount, void* indices)
 {
   mVertexBuffer.Initialize(mRhi, elementCount, sizeType, data,
     isStatic ? VertexBuffer::STATIC_BUFFER : VertexBuffer::DYNAMIC_BUFFER);

@@ -38,6 +38,6 @@ public:
 private:
   std::vector<RenderCmd>  mRenderList;
   RenderCmdCompareFunc    mCompare;
-  b8                      mDirty;
+  b32                      mDirty;
 };
 } // Recluse

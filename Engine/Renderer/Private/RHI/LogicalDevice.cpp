@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-b8 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info)
+b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info)
 {
   VkResult Result = vkCreateDevice(physical, &info, nullptr, &handle);
   if (Result != VK_SUCCESS) {

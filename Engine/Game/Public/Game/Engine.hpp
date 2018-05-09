@@ -106,7 +106,7 @@ public:
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
-  b8                            Running() { return m_running; }
+  b32                            Running() { return m_running; }
 
 private:
 
@@ -124,8 +124,8 @@ private:
 
   Window                        m_window;
   u32                           m_sceneObjectCount;
-  b8                            m_running : 1;
-  b8                            m_stopping : 1;
+  b32                           m_running  : 1;
+  b32                           m_stopping : 1;
 };
 
 

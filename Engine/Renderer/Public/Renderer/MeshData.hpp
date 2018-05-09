@@ -20,7 +20,7 @@ public:
   ~MeshData();
 
   void            Initialize(size_t elementCount, size_t sizeType, void* data,
-    b8 isStatic, size_t indexCount = 0, void* indices = nullptr);
+    b32 isStatic, size_t indexCount = 0, void* indices = nullptr);
 
   void            CleanUp();
 

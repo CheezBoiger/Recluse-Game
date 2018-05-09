@@ -38,16 +38,16 @@ public:
 
   void SetTransform(const Vector3& newPos, const Quaternion& newRot);
   void SetMass(r32 mass);
-  b8                    Kinematic() const { return m_bKinematic; }
-  b8                    Activated() const { return m_bActivated; }
+  b32                   Kinematic() const { return m_bKinematic; }
+  b32                   Activated() const { return m_bActivated; }
 
 
   OnCollisionCallback   onCollisionCallback;
   r32                   m_mass;
   Vector3               m_vPosition;
   Quaternion            m_qRotation;
-  b8                    m_bKinematic;
-  b8                    m_bActivated;
+  b32                   m_bKinematic : 1;
+  b32                   m_bActivated : 1;
 
 };
 } // Recluse

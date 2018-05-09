@@ -37,15 +37,15 @@ public:
   DescriptorSet*        GetDescriptorSet(std::string str);
   RenderObject*         GetRenderObject(uuid64 uuid);
 
-  b8                    RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline);
-  b8                    RegisterComputePipeline(std::string str, ComputePipeline* pipeline);
-  b8                    RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer);
-  b8                    RegisterRenderTexture(std::string str, Texture* texture);
-  b8                    RegisterSampler(std::string str, Sampler* sampler);
-  b8                    RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout);
-  b8                    RegisterDescriptorSet(std::string str, DescriptorSet* set);
+  b32                   RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline);
+  b32                   RegisterComputePipeline(std::string str, ComputePipeline* pipeline);
+  b32                   RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer);
+  b32                   RegisterRenderTexture(std::string str, Texture* texture);
+  b32                   RegisterSampler(std::string str, Sampler* sampler);
+  b32                   RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout);
+  b32                   RegisterDescriptorSet(std::string str, DescriptorSet* set);
 
-  b8                    RegisterRenderObject(RenderObject* obj);
+  b32                    RegisterRenderObject(RenderObject* obj);
   
   GraphicsPipeline*     UnregisterGraphicsPipeline(std::string str);
   ComputePipeline*      UnregisterComputePipeline(std::string str);

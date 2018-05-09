@@ -19,7 +19,7 @@ typedef void(*WindowInactiveCallack)(Window* window);
 // Window Class. Uses Win32 API for window creation. Sadly, this is will
 // make our game engine dependent on windows operating systems.
 class Window {
-  static b8                     initialized;
+  static b32                    bInitialized;
   static WindowResizeCallback   gWindowResizeCallback;
   static KeyboardCallback       gKeyboardCallback;
   static MouseButtonCallback    gMouseButtonCallback;
@@ -30,8 +30,8 @@ class Window {
 
 public:
   // Initialize the Window API before creating windows!
-  static b8                     Initialized();
-  static b8                     InitializeAPI();
+  static b32                    Initialized();
+  static b32                    InitializeAPI();
   static void                   PollEvents();
 
   static void                   SetWindowResizeCallback(WindowResizeCallback callback);
@@ -54,7 +54,7 @@ public:
 
   ~Window();
 
-  b8            Create(std::string title, i32 width, i32 height);
+  b32            Create(std::string title, i32 width, i32 height);
 
   void          Show();
   void          Hide();
@@ -65,7 +65,7 @@ public:
   // Setting to full screen, or windowed, or window borderless, you MUST explicitly
   // call Show() AFTER, in order to update the window.
   void          SetToFullScreen();
-  void          SetToWindowed(i32 width, i32 height, b8 borderless = false);
+  void          SetToWindowed(i32 width, i32 height, b32 borderless = false);
   
   i32           Width() const { return mWidth; }
   i32           Height() const { return mHeight; }
@@ -74,10 +74,10 @@ public:
 
   HWND          Handle() { return mHandle; }
 
-  b8            ShouldClose() const { return mRequestClose; }
-  b8            FullScreen() const { return mFullScreen; }
-  b8            Showing() const { return mShowing; }
-  b8            Minimized() const { return mMinimized; }
+  b32           ShouldClose() const { return mRequestClose; }
+  b32           FullScreen() const { return mFullScreen; }
+  b32           Showing() const { return mShowing; }
+  b32           Minimized() const { return mMinimized; }
 private:
   void          InputMousePos(i32 x, i32 y);
   static LRESULT WindowProc(HWND hwnd, UINT, WPARAM, LPARAM);
@@ -89,9 +89,9 @@ private:
   i32           m_PosX;
   i32           m_PosY;
 
-  b8            mRequestClose : 1;
-  b8            mFullScreen   : 1;
-  b8            mShowing      : 1;
-  b8            mMinimized    : 1;
+  b32            mRequestClose : 1;
+  b32            mFullScreen   : 1;
+  b32            mShowing      : 1;
+  b32            mMinimized    : 1;
 };
 } // Recluse

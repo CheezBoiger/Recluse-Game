@@ -51,11 +51,11 @@ public:
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
 
 
-  b8            Visible() const { return m_Visible; }
-  b8            _bRenderable() const { return m_Renderable; }
-  b8            Translucent() const { return m_Translucent; }
-  b8            Static() const { return m_Static; }
-  b8            Skinned() const { return m_Skinned; }
+  b32            Visible() const { return m_Visible; }
+  b32            _bRenderable() const { return m_Renderable; }
+  b32            Translucent() const { return m_Translucent; }
+  b32            Static() const { return m_Static; }
+  b32            Skinned() const { return m_Skinned; }
   Buffer*       NativeObjectBuffer() { return m_pObjectBuffer; }
 
 protected:
@@ -63,12 +63,12 @@ protected:
   Buffer*       m_pObjectBuffer;
   u32           m_bNeedsUpdate;
 
-  b8            m_Visible;
-  b8            m_Renderable;
-  b8            m_Skinned;
+  b32            m_Visible;
+  b32            m_Renderable;
+  b32            m_Skinned;
 
-  b8            m_Translucent;
-  b8            m_Static;
+  b32            m_Translucent;
+  b32            m_Static;
   
   VulkanRHI*     m_pRhi;
   

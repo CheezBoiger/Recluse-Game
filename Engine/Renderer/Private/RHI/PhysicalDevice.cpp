@@ -16,7 +16,7 @@ std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhys
 }
 
 
-b8 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
+b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
     i32* presentation, i32* graphics, i32* transfer, i32* compute) const
 {
   if (!handle) {

@@ -59,11 +59,11 @@ public:
   static PhysicalDevice       gPhysicalDevice;
 
   // Context and physical device set up.
-  static b8                   CreateContext();
-  static b8                   FindPhysicalDevice();
+  static b32                  CreateContext();
+  static b32                  FindPhysicalDevice();
 
 private:
-  static b8                   SuitableDevice(VkPhysicalDevice device);
+  static b32                  SuitableDevice(VkPhysicalDevice device);
 public:
 
   VulkanRHI();
@@ -210,7 +210,7 @@ public:
   VkFormat                      DepthFormat() const { return mSwapchainInfo.mDepthFormat; }
   VkImageAspectFlags            DepthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
   VkImageUsageFlags             DepthUsageFlags() const { return mSwapchainInfo.mDepthUsageFlags; }
-  b8                            CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
+  b32                           CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
   const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
 
 private:
@@ -242,7 +242,7 @@ private:
     std::vector<VkFramebuffer>                mSwapchainFramebuffers;
     //std::vector<CommandBuffer>                mSwapchainCmdBuffers;
     std::vector<std::vector<CommandBuffer> >  mCmdBufferSets;
-    b8                                        mComplete;
+    b32                                       mComplete;
     VkRenderPass                              mSwapchainRenderPass;
     VkImage                                   mDepthAttachment;
     VkImageView                               mDepthView;

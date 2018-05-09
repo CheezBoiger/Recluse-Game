@@ -39,12 +39,12 @@ public:
   u32                     _uInstances;
 
   // Is this object renderable? If not, the renderer will ignore it.
-  b8                      _bRenderable;
+  b32                      _bRenderable;
 
   // Checks if shadow is enabled for this Command. If false, renderer
   // will opt out from rendering shadows for this render object. No shadow is produced from this object when set
   // false. This can speed up performance.
-  b8                      _bEnableShadow;
+  b32                      _bEnableShadow;
 
   RenderObject(uuid64 uuid, MeshDescriptor* mesh = nullptr, 
                 MaterialDescriptor* material = nullptr);
