@@ -7,18 +7,19 @@ namespace Recluse {
 
 
 
-b8 Mouse::mouseTrack = true;
-b8 Mouse::mouseEnabled = true;
-b8 Mouse::mouseShow = true;
-b8 Mouse::mouseClamped = false;
+b32 Mouse::mouseTrack = true;
+b32 Mouse::mouseEnabled = true;
+b32 Mouse::mouseShow = true;
+b32 Mouse::mouseClamped = false;
 r64 Mouse::XPos = 0;
 r64 Mouse ::YPos = 0;
 r64 Mouse::LastXPos = 0;
 r64 Mouse::LastYPos = 0;
 HCURSOR Mouse::cursor = NULL;
+b32 Mouse::buttonActions[Mouse::MAX_MOUSE_BUTTONS];
 
 
-void Mouse::Enable(b8 enable)
+void Mouse::Enable(b32 enable)
 {
   if (enable && Mouse::cursor) {
     SetCursor(Mouse::cursor);
@@ -30,7 +31,7 @@ void Mouse::Enable(b8 enable)
 }
 
 
-void Mouse::Show(b8 enable)
+void Mouse::Show(b32 enable)
 {
   if (enable) {
     ShowCursor(true);
@@ -49,5 +50,17 @@ void Mouse::SetPosition(r64 x, r64 y)
   Mouse::YPos = y;
   Mouse::LastXPos = x;
   Mouse::LastYPos = y;
+}
+
+
+b32 Mouse::ButtonDown(Mouse::ButtonType type)
+{
+  return buttonActions[(i32)type] == Mouse::PRESSED;
+}
+
+
+b32 Mouse::ButtonUp(Mouse::ButtonType type)
+{
+  return buttonActions[(i32)type] == Mouse::RELEASED;
 }
 } // Recluse

@@ -62,6 +62,7 @@ void MousePositionMove(Window* window, r64 x, r64 y)
 
 void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
 {
+#if 0
   if (action == Mouse::PRESSED) {
     Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
     Log() << " pressed at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n"; 
@@ -69,6 +70,7 @@ void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
     Log() << "Button: " << ((button == Mouse::LEFT) ? "Left" : "Right");
     Log() << " released at location: X: " << Mouse::X() << " Y: " << Mouse::Y() << "\n";
   }
+#endif
 }
 
 
@@ -97,7 +99,7 @@ Engine::~Engine()
 }
 
 
-void Engine::StartUp(std::string appName, b8 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
+void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
 {
   if (m_running) return;
 

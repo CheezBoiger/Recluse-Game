@@ -190,10 +190,12 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
       default: type = Mouse::UNKNOWN; break;
       };
 
+      Mouse::buttonActions[(i32)type] = Mouse::PRESSED;
+
       int X = (int)(short) GET_X_LPARAM(lParam);
       int Y = (int)(short) GET_Y_LPARAM(lParam);
       if (gMouseButtonCallback) gMouseButtonCallback(window, type, 
-                                  Mouse::PRESSED, 0);
+                                  Mouse::buttonActions[(i32)type], 0);
     }
   } break;
   case WM_LBUTTONUP:
@@ -207,10 +209,12 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
       default: type = Mouse::UNKNOWN; break;
       };
 
+      Mouse::buttonActions[(i32)type] = Mouse::RELEASED;
+
       int X = (int)(short)GET_X_LPARAM(lParam);
       int Y = (int)(short)GET_Y_LPARAM(lParam);
       if (gMouseButtonCallback) gMouseButtonCallback(window, type,
-        Mouse::RELEASED, 0);
+        Mouse::buttonActions[(i32)type], 0);
     }
   } break;
   case WM_INPUT:
@@ -279,12 +283,22 @@ b32 Window::InitializeAPI()
   kFullscreenWidth = GetSystemMetrics(SM_CXSCREEN);
   kFullscreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
+  for (size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i) {
+    Mouse::buttonActions[i] = Mouse::IDLE;
+  }
+
   return bInitialized;
 }
 
 
 void Window::PollEvents()
 {
+  for (size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i) {
+    if (Mouse::buttonActions[i] == Mouse::RELEASED) {
+      Mouse::buttonActions[i] = Mouse::IDLE;
+    }
+  }
+
   MSG msg;
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&msg);

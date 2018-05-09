@@ -309,6 +309,44 @@ void BulletPhysics::ApplyImpulse(RigidBody* body, const Vector3& impulse, const 
 
 b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance)
 {
+  btVector3 start(btScalar(origin.x),
+    btScalar(origin.y),
+    btScalar(origin.z));
+  btVector3 dir(btScalar(direction.x),
+    btScalar(direction.y),
+    btScalar(direction.z));
+  dir.normalize();
+
+  btVector3 end = start + dir * maxDistance;
+
+  btCollisionWorld::ClosestRayResultCallback hit(start, end);
+  bt_manager._pWorld->rayTest(start, end, hit);
+ 
+  // Register hit.
+  if (!hit.hasHit()) return false; 
+  RigidBody* rbHit = static_cast<RigidBody*>(hit.m_collisionObject->getUserPointer());
+
   return true;
+}
+
+
+b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance)
+{
+  btVector3 start(btScalar(origin.x),
+    btScalar(origin.y),
+    btScalar(origin.z));
+  btVector3 dir(btScalar(direction.x),
+    btScalar(direction.y),
+    btScalar(direction.z));
+  dir.normalize();
+
+  btVector3 end = start + dir * maxDistance;
+  btCollisionWorld::ClosestRayResultCallback allHits(start, end);
+  bt_manager._pWorld->rayTest(start, end, allHits);
+
+  // Register hits.
+
+
+  return allHits.hasHit();
 }
 } // Recluse

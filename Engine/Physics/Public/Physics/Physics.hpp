@@ -49,6 +49,8 @@ public:
 
   virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
   virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance) { return false; }
+  virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance) { return false; }
+
 private:
 };
 

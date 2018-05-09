@@ -40,7 +40,7 @@ public:
   void SetMass(r32 mass);
   b32                   Kinematic() const { return m_bKinematic; }
   b32                   Activated() const { return m_bActivated; }
-
+  uuid64                GetGameObjectUUID() const { return m_gameObjUUID; }
 
   OnCollisionCallback   onCollisionCallback;
   r32                   m_mass;
@@ -48,6 +48,6 @@ public:
   Quaternion            m_qRotation;
   b32                   m_bKinematic : 1;
   b32                   m_bActivated : 1;
-
+  uuid64                m_gameObjUUID;
 };
 } // Recluse

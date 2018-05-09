@@ -72,6 +72,8 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 1.0 * Time::DeltaTime; }
     if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 1.0 * Time::DeltaTime; }
 
+    
+
     if (bFirstLook) {
       m_lastX = (r32)Mouse::X();
       m_lastY = (r32)Mouse::Y();
@@ -91,6 +93,12 @@ public:
 
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
+
+    if (Mouse::ButtonDown(Mouse::LEFT)) {
+      if (gPhysics().RayTest(transform->Position, transform->Forward(), 50.0f)) {
+        Log() << "Ray hit something!\n";
+      }
+    }
   }
 
   void CleanUp() override 
