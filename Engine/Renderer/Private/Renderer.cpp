@@ -1389,7 +1389,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
 
   Texture* gbuffer_Albedo = m_pRhi->CreateTexture();
   Texture* gbuffer_Normal = m_pRhi->CreateTexture();
-  Texture* gbuffer_Position = m_pRhi->CreateTexture();
+  Texture* gbuffer_roughMetalSpec = m_pRhi->CreateTexture();
   Texture* gbuffer_Emission = m_pRhi->CreateTexture();
   Texture* gbuffer_Depth = m_pRhi->CreateTexture();
   Sampler* gbuffer_Sampler = m_pRhi->CreateSampler();
@@ -1401,7 +1401,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   gResources().RegisterRenderTexture(hdr_gamma_colorAttachStr, hdr_Texture);
   gResources().RegisterRenderTexture(gbuffer_AlbedoAttachStr, gbuffer_Albedo);
   gResources().RegisterRenderTexture(gbuffer_NormalAttachStr, gbuffer_Normal);
-  gResources().RegisterRenderTexture(gbuffer_PositionAttachStr, gbuffer_Position);
+  gResources().RegisterRenderTexture(gbuffer_PositionAttachStr, gbuffer_roughMetalSpec);
   gResources().RegisterRenderTexture(gbuffer_EmissionAttachStr, gbuffer_Emission);
   gResources().RegisterRenderTexture(gbuffer_DepthAttachStr, gbuffer_Depth);
   gResources().RegisterRenderTexture(pbr_FinalTextureStr, pbr_Final);
@@ -1424,7 +1424,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.imageType = VK_IMAGE_TYPE_2D;
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cImageInfo.format = GBUFFER_ALBEDO_FORMAT;
   cImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
@@ -1436,7 +1436,7 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
   cViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  cViewInfo.format = GBUFFER_ALBEDO_FORMAT;
   cViewInfo.image = nullptr; // No need to set the image, texture->Initialize() handles this for us.
   cViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   cViewInfo.subresourceRange = { };
@@ -1447,6 +1447,9 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cViewInfo.subresourceRange.levelCount = 1;
 
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.format = GBUFFER_ADDITIONAL_INFO_FORMAT;
+  cViewInfo.format =  GBUFFER_ADDITIONAL_INFO_FORMAT;
   gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -1454,14 +1457,18 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
 
+  cImageInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
+  cViewInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
+  gbuffer_roughMetalSpec->Initialize(cImageInfo, cViewInfo);
+
   // For the normal component in the gbuffer we use 10 bits for r, g, and b channels, and 2 bits for alpha.
   // If this is not supported properly, we can go with less precision.
   VkImageFormatProperties imgFmtProps;
-  VkResult result = VulkanRHI::gPhysicalDevice.GetImageFormatProperties(VK_FORMAT_A2B10G10R10_UNORM_PACK32, 
+  VkResult result = VulkanRHI::gPhysicalDevice.GetImageFormatProperties(VK_FORMAT_R16G16_UNORM, 
     VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
     0, &imgFmtProps);
-  cViewInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
-  cImageInfo.format = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+  cViewInfo.format = GBUFFER_NORMAL_FORMAT;
+  cImageInfo.format = GBUFFER_NORMAL_FORMAT;
   if (result == VK_ERROR_FORMAT_NOT_SUPPORTED) { 
     Log(rWarning) << "Graphics GBuffer R10G10B10A2 format for optimal tiling not supported! Switching to R8G8B8A8 format.\n";
     cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -1469,10 +1476,8 @@ void Renderer::SetUpRenderTextures(b8 fullSetup)
   }
 
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-
-
   gbuffer_Normal->Initialize(cImageInfo, cViewInfo);
-  gbuffer_Position->Initialize(cImageInfo, cViewInfo);
+
   // TODO(): Need to replace position render target, as we can take advantage of 
   // depth buffer and clip space fragment coordinates.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;

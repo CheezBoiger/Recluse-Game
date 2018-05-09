@@ -6,6 +6,12 @@
 #include "UserParams.hpp"
 
 
+#define GBUFFER_ALBEDO_FORMAT             VK_FORMAT_R8G8B8A8_UNORM
+#define GBUFFER_NORMAL_FORMAT             VK_FORMAT_R16G16_UNORM
+#define GBUFFER_ROUGH_METAL_FORMAT        VK_FORMAT_R8G8B8A8_UNORM 
+#define GBUFFER_ADDITIONAL_INFO_FORMAT    VK_FORMAT_R8G8B8A8_UNORM
+
+
 namespace Recluse {
 
 class Renderer;

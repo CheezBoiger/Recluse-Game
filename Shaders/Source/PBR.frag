@@ -117,12 +117,13 @@ GBuffer ReadGBuffer(vec2 uv)
 {
   GBuffer gbuffer;
   vec4 albedoFrag           = texture(rt0, uv);
-  vec4 normalFrag           = texture(rt1, uv) * 2.0 - 1.0;
+  vec4 normalFrag           = texture(rt1, uv);
   vec4 erm                  = texture(rt2, uv);
   vec4 emissionFrag         = texture(rt3, uv);
+  vec4 encodedN             = vec4(normalFrag.xy, 0.0, 0.0);
   
   gbuffer.albedo            = albedoFrag.rgb;
-  gbuffer.normal            = normalFrag.rgb;
+  gbuffer.normal            = DecodeNormal(encodedN);
   gbuffer.emission          = emissionFrag.rgb;
   gbuffer.emissionStrength  = erm.r;
   gbuffer.roughness         = erm.g;

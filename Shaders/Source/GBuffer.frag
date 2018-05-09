@@ -138,7 +138,7 @@ struct GBuffer
 void WriteGBuffer(GBuffer gbuffer)
 {
   rt0 = vec4(gbuffer.albedo, gbuffer.ao);
-  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 1.0);
+  rt1 = vec4(EncodeNormal(gbuffer.normal), 0.0, 0.0);
   rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
   rt3 = vec4(gbuffer.emission, 1.0);
 }
