@@ -51,6 +51,10 @@ struct Quaternion {
   // y -> yaw
   // z -> roll
   Vector3           ToEulerAngles() const;
+
+  // Rotates a point (other) about this quaternion.
+  Vector3           operator*(const Vector3& other) const;
+
   Matrix4           ToMatrix4() const;
 
   r32               Norm() const;

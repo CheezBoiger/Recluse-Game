@@ -10,6 +10,7 @@
 #include "../DemoTextureLoad.hpp"
 
 #include "Helmet.hpp"
+#include "Lantern.hpp"
 
 // Scripts.
 #include <array>
@@ -101,10 +102,10 @@ public:
       RayTestHit hitOut;
       if (gPhysics().RayTest(transform->Position, transform->Forward(), 50.0f, &hitOut)) {
         GameObject* obj = hitOut._rigidbody->GetGameObject();
-        Log() << "You hit " << obj->GetName() << "!!\n";
-        HelmetObject* helmet = GameObject::Cast<HelmetObject>(obj);
-        if (helmet) {
-            
+        LanternObject* lantern = GameObject::Cast<LanternObject>(obj);
+        if (lantern) {
+            Transform* t = lantern->GetTransform();
+            t->Position = transform->Position + transform->Forward() * 3.0f;
         }
       }
     }

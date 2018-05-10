@@ -35,9 +35,11 @@ class Transform;
        }
 
 #define UNREGISTER_COMPONENT(cls) { \
-          uuid64 uuid = GetOwner()->GetId(); \
-          auto it = _k##cls##s.find(uuid); \
-          if (it != _k##cls##s.end()) { \
+          if (GetOwner()) { \
+            uuid64 uuid = GetOwner()->GetId(); \
+            auto it = _k##cls##s.find(uuid); \
+            if (it != _k##cls##s.end()) { \
+            } \
           } \
         }
 

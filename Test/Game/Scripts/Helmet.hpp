@@ -33,7 +33,7 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, -0.1f, 0.0f));
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
 
@@ -84,7 +84,7 @@ public:
 #define FOLLOW_CAMERA_FORWARD 0
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
-    //Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(0.0f, 1.0, 0.0f));
+    //Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(1.0f, 0.0, 0.0f));
     //transform->Rotation = transform->Rotation * q;
 #if FOLLOW_CAMERA_FORWARD
     // Have helmet rotate with camera look around.

@@ -45,6 +45,8 @@ public:
   b32                   Activated() const { return m_bActivated; }
   GameObject*           GetGameObject() const { return m_gameObj; }
   Collider*             GetCollider() { return m_pCollider; }
+  
+  void                  ClearForces();
 
   OnCollisionCallback   onCollisionCallback;
   Collider*             m_pCollider;

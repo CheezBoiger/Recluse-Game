@@ -355,4 +355,14 @@ b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, c
 
   return allHits.hasHit();
 }
+
+
+void BulletPhysics::ClearForces(RigidBody* body)
+{
+  R_ASSERT(body, "Rigid Body was null.");
+  uuid64 k = body->GetUUID();
+  btRigidBody* rb = kRigidBodyMap[k].native;
+  rb->clearForces();
+  btCompoundShape s;
+}
 } // Recluse

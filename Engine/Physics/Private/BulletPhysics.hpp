@@ -50,6 +50,7 @@ public:
   void                  DeactivateRigidBody(RigidBody* body) override;
 
   void                  SetWorldGravity(const Vector3& gravity) override;
+  void                  ClearForces(RigidBody* body) override;
 
   void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
   b32                   RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) override;

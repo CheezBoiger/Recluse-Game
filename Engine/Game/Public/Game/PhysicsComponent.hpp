@@ -34,6 +34,7 @@ public:
   void SetMass(r32 mass);
   void SetRelativeOffset(const Vector3& offset);
   void ApplyForce(const Vector3& force);
+  void ClearForces();
   void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
   r32 GetMass() const { return m_mass; }
   void UpdateFromGameObject();

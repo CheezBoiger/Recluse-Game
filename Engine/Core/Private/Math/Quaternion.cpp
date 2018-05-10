@@ -302,6 +302,15 @@ b8 Quaternion::operator!=(const Quaternion& other) const
 }
 
 
+Vector3 Quaternion::operator*(const Vector3& other) const
+{
+  Vector3 u(x, y, z);
+  r32 s = w;
+  
+  return u * u.Dot(other) * 2.0f + other * (s * s - u.Dot(u)) + u.Cross(other) * 2.0f * s;
+}
+
+
 Log& operator<<(Log& log, const Quaternion& quat)
 {
   log << "(" << quat.w << ", " << quat.x << ", " << quat.y << ", " << quat.z << ")";

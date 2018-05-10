@@ -168,15 +168,16 @@ public:
 
   LanternObject()
   {
+    SetName("Lantern");
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.5f, 1.0f, 0.5f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 0.5f, 0.2f));
 
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.95f, 0.0f));
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
@@ -205,6 +206,7 @@ public:
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
     trans->Position = Vector3(-4.0f, 5.0f, 0.0f);
+    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
 
     m_pCage = new LanternCage();
@@ -224,7 +226,7 @@ public:
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(45.0f * tick), Vector3(0.0f, 1.0, 0.0f));
-    transform->Rotation = transform->Rotation * q;
+    //transform->Rotation = transform->Rotation * q;
   }
 
   void CleanUp() override
@@ -247,12 +249,13 @@ public:
     delete m_pHandle;
   }
 
+  PhysicsComponent*   m_pPhysicsComponent;
+
 private:
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
-  PhysicsComponent*   m_pPhysicsComponent;
   Collider*           m_pCollider;
 
   LanternCage*        m_pCage;
