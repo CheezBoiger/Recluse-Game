@@ -62,6 +62,7 @@ private:
 
   std::string               m_SceneName;
   SceneNode                 m_Root;
+
   // Global illumination Lighting information cache.
   //std::vector<LightProbe*>       m_lightProbes;
   //std::vector<ReflectionProbe*>  m_reflectionProbes;

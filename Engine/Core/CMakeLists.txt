@@ -44,6 +44,7 @@ set(RECLUSE_CORE_FILES
   ${RECLUSE_CORE_PUB_DIR}/Utility/Image.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Archive.hpp
   ${RECLUSE_CORE_PUB_DIR}/Utility/Cpu.hpp
+  ${RECLUSE_CORE_PUB_DIR}/Utility/CharHash.hpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Utility/Archive.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Window.cpp
   ${RECLUSE_CORE_PRIVATE_DIR}/Win32/Win32Time.cpp

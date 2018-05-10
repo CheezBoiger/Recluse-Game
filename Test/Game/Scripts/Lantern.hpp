@@ -1,4 +1,5 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
+#pragma once
 #include "Game/Engine.hpp"
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
@@ -163,17 +164,19 @@ class LanternObject : public GameObject
 {
 public:
 
+  R_GAME_OBJECT(LanternObject)  
+
   LanternObject()
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 1.0f, 0.4f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.5f, 1.0f, 0.5f));
 
     m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 1.0f, 0.0f));
+    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.95f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
@@ -220,7 +223,7 @@ public:
   {
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
-    Quaternion q = Quaternion::AngleAxis(Radians(90.0f * tick), Vector3(0.0f, 1.0, 0.0f));
+    Quaternion q = Quaternion::AngleAxis(Radians(45.0f * tick), Vector3(0.0f, 1.0, 0.0f));
     transform->Rotation = transform->Rotation * q;
   }
 

@@ -15,7 +15,7 @@ DEFINE_COMPONENT_MAP(PhysicsComponent);
 void PhysicsComponent::OnInitialize(GameObject* owner)
 {
   if (!m_pRigidBody) m_pRigidBody = gPhysics().CreateRigidBody(m_pCollider);
-  m_pRigidBody->m_gameObjUUID = owner->GetId();
+  m_pRigidBody->m_gameObj = owner;
 
   REGISTER_COMPONENT(PhysicsComponent, this);
 }

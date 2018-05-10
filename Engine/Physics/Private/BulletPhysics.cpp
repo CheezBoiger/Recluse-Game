@@ -131,6 +131,7 @@ void BulletPhysics::CleanUp()
 RigidBody* BulletPhysics::CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset)
 {
   RigidBody* rigidbody = new RigidBody();
+  rigidbody->m_pCollider = shape;
   btCollisionShape* pShape = GetCollisionShape(shape);
   btDefaultMotionState* pMotionState = new btDefaultMotionState(
     btTransform(btQuaternion(0.f, 0.f, 0.f, 1.f), 
@@ -307,7 +308,7 @@ void BulletPhysics::ApplyImpulse(RigidBody* body, const Vector3& impulse, const 
 }
 
 
-b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance)
+b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output)
 {
   btVector3 start(btScalar(origin.x),
     btScalar(origin.y),
@@ -325,7 +326,12 @@ b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, cons
   // Register hit.
   if (!hit.hasHit()) return false; 
   RigidBody* rbHit = static_cast<RigidBody*>(hit.m_collisionObject->getUserPointer());
-
+  output->_rigidbody = rbHit;
+  output->_collider = rbHit->GetCollider();
+  output->_normal = Vector3(hit.m_hitNormalWorld.x(),
+                            hit.m_hitNormalWorld.y(),
+                            hit.m_hitNormalWorld.z());
+  hit.m_closestHitFraction;
   return true;
 }
 

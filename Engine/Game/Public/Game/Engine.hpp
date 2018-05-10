@@ -95,7 +95,9 @@ public:
   void                          LoadSceneTransition();
 
   std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; }
-  std::vector<game_uuid_t>&     GetGameObjectKeys() { return m_cachedGameObjectKeys; } 
+  std::vector<game_uuid_t>&     GetGameObjectKeys() { return m_cachedGameObjectKeys; }
+
+  Scene*                        GetScene() { return m_pPushedScene; } 
 
   r64                           GameMousePosX() const { return m_gameMouseX; }
   r64                           GameMousePosY() const { return m_gameMouseY; }

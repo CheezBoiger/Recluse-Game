@@ -9,6 +9,8 @@
 #include "Game/Scene/ModelLoader.hpp"
 #include "../DemoTextureLoad.hpp"
 
+#include "Helmet.hpp"
+
 // Scripts.
 #include <array>
 #include <algorithm>
@@ -94,9 +96,16 @@ public:
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
 
+    // Testing ray cast.
     if (Mouse::ButtonDown(Mouse::LEFT)) {
-      if (gPhysics().RayTest(transform->Position, transform->Forward(), 50.0f)) {
-        Log() << "Ray hit something!\n";
+      RayTestHit hitOut;
+      if (gPhysics().RayTest(transform->Position, transform->Forward(), 50.0f, &hitOut)) {
+        GameObject* obj = hitOut._rigidbody->GetGameObject();
+        Log() << "You hit " << obj->GetName() << "!!\n";
+        HelmetObject* helmet = GameObject::Cast<HelmetObject>(obj);
+        if (helmet) {
+            
+        }
       }
     }
   }
