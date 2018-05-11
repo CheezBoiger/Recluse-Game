@@ -16,41 +16,37 @@ class Collider;
 class RigidBody;
 
 
+// NOTE(): Be sure to initialize Physics Component first, before calling any other function
+// within.
 class PhysicsComponent : public Component {
   RCOMPONENT(PhysicsComponent);
 public:
   static void UpdateFromPreviousGameLogic();
 
   PhysicsComponent() 
-    : m_pRigidBody(nullptr)
-    , m_pCollider(nullptr) { }
+    : m_pRigidBody(nullptr) { }
 
   void Update() override;
   virtual void OnInitialize(GameObject* owner) override;  
   virtual void OnCleanUp() override;
   void OnEnable() override;
 
-  void SetCollider(Collider* collider) { m_pCollider = collider; }
+  void AddCollider(Collider* collider) { m_pRigidBody->AddCollider(collider); }
   void SetMass(r32 mass);
-  void SetRelativeOffset(const Vector3& offset);
+  //void SetRelativeOffset(const Vector3& offset);
   void ApplyForce(const Vector3& force);
   void ClearForces();
   void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
   r32 GetMass() const { return m_mass; }
   void UpdateFromGameObject();
 
-
-  Collider*   GetCollider() { return m_pCollider; }
-
-  RigidBody* m_pRigidBody;
-  Collider*  m_pCollider;
+  RigidBody* GetRigidBody() { return m_pRigidBody; }
 
 private:
 
   void SetTransform(const Vector3& newPos, const Quaternion& newRot);
 
-
-  Vector3     m_relOffset;
+  RigidBody*  m_pRigidBody;
   r32         m_mass;
 };
 } // Recluse

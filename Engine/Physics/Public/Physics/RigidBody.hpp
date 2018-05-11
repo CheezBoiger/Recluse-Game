@@ -6,6 +6,8 @@
 #include "Core/Math/Quaternion.hpp"
 #include "PhysicsConfigs.hpp"
 
+#include "Collider.hpp"
+#include "CompoundCollider.hpp"
 
 #include <functional>
 
@@ -33,8 +35,8 @@ public:
   RigidBody() 
     : onCollisionCallback(nullptr)
     , m_bActivated(true)
-    , m_pCollider(nullptr)
-    , m_gameObj(nullptr) { }
+    , m_gameObj(nullptr)
+    , m_mass(1.0f) { }
 
   void                  ObjectCollided();
   void                  EnableKinematic(b8 enable);
@@ -44,17 +46,23 @@ public:
   b32                   Kinematic() const { return m_bKinematic; }
   b32                   Activated() const { return m_bActivated; }
   GameObject*           GetGameObject() const { return m_gameObj; }
-  Collider*             GetCollider() { return m_pCollider; }
+  CompoundCollider*     GetCompound() { return &m_compound; }
+
+  void                  AddCollider(Collider* collider);
+
+  void                  RemoveCollider();
   
   void                  ClearForces();
 
   OnCollisionCallback   onCollisionCallback;
-  Collider*             m_pCollider;
   Vector3               m_vPosition;
   r32                   m_mass;
   Quaternion            m_qRotation;
   b32                   m_bKinematic;
   b32                   m_bActivated;
   GameObject*           m_gameObj;
+
+private:
+  CompoundCollider     m_compound;
 };
 } // Recluse

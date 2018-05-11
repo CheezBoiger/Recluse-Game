@@ -2,6 +2,9 @@
 #pragma once
 
 #include "Core/Types.hpp"
+#include "Core/Serialize.hpp"
+
+#include "PhysicsConfigs.hpp"
 
 
 namespace Recluse {
@@ -9,11 +12,19 @@ namespace Recluse {
 
 class Actor;
 
+typedef uuid64 collider_uuid_t;
 
-class Collider {
+class Collider : public PhysicsObject {
 public:
-  virtual         ~Collider() { }
 
-  
+  // Center point of this collider.
+  Vector3     center;
+};
+
+
+
+class CompoundCollider : public Collider {
+public:
+
 };
 } // Recluse

@@ -7,6 +7,7 @@
 
 
 #include "Game/Scene/ModelLoader.hpp"
+#include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
 
 #include "Helmet.hpp"
@@ -57,8 +58,8 @@ public:
     // Anything in contact with this flying camera will get pushed aside.
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->AddCollider(m_pCollider);
   
     m_pPhysicsComponent->SetMass(0.0f);
   }

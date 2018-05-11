@@ -7,6 +7,7 @@
 
 
 #include "Game/Scene/ModelLoader.hpp"
+#include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
@@ -33,9 +34,9 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
-    m_pPhysicsComponent->SetCollider(m_pCollider);
+   // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
     m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->AddCollider(m_pCollider);
 
     Mesh* mesh = nullptr;
     //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
@@ -51,12 +52,14 @@ public:
       "Material_MR"
 #endif
       , &material);
-    m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
+    m_pMaterialComponent->SetMaterialRef(material);
+
     //material->SetEmissiveFactor(1.0f);
     material->SetRoughnessFactor(1.0f);
     material->SetMetallicFactor(1.0f);
     material->SetEmissiveFactor(1.0f);
+
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);

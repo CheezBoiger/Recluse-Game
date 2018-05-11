@@ -21,6 +21,8 @@ set(PHYSICS_FILES
   ${PHYSICS_PUBLIC_DIR}/Collision.hpp
   ${PHYSICS_PUBLIC_DIR}/PhysicsConfigs.hpp
   ${PHYSICS_PUBLIC_DIR}/RigidBody.hpp
+  ${PHYSICS_PUBLIC_DIR}/CompoundCollider.hpp
+  ${PHYSICS_PUBLIC_DIR}/SphereCollider.hpp
   ${PHYSICS_PRIVATE_DIR}/BulletPhysics.hpp
 
   ${PHYSICS_PRIVATE_DIR}/BulletPhysics.cpp

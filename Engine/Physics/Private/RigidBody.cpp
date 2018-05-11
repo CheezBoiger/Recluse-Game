@@ -21,4 +21,11 @@ void RigidBody::SetTransform(const Vector3& newPos, const Quaternion& newRot)
 {
   gPhysics().SetTransform(this, newPos, newRot);
 }
+
+
+void RigidBody::AddCollider(Collider* collider) 
+{
+  if (!collider) return;
+  gPhysics().AddCollider(this, collider);
+}
 } // Recluse 

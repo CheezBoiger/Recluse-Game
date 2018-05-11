@@ -37,10 +37,11 @@ public:
   btDynamicsWorld*      GetCurrentWorld() { return m_pWorld; }
 
   void                  ClearWorld() { }
-  RigidBody*            CreateRigidBody(Collider* shape, const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
+  RigidBody*            CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
   void                  FreeRigidBody(RigidBody* body) override;
-  Collider*             CreateBoxCollider(const Vector3& scale) override;
-  Collider*             CreateSphereCollider() override { return nullptr; }
+  BoxCollider*          CreateBoxCollider(const Vector3& scale) override;
+  SphereCollider*       CreateSphereCollider() override { return nullptr; }
+  CompoundCollider*     CreateCompoundCollider() override;
 
   void                  ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
 
@@ -51,6 +52,7 @@ public:
 
   void                  SetWorldGravity(const Vector3& gravity) override;
   void                  ClearForces(RigidBody* body) override;
+  void                            AddCollider(RigidBody* body, Collider* collider) override;
 
   void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
   b32                   RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) override;

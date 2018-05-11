@@ -174,10 +174,11 @@ public:
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 0.5f, 0.2f));
+    m_pCollider->center = Vector3(0.0f, 0.45f, 0.0f);
 
-    m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
+    m_pPhysicsComponent->AddCollider(m_pCollider);
+   // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
@@ -192,8 +193,8 @@ public:
       "RustySample"
 #endif
       , &material);
-    m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
+    m_pMaterialComponent->SetMaterialRef(material);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
     //m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
@@ -206,7 +207,7 @@ public:
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
     trans->Position = Vector3(-4.0f, 5.0f, 0.0f);
-    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
 
     m_pCage = new LanternCage();

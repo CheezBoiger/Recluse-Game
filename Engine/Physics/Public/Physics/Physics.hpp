@@ -18,6 +18,9 @@ namespace Recluse {
 
 class Actor;
 class BulletPhysics;
+class BoxCollider;
+class SphereCollider;
+class CompoundCollider;
 
 
 struct RayTestHit {
@@ -39,11 +42,11 @@ public:
   virtual void                            OnShutDown() override { }
 
 
-  virtual RigidBody*                      CreateRigidBody(Collider* collider,
-                                            const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
+  virtual RigidBody*                      CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
 
-  virtual Collider*                       CreateBoxCollider(const Vector3& scale) { return nullptr; }
-  virtual Collider*                       CreateSphereCollider() { return nullptr; }
+  virtual BoxCollider*                    CreateBoxCollider(const Vector3& scale) { return nullptr; }
+  virtual SphereCollider*                 CreateSphereCollider() { return nullptr; }
+  virtual CompoundCollider*               CreateCompoundCollider() { return nullptr; }
   virtual void                            FreeRigidBody(RigidBody* body) { }
 
 
@@ -59,6 +62,7 @@ public:
 
   virtual void                            ClearForces(RigidBody* body) { }
   virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
+  virtual void                            AddCollider(RigidBody* body, Collider* collider) { }
   virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
   virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance) { return false; }
 

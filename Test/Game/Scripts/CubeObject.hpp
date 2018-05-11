@@ -7,6 +7,7 @@
 
 
 #include "Game/Scene/ModelLoader.hpp"
+#include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
@@ -32,8 +33,8 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(5.0f, 5.0f, 5.0f));
 
-    m_pPhysicsComponent->SetCollider(m_pCollider);
     m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->SetMass(0.0f);
 
     Mesh* mesh = nullptr;
@@ -49,8 +50,9 @@ public:
       "Material_MR"
 #endif
       , &material);
-    m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
+    m_pMaterialComponent->SetMaterialRef(material);
+
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);

@@ -16,16 +16,19 @@ struct physics_configs_t {
 };
 
 
+typedef uuid64 physics_uuid_t;
+
+
 class PhysicsObject {
-  static uuid64 genIdx;
+  static physics_uuid_t genIdx;
 public:
   PhysicsObject()
     : m_uuid(genIdx++) { }
 
   virtual ~PhysicsObject() { }
 
-  uuid64                GetUUID() const { return m_uuid; }
+  physics_uuid_t                GetUUID() const { return m_uuid; }
 private:
-  uuid64                m_uuid;
+  physics_uuid_t                m_uuid;
 };
 } // Recluse

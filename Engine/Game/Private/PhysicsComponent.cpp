@@ -15,7 +15,7 @@ DEFINE_COMPONENT_MAP(PhysicsComponent);
 
 void PhysicsComponent::OnInitialize(GameObject* owner)
 {
-  if (!m_pRigidBody) m_pRigidBody = gPhysics().CreateRigidBody(m_pCollider);
+  if (!m_pRigidBody) m_pRigidBody = gPhysics().CreateRigidBody();
   m_pRigidBody->m_gameObj = owner;
 
   REGISTER_COMPONENT(PhysicsComponent, this);
@@ -33,8 +33,8 @@ void PhysicsComponent::Update()
   R_ASSERT(m_pRigidBody, "No rigidbody assigned to this physics component.");
   Transform* transform = GetOwner()->GetTransform();
   transform->Rotation = m_pRigidBody->m_qRotation;
-  Vector3 finalOffset = transform->Rotation * m_relOffset;
-  transform->Position = m_pRigidBody->m_vPosition - finalOffset;
+  //Vector3 finalOffset = transform->Rotation * m_relOffset;
+  transform->Position = m_pRigidBody->m_vPosition; // - finalOffset;
 }
 
 
@@ -61,21 +61,22 @@ void PhysicsComponent::UpdateFromGameObject()
 {
   Transform* transform = GetTransform();
   m_pRigidBody->m_qRotation = transform->Rotation;
-  Vector3 finalOffset = transform->Rotation * m_relOffset;
-  m_pRigidBody->m_vPosition = transform->Position + finalOffset;
+  //Vector3 finalOffset = transform->Rotation * m_relOffset;
+  m_pRigidBody->m_vPosition = transform->Position; // + finalOffset;
   gPhysics().SetTransform(m_pRigidBody, 
     m_pRigidBody->m_vPosition, 
     m_pRigidBody->m_qRotation);
 }
 
 
+/*
 void PhysicsComponent::SetRelativeOffset(const Vector3& offset)
 {
   if (!m_pRigidBody) return;
   m_relOffset = offset;
 
 }
-
+*/
 
 void PhysicsComponent::ApplyImpulse(const Vector3& impulse, const Vector3& relPos)
 {
