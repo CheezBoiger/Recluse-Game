@@ -16,31 +16,39 @@ namespace Recluse {
 
 // The joint pose that represents current position and orientation
 // of a joint at a specified key frame.
-struct JointPose 
-{
+struct JointPose {
   Quaternion  _rot;
-  Vector3     _trans;
-  Vector3     _scale;
+  Vector4     _trans;
+  r32         _scale; // uniform scale.
 };
 
 
 // A Sample of an animation at some certain key frame.
-struct AnimSample 
-{
+struct AnimSample {
   JointPose*  _aLocalPoses;
   Matrix4*    _aGlobalPoses;
 };
 
 
 // Single instance of an animation clip. This may represent a "walk," "run,", "shoot," etc...
-struct AnimationClip 
-{
+struct AnimClip {
   // Duration of this animation clip.
   r32                           _rDuration;
   r32                           _fps;
   u32                           _frameCount;
-  u32                           _skeletonId;
+  Skeleton*                     _pSkeleton;
   AnimSample*                   _aAnimSamples;
-  u32                           _bLooping;
+  b32                           _bLooping;
+};
+
+
+// Animation clip state. Keeps track of the state of an animation's clip.
+struct AnimClipState {
+  std::string                 _animClipName;
+  r32                         _rTimePos;
+  r32                         _rWeight;
+  r32                         _rPlaybackRate;
+  b32                         _bEnabled;
+  b32                         _bLooping;
 };
 } // Recluse

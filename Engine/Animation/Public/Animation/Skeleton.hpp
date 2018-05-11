@@ -9,19 +9,17 @@ namespace Recluse {
 
 
 
-struct Joint 
-{
+struct Joint {
   Matrix4       _InvBindPose;
-  u8            _iParent;
   const tchar*  _name;
+  u8            _iParent;
 };
 
 
 // Represents the skinned animation of a mesh object in a game.
 // The skeleton defines all joints and transformation offsets 
 // that make up the animation within the game.
-struct Skeleton 
-{
+struct Skeleton {
   // Full joint transformation that corresponds to a bone.
   Joint*  _aJoints;
 

@@ -227,7 +227,7 @@ public:
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
     Quaternion q = Quaternion::AngleAxis(Radians(45.0f * tick), Vector3(0.0f, 1.0, 0.0f));
-    //transform->Rotation = transform->Rotation * q;
+    transform->Rotation = transform->Rotation * q;
   }
 
   void CleanUp() override

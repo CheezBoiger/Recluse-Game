@@ -7,6 +7,9 @@
 
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
+#include "BulletSoftBody/btDefaultSoftBodySolver.h"
+#include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
+#include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "Core/Types.hpp"
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Quaternion.hpp"
