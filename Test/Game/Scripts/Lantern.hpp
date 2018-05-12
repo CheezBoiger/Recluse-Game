@@ -39,7 +39,7 @@ public:
 #if 0
       "StingrayPBS1SG"
 #else
-      "Material_MR"
+      "RustySample"
 #endif
       , &material);
     m_pMaterialComponent->SetMaterialRef(material);
@@ -213,8 +213,10 @@ public:
     m_pCage = new LanternCage();
     m_pHandle = new LanternHandle();
 
-    AddChild(m_pCage);
     AddChild(m_pHandle);
+    AddChild(m_pCage);
+
+    bFollow = false;
   }
 
 
@@ -224,10 +226,17 @@ public:
 
   void Update(r32 tick) override
   {
-    Transform* transform = GetTransform();
-    // transform->Position += m_vRandDir * tick;
-    Quaternion q = Quaternion::AngleAxis(Radians(45.0f * tick), Vector3(0.0f, 1.0, 0.0f));
-    transform->Rotation = transform->Rotation * q;
+    if (Keyboard::KeyPressed(KEY_CODE_0)) {
+      bFollow = true;
+    }
+
+    if (bFollow) {
+      Camera* cam = Camera::GetMain();
+      Transform* camTransform = cam->GetTransform();
+      Transform* transform = GetTransform();
+      camTransform->Position = transform->Position + transform->Forward() * 3.0f;
+      camTransform->Rotation = transform->Rotation * Quaternion::AngleAxis(Radians(180.f), Vector3::UP);
+    }
   }
 
   void CleanUp() override
@@ -258,6 +267,7 @@ private:
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
   Collider*           m_pCollider;
+  b32                 bFollow;
 
   LanternCage*        m_pCage;
   LanternHandle*      m_pHandle;

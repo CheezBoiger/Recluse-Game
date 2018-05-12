@@ -190,8 +190,17 @@ void Engine::Stop()
 }
 
 
+std::thread worker0;
+std::thread worker1;
+std::thread worker2;
+
+
 void Engine::Update()
 {
+  if (worker2.joinable()) {
+    worker2.join();
+  }
+
   if (m_window.ShouldClose() || m_stopping) {
     Stop();
     return;
@@ -199,7 +208,7 @@ void Engine::Update()
   // Render out the scene.
   r64 dt = Time::DeltaTime;
   r64 tick = Time::FixTime * Time::ScaleTime;
-  //m_dLag += Time::DeltaTime;
+  m_dLag += Time::DeltaTime;
 
   gAnimation().UpdateState(dt);
   gUI().UpdateState(dt);
@@ -208,12 +217,26 @@ void Engine::Update()
   gAudio().UpdateState(dt);
 #endif
 
+  // Update using next frame input.
   UpdateGameLogic(tick);
+  Transform::UpdateComponents();
 
-#if !defined FORCE_PHYSICS_OFF
-  gPhysics().UpdateState(dt, tick);
-  PhysicsComponent::UpdateComponents();
-#endif 
+  worker2 = std::thread([&] () -> void {
+    PhysicsComponent::UpdateFromPreviousGameLogic();
+    gPhysics().UpdateState(dt, tick);
+    PhysicsComponent::UpdateComponents();
+  });
+
+  worker0 = std::thread([&]() -> void {
+    RendererComponent::UpdateComponents();
+  });
+
+  worker1 = std::thread([&]() -> void {
+    PointLightComponent::UpdateComponents();
+  });
+
+  worker0.join();
+  worker1.join();
 
   gRenderer().Render();
 }
@@ -230,17 +253,7 @@ void Engine::UpdateGameLogic(r64 tick)
     }
   }
 
-  PhysicsComponent::UpdateFromPreviousGameLogic();
-  Transform::UpdateComponents();
-
   if (Camera::GetMain()) Camera::GetMain()->Update();
-
-  std::thread worker0 = std::thread([&] () -> void {
-    RendererComponent::UpdateComponents();
-  });
-  std::thread worker1 = std::thread([&] () -> void {
-    PointLightComponent::UpdateComponents();
-  });
 
   {
     DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
@@ -251,11 +264,6 @@ void Engine::UpdateGameLogic(r64 tick)
     pLights->_PrimaryLight._Enable = pPrimary->_Enable;
     pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
   }
-
-  
-
-  worker0.join();
-  worker1.join();
  //TraverseScene(UpdateGameObject);
 }
 
