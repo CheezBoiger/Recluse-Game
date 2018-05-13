@@ -403,7 +403,7 @@ void main()
     
   }
   
-  outColor = gbuffer.emissionStrength * gbuffer.emission + (outColor * gbuffer.ao);
+  outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);
   vFragColor = vec4(outColor, 1.0);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;

@@ -178,7 +178,7 @@ void main()
   }
   
   if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb;
+    fragEmissive = pow(texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
   }   
   
   vec3 N = normalize(fragNormal);

@@ -187,7 +187,7 @@ public:
 
     Material* material = nullptr;
     MaterialCache::Get(
-#if 0
+#if 1
       "StingrayPBS1SG"
 #else
       "RustySample"
@@ -195,9 +195,7 @@ public:
       , &material);
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
-    //material->SetEmissiveFactor(1.0f);
-    //material->SetRoughnessFactor(1.0f);
-    //m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
 
