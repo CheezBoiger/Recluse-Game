@@ -57,7 +57,7 @@ void Camera::Update()
   Vector3 pos = transform->Position;
   Vector3 right = transform->Right();
   Vector3 up = transform->Up();
-  Vector3 front = transform->Forward();
+  Vector3 front = transform->Front();
 
   // Update camera and screen info.
   GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();

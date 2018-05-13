@@ -44,13 +44,13 @@ void CCamViewFrustum::Update(Transform* transform)
   if (!m_pCamera->Culling()) return;
   ConfigureFrustum();
   
-  Vector3 l = transform->Forward();
+  Vector3 l = transform->Front();
   Vector3 p = transform->Position;
   Vector3 u = transform->Up();
 
   Vector3 Nc, Fc, X, Y, Z;
 
-  Z = transform->Forward();
+  Z = transform->Front();
   X = -(u ^ Z).Normalize();
   Y = Z ^ X;
 

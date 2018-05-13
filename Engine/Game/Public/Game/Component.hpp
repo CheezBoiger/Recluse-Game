@@ -134,8 +134,38 @@ public:
     , Scale(Vector3(1.0f, 1.0f, 1.0f))
     { }
 
+  Transform(const Transform& ob) {
+    LocalPosition = ob.LocalPosition;
+    Position = ob.Position;
+    Rotation = ob.Rotation;
+    LocalRotation = ob.LocalRotation;
+    Scale = ob.Scale;
+    LocalScale = ob.LocalScale;
+    m_LocalToWorldMatrix = ob.m_LocalToWorldMatrix;
+    m_WorldToLocalMatrix = ob.m_WorldToLocalMatrix;
+    m_Up = ob.m_Up;
+    m_Front = ob.m_Front;
+    m_Right = ob.m_Right;
+  }
+
+
+  Transform& operator=(const Transform& ob) {
+    LocalPosition = ob.LocalPosition;
+    Position = ob.Position;
+    Rotation = ob.Rotation;
+    LocalRotation = ob.LocalRotation;
+    Scale = ob.Scale;
+    LocalScale = ob.LocalScale;
+    m_LocalToWorldMatrix = ob.m_LocalToWorldMatrix;
+    m_WorldToLocalMatrix = ob.m_WorldToLocalMatrix;
+    m_Up = ob.m_Up;
+    m_Front = ob.m_Front;
+    m_Right = ob.m_Right;
+    return (*this);
+  }
+
   // Front axis of the object in world space.
-  Vector3       Forward() const { return m_Front; };
+  Vector3       Front() const { return m_Front; };
 
   // Up axis of the object in world space.
   Vector3       Up() const { return m_Up; }

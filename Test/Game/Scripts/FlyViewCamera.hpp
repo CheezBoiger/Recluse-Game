@@ -71,15 +71,20 @@ public:
   {
     if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
     Transform* transform = GetTransform();
+
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
       bFollow = true;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_1)) {
+      bFollow = false;
     }
 
     if (!bFollow) {
       if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->Position -= transform->Right() * m_speed * tick; }
       if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * m_speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Forward() * m_speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Forward() * m_speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Front() * m_speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Front() * m_speed * tick; }
     }
     if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 1.0 * Time::DeltaTime; }
     if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 1.0 * Time::DeltaTime; }
@@ -110,7 +115,8 @@ public:
     // Testing ray cast.
     if (Mouse::ButtonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
-      if (gPhysics().RayTest(transform->Position, transform->Forward(), 50.0f, &hitOut)) {
+      if (gPhysics().RayTest(transform->Position, transform->Front(), 50.0f, &hitOut)) {
+        Log() << "Hitting object.\n";
         GameObject* obj = hitOut._rigidbody->GetGameObject();
         if (!GameObject::Cast<CubeObject>(obj)) {
           _pHolding = obj;
@@ -125,7 +131,7 @@ public:
 
     if (_pHolding) {
       Transform* t = _pHolding->GetTransform();
-      t->Position = transform->Position + transform->Forward() * 5.0f;
+      t->Position = transform->Position + transform->Front() * 5.0f;
     }
   }
 
@@ -154,4 +160,5 @@ private:
   b32               bFollow;
   // Object to hold on to.
   GameObject*       _pHolding;
+  Transform         oldTransform;
 };

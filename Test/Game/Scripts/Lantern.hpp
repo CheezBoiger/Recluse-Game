@@ -226,15 +226,24 @@ public:
 
   void Update(r32 tick) override
   {
-    if (Keyboard::KeyPressed(KEY_CODE_0)) {
+    Camera* cam = Camera::GetMain();
+    Transform* camTransform = cam->GetTransform();
+
+    if (!bFollow && Keyboard::KeyPressed(KEY_CODE_0)) {
+      oldTransform = *camTransform;
       bFollow = true;
+    }
+
+    if (bFollow && Keyboard::KeyPressed(KEY_CODE_1)) {
+      *camTransform = oldTransform;
+      bFollow = false;
     }
 
     if (bFollow) {
       Camera* cam = Camera::GetMain();
       Transform* camTransform = cam->GetTransform();
       Transform* transform = GetTransform();
-      camTransform->Position = transform->Position + transform->Forward() * 3.0f;
+      camTransform->Position = transform->Position + transform->Front() * 3.0f;
       camTransform->Rotation = transform->Rotation * Quaternion::AngleAxis(Radians(180.f), Vector3::UP);
     }
   }
@@ -271,4 +280,5 @@ private:
 
   LanternCage*        m_pCage;
   LanternHandle*      m_pHandle;
+  Transform           oldTransform;
 };

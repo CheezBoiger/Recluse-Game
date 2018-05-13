@@ -219,22 +219,22 @@ void Engine::Update()
 
   // Update using next frame input.
   UpdateGameLogic(tick);
+  PhysicsComponent::UpdateFromPreviousGameLogic();
   Transform::UpdateComponents();
 
   worker2 = std::thread([&] () -> void {
-    PhysicsComponent::UpdateFromPreviousGameLogic();
     gPhysics().UpdateState(dt, tick);
     PhysicsComponent::UpdateComponents();
   });
 
   worker0 = std::thread([&]() -> void {
+    if (Camera::GetMain()) Camera::GetMain()->Update();
     RendererComponent::UpdateComponents();
   });
 
   worker1 = std::thread([&]() -> void {
     PointLightComponent::UpdateComponents();
   });
-
   worker0.join();
   worker1.join();
 
@@ -252,8 +252,6 @@ void Engine::UpdateGameLogic(r64 tick)
       object->Update(static_cast<r32>(tick));
     }
   }
-
-  if (Camera::GetMain()) Camera::GetMain()->Update();
 
   {
     DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
