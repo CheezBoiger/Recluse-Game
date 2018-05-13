@@ -112,7 +112,8 @@ public:
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_B) && Keyboard::KeyPressed(KEY_CODE_SHIFT)) {
-      m_pPhysicsComponent->ApplyImpulse(m_vRandDir, Vector3(0.0f, 0.0f, 0.0f));
+      m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(
+        m_pMaterialComponent->GetMaterial()->EmissiveFactor() - 0.01f * tick);
     }
   }
 

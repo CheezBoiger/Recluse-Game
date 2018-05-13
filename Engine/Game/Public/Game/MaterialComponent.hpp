@@ -23,6 +23,10 @@ struct Material {
   void                      Initialize();
   void                      CleanUp();
 
+  r32                       EmissiveFactor() const { return m_pDesc->Data()->_emissiveFactor; }
+  r32                       MetallicFactor() const { return m_pDesc->Data()->_metalFactor; }
+  r32                       RoughFactor() const { return m_pDesc->Data()->_roughFactor; }
+
   void                      SetRoughnessFactor(r32 rough) { m_pDesc->Data()->_roughFactor = rough; MARK_DIRTY_MATERIAL(); }
   void                      SetMetallicFactor(r32 metal) { m_pDesc->Data()->_metalFactor = metal; MARK_DIRTY_MATERIAL(); }
   void                      SetEmissiveFactor(r32 emissive) { m_pDesc->Data()->_emissiveFactor = emissive; MARK_DIRTY_MATERIAL(); }
