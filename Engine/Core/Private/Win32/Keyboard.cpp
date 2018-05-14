@@ -7,13 +7,13 @@ namespace Recluse {
 KeyAction Keyboard::keys[256];
 
 
-b8 Keyboard::KeyPressed(KeyCode key)
+b32 Keyboard::KeyPressed(KeyCode key)
 {
   return Keyboard::keys[(i32)key] == KEY_DOWN ? true : false;
 }
 
 
-b8 Keyboard::KeyReleased(KeyCode key)
+b32 Keyboard::KeyReleased(KeyCode key)
 {
   return Keyboard::keys[(i32)key] == KEY_UP ? true : false;
 }

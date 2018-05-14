@@ -5,7 +5,7 @@
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
 
-
+#include "Item.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
@@ -19,11 +19,10 @@ using namespace Recluse;
 
 
 // Helmet object example, on how to set up and update a game object for the engine.
-class HelmetObject : public GameObject
+class HelmetObject : public Item
 {
-public:
-
   R_GAME_OBJECT(HelmetObject)
+public:
 
     HelmetObject()
   {
@@ -72,7 +71,7 @@ public:
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     trans->Rotation = Quaternion::AngleAxis(Radians(45.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-
+    m_factor = 1.0f;
     m_pPhysicsComponent->Enable(false);
   }
 
@@ -111,10 +110,9 @@ public:
       m_pPhysicsComponent->Enable(true);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_B) && Keyboard::KeyPressed(KEY_CODE_SHIFT)) {
-      m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(
-        m_pMaterialComponent->GetMaterial()->EmissiveFactor() - 0.01f * tick);
-    }
+    // Make emission glow.
+    m_factor = Absf(sinf(static_cast<r32>(Time::CurrentTime())));
+    m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(m_factor);
   }
 
   void CleanUp() override
@@ -133,9 +131,5 @@ public:
 
 private:
   Vector3             m_vRandDir;
-  RendererComponent*  m_pRendererComponent;
-  MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
-  PhysicsComponent*   m_pPhysicsComponent;
-  Collider*           m_pCollider;
+  r32                 m_factor;
 };

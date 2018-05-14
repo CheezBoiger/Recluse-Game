@@ -10,6 +10,7 @@
 #include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
 
+#include "Item.hpp"
 #include "Helmet.hpp"
 #include "CubeObject.hpp"
 #include "Lantern.hpp"
@@ -116,16 +117,18 @@ public:
     if (Mouse::ButtonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
       if (gPhysics().RayTest(transform->Position, transform->Front(), 50.0f, &hitOut)) {
-        Log() << "Hitting object.\n";
         GameObject* obj = hitOut._rigidbody->GetGameObject();
-        if (!GameObject::Cast<CubeObject>(obj)) {
-          _pHolding = obj;
+        Item* item = obj->CastTo<Item>();
+        if (item) {
+          _pHolding = item;
+          item->GetPhysicsComponent()->Enable(false);
         }
       }
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_E)) {
+    if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
+      _pHolding->GetPhysicsComponent()->Enable(true);
       _pHolding = nullptr;
     }
 
@@ -159,6 +162,6 @@ private:
   Collider*         m_pCollider;
   b32               bFollow;
   // Object to hold on to.
-  GameObject*       _pHolding;
+  Item*             _pHolding;
   Transform         oldTransform;
 };

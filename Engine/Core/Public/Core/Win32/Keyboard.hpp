@@ -84,7 +84,7 @@ enum KeyAction {
 class Keyboard {
 public:
   static KeyAction keys[256];
-  static b8 KeyPressed(KeyCode keycode);
-  static b8 KeyReleased(KeyCode keycode);
+  static b32 KeyPressed(KeyCode keycode);
+  static b32 KeyReleased(KeyCode keycode);
 };
 } // Recluse

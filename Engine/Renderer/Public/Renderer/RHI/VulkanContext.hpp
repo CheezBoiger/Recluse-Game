@@ -5,6 +5,9 @@
 #include "PhysicalDevice.hpp"
 
 
+#define ENGINE_NAME "Recluse"
+
+
 namespace Recluse {
 
 

@@ -6,6 +6,7 @@
 #include "Renderer/UserParams.hpp"
 
 
+#include "Item.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "../DemoTextureLoad.hpp"
 #include "Scripts/FlyViewCamera.hpp"
@@ -21,6 +22,7 @@ using namespace Recluse;
 // Lantern handle example, on how to set up and update a game object for the engine.
 class LanternCage : public GameObject
 {
+  R_GAME_OBJECT(LanternCage)
 public:
 
   LanternCage()
@@ -90,6 +92,7 @@ private:
 // Lantern handle example, on how to set up and update a game object for the engine.
 class LanternHandle : public GameObject
 {
+  R_GAME_OBJECT(LanternHandle)
 public:
 
   LanternHandle()
@@ -160,11 +163,10 @@ private:
 // Lantern contains other children game objects to demonstrate parent-child transformations.
 
 // TODO(): Do we want multiple render components in one game object?
-class LanternObject : public GameObject
+class LanternObject : public Item
 {
+  R_GAME_OBJECT(LanternObject)
 public:
-
-  R_GAME_OBJECT(LanternObject)  
 
   LanternObject()
   {
@@ -266,14 +268,8 @@ public:
     delete m_pHandle;
   }
 
-  PhysicsComponent*   m_pPhysicsComponent;
-
 private:
   Vector3             m_vRandDir;
-  RendererComponent*  m_pRendererComponent;
-  MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
-  Collider*           m_pCollider;
   b32                 bFollow;
 
   LanternCage*        m_pCage;

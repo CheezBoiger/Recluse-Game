@@ -14,9 +14,7 @@ GameObject::GameObject()
   : m_pParent(nullptr)
   , m_id(std::hash<game_uuid_t>()(sGameObjectCount++))
   , m_name("Default Name")
-  , m_objTypeId(0)
 {
-  m_objTypeId = GetObjectId();
   m_transform.Initialize(this);
 }
 

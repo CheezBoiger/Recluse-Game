@@ -6,6 +6,7 @@
 #include "Renderer/UserParams.hpp"
 
 
+#include "Item.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
@@ -21,9 +22,9 @@ using namespace Recluse;
 // Spehere object example, on how to set up and update a game object for the engine.
 class CubeObject : public GameObject
 {
-public:
-
   R_GAME_OBJECT(CubeObject)
+
+public:
 
     CubeObject()
   {

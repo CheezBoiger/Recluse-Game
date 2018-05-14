@@ -37,7 +37,7 @@ b32 Context::CreateInstance()
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.pApplicationName = "Recluse";
-  appInfo.pEngineName = "Recluse Engine";
+  appInfo.pEngineName = ENGINE_NAME;
 
   VkInstanceCreateInfo instCreateInfo = {};
   instCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
