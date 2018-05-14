@@ -44,7 +44,8 @@ public:
      m_pPhysicsComponent->Enable(false);
 
     Mesh* mesh = nullptr;
-    //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    //MeshCache::Get("BoomBox", &mesh);
+
     MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
@@ -52,7 +53,7 @@ public:
     Material* material = nullptr;
     MaterialCache::Get(
 #if 0
-      "StingrayPBS1SG"
+      "BoomBox_Mat"
 #else
       "Material_MR"
 #endif
@@ -60,10 +61,10 @@ public:
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
 
+    material->SetEmissiveFactor(0.01f);
+    //material->SetRoughnessFactor(1.0f);
+    //material->SetMetallicFactor(1.0f);
     //material->SetEmissiveFactor(1.0f);
-    material->SetRoughnessFactor(1.0f);
-    material->SetMetallicFactor(1.0f);
-    material->SetEmissiveFactor(1.0f);
 
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
@@ -75,9 +76,9 @@ public:
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
-    trans->Rotation = Quaternion::AngleAxis(Radians(45.0f), Vector3(1.0f, 0.0f, 0.0f));
+    //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-    m_factor = 1.0f;
+    m_factor = 0.01f;
   }
 
   // Updating game logic...
@@ -86,7 +87,7 @@ public:
 #define FOLLOW_CAMERA_FORWARD 0
     Transform* transform = GetTransform();
     // transform->Position += m_vRandDir * tick;
-    //Quaternion q = Quaternion::AngleAxis(Radians(0.1f), Vector3(1.0f, 0.0, 0.0f));
+    //Quaternion q = Quaternion::AngleAxis(Radians(45.0f) * tick, Vector3(1.0f, 0.0, 0.0f));
     //transform->Rotation = transform->Rotation * q;
 #if FOLLOW_CAMERA_FORWARD
     // Have helmet rotate with camera look around.

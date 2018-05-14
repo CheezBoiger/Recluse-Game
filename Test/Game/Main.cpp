@@ -68,9 +68,12 @@ int main(int c, char* argv[])
     MeshCache::Cache("NativeCube", mesh);
   }
 
-  ModelLoader::Model model;
-  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model);
-  ModelLoader::Load("Assets/Lantern/lantern.gltf", &model);
+  ModelLoader::Model model0;
+  ModelLoader::Model model1;
+  ModelLoader::Model model2;
+  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model0);
+  ModelLoader::Load("Assets/BoomBox/BoomBox.gltf", &model1);
+  ModelLoader::Load("Assets/Lantern/lantern.gltf", &model2);
 
   {
     Material* material = new Material();

@@ -243,6 +243,9 @@ std::vector<StaticVertex> Cube::MeshInstance(r32 scale)
     cube[i].normal = normals[i];
     cube[i].texcoord0 = Vector2(texcoords[i].x, texcoords[i].y);
     //null_bones(cube[i]);
+
+    cube[i].position.y *= -1.0f;
+    cube[i].normal.y *= -1.0f;
   }
   return cube;
 }

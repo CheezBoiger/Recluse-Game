@@ -115,8 +115,8 @@ void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
 void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   Vector3 t;
-  Matrix4 R;
-  Vector3 s = Vector3(1.0f, 1.0f, 1.0f);
+  Quaternion r;
+  Vector3 s = Vector3(-1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
   if (node.translation.size() == 3) {
     const double* tnative = node.translation.data();
     t = Vector3(  static_cast<r32>(tnative[0]), 
@@ -126,13 +126,11 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
   
   if (node.rotation.size() == 4) {
     const double* rq = node.rotation.data();
-    Quaternion q = 
-      Quaternion( static_cast<r32>(rq[0]),
-                  static_cast<r32>(rq[1]),
-                  static_cast<r32>(rq[2]),
-                  static_cast<r32>(rq[3]));
-    q = q.Inverse();
-    R = q.ToMatrix4();
+    r = Quaternion( static_cast<r32>(rq[0]),
+                    static_cast<r32>(rq[1]),
+                    static_cast<r32>(rq[2]),
+                    static_cast<r32>(rq[3]));
+    r = r.Inverse();
   }
 
   if (node.scale.size() == 3) {
@@ -147,6 +145,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
     localMatrix = Matrix4(node.matrix.data()).Transpose();
   } else {
     Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
+    Matrix4 R = r.ToMatrix4();
     Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
     localMatrix = S * R * T;
   }
@@ -200,10 +199,13 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
         for (size_t value = 0; value < positionAccessor.count; ++value) {
           StaticVertex vertex;
           vertex.position = localMatrix * Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
+          vertex.position.w = 1.0f;
           vertex.normal = Vector4(Matrix3(localMatrix) * Vector3(&bufferNormals[value * 3]), 1.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
+          //vertex.position.y *= -1.0f;
+          //vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
         }
       }
@@ -243,7 +245,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
       
       Primitive prim;
       prim._meshRef = pMesh;
-      prim._materialRef = engineModel->materials[primitive.material];
+      prim._materialRef = primitive.material != -1 ? engineModel->materials[primitive.material] : nullptr;
       prim._firstIndex = indexStart;
       prim._indexCount = indexCount;
 
@@ -283,6 +285,7 @@ ModelResult Load(const std::string path, Model* model)
     tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];  
     LoadNode(node, gltfModel, model, Matrix4(), 1.0);
   }
+
   return Model_Success;
 }
 
