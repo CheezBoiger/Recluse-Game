@@ -35,10 +35,12 @@ public:
   void SetMass(r32 mass);
   //void SetRelativeOffset(const Vector3& offset);
   void ApplyForce(const Vector3& force);
+  void SetGravity(const Vector3& gravity);
   void ClearForces();
   void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
   r32 GetMass() const { return m_mass; }
   void UpdateFromGameObject();
+  void SetFriction(const r32 friction);
 
   RigidBody* GetRigidBody() { return m_pRigidBody; }
 

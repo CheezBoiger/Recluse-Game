@@ -162,15 +162,16 @@ void RendererComponent::Update()
   Transform* transform = GetOwner()->GetTransform();
   ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
   Matrix4 model = transform->GetLocalToWorldMatrix();
-  if (renderData->_Model != model) {
-    renderData->_Model = model;
-    renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
-    renderData->_NormalMatrix[3][0] = 0.0f;
-    renderData->_NormalMatrix[3][1] = 0.0f;
-    renderData->_NormalMatrix[3][2] = 0.0f;
-    renderData->_NormalMatrix[3][3] = 1.0f;
-    m_meshDescriptor->SignalUpdate();
-  }
+  if (model == renderData->_Model) return;
+
+  Matrix4 N = model;
+  N[3][0] = 0.0f;
+  N[3][1] = 0.0f;
+  N[3][2] = 0.0f;
+  N[3][3] = 1.0f;
+  renderData->_Model = model;
+  renderData->_NormalMatrix = N.Inverse().Transpose();
+  m_meshDescriptor->SignalUpdate();
 }
 
 

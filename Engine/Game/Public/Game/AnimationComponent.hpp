@@ -7,6 +7,8 @@
 #include "Core/Types.hpp"
 #include "Component.hpp"
 
+#include <map>
+
 
 namespace Recluse {
 
@@ -18,15 +20,19 @@ class AnimationComponent : public Component {
 public:
   
   // Add an animation clip to the component to playback in the future.
-  void AddClip(AnimationClip* clip, const char* name);
+  void AddClip(AnimClip* clip, const std::string& name);
 
   // Blend an animation to target weight over time in seconds.
-  void BlendPlayback(const char* name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
+  void BlendPlayback(const std::string& name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
   
   // Signal to play back an animation clip with given name.
-  void Playback(const char* name);
+  void Playback(const std::string& name);
   
   // Check if component is playing back a clip.
-  b32    PlayingBack(const char* name);
+  b32    PlayingBack(const std::string& name);
+
+private:
+  Skeleton*   m_pSkeleton;
+  std::map<std::string, AnimClip*>    m_clips;
 };
 } // Recluse
