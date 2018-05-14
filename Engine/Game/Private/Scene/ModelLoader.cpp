@@ -204,7 +204,6 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
-
           vertices.push_back(vertex);
         }
       }

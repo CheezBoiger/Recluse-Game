@@ -44,6 +44,7 @@ class TextureCubeArray;
 class TextureSampler;
 class UIOverlay;
 class RenderObject;
+class SkinnedRenderObject;
 class Sky;
 
 // Renderer, which will be responsible for rendering out the scene from a
@@ -132,6 +133,7 @@ public:
   // Create a render object for the renderer to render? Must assign a uuid to the render object
   // prior to it's creation.
   RenderObject*     CreateRenderObject(uuid64 obj_uuid);
+  SkinnedRenderObject*  CreateSkinnedRenderObject(uuid64 objUuid);
 
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();

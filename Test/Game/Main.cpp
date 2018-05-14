@@ -99,7 +99,7 @@ int main(int c, char* argv[])
   scene.GetRoot()->AddChild(mainCam);
   
   std::vector<HelmetObject*> helmets;
-  #define HELM_COUNT 10
+  #define HELM_COUNT 100
   for (u32 i = 0; i < HELM_COUNT; ++i) {
     helmets.push_back(new HelmetObject());
     scene.GetRoot()->AddChild(helmets[i]);

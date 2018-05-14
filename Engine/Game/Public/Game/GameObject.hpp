@@ -31,7 +31,7 @@ typedef uuid64  object_uuid_t;
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
 // physics, audio, animation, etc. GameObject only contains basic information about its
-// children, therefore, you must inherit it to create and instantiate these components.
+// children, therefore, you must inherit it to create and instantiate its components.
 class GameObject : public ISerializable {
 
   GameObject(const GameObject&) = delete;
@@ -59,13 +59,13 @@ public:
   // Update the object. Can be overridable from inherited classes.
   virtual void                        Update(r32 tick) { }
 
-  // Wakes up the game object in the scene.
-  virtual void                        Awake() { }
+  // Wakes up the game object in the scene. First time initialization is done with this call.
+  virtual void                        OnStart() { }
 
-  //  Performs necessary clean up on destroy.
-  virtual void                        CleanUp() { }
+  //  Performs necessary clean up if Start() was called.
+  virtual void                        OnCleanUp() { }
 
-  // Puts game object to sleep. This will cause engine to ignore updating this object.
+  // Puts game object to sleep. Called manually, and allows for certain components to be disabled if needed.
   virtual void                        Sleep() { }
 
   GameObject*                         GetParent() { return m_pParent; }
@@ -89,6 +89,11 @@ public:
     return obj->CastTo<T>();
   }
 
+  b32                                 Started() { return m_bStarted; }
+  void                                CleanUp() { if (m_bStarted) { OnCleanUp(); m_bStarted = false; } }
+  void                                Start() { if (!m_bStarted) { OnStart(); m_bStarted = true; } }
+
+
 private:
   std::string                         m_name;
   std::string                         m_tag;
@@ -100,6 +105,7 @@ private:
   GameObject*                         m_pParent;
   Transform                           m_transform;
   game_uuid_t                         m_id;
+  b32                                 m_bStarted;
   
   friend class GameObjectManager;
   friend class Component;

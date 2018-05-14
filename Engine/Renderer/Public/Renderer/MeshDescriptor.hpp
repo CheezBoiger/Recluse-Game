@@ -24,7 +24,7 @@ struct ObjectBuffer {
 };
 
 
-struct JointsBuffer {
+struct JointBuffer {
   Matrix4 _mJoints[128];
 };
 
@@ -43,30 +43,31 @@ public:
 
   virtual void  Update();
 
-  void          SetVisible(b8 enable) { m_Visible = enable; }
-  void          SetRenderable(b8 enable) { m_Renderable = enable; }
-  void          SetTranslucent(b8 enable) { m_Translucent = enable; }
+  void          SetVisible(b32 enable) { m_Visible = enable; }
+  void          SetRenderable(b32 enable) { m_Renderable = enable; }
+  void          SetTranslucent(b32 enable) { m_Translucent = enable; }
   void          SignalUpdate() { m_bNeedsUpdate = true; }
 
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
+  virtual JointBuffer*  JointData() { return nullptr; }
 
 
-  b32            Visible() const { return m_Visible; }
-  b32            _bRenderable() const { return m_Renderable; }
-  b32            Translucent() const { return m_Translucent; }
-  b32            Static() const { return m_Static; }
-  b32            Skinned() const { return m_Skinned; }
+  b32           Visible() const { return m_Visible; }
+  b32           Renderable() const { return m_Renderable; }
+  b32           Translucent() const { return m_Translucent; }
+  b32           Static() const { return m_Static; }
+  virtual b32   Skinned() const { return false; }
   Buffer*       NativeObjectBuffer() { return m_pObjectBuffer; }
+
+  virtual u32                     NumJoints() { return 0; }
 
 protected:
   ObjectBuffer  m_ObjectData;
   Buffer*       m_pObjectBuffer;
-  u32           m_bNeedsUpdate;
+  b32           m_bNeedsUpdate;
 
   b32            m_Visible;
   b32            m_Renderable;
-  b32            m_Skinned;
-
   b32            m_Translucent;
   b32            m_Static;
   
@@ -84,12 +85,15 @@ public:
   virtual void  Initialize() override;
   virtual void  CleanUp() override;
   virtual void  Update() override;  
+  virtual b32   Skinned() const override { return true; }
 
-  JointsBuffer*  JointsData() { return &m_jointsData; }
+  JointBuffer*  JointData() override { return &m_jointsData; }
   Buffer*       NativeJointBuffer() { return m_pJointsBuffer; }
 
+  virtual u32 NumJoints() override { return 128; }
+
 private:
-  JointsBuffer   m_jointsData;
+  JointBuffer   m_jointsData;
   Buffer*       m_pJointsBuffer;
   friend class  Renderer;
 };

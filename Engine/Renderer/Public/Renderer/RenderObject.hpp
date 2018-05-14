@@ -11,6 +11,7 @@ class MeshData;
 class MeshDescriptor;
 class SkinnedMesh;
 class MaterialDescriptor;
+class SkinnedMeshDescriptor;
 class DescriptorSet;
 class VulkanRHI;
 
@@ -49,25 +50,25 @@ public:
   RenderObject(uuid64 uuid, MeshDescriptor* mesh = nullptr, 
                 MaterialDescriptor* material = nullptr);
 
-  ~RenderObject();
+  virtual ~RenderObject();
 
   // Initialize the descriptor set within this render group. Does not need to have mesh data for this 
   // to be initialized!
-  void                    Initialize();
+  virtual void            Initialize();
 
   // Clean up the descriptor for this render object.
-  void                    CleanUp();
+  virtual void            CleanUp();
 
   // Updates the descriptor set that is not the current index of this
   // render object. 
-  void                    Update();
+  virtual void            Update();
 
   uuid64                  GetUUID() const { return m_uuid; }
 
   // The currently used descriptor set.
   DescriptorSet*          CurrMeshSet() { return mMeshSets[mCurrIdx]; }
   DescriptorSet*          CurrMaterialSet() { return mMaterialSets[mCurrIdx]; }
-  DescriptorSet*          CurrBoneSet() { return m_BonesSets[mCurrIdx]; }
+  virtual DescriptorSet*  CurrJointSet() { return nullptr; }
 
   size_t                  Size() const { return mMeshGroup.size(); }
 
@@ -96,16 +97,15 @@ public:
 
 protected:  
 
- void                     UpdateDescriptorSets(size_t idx);
+ virtual void                     UpdateDescriptorSets(size_t idx);
 
-private:
+protected:
   // The mesh group to render with the following description and material ids.
   std::vector<MeshData*>  mMeshGroup;
 
   // The actual descriptor set used.
   DescriptorSet*          mMeshSets           [2];
   DescriptorSet*          mMaterialSets       [2];
-  DescriptorSet*          m_BonesSets         [2];
   // The Mesh descriptor, used to define the renderobject in 3D space.
   MeshDescriptor*         _pMeshDescId;
 
@@ -116,13 +116,27 @@ private:
   // UUID identifer that corresponds to this render object.
   uuid64                  m_uuid;
   VulkanRHI*              mRhi;
-  u32                     m_bNeedsUpdate;
+  b32                     m_bNeedsUpdate;
   friend class Renderer;
 };
 
 
+// Skinned Render object implementation, which allows updating joint sets.
+// This is used for animation purposes.
 class SkinnedRenderObject : public RenderObject {
 public:
-  
+  SkinnedRenderObject(uuid64 uuid, SkinnedMeshDescriptor* smd,
+    MaterialDescriptor* md);
+
+  virtual DescriptorSet*  CurrJointSet() override { return m_JointSets[mCurrIdx]; }
+  virtual void Initialize() override;
+  virtual void CleanUp() override;
+  virtual void Update() override;
+
+private:
+
+  void UpdateJointSets(size_t idx);
+
+  DescriptorSet* m_JointSets[2];
 };
 } // Recluse

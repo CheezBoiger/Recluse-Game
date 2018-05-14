@@ -39,6 +39,10 @@ public:
     , m_speed(5.0f)
     , _pHolding(nullptr)
   {
+  }
+
+  void OnStart() override
+  {
     Window* pWindow = gEngine().GetWindow();
     Transform* transform = GetTransform();
     // Camera set.
@@ -63,11 +67,12 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
-  
+
     bFollow = false;
     m_pPhysicsComponent->SetMass(0.0f);
   }
 
+  // Game object updating.
   void Update(r32 tick) override
   {
     if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
@@ -121,14 +126,14 @@ public:
         Item* item = obj->CastTo<Item>();
         if (item) {
           _pHolding = item;
-          item->GetPhysicsComponent()->Enable(false);
+          item->GetPhysicsComponent()->SetMass(0.0f);
         }
       }
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
-      _pHolding->GetPhysicsComponent()->Enable(true);
+      _pHolding->GetPhysicsComponent()->SetMass(1.0f);
       _pHolding = nullptr;
     }
 
@@ -138,7 +143,7 @@ public:
     }
   }
 
-  void CleanUp() override 
+  void OnCleanUp() override 
   {
     m_pPhysicsComponent->CleanUp();
 

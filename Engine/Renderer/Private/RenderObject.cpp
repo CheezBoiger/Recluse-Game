@@ -35,14 +35,12 @@ RenderObject::RenderObject(uuid64 uuid,
   mMeshSets[1] = nullptr;
   mMaterialSets[0] = nullptr;
   mMaterialSets[1] = nullptr;
-  m_BonesSets[0] = nullptr;
-  m_BonesSets[1] = nullptr;
 }
 
 
 RenderObject::~RenderObject()
 {
-  if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1] || m_BonesSets[0] || m_BonesSets[1]) {
+  if (mMeshSets[0] || mMeshSets[1] || mMaterialSets[0] || mMaterialSets[1]) {
     Log(rError) << "Descriptor Sets were not cleaned up before destruction of this object!\n";
   }
 }
@@ -68,14 +66,6 @@ void RenderObject::Initialize()
   mMaterialSets[0]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
   mMaterialSets[1]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
 
-  if (_pMeshDescId->Skinned()) {
-    DescriptorSetLayout* BonesLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
-    m_BonesSets[0] = mRhi->CreateDescriptorSet();
-    m_BonesSets[1] = mRhi->CreateDescriptorSet();
-    m_BonesSets[0]->Allocate(mRhi->DescriptorPool(), BonesLayout);
-    m_BonesSets[1]->Allocate(mRhi->DescriptorPool(), BonesLayout);
-  }
-
   UpdateDescriptorSets(0);
   UpdateDescriptorSets(1);
 }
@@ -95,11 +85,6 @@ void RenderObject::CleanUp()
       mRhi->FreeDescriptorSet(mMaterialSets[idx]);
       mMaterialSets[idx] = nullptr;
     }
-  }
-
-  for (size_t idx = 0; idx < 2; ++idx) {
-    mRhi->FreeDescriptorSet(m_BonesSets[idx]);
-    m_BonesSets[idx] = nullptr;
   }
 }
 
@@ -263,15 +248,54 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
 
     mMaterialSets[idx]->Update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
   }
+}
 
+
+/*
+if (_pMeshDescId->Skinned()) {
+DescriptorSetLayout* BonesLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
+m_BonesSets[0] = mRhi->CreateDescriptorSet();
+m_BonesSets[1] = mRhi->CreateDescriptorSet();
+m_BonesSets[0]->Allocate(mRhi->DescriptorPool(), BonesLayout);
+m_BonesSets[1]->Allocate(mRhi->DescriptorPool(), BonesLayout);
+}
+*/
+
+SkinnedRenderObject::SkinnedRenderObject(uuid64 id,
+  SkinnedMeshDescriptor* smd, MaterialDescriptor* md)
+  : RenderObject(id, smd, md)
+{
+  m_JointSets[0] = nullptr;
+  m_JointSets[1] = nullptr;
+}
+
+
+void SkinnedRenderObject::Initialize()
+{
+  RenderObject::Initialize();
+  DescriptorSetLayout* jointLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
+
+  m_JointSets[0] = mRhi->CreateDescriptorSet();
+  m_JointSets[1] = mRhi->CreateDescriptorSet();
+  
+  m_JointSets[0]->Allocate(mRhi->DescriptorPool(), jointLayout);
+  m_JointSets[1]->Allocate(mRhi->DescriptorPool(), jointLayout);
+
+  UpdateJointSets(0);
+  UpdateJointSets(1); 
+}
+
+
+void SkinnedRenderObject::UpdateJointSets(size_t idx)
+{
   // Bones
   if (_pMeshDescId->Skinned()) {
-    VkDescriptorBufferInfo boneBufferInfo = { };
+    VkDescriptorBufferInfo boneBufferInfo = {};
     SkinnedMeshDescriptor* sm = reinterpret_cast<SkinnedMeshDescriptor*>(_pMeshDescId);
     boneBufferInfo.buffer = sm->NativeJointBuffer()->NativeBuffer();
     boneBufferInfo.offset = 0;
-    boneBufferInfo.range = sizeof(JointsBuffer);
-    VkWriteDescriptorSet BoneWriteSet = { };
+    boneBufferInfo.range = sizeof(JointBuffer);
+    VkWriteDescriptorSet BoneWriteSet = {};
     BoneWriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     BoneWriteSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     BoneWriteSet.dstBinding = 0;
@@ -280,7 +304,28 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     BoneWriteSet.descriptorCount = 1;
     BoneWriteSet.pNext = nullptr;
 
-    m_BonesSets[idx]->Update(1, &BoneWriteSet);
+    m_JointSets[idx]->Update(1, &BoneWriteSet);
+  }
+}
+
+
+void SkinnedRenderObject::Update()
+{
+  if (m_bNeedsUpdate) {
+    R_DEBUG(rDebug, "Updating Joint Buffers.\n");
+    UpdateJointSets((mCurrIdx == 0) ? 1 : 0);
+  }
+  // Update render object after, since it is already doing the idx swapping.
+  RenderObject::Update();
+}
+
+
+void SkinnedRenderObject::CleanUp()
+{
+  RenderObject::CleanUp();
+  for (size_t idx = 0; idx < 2; ++idx) {
+    mRhi->FreeDescriptorSet(m_JointSets[idx]);
+    m_JointSets[idx] = nullptr;
   }
 }
 } // Recluse

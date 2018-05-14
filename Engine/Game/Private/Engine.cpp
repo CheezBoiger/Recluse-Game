@@ -193,6 +193,7 @@ void Engine::Stop()
 std::thread worker0;
 std::thread worker1;
 std::thread worker2;
+std::thread worker3;
 
 
 void Engine::Update()
@@ -228,8 +229,14 @@ void Engine::Update()
   });
 
   worker0 = std::thread([&]() -> void {
-    if (Camera::GetMain()) Camera::GetMain()->Update();
+    if (Camera::GetMain()) { 
+      if (Camera::GetMain()->Enabled()) Camera::GetMain()->Update(); 
+    }
     RendererComponent::UpdateComponents();
+  });
+
+  worker3 = std::thread([&]() -> void {
+    SkinnedRendererComponent::UpdateComponents();
   });
 
   worker1 = std::thread([&]() -> void {
@@ -237,6 +244,7 @@ void Engine::Update()
   });
   worker0.join();
   worker1.join();
+  worker3.join();
 
   gRenderer().Render();
 }
@@ -279,7 +287,8 @@ void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
   cache[currNum] = object;
   cachedKeys[currNum] = object->GetId();
   
-  
+  // Wake the object.
+  object->Start(); 
 }
 
 

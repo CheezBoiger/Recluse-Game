@@ -26,6 +26,11 @@ public:
 
     HelmetObject()
   {
+  }
+
+
+  void OnStart() override
+  {
     SetName("Mister helmet");
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -33,9 +38,10 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
-   // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
+    // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
+     m_pPhysicsComponent->Enable(false);
 
     Mesh* mesh = nullptr;
     //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
@@ -72,12 +78,6 @@ public:
     trans->Rotation = Quaternion::AngleAxis(Radians(45.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_factor = 1.0f;
-    m_pPhysicsComponent->Enable(false);
-  }
-
-
-  void Awake() override
-  {
   }
 
   // Updating game logic...
@@ -115,7 +115,7 @@ public:
     m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(m_factor);
   }
 
-  void CleanUp() override
+  void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();

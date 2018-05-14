@@ -27,6 +27,11 @@ public:
 
   LanternCage()
   {
+  }
+
+
+  void OnStart() override
+  {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
@@ -61,16 +66,11 @@ public:
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
-
-  void Awake() override
-  {
-  }
-
   void Update(r32 tick) override
   {
   }
 
-  void CleanUp() override
+  void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
@@ -96,6 +96,11 @@ class LanternHandle : public GameObject
 public:
 
   LanternHandle()
+  {
+  }
+
+
+  void OnStart() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -131,16 +136,11 @@ public:
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
-
-  void Awake() override
-  {
-  }
-
   void Update(r32 tick) override
   {
   }
 
-  void CleanUp() override
+  void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
@@ -170,6 +170,11 @@ public:
 
   LanternObject()
   {
+  }
+
+
+  void OnStart() override
+  {
     SetName("Lantern");
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -180,7 +185,7 @@ public:
 
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
-   // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
+    // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
 
     Mesh* mesh = nullptr;
     MeshCache::Get("lantern lantern_base", &mesh);
@@ -219,11 +224,6 @@ public:
     bFollow = false;
   }
 
-
-  void Awake() override
-  {
-  }
-
   void Update(r32 tick) override
   {
     Camera* cam = Camera::GetMain();
@@ -248,7 +248,7 @@ public:
     }
   }
 
-  void CleanUp() override
+  void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();

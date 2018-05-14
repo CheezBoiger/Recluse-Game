@@ -18,6 +18,7 @@ class Renderer;
 class MaterialDescriptor;
 class MeshComponent;
 class MaterialComponent;
+class AnimationComponent;
 class Mesh;
 
 
@@ -52,11 +53,12 @@ public:
   b32                        Dirty() const { return m_bDirty; }
   b32                        ShadowEnabled() const;
   RenderObject*             RenderObj() { return m_renderObj; }
-  MeshDescriptor*           GetDescriptor() { return m_meshDescriptor; }
+  MeshDescriptor*           GetMeshDescriptor() { return m_meshDescriptor; }
 
   void                      SignalClean() { m_bDirty = false; }
   void                      SetMaterialComponent(MaterialComponent* material) { m_materialRef = material; }
   void                      SetMeshComponent(MeshComponent* mesh) { m_meshRef = mesh; }
+  virtual void              SetAnimationComponent(AnimationComponent* anim) { }
 
 protected:
   void                      TriggerDirty() { m_bDirty = true; }
@@ -71,11 +73,18 @@ protected:
 // Renderer component that holds a skinned mesh object, for animation and 
 // whatnot.
 class SkinnedRendererComponent : public RendererComponent {
+  RCOMPONENT(SkinnedRendererComponent)
 public:
-  
+
   virtual void OnInitialize(GameObject* owner) override;
   virtual void OnCleanUp() override;
+  virtual void Update() override;
+  virtual void Serialize(IArchive& a) override { }
+  virtual void Deserialize(IArchive& a) override { }
+
+  virtual void SetAnimationComponent(AnimationComponent* anim) { m_pAnimComponent = anim; }
 
 protected:
+  AnimationComponent*     m_pAnimComponent;
 };
 } // Recluse

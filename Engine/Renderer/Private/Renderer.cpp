@@ -2172,7 +2172,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       DescriptorSets[0] = m_pGlobal->Set()->Handle();
       DescriptorSets[1] = RenderObj->CurrMeshSet()->Handle();
       DescriptorSets[2] = RenderObj->CurrMaterialSet()->Handle();
-      DescriptorSets[3] = (Skinned ? RenderObj->CurrBoneSet()->Handle() : nullptr);
+      DescriptorSets[3] = (Skinned ? RenderObj->CurrJointSet()->Handle() : nullptr);
 
       // Bind materials.
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
@@ -2509,7 +2509,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
         VkDescriptorSet descriptorSets[3];
         descriptorSets[0] = obj->CurrMeshSet()->Handle();
         descriptorSets[1] = lightViewSet->Handle();
-        descriptorSets[2] = skinned ? obj->CurrBoneSet()->Handle() : VK_NULL_HANDLE;
+        descriptorSets[2] = skinned ? obj->CurrJointSet()->Handle() : VK_NULL_HANDLE;
         GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -2755,6 +2755,15 @@ void Renderer::FreeMeshData(MeshData* mesh)
 RenderObject* Renderer::CreateRenderObject(uuid64 uuid)
 {
   RenderObject* obj = new RenderObject(uuid, nullptr, nullptr);
+  obj->mRhi = m_pRhi;
+  gResources().RegisterRenderObject(obj);
+  return obj;
+}
+
+
+SkinnedRenderObject* Renderer::CreateSkinnedRenderObject(uuid64 uuid)
+{
+  SkinnedRenderObject* obj = new SkinnedRenderObject(uuid, nullptr, nullptr);
   obj->mRhi = m_pRhi;
   gResources().RegisterRenderObject(obj);
   return obj;

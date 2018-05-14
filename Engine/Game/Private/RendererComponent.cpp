@@ -16,6 +16,7 @@ namespace Recluse {
 
 
 DEFINE_COMPONENT_MAP(RendererComponent);
+DEFINE_COMPONENT_MAP(SkinnedRendererComponent);
 
 
 RendererComponent::RendererComponent()
@@ -156,20 +157,75 @@ b32 RendererComponent::Enabled() const
 
 void RendererComponent::Update()
 {
-  // TODO(): Static objects don't necessarily need to be updated.
+  // TODO(): Static objects don't necessarily need to be updated all the time.
+  // This is especially true if the object is kinematic
   Transform* transform = GetOwner()->GetTransform();
-  if (transform) {
-    ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
-    Matrix4 model = transform->GetLocalToWorldMatrix();
-    if (renderData->_Model != model) {
-      renderData->_Model = model;
-      renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
-      renderData->_NormalMatrix[3][0] = 0.0f;
-      renderData->_NormalMatrix[3][1] = 0.0f;
-      renderData->_NormalMatrix[3][2] = 0.0f;
-      renderData->_NormalMatrix[3][3] = 1.0f;
-      m_meshDescriptor->SignalUpdate();
-    }
+  ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
+  Matrix4 model = transform->GetLocalToWorldMatrix();
+  if (renderData->_Model != model) {
+    renderData->_Model = model;
+    renderData->_NormalMatrix = renderData->_Model.Inverse().Transpose();
+    renderData->_NormalMatrix[3][0] = 0.0f;
+    renderData->_NormalMatrix[3][1] = 0.0f;
+    renderData->_NormalMatrix[3][2] = 0.0f;
+    renderData->_NormalMatrix[3][3] = 1.0f;
+    m_meshDescriptor->SignalUpdate();
   }
+}
+
+
+void SkinnedRendererComponent::Update()
+{
+  JointBuffer* pJointBuffer = m_meshDescriptor->JointData();
+  R_ASSERT(pJointBuffer, "Joint buffer found null!");
+  u32 jointCount = m_meshDescriptor->NumJoints();
+
+  // TODO(): Need to extract joint pose matrices from animation
+  // component!
+
+  for (u32 i = 0; i < jointCount; ++i) {
+    // Update descriptor joints.
+  }
+  RendererComponent::Update();
+}
+
+
+void SkinnedRendererComponent::OnInitialize(GameObject* owner)
+{
+  if (m_renderObj) {
+    Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
+    return;
+  }
+
+  Material* material = Material::Default();
+  if (m_materialRef && m_materialRef->GetMaterial()) {
+    material = m_materialRef->GetMaterial();
+  }
+
+  m_renderObj = gRenderer().CreateSkinnedRenderObject(owner->GetId());
+  m_meshDescriptor = gRenderer().CreateSkinnedMeshDescriptor();
+  m_meshDescriptor->Initialize();
+
+  m_renderObj->SetMeshDescriptor(m_meshDescriptor);
+  m_renderObj->SetMaterialDescriptor(material->Native());
+  m_renderObj->Initialize();
+
+  // Check if MeshComponent is in game object.
+  if (m_meshRef && m_meshRef->MeshRef()) {
+    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
+  }
+
+  REGISTER_COMPONENT(SkinnedRendererComponent, this);
+}
+
+
+void SkinnedRendererComponent::OnCleanUp()
+{
+  gRenderer().FreeRenderObject(m_renderObj);
+  gRenderer().FreeMeshDescriptor(m_meshDescriptor);
+  m_renderObj = nullptr;
+  m_meshDescriptor = nullptr;
+
+  UNREGISTER_COMPONENT(SkinnedRendererComponent);
 }
 } // Recluse

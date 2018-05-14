@@ -7,6 +7,7 @@
 
 namespace Recluse {
 
+typedef u32      anim_uuid_t;
 
 
 struct Joint {
@@ -21,9 +22,12 @@ struct Joint {
 // that make up the animation within the game.
 struct Skeleton {
   // Full joint transformation that corresponds to a bone.
-  Joint*  _aJoints;
+  Joint*          _aJoints;
 
   // Number of joins in the skeleton.
-  u32     m_uNumOfJoints;
+  u32             _uNumOfJoints;
+  
+  // This skeleton's unique id.
+  anim_uuid_t     _uuid;
 };
 } // Recluse

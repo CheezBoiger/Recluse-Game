@@ -23,8 +23,9 @@ struct JointPose {
 };
 
 
-// A Sample of an animation at some certain key frame.
-struct AnimSample {
+// A Sample of an animation at some certain key frame. This corresponds to 
+// the AnimClip states.
+struct AnimPose {
   JointPose*  _aLocalPoses;
   Matrix4*    _aGlobalPoses;
 };
@@ -33,22 +34,27 @@ struct AnimSample {
 // Single instance of an animation clip. This may represent a "walk," "run,", "shoot," etc...
 struct AnimClip {
   // Duration of this animation clip.
-  r32                           _rDuration;
-  r32                           _fps;
-  u32                           _frameCount;
-  Skeleton*                     _pSkeleton;
-  AnimSample*                   _aAnimSamples;
-  b32                           _bLooping;
+  r32                           _fDuration;   // Duration of clip T.
+  r32                           _fFps;         // frames per second time.
+  u32                           _uFrameCount;  // Number of frames this clip occupies.
+  Skeleton*                     _pSkeleton;     //
+  AnimPose*                     _aAnimPoseSamples;    //
+  b32                           _bLooping;    //
 };
 
 
 // Animation clip state. Keeps track of the state of an animation's clip.
 struct AnimClipState {
   std::string                 _animClipName;
-  r32                         _rTimePos;
-  r32                         _rWeight;
-  r32                         _rPlaybackRate;
+  r32                         _fCurrLocalTime;  // Local clock t. Runs until AnimClip._rDuration.
+  r32                         _fWeight;
+  r32                         _fPlaybackRate;
   b32                         _bEnabled;
   b32                         _bLooping;
 };
+
+
+// Animation clips should transition between pose samples, using the equation:
+//
+//    
 } // Recluse

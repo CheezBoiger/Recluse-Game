@@ -33,7 +33,6 @@ private:
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent);
 public:
-  
   virtual void OnInitialize(GameObject* owner) override { }
   virtual void OnCleanUp() override { }
 

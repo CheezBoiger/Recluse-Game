@@ -7,13 +7,14 @@
 namespace Recluse {
 
 
-game_uuid_t GameObject::sGameObjectCount = 0;
+game_uuid_t GameObject::sGameObjectCount = 1;
 
 
 GameObject::GameObject()
   : m_pParent(nullptr)
   , m_id(std::hash<game_uuid_t>()(sGameObjectCount++))
   , m_name("Default Name")
+  , m_bStarted(false)
 {
   m_transform.Initialize(this);
 }

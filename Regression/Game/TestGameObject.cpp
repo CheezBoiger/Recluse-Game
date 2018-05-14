@@ -17,7 +17,7 @@ class TestObject : public GameObject
 {
 public:
 
-  virtual void Awake() override
+  virtual void OnStart() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -41,11 +41,15 @@ public:
   }
 
 
-  virtual void CleanUp() override 
+  virtual void OnCleanUp() override 
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
+
+    delete m_pMeshComponent;
+    delete m_pMaterialComponent;
+    delete m_pRendererComponent;
   }
 
 private:

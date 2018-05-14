@@ -14,7 +14,6 @@ MeshDescriptor::MeshDescriptor()
   , m_Renderable(true)
   , m_Translucent(false)
   , m_Static(true) 
-  , m_Skinned(false)
   , m_pRhi(nullptr)
   , m_bNeedsUpdate(true)
 {
@@ -71,7 +70,6 @@ SkinnedMeshDescriptor::SkinnedMeshDescriptor()
   : m_pJointsBuffer(nullptr)
   , MeshDescriptor()
 {
-  m_Skinned = true;
 }
 
 
@@ -87,14 +85,14 @@ void SkinnedMeshDescriptor::Initialize()
 {
   MeshDescriptor::Initialize();
 
-  VkBufferCreateInfo bonesCI = {};
-  VkDeviceSize bonesSize = sizeof(JointsBuffer);
-  bonesCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  bonesCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-  bonesCI.size = bonesSize;
+  VkBufferCreateInfo jointCI = {};
+  VkDeviceSize jointsSize = sizeof(JointBuffer);
+  jointCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  jointCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+  jointCI.size = jointsSize;
 
   m_pJointsBuffer = m_pRhi->CreateBuffer();
-  m_pJointsBuffer->Initialize(bonesCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pJointsBuffer->Initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 }
 
 
@@ -103,7 +101,7 @@ void SkinnedMeshDescriptor::Update()
   MeshDescriptor::Update();
 
   m_pJointsBuffer->Map();
-    memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointsBuffer));
+    memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointBuffer));
   m_pJointsBuffer->UnMap();
 }
 

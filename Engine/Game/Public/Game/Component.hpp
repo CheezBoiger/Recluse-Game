@@ -21,6 +21,7 @@ class Transform;
     public: static void UpdateComponents() { \
               for (auto& it : _k##cls##s) { \
                 cls* comp = it.second; \
+                if (!comp->Enabled()) continue; \
                 comp->Update(); \
               } \
             } \
@@ -60,6 +61,7 @@ class GameObject;
 class Component : public ISerializable {
   RCOMPONENT(Component)
 public:
+
   virtual ~Component() { }
 
   inline GameObject*   GetOwner() { return m_pGameObjectOwner; }
@@ -70,7 +72,7 @@ public:
 protected:
   Component()
     : m_pGameObjectOwner(nullptr)
-    , m_bEnabled(false) { }
+    , m_bEnabled(true) { }
 
   template<typename T>
   static APtr<Component> Create() {
@@ -96,7 +98,7 @@ public:
 
   b32            Enabled() const { return m_bEnabled; }
 
-  void          Enable(b8 enable) { m_bEnabled = enable; OnEnable(); }
+  void          Enable(b32 enable) { m_bEnabled = enable; OnEnable(); }
 
   Transform*    GetTransform();
 

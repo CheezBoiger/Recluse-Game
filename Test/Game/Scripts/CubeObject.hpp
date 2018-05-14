@@ -28,6 +28,11 @@ public:
 
     CubeObject()
   {
+  }
+
+
+  void OnStart() override
+  {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
@@ -68,11 +73,6 @@ public:
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
-
-  void Awake() override
-  {
-  }
-
   void Update(r32 tick) override
   {
     Transform* transform = GetTransform();
@@ -81,7 +81,7 @@ public:
     //transform->Rotation = transform->Rotation * q;
   }
 
-  void CleanUp() override
+  void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
     m_pMaterialComponent->CleanUp();
