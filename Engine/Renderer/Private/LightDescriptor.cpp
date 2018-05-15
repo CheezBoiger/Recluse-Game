@@ -254,7 +254,7 @@ void LightDescriptor::Update()
   Matrix4 proj = Matrix4::Ortho(
     m_rShadowViewportWidth, 
     m_rShadowViewportHeight, 
-    0.01f, 
+    1.0f, 
     8000.0f
   );
 

@@ -49,7 +49,7 @@ public:
     pCam = new Camera(Camera::PERSPECTIVE, Radians(60.0f),
       static_cast<r32>(pWindow->Width()),
       static_cast<r32>(pWindow->Height()),
-      0.001f, 2000.0f);
+      0.2f, 2000.0f);
     pCam->Initialize(this);
     pCam->EnableBloom(true);
     Camera::SetMain(pCam);
@@ -139,7 +139,7 @@ public:
 
     if (_pHolding) {
       Transform* t = _pHolding->GetTransform();
-      t->Position = transform->Position + transform->Front() * 5.0f;
+      t->Position = transform->Position + transform->Front() * 3.0f;
     }
   }
 
