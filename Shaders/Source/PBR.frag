@@ -152,7 +152,7 @@ GBuffer ReadGBuffer(vec2 uv)
 // Shadowing.
 
 #define SHADOW_FACTOR 0.0
-#define SHADOW_BIAS   0.00001
+#define SHADOW_BIAS   0.0000000000
 
 float textureProj(vec4 P, vec2 offset)
 {
