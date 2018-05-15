@@ -119,7 +119,7 @@ void Renderer::OnShutDown()
 void Renderer::BeginFrame()
 {
   m_Rendering = true;
-  m_pRhi->PresentWaitIdle();
+  //m_pRhi->PresentWaitIdle();
   m_pRhi->AcquireNextImage();
 }
 
@@ -1124,8 +1124,8 @@ void Renderer::SetUpGraphicsPipelines()
   VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
      VK_POLYGON_MODE_FILL,
       VK_FALSE, 
-      VK_CULL_MODE_FRONT_BIT,
-      VK_FRONT_FACE_CLOCKWISE,
+      GBUFFER_CULL_MODE,
+      GBUFFER_WINDING_ORDER,
       1.0f,
       VK_FALSE,
       VK_FALSE

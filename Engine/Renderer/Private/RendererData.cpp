@@ -584,8 +584,8 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
     VK_POLYGON_MODE_FILL,
     VK_FALSE,
-    VK_CULL_MODE_BACK_BIT,
-    VK_FRONT_FACE_CLOCKWISE,
+    SHADOW_CULL_MODE,
+    SHADOW_WINDING_ORDER,
     1.0f,
     VK_FALSE,
     VK_FALSE
