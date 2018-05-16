@@ -43,14 +43,19 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
      m_pPhysicsComponent->Enable(false);
 
-    Mesh* mesh = nullptr;
+    ModelLoader::Model* model;
+    ModelCache::Get("DamagedHelmet", &model);
+    if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
+
+    Mesh* mesh = model->meshes[0];
     //MeshCache::Get("BoomBox", &mesh);
 
-    MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
+    //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
-    Material* material = nullptr;
+    Material* material = model->materials[0];
+#if 0
     MaterialCache::Get(
 #if 0
       "BoomBox_Mat"
@@ -58,6 +63,7 @@ public:
       "Material_MR"
 #endif
       , &material);
+#endif
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
 

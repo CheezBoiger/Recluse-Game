@@ -50,6 +50,9 @@ struct AnimModel : public Model {
 
 
 // Load a model Mesh and Material, as well as a Skinned mesh if applicable.
+// This will also store the model data in ModelCache, under the name of the file.
+// ex. path/to/Apple.gltf 
+// name = Apple
 ModelResult Load(const std::string filename);
 ModelResult LoadAnimatedModel(const std::string filename);
 ModelResult FreeModel(Model** model);

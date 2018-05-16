@@ -301,7 +301,7 @@ ModelResult Load(const std::string path)
   if (cutoff != std::string::npos) {
     size_t removeExtId = path.find_last_of('.');
     if (removeExtId != std::string::npos) {
-      std::string fileName = path.substr(cutoff + 1, removeExtId);
+      std::string fileName = path.substr(cutoff + 1, removeExtId - (cutoff + 1));
       model->name = fileName;
     }
   }
