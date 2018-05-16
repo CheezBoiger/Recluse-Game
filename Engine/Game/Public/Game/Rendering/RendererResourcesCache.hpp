@@ -9,14 +9,12 @@
 #include "RendererComponent.hpp"
 #include "TextureCache.hpp"
 
+#include "Scene/ModelLoader.hpp"
+
 #include <unordered_map>
 
 namespace Recluse {
 
-
-class MeshData;
-class Mesh;
-struct Material;
 
 class MeshCache {
 public:
@@ -109,6 +107,51 @@ public:
 
 private:
   static std::unordered_map<std::string, Material*> m_Cache;
+};
+
+
+class ModelCache {
+public:
+  static void       CleanUpAll() {
+    // TODO(): Automate cleaning up all materials within this cache.
+    for (auto& it : m_Cache) {
+      ModelLoader::Model* model = it.second;
+      delete model;
+    }
+    m_Cache.clear();
+  }
+
+  static b32         Cache(std::string name, ModelLoader::Model* model) {
+    if (m_Cache.find(name) != m_Cache.end()) {
+      return false;
+    }
+    m_Cache[name] = model;
+    return true;
+  }
+
+  static b32         UnCache(std::string name, ModelLoader::Model** out) {
+    auto it = m_Cache.find(name);
+    if (it != m_Cache.end()) {
+      ModelLoader::Model* pMod = it->second;
+      *out = pMod;
+      m_Cache.erase(it);
+      return true;
+    }
+
+    return false;
+  }
+
+  static b32         Get(std::string name, ModelLoader::Model** out) {
+    auto it = m_Cache.find(name);
+    if (it != m_Cache.end()) {
+      *out = it->second;
+      return true;
+    }
+
+    return false;
+  }
+private:
+  static std::unordered_map<std::string, ModelLoader::Model* > m_Cache;
 };
 
 

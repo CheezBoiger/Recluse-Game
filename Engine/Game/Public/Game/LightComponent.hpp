@@ -33,9 +33,11 @@ public:
 
   virtual ~LightComponent() { }
 
+protected:
   virtual void              OnInitialize(GameObject* owner) override { }
   virtual void              OnCleanUp() override { }
   virtual void              Update() override { }
+public:
 
   u32                       GetId() const { return m_Id; }
   virtual void              SetIntensity(r32 intensity) { }

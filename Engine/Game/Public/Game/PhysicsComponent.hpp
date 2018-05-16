@@ -26,9 +26,12 @@ public:
   PhysicsComponent() 
     : m_pRigidBody(nullptr) { }
 
+protected:
   void Update() override;
   virtual void OnInitialize(GameObject* owner) override;  
   virtual void OnCleanUp() override;
+public:
+
   void OnEnable() override;
 
   void AddCollider(Collider* collider) { m_pRigidBody->AddCollider(collider); }

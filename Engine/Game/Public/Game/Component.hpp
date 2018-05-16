@@ -203,12 +203,11 @@ public:
   Matrix4       GetLocalToWorldMatrix() const { return m_LocalToWorldMatrix; }
   Matrix4       GetWorldToLocalMatrix() const { return m_WorldToLocalMatrix; }
 
-  void          OnInitialize(GameObject* owner) override;
-  void          OnCleanUp() override;
-
 protected:
   // TODO():
   void          Update() override;
+  void          OnInitialize(GameObject* owner) override;
+  void          OnCleanUp() override;
 
   Matrix4       m_LocalToWorldMatrix;
   Matrix4       m_WorldToLocalMatrix;

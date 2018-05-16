@@ -4,10 +4,12 @@
 #include "Core/Types.hpp"
 
 #include "Core/Utility/Module.hpp"
-
+#include "Core/Math/Matrix4.hpp"
 
 namespace Recluse {
 
+
+class AnimObject;
 
 
 class Animation : public EngineModule<Animation> {
@@ -19,6 +21,12 @@ public:
   void OnShutDown() override;
 
   void UpdateState(r64 dt);
+
+  // Create an animation object with specified gameobject id.
+  AnimObject*   CreateAnimObject(uuid64 id);
+
+  // Free an animation object from the animation engine.
+  void          FreeAnimObject(AnimObject* obj);
 
 private:
 

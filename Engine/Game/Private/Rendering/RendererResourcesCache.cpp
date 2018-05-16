@@ -6,6 +6,7 @@ namespace Recluse {
 
 std::unordered_map<std::string, Material*> MaterialCache::m_Cache;
 std::unordered_map<std::string, Mesh*> MeshCache::m_Cache;
+std::unordered_map<std::string, ModelLoader::Model*> ModelCache::m_Cache;
 
 ResourceManager& gResourceManager()
 {

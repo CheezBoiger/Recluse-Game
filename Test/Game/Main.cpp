@@ -68,12 +68,9 @@ int main(int c, char* argv[])
     MeshCache::Cache("NativeCube", mesh);
   }
 
-  ModelLoader::Model model0;
-  ModelLoader::Model model1;
-  ModelLoader::Model model2;
-  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf", &model0);
-  ModelLoader::Load("Assets/BoomBox/BoomBox.gltf", &model1);
-  ModelLoader::Load("Assets/Lantern/lantern.gltf", &model2);
+  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf");
+  ModelLoader::Load("Assets/BoomBox/BoomBox.gltf");
+  ModelLoader::Load("Assets/Lantern/lantern.gltf");
 
   {
     Material* material = new Material();
@@ -191,6 +188,7 @@ int main(int c, char* argv[])
   delete mainCam;
 
   // Finish.
+  ModelCache::CleanUpAll();
   MaterialCache::CleanUpAll();
   MeshCache::CleanUpAll();
   TextureCache::CleanUpAll();

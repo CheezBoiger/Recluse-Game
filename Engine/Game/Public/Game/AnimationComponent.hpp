@@ -31,8 +31,22 @@ public:
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
 
+  // 
+  virtual void              OnInitialize(GameObject* owner) override;
+
+  // 
+  virtual void              OnCleanUp() override;
+
+  //
+  virtual void              Serialize(IArchive& archive) override { }
+
+  //
+  virtual void              Deserialize(IArchive& archive) override { }
+
+  //
+  virtual void              Update() override;
+
 private:
-  Skeleton*   m_pSkeleton;
   std::map<std::string, AnimClip*>    m_clips;
 };
 } // Recluse

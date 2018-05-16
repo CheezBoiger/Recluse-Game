@@ -35,11 +35,9 @@ public:
   RendererComponent& operator=(RendererComponent&& obj);
   RendererComponent& operator=(const RendererComponent& obj);
 
-  virtual void              OnInitialize(GameObject* owner) override;
-  virtual void              OnCleanUp() override;
   virtual void              Serialize(IArchive& archive) override { }
   virtual void              Deserialize(IArchive& archive) override { }
-  virtual void              Update() override;
+
 
   // Reconfigure this renderer component, this will signal the renderer to 
   // update the cmd buffer, and re construct it's scene. It must be done in order
@@ -61,6 +59,10 @@ public:
   virtual void              SetAnimationComponent(AnimationComponent* anim) { }
 
 protected:
+  virtual void              OnInitialize(GameObject* owner) override;
+  virtual void              OnCleanUp() override;
+  virtual void              Update() override;
+
   void                      TriggerDirty() { m_bDirty = true; }
   RenderObject*             m_renderObj;
   MeshDescriptor*           m_meshDescriptor;

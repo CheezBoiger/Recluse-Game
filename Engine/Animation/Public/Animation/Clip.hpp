@@ -37,7 +37,7 @@ struct AnimClip {
   r32                           _fDuration;   // Duration of clip T.
   r32                           _fFps;         // frames per second time.
   u32                           _uFrameCount;  // Number of frames this clip occupies.
-  Skeleton*                     _pSkeleton;     //
+  skeleton_uuid_t               _skeletonId;     // id of skeleton that this clip works with.
   AnimPose*                     _aAnimPoseSamples;    //
   b32                           _bLooping;    //
 };

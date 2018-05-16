@@ -1,11 +1,16 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
 #include "Scene/ModelLoader.hpp"
 #include "Core/Logging/Log.hpp"
+#include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
 
 #include "Renderer/Vertex.hpp"
 
+#include "Game/Rendering/RendererResourcesCache.hpp"
 #include "Rendering/TextureCache.hpp"
+
+#include "Renderer/Renderer.hpp"
+
 #include "tiny_gltf.hpp"
 
 
@@ -261,8 +266,9 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
 }
 
 
-ModelResult Load(const std::string path, Model* model)
+ModelResult Load(const std::string path)
 {
+  Model*           model = nullptr;
   tinygltf::Model gltfModel;
   tinygltf::TinyGLTF loader;
   std::string err;
@@ -277,6 +283,9 @@ ModelResult Load(const std::string path, Model* model)
     return Model_Fail;
   }
 
+  // Successful loading from tinygltf.
+  model = new Model();
+
   LoadTextures(&gltfModel, model);
   LoadMaterials(&gltfModel, model);
 
@@ -286,6 +295,17 @@ ModelResult Load(const std::string path, Model* model)
     LoadNode(node, gltfModel, model, Matrix4(), 1.0);
   }
 
+  static u64 copy = 0;
+  model->name = "Unknown" + std::to_string(copy++);
+  size_t cutoff = path.find_last_of('/');
+  if (cutoff != std::string::npos) {
+    size_t removeExtId = path.find_last_of('.');
+    if (removeExtId != std::string::npos) {
+      std::string fileName = path.substr(cutoff + 1, removeExtId);
+      model->name = fileName;
+    }
+  }
+  ModelCache::Cache(model->name, model);
   return Model_Success;
 }
 

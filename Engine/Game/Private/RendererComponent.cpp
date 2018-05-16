@@ -2,6 +2,7 @@
 #include "RendererComponent.hpp"
 #include "MeshComponent.hpp"
 #include "MaterialComponent.hpp"
+#include "AnimationComponent.hpp"
 #include "GameObject.hpp"
 
 #include "Renderer/RenderObject.hpp"
@@ -186,6 +187,7 @@ void SkinnedRendererComponent::Update()
 
   for (u32 i = 0; i < jointCount; ++i) {
     // Update descriptor joints.
+    pJointBuffer->_mJoints[i];
   }
   RendererComponent::Update();
 }

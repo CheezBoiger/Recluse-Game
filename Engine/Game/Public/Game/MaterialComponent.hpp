@@ -62,6 +62,8 @@ public:
   Material*     GetMaterial() { return m_pRef; }
 
 
+protected:
+
   void          Update() override { }
 
 private:

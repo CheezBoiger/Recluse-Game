@@ -3,11 +3,13 @@
 
 #include "Core/Serialize.hpp"
 #include "Core/Math/Matrix4.hpp"
+
 #include <map>
+#include <vector>
 
 namespace Recluse {
 
-typedef u32      anim_uuid_t;
+typedef u32      skeleton_uuid_t;
 
 
 struct Joint {
@@ -21,13 +23,11 @@ struct Joint {
 // The skeleton defines all joints and transformation offsets 
 // that make up the animation within the game.
 struct Skeleton {
+  static 
   // Full joint transformation that corresponds to a bone.
-  Joint*          _aJoints;
+  std::vector<Joint>          _joints;
 
-  // Number of joins in the skeleton.
-  u32             _uNumOfJoints;
-  
   // This skeleton's unique id.
-  anim_uuid_t     _uuid;
+  skeleton_uuid_t     _uuid;
 };
 } // Recluse

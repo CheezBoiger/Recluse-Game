@@ -32,9 +32,10 @@ private:
 // Mesh Component holds a reference to mesh objects that are loaded.
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent);
-public:
+protected:
   virtual void OnInitialize(GameObject* owner) override { }
   virtual void OnCleanUp() override { }
+public:
 
   void SetMeshRef(Mesh* pData) { m_pMeshRef = pData; }
   
