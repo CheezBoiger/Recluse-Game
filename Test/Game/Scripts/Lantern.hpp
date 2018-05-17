@@ -18,6 +18,91 @@
 
 using namespace Recluse;
 
+// Lantern handle example, on how to set up and update a game object for the engine.
+class LanternHandle : public GameObject
+{
+  R_GAME_OBJECT(LanternHandle)
+public:
+
+  LanternHandle()
+  {
+  }
+
+
+  void OnStart() override
+  {
+    m_pMeshComponent = new MeshComponent();
+    m_pMaterialComponent = new MaterialComponent();
+    m_pRendererComponent = new RendererComponent();
+    m_pointLight=  new PointLightComponent();
+
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("Lantern", &model);
+    Mesh* mesh = model->meshes[1];
+    //MeshCache::Get("lantern handle", &mesh);
+    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->SetMeshRef(mesh);
+
+    Material* material = model->materials[0];
+/*
+    MaterialCache::Get(
+#if 0
+      "StingrayPBS1SG"
+#else
+      "RustySample"
+#endif
+      , &material);
+*/
+    m_pMaterialComponent->SetMaterialRef(material);
+    m_pMaterialComponent->Initialize(this);
+    //material->SetEmissiveFactor(1.0f);
+    //material->SetRoughnessFactor(1.0f);
+    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->Initialize(this);
+
+    std::random_device r;
+    std::mt19937 twist(r());
+    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    Transform* trans = GetTransform();
+    trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
+    trans->Position = Vector3(0.0f, 0.05f, 0.0f);
+    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+
+    m_pointLight->Initialize(this);
+    m_pointLight->SetOffset(Vector3(-2.0f, 3.6f, 0.0f));
+    m_pointLight->SetColor(Vector4(1.0f, 0.5f, 0.3, 1.0f));
+    m_pointLight->SetRange(30.0f);
+    m_pointLight->SetIntensity(1.0f);
+  
+  }
+
+  void Update(r32 tick) override
+  {
+  }
+
+  void OnCleanUp() override
+  {
+    m_pMeshComponent->CleanUp();
+    m_pMaterialComponent->CleanUp();
+    m_pRendererComponent->CleanUp();
+
+    delete m_pMeshComponent;
+    delete m_pMaterialComponent;
+    delete m_pRendererComponent;
+
+    m_pointLight->CleanUp();
+    delete m_pointLight;
+  }
+
+private:
+  Vector3             m_vRandDir;
+  RendererComponent*  m_pRendererComponent;
+  MeshComponent*      m_pMeshComponent;
+  MaterialComponent*  m_pMaterialComponent;
+  PointLightComponent* m_pointLight;
+};
+
 
 // Lantern handle example, on how to set up and update a game object for the engine.
 class LanternCage : public GameObject
@@ -36,12 +121,15 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
 
-    Mesh* mesh = nullptr;
-    MeshCache::Get("lantern supporting_cage", &mesh);
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("Lantern", &model);
+    Mesh* mesh = model->meshes[2];
+    //MeshCache::Get("lantern supporting_cage", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
-    Material* material = nullptr;
+    Material* material = model->materials[0];
+/*
     MaterialCache::Get(
 #if 0
       "StingrayPBS1SG"
@@ -49,6 +137,7 @@ public:
       "RustySample"
 #endif
       , &material);
+*/    
     m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
@@ -64,6 +153,9 @@ public:
     trans->Position = Vector3(0.0f, 0.05f, 0.0f);
     trans->LocalPosition = Vector3(0.0f, 1.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+
+    m_pHandle = new LanternHandle();
+    AddChild(m_pHandle);
   }
 
   void Update(r32 tick) override
@@ -79,6 +171,9 @@ public:
     delete m_pMeshComponent;
     delete m_pMaterialComponent;
     delete m_pRendererComponent;
+
+    m_pHandle->CleanUp();
+    delete m_pHandle;
   }
 
 private:
@@ -86,76 +181,7 @@ private:
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
   MaterialComponent*  m_pMaterialComponent;
-};
-
-
-// Lantern handle example, on how to set up and update a game object for the engine.
-class LanternHandle : public GameObject
-{
-  R_GAME_OBJECT(LanternHandle)
-public:
-
-  LanternHandle()
-  {
-  }
-
-
-  void OnStart() override
-  {
-    m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
-    m_pRendererComponent = new RendererComponent();
-
-    Mesh* mesh = nullptr;
-    MeshCache::Get("lantern handle", &mesh);
-    m_pMeshComponent->Initialize(this);
-    m_pMeshComponent->SetMeshRef(mesh);
-
-    Material* material = nullptr;
-    MaterialCache::Get(
-#if 0
-      "StingrayPBS1SG"
-#else
-      "RustySample"
-#endif
-      , &material);
-    m_pMaterialComponent->SetMaterialRef(material);
-    m_pMaterialComponent->Initialize(this);
-    //material->SetEmissiveFactor(1.0f);
-    //material->SetRoughnessFactor(1.0f);
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
-    m_pRendererComponent->Initialize(this);
-
-    std::random_device r;
-    std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
-    Transform* trans = GetTransform();
-    trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
-    trans->Position = Vector3(0.0f, 0.05f, 0.0f);
-    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-  }
-
-  void Update(r32 tick) override
-  {
-  }
-
-  void OnCleanUp() override
-  {
-    m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
-    m_pRendererComponent->CleanUp();
-
-    delete m_pMeshComponent;
-    delete m_pMaterialComponent;
-    delete m_pRendererComponent;
-  }
-
-private:
-  Vector3             m_vRandDir;
-  RendererComponent*  m_pRendererComponent;
-  MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
+  LanternHandle*      m_pHandle;
 };
 
 
@@ -187,12 +213,15 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
 
-    Mesh* mesh = nullptr;
-    MeshCache::Get("lantern lantern_base", &mesh);
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("Lantern", &model);
+    Mesh* mesh = model->meshes[0];//nullptr;
+    //MeshCache::Get("lantern lantern_base", &mesh);
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
-    Material* material = nullptr;
+    Material* material = model->materials[0];;//nullptr;
+/*
     MaterialCache::Get(
 #if 1
       "StingrayPBS1SG"
@@ -200,25 +229,23 @@ public:
       "RustySample"
 #endif
       , &material);
+*/
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
     m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+    material->SetEmissiveFactor(0.2f);
 
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(0.01f, 0.01f, 0.01f);
+    trans->Scale = Vector3(0.2f, 0.2f, 0.2f);
     trans->Position = Vector3(-4.0f, 5.0f, 0.0f);
     trans->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
-
     m_pCage = new LanternCage();
-    m_pHandle = new LanternHandle();
-
-    AddChild(m_pHandle);
     AddChild(m_pCage);
 
     bFollow = false;
@@ -262,17 +289,12 @@ public:
     delete m_pCollider;
 
     m_pCage->CleanUp();
-    m_pHandle->CleanUp();
-
     delete m_pCage;
-    delete m_pHandle;
   }
 
 private:
   Vector3             m_vRandDir;
   b32                 bFollow;
-
   LanternCage*        m_pCage;
-  LanternHandle*      m_pHandle;
   Transform           oldTransform;
 };

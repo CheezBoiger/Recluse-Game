@@ -148,8 +148,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
   Matrix4 localMatrix = Matrix4::Identity();
   if (node.matrix.size() == 16) {
     localMatrix = Matrix4(node.matrix.data()).Transpose();
-  }
-  else {
+  } else {
     Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
     Matrix4 R = r.ToMatrix4();
     Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);

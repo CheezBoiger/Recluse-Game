@@ -71,6 +71,7 @@ int main(int c, char* argv[])
   ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf");
   ModelLoader::Load("Assets/BoomBox/BoomBox.gltf");
   ModelLoader::Load("Assets/Lantern/lantern.gltf");
+  ModelLoader::Load("Assets/Lantern2/Lantern.gltf");
 
   {
     Material* material = new Material();
@@ -148,24 +149,12 @@ int main(int c, char* argv[])
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
-    DirectionalLight* light = scene.GetPrimaryLight();
 
-    // Test sun rendering.
+    // Test sun rendering. This is not mandatory for running the engine!
+    //DirectionalLight* light = scene.GetPrimaryLight();
     //light->_Direction = Vector3(
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
-
-    // Scene transitions.
-    if (Keyboard::KeyPressed(KEY_CODE_G)) {
-      gEngine().PushScene(&scene2);
-      gEngine().BuildScene();
-    }
-
-    if (Keyboard::KeyPressed(KEY_CODE_H)) {
-      gEngine().PushScene(&scene);
-      gEngine().BuildScene();
-    }
-
 
     gEngine().Update();
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";

@@ -78,7 +78,8 @@ void PointLightComponent::Update()
   if (!transform) {
     return;
   }
-
-  m_NativeLight->_Position = transform->Position;
+  // Rotate about the same area of where the position should be.
+  Vector3 rel = transform->Rotation * m_offset;
+  m_NativeLight->_Position = transform->Position + rel;
 }
 } // Recluse

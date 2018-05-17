@@ -28,7 +28,10 @@ public:
   void  SetRange(r32 range) { m_NativeLight->_Range = range; }
   void  SetEnable(b32 enable) { m_NativeLight->_Enable = enable; }
   
+  void  SetOffset(const Vector3& offset) { m_offset = offset; }
+
 private:
   PointLight* m_NativeLight;  
+  Vector3     m_offset;
 };
 } // Recluse
