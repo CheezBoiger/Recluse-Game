@@ -17,7 +17,7 @@ std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhys
 
 
 b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
-    i32* presentation, i32* graphics, i32* transfer, i32* compute) const
+    QueueFamily* presentation, QueueFamily* graphics, QueueFamily* transfer, QueueFamily* compute) const
 {
   if (!handle) {
     R_DEBUG(rError, "No handle is set to query queue families from!\n");
@@ -31,21 +31,25 @@ b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
   i32 i = 0;
   for (const auto& queueFamily : queueFamilies) {
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      *graphics = i;
+      graphics->_idx = i;
+      graphics->_queueCount = queueFamily.queueCount;
     }
 
     VkBool32 presentSupport = false;
     vkGetPhysicalDeviceSurfaceSupportKHR(handle, i, surface, &presentSupport);
     if (queueFamily.queueCount > 0 && presentSupport) {
-      *presentation = i;
+      presentation->_idx = i;
+      presentation->_queueCount = queueFamily.queueCount;
     }
 
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) {
-      *compute = i;
+      compute->_idx = i;
+      compute->_queueCount = queueFamily.queueCount;
     }
 
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
-      *transfer = i;
+      transfer->_idx = i;
+      transfer->_queueCount = queueFamily.queueCount;
     }
 
     ++i;

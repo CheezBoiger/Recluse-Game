@@ -12,6 +12,7 @@
 
 #include <functional>
 
+#define DEFAULT_QUEUE_IDX 0
 
 namespace Recluse {
 
@@ -150,19 +151,21 @@ public:
   void                          AcquireNextImage();
 
   // Submit a command buffer to the graphics queue.
-  void                          GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void                          GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Submit a command buffer to the transfer queue.
-  void                          TransferSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void                          TransferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Wait until transfer queue has completely finished all submittals.
-  void                          TransferWaitIdle();
+  void                          TransferWaitIdle(size_t queueIdx);
 
   // Wait until the graphics queue has completely finished all submittals.
-  void                          GraphicsWaitIdle();
+  void                          GraphicsWaitIdle(size_t queueIdx);
 
   // Wait until compute queue has completely finished all submittals.
-  void                          ComputeWaitIdle();
+  void                          ComputeWaitIdle(size_t queueIdx);
+
+  void                          WaitAllGraphicsQueues();
 
   // Wait until present queue has completely finished presenting onto the screen.
   void                          PresentWaitIdle();
@@ -171,7 +174,7 @@ public:
   void                          DeviceWaitIdle();
 
   // Submit a command buffer to the compute queue.
-  void                          ComputeSubmit(const VkSubmitInfo& submitInfo);
+  void                          ComputeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
@@ -196,7 +199,7 @@ public:
   void                          SwapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
 
   // Obtain the Graphics Finished Semaphore from swapchain.
-  VkSemaphore                   GraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(); }
+  VkSemaphore                   GraphicsFinishedSemaphore() { return mLogicalDevice.GraphicsFinishedSemaphore(); }
 
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!

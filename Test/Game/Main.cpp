@@ -150,12 +150,6 @@ int main(int c, char* argv[])
     Time::Update();
     gEngine().ProcessInput();
 
-    // Test sun rendering. This is not mandatory for running the engine!
-    //DirectionalLight* light = scene.GetPrimaryLight();
-    //light->_Direction = Vector3(
-    //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
-    //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
-
     gEngine().Update();
     Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }

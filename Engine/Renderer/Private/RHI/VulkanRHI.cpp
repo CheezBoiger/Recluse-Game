@@ -146,28 +146,34 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   // device output queue family indices and the number of queues you can create 
   // with it. Graphics, Compute, and Presentation all share the same queue! Transfer
   // has its own queue.
-  i32 presentationIndex;
-  i32 graphicsIndex;
-  i32 computeIndex;
-  i32 transferIndex;
+  QueueFamily presentationQueueFamily;
+  QueueFamily graphicsQueueFamily;
+  QueueFamily computeQueueFamily;
+  QueueFamily transferQueueFamily;
 
   b8 result = gPhysicalDevice.FindQueueFamilies(mSurface, 
-    &presentationIndex, &graphicsIndex, &transferIndex, &computeIndex);
+    &presentationQueueFamily, &graphicsQueueFamily, &transferQueueFamily, &computeQueueFamily);
   
   if (!result) {
     R_DEBUG(rError, "Failed to find proper queue families in vulkan context!\n");
     return;
   } 
   
-  std::set<i32> queueFamilies = { presentationIndex, graphicsIndex, computeIndex, transferIndex };
+  std::set<QueueFamily, QueueFamilyCompare> queueFamilies = { presentationQueueFamily, 
+    graphicsQueueFamily, computeQueueFamily, transferQueueFamily };
   std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
-  r32 priorities[] = { 1.0f };
-  for (i32 queueFamily : queueFamilies) {
+  // Expected 32 queues may be created.
+  std::array<r32, 32> priorities = { 1.0f };
+  for (size_t i = 0; i < priorities.size(); ++i) {
+    priorities[i] = 1.0f;
+  }
+
+  for (const QueueFamily& queueFamily : queueFamilies) {
     VkDeviceQueueCreateInfo qInfo = { };
     qInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    qInfo.pQueuePriorities = priorities;
-    qInfo.queueCount = 1; // Need to change to accomadate more than one queue.
-    qInfo.queueFamilyIndex = queueFamily;
+    qInfo.pQueuePriorities = priorities.data();
+    qInfo.queueCount = queueFamily._queueCount; // Need to change to accomadate more than one queue.
+    qInfo.queueFamilyIndex = queueFamily._idx;
     deviceQueueCreateInfos.push_back(qInfo);
   }
 
@@ -187,31 +193,31 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
-  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate)) {
+  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate,
+      &graphicsQueueFamily, &computeQueueFamily, &transferQueueFamily, &presentationQueueFamily)) {
     R_DEBUG(rError, "Vulkan logical device failed to create.\n");
     return;
   }
   
   VkPresentModeKHR presentMode = GetPresentMode(params);
-  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode,
-    graphicsIndex, presentationIndex, transferIndex, computeIndex);
+  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.GraphicsIndex());
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.GraphicsQueueFamily()._idx);
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
   if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create primary command pool!\n");
   } 
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.ComputeIndex());
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.ComputeQueueFamily()._idx);
 
   if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mSwapchain.TransferIndex());
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.TransferQueueFamily()._idx);
 
   if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
@@ -232,7 +238,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
 
 void VulkanRHI::CleanUp()
 {
-  mSwapchain.WaitOnQueues();
+  mLogicalDevice.WaitOnQueues();
 
   // Clean up all cmd buffers used for swapchain rendering.
   for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
@@ -461,9 +467,11 @@ void VulkanRHI::SetUpSwapchainRenderPass()
 }
 
 
-void VulkanRHI::GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
-  VkResult result = vkQueueSubmit(mSwapchain.GraphicsQueue(), count, submitInfo, fence);
+  VkResult result = vkQueueSubmit(mLogicalDevice.GraphicsQueue(queueIdx), 
+    count, submitInfo, fence);
+
   if (result != VK_SUCCESS) {
     if (result == VK_ERROR_DEVICE_LOST)  {
       R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?\n");
@@ -477,7 +485,7 @@ void VulkanRHI::GraphicsSubmit(const u32 count, const VkSubmitInfo* submitInfo, 
 void VulkanRHI::AcquireNextImage()
 {
   vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
-    mSwapchain.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
+    mLogicalDevice.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
 }
 
 
@@ -505,13 +513,13 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
 
-  GraphicsSubmit(1, &submitInfo, fence);
+  GraphicsSubmit(0, 1, &submitInfo, fence);
 }
 
 
 void VulkanRHI::Present()
 {
-  VkSemaphore signalSemaphores[] = { mSwapchain.GraphicsFinishedSemaphore() };
+  VkSemaphore signalSemaphores[] = { mLogicalDevice.GraphicsFinishedSemaphore() };
   VkSwapchainKHR swapchains[] = { mSwapchain.Handle() };
 
   VkPresentInfoKHR presentInfo = { };
@@ -523,60 +531,63 @@ void VulkanRHI::Present()
   presentInfo.pWaitSemaphores = signalSemaphores;
   presentInfo.pImageIndices = &mSwapchainInfo.mCurrentImageIndex;
 
-  if (vkQueuePresentKHR(mSwapchain.PresentQueue(), &presentInfo) != VK_SUCCESS) {
+  if (vkQueuePresentKHR(mLogicalDevice.PresentQueue(), &presentInfo) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to present!\n");
   }
 }
 
 
-void VulkanRHI::ComputeSubmit(const VkSubmitInfo& submitInfo)
+void VulkanRHI::ComputeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence)
 {
-  VkFence fence = mSwapchain.ComputeFence();
-  vkWaitForFences(mLogicalDevice.Native(), 1, &fence, VK_TRUE, UINT64_MAX);
-  vkResetFences(mLogicalDevice.Native(), 1, &fence);
-
-  if (vkQueueSubmit(mSwapchain.ComputeQueue(), 1, &submitInfo, fence) != VK_SUCCESS) {
+  if (vkQueueSubmit(mLogicalDevice.ComputeQueue(queueIdx), 1, &submitInfo, fence) != VK_SUCCESS) {
     R_DEBUG(rError, "Compute failed to submit task!\n");
   }
 }
 
 
-void VulkanRHI::TransferSubmit(const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::TransferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
-  VkResult result = vkQueueSubmit(mSwapchain.TransferQueue(), count, submitInfo, fence);
+  VkResult result = vkQueueSubmit(mLogicalDevice.TransferQueue(queueIdx), count, submitInfo, fence);
   if (result != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to submit to transfer queue!\n");
   }
 }
 
 
-void VulkanRHI::TransferWaitIdle()
+void VulkanRHI::TransferWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mSwapchain.TransferQueue());
+  vkQueueWaitIdle(mLogicalDevice.TransferQueue(queueIdx));
 }
 
 
-void VulkanRHI::GraphicsWaitIdle()
+void VulkanRHI::GraphicsWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mSwapchain.GraphicsQueue());
+  vkQueueWaitIdle(mLogicalDevice.GraphicsQueue(queueIdx));
 }
 
 
-void VulkanRHI::ComputeWaitIdle()
+void VulkanRHI::ComputeWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mSwapchain.ComputeQueue());
+  vkQueueWaitIdle(mLogicalDevice.ComputeQueue(queueIdx));
 }
 
 
 void VulkanRHI::PresentWaitIdle()
 {
-  vkQueueWaitIdle(mSwapchain.PresentQueue());
+  vkQueueWaitIdle(mLogicalDevice.PresentQueue());
 }
 
 
 void VulkanRHI::DeviceWaitIdle()
 {
   vkDeviceWaitIdle(mLogicalDevice.Native());
+}
+
+void VulkanRHI::WaitAllGraphicsQueues()
+{
+  for (size_t i = 0; i < LogicDevice()->GraphicsQueueFamily()._queueCount; ++i) {
+    GraphicsWaitIdle(i);
+  }
 }
 
 

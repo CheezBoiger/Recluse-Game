@@ -8,14 +8,6 @@ namespace Recluse {
 
 Swapchain::Swapchain()
   : mSwapchain(VK_NULL_HANDLE)
-  , mPresentationQueue(VK_NULL_HANDLE)
-  , mGraphicsQueue(VK_NULL_HANDLE)
-  , mComputeQueue(VK_NULL_HANDLE)
-  , mImageAvailableSemaphore(VK_NULL_HANDLE)
-  , mGraphicsFinishedSemaphore(VK_NULL_HANDLE)
-  , mPresentationQueueIndex(-1)
-  , mGraphicsQueueIndex(-1)
-  , mComputeQueueIndex(-1)
 {
 }
 
@@ -26,23 +18,10 @@ Swapchain::~Swapchain()
 
 
 void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
-      VkPresentModeKHR desiredPresent, i32 graphicsIndex, i32 presentationIndex, i32 transferIndex, i32 computeIndex)
+      VkPresentModeKHR desiredPresent)
 {
-  mGraphicsQueueIndex = graphicsIndex;
-  mPresentationQueueIndex = presentationIndex;
-  mComputeQueueIndex = computeIndex;
-  m_TransferQueueIndex = transferIndex;
   mOwner = device.Native();
 
-  // TODO(): Read initialize() call from vulkan context, queue index will change in the future.
-  vkGetDeviceQueue(mOwner, graphicsIndex, 0, &mGraphicsQueue);
-  vkGetDeviceQueue(mOwner, mPresentationQueueIndex, 0, &mPresentationQueue);
-  vkGetDeviceQueue(mOwner, computeIndex, 0, &mComputeQueue);
-  vkGetDeviceQueue(mOwner, m_TransferQueueIndex, 0, &m_TransferQueue);
-
-  CreateSemaphores();
-  CreateComputeFence();
-  
   std::vector<VkPresentModeKHR> presentModes = physical.QuerySwapchainPresentModes(surface);
   std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.QuerySwapchainSurfaceFormats(surface);
   VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
@@ -108,22 +87,6 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat,
 
 void Swapchain::CleanUp()
 {
-  WaitOnQueues();
-  if (mImageAvailableSemaphore) {
-    vkDestroySemaphore(mOwner, mImageAvailableSemaphore, nullptr);
-    mImageAvailableSemaphore = VK_NULL_HANDLE;
-  }
-
-  if (mGraphicsFinishedSemaphore) {
-    vkDestroySemaphore(mOwner, mGraphicsFinishedSemaphore, nullptr);
-    mGraphicsFinishedSemaphore = VK_NULL_HANDLE;
-  }
-
-  if (mComputeFence) {
-    vkDestroyFence(mOwner, mComputeFence, nullptr);
-    mComputeFence = VK_NULL_HANDLE;
-  }
-
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {
     SwapchainImage& image = SwapchainImages[i];
     vkDestroyImageView(mOwner, image.View, nullptr);
@@ -174,40 +137,5 @@ void Swapchain::QuerySwapchainImages()
     SwapchainImages[i].Image = images[i];
   }
 
-}
-
-
-void Swapchain::WaitOnQueues()
-{
-  vkQueueWaitIdle(mGraphicsQueue);
-  vkQueueWaitIdle(mPresentationQueue);
-  vkQueueWaitIdle(mComputeQueue);
-}
-
-
-void Swapchain::CreateSemaphores()
-{
-  VkSemaphoreCreateInfo semaphoreCI = { };
-  semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mImageAvailableSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
-
-  if (vkCreateSemaphore(mOwner, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
-}
-
-
-void Swapchain::CreateComputeFence()
-{
-  VkFenceCreateInfo fenceCI = { };
-  fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-  if (vkCreateFence(mOwner, &fenceCI, nullptr, &mComputeFence) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
 }
 } // Recluse

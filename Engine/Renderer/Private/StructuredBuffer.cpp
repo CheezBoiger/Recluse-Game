@@ -88,8 +88,8 @@ void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = &native;
   
-  mRhi->ComputeSubmit(submit);
-  mRhi->ComputeWaitIdle();
+  mRhi->ComputeSubmit(DEFAULT_QUEUE_IDX, submit);
+  mRhi->ComputeWaitIdle(DEFAULT_QUEUE_IDX);
   
   mRhi->FreeBuffer(StagingBuffer);
   mRhi->FreeCommandBuffer(CmdBuffer);

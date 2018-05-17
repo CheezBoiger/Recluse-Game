@@ -146,7 +146,8 @@ void Renderer::Render()
     nullptr,
     nullptr
   };
-  VkSemaphore offscreen_WaitSemas[] = { m_pRhi->SwapchainObject()->ImageAvailableSemaphore() };
+
+  VkSemaphore offscreen_WaitSemas[] = { m_pRhi->LogicDevice()->ImageAvailableSemaphore() };
   VkSemaphore offscreen_SignalSemas[] = { m_Offscreen._Semaphore->Handle() };
 
   VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffer->Handle() };
@@ -223,10 +224,10 @@ void Renderer::Render()
 
     VkSubmitInfo submits[] { offscreenSI, pbrSi, skyboxSI };
     // Submit to renderqueue.
-    m_pRhi->GraphicsSubmit(3, submits);
+    m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 3, submits);
 
     // High Dynamic Range and Gamma Pass.
-    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(1, &hdrSI);
+    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &hdrSI);
 
     // Before calling this cmd buffer, we want to submit our offscreen buffer first, then
     // sent our signal to our swapchain cmd buffers.
@@ -253,7 +254,7 @@ void Renderer::Render()
   computeSubmit.signalSemaphoreCount = 0;
   computeSubmit.waitSemaphoreCount = 0;
 
-  m_pRhi->ComputeSubmit(computeSubmit);
+  m_pRhi->ComputeSubmit(DEFAULT_QUEUE_IDX, computeSubmit);
 }
 
 
@@ -1984,7 +1985,7 @@ void Renderer::CleanUpHDR(b32 fullCleanUp)
 
 void Renderer::Build()
 {
-  m_pRhi->GraphicsWaitIdle();
+  m_pRhi->WaitAllGraphicsQueues();
 
   BuildOffScreenBuffer(CurrentCmdBufferIdx());
   BuildHDRCmdBuffer();

@@ -151,7 +151,6 @@ public:
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
     trans->Position = Vector3(0.0f, 0.05f, 0.0f);
-    trans->LocalPosition = Vector3(0.0f, 1.0f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
 
     m_pHandle = new LanternHandle();

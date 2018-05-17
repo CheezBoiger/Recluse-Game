@@ -79,6 +79,12 @@ public:
     //transform->Position += m_vRandDir * tick;
     //Quaternion q = Quaternion::AngleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
     //transform->Rotation = transform->Rotation * q;
+    // Test sun rendering. This is not mandatory for running the engine!
+    //Scene* scene = gEngine().GetScene();
+    //DirectionalLight* light = scene->GetPrimaryLight();
+    //light->_Direction = Vector3(
+    //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
+    //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
   }
 
   void OnCleanUp() override

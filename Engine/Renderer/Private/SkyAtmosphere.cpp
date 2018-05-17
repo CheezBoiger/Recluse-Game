@@ -532,7 +532,7 @@ void Sky::CreateGraphicsPipeline(VulkanRHI* rhi)
 void Sky::BuildCmdBuffer(VulkanRHI* rhi)
 {
   if (m_pCmdBuffer) {
-    rhi->GraphicsWaitIdle();
+    rhi->WaitAllGraphicsQueues();
     m_pCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
   

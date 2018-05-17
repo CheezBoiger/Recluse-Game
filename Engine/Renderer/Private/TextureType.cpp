@@ -167,8 +167,8 @@ void Texture2D::Update(Image const& Image)
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  mRhi->TransferSubmit(1, &submit);
-  mRhi->TransferWaitIdle();
+  mRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  mRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
 
   buffer.Free();
   stagingBuffer.CleanUp();

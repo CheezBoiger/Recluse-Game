@@ -26,11 +26,9 @@ public:
   Swapchain();
   ~Swapchain();
 
-  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent,
-                                            i32 graphicsIndex, i32 presentationIndex, i32 transferIndex, i32 computeIndex);
+  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent);
 
   void                          CleanUp();
-  void                          WaitOnQueues();
 
   VkSwapchainKHR                Handle() { return mSwapchain; }
 
@@ -46,46 +44,15 @@ public:
   VkFormat                      SwapchainFormat() const { return mSwapchainFormat; }
   VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }
   VkPresentModeKHR              CurrentPresentMode() const { return mCurrentPresentMode; }
-
-  VkQueue                       PresentQueue() { return mPresentationQueue; }
-  VkQueue                       GraphicsQueue() { return mGraphicsQueue; }
-  VkQueue                       ComputeQueue() { return mComputeQueue; }
-  VkQueue                       TransferQueue() { return m_TransferQueue; }
-
-  i32                           PresentIndex() { return mPresentationQueueIndex; }
-  i32                           GraphicsIndex() { return mGraphicsQueueIndex; }
-  i32                           ComputeIndex() { return mComputeQueueIndex; }
-  i32                           TransferIndex() { return m_TransferQueueIndex; }
-
-  VkSemaphore                   ImageAvailableSemaphore() { return mImageAvailableSemaphore; }
-  VkSemaphore                   GraphicsFinishedSemaphore() { return mGraphicsFinishedSemaphore; }
-  VkFence                       ComputeFence() { return mComputeFence; }
   
 private:
   void                          QuerySwapchainImages();
-  void                          CreateSemaphores();
-  void                          CreateComputeFence();
 
   VkSwapchainKHR                mSwapchain;
-
-  VkSemaphore                   mImageAvailableSemaphore;
-  VkSemaphore                   mGraphicsFinishedSemaphore;
-  VkFence                       mComputeFence;
 
   VkFormat                      mSwapchainFormat;
   VkExtent2D                    mSwapchainExtent;
   VkPresentModeKHR              mCurrentPresentMode;
-
-  VkQueue                       mPresentationQueue;
-  VkQueue                       mGraphicsQueue;
-  VkQueue                       mComputeQueue;
-  VkQueue                       m_TransferQueue;
-
-  i32                           mPresentationQueueIndex;
-  i32                           mGraphicsQueueIndex;
-  i32                           mComputeQueueIndex;
-  i32                           m_TransferQueueIndex;
-
   std::vector<SwapchainImage>   SwapchainImages;
 
 };

@@ -4,6 +4,10 @@
 #include "Core/Types.hpp"
 #include "VulkanConfigs.hpp"
 
+#include "PhysicalDevice.hpp"
+
+#include <vector>
+
 
 namespace Recluse {
 
@@ -14,10 +18,14 @@ namespace Recluse {
 class LogicalDevice {
 public:
   LogicalDevice()
-    : handle(VK_NULL_HANDLE) { }
+    : handle(VK_NULL_HANDLE)
+    , mPresentationQueue(VK_NULL_HANDLE)
+    , mImageAvailableSemaphore(VK_NULL_HANDLE)
+    , mGraphicsFinishedSemaphore(VK_NULL_HANDLE) { }
 
 
-  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info);
+  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
+                          QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation);
   void                  CleanUp();
 
   // Performs a manual flush of mapped memory writes to make them visible to the host. This
@@ -28,7 +36,40 @@ public:
   VkMemoryRequirements  GetBufferMemoryRequirements(const VkBuffer& buffer);
   VkDevice              Native() const { return handle; }
 
+  void                          WaitOnQueues();
+
+  VkQueue                       PresentQueue() { return mPresentationQueue; }
+  VkQueue                       GraphicsQueue(size_t i) { return mGraphicsQueues[i]; }
+  VkQueue                       ComputeQueue(size_t i) { return mComputeQueues[i]; }
+  VkQueue                       TransferQueue(size_t i) { return mTransferQueues[i]; }
+
+  QueueFamily&                  PresentQueueFamily() { return mPresentationQueueFamily; }
+  QueueFamily&                  GraphicsQueueFamily() { return mGraphicsQueueFamily; }
+  QueueFamily&                  ComputeQueueFamily() { return mComputeQueueFamily; }
+  QueueFamily&                  TransferQueueFamily() { return mTransferQueueFamily; }
+
+  VkSemaphore                   ImageAvailableSemaphore() { return mImageAvailableSemaphore; }
+  VkSemaphore                   GraphicsFinishedSemaphore() { return mGraphicsFinishedSemaphore; }
+  VkFence                       DefaultComputeFence() { return mDefaultComputeFence; }
+
 private:
   VkDevice              handle;
+
+  VkQueue                       mPresentationQueue;
+  std::vector<VkQueue>          mGraphicsQueues;
+  std::vector<VkQueue>          mComputeQueues;
+  std::vector<VkQueue>          mTransferQueues;
+
+  QueueFamily                   mPresentationQueueFamily;
+  QueueFamily                   mGraphicsQueueFamily;
+  QueueFamily                   mComputeQueueFamily;
+  QueueFamily                   mTransferQueueFamily;
+
+  VkSemaphore                   mImageAvailableSemaphore;
+  VkSemaphore                   mGraphicsFinishedSemaphore;
+  VkFence                       mDefaultComputeFence;
+
+  void                          CreateSemaphores();
+  void                          CreateComputeFence();
 };
 } // Recluse

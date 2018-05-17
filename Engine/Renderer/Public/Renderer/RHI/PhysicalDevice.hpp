@@ -9,6 +9,19 @@
 namespace Recluse {
 
 
+struct QueueFamily {
+  i32             _idx;
+  u32             _queueCount;
+};
+
+
+struct QueueFamilyCompare {
+  constexpr bool operator()(const QueueFamily &lhs, const QueueFamily &rhs) const
+  {
+    return lhs._idx < rhs._idx;
+  }
+};
+
 // Container to hold the handle of our physical device. This object
 // serves as a query to the provided physical device.
 class PhysicalDevice {
@@ -23,7 +36,9 @@ public:
   std::vector<VkPresentModeKHR>             QuerySwapchainPresentModes(VkSurfaceKHR surface) const;
 
   b32                                       FindQueueFamilies(VkSurfaceKHR surface,
-                                              i32* presentation, i32* graphics, i32* transfer, i32* compute) const;
+                                              QueueFamily* presentation, QueueFamily* graphics, 
+                                              QueueFamily* transfer, QueueFamily* compute) const;
+
   u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
   VkResult                                  GetImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage,
                                               VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) const;
