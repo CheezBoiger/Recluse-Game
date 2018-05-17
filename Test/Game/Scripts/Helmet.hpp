@@ -44,7 +44,7 @@ public:
      m_pPhysicsComponent->Enable(false);
 
     ModelLoader::Model* model;
-    ModelCache::Get("BoomBox", &model);
+    ModelCache::Get("DamagedHelmet", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -80,7 +80,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(50.5f, 50.5f, 50.5f);
+    trans->Scale = Vector3(0.5f, 0.5f, 0.5f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
