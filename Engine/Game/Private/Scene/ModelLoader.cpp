@@ -121,39 +121,41 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
 {
   Vector3 t;
   Quaternion r;
-  Vector3 s = Vector3(-1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
+  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
   if (node.translation.size() == 3) {
     const double* tnative = node.translation.data();
-    t = Vector3(  static_cast<r32>(tnative[0]), 
-                  static_cast<r32>(tnative[1]), 
-                  static_cast<r32>(tnative[2]));
+    t = Vector3(static_cast<r32>(tnative[0]),
+      static_cast<r32>(tnative[1]),
+      static_cast<r32>(tnative[2]));
   }
-  
+
   if (node.rotation.size() == 4) {
     const double* rq = node.rotation.data();
-    r = Quaternion( static_cast<r32>(rq[0]),
-                    static_cast<r32>(rq[1]),
-                    static_cast<r32>(rq[2]),
-                    static_cast<r32>(rq[3]));
-    r = r.Inverse();
+    r = Quaternion(static_cast<r32>(rq[0]),
+      static_cast<r32>(rq[1]),
+      static_cast<r32>(rq[2]),
+      static_cast<r32>(rq[3]));
+    //r = r.Inverse();
   }
 
   if (node.scale.size() == 3) {
     const double* sv = node.scale.data();
-    s = Vector3(  static_cast<r32>(sv[0]),
-                  static_cast<r32>(sv[1]),
-                  static_cast<r32>(sv[2]));
+    s = Vector3(static_cast<r32>(sv[0]),
+      static_cast<r32>(sv[1]),
+      static_cast<r32>(sv[2]));
   }
 
   Matrix4 localMatrix = Matrix4::Identity();
   if (node.matrix.size() == 16) {
     localMatrix = Matrix4(node.matrix.data()).Transpose();
-  } else {
+  }
+  else {
     Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
     Matrix4 R = r.ToMatrix4();
     Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
     localMatrix = S * R * T;
   }
+  localMatrix = localMatrix * parentMatrix;
   if (!node.children.empty()) {
     for (size_t i = 0; i < node.children.size(); ++i) {
       LoadNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
@@ -172,8 +174,8 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
       u32   vertexStart = static_cast<u32>(vertices.size());
-      u32   indexStart  = static_cast<u32>(indices.size());
-      u32   indexCount  = 0;
+      u32   indexStart = static_cast<u32>(indices.size());
+      u32   indexCount = 0;
       if (primitive.indices < 0) continue;
       R_ASSERT(primitive.attributes.find("POSITION") != primitive.attributes.end(), "No position values within mesh!");
 
@@ -184,13 +186,13 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
 
         const tinygltf::Accessor& positionAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
         const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
-        bufferPositions = 
-          reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);     
+        bufferPositions =
+          reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
 
         if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
           const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
           const tinygltf::BufferView& bufViewNorm = model.bufferViews[normalAccessor.bufferView];
-          bufferNormals = 
+          bufferNormals =
             reinterpret_cast<const r32*>(&model.buffers[bufViewNorm.buffer].data[normalAccessor.byteOffset + bufViewNorm.byteOffset]);
         }
 
@@ -200,10 +202,11 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           bufferTexCoords =
             reinterpret_cast<const r32*>(&model.buffers[bufViewTexCoord0.buffer].data[texcoordAccessor.byteOffset + bufViewTexCoord0.byteOffset]);
         }
-     
+
         for (size_t value = 0; value < positionAccessor.count; ++value) {
           StaticVertex vertex;
-          vertex.position = localMatrix * Vector4(Vector3(&bufferPositions[value * 3]), 1.0f);
+          Vector3 p(&bufferPositions[value * 3]);
+          vertex.position = localMatrix * Vector4(p, 1.0f);
           vertex.position.w = 1.0f;
           vertex.normal = Vector4(Matrix3(localMatrix) * Vector3(&bufferNormals[value * 3]), 1.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
@@ -215,7 +218,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
         }
       }
 
-        // Indices.
+      // Indices.
       {
         const tinygltf::Accessor& indAccessor = model.accessors[primitive.indices];
         const tinygltf::BufferView& iBufView = model.bufferViews[indAccessor.bufferView];
@@ -223,31 +226,31 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
         indexCount = static_cast<u32>(indAccessor.count);
 
         // TODO(): In progress. 
-        switch (indAccessor.componentType) { 
-          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
-          {
-            const u32* buf = (const u32*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
-            for (size_t index = 0; index < indAccessor.count; ++index) { 
-              indices.push_back(buf[index] + vertexStart);
-            }
-          } break;
-          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
-          {
-            const u16* buf = (const u16*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
-            for (size_t index = 0; index < indAccessor.count; ++index) {
-              indices.push_back(((u32)buf[index]) + vertexStart);
-            }
-          } break;
-          case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
-          {
-            const u8* buf = (const u8*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
-            for (size_t index = 0; index < indAccessor.count; ++index) {
-              indices.push_back(((u32)buf[index]) + vertexStart);
-            }
-          } break;
+        switch (indAccessor.componentType) {
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
+        {
+          const u32* buf = (const u32*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(buf[index] + vertexStart);
+          }
+        } break;
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+        {
+          const u16* buf = (const u16*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(((u32)buf[index]) + vertexStart);
+          }
+        } break;
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
+        {
+          const u8* buf = (const u8*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(((u32)buf[index]) + vertexStart);
+          }
+        } break;
         };
       }
-      
+
       Primitive prim;
       prim._meshRef = pMesh;
       prim._materialRef = primitive.material != -1 ? engineModel->materials[primitive.material] : nullptr;
@@ -291,8 +294,9 @@ ModelResult Load(const std::string path)
 
   tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
-    tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];  
-    LoadNode(node, gltfModel, model, Matrix4(), 1.0);
+    tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
+    Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
+    LoadNode(node, gltfModel, model, mat, 1.0);
   }
 
   static u64 copy = 0;
@@ -308,6 +312,5 @@ ModelResult Load(const std::string path)
   ModelCache::Cache(model->name, model);
   return Model_Success;
 }
-
 } // ModelLoader
 } // Recluse

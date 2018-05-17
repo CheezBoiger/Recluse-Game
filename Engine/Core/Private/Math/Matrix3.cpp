@@ -149,9 +149,9 @@ Matrix3 Matrix3::ToMatrix3(const Matrix4& other)
 Vector3 Matrix3::operator*(const Vector3& other) const
 {
   return Vector3(
-    Data[0][0] * other.x + Data[0][1] * other.y + Data[0][2] * other.z,
-    Data[1][0] * other.x + Data[1][1] * other.y + Data[1][2] * other.z,
-    Data[2][0] * other.x + Data[2][1] * other.y + Data[2][2] * other.z
+    Data[0][0] * other.x + Data[1][0] * other.y + Data[2][0] * other.z,
+    Data[0][1] * other.x + Data[1][1] * other.y + Data[2][1] * other.z,
+    Data[0][2] * other.x + Data[1][2] * other.y + Data[2][2] * other.z
   );
 }
 } // Recluse
