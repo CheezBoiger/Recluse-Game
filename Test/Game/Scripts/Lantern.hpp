@@ -71,8 +71,8 @@ public:
 
     m_pointLight->Initialize(this);
     m_pointLight->SetOffset(Vector3(-2.0f, 3.6f, 0.0f));
-    m_pointLight->SetColor(Vector4(1.0f, 0.5f, 0.3, 1.0f));
-    m_pointLight->SetRange(30.0f);
+    m_pointLight->SetColor(Vector4(1.0f, 0.5f, 0.3f, 1.0f));
+    m_pointLight->SetRange(10.0f);
     m_pointLight->SetIntensity(1.0f);
   
   }
@@ -206,11 +206,15 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 0.5f, 0.2f));
-    m_pCollider->center = Vector3(0.0f, 0.45f, 0.0f);
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 2.5f, 0.2f));
+    m_secondCollider = gPhysics().CreateBoxCollider(Vector3(1.5f, 0.2f, 0.2f));
+    m_pCollider->center = Vector3(0.5f, 2.7f, 0.0f);
+    m_secondCollider->center = Vector3(0.0f, 4.4f, 0.0f);
 
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
+    m_pPhysicsComponent->AddCollider(m_secondCollider);
+    m_pPhysicsComponent->SetMass(0.0f);
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.45f, 0.0f));
 
     ModelLoader::Model* model = nullptr;
@@ -242,8 +246,8 @@ public:
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.2f, 0.2f, 0.2f);
-    trans->Position = Vector3(-4.0f, 5.0f, 0.0f);
-    trans->Rotation = Quaternion::AngleAxis(Radians(0.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->Position = Vector3(-4.0f, 0.0f, 4.0f);
+    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f + 45.0f), Vector3(0.0f, 1.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_pCage = new LanternCage();
     AddChild(m_pCage);
@@ -287,6 +291,7 @@ public:
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
+    delete m_secondCollider;
 
     m_pCage->CleanUp();
     delete m_pCage;
@@ -297,4 +302,5 @@ private:
   b32                 bFollow;
   LanternCage*        m_pCage;
   Transform           oldTransform;
+  Collider*           m_secondCollider;
 };

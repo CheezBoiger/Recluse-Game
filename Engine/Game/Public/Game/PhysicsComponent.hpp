@@ -41,6 +41,9 @@ public:
   void SetGravity(const Vector3& gravity);
   void ClearForces();
   void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
+  void SetCenterOfMass(const Vector3& centerOfMass);
+  Vector3 GetCenterOfMassPosition();
+
   r32 GetMass() const { return m_mass; }
   void UpdateFromGameObject();
   void SetFriction(const r32 friction);
