@@ -29,7 +29,8 @@ public:
 
   LightComponent(LightType type = UNKNOWN_LIGHT)
     : m_Type(type)
-    , m_Id(UINT_MAX) { }
+    , m_Id(UINT_MAX)
+    , m_debug(false) { }
 
   virtual ~LightComponent() { }
 
@@ -46,8 +47,13 @@ public:
   virtual void              Serialize(IArchive& archive) override { }
   virtual void              Deserialize(IArchive& archive) override { }
 
+  b32                       Debugging() { return m_debug; }
+  
+ virtual void               Debug(b32 enable) { }
+
 protected:
   LightType                 m_Type;
   u32                       m_Id;
+  b32                       m_debug;
 };
 } // Recluse

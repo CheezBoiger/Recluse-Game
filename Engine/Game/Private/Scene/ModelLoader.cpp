@@ -4,10 +4,11 @@
 #include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
 
-#include "Renderer/Vertex.hpp"
-
 #include "Game/Rendering/RendererResourcesCache.hpp"
 #include "Rendering/TextureCache.hpp"
+
+
+#include "Renderer/Vertex.hpp"
 
 #include "Renderer/Renderer.hpp"
 
@@ -261,7 +262,7 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
       engineModel->primitives.push_back(prim);
     }
 
-    pMesh->Initialize(vertices.size(), sizeof(StaticVertex), vertices.data(), true, indices.size(), indices.data());
+    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data());
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
   }

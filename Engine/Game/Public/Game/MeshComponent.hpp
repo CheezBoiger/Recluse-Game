@@ -4,6 +4,8 @@
 #include "Core/Types.hpp"
 #include "Game/Component.hpp"
 
+#include "Renderer/MeshData.hpp"
+
 
 namespace Recluse {
 
@@ -17,7 +19,8 @@ public:
   Mesh() : m_pData(nullptr)  { }
 
   // Initialize the mesh object.
-  void            Initialize(size_t elementCount, size_t sizeType, void* data, b32 isStatic, size_t indexCount, void* indices);
+  void            Initialize(size_t elementCount, void* data, MeshData::VertexType type, 
+                    size_t indexCount, void* indices, const Vector3& min = Vector3(), const Vector3& max = Vector3());
 
   // Clean up the mesh object when no longer being used.
   void            CleanUp();

@@ -26,7 +26,7 @@ std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32
   StaticVertex topVertex;
   Vector4 color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-  topVertex.position = Vector4(0.0f, +radius, 0.0f, 1.0f);
+  topVertex.position = Vector4(0.0f, radius, 0.0f, 1.0f);
   topVertex.normal = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
   topVertex.texcoord0 = Vector2(0.0f, 0.0f);
   topVertex.texcoord1 = Vector2(0.0f, 0.0f);
@@ -39,7 +39,7 @@ std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32
   bottomVertex.texcoord1 = Vector2(0.0f, 1.0f);
   //null_bones(bottomVertex);
 
-  vertices.push_back(topVertex);
+  vertices.push_back(bottomVertex);
 
   float phiStep = r32(CONST_PI) / stackCount;
   float thetaStep = 2.0f * r32(CONST_PI) / sliceCount;
@@ -70,11 +70,13 @@ std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32
       v.texcoord0.y = phi / r32(CONST_PI);
       v.texcoord1 = v.texcoord0;
 
+      v.normal.y *= -1.0f;
+      v.position.y *= -1.0f;
       vertices.push_back(v);
     }
   }
 
-  vertices.push_back(bottomVertex);
+  vertices.push_back(topVertex);
 
   return vertices;
 }

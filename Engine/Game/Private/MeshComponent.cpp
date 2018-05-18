@@ -8,10 +8,13 @@
 namespace Recluse {
 
 
-void Mesh::Initialize(size_t elementCount, size_t sizeType, void* data, b32 isStatic, size_t indexCount, void* indices)
+void Mesh::Initialize(size_t elementCount, void* data, MeshData::VertexType type,size_t indexCount, 
+  void* indices, const Vector3& min, const Vector3& max)
 {
   m_pData = gRenderer().CreateMeshData();
-  m_pData->Initialize(elementCount, sizeType, data, isStatic, indexCount, indices);
+  m_pData->Initialize(elementCount, data, type, indexCount, indices);
+  m_pData->SetMin(min);
+  m_pData->SetMax(max);
 }
 
 

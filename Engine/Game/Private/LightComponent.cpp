@@ -2,6 +2,7 @@
 #include "LightComponent.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
+#include "Geometry/UVSphere.hpp"
 
 #include "Core/Math/Vector4.hpp"
 #include "Renderer/Renderer.hpp"
@@ -14,6 +15,7 @@ namespace Recluse {
 
 std::queue<u32> PointLightComponent::sAvailablePointLightIds;
 std::queue<u32> LightComponent::sAvailableDirectionalLightIds;
+Mesh*           kPointLightMesh = nullptr;
 
 DEFINE_COMPONENT_MAP(PointLightComponent);
 
@@ -30,12 +32,14 @@ void LightComponent::GlobalInitialize()
   for (u32 i = 0; i < dirLightCount; ++i) {
     sAvailableDirectionalLightIds.push(i);
   }
+
+  PointLightComponent::InitializeMeshDebug();
 }
 
 
 void LightComponent::GlobalCleanUp()
 {
-  // uhh? what to clean up? Renderer takes care of this shat.
+  PointLightComponent::CleanUpMeshDebug();
 }
 
 
@@ -81,5 +85,28 @@ void PointLightComponent::Update()
   // Rotate about the same area of where the position should be.
   Vector3 rel = transform->Rotation * m_offset;
   m_NativeLight->_Position = transform->Position + rel;
+}
+
+
+void PointLightComponent::Debug(b32 enable)
+{
+  // TODO: Mesh debugging. Need to inject mesh to renderer for debug pipeline.
+}
+
+
+void PointLightComponent::InitializeMeshDebug()
+{
+  kPointLightMesh = new Mesh();
+  u32 g = 48;
+  auto vertices = UVSphere::MeshInstance(1.0f, g, g);
+  auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), g, g);
+  kPointLightMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data());
+}
+
+
+void PointLightComponent::CleanUpMeshDebug()
+{
+  kPointLightMesh->CleanUp();
+  delete kPointLightMesh;
 }
 } // Recluse

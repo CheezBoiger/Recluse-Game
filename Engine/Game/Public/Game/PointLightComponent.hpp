@@ -15,6 +15,8 @@ class PointLightComponent : public LightComponent {
   
 public:
   static std::queue<u32>  sAvailablePointLightIds;
+  static void   InitializeMeshDebug();
+  static void   CleanUpMeshDebug();
 
   PointLightComponent()
     : LightComponent(LightComponent::POINT_LIGHT) { }
@@ -30,6 +32,7 @@ public:
   
   void  SetOffset(const Vector3& offset) { m_offset = offset; }
 
+  virtual void  Debug(b32 enable) override;
 private:
   PointLight* m_NativeLight;  
   Vector3     m_offset;

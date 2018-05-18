@@ -2263,7 +2263,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       // Set up the render group.
       for (size_t idx = 0; idx < RenderObj->Size(); ++idx) {
         MeshData* data = (*RenderObj)[idx];
-
+        // TODO(): Do culling if needed here.
         if (!data) {
           R_DEBUG(rWarning, "Null data in render object group!, skipping...\n");
           continue;

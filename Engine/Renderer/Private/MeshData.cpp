@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "MeshData.hpp"
+#include "Vertex.hpp"
 
 namespace Recluse {
 
@@ -16,11 +17,21 @@ MeshData::~MeshData()
 }
 
 
-void MeshData::Initialize(size_t elementCount, size_t sizeType, void* data,
-  b32 isStatic, size_t indexCount, void* indices)
+void MeshData::Initialize(size_t elementCount, void* data, MeshData::VertexType sizeType, size_t indexCount, void* indices)
 {
-  mVertexBuffer.Initialize(mRhi, elementCount, sizeType, data,
-    isStatic ? VertexBuffer::STATIC_BUFFER : VertexBuffer::DYNAMIC_BUFFER);
+  size_t size = 0;
+  switch (sizeType) {
+    case STATIC:
+      size = sizeof(StaticVertex); break;
+    case SKINNED:
+      size = sizeof(SkinnedVertex); break;
+    case QUAD:
+      size = sizeof(QuadVertex); break;
+    default:
+      size = 0; break;
+  }
+
+  mVertexBuffer.Initialize(mRhi, elementCount, size, data);
 
   if (indexCount) {
     mIndexBuffer.Initialize(mRhi, indexCount, sizeof(u32), indices);
