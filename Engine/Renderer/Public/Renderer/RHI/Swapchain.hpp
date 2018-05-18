@@ -38,8 +38,11 @@ public:
   SwapchainImage&               Get(const size_t index) { return SwapchainImages[index]; }
   SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }
   
+  // Recreate the swapchain. desiredBuffers specifies how many swapchain images to use for displaying.
+  // default is minimum buffers from gpu query, using 0 to signal default swapchain image count.
+  // 2 is double buffered, and 3 is tripled buffered.
   void                          ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
-                                  VkSurfaceCapabilitiesKHR capabilities);
+                                  VkSurfaceCapabilitiesKHR capabilities, u32 desiredBuffers = 0);
 
   VkFormat                      SwapchainFormat() const { return mSwapchainFormat; }
   VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }

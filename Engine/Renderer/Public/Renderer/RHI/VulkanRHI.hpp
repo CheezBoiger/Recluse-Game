@@ -52,6 +52,23 @@ private:
 };
 
 
+class Fence : public VulkanHandle {
+public:
+  Fence()
+    : mFence(VK_NULL_HANDLE) { }
+
+  ~Fence();
+
+  void Initialize(const VkFenceCreateInfo& info);
+  void  CleanUp();
+
+  VkFence     Handle() { return mFence; }
+
+private:
+  VkFence     mFence;
+};
+
+
 // Render Hardware Interface for Vulkan.
 class VulkanRHI {
 public:
@@ -139,10 +156,14 @@ public:
   // Create a semaphore object.
   Semaphore*                    CreateVkSemaphore();
 
+  Fence*                        CreateVkFence();
+
   u32                           NumDescriptorSets() { return mCurrDescSets; }
 
   // Free a semaphore that was created by this RHI.
   void                          FreeVkSemaphore(Semaphore* semaphore);
+
+  void                          FreeVkFence(Fence* fence);
 
   // Flush out commands that are on hold.
   void                          FlushCommands();
@@ -176,6 +197,10 @@ public:
   // Submit a command buffer to the compute queue.
   void                          ComputeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
+  void                          WaitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout);
+
+  void                          ResetFences(const u32 fenceCount, const VkFence* pFences);
+
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
   // If no signals are specified, or signalSemaphoreCount is equal to 0, cmdbuffer will default
@@ -189,7 +214,7 @@ public:
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
   // requery their resources as they have been recreated!
-  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height);
+  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 desiredBuffers = 0);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.

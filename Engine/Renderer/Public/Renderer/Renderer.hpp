@@ -43,6 +43,7 @@ class Texture2DArray;
 class TextureCubeArray;
 class TextureSampler;
 class UIOverlay;
+class Fence;
 class RenderObject;
 class SkinnedRenderObject;
 class Sky;
@@ -292,6 +293,7 @@ private:
 
   CommandBuffer*        m_pSkyboxCmdBuffer;
   CommandBuffer*        m_pFinalCommandBuffer;
+  Fence*                m_cpuFence;
   Semaphore*            m_pFinalFinished;
   Semaphore*            m_SkyboxFinished;
   RenderQuad            m_RenderQuad;

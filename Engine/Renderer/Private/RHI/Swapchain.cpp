@@ -40,11 +40,15 @@ void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
 
 
 void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, 
-  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities)
+  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities, u32 desiredBuffers)
 {
   VkSwapchainKHR oldSwapChain = mSwapchain;
 
-  u32 imageCount = capabilities.minImageCount + 1;
+  u32 imageCount = capabilities.minImageCount;
+  if (desiredBuffers > imageCount) {
+    imageCount = desiredBuffers;
+  }
+
   if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
     imageCount = capabilities.maxImageCount;
   }

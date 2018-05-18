@@ -44,9 +44,7 @@ VkPresentModeKHR GetPresentMode(const GraphicsConfigParams* params)
 
 Semaphore::~Semaphore()
 {
-  if (mSema) {
-    R_DEBUG(rWarning, "Semaphore was not cleaned up prior to deletion!\n");
-  }
+  R_ASSERT(!mSema, "Semaphore was not cleaned up prior to deletion!\n");
 }
 
 
@@ -64,6 +62,29 @@ void Semaphore::CleanUp()
     vkDestroySemaphore(mOwner, mSema, nullptr);
     mSema = VK_NULL_HANDLE;
   }
+}
+
+
+void Fence::Initialize(const VkFenceCreateInfo& info)
+{
+  if (vkCreateFence(mOwner, &info, nullptr, &mFence) != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to create fence!\n");
+  }
+}
+
+
+void Fence::CleanUp()
+{
+  if (mFence) {
+    vkDestroyFence(mOwner, mFence, nullptr);
+    mFence = VK_NULL_HANDLE;
+  }
+}
+
+
+Fence::~Fence()
+{
+  R_ASSERT(!mFence, "Fence was not properly destroyed!\n");
 }
 
 
@@ -482,6 +503,34 @@ void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitI
 }
 
 
+void VulkanRHI::WaitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout)
+{
+  vkWaitForFences(mLogicalDevice.Native(), fenceCount, pFences, waitAll, timeout); 
+}
+
+
+void VulkanRHI::ResetFences(const u32 fenceCount, const VkFence* pFences)
+{
+  vkResetFences(mLogicalDevice.Native(), fenceCount, pFences);
+}
+
+
+Fence* VulkanRHI::CreateVkFence()
+{
+  Fence* fence = new Fence();
+  fence->SetOwner(mLogicalDevice.Native());
+  return fence;
+}
+
+
+void VulkanRHI::FreeVkFence(Fence* fence)
+{
+  if (!fence) return;
+  fence->CleanUp();
+  delete fence;
+}
+
+
 void VulkanRHI::AcquireNextImage()
 {
   vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
@@ -641,7 +690,7 @@ void VulkanRHI::RebuildCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
+void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 desiredBuffers)
 {
   if (width <= 0 || height <= 0) return;
 
@@ -659,7 +708,7 @@ void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height)
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
 
-  mSwapchain.ReCreate(mSurface, surfaceFormats[0], presentMode, capabilities);
+  mSwapchain.ReCreate(mSurface, surfaceFormats[0], presentMode, capabilities, desiredBuffers);
   
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();

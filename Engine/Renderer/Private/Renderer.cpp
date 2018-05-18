@@ -44,9 +44,6 @@ Renderer& gRenderer() {
 }
 
 
-VkFence cpuFence;
-
-
 Renderer::Renderer()
   : m_pRhi(nullptr)
   , m_Rendering(false)
@@ -56,6 +53,7 @@ Renderer::Renderer()
   , m_AntiAliasing(false)
   , m_pSky(nullptr)
   , m_pSkyboxCmdBuffer(nullptr)
+  , m_cpuFence(nullptr)
   , m_SkyboxFinished(nullptr)
   , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
@@ -213,8 +211,9 @@ void Renderer::Render()
 
   // Wait for fences before starting next frame.
   if (bPreviousFrame) {
-    vkWaitForFences(m_pRhi->LogicDevice()->Native(), 1, &cpuFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(m_pRhi->LogicDevice()->Native(), 1, &cpuFence);
+    VkFence fence[] = { m_cpuFence->Handle() };
+    m_pRhi->WaitForFences(1, fence, VK_TRUE, UINT64_MAX);
+    m_pRhi->ResetFences(1, fence);
   }
 
   // begin frame. This is where we start our render process per frame.
@@ -257,7 +256,7 @@ void Renderer::Render()
 
     // Signal graphics finished on the final output.
     VkSemaphore signal = m_pRhi->GraphicsFinishedSemaphore();
-    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &finalFinished, 1, &signal, cpuFence); // cpuFence will need to wait until overlay is finished.
+    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &finalFinished, 1, &signal, m_cpuFence->Handle()); // cpuFence will need to wait until overlay is finished.
     bPreviousFrame = true;
   EndFrame();
 
@@ -310,7 +309,8 @@ void Renderer::CleanUp()
   CleanUpFrameBuffers();
   CleanUpRenderTextures(true);
 
-  vkDestroyFence(m_pRhi->LogicDevice()->Native(), cpuFence, nullptr);
+  m_pRhi->FreeVkFence(m_cpuFence);
+  m_cpuFence = nullptr;
 
   if (m_pRhi) {
     m_pRhi->CleanUp();
@@ -364,7 +364,8 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   VkFenceCreateInfo fenceCi = { };
   fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   
-  vkCreateFence(m_pRhi->LogicDevice()->Native(), &fenceCi, nullptr, &cpuFence);
+  m_cpuFence = m_pRhi->CreateVkFence();
+  m_cpuFence->Initialize(fenceCi);
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
@@ -3023,12 +3024,13 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 
   if (m_pWindow->Width() <= 0 || m_pWindow <= 0) return;
   VkPresentModeKHR presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode();
+  u32 bufferCount = 2;
 
   if (params) {
     switch (params->_Buffering) {
-    case SINGLE_BUFFER: presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
-    case DOUBLE_BUFFER: presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break;
-    case TRIPLE_BUFFER: presentMode = VK_PRESENT_MODE_MAILBOX_KHR; break;
+    case SINGLE_BUFFER: { presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR; bufferCount = 1; } break;
+    case DOUBLE_BUFFER: { presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; bufferCount = 2; } break;
+    case TRIPLE_BUFFER: { presentMode = VK_PRESENT_MODE_MAILBOX_KHR; bufferCount = 3; } break;
     default: presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode(); break;
     }
 
@@ -3046,7 +3048,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   }
 
   // Triple buffering atm, we will need to use user params to switch this.
-  m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height());
+  m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height(), bufferCount);
 
   m_pUI->CleanUp();
 
