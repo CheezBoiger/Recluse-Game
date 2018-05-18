@@ -73,7 +73,7 @@ public:
     m_pointLight->SetOffset(Vector3(-2.0f, 3.6f, 0.0f));
     m_pointLight->SetColor(Vector4(1.0f, 0.5f, 0.3f, 1.0f));
     m_pointLight->SetRange(10.0f);
-    m_pointLight->SetIntensity(1.0f);
+    m_pointLight->SetIntensity(2.0f);
   
   }
 
@@ -275,6 +275,13 @@ public:
       Transform* transform = GetTransform();
       camTransform->Position = transform->Position + transform->Front() * 3.0f;
       camTransform->Rotation = transform->Rotation * Quaternion::AngleAxis(Radians(180.f), Vector3::UP);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_U)) {
+      m_pRendererComponent->Enable(false);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_Y)) {
+      m_pRendererComponent->Enable(true);
     }
   }
 

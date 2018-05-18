@@ -158,13 +158,21 @@ b32 RendererComponent::Enabled() const
 
 void RendererComponent::Update()
 {
+  if (!Enabled()) return;
   // TODO(): Static objects don't necessarily need to be updated all the time.
   // This is especially true if the object is kinematic
   Transform* transform = GetOwner()->GetTransform();
   ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
   Matrix4 model = transform->GetLocalToWorldMatrix();
-  if (model == renderData->_Model) return;
 
+  // Now push the object into the renderer for updating.
+  CmdList& list = gRenderer().GetDeferredList();
+  RenderCmd cmd;
+  cmd._pTarget = m_renderObj;
+  cmd._Debug = false;
+  list.PushBack(cmd);
+
+  if (model == renderData->_Model) return;
   Matrix4 N = model;
   N[3][0] = 0.0f;
   N[3][1] = 0.0f;

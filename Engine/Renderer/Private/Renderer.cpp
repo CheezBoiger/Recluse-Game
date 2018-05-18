@@ -66,8 +66,8 @@ Renderer::Renderer()
   m_Downscale._Strength = 1.0f;
   m_Downscale._Scale = 1.0f;
 
-  m_renderObjKeys.keys = nullptr;
-  m_renderObjKeys.count = 0;
+  m_cmdList.Resize(1024);
+  m_forwardCmdList.Resize(1024);
 
   m_cmdList.SetSortFunc([&](RenderCmd& cmd1, RenderCmd& cmd2) -> bool {
     if (!cmd1._pTarget || !cmd2._pTarget) return false;
@@ -83,6 +83,24 @@ Renderer::Renderer()
     Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
 
     return v1.Magnitude() < v2.Magnitude();
+  });
+
+  // Use painter's algorithm in this case for forward, simply because of 
+  // transparent objects.
+  m_forwardCmdList.SetSortFunc([&](RenderCmd& cmd1, RenderCmd& cmd2) -> bool {
+    if (!cmd1._pTarget || !cmd2._pTarget) return false;
+    if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
+    MeshDescriptor* mesh1 = cmd1._pTarget->GetMeshDescriptor();
+    MeshDescriptor* mesh2 = cmd2._pTarget->GetMeshDescriptor();
+    Matrix4 m1 = mesh1->ObjectData()->_Model;
+    Matrix4 m2 = mesh2->ObjectData()->_Model;
+
+    Vector4 native_pos = m_pGlobal->Data()->_CameraPos;
+    Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
+    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
+    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
+
+    return v1.Magnitude() > v2.Magnitude();
   });
 }
 
@@ -135,7 +153,7 @@ void Renderer::Render()
 
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
-  BuildCmdLists();
+  SortCmdLists();
   CheckCmdUpdate();
 
   // TODO(): Need to clean this up.
@@ -270,6 +288,9 @@ void Renderer::Render()
   computeSubmit.waitSemaphoreCount = 0;
 
   m_pRhi->ComputeSubmit(DEFAULT_QUEUE_IDX, computeSubmit);
+
+  // Clear command list afterwards.
+  ClearCmdLists();
 }
 
 
@@ -3204,25 +3225,17 @@ void Renderer::EnableHDR(b32 enable)
 }
 
 
-void Renderer::PushRenderIds(uuid64* renderobjs, u32 count)
+void Renderer::SortCmdLists()
 {
-  m_renderObjKeys.count = count;
-  m_renderObjKeys.keys = renderobjs;
+  m_cmdList.Sort();
+  // TODO(): Also sort forward list too.
 }
 
 
-void Renderer::BuildCmdLists()
+void Renderer::ClearCmdLists()
 {
-  R_ASSERT(m_renderObjKeys.keys, "Null render keys.");
-  R_ASSERT(m_renderObjKeys.count >= 0, "Negative render key count");
+  // TODO(): Clear forward command list as well.
   m_cmdList.Clear();
-  m_cmdList.Resize(m_renderObjKeys.count);
-  // TODO(): Add deferred cmd list to sort and rebuild
-
-  for (u32 i = 0; i < m_renderObjKeys.count; ++i) {
-    m_cmdList[i]._pTarget = gResources().GetRenderObject(m_renderObjKeys.keys[i]);
-  }
-
-  m_cmdList.Sort();
+  //m_forwardCmdList.Clear();
 }
 } // Recluse

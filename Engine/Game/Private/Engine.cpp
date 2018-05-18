@@ -302,8 +302,6 @@ void Engine::BuildScene()
 
   TraverseScene(BuildSceneCallback);
   gRenderer().Build();
-  gRenderer().PushRenderIds(m_cachedGameObjectKeys.data(), 
-    static_cast<u32>(m_cachedGameObjectKeys.size()));
 }
 
 

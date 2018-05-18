@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #pragma once 
 
 #include "Core/Types.hpp"
@@ -21,23 +21,25 @@ class CmdList {
 public:
   CmdList(size_t size = 0)
     : mRenderList(size)
-    , mCompare(nullptr) { } 
+    , mCompare(nullptr)
+    , m_currIdx(0) { } 
 
-  size_t                  Size() const { return mRenderList.size(); }
+  size_t                  Size() const { return m_currIdx; }
   RenderCmd&              operator[](size_t i) { return mRenderList[i]; }
   RenderCmd&              Get(size_t i) { return mRenderList[i]; }
 
   void                    Resize(size_t newSize) { mRenderList.resize(newSize); }
   void                    SetSortFunc(RenderCmdCompareFunc compare) { mCompare = compare; }
-  void                    PushBack(RenderCmd cmd) { mRenderList.push_back(cmd); }
+  void                    PushBack(RenderCmd cmd) { if (m_currIdx >= mRenderList.size()) { Resize(mRenderList.size() << 1); } mRenderList[m_currIdx++] = cmd; }
   void                    Erase(u32 i) { mRenderList.erase(mRenderList.begin() + i); }
   // Sort using alg.
   void                    Sort();  
-  void                    Clear() { mRenderList.clear(); }
+  void                    Clear() { m_currIdx = 0; }
 
 private:
   std::vector<RenderCmd>  mRenderList;
   RenderCmdCompareFunc    mCompare;
   b32                      mDirty;
+  u32                     m_currIdx;
 };
 } // Recluse

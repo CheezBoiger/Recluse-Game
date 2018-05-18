@@ -81,10 +81,6 @@ public:
   // Callback used for EngineModule<> set up.
   void              OnShutDown() override;
 
-  void              PushRenderIds(uuid64* renderobjs, u32 count);
-  
-  void              PushDeferredRenderIds(uuid64* renderobjs, u32 count);
-
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
   // This will effectively stall the gpu if called too often. If you are adding/removing objects 
@@ -209,6 +205,9 @@ public:
 
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
+  CmdList&          GetDeferredList() { return m_cmdList; }
+  CmdList&          GetForwardList() { return m_forwardCmdList; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -252,11 +251,13 @@ private:
   void              CheckCmdUpdate();
   inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
 
-  void              BuildCmdLists();
+  void              ClearCmdLists();
+  void              SortCmdLists();
 
   Window*           m_pWindow;
   CmdList           m_cmdList;
   CmdList           m_deferredCmdList;
+  CmdList           m_forwardCmdList;
   GlobalDescriptor* m_pGlobal;
   LightDescriptor*  m_pLights;
 
@@ -285,11 +286,6 @@ private:
     r32                           _Strength;
     r32                           _Scale;
   } m_Downscale;
-
-  struct {
-    uuid64* keys;
-    u32     count;
-  } m_renderObjKeys;
 
   CommandBuffer*        m_pSkyboxCmdBuffer;
   CommandBuffer*        m_pFinalCommandBuffer;
