@@ -44,7 +44,7 @@ public:
 
   ~Camera() { }
 
-  Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar);
+  Camera(Project type, r32 fov, r32 zNear, r32 zFar);
 
   Matrix4     View() { return m_viewMatrix; }
   Matrix4     Projection() { return m_projectionMatrix; }
@@ -52,9 +52,6 @@ public:
   // Update camera's coordinate view space.
   void        Update();
 
-  void                SetAspect(r32 aspect) { m_Aspect = aspect; }
-  void                SetPixelWidth(r32 width) { m_PixelWidth = width; }
-  void                SetPixelHeight(r32 height) { m_PixelHeight = height; }
   void                SetFoV(r32 fov) { m_Fov = fov; }
   void                SetProjection(Project proj) { m_ProjType = proj; }
   

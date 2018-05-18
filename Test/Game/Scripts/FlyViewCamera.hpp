@@ -28,8 +28,8 @@ class MainCamera : public GameObject
 {
 public:
   MainCamera()
-    : m_xSensitivity(0.0025f)
-    , m_ySensitivity(0.0025f)
+    : m_xSensitivity(25.0f / 10000.0f)
+    , m_ySensitivity(25.0f / 10000.0f)
     , m_yaw(0.0f)
     , m_pitch(0.0f)
     , bFirstLook(true)
@@ -46,10 +46,7 @@ public:
     Window* pWindow = gEngine().GetWindow();
     Transform* transform = GetTransform();
     // Camera set.
-    pCam = new Camera(Camera::PERSPECTIVE, Radians(60.0f),
-      static_cast<r32>(pWindow->Width()),
-      static_cast<r32>(pWindow->Height()),
-      0.2f, 2000.0f);
+    pCam = new Camera(Camera::PERSPECTIVE, Radians(60.0f), 0.2f, 2000.0f);
     pCam->Initialize(this);
     pCam->EnableBloom(true);
     Camera::SetMain(pCam);

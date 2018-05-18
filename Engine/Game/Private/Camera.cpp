@@ -26,12 +26,12 @@ void Camera::SetMain(Camera* pCam)
 }
 
 
-Camera::Camera(Project type, r32 fov, r32 pixelWidth, r32 pixelHeight, r32 zNear, r32 zFar)
+Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
   : m_ProjType(type)
   , m_Fov(fov)
-  , m_PixelWidth(pixelWidth)
-  , m_PixelHeight(pixelHeight)
-  , m_Aspect(pixelWidth / pixelHeight)
+  , m_PixelWidth(1.0f)
+  , m_PixelHeight(1.0f)
+  , m_Aspect(1.0f / 1.0f)
   , m_ZNear(zNear)
   , m_ZFar(zFar)
   , m_OrthoScale(1.0f)
@@ -80,7 +80,13 @@ void Camera::Update()
     m_projectionMatrix = Matrix4::Perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
   }
 
-  SetAspect(((r32)pWindow->Width() / (r32)pWindow->Height()));
+  r32 winPixWidth = r32(pWindow->Width());
+  r32 winPixHeight = r32(pWindow->Height());
+  if (m_PixelHeight != winPixHeight || m_PixelWidth != winPixWidth) {
+    m_PixelWidth = winPixWidth;
+    m_PixelHeight = winPixHeight;
+    m_Aspect = (m_PixelWidth / m_PixelHeight);
+  }
 
   gGlobalBuffer->_CameraPos = Vector4(pos, 1.0f);
   gGlobalBuffer->_Proj = m_projectionMatrix;
