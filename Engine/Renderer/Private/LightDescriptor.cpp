@@ -274,7 +274,7 @@ void LightDescriptor::Update()
 
 void LightDescriptor::InitializeNativeLights()
 {
-  DescriptorSetLayout* pbrLayout = gResources().GetDescriptorSetLayout(LightSetLayoutStr);
+  DescriptorSetLayout* pbrLayout = LightSetLayoutKey;
   m_pLightDescriptorSet = m_pRhi->CreateDescriptorSet();
   m_pLightDescriptorSet->Allocate(m_pRhi->DescriptorPool(), pbrLayout);
 
@@ -316,7 +316,7 @@ void LightDescriptor::InitializePrimaryShadow()
   // TODO(): Create DescriptorSet and Framebuffer for shadow pass.
   if (m_pFrameBuffer) return;
 
-  DescriptorSetLayout* viewLayout = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr);
+  DescriptorSetLayout* viewLayout = LightViewDescriptorSetLayoutKey;
   m_pLightViewDescriptorSet = m_pRhi->CreateDescriptorSet();
   m_pLightViewDescriptorSet->Allocate(m_pRhi->DescriptorPool(), viewLayout);
 

@@ -285,9 +285,9 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
   m_pFrameBuffer->Finalize(framebufferCi, renderpassCi);
 
   // Create a renderpass for the pbr overlay.
-  Texture* pbr_Color = gResources().GetRenderTexture(pbr_FinalTextureStr);
-  Texture* pbr_Bright = gResources().GetRenderTexture(pbr_BrightTextureStr);
-  Texture* pbr_Depth = gResources().GetRenderTexture(gbuffer_DepthAttachStr);
+  Texture* pbr_Color = pbr_FinalTextureKey;
+  Texture* pbr_Bright = pbr_BrightTextureKey;
+  Texture* pbr_Depth = gbuffer_DepthAttachKey;
 
   std::array<VkAttachmentDescription, 3> attachmentDescriptions;
   VkSubpassDependency dependenciesNative[2];
@@ -511,7 +511,7 @@ void Sky::CreateGraphicsPipeline(VulkanRHI* rhi)
   range.size = sizeof(Matrix4) * 2;
   range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  DescriptorSetLayout* globalLayout = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr);
+  DescriptorSetLayout* globalLayout = GlobalSetLayoutKey;
   VkDescriptorSetLayout global = globalLayout->Layout();
 
   VkPipelineLayoutCreateInfo layout = { };

@@ -28,32 +28,32 @@ class Resources {
   resource_id_t ObtainResourceId();
 
 public:
-  GraphicsPipeline*     GetGraphicsPipeline(std::string str);
-  ComputePipeline*      GetComputePipeline(std::string str);
-  FrameBuffer*          GetFrameBuffer(std::string str);
-  Texture*              GetRenderTexture(std::string str);
-  Sampler*              GetSampler(std::string str);
-  DescriptorSetLayout*  GetDescriptorSetLayout(std::string str);
-  DescriptorSet*        GetDescriptorSet(std::string str);
+  GraphicsPipeline*     GetGraphicsPipeline(u64 id);
+  ComputePipeline*      GetComputePipeline(u64 id);
+  FrameBuffer*          GetFrameBuffer(u64 id);
+  Texture*              GetRenderTexture(u64 id);
+  Sampler*              GetSampler(u64 id);
+  DescriptorSetLayout*  GetDescriptorSetLayout(u64 id);
+  DescriptorSet*        GetDescriptorSet(u64 id);
   RenderObject*         GetRenderObject(uuid64 uuid);
 
-  b32                   RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline);
-  b32                   RegisterComputePipeline(std::string str, ComputePipeline* pipeline);
-  b32                   RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer);
-  b32                   RegisterRenderTexture(std::string str, Texture* texture);
-  b32                   RegisterSampler(std::string str, Sampler* sampler);
-  b32                   RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout);
-  b32                   RegisterDescriptorSet(std::string str, DescriptorSet* set);
+  b32                   RegisterGraphicsPipeline(GraphicsPipeline* pipeline);
+  b32                   RegisterComputePipeline(ComputePipeline* pipeline);
+  b32                   RegisterFrameBuffer(FrameBuffer* framebuffer);
+  b32                   RegisterRenderTexture(Texture* texture);
+  b32                   RegisterSampler(Sampler* sampler);
+  b32                   RegisterDescriptorSetLayout(DescriptorSetLayout* layout);
+  b32                   RegisterDescriptorSet(DescriptorSet* set);
 
   b32                    RegisterRenderObject(RenderObject* obj);
   
-  GraphicsPipeline*     UnregisterGraphicsPipeline(std::string str);
-  ComputePipeline*      UnregisterComputePipeline(std::string str);
-  FrameBuffer*          UnregisterFrameBuffer(std::string str);
-  Texture*              UnregisterRenderTexture(std::string str);
-  Sampler*              UnregisterSampler(std::string str);
-  DescriptorSetLayout*  UnregisterDescriptorSetLayout(std::string str);
-  DescriptorSet*        UnregisterDescriptorSet(std::string str);
+  GraphicsPipeline*     UnregisterGraphicsPipeline(u64 id);
+  ComputePipeline*      UnregisterComputePipeline(u64 id);
+  FrameBuffer*          UnregisterFrameBuffer(u64 id);
+  Texture*              UnregisterRenderTexture(u64 id);
+  Sampler*              UnregisterSampler(u64 id);
+  DescriptorSetLayout*  UnregisterDescriptorSetLayout(u64 id);
+  DescriptorSet*        UnregisterDescriptorSet(u64 id);
   RenderObject*         UnregisterRenderObject(uuid64 uuid);
 };
 

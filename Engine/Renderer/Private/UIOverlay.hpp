@@ -4,6 +4,8 @@
 #include "Core/Types.hpp"
 #include "Core/Utility/Vector.hpp"
 
+#include "RHI/VulkanConfigs.hpp"
+
 namespace Recluse {
 
 class VulkanRHI;
@@ -19,6 +21,11 @@ class CmdList;
 // streams through screen space.
 class UIOverlay {
 public:
+  UIOverlay() 
+    : m_pGraphicsPipeline(VK_NULL_HANDLE)
+    , m_pFrameBuffer(VK_NULL_HANDLE)
+    , m_pColorTarget(VK_NULL_HANDLE)
+    , m_pSemaphore(VK_NULL_HANDLE) { }
 
   void                        Initialize(VulkanRHI* rhi);
   void                        CleanUp();

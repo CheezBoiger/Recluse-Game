@@ -133,9 +133,9 @@ void UIOverlay::CleanUp()
 
   // FrameBuffers are handled by the RHI context. Do not delete!
   
-  GraphicsPipeline* pipeline = gResources().UnregisterGraphicsPipeline("UIOverlayPipeline");
-  if (pipeline) {
-    m_pRhi->FreeGraphicsPipeline(pipeline);
+  if (m_pGraphicsPipeline) {
+    m_pRhi->FreeGraphicsPipeline(m_pGraphicsPipeline);
+    m_pGraphicsPipeline = nullptr;
   }
 }
 
@@ -148,9 +148,10 @@ void UIOverlay::InitializeFrameBuffer()
 
 void UIOverlay::SetUpGraphicsPipeline()
 {
-  if (!gResources().GetGraphicsPipeline("UIOverlayPipeline")) {
+  if (!m_pGraphicsPipeline) {
     GraphicsPipeline* pipeline = m_pRhi->CreateGraphicsPipeline();
-    gResources().RegisterGraphicsPipeline("UIOverlayPipeline", pipeline);
+    m_pGraphicsPipeline = pipeline;
+
     VkGraphicsPipelineCreateInfo pipeCI = {};
     VkPipelineLayoutCreateInfo layoutCI = {};
 

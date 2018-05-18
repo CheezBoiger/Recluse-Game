@@ -18,13 +18,13 @@
 namespace Recluse {
 
 
-std::unordered_map<std::string, GraphicsPipeline* > GraphicsPipelineMap;
-std::unordered_map<std::string, ComputePipeline* >  ComputePipelineMap;
-std::unordered_map<std::string, FrameBuffer* > FrameBuffers;
-std::unordered_map<std::string, Texture*> RenderTextureMap;
-std::unordered_map<std::string, Sampler*> SamplerMap;
-std::unordered_map<std::string, DescriptorSetLayout*> DescriptorSetLayoutMap;
-std::unordered_map<std::string, DescriptorSet* > DescriptorSetMap;
+std::unordered_map<u64, GraphicsPipeline* > GraphicsPipelineMap;
+std::unordered_map<u64, ComputePipeline* >  ComputePipelineMap;
+std::unordered_map<u64, FrameBuffer* > FrameBuffers;
+std::unordered_map<u64, Texture*> RenderTextureMap;
+std::unordered_map<u64, Sampler*> SamplerMap;
+std::unordered_map<u64, DescriptorSetLayout*> DescriptorSetLayoutMap;
+std::unordered_map<u64, DescriptorSet* > DescriptorSetMap;
 std::unordered_map<uuid64, RenderObject*> RenderObjects;
 
 resource_id_t Resources::idCount = 0;
@@ -44,10 +44,12 @@ Resources& gResources()
 }
 
 
-b32 Resources::RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipeline)
+b32 Resources::RegisterGraphicsPipeline(GraphicsPipeline* pipeline)
 { 
-  if (GraphicsPipelineMap.find(str) == GraphicsPipelineMap.end()) {
-    GraphicsPipelineMap[str] = pipeline;
+  if (!pipeline) return false;
+  graphics_uuid_t id = pipeline->GetUUID();
+  if (GraphicsPipelineMap.find(id) == GraphicsPipelineMap.end()) {
+    GraphicsPipelineMap[id] = pipeline;
     return true;    
   }
 
@@ -55,10 +57,11 @@ b32 Resources::RegisterGraphicsPipeline(std::string str, GraphicsPipeline* pipel
 }
 
 
-b32 Resources::RegisterComputePipeline(std::string str, ComputePipeline* pipeline)
+b32 Resources::RegisterComputePipeline(ComputePipeline* pipeline)
 {
-  if (ComputePipelineMap.find(str) == ComputePipelineMap.end()) {
-    ComputePipelineMap[str] = pipeline; 
+  graphics_uuid_t id = pipeline->GetUUID();
+  if (ComputePipelineMap.find(id) == ComputePipelineMap.end()) {
+    ComputePipelineMap[id] = pipeline; 
     return true;
   }
   
@@ -66,10 +69,11 @@ b32 Resources::RegisterComputePipeline(std::string str, ComputePipeline* pipelin
 }
 
 
-b32 Resources::RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer)
+b32 Resources::RegisterFrameBuffer(FrameBuffer* framebuffer)
 {
-  if (FrameBuffers.find(str) == FrameBuffers.end()) {
-    FrameBuffers[str] = framebuffer;
+  graphics_uuid_t id = framebuffer->GetUUID();
+  if (FrameBuffers.find(id) == FrameBuffers.end()) {
+    FrameBuffers[id] = framebuffer;
     return true;
   }
 
@@ -77,20 +81,22 @@ b32 Resources::RegisterFrameBuffer(std::string str, FrameBuffer* framebuffer)
 }
 
 
-b32 Resources::RegisterRenderTexture(std::string str, Texture* texture)
+b32 Resources::RegisterRenderTexture(Texture* texture)
 {
-  if (RenderTextureMap.find(str) == RenderTextureMap.end()) {
-    RenderTextureMap[str] = texture;
+  graphics_uuid_t id = texture->GetUUID();
+  if (RenderTextureMap.find(id) == RenderTextureMap.end()) {
+    RenderTextureMap[id] = texture;
     return true;
   }
   return false;
 }
 
 
-b32 Resources::RegisterSampler(std::string str, Sampler* sampler)
+b32 Resources::RegisterSampler(Sampler* sampler)
 {
-  if (SamplerMap.find(str) == SamplerMap.end()) {
-    SamplerMap[str] = sampler;
+  graphics_uuid_t id = sampler->GetUUID();
+  if (SamplerMap.find(id) == SamplerMap.end()) {
+    SamplerMap[id] = sampler;
     return true;
   }
 
@@ -98,175 +104,177 @@ b32 Resources::RegisterSampler(std::string str, Sampler* sampler)
 }
 
 
-b32 Resources::RegisterDescriptorSetLayout(std::string str, DescriptorSetLayout* layout)
+b32 Resources::RegisterDescriptorSetLayout(DescriptorSetLayout* layout)
 {
-  if (DescriptorSetLayoutMap.find(str) == DescriptorSetLayoutMap.end()) {
-    DescriptorSetLayoutMap[str] = layout;
+  graphics_uuid_t id = layout->GetUUID();
+  if (DescriptorSetLayoutMap.find(id) == DescriptorSetLayoutMap.end()) {
+    DescriptorSetLayoutMap[id] = layout;
     return true;
   }
   return false;
 }
 
 
-b32 Resources::RegisterDescriptorSet(std::string str, DescriptorSet* set)
+b32 Resources::RegisterDescriptorSet(DescriptorSet* set)
 {
-  if (DescriptorSetMap.find(str) == DescriptorSetMap.end()) {
-    DescriptorSetMap[str] = set;
+  graphics_uuid_t id = set->GetUUID();
+  if (DescriptorSetMap.find(id) == DescriptorSetMap.end()) {
+    DescriptorSetMap[id] = set;
     return true;
   }
   return false;
 }
 
 
-GraphicsPipeline* Resources::GetGraphicsPipeline(std::string str)
+GraphicsPipeline* Resources::GetGraphicsPipeline(u64 id)
 {
-  if (GraphicsPipelineMap.find(str) != GraphicsPipelineMap.end()) {
-    return GraphicsPipelineMap[str];
+  if (GraphicsPipelineMap.find(id) != GraphicsPipelineMap.end()) {
+    return GraphicsPipelineMap[id];
   }
   
   return nullptr;
 }
 
 
-ComputePipeline* Resources::GetComputePipeline(std::string str)
+ComputePipeline* Resources::GetComputePipeline(u64 id)
 {
-  if (ComputePipelineMap.find(str) != ComputePipelineMap.end()) {
-    return ComputePipelineMap[str];
+  if (ComputePipelineMap.find(id) != ComputePipelineMap.end()) {
+    return ComputePipelineMap[id];
   } 
 
   return nullptr;
 }
 
 
-FrameBuffer* Resources::GetFrameBuffer(std::string str)
+FrameBuffer* Resources::GetFrameBuffer(u64 id)
 {
-  if (FrameBuffers.find(str) != FrameBuffers.end()) {
-    return FrameBuffers[str];
+  if (FrameBuffers.find(id) != FrameBuffers.end()) {
+    return FrameBuffers[id];
   }
   return nullptr;
 }
 
 
-Texture* Resources::GetRenderTexture(std::string str)
+Texture* Resources::GetRenderTexture(u64 id)
 {
-  if (RenderTextureMap.find(str) != RenderTextureMap.end()) {
-    return RenderTextureMap[str];
+  if (RenderTextureMap.find(id) != RenderTextureMap.end()) {
+    return RenderTextureMap[id];
   }
   return nullptr;
 }
 
 
-Sampler* Resources::GetSampler(std::string str)
+Sampler* Resources::GetSampler(u64 id)
 {
-  if (SamplerMap.find(str) != SamplerMap.end()) {
-    return SamplerMap[str];
+  if (SamplerMap.find(id) != SamplerMap.end()) {
+    return SamplerMap[id];
   }
   return nullptr;
 }
 
 
-DescriptorSetLayout* Resources::GetDescriptorSetLayout(std::string str)
+DescriptorSetLayout* Resources::GetDescriptorSetLayout(u64 id)
 {
-  if (DescriptorSetLayoutMap.find(str) != DescriptorSetLayoutMap.end()) {
-    return DescriptorSetLayoutMap[str];
+  if (DescriptorSetLayoutMap.find(id) != DescriptorSetLayoutMap.end()) {
+    return DescriptorSetLayoutMap[id];
   }
   return nullptr;
 }
 
 
-DescriptorSet* Resources::GetDescriptorSet(std::string str)
+DescriptorSet* Resources::GetDescriptorSet(u64 id)
 {
-  if (DescriptorSetMap.find(str) != DescriptorSetMap.end()) {
-    return DescriptorSetMap[str];
+  if (DescriptorSetMap.find(id) != DescriptorSetMap.end()) {
+    return DescriptorSetMap[id];
   }
   return nullptr;
 }
 
 
-GraphicsPipeline* Resources::UnregisterGraphicsPipeline(std::string str)
+GraphicsPipeline* Resources::UnregisterGraphicsPipeline(u64 id)
 {
   GraphicsPipeline* pipeline = nullptr;
 
-  if (GraphicsPipelineMap.find(str) != GraphicsPipelineMap.end()) {
-    pipeline = GraphicsPipelineMap[str];
-    GraphicsPipelineMap.erase(str);
+  if (GraphicsPipelineMap.find(id) != GraphicsPipelineMap.end()) {
+    pipeline = GraphicsPipelineMap[id];
+    GraphicsPipelineMap.erase(id);
   }
   
   return pipeline;
 }
 
 
-ComputePipeline* Resources::UnregisterComputePipeline(std::string str)
+ComputePipeline* Resources::UnregisterComputePipeline(u64 id)
 {
   ComputePipeline* pipeline = nullptr;
-  if (ComputePipelineMap.find(str) != ComputePipelineMap.end()) {
-    pipeline = ComputePipelineMap[str];
-    ComputePipelineMap.erase(str);
+  if (ComputePipelineMap.find(id) != ComputePipelineMap.end()) {
+    pipeline = ComputePipelineMap[id];
+    ComputePipelineMap.erase(id);
   }
 
   return pipeline;
 }
 
 
-FrameBuffer* Resources::UnregisterFrameBuffer(std::string str)
+FrameBuffer* Resources::UnregisterFrameBuffer(u64 id)
 {
   FrameBuffer* framebuffer = nullptr;
   
-  if (FrameBuffers.find(str) != FrameBuffers.end()) {
-    framebuffer = FrameBuffers[str];
-    FrameBuffers.erase(str);
+  if (FrameBuffers.find(id) != FrameBuffers.end()) {
+    framebuffer = FrameBuffers[id];
+    FrameBuffers.erase(id);
   }  
 
   return framebuffer;
 }
 
 
-Texture* Resources::UnregisterRenderTexture(std::string str)
+Texture* Resources::UnregisterRenderTexture(u64 id)
 {
   Texture* texture = nullptr;
 
-  if (RenderTextureMap.find(str) != RenderTextureMap.end()) {
-    texture = RenderTextureMap[str];
-    RenderTextureMap.erase(str);
+  if (RenderTextureMap.find(id) != RenderTextureMap.end()) {
+    texture = RenderTextureMap[id];
+    RenderTextureMap.erase(id);
   }
 
   return texture;
 }
 
 
-Sampler* Resources::UnregisterSampler(std::string str)
+Sampler* Resources::UnregisterSampler(u64 id)
 {
   Sampler* sampler = nullptr;
 
-  if (SamplerMap.find(str) != SamplerMap.end()) {
-    sampler = SamplerMap[str];
-    SamplerMap.erase(str);
+  if (SamplerMap.find(id) != SamplerMap.end()) {
+    sampler = SamplerMap[id];
+    SamplerMap.erase(id);
   }
 
   return sampler;
 }
 
 
-DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(std::string str)
+DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(u64 id)
 {
   DescriptorSetLayout* layout = nullptr;
 
-  if (DescriptorSetLayoutMap.find(str) != DescriptorSetLayoutMap.end()) {
-    layout = DescriptorSetLayoutMap[str];
-    DescriptorSetLayoutMap.erase(str);
+  if (DescriptorSetLayoutMap.find(id) != DescriptorSetLayoutMap.end()) {
+    layout = DescriptorSetLayoutMap[id];
+    DescriptorSetLayoutMap.erase(id);
   }
 
   return layout;
 }
 
 
-DescriptorSet* Resources::UnregisterDescriptorSet(std::string str)
+DescriptorSet* Resources::UnregisterDescriptorSet(u64 id)
 {
   DescriptorSet* set = nullptr;
 
-  if (DescriptorSetMap.find(str) != DescriptorSetMap.end()) {
-    set = DescriptorSetMap[str];
-    DescriptorSetMap.erase(str);
+  if (DescriptorSetMap.find(id) != DescriptorSetMap.end()) {
+    set = DescriptorSetMap[id];
+    DescriptorSetMap.erase(id);
   }
 
   return set;

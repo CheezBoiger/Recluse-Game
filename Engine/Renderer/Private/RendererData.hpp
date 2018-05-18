@@ -21,129 +21,143 @@
 namespace Recluse {
 
 class Renderer;
+class Sampler;
+class Texture;
+class FrameBuffer;
+class GraphicsPipeline;
+class ComputePipeline;
+class DescriptorSetLayout;
+class DescriptorSet;
+class Buffer;
 
 extern std::string ShadersPath;
 
-extern std::string DefaultTextureStr;
-extern std::string DefaultSamplerStr;
+extern Texture* DefaultTextureKey;
+extern Sampler* DefaultSamplerKey;
 
-extern std::string ShadowMapPipelineStr;
-extern std::string DynamicShadowMapPipelineStr;
+extern GraphicsPipeline* ShadowMapPipelineKey;
+extern GraphicsPipeline* DynamicShadowMapPipelineKey;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
-extern std::string LightViewDescriptorSetLayoutStr;
-extern std::string illumination_reflectProbeDescLayoutStr;
+extern DescriptorSetLayout* LightViewDescriptorSetLayoutKey;
+extern DescriptorSetLayout* illumination_reflectProbeDescLayoutKey;
 
-extern std::string gbuffer_PipelineStr;
-extern std::string gbuffer_StaticPipelineStr;
-extern std::string gbuffer_LayoutStr;
-extern std::string gbuffer_AlbedoAttachStr;
-extern std::string gbuffer_NormalAttachStr;
-extern std::string gbuffer_PositionAttachStr;
-extern std::string gbuffer_EmissionAttachStr;
-extern std::string gbuffer_SamplerStr;
-extern std::string gbuffer_DepthAttachStr;
-extern std::string gbuffer_FrameBufferStr;
+extern GraphicsPipeline* gbuffer_PipelineKey;
+extern GraphicsPipeline* gbuffer_StaticPipelineKey;
+extern DescriptorSetLayout* gbuffer_LayoutKey;
+extern Texture* gbuffer_AlbedoAttachKey;
+extern Texture* gbuffer_NormalAttachKey;
+extern Texture* gbuffer_PositionAttachKey;
+extern Texture* gbuffer_EmissionAttachKey;
+extern Sampler* gbuffer_SamplerKey;
+extern Texture* gbuffer_DepthAttachKey;
+extern FrameBuffer* gbuffer_FrameBufferKey;
 extern std::string gbuffer_VertFileStr;
 extern std::string gbuffer_StaticVertFileStr;
 extern std::string gbuffer_FragFileStr;
 
-extern std::string pbr_PipelineStr;
-extern std::string pbr_FrameBufferStr;
-extern std::string pbr_DescLayoutStr;
-extern std::string pbr_DescSetStr;
-extern std::string pbr_FinalTextureStr;
-extern std::string pbr_BrightTextureStr;
+extern GraphicsPipeline* pbr_PipelineKey;
+extern FrameBuffer* pbr_FrameBufferKey;
+extern DescriptorSetLayout* pbr_DescLayoutKey;
+extern DescriptorSet* pbr_DescSetKey;
+extern Texture* pbr_FinalTextureKey;
+extern Texture* pbr_BrightTextureKey;
 extern std::string pbr_VertStr;
 extern std::string pbr_FragStr;
 
-extern std::string pbr_forwardPipelineStr;
+extern GraphicsPipeline* pbr_forwardPipelineKey;
 extern const char* pbr_forwardVertStr;
 extern const char* pbr_forwardFragStr;
 
-extern std::string aa_PipelineStr;
-extern std::string aa_FrameBufferStr;
-extern std::string aa_DescLayoutStr;
-extern std::string aa_outputTextureStr;
+extern GraphicsPipeline* aa_PipelineKey;
+extern FrameBuffer* aa_FrameBufferKey;
+extern DescriptorSetLayout* aa_DescLayoutKey;
+extern Texture* aa_outputTextureKey;
 extern std::string aa_fragStr;
 
 // Work in progress.
-extern std::string cluster_FrustumPipelineStr;
-extern std::string cluster_LightCullPipelineStr;
-extern std::string cluster_LightGridStr;
-extern std::string cluster_FrustumTextureStr;
+extern ComputePipeline* cluster_FrustumPipelineKey;
+extern ComputePipeline* cluster_LightCullPipelineKey;
+extern Texture* cluster_LightGridKey;
+extern Texture* cluster_FrustumTextureKey;
 
 extern std::string renderquad_vertStr;
 
-extern std::string hiz_FullTexture;
-extern std::string hiz_2xTex;
-extern std::string hiz_4xTex;
+extern Texture* hiz_FullTexture;
+extern Texture* hiz_2xTex;
+extern Texture* hiz_4xTex;
 
-extern std::string skybox_pipelineStr;
-extern std::string skybox_descriptorSetStr;
-extern std::string skybox_setLayoutStr;
+extern GraphicsPipeline* skybox_pipelineKey;
+extern DescriptorSet* skybox_descriptorSetKey;
+extern DescriptorSetLayout* skybox_setLayoutKey;
 
-extern std::string MeshSetLayoutStr;
-extern std::string MaterialSetLayoutStr;
-extern std::string BonesSetLayoutStr;
-extern std::string GlobalSetLayoutStr;
-extern std::string LightSetLayoutStr;
+extern DescriptorSetLayout*  MeshSetLayoutKey;
+extern DescriptorSetLayout* MaterialSetLayoutKey;
+extern DescriptorSetLayout* BonesSetLayoutKey;
+extern DescriptorSetLayout* GlobalSetLayoutKey;
+extern DescriptorSetLayout* LightSetLayoutKey;
 
-extern std::string ScaledSamplerStr;
-extern std::string RenderTarget2xHorizStr;
-extern std::string RenderTarget2xFinalStr;
-extern std::string RenderTarget4xScaledStr;
-extern std::string RenderTarget4xFinalStr;
-extern std::string RenderTarget8xScaledStr;
-extern std::string RenderTarget8xFinalStr;
-extern std::string RenderTarget16xScaledStr;
-extern std::string RenderTarget16xFinalStr;
-extern std::string FrameBuffer2xHorizStr;
-extern std::string FrameBuffer2xFinalStr;
-extern std::string FrameBuffer4xStr;
-extern std::string FrameBuffer4xFinalStr;
-extern std::string FrameBuffer8xStr;
-extern std::string FrameBuffer8xFinalStr;
-extern std::string FrameBuffer16xStr;
-extern std::string FrameBuffer16xFinalStr;
-extern std::string DownscaleBlurLayoutStr;
-extern std::string DownscaleBlurDescriptorSet2x;
-extern std::string DownscaleBlurDescriptorSet2xFinalStr;
-extern std::string DownscaleBlurDescriptorSet4x;
-extern std::string DownscaleBlurDescriptorSet4xFinalStr;
-extern std::string DownscaleBlurDescriptorSet8x;
-extern std::string DownscaleBlurDescriptorSet8xFinalStr;
-extern std::string DownscaleBlurDescriptorSet16x;
-extern std::string DownscaleBlurDescriptorSet16xFinalStr;
-extern std::string GlowPipelineStr;
+extern Sampler* ScaledSamplerKey;
+extern Texture* RenderTarget2xHorizKey;
+extern Texture* RenderTarget2xFinalKey;
+extern Texture* RenderTarget4xScaledKey;
+extern Texture* RenderTarget4xFinalKey;
+extern Texture* RenderTarget8xScaledKey;
+extern Texture* RenderTarget8xFinalKey;
+extern Texture* RenderTarget16xScaledKey;
+extern Texture* RenderTarget16xFinalKey;
+extern FrameBuffer* FrameBuffer2xHorizKey;
+extern FrameBuffer* FrameBuffer2xFinalKey;
+extern FrameBuffer* FrameBuffer4xKey;
+extern FrameBuffer* FrameBuffer4xFinalKey;
+extern FrameBuffer* FrameBuffer8xKey;
+extern FrameBuffer* FrameBuffer8xFinalKey;
+extern FrameBuffer* FrameBuffer16xKey;
+extern FrameBuffer* FrameBuffer16xFinalKey;
+extern DescriptorSetLayout* DownscaleBlurLayoutKey;
+extern DescriptorSet* DownscaleBlurDescriptorSet2x;
+extern DescriptorSet* DownscaleBlurDescriptorSet2xFinalKey;
+extern DescriptorSet* DownscaleBlurDescriptorSet4x;
+extern DescriptorSet* DownscaleBlurDescriptorSet4xFinalKey;
+extern DescriptorSet* DownscaleBlurDescriptorSet8x;
+extern DescriptorSet* DownscaleBlurDescriptorSet8xFinalKey;
+extern DescriptorSet* DownscaleBlurDescriptorSet16x;
+extern DescriptorSet* DownscaleBlurDescriptorSet16xFinalKey;
+extern GraphicsPipeline* GlowPipelineKey;
 extern std::string GlowFragFileStr;
-extern std::string RenderTargetGlowStr;
-extern std::string FrameBufferGlowStr;
-extern std::string GlowDescriptorSetLayoutStr;
-extern std::string GlowDescriptorSetStr;
-extern std::string DownscaleBlurPipeline2xStr;
-extern std::string DownscaleBlurPipeline4xStr;
-extern std::string DownscaleBlurPipeline8xStr;
-extern std::string DownscaleBlurPipeline16xStr;
+extern Texture* RenderTargetGlowKey;
+extern FrameBuffer* FrameBufferGlowKey;
+extern DescriptorSetLayout* GlowDescriptorSetLayoutKey;
+extern DescriptorSet* GlowDescriptorSetKey;
+extern GraphicsPipeline* DownscaleBlurPipeline2xKey;
+extern GraphicsPipeline* DownscaleBlurPipeline4xKey;
+extern GraphicsPipeline* DownscaleBlurPipeline8xKey;
+extern GraphicsPipeline* DownscaleBlurPipeline16xKey;
 extern std::string DownscaleBlurVertFileStr;
 extern std::string DownscaleBlurFragFileStr;
 
-extern std::string RenderTargetVelocityStr;
+extern Texture* RenderTargetVelocityKey;
 
-extern std::string hdr_gamma_pipelineStr;
-extern std::string hdr_gamma_colorAttachStr;
-extern std::string hdr_gamma_frameBufferStr;
-extern std::string hdr_gamma_samplerStr;
-extern std::string hdr_gamma_descSetStr;
-extern std::string hdr_gamma_descSetLayoutStr;
+extern GraphicsPipeline* hdr_gamma_pipelineKey;
+extern Texture* hdr_gamma_colorAttachKey;
+extern FrameBuffer* hdr_gamma_frameBufferKey;
+extern Sampler* hdr_gamma_samplerKey;
+extern DescriptorSet* hdr_gamma_descSetKey;
+extern DescriptorSetLayout* hdr_gamma_descSetLayoutKey;
 extern std::string hdr_gamma_vertFileStr;
 extern std::string hdr_gamma_fragFileStr;
 
-extern std::string final_PipelineStr;
-extern std::string final_DescSetStr;
-extern std::string final_DescSetLayoutStr;
+extern GraphicsPipeline* final_PipelineKey;
+extern DescriptorSet* final_DescSetKey;
+extern DescriptorSetLayout* final_DescSetLayoutKey;
 extern std::string final_VertFileStr;
 extern std::string final_FragFileStr;
+extern FrameBuffer* final_frameBufferKey;
+extern Texture* final_renderTargetKey;
+
+
+extern DescriptorSet* output_descSetKey;
+extern GraphicsPipeline* output_pipelineKey;
 
 extern char const* kDefaultShaderEntryPointStr;
 

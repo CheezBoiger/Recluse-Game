@@ -59,8 +59,8 @@ void RenderObject::Initialize()
   mMaterialSets[0] = mRhi->CreateDescriptorSet();
   mMaterialSets[1] = mRhi->CreateDescriptorSet();
 
-  DescriptorSetLayout* MeshLayout = gResources().GetDescriptorSetLayout(MeshSetLayoutStr);
-  DescriptorSetLayout* MaterialLayout = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr);
+  DescriptorSetLayout* MeshLayout = MeshSetLayoutKey;
+  DescriptorSetLayout* MaterialLayout = MaterialSetLayoutKey;
   mMeshSets[0]->Allocate(mRhi->DescriptorPool(), MeshLayout);
   mMeshSets[1]->Allocate(mRhi->DescriptorPool(), MeshLayout);
   mMaterialSets[0]->Allocate(mRhi->DescriptorPool(), MaterialLayout);
@@ -114,10 +114,10 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
     return;
   }
 
-  Sampler* sampler = gResources().GetSampler(DefaultSamplerStr);
+  Sampler* sampler = DefaultSamplerKey;
   if (_pMaterialDescId->Sampler()) sampler = _pMaterialDescId->Sampler()->Handle();
 
-  Texture* defaultTexture = gResources().GetRenderTexture(DefaultTextureStr);
+  Texture* defaultTexture = DefaultTextureKey;
 
   // Mesh
   {
@@ -273,7 +273,7 @@ SkinnedRenderObject::SkinnedRenderObject(uuid64 id,
 void SkinnedRenderObject::Initialize()
 {
   RenderObject::Initialize();
-  DescriptorSetLayout* jointLayout = gResources().GetDescriptorSetLayout(BonesSetLayoutStr);
+  DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
 
   m_JointSets[0] = mRhi->CreateDescriptorSet();
   m_JointSets[1] = mRhi->CreateDescriptorSet();

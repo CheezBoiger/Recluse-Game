@@ -10,7 +10,7 @@ in FRAG_IN {
 
 layout (location = 0) out vec4 fragColor;
 
-layout (binding = 0) uniform sampler2D finalTexture;
+layout (set = 0, binding = 0) uniform sampler2D finalTexture;
 
 layout (set = 0, binding = 1) uniform GlobalBuffer {
   mat4  view;

@@ -120,6 +120,24 @@ public:
     // Make emission glow.
     m_factor = Absf(sinf(static_cast<r32>(Time::CurrentTime())));
     m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(m_factor);
+
+    if (Keyboard::KeyPressed(KEY_CODE_K)) {
+      ModelLoader::Model* model = nullptr;  
+      ModelCache::Get("BoomBox", &model);
+      m_pMaterialComponent->SetMaterialRef(model->materials[0]);
+      m_pMeshComponent->SetMeshRef(model->meshes[0]);
+      m_pRendererComponent->ReConfigure();
+      transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_J)) {
+      ModelLoader::Model* model = nullptr;
+      ModelCache::Get("DamagedHelmet", &model);
+      m_pMaterialComponent->SetMaterialRef(model->materials[0]);
+      m_pMeshComponent->SetMeshRef(model->meshes[0]);
+      m_pRendererComponent->ReConfigure();
+      transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
+    }
   }
 
   void OnCleanUp() override

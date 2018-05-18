@@ -11,23 +11,28 @@
 #define INTEL_VENDOR_ID         0x1F96
 #define AMD_VENDOR_ID           0x1022
 
+typedef unsigned long graphics_uuid_t;
 
 class VulkanHandle {
+  static graphics_uuid_t uuid;
 public:
+  
   VulkanHandle()
-    : mOwner(VK_NULL_HANDLE) { }
+    : mOwner(VK_NULL_HANDLE)
+    , m_uuid(uuid++) { }
 
   void      SetOwner(VkDevice owner) { mOwner = owner; }
   VkDevice  Owner() { return mOwner; }
+  graphics_uuid_t GetUUID() const { return m_uuid; }
 
 protected:
   VkDevice  mOwner;
+  graphics_uuid_t m_uuid;
 };
 
 
 namespace Recluse {
 namespace {
-
 
 VkSubpassDependency CreateSubPassDependency(u32 srcSubpass, VkAccessFlags srcAccessMask,
   VkPipelineStageFlags srcStageMask, u32 dstSubpass, VkAccessFlags dstAccessMask,

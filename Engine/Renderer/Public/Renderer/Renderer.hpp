@@ -237,6 +237,7 @@ private:
   void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
   void              BuildHDRCmdBuffer();
   void              BuildSkyboxCmdBuffer();
+  void              BuildFinalCmdBuffer();
   void              SetUpDownscale(b32 FullSetUp);
   void              CleanUpDownscale(b32 FullCleanUp);
   void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
@@ -290,6 +291,8 @@ private:
   } m_renderObjKeys;
 
   CommandBuffer*        m_pSkyboxCmdBuffer;
+  CommandBuffer*        m_pFinalCommandBuffer;
+  Semaphore*            m_pFinalFinished;
   Semaphore*            m_SkyboxFinished;
   RenderQuad            m_RenderQuad;
   GraphicsConfigParams  m_currentGraphicsConfigs;

@@ -19,56 +19,56 @@ namespace Recluse {
 
 std::string ShadersPath               = "Shaders";
 
-std::string DefaultTextureStr         = "DefaultTexture";
-std::string DefaultSamplerStr         = "DefaultSampler";
+Texture* DefaultTextureKey         = nullptr;
+Sampler* DefaultSamplerKey         = nullptr;
 
-std::string ShadowMapPipelineStr              = "ShadowMapPipeline";
-std::string DynamicShadowMapPipelineStr       = "DynamicShadowMapPipeline";
+GraphicsPipeline* ShadowMapPipelineKey              = nullptr;
+GraphicsPipeline* DynamicShadowMapPipelineKey       = nullptr;
 std::string DynamicShadowMapVertFileStr       = "DynamicShadowMapping.vert.spv";
 std::string ShadowMapVertFileStr              = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr              = "ShadowMapping.frag.spv";
-std::string LightViewDescriptorSetLayoutStr   = "LightViewDescriptorLayout";
-std::string illumination_reflectProbeDescLayoutStr = "reflectionProbeDescLayout";
+DescriptorSetLayout* LightViewDescriptorSetLayoutKey   = nullptr;
+DescriptorSetLayout* illumination_reflectProbeDescLayoutKey = nullptr;
 
-std::string gbuffer_PipelineStr               = "GBufferPipeline";
-std::string gbuffer_StaticPipelineStr         = "StaticGBufferPipeline";
-std::string gbuffer_LayoutStr                 = "GBufferLayout";
-std::string gbuffer_AlbedoAttachStr           = "AlbedoColor";
-std::string gbuffer_NormalAttachStr           = "NormalColor";
-std::string gbuffer_PositionAttachStr         = "PositionColor";
-std::string gbuffer_EmissionAttachStr         = "EmissionColor";
-std::string gbuffer_DepthAttachStr            = "GBufferDepth";
-std::string gbuffer_SamplerStr                = "GBufferSampler";
-std::string gbuffer_FrameBufferStr            = "GBufferFrameBuffer";
+GraphicsPipeline* gbuffer_PipelineKey               = nullptr;
+GraphicsPipeline* gbuffer_StaticPipelineKey         = nullptr;
+DescriptorSetLayout* gbuffer_LayoutKey                 = nullptr;
+Texture* gbuffer_AlbedoAttachKey           = nullptr;
+Texture* gbuffer_NormalAttachKey           = nullptr;
+Texture* gbuffer_PositionAttachKey         = nullptr;
+Texture* gbuffer_EmissionAttachKey         = nullptr;
+Texture* gbuffer_DepthAttachKey            = nullptr;
+Sampler* gbuffer_SamplerKey                = nullptr;
+FrameBuffer* gbuffer_FrameBufferKey            = nullptr;
 std::string gbuffer_VertFileStr               = "GBuffer.vert.spv";
 std::string gbuffer_StaticVertFileStr         = "StaticGBuffer.vert.spv";
 std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
 
-std::string pbr_PipelineStr                   = "PBRPipeline";
-std::string pbr_FrameBufferStr                = "PBRFrameBuffer";
-std::string pbr_DescLayoutStr                 = "PBRDescLayout";
-std::string pbr_DescSetStr                    = "PBRDescSet";
-std::string pbr_FinalTextureStr               = "RenderTargetColor";
-std::string pbr_BrightTextureStr              = "RenderTargetBright";
+GraphicsPipeline* pbr_PipelineKey                   = nullptr;
+FrameBuffer* pbr_FrameBufferKey                = nullptr;
+DescriptorSetLayout* pbr_DescLayoutKey                 = nullptr;
+DescriptorSet* pbr_DescSetKey                    = nullptr;
+Texture* pbr_FinalTextureKey               = nullptr;
+Texture* pbr_BrightTextureKey              = nullptr;
 std::string pbr_VertStr                       = "PBR.vert.spv";
 std::string pbr_FragStr                       = "PBR.frag.spv";
 
-std::string RenderTargetBlurHoriz4xStr  = "RTBlurHoriz4xTemp";
-std::string FrameBuffer4xHorizStr       = "FrameBufferHoriz4xStr";
-std::string MeshSetLayoutStr            = "MeshDescriptorSetLayout";
-std::string MaterialSetLayoutStr        = "MaterialDescriptorSetLayout";
-std::string BonesSetLayoutStr           = "BonesDescriptorSetLayout";
-std::string GlobalSetLayoutStr          = "GlobalDescriptorSetLayout";
-std::string LightSetLayoutStr           = "LightDescriptorSetLayout";
+Texture* RenderTargetBlurHoriz4xKey  = nullptr;
+FrameBuffer* FrameBuffer4xHorizKey       = nullptr;
+DescriptorSetLayout* MeshSetLayoutKey            = nullptr;
+DescriptorSetLayout* MaterialSetLayoutKey        = nullptr;
+DescriptorSetLayout* BonesSetLayoutKey           = nullptr;
+DescriptorSetLayout* GlobalSetLayoutKey          = nullptr;
+DescriptorSetLayout* LightSetLayoutKey           = nullptr;
 
-std::string skybox_pipelineStr           = "SkyboxPipeline";
-std::string skybox_descriptorSetStr      = "SkyboxSet";
-std::string skybox_setLayoutStr          = "SkyboxLayout";
+GraphicsPipeline* skybox_pipelineKey           = nullptr;
+DescriptorSet* skybox_descriptorSetKey      = nullptr;
+DescriptorSetLayout* skybox_setLayoutKey          = nullptr;
 
-std::string aa_PipelineStr                = "AA Pipeline";
-std::string aa_FrameBufferStr             = "AA FrameBuffer";
-std::string aa_DescLayoutStr              = "AA Desc Layout";
-std::string aa_outputTextureStr           = "AA Texture Output";
+GraphicsPipeline* aa_PipelineKey                = nullptr;
+FrameBuffer* aa_FrameBufferKey             = nullptr;
+DescriptorSetLayout* aa_DescLayoutKey              = nullptr;
+Texture* aa_outputTextureKey           = nullptr;
 
 std::string renderquad_vertStr            = "RenderQuad.vert.spv";
 // Must check with the renderer specs.
@@ -77,61 +77,65 @@ std::string aa_fragStr                    = "";
 std::string fxaa_fragStr                  = "FXAA.frag.spv";
 std::string smaa_fragStr                  = "SMAA.frag.spv";
 
-std::string ScaledSamplerStr            = "ScaledSampler";
-std::string RenderTarget2xHorizStr      = "RenderTarget2x";
-std::string RenderTarget2xFinalStr      = "RenderTarget2xFinal";
-std::string RenderTarget4xScaledStr     = "RenderTarget4x";
-std::string RenderTarget4xFinalStr      = "RenderTarget4xFinal";
-std::string RenderTarget8xScaledStr     = "RenderTarget8x";
-std::string RenderTarget8xFinalStr      = "RenderTarget8xFinal";
-std::string RenderTarget16xScaledStr    = "RenderTarget16x";
-std::string RenderTarget16xFinalStr     = "RenderTarget16xFinal";
-std::string FrameBuffer2xHorizStr       = "FrameBuffer2x";
-std::string FrameBuffer2xFinalStr       = "FrameBuffer2xFinal";
-std::string FrameBuffer4xFinalStr       = "FrameBuffer4xFinal";
-std::string FrameBuffer4xStr            = "FrameBuffer4x";
-std::string FrameBuffer8xStr            = "FrameBuffer8x";
-std::string FrameBuffer8xFinalStr       = "FrameBuffer8xFinal";
-std::string FrameBuffer16xStr           = "FrameBuffer16x";
-std::string FrameBuffer16xFinalStr      = "FrameBuffer16xFinal";
-std::string GlowPipelineStr             = "GlowPipelineStr";
+Sampler* ScaledSamplerKey            = nullptr;
+Texture* RenderTarget2xHorizKey      = nullptr;
+Texture* RenderTarget2xFinalKey      = nullptr;
+Texture* RenderTarget4xScaledKey     = nullptr;
+Texture* RenderTarget4xFinalKey      = nullptr;
+Texture* RenderTarget8xScaledKey     = nullptr;
+Texture* RenderTarget8xFinalKey      = nullptr;
+Texture* RenderTarget16xScaledKey    = nullptr;
+Texture* RenderTarget16xFinalKey     = nullptr;
+FrameBuffer* FrameBuffer2xHorizKey       = nullptr;
+FrameBuffer* FrameBuffer2xFinalKey       = nullptr;
+FrameBuffer* FrameBuffer4xFinalKey       = nullptr;
+FrameBuffer* FrameBuffer4xKey            = nullptr;
+FrameBuffer* FrameBuffer8xKey            = nullptr;
+FrameBuffer* FrameBuffer8xFinalKey       = nullptr;
+FrameBuffer* FrameBuffer16xKey           = nullptr;
+FrameBuffer* FrameBuffer16xFinalKey      = nullptr;
+GraphicsPipeline* GlowPipelineKey             = nullptr;
 std::string GlowFragFileStr             = "GlowPass.frag.spv";
-std::string RenderTargetGlowStr         = "RenderTargetGlow";
-std::string FrameBufferGlowStr          = "FrameBufferGlow";
-std::string GlowDescriptorSetLayoutStr  = "GlowDescriptorSetLayout";
-std::string GlowDescriptorSetStr        = "GlowDescriptorSet";
-std::string DownscaleBlurPipeline2xStr  = "DownscaleBlurPipeline2x";
-std::string DownscaleBlurPipeline4xStr  = "DownscaleBlurPipeline4x";
-std::string DownscaleBlurPipeline8xStr  = "DownscaleBlurPipeline8x";
-std::string DownscaleBlurPipeline16xStr = "DownscaleBlurPipeline16x";
-std::string DownscaleBlurLayoutStr      = "DownscaleBlurLayout";
-std::string DownscaleBlurDescriptorSet2x          = "DownscaleBlurDescriptorSet2x";
-std::string DownscaleBlurDescriptorSet2xFinalStr  = "DownscaleFinal2x";
-std::string DownscaleBlurDescriptorSet4x          = "DownscaleBlurDescriptorSet4x";
-std::string DownscaleBlurDescriptorSet4xFinalStr  = "DownscaleFinal4x";
-std::string DownscaleBlurDescriptorSet8x          = "DownscaleBlurDescriptorSet8x";
-std::string DownscaleBlurDescriptorSet8xFinalStr  = "DownscaleFinal8x";
-std::string DownscaleBlurDescriptorSet16x         = "DownscaleBlurDescriptorSet16x";
-std::string DownscaleBlurDescriptorSet16xFinalStr = "DownScaleFinal16x";
+Texture* RenderTargetGlowKey         = nullptr;
+FrameBuffer* FrameBufferGlowKey          = nullptr;
+DescriptorSetLayout* GlowDescriptorSetLayoutKey  = nullptr;
+DescriptorSet* GlowDescriptorSetKey        = nullptr;
+GraphicsPipeline* DownscaleBlurPipeline2xKey  = nullptr;
+GraphicsPipeline* DownscaleBlurPipeline4xKey  = nullptr;
+GraphicsPipeline* DownscaleBlurPipeline8xKey  = nullptr;
+GraphicsPipeline* DownscaleBlurPipeline16xKey = nullptr;
+DescriptorSetLayout* DownscaleBlurLayoutKey      = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet2x          = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet2xFinalKey  = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet4x          = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet4xFinalKey  = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet8x          = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet8xFinalKey  = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet16x         = nullptr;
+DescriptorSet* DownscaleBlurDescriptorSet16xFinalKey = nullptr;
 std::string DownscaleBlurVertFileStr    = "DownscaleBlurPass.vert.spv";
 std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
 
-std::string RenderTargetVelocityStr     = "VelocityMap";
+Texture* RenderTargetVelocityKey     = nullptr;
 
-std::string hdr_gamma_pipelineStr         = "HDRGammaPipeline";
-std::string hdr_gamma_colorAttachStr      = "HDRGammaColor";
-std::string hdr_gamma_frameBufferStr      = "HDRGammaFrameBuffer";
-std::string hdr_gamma_samplerStr          = "HDRGammaSampler";
-std::string hdr_gamma_descSetStr          = "HDRGammaSet";
-std::string hdr_gamma_descSetLayoutStr    = "HDRGammaSetLayout";
+GraphicsPipeline* hdr_gamma_pipelineKey         = nullptr;
+Texture* hdr_gamma_colorAttachKey      = nullptr;
+FrameBuffer* hdr_gamma_frameBufferKey      = nullptr;
+Sampler* hdr_gamma_samplerKey          = nullptr;
+DescriptorSet* hdr_gamma_descSetKey          = nullptr;
+DescriptorSetLayout* hdr_gamma_descSetLayoutKey    = nullptr;
 std::string hdr_gamma_vertFileStr         = "HDRGammaPass.vert.spv";
 std::string hdr_gamma_fragFileStr         = "HDRGammaPass.frag.spv";
 
-std::string final_PipelineStr            = "FinalPipeline";
-std::string final_DescSetStr             = "FinalSet";
-std::string final_DescSetLayoutStr       = "FinalSetLayout";
+GraphicsPipeline* final_PipelineKey            = nullptr;
+DescriptorSet* final_DescSetKey             = nullptr;
+DescriptorSetLayout* final_DescSetLayoutKey       = nullptr;
 std::string final_VertFileStr            = "FinalPass.vert.spv";
 std::string final_FragFileStr            = "FinalPass.frag.spv";
+Texture* final_renderTargetKey       = nullptr;
+FrameBuffer* final_frameBufferKey = nullptr;
+DescriptorSet*  output_descSetKey = nullptr;
+GraphicsPipeline* output_pipelineKey = nullptr;
 
 // Default entry point on shaders.
 char const* kDefaultShaderEntryPointStr = "main";
@@ -157,12 +161,12 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* GBufferPipeline = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* GBufferStaticPipeline = Rhi->CreateGraphicsPipeline();
-  FrameBuffer* GBufferFrameBuffer = gResources().GetFrameBuffer(gbuffer_FrameBufferStr);
+  FrameBuffer* GBufferFrameBuffer = gbuffer_FrameBufferKey;
   Shader* VertGBuffer = Rhi->CreateShader();
   Shader* FragGBuffer = Rhi->CreateShader();
 
-  gResources().RegisterGraphicsPipeline(gbuffer_PipelineStr, GBufferPipeline);
-  gResources().RegisterGraphicsPipeline(gbuffer_StaticPipelineStr, GBufferStaticPipeline);
+  gbuffer_PipelineKey = GBufferPipeline;
+  gbuffer_StaticPipelineKey = GBufferStaticPipeline;
 
   LoadShader(gbuffer_VertFileStr, VertGBuffer);
   LoadShader(gbuffer_FragFileStr, FragGBuffer);
@@ -189,10 +193,10 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   GraphicsInfo.pStages = PbrShaders;
 
   std::array<VkDescriptorSetLayout, 4> DLayouts;
-  DLayouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
-  DLayouts[1] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
-  DLayouts[2] = gResources().GetDescriptorSetLayout(MaterialSetLayoutStr)->Layout();
-  DLayouts[3] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
+  DLayouts[0] = GlobalSetLayoutKey->Layout();
+  DLayouts[1] = MeshSetLayoutKey->Layout();
+  DLayouts[2] = MaterialSetLayoutKey->Layout();
+  DLayouts[3] = BonesSetLayoutKey->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -236,7 +240,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
   VkPipelineLayoutCreateInfo hdrLayout = {};
   VkDescriptorSetLayout hdrSetLayout[1]; 
-  hdrSetLayout[0] = gResources().GetDescriptorSetLayout(hdr_gamma_descSetLayoutStr)->Layout();
+  hdrSetLayout[0] = hdr_gamma_descSetLayoutKey->Layout();
 
   Shader* HdrFrag = Rhi->CreateShader();
   Shader* HdrVert = Rhi->CreateShader();
@@ -244,7 +248,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   LoadShader(hdr_gamma_vertFileStr, HdrVert);
   LoadShader(hdr_gamma_fragFileStr, HdrFrag);
 
-  FrameBuffer* hdrBuffer = gResources().GetFrameBuffer(hdr_gamma_frameBufferStr);
+  FrameBuffer* hdrBuffer = hdr_gamma_frameBufferKey;
   GraphicsInfo.renderPass = hdrBuffer->RenderPass();
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
@@ -275,7 +279,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
 
   Rhi->FreeShader(HdrFrag);
   Rhi->FreeShader(HdrVert);
-  gResources().RegisterGraphicsPipeline(hdr_gamma_pipelineStr, hdrPipeline);
+  hdr_gamma_pipelineKey = hdrPipeline;
 
 }
 
@@ -284,9 +288,9 @@ void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(pbr_PipelineStr, pbr_Pipeline);
+  pbr_PipelineKey = pbr_Pipeline;
 
-  FrameBuffer* pbr_FrameBuffer = gResources().GetFrameBuffer(pbr_FrameBufferStr);  
+  FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;  
 
   Shader* VertPBR = Rhi->CreateShader();
   Shader* FragPBR = Rhi->CreateShader();
@@ -348,10 +352,10 @@ void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo
   GraphicsInfo.pColorBlendState = &colorBlendCI;
 
   std::array<VkDescriptorSetLayout, 4> layouts;
-  layouts[0] = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr)->Layout();
-  layouts[1] = gResources().GetDescriptorSetLayout(pbr_DescLayoutStr)->Layout();
-  layouts[2] = gResources().GetDescriptorSetLayout(LightSetLayoutStr)->Layout();
-  layouts[3] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
+  layouts[0] = GlobalSetLayoutKey->Layout();
+  layouts[1] = pbr_DescLayoutKey->Layout();
+  layouts[2] = LightSetLayoutKey->Layout();
+  layouts[3] = LightViewDescriptorSetLayoutKey->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -386,18 +390,18 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GraphicsPipeline* GlowPipeline = Rhi->CreateGraphicsPipeline();
   // Scaled and Final framebuffers have the same renderpass, so we can just use 
   // one of their renderpasses.
-  FrameBuffer*      FrameBuffer2x = gResources().GetFrameBuffer(FrameBuffer2xHorizStr);
-  FrameBuffer*      FrameBuffer4x = gResources().GetFrameBuffer(FrameBuffer4xStr);
-  FrameBuffer*      FrameBuffer8x = gResources().GetFrameBuffer(FrameBuffer8xStr);
-  FrameBuffer*      FrameBuffer16x = gResources().GetFrameBuffer(FrameBuffer16xStr);
-  FrameBuffer*      GlowFrameBuffer = gResources().GetFrameBuffer(FrameBufferGlowStr);
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline2xStr, Downscale2x);
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline4xStr, Downscale4x);
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline8xStr, Downscale8x);
-  gResources().RegisterGraphicsPipeline(DownscaleBlurPipeline16xStr, Downscale16x);
-  gResources().RegisterGraphicsPipeline(GlowPipelineStr, GlowPipeline);
-  DescriptorSetLayout* DownscaleDescLayout = gResources().GetDescriptorSetLayout(DownscaleBlurLayoutStr);
-  DescriptorSetLayout* GlowDescLayout = gResources().GetDescriptorSetLayout(GlowDescriptorSetLayoutStr);
+  FrameBuffer*      FrameBuffer2x = FrameBuffer2xHorizKey;
+  FrameBuffer*      FrameBuffer4x = FrameBuffer4xKey;
+  FrameBuffer*      FrameBuffer8x = FrameBuffer8xKey;
+  FrameBuffer*      FrameBuffer16x = FrameBuffer16xKey;
+  FrameBuffer*      GlowFrameBuffer = FrameBufferGlowKey;
+  DownscaleBlurPipeline2xKey = Downscale2x;
+  DownscaleBlurPipeline4xKey = Downscale4x;
+  DownscaleBlurPipeline8xKey = Downscale8x;
+  DownscaleBlurPipeline16xKey = Downscale16x;
+  GlowPipelineKey = GlowPipeline;
+  DescriptorSetLayout* DownscaleDescLayout = DownscaleBlurLayoutKey;
+  DescriptorSetLayout* GlowDescLayout = GlowDescriptorSetLayoutKey;
 
   Shader* DbVert = Rhi->CreateShader();
   Shader* DbFrag = Rhi->CreateShader();
@@ -479,12 +483,12 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   VkPipelineInputAssemblyStateCreateInfo n = { };
 
   GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(final_PipelineStr, quadPipeline);
+  final_PipelineKey = quadPipeline;
 
   LoadShader(final_VertFileStr, quadVert);
   LoadShader(final_FragFileStr, quadFrag);
 
-  GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
+  GraphicsInfo.renderPass = final_frameBufferKey->RenderPass();
 
   VkPipelineShaderStageCreateInfo FinalShaders[2];
   FinalShaders[0].flags = 0;
@@ -509,12 +513,17 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   VkPipelineLayoutCreateInfo finalLayout = {};
   finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   finalLayout.setLayoutCount = 1;
-  VkDescriptorSetLayout finalL = gResources().GetDescriptorSetLayout(final_DescSetLayoutStr)->Layout();
+  VkDescriptorSetLayout finalL = final_DescSetLayoutKey->Layout();
   finalLayout.pSetLayouts = &finalL;
   finalLayout.pushConstantRangeCount = 0;
   finalLayout.pPushConstantRanges = nullptr;
 
   quadPipeline->Initialize(GraphicsInfo, finalLayout);
+
+  // Now create the output pipeline.
+  output_pipelineKey = Rhi->CreateGraphicsPipeline();
+  GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
+  output_pipelineKey->Initialize(GraphicsInfo, finalLayout);
 
   Rhi->FreeShader(quadVert);
   Rhi->FreeShader(quadFrag);
@@ -526,15 +535,15 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
   GraphicsPipeline* ShadowMapPipeline = Rhi->CreateGraphicsPipeline();
   GraphicsPipeline* DynamicShadowMapPipeline = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(ShadowMapPipelineStr, ShadowMapPipeline);
-  gResources().RegisterGraphicsPipeline(DynamicShadowMapPipelineStr, DynamicShadowMapPipeline);
+  ShadowMapPipelineKey = ShadowMapPipeline;
+  DynamicShadowMapPipelineKey = DynamicShadowMapPipeline;
 
   // TODO(): Initialize shadow map pipeline.
   VkPipelineLayoutCreateInfo PipeLayout = {};
   std::array<VkDescriptorSetLayout, 3> DescLayouts;
-  DescLayouts[0] = gResources().GetDescriptorSetLayout(MeshSetLayoutStr)->Layout();
-  DescLayouts[1] = gResources().GetDescriptorSetLayout(LightViewDescriptorSetLayoutStr)->Layout();
-  DescLayouts[2] = gResources().GetDescriptorSetLayout(BonesSetLayoutStr)->Layout();
+  DescLayouts[0] = MeshSetLayoutKey->Layout();
+  DescLayouts[1] = LightViewDescriptorSetLayoutKey->Layout();
+  DescLayouts[2] = BonesSetLayoutKey->Layout();
 
   auto Bindings = StaticVertexDescription::GetBindingDescription();
   auto Attribs = StaticVertexDescription::GetVertexAttributes();
@@ -647,10 +656,10 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   GraphicsPipelineInfo.pVertexInputState = &inputState;
 
   GraphicsPipeline* sky = Rhi->CreateGraphicsPipeline();
-  gResources().RegisterGraphicsPipeline(skybox_pipelineStr, sky);
+  skybox_pipelineKey = sky;
   
-  DescriptorSetLayout* global = gResources().GetDescriptorSetLayout(GlobalSetLayoutStr);
-  DescriptorSetLayout* skybox = gResources().GetDescriptorSetLayout(skybox_setLayoutStr);
+  DescriptorSetLayout* global = GlobalSetLayoutKey;
+  DescriptorSetLayout* skybox = skybox_setLayoutKey;
 
   VkDescriptorSetLayout layouts[] = { 
     global->Layout(),
