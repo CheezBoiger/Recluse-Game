@@ -36,7 +36,7 @@ void LoadTextures()
   img.CleanUp();
   TextureCache::Cache(emissive);
 
-  img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
+  img.Load(FROM_TEXTURES_DIR("grass1-albedo3.png"));
   Texture2D* rustBase = gRenderer().CreateTexture2D();
   rustBase->Initialize(img.Width(), img.Height());
   rustBase->_Name = "RustedAlbedo";
@@ -44,7 +44,7 @@ void LoadTextures()
   img.CleanUp();
   TextureCache::Cache(rustBase);
 
-  img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
+  img.Load(FROM_TEXTURES_DIR("grass1-normal2.png"));
   Texture2D* rustNormal = gRenderer().CreateTexture2D();
   rustNormal->Initialize(img.Width(), img.Height());
   rustNormal->_Name = "RustedNormal";
@@ -52,7 +52,7 @@ void LoadTextures()
   img.CleanUp();
   TextureCache::Cache(rustNormal);
 
-  img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
+  img.Load(FROM_TEXTURES_DIR("grass1-rough.png"));
   Texture2D* rustRough = gRenderer().CreateTexture2D();
   rustRough->Initialize(img.Width(), img.Height());
   rustRough->_Name = "RustedRough";
