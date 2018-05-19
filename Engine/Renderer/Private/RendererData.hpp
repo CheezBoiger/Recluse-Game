@@ -71,7 +71,7 @@ extern const char* pbr_forwardFragStr;
 
 extern GraphicsPipeline* aa_PipelineKey;
 extern FrameBuffer* aa_FrameBufferKey;
-extern DescriptorSetLayout* aa_DescLayoutKey;
+extern DescriptorSetLayout* aa_DescLayoutKey;   // Depends on the aliasing technique.
 extern Texture* aa_outputTextureKey;
 extern std::string aa_fragStr;
 
@@ -155,7 +155,6 @@ extern std::string final_FragFileStr;
 extern FrameBuffer* final_frameBufferKey;
 extern Texture* final_renderTargetKey;
 
-
 extern DescriptorSet* output_descSetKey;
 extern GraphicsPipeline* output_pipelineKey;
 
@@ -184,5 +183,16 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
 
 void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
-}
+
+class AntiAliasingPipe {
+public:
+  enum AliasingType {
+    FXAA,
+    SMAA
+  };
+
+  static DescriptorSetLayout* CreateDescriptorSetLayout(AliasingType type);
+  static GraphicsPipeline*    CreateGraphicsPipeline(AliasingType type); 
+};
+} // RendererPass
 } // Recluse

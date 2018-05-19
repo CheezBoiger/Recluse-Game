@@ -87,6 +87,7 @@ Quaternion Quaternion::Inverse() const
 {
   Quaternion conjugate = Conjugate();
   r32 norm2 = (x*x + y*y + z*z + w*w);
+  // TODO(): Possible divide by zero: may want to check for issue here.
   conjugate /= norm2;
   return conjugate;
 }
