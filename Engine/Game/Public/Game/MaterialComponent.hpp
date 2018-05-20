@@ -14,7 +14,12 @@ namespace Recluse {
 struct Material {
   // Default used if no material is defined by the game object, for the renderer component.
   static Material           _sDefault;
-  static void               InitializeDefault() { _sDefault.Initialize(); _sDefault.Native()->Update(); }
+  static void               InitializeDefault() {
+     _sDefault.Initialize(); 
+    _sDefault.Native()->PushUpdate(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE | MaterialDescriptor::MATERIAL_BUFFER_UPDATE);
+    _sDefault.Native()->Update(); 
+  }
+
   static void               CleanUpDefault() { _sDefault.CleanUp(); }
   static Material*          Default() { return &_sDefault; }
 #define MARK_DIRTY_MATERIAL(b) m_pDesc->PushUpdate(b);

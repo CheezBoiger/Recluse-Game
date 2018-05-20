@@ -88,6 +88,8 @@ void MeshDescriptor::Update()
 
 void MeshDescriptor::CleanUp()
 {
+  // Need to wait before we can remove this object in cmd buffer.
+  m_pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
   if (m_meshSet) {
     m_pRhi->FreeDescriptorSet(m_meshSet);
     m_meshSet = nullptr;

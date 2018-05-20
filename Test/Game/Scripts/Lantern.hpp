@@ -79,6 +79,12 @@ public:
 
   void Update(r32 tick) override
   {
+    if (Keyboard::KeyPressed(KEY_CODE_5)) {
+      m_pointLight->Debug(false);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_6)) {
+      m_pointLight->Debug(true);;
+    }
   }
 
   void OnCleanUp() override

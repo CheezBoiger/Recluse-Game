@@ -49,9 +49,12 @@ public:
 
   b32                       Debugging() { return m_debug; }
   
- virtual void               Debug(b32 enable) { }
+  void               Debug(b32 enable) { m_debug = enable; OnDebug(); }
 
 protected:
+
+  virtual void OnDebug() { }
+
   LightType                 m_Type;
   u32                       m_Id;
   b32                       m_debug;

@@ -7,6 +7,7 @@
 #include "Core/Math/Vector4.hpp"
 #include "Renderer/Renderer.hpp"
 #include "Renderer/LightDescriptor.hpp"
+#include "Renderer/MeshDescriptor.hpp"
 #include "PointLightComponent.hpp"
 
 
@@ -72,6 +73,12 @@ void PointLightComponent::OnCleanUp()
   // Push back light id as it is now available.
   sAvailablePointLightIds.push(m_Id);
   m_NativeLight->_Enable = false;
+
+  if (m_descriptor) {
+    gRenderer().FreeMeshDescriptor(m_descriptor);
+    m_descriptor = nullptr;
+  }
+
   UNREGISTER_COMPONENT(PointLightComponent);
 }
 
@@ -85,12 +92,33 @@ void PointLightComponent::Update()
   // Rotate about the same area of where the position should be.
   Vector3 rel = transform->Rotation * m_offset;
   m_NativeLight->_Position = transform->Position + rel;
-}
 
+  if (Debugging()) {
+    CmdList<MeshRenderCmd>& cmdlist = gRenderer().GetDeferredList();
+    MeshRenderCmd cmd;
+    cmd._config = CMD_RENDERABLE_BIT;
+    cmd._pMeshDesc = m_descriptor;
+    cmd._pMeshData = kPointLightMesh->Native();
+    cmd._pMatDesc = Material::Default()->Native();
 
-void PointLightComponent::Debug(b32 enable)
-{
-  // TODO: Mesh debugging. Need to inject mesh to renderer for debug pipeline.
+    ObjectBuffer* buffer = m_descriptor->ObjectData();
+    buffer->_Model = Matrix4(
+      Vector4(1.0f, 0.0f, 0.0f, 0.0f),
+      Vector4(0.0f, 1.0f, 0.0f, 0.0f),
+      Vector4(0.0f, 0.0f, 1.0f, 0.0f),
+      m_NativeLight->_Position);
+    buffer->_Model[3][3] = 1.0f;
+    buffer->_Model = Matrix4::Scale(buffer->_Model, Vector3(0.3f, 0.3f, 0.3f));
+
+    Matrix4 N = buffer->_Model;
+    N[3][0] = 0.0f;
+    N[3][1] = 0.0f;
+    N[3][2] = 0.0f;
+    N[3][3] = 1.0f;
+    buffer->_NormalMatrix = N.Inverse().Transpose();
+    m_descriptor->PushUpdate(MeshDescriptor::MESH_BUFFER_UPDATE);
+    cmdlist.PushBack(cmd);
+  }
 }
 
 
@@ -108,5 +136,18 @@ void PointLightComponent::CleanUpMeshDebug()
 {
   kPointLightMesh->CleanUp();
   delete kPointLightMesh;
+}
+
+
+void PointLightComponent::OnDebug()
+{
+  if (m_debug && !m_descriptor) {
+    m_descriptor = gRenderer().CreateStaticMeshDescriptor();
+    m_descriptor->Initialize();
+    m_descriptor->PushUpdate(MeshDescriptor::MESH_DESCRIPTOR_UPDATE);
+  } else if (!m_debug && m_descriptor) {
+    gRenderer().FreeMeshDescriptor(m_descriptor);
+    m_descriptor = nullptr;
+  }
 }
 } // Recluse

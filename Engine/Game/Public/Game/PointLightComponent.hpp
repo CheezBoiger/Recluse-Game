@@ -10,6 +10,9 @@
 namespace Recluse {
 
 
+class MeshDescriptor;
+
+
 class PointLightComponent : public LightComponent {
   RCOMPONENT(PointLightComponent);
   
@@ -19,7 +22,9 @@ public:
   static void   CleanUpMeshDebug();
 
   PointLightComponent()
-    : LightComponent(LightComponent::POINT_LIGHT) { }
+    : LightComponent(LightComponent::POINT_LIGHT)
+    , m_descriptor(nullptr)
+    , m_NativeLight(nullptr) { }
 
   void  OnInitialize(GameObject* owner) override;
   void  OnCleanUp() override;
@@ -31,9 +36,11 @@ public:
   virtual void  OnEnable() override { m_NativeLight->_Enable = Enabled(); }
   
   void  SetOffset(const Vector3& offset) { m_offset = offset; }
+protected:
+  void OnDebug() override;
 
-  virtual void  Debug(b32 enable) override;
 private:
+  MeshDescriptor* m_descriptor;
   PointLight* m_NativeLight;  
   Vector3     m_offset;
 };

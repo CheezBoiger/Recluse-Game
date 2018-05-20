@@ -58,6 +58,16 @@ struct Matrix4 {
               static_cast<r32>(rawDat[12]), static_cast<r32>(rawDat[13]), static_cast<r32>(rawDat[14]),   static_cast<r32>(rawDat[15])) 
   { }
 
+  Matrix4(const Vector4& row1,
+          const Vector4& row2 = Vector4(0.0f, 1.0f, 0.0f, 0.0f),
+          const Vector4& row3 = Vector4(0.0f, 0.0f, 1.0f, 0.0f),
+          const Vector4& row4 = Vector4(0.0f, 0.0f, 0.0f, 1.0f))
+    : Matrix4(row1.x, row1.y, row1.z, row1.w,
+              row2.x, row2.y, row2.z, row2.w,
+              row3.x, row3.y, row3.z, row3.w,
+              row4.x, row4.y, row4.z, row4.w)
+  { }
+
   // Retrieve the Perspective matrix, which is in left hand coordinates.
   static Matrix4          Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar);
 
