@@ -126,7 +126,6 @@ public:
       ModelCache::Get("BoomBox", &model);
       m_pMaterialComponent->SetMaterialRef(model->materials[0]);
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
-      m_pRendererComponent->ReConfigure();
       transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
     }
 
@@ -135,7 +134,6 @@ public:
       ModelCache::Get("DamagedHelmet", &model);
       m_pMaterialComponent->SetMaterialRef(model->materials[0]);
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
-      m_pRendererComponent->ReConfigure();
       transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
     }
   }

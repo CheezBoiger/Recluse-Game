@@ -23,8 +23,7 @@ using namespace Recluse;
     Material -> MaterialComponent.
     Mesh -> MeshComponent
     RendererComponent
-  Updating materials or meshes requires you call RendererComponent::ReConfigure() to 
-  update the object.
+  Updating materials or meshes are done through these components.
 */
 int main(int c, char* argv[])
 {

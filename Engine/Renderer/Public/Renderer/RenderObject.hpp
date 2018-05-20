@@ -32,7 +32,7 @@ struct PrimitiveInfo {
 //
 // NOTE(): All mesh data in this render object must share the same mesh descriptor and material, otherwise
 // create multiple render objects to define meshes with separate mesh descriptors and/or materials!
-class RenderObject {
+class [[deprecated("Render Objects no longer supported.")]] RenderObject {
 public:
 #define SIGNAL_RENDER_OBJECT_UPDATE() m_bNeedsUpdate = true
   // Number of instances to draw meshdata within the render object.
@@ -123,7 +123,7 @@ protected:
 
 // Skinned Render object implementation, which allows updating joint sets.
 // This is used for animation purposes.
-class SkinnedRenderObject : public RenderObject {
+class [[deprecated("Render Objects no longer supported.")]] SkinnedRenderObject : public RenderObject {
 public:
   SkinnedRenderObject(uuid64 uuid, SkinnedMeshDescriptor* smd,
     MaterialDescriptor* md);

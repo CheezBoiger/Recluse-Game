@@ -9,9 +9,4 @@
 
 namespace Recluse {
 
-
-  void CmdList::Sort()
-  {
-    if (mCompare && m_currIdx > 0) std::sort(mRenderList.begin(), mRenderList.begin() + (m_currIdx - 1), mCompare);
-  }
 } // Recluse

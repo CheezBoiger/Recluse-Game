@@ -10,7 +10,6 @@
 #include "Core/Thread/CoreThread.hpp"
 #include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
-#include "Renderer/RenderObject.hpp"
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/UserParams.hpp"

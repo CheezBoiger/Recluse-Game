@@ -5,7 +5,6 @@
 #include "AnimationComponent.hpp"
 #include "GameObject.hpp"
 
-#include "Renderer/RenderObject.hpp"
 #include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/Renderer.hpp"
@@ -21,17 +20,16 @@ DEFINE_COMPONENT_MAP(SkinnedRendererComponent);
 
 
 RendererComponent::RendererComponent()
-  : m_renderObj(nullptr)
-  , m_meshDescriptor(nullptr)
+  : m_meshDescriptor(nullptr)
   , m_materialRef(nullptr)
   , m_meshRef(nullptr)
+  , m_configs(CMD_RENDERABLE_BIT | CMD_SHADOWS_BIT)
 {
 }
 
 
 RendererComponent::RendererComponent(const RendererComponent& m)
   : m_meshDescriptor(m.m_meshDescriptor)
-  , m_renderObj(m.m_renderObj)
   , m_materialRef(m.m_materialRef)
   , m_meshRef(m.m_meshRef)
 {
@@ -40,12 +38,10 @@ RendererComponent::RendererComponent(const RendererComponent& m)
 
 RendererComponent::RendererComponent(RendererComponent&& m)
   : m_meshDescriptor(m.m_meshDescriptor)
-  , m_renderObj(m.m_renderObj)
   , m_materialRef(m.m_materialRef)
   , m_meshRef(m.m_meshRef)
 {
   m.m_meshDescriptor = nullptr;
-  m.m_renderObj = nullptr;
   m.m_materialRef = nullptr;
   m.m_meshRef = nullptr;
 }
@@ -53,13 +49,11 @@ RendererComponent::RendererComponent(RendererComponent&& m)
 
 RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
-  m_renderObj = obj.m_renderObj;
   m_meshDescriptor = obj.m_meshDescriptor;
   m_materialRef = obj.m_materialRef;
   m_meshRef = obj.m_meshRef;
 
   obj.m_meshDescriptor = nullptr;
-  obj.m_renderObj = nullptr;
   obj.m_materialRef = nullptr;
   obj.m_meshRef = nullptr;
   return (*this);
@@ -68,7 +62,6 @@ RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 
 RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
-  m_renderObj = obj.m_renderObj;
   m_meshDescriptor = obj.m_meshDescriptor;
   m_meshRef = obj.m_meshRef;
   m_materialRef = obj.m_materialRef;
@@ -78,56 +71,26 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 
 void RendererComponent::EnableShadow(b32 enable)
 {
-  m_renderObj->_bEnableShadow = enable;
+  if (enable) { m_configs |= CMD_SHADOWS_BIT; }
+  else { m_configs &= ~CMD_SHADOWS_BIT; }
 }
 
 
 b32 RendererComponent::ShadowEnabled() const
 {
-  return m_renderObj->_bEnableShadow;
+  return (m_configs & CMD_SHADOWS_BIT);
 }
-
-
-void RendererComponent::ReConfigure()
-{
-  m_renderObj->ClearOutMeshGroup();
-  if (m_meshRef && m_meshRef->MeshRef()) {
-    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
-  }
-
-  Material* material = Material::Default();
-  if (m_materialRef) {
-    material = m_materialRef->GetMaterial();
-  }
-
-  m_renderObj->SetMaterialDescriptor( material->Native() );
-}
-
 
 void RendererComponent::OnInitialize(GameObject* owner)
 {
-  if (m_renderObj) {
-    Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
-    return;
-  }
-
   Material* material = Material::Default();
   if (m_materialRef && m_materialRef->GetMaterial()) {
     material = m_materialRef->GetMaterial();
   }
   
-  m_renderObj = gRenderer().CreateRenderObject(owner->GetId());
   m_meshDescriptor = gRenderer().CreateStaticMeshDescriptor();
   m_meshDescriptor->Initialize();
-
-  m_renderObj->SetMeshDescriptor( m_meshDescriptor );
-  m_renderObj->SetMaterialDescriptor( material->Native() );
-  m_renderObj->Initialize();
-
-  // Check if MeshComponent is in game object.
-  if (m_meshRef && m_meshRef->MeshRef()) {
-    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
-  }
+  m_meshDescriptor->PushUpdate(MeshDescriptor::MESH_DESCRIPTOR_UPDATE);
 
   REGISTER_COMPONENT(RendererComponent, this);
 }
@@ -135,30 +98,23 @@ void RendererComponent::OnInitialize(GameObject* owner)
 
 void RendererComponent::OnCleanUp()
 {
-  gRenderer().FreeRenderObject(m_renderObj);
   gRenderer().FreeMeshDescriptor(m_meshDescriptor);
-  m_renderObj = nullptr;
   m_meshDescriptor = nullptr;
 
   UNREGISTER_COMPONENT(RendererComponent);
 }
 
 
-void RendererComponent::Enable(b32 enable)
+void RendererComponent::OnEnable()
 {
-  m_renderObj->_bRenderable = enable;
-}
-
-
-b32 RendererComponent::Enabled() const
-{
-  return m_renderObj->_bRenderable;
+  if (Enabled()) { m_configs |= CMD_RENDERABLE_BIT; }
+  else { m_configs &= ~CMD_RENDERABLE_BIT; }
 }
 
 
 void RendererComponent::Update()
 {
-  if (!Enabled()) return;
+  if (!Enabled() || !m_meshRef) return;
   // TODO(): Static objects don't necessarily need to be updated all the time.
   // This is especially true if the object is kinematic
   Transform* transform = GetOwner()->GetTransform();
@@ -166,10 +122,12 @@ void RendererComponent::Update()
   Matrix4 model = transform->GetLocalToWorldMatrix();
 
   // Now push the object into the renderer for updating.
-  CmdList& list = gRenderer().GetDeferredList();
-  RenderCmd cmd;
-  cmd._pTarget = m_renderObj;
-  cmd._Debug = false;
+  CmdList<MeshRenderCmd>& list = gRenderer().GetDeferredList();
+  MeshRenderCmd cmd;
+  cmd._pMeshDesc = m_meshDescriptor;
+  cmd._pMatDesc = m_materialRef->GetMaterial()->Native();
+  cmd._pMeshData = m_meshRef->MeshRef() ? m_meshRef->MeshRef()->Native() : nullptr;
+  cmd._config = m_configs;
   list.PushBack(cmd);
 
   if (model == renderData->_Model) return;
@@ -180,7 +138,7 @@ void RendererComponent::Update()
   N[3][3] = 1.0f;
   renderData->_Model = model;
   renderData->_NormalMatrix = N.Inverse().Transpose();
-  m_meshDescriptor->SignalUpdate();
+  m_meshDescriptor->PushUpdate(MeshDescriptor::MESH_BUFFER_UPDATE);
 }
 
 
@@ -197,34 +155,22 @@ void SkinnedRendererComponent::Update()
     // Update descriptor joints.
     pJointBuffer->_mJoints[i];
   }
+  m_meshDescriptor->PushUpdate(MeshDescriptor::JOINT_BUFFER_UPDATE);
   RendererComponent::Update();
 }
 
 
 void SkinnedRendererComponent::OnInitialize(GameObject* owner)
 {
-  if (m_renderObj) {
-    Log(rWarning) << "Renderer Component is already initialized! Skipping...\n";
-    return;
-  }
 
   Material* material = Material::Default();
   if (m_materialRef && m_materialRef->GetMaterial()) {
     material = m_materialRef->GetMaterial();
   }
 
-  m_renderObj = gRenderer().CreateSkinnedRenderObject(owner->GetId());
   m_meshDescriptor = gRenderer().CreateSkinnedMeshDescriptor();
   m_meshDescriptor->Initialize();
-
-  m_renderObj->SetMeshDescriptor(m_meshDescriptor);
-  m_renderObj->SetMaterialDescriptor(material->Native());
-  m_renderObj->Initialize();
-
-  // Check if MeshComponent is in game object.
-  if (m_meshRef && m_meshRef->MeshRef()) {
-    m_renderObj->PushBack(m_meshRef->MeshRef()->Native());
-  }
+  m_meshDescriptor->PushUpdate(MeshDescriptor::MESH_DESCRIPTOR_UPDATE | MeshDescriptor::JOINT_DESCRIPTOR_UPDATE);
 
   REGISTER_COMPONENT(SkinnedRendererComponent, this);
 }
@@ -232,9 +178,7 @@ void SkinnedRendererComponent::OnInitialize(GameObject* owner)
 
 void SkinnedRendererComponent::OnCleanUp()
 {
-  gRenderer().FreeRenderObject(m_renderObj);
   gRenderer().FreeMeshDescriptor(m_meshDescriptor);
-  m_renderObj = nullptr;
   m_meshDescriptor = nullptr;
 
   UNREGISTER_COMPONENT(SkinnedRendererComponent);

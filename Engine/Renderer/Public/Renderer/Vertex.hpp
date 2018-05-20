@@ -29,6 +29,13 @@ struct QuadVertex {
 };
 
 
+struct UIVertex {
+  Vector2 position;
+  Vector2 texcoord;
+  Vector4 color;
+};
+
+
 struct SkinnedVertex {
   Vector4 position;
   Vector4 normal;

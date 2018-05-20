@@ -44,6 +44,10 @@ struct MaterialBuffer {
 // meshes.
 class MaterialDescriptor {
 public:
+  enum UpdateBit {
+    MATERIAL_BUFFER_UPDATE = (1 << 0),
+    MATERIAL_DESCRIPTOR_UPDATE = (1 << 1)
+  };
 
   MaterialDescriptor();
   ~MaterialDescriptor();
@@ -61,7 +65,8 @@ public:
   void            SetEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
   void            SetTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
 
-  void            SignalUpdate() { m_bNeedsUpdate = true; }
+  void            PushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE) { m_bNeedsUpdate |= updateBits; }
+  DescriptorSet*          CurrMaterialSet() { return m_materialSet; }
 
   MaterialBuffer* Data() { return &m_MaterialData; }
   Buffer*         Native() { return m_pBuffer; }
@@ -74,9 +79,12 @@ public:
   Texture2D*      Ao() { return m_pAo; }
   Texture2D*      Emissive() { return m_pEmissive; }
 
-  TextureSampler* Sampler() { return m_pSampler; }
+  TextureSampler* GetSampler() { return m_pSampler; }
 
 private:
+
+ // void                    SwapDescriptorSet() { m_currIdx = m_currIdx == 0 ? 1 : 0; }
+
   MaterialBuffer  m_MaterialData;
   Buffer*         m_pBuffer;
 
@@ -88,6 +96,7 @@ private:
 
   TextureSampler* m_pSampler;
   u32             m_bNeedsUpdate;
+  DescriptorSet*  m_materialSet;
   VulkanRHI*      m_pRhi;
   friend class Renderer;
 };

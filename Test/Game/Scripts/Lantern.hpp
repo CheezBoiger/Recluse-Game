@@ -74,7 +74,7 @@ public:
     m_pointLight->SetColor(Vector4(1.0f, 0.5f, 0.3f, 1.0f));
     m_pointLight->SetRange(10.0f);
     m_pointLight->SetIntensity(2.0f);
-  
+    m_pointLight->Enable(true);
   }
 
   void Update(r32 tick) override

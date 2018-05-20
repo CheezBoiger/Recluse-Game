@@ -115,7 +115,7 @@ void RenderObject::UpdateDescriptorSets(size_t idx)
   }
 
   Sampler* sampler = DefaultSamplerKey;
-  if (_pMaterialDescId->Sampler()) sampler = _pMaterialDescId->Sampler()->Handle();
+  if (_pMaterialDescId->GetSampler()) sampler = _pMaterialDescId->GetSampler()->Handle();
 
   Texture* defaultTexture = DefaultTextureKey;
 

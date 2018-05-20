@@ -26,4 +26,10 @@ struct StaticVertexDescription {
   static VkVertexInputBindingDescription                GetBindingDescription();
   static std::vector<VkVertexInputAttributeDescription> GetVertexAttributes();
 };
+
+
+struct UIVertexDescription {
+  static VkVertexInputBindingDescription                GetBindingDescription();
+  static std::vector<VkVertexInputAttributeDescription> GetVertexAttributes();
+};
 } // Recluse

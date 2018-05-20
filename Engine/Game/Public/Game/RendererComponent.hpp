@@ -12,7 +12,6 @@
 namespace Recluse {
 
 
-class RenderObject;
 class MeshDescriptor;
 class Renderer;
 class MaterialDescriptor;
@@ -38,19 +37,11 @@ public:
   virtual void              Serialize(IArchive& archive) override { }
   virtual void              Deserialize(IArchive& archive) override { }
 
-
-  // Reconfigure this renderer component, this will signal the renderer to 
-  // update the cmd buffer, and re construct it's scene. It must be done in order
-  // to add new textures. Recommended you do not call this function every frame, as it does
-  // hinder rendering performance.
-  void                      ReConfigure();
-  void                      Enable(b32 enable);
+  void                      OnEnable() override;
   void                      EnableShadow(b32 enable);
 
-  b32                        Enabled() const;
   b32                        Dirty() const { return m_bDirty; }
   b32                        ShadowEnabled() const;
-  RenderObject*             RenderObj() { return m_renderObj; }
   MeshDescriptor*           GetMeshDescriptor() { return m_meshDescriptor; }
 
   void                      SignalClean() { m_bDirty = false; }
@@ -64,11 +55,11 @@ protected:
   virtual void              Update() override;
 
   void                      TriggerDirty() { m_bDirty = true; }
-  RenderObject*             m_renderObj;
   MeshDescriptor*           m_meshDescriptor;
   MaterialComponent*        m_materialRef;
   MeshComponent*            m_meshRef;
   b32                       m_bDirty;
+  u32                       m_configs;
 };
 
 

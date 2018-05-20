@@ -20,7 +20,6 @@ namespace Recluse {
 
 
 class VulkanRHI;
-class CmdList;
 class LightProbe;
 class CommandBuffer;
 class ReflectionProbe;
@@ -127,19 +126,11 @@ public:
   // Create a Sampler.
   TextureSampler*   CreateTextureSampler();
 
-  // Create a render object for the renderer to render? Must assign a uuid to the render object
-  // prior to it's creation.
-  RenderObject*     CreateRenderObject(uuid64 obj_uuid);
-  SkinnedRenderObject*  CreateSkinnedRenderObject(uuid64 objUuid);
-
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
   LightBuffer*      LightData() { return m_pLights->Data(); }
-
-  // Frees the render object.
-  void              FreeRenderObject(RenderObject* renderObject);
 
   // Frees up the allocated mesh data object.
   void              FreeMeshData(MeshData* mesh);
@@ -205,8 +196,8 @@ public:
 
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
-  CmdList&          GetDeferredList() { return m_cmdList; }
-  CmdList&          GetForwardList() { return m_forwardCmdList; }
+  CmdList<MeshRenderCmd>&          GetDeferredList() { return m_cmdList; }
+  CmdList<MeshRenderCmd>&          GetForwardList() { return m_forwardCmdList; }
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
@@ -255,9 +246,9 @@ private:
   void              SortCmdLists();
 
   Window*           m_pWindow;
-  CmdList           m_cmdList;
-  CmdList           m_deferredCmdList;
-  CmdList           m_forwardCmdList;
+  CmdList<MeshRenderCmd>           m_cmdList;
+  CmdList<MeshRenderCmd>           m_deferredCmdList;
+  CmdList<MeshRenderCmd>           m_forwardCmdList;
   GlobalDescriptor* m_pGlobal;
   LightDescriptor*  m_pLights;
 

@@ -88,6 +88,7 @@ public:
     }
 
     OnInitialize(m_pGameObjectOwner);
+    Enable(true);
   }
 
   // Perform early clean up of abstract component, then call OnCleanUp() if any.

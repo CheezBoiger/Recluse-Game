@@ -7,7 +7,7 @@
 #include <fstream>
 #include <cmath>
 
-#if defined _M_X64 && __USE_INTEL_INTRINSICS__
+#if defined _M_X64 //&& __USE_INTEL_INTRINSICS__
 #define FAST_INTRINSICS 
 #include <xmmintrin.h>
 #endif 

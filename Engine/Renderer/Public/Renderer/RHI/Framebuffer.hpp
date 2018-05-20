@@ -33,4 +33,16 @@ private:
   u32           m_Width;
   u32           m_Height;
 };
+
+
+class RenderPass : public VulkanHandle {
+public:
+  void CleanUp();
+  void Initialize(const VkRenderPassCreateInfo& info);
+
+  VkRenderPass Handle() { return m_renderPass; }
+
+private:
+  VkRenderPass m_renderPass;
+};
 } // Recluse

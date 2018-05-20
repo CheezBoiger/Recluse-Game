@@ -15,7 +15,6 @@ class DescriptorSetLayout;
 class DescriptorSet;
 class MaterialDescriptor;
 class Mesh;
-class RenderObject;
 
 typedef size_t resource_id_t;
 
@@ -35,7 +34,6 @@ public:
   Sampler*              GetSampler(u64 id);
   DescriptorSetLayout*  GetDescriptorSetLayout(u64 id);
   DescriptorSet*        GetDescriptorSet(u64 id);
-  RenderObject*         GetRenderObject(uuid64 uuid);
 
   b32                   RegisterGraphicsPipeline(GraphicsPipeline* pipeline);
   b32                   RegisterComputePipeline(ComputePipeline* pipeline);
@@ -44,8 +42,6 @@ public:
   b32                   RegisterSampler(Sampler* sampler);
   b32                   RegisterDescriptorSetLayout(DescriptorSetLayout* layout);
   b32                   RegisterDescriptorSet(DescriptorSet* set);
-
-  b32                    RegisterRenderObject(RenderObject* obj);
   
   GraphicsPipeline*     UnregisterGraphicsPipeline(u64 id);
   ComputePipeline*      UnregisterComputePipeline(u64 id);
@@ -54,7 +50,6 @@ public:
   Sampler*              UnregisterSampler(u64 id);
   DescriptorSetLayout*  UnregisterDescriptorSetLayout(u64 id);
   DescriptorSet*        UnregisterDescriptorSet(u64 id);
-  RenderObject*         UnregisterRenderObject(uuid64 uuid);
 };
 
 

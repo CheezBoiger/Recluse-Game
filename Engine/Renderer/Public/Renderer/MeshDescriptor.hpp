@@ -13,6 +13,7 @@ namespace Recluse {
 class Buffer;
 class Renderer;
 class MeshData;
+class DescriptorSet;
 
 
 struct ObjectBuffer {
@@ -35,6 +36,14 @@ struct JointBuffer {
 // as whether that meshdata is defined as transparent, translucent, visible, and/or renderable.
 class MeshDescriptor {
 public:
+  enum UpdateBit {
+    MESH_BUFFER_UPDATE = (1 << 0),
+    JOINT_BUFFER_UPDATE = (1 << 1),
+    MESH_DESCRIPTOR_UPDATE = (1 << 2),
+    JOINT_DESCRIPTOR_UPDATE = (1 << 3),
+  
+  };
+
   MeshDescriptor();
   virtual ~MeshDescriptor();
 
@@ -44,17 +53,16 @@ public:
   virtual void  Update();
 
   void          SetVisible(b32 enable) { m_Visible = enable; }
-  void          SetRenderable(b32 enable) { m_Renderable = enable; }
-  void          SetTranslucent(b32 enable) { m_Translucent = enable; }
-  void          SignalUpdate() { m_bNeedsUpdate = true; }
+  void          PushUpdate(b32 updateBits = (MESH_BUFFER_UPDATE | JOINT_BUFFER_UPDATE)) 
+                  { m_bNeedsUpdate |= updateBits; }
 
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
   virtual JointBuffer*  JointData() { return nullptr; }
 
+  virtual DescriptorSet*  CurrJointSet() { return nullptr; }
+  DescriptorSet*          CurrMeshSet() { return m_meshSet; }
 
   b32           Visible() const { return m_Visible; }
-  b32           Renderable() const { return m_Renderable; }
-  b32           Translucent() const { return m_Translucent; }
   b32           Static() const { return m_Static; }
   virtual b32   Skinned() const { return false; }
   Buffer*       NativeObjectBuffer() { return m_pObjectBuffer; }
@@ -62,15 +70,18 @@ public:
   virtual u32                     NumJoints() { return 0; }
 
 protected:
+
+  //void                    SwapDescriptorSet() { m_currIdx = (m_currIdx == 0 ? 1 : 0); }
+
   ObjectBuffer  m_ObjectData;
   Buffer*       m_pObjectBuffer;
   b32           m_bNeedsUpdate;
 
-  b32            m_Visible;
-  b32            m_Renderable;
-  b32            m_Translucent;
-  b32            m_Static;
+  b32             m_Visible;
+  b32             m_Static;
   
+  u32             m_currIdx;
+  DescriptorSet*  m_meshSet;
   VulkanRHI*     m_pRhi;
   
   friend class Renderer;
@@ -89,12 +100,16 @@ public:
 
   JointBuffer*  JointData() override { return &m_jointsData; }
   Buffer*       NativeJointBuffer() { return m_pJointsBuffer; }
+  virtual DescriptorSet*  CurrJointSet() override { return m_jointSet; }
 
-  virtual u32 NumJoints() override { return 128; }
+  void          UpdateJointSets();
+
+  virtual u32   NumJoints() override { return 128; }
 
 private:
   JointBuffer   m_jointsData;
   Buffer*       m_pJointsBuffer;
+  DescriptorSet*  m_jointSet;
   friend class  Renderer;
 };
 } // Recluse

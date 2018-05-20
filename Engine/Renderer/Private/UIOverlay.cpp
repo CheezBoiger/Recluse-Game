@@ -10,9 +10,12 @@
 #include "RHI/GraphicsPipeline.hpp"
 #include "RHI/Commandbuffer.hpp"
 #include "RHI/Framebuffer.hpp"
+#include "RHI/Texture.hpp"
 
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
+
+#include <array>
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_IMPLEMENTATION
@@ -103,8 +106,7 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_pSemaphore->Initialize(semaCi);
 
-  CreateAttachmentTextures();
-  InitializeFrameBuffer();
+  InitializeRenderPass();
   SetUpGraphicsPipeline();
 
   // After initialization of our graphics gui pipeline, it's time to 
@@ -131,8 +133,11 @@ void UIOverlay::CleanUp()
     }
   }
 
-  // FrameBuffers are handled by the RHI context. Do not delete!
-  
+  if (m_renderPass) {
+    vkDestroyRenderPass(m_pRhi->LogicDevice()->Native(), m_renderPass, nullptr);
+    m_renderPass = VK_NULL_HANDLE;
+  }
+ 
   if (m_pGraphicsPipeline) {
     m_pRhi->FreeGraphicsPipeline(m_pGraphicsPipeline);
     m_pGraphicsPipeline = nullptr;
@@ -140,9 +145,62 @@ void UIOverlay::CleanUp()
 }
 
 
-void UIOverlay::InitializeFrameBuffer()
+void UIOverlay::InitializeRenderPass()
 {
-  // TODO:
+  std::array<VkAttachmentDescription, 1> attachmentDescriptions;
+  VkSubpassDependency dependencies[2];
+  attachmentDescriptions[0] = CreateAttachmentDescription(
+    final_renderTargetKey->Format(),
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    final_renderTargetKey->Samples()
+  );
+
+  dependencies[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependencies[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_READ_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  std::array<VkAttachmentReference, 1> attachmentColors;
+  attachmentColors[0].attachment = 0;
+  attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  VkSubpassDescription subpass = {};
+  subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+  subpass.pColorAttachments = attachmentColors.data();
+  subpass.pDepthStencilAttachment = nullptr;
+
+  VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
+    static_cast<u32>(attachmentDescriptions.size()),
+    attachmentDescriptions.data(),
+    2,
+    dependencies,
+    1,
+    &subpass
+  );
+
+  VkResult result = vkCreateRenderPass(m_pRhi->LogicDevice()->Native(), &renderpassCI, nullptr, &m_renderPass);
+  R_ASSERT(result ==  VK_SUCCESS, "Failed to create renderpass for ui!\n");
 }
 
 
@@ -168,13 +226,7 @@ void UIOverlay::SetUpGraphicsPipeline()
 }
 
 
-void UIOverlay::CreateAttachmentTextures()
-{
-  
-}
-
-
-void UIOverlay::BuildCmdBuffers(CmdList* cmdList)
+void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>* cmdList)
 {
   // TODO:
 }
