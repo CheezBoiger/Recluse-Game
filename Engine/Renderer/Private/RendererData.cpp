@@ -45,6 +45,9 @@ std::string gbuffer_StaticVertFileStr         = "StaticGBuffer.vert.spv";
 std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
 
 GraphicsPipeline* pbr_PipelineKey                   = nullptr;
+GraphicsPipeline* pbr_forwardPipelineKey      = nullptr;
+GraphicsPipeline* pbr_staticForwardPipelineKey = nullptr;
+VkRenderPass      pbr_forwardRenderPass       = VK_NULL_HANDLE;
 FrameBuffer* pbr_FrameBufferKey                = nullptr;
 DescriptorSetLayout* pbr_DescLayoutKey                 = nullptr;
 DescriptorSet* pbr_DescSetKey                    = nullptr;
@@ -52,6 +55,7 @@ Texture* pbr_FinalTextureKey               = nullptr;
 Texture* pbr_BrightTextureKey              = nullptr;
 std::string pbr_VertStr                       = "PBR.vert.spv";
 std::string pbr_FragStr                       = "PBR.frag.spv";
+std::string pbr_forwardFragStr                  = "ForwardPBR.frag.spv";
 
 Texture* RenderTargetBlurHoriz4xKey  = nullptr;
 FrameBuffer* FrameBuffer4xHorizKey       = nullptr;
@@ -71,6 +75,8 @@ DescriptorSetLayout* aa_DescLayoutKey              = nullptr;
 Texture* aa_outputTextureKey           = nullptr;
 
 std::string renderquad_vertStr            = "RenderQuad.vert.spv";
+std::string pbr_forwardVertStr = "ForwardPBR.vert.spv";
+
 // Must check with the renderer specs.
 std::string aa_fragStr                    = "";
 
@@ -284,7 +290,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
 }
 
 
-void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
@@ -365,6 +371,117 @@ void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo
   PipelineLayout.pushConstantRangeCount = 0;
 
   pbr_Pipeline->Initialize(GraphicsInfo, PipelineLayout);
+
+  Rhi->FreeShader(VertPBR);
+  Rhi->FreeShader(FragPBR);
+}
+
+
+void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
+{
+  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+  GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
+  pbr_staticForwardPipelineKey = Rhi->CreateGraphicsPipeline();
+  pbr_forwardPipelineKey = pbr_Pipeline;
+
+  FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
+
+  Shader* VertPBR = Rhi->CreateShader();
+  Shader* FragPBR = Rhi->CreateShader();
+
+  LoadShader(pbr_forwardVertStr, VertPBR);
+  LoadShader(pbr_forwardFragStr, FragPBR);
+
+  VkPipelineShaderStageCreateInfo PbrShaders[2];
+  PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[0].module = VertPBR->Handle();
+  PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  PbrShaders[0].pName = kDefaultShaderEntryPointStr;
+  PbrShaders[0].pNext = nullptr;
+  PbrShaders[0].pSpecializationInfo = nullptr;
+  PbrShaders[0].flags = 0;
+
+  PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  PbrShaders[1].module = FragPBR->Handle();
+  PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  PbrShaders[1].pName = kDefaultShaderEntryPointStr;
+  PbrShaders[1].pNext = nullptr;
+  PbrShaders[1].flags = 0;
+  PbrShaders[1].pSpecializationInfo = nullptr;
+
+  GraphicsInfo.renderPass = pbr_forwardRenderPass;
+  GraphicsInfo.stageCount = 2;
+  GraphicsInfo.pStages = PbrShaders;
+
+  std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
+  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+    static_cast<u32>(colorBlendAttachments.size()),
+    colorBlendAttachments.data(),
+    VK_FALSE,
+    VK_LOGIC_OP_COPY
+  );
+
+  GraphicsInfo.pColorBlendState = &colorBlendCI;
+
+  std::array<VkDescriptorSetLayout, 6> layouts;
+  layouts[0] = GlobalSetLayoutKey->Layout();
+  layouts[1] = MeshSetLayoutKey->Layout();
+  layouts[2] = MaterialSetLayoutKey->Layout();
+  layouts[3] = LightSetLayoutKey->Layout();
+  layouts[4] = LightViewDescriptorSetLayoutKey->Layout();
+  layouts[5] = BonesSetLayoutKey->Layout();
+
+  VkPipelineLayoutCreateInfo PipelineLayout = {};
+  PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+  PipelineLayout.pSetLayouts = layouts.data();
+  PipelineLayout.pPushConstantRanges = 0;
+  PipelineLayout.pushConstantRangeCount = 0;
+
+  pbr_forwardPipelineKey->Initialize(GraphicsInfo, PipelineLayout);
+
+  Rhi->FreeShader(VertPBR);
+  VertPBR = Rhi->CreateShader();
+  LoadShader(gbuffer_StaticVertFileStr, VertPBR);
+  PbrShaders[0].module = VertPBR->Handle();
+  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
+
+  // Static pipeline creation.
+  auto Bindings = StaticVertexDescription::GetBindingDescription();
+  auto VertexAttribs = StaticVertexDescription::GetVertexAttributes();
+  VkPipelineVertexInputStateCreateInfo Input = {};
+
+  GraphicsInfo.pVertexInputState = &Input;
+  Input.vertexAttributeDescriptionCount = static_cast<u32>(VertexAttribs.size());
+  Input.vertexBindingDescriptionCount = 1;
+  Input.pVertexBindingDescriptions = &Bindings;
+  Input.pVertexAttributeDescriptions = VertexAttribs.data();
+  Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  Input.pNext = nullptr;
+
+  pbr_staticForwardPipelineKey->Initialize(GraphicsInfo, PipelineLayout);
 
   Rhi->FreeShader(VertPBR);
   Rhi->FreeShader(FragPBR);

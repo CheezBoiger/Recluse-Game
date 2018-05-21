@@ -196,8 +196,8 @@ public:
 
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
-  CmdList<MeshRenderCmd>&          GetDeferredList() { return m_cmdList; }
-  CmdList<MeshRenderCmd>&          GetForwardList() { return m_forwardCmdList; }
+  // Push mesh to render.
+  void              PushMeshRender(MeshRenderCmd& cmd);
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
@@ -219,6 +219,8 @@ private:
   void              CleanUpOffscreen(b32 fullCleanup);
   void              CleanUpFinalOutputs();
   void              SetUpFinalOutputs();
+  void              SetUpForwardPBR();
+  void              BuildForwardPBRCmdBuffer();
   void              SetUpRenderTextures(b32 fullSetup);
   void              SetUpOffscreen(b32 fullSetup);
   void              SetUpPBR();
@@ -233,6 +235,7 @@ private:
   void              CleanUpDownscale(b32 FullCleanUp);
   void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
   void              SetUpHDR(b32 fullSetup);
+  void              CleanUpForwardPBR();
   void              CleanUpHDR(b32 fullCleanup);
   void              CleanUpPBR();
   void              CleanUpSkybox();
@@ -265,6 +268,11 @@ private:
     CommandBuffer*                _CmdBuffer;
     Semaphore*                    _Sema;
   } m_Pbr;
+
+  struct {
+    CommandBuffer*                _CmdBuffer;
+    Semaphore*                    _Semaphore;
+  } m_Forward;
 
   struct {
     CommandBuffer*                _CmdBuffer;

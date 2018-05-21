@@ -112,6 +112,13 @@ void RendererComponent::OnEnable()
 }
 
 
+void RendererComponent::ForceForward(b32 enable)
+{
+  if (enable) { m_configs |= CMD_FORWARD_BIT; }
+  else { m_configs &= ~CMD_FORWARD_BIT; }
+}
+
+
 void RendererComponent::Update()
 {
   if (!Enabled() || !m_meshRef) return;
@@ -122,13 +129,12 @@ void RendererComponent::Update()
   Matrix4 model = transform->GetLocalToWorldMatrix();
 
   // Now push the object into the renderer for updating.
-  CmdList<MeshRenderCmd>& list = gRenderer().GetDeferredList();
   MeshRenderCmd cmd;
   cmd._pMeshDesc = m_meshDescriptor;
   cmd._pMatDesc = m_materialRef->GetMaterial()->Native();
   cmd._pMeshData = m_meshRef->MeshRef() ? m_meshRef->MeshRef()->Native() : nullptr;
   cmd._config = m_configs;
-  list.PushBack(cmd);
+  gRenderer().PushMeshRender(cmd);
 
   if (model == renderData->_Model) return;
   Matrix4 N = model;

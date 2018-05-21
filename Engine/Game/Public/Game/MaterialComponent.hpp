@@ -42,13 +42,13 @@ struct Material {
   void                      SetAo(Texture2D* texture) { m_pDesc->SetAo(texture); MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
   void                      SetEmissive(Texture2D* texture) { m_pDesc->SetEmissive(texture); MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
   void                      SetBaseColor(Vector4 color) { m_pDesc->Data()->_Color = color; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
-
-  void                      EnableAlbedo(b8 enable) { m_pDesc->Data()->_HasAlbedo = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
-  void                      EnableNormal(b8 enable) { m_pDesc->Data()->_HasNormal = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
-  void                      EnableRoughness(b8 enable) { m_pDesc->Data()->_HasRoughness = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
-  void                      EnableMetallic(b8 enable) { m_pDesc->Data()->_HasMetallic = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
-  void                      EnableEmissive(b8 enable) { m_pDesc->Data()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
-  void                      EnableAo(b8 enable) { m_pDesc->Data()->_HasAO = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      SetTransparent(b32 enable) { m_pDesc->Data()->_IsTransparent = enable; }
+  void                      EnableAlbedo(b32 enable) { m_pDesc->Data()->_HasAlbedo = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      EnableNormal(b32 enable) { m_pDesc->Data()->_HasNormal = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      EnableRoughness(b32 enable) { m_pDesc->Data()->_HasRoughness = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      EnableMetallic(b32 enable) { m_pDesc->Data()->_HasMetallic = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      EnableEmissive(b32 enable) { m_pDesc->Data()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
+  void                      EnableAo(b32 enable) { m_pDesc->Data()->_HasAO = enable; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
 
   // Returns the native descriptor.
   MaterialDescriptor*       Native() { return m_pDesc; }

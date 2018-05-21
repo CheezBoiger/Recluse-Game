@@ -94,7 +94,6 @@ void PointLightComponent::Update()
   m_NativeLight->_Position = transform->Position + rel;
 
   if (Debugging()) {
-    CmdList<MeshRenderCmd>& cmdlist = gRenderer().GetDeferredList();
     MeshRenderCmd cmd;
     cmd._config = CMD_RENDERABLE_BIT;
     cmd._pMeshDesc = m_descriptor;
@@ -117,7 +116,7 @@ void PointLightComponent::Update()
     N[3][3] = 1.0f;
     buffer->_NormalMatrix = N.Inverse().Transpose();
     m_descriptor->PushUpdate(MeshDescriptor::MESH_BUFFER_UPDATE);
-    cmdlist.PushBack(cmd);
+    gRenderer().PushMeshRender(cmd);
   }
 }
 

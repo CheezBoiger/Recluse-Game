@@ -91,7 +91,6 @@ Fence::~Fence()
 VulkanRHI::VulkanRHI()
   : mWindow(NULL)
   , mSurface(VK_NULL_HANDLE)
-  , mCmdPool(VK_NULL_HANDLE)
   , mComputeCmdPool(VK_NULL_HANDLE)
   , m_TransferCmdPool(VK_NULL_HANDLE)
   , mDescriptorPool(VK_NULL_HANDLE)
@@ -102,6 +101,8 @@ VulkanRHI::VulkanRHI()
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
   mSwapchainInfo.mCmdBufferSets.resize(2);
+
+  mGraphicsCmdPools.resize(2);
 }
 
 
@@ -228,9 +229,11 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.GraphicsQueueFamily()._idx);
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
-  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mCmdPool) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create primary command pool!\n");
-  } 
+  for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
+    if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mGraphicsCmdPools[i]) != VK_SUCCESS) {
+      R_DEBUG(rError, "Failed to create primary command pool!\n");
+    } 
+  }
 
   cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.ComputeQueueFamily()._idx);
 
@@ -270,9 +273,11 @@ void VulkanRHI::CleanUp()
     }
   }
 
-  if (mCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Native(), mCmdPool, nullptr);
-    mCmdPool = VK_NULL_HANDLE;
+  for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
+    if (mGraphicsCmdPools[i]) {
+      vkDestroyCommandPool(mLogicalDevice.Native(), mGraphicsCmdPools[i], nullptr);
+      mGraphicsCmdPools[i] = VK_NULL_HANDLE;
+    }
   }
 
   if (mComputeCmdPool) {
@@ -648,7 +653,7 @@ void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
     CommandBuffer& cmdBuffer = cmdBufferSet[i];
     cmdBuffer.SetOwner(mLogicalDevice.Native());
-    cmdBuffer.Allocate(mCmdPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    cmdBuffer.Allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     
     VkCommandBufferBeginInfo cmdBufferBI = { };
     cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

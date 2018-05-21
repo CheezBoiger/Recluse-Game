@@ -140,7 +140,10 @@ public:
   VkSurfaceKHR                  Surface() { return mSurface; }
 
   // Get the command pool on the graphics side.
-  VkCommandPool                 GraphicsCmdPool() { return mCmdPool; }
+  VkCommandPool                 GraphicsCmdPool(size_t i) { return mGraphicsCmdPools[i]; }
+
+  // Get the number of graphics command pools this RHI is using.
+  size_t                           NumGraphicsCmdPools() { return mGraphicsCmdPools.size(); }
 
   // Get the command pool on the compute side.
   VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
@@ -257,7 +260,7 @@ private:
   Swapchain                     mSwapchain;
   LogicalDevice                 mLogicalDevice;
   VkSurfaceKHR                  mSurface;
-  VkCommandPool                 mCmdPool;
+  std::vector<VkCommandPool>    mGraphicsCmdPools;
   VkCommandPool                 mComputeCmdPool;
   VkCommandPool                 m_TransferCmdPool;
   VkDescriptorPool              mDescriptorPool;

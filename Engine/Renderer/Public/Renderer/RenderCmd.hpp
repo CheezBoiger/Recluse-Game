@@ -19,10 +19,13 @@ class MeshData;
 
 
 enum CmdConfigBits {
-  CMD_RENDERABLE_BIT = (1 << 0),
-  CMD_DEBUG_BIT = (1 << 2),
-  CMD_SHADOWS_BIT = (1 << 3),
-  CMD_INSTANCING_BIT = (1 << 4)
+  CMD_RENDERABLE_BIT  = (1 << 0),
+  CMD_DEBUG_BIT       = (1 << 2),
+  CMD_SHADOWS_BIT     = (1 << 3),
+  CMD_INSTANCING_BIT  = (1 << 4),
+  CMD_TRANSLUCENT_BIT = (1 << 5),
+  CMD_TRANSPARENT_BIT = (1 << 6),
+  CMD_FORWARD_BIT = (1 << 7)
 };
 
 

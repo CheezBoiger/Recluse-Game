@@ -129,7 +129,7 @@ Sky::~Sky()
 void Sky::CreateCommandBuffer(VulkanRHI* rhi)
 {
   m_pCmdBuffer = rhi->CreateCommandBuffer();
-  m_pCmdBuffer->Allocate(rhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  m_pCmdBuffer->Allocate(rhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 }
 
 

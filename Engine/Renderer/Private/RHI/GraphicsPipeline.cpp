@@ -17,7 +17,8 @@ GraphicsPipeline::~GraphicsPipeline()
 void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
   const VkPipelineLayoutCreateInfo& layout)
 {
-  if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
+  VkResult result = vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout);
+  if (result != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create pipeline layout!\n");
   }
 

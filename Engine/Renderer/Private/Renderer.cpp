@@ -200,6 +200,18 @@ void Renderer::Render()
   pbrSi.pSignalSemaphores = pbr_SignalSemas;
   pbrSi.pWaitDstStageMask = waitFlags;
 
+  VkSubmitInfo forwardSi = { };
+  VkCommandBuffer forwardBuffers[] = { m_Forward._CmdBuffer->Handle() };
+  VkSemaphore forwardSignalSemas[] = { m_Forward._Semaphore->Handle() };
+  forwardSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  forwardSi.commandBufferCount = 1;
+  forwardSi.pCommandBuffers = forwardBuffers;
+  forwardSi.signalSemaphoreCount = 1;
+  forwardSi.waitSemaphoreCount = 1;
+  forwardSi.pWaitSemaphores = pbr_SignalSemas;
+  forwardSi.pSignalSemaphores = forwardSignalSemas;
+  forwardSi.pWaitDstStageMask = waitFlags;
+
   // skybox, waits for pbr to finish rendering.
   VkSubmitInfo skyboxSI = offscreenSI;
   VkSemaphore skybox_SignalSemas[] = { m_SkyboxFinished->Handle() };
@@ -207,7 +219,7 @@ void Renderer::Render()
   skyboxSI.commandBufferCount = 1;
   skyboxSI.pCommandBuffers = &skybox_CmdBuffer;
   skyboxSI.pSignalSemaphores = skybox_SignalSemas;
-  skyboxSI.pWaitSemaphores = pbr_SignalSemas;
+  skyboxSI.pWaitSemaphores = forwardSignalSemas;
 
   // Postprocessing, HDR waits for skybox to finish rendering onto scene.
   VkSubmitInfo hdrSI = offscreenSI;
@@ -250,9 +262,9 @@ void Renderer::Render()
       m_pSky->MarkClean();
     }
 
-    VkSubmitInfo submits[] { offscreenSI, pbrSi, skyboxSI };
+    VkSubmitInfo submits[] { offscreenSI, pbrSi, forwardSi, skyboxSI };
     // Submit to renderqueue.
-    m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 3, submits);
+    m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 4, submits);
 
     // High Dynamic Range and Gamma Pass. Post process after rendering. This will include
     // Bloom, AA, other effects.
@@ -319,6 +331,7 @@ void Renderer::CleanUp()
   }
 
   m_RenderQuad.CleanUp();
+  CleanUpForwardPBR();
   CleanUpPBR();
   CleanUpHDR(true);
   CleanUpDownscale(true);
@@ -375,6 +388,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpDownscale(true);
   SetUpHDR(true);
   SetUpPBR();
+  SetUpForwardPBR();
 
   m_pLights = new LightDescriptor();
   m_pLights->m_pRhi = m_pRhi;
@@ -1063,6 +1077,43 @@ void Renderer::SetUpFrameBuffers()
     );
 
     pbr_FrameBuffer->Finalize(pbrFramebufferCI, pbrRenderpassCI);
+
+    // Forward renderpass portion.
+    pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
+      pbr_Final->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      pbr_Final->Samples()
+    );
+
+    pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
+      pbr_Bright->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      pbr_Bright->Samples()
+    );
+
+    pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
+      gbuffer_Depth->Format(),
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Depth->Samples()
+    );
+
+    VkResult result = vkCreateRenderPass(m_pRhi->LogicDevice()->Native(), &pbrRenderpassCI, nullptr, &pbr_forwardRenderPass);
+    R_ASSERT(result == VK_SUCCESS, "Failed to create forward pbr render pass.\n");
   }
   
   // No need to render any depth, as we are only writing on a 2d surface.
@@ -1335,6 +1386,8 @@ void Renderer::SetUpGraphicsPipelines()
     R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
   }
     
+  RendererPass::SetUpForwardPhysicallyBasedPass(RHI(), GraphicsPipelineInfo);
+
   RendererPass::SetUpGBufferPass(RHI(), GraphicsPipelineInfo);
   RendererPass::SetUpSkyboxPass(RHI(), GraphicsPipelineInfo);
 
@@ -1358,7 +1411,7 @@ void Renderer::SetUpGraphicsPipelines()
   colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
 
-  RendererPass::SetUpPhysicallyBasedPass(RHI(), GraphicsPipelineInfo);
+  RendererPass::SetUpDeferredPhysicallyBasedPass(RHI(), GraphicsPipelineInfo);
   RendererPass::SetUpDownScalePass(RHI(), GraphicsPipelineInfo);
   RendererPass::SetUpHDRGammaPass(RHI(), GraphicsPipelineInfo);
 
@@ -1381,6 +1434,12 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
   m_pRhi->FreeGraphicsPipeline(gbuffer_StaticPipeline);
+
+  vkDestroyRenderPass(m_pRhi->LogicDevice()->Native(), pbr_forwardRenderPass, nullptr);
+  pbr_forwardRenderPass = VK_NULL_HANDLE;
+
+  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineKey);
+  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineKey);
 
   GraphicsPipeline* QuadPipeline = final_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
@@ -1807,9 +1866,9 @@ void Renderer::SetUpOffscreen(b32 fullSetup)
 
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-      m_Offscreen._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+      m_Offscreen._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
       m_Offscreen._ShadowCmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-      m_Offscreen._ShadowCmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);  
+      m_Offscreen._ShadowCmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);  
   }
   }
 }
@@ -1999,7 +2058,7 @@ void Renderer::SetUpHDR(b32 fullSetUp)
 {
   if (fullSetUp) {
     m_HDR._CmdBuffer = m_pRhi->CreateCommandBuffer();
-    m_HDR._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_HDR._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     m_HDR._Semaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCi = { };
     semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -2116,7 +2175,7 @@ void Renderer::SetUpSkybox()
 
   // Create skybox Commandbuffer.
   m_pSkyboxCmdBuffer = m_pRhi->CreateCommandBuffer();
-  m_pSkyboxCmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  m_pSkyboxCmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   m_SkyboxFinished = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo sema = { };
@@ -2257,7 +2316,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       MeshRenderCmd& renderCmd = m_cmdList.Get(i);
       // Need to notify that this render command does not have a render object.
       if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) continue;
-      if (!(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
+      if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
+          (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
       MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
       b8 Skinned = pMeshDesc->Skinned();
@@ -2303,11 +2363,6 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
       }
     }
-
-
-  for (size_t i = 0; i < m_deferredCmdList.Size(); ++i) {
-
-  }
   cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
@@ -2646,41 +2701,163 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
+  auto render = [&] (MeshRenderCmd& renderCmd) -> void {
+    if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) return;
+    if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
+    MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
+    MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
+    b8 skinned = pMeshDesc->Skinned();
+    VkDescriptorSet descriptorSets[3];
+    descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
+    descriptorSets[1] = lightViewSet->Handle();
+    descriptorSets[2] = skinned ? pMeshDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
+    GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+    cmdBuffer->SetViewPorts(0, 1, &viewport);
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
+    MeshData* mesh = renderCmd._pMeshData;
+    if (!mesh) return;
+    VertexBuffer* vertex = mesh->VertexData();
+    IndexBuffer* index = mesh->IndexData();
+    VkBuffer buf = vertex->Handle()->NativeBuffer();
+
+    VkDeviceSize offset[] = { 0 };
+    cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
+    if (index) {
+      VkBuffer ind = index->Handle()->NativeBuffer();
+      cmdBuffer->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->DrawIndexed(index->IndexCount(), renderCmd._instances, 0, 0, 0);
+    }
+    else {
+      cmdBuffer->Draw(vertex->VertexCount(), renderCmd._instances, 0, 0);
+    }
+  };
+
   // Create the shadow rendering pass.
   cmdBuffer->Begin(begin);
     cmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
       for (size_t i = 0; i < m_cmdList.Size(); ++i) {
         MeshRenderCmd& renderCmd = m_cmdList[i];
-        if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) continue;
-        if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) continue;
-        MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-        MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
-        b8 skinned = pMeshDesc->Skinned();
-        VkDescriptorSet descriptorSets[3];
-        descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
-        descriptorSets[1] = lightViewSet->Handle();
-        descriptorSets[2] = skinned ? pMeshDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
-        GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
-        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
-        cmdBuffer->SetViewPorts(0, 1, &viewport);
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
-        MeshData* mesh = renderCmd._pMeshData;
-        if (!mesh) return;
-        VertexBuffer* vertex = mesh->VertexData();
-        IndexBuffer* index = mesh->IndexData();
-        VkBuffer buf = vertex->Handle()->NativeBuffer();
+        render(renderCmd);
+      }
 
-        VkDeviceSize offset[] = { 0 };
-        cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
-        if (index) {
-          VkBuffer ind = index->Handle()->NativeBuffer();
-          cmdBuffer->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
-          cmdBuffer->DrawIndexed(index->IndexCount(), renderCmd._instances, 0, 0, 0);
-        } else {
-          cmdBuffer->Draw(vertex->VertexCount(), renderCmd._instances, 0, 0);
-        }
+      for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
+        MeshRenderCmd& renderCmd = m_forwardCmdList[i];
+        render(renderCmd);
       }
     cmdBuffer->EndRenderPass();    
+  cmdBuffer->End();
+}
+
+
+void Renderer::SetUpForwardPBR()
+{
+  m_Forward._CmdBuffer = m_pRhi->CreateCommandBuffer();
+  CommandBuffer* cmdB = m_Forward._CmdBuffer;
+  cmdB->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  
+  m_Forward._Semaphore = m_pRhi->CreateVkSemaphore();
+  VkSemaphoreCreateInfo semaCi = { };
+  semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  m_Forward._Semaphore->Initialize(semaCi);
+}
+
+
+void Renderer::CleanUpForwardPBR()
+{
+  m_pRhi->FreeCommandBuffer(m_Forward._CmdBuffer);
+  m_pRhi->FreeVkSemaphore(m_Forward._Semaphore);
+}
+
+
+void Renderer::BuildForwardPBRCmdBuffer()
+{
+  CommandBuffer* cmdBuffer = m_Forward._CmdBuffer;
+  cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  
+  VkCommandBufferBeginInfo begin = { };
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  
+  std::array<VkClearValue, 5> clearValues;
+  clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[4].depthStencil = { 1.0f, 0 };
+
+  VkRenderPassBeginInfo renderPassCi = {};
+  renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassCi.framebuffer = pbr_FrameBufferKey->Handle();
+  renderPassCi.renderPass = pbr_forwardRenderPass;
+  renderPassCi.pClearValues = clearValues.data();
+  renderPassCi.clearValueCount = static_cast<u32>(clearValues.size());
+  renderPassCi.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  renderPassCi.renderArea.offset = { 0, 0 };
+
+  VkViewport viewport = {};
+  viewport.height = (r32)m_pWindow->Height();
+  viewport.width = (r32)m_pWindow->Width();
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.y = 0.0f;
+  viewport.x = 0.0f;
+  
+  VkDescriptorSet DescriptorSets[6];
+
+  cmdBuffer->Begin(begin);
+    cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
+      for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
+        MeshRenderCmd& renderCmd = m_forwardCmdList[i];
+        if (!(renderCmd._config & CMD_FORWARD_BIT) || !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
+        MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
+        MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
+        b8 Skinned = pMeshDesc->Skinned();
+        GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipelineKey : pbr_staticForwardPipelineKey;
+        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+        cmdBuffer->SetViewPorts(0, 1, &viewport);
+
+        DescriptorSets[0] = m_pGlobal->Set()->Handle();
+        DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
+        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
+        DescriptorSets[3] = m_pLights->Set()->Handle();
+        DescriptorSets[4] = m_pLights->ViewSet()->Handle();
+        DescriptorSets[5] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
+
+        // Bind materials.
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
+          Pipe->Layout(),
+          0,
+          (Skinned ? 6 : 5),
+          DescriptorSets,
+          0,
+          nullptr
+        );
+
+        // Set up the render mesh
+        MeshData* data = renderCmd._pMeshData;
+        // TODO(): Do culling if needed here.
+        if (!data) {
+          R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
+          continue;
+        }
+
+        VertexBuffer* vertexBuffer = data->VertexData();
+        IndexBuffer* indexBuffer = data->IndexData();
+        VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
+
+        VkDeviceSize offsets[] = { 0 };
+        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+
+        if (indexBuffer) {
+          VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
+          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), renderCmd._instances, 0, 0, 0);
+        }
+        else {
+          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+        }
+      }
+    cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
 
@@ -2773,7 +2950,7 @@ void Renderer::SetUpPBR()
   pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
 
   m_Pbr._CmdBuffer = m_pRhi->CreateCommandBuffer();
-  m_Pbr._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  m_Pbr._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   m_Pbr._Sema = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo semaCi = {};
@@ -2857,7 +3034,7 @@ void Renderer::SetUpFinalOutputs()
   }
 
   m_pFinalCommandBuffer = m_pRhi->CreateCommandBuffer();
-  m_pFinalCommandBuffer->Allocate(m_pRhi->GraphicsCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  m_pFinalCommandBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   m_pFinalFinished = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo info = { };
@@ -2871,7 +3048,10 @@ void Renderer::CheckCmdUpdate()
   u32 idx = CurrentCmdBufferIdx() + 1;
   if (idx >= m_TotalCmdBuffers) idx = 0;
 
-  BuildOffScreenBuffer(idx);
+  std::thread thr1 = std::thread([&]() -> void {
+    BuildOffScreenBuffer(idx);
+    BuildForwardPBRCmdBuffer();
+  });
   
   if (m_pLights->PrimaryShadowEnabled()) {
     BuildShadowCmdBuffer(idx);
@@ -2886,6 +3066,7 @@ void Renderer::CheckCmdUpdate()
     }
   }
 #endif
+  thr1.join();
   m_CurrCmdBufferIdx = idx;
 }
 
@@ -2957,8 +3138,15 @@ void Renderer::UpdateSceneDescriptors()
     }
   }
 
-  for (size_t idx = 0; idx < m_cmdList.Size(); ++idx) {
-    MeshRenderCmd& rnd_cmd = m_cmdList.Get(idx);
+  for (size_t idx = 0; idx < m_forwardCmdList.Size(); ++idx) {
+    MeshRenderCmd& rnd_cmd = m_forwardCmdList.Get(idx);
+    if (rnd_cmd._pMeshDesc) {
+      rnd_cmd._pMeshDesc->Update();
+    }
+
+    if (rnd_cmd._pMatDesc) {
+      rnd_cmd._pMatDesc->Update();
+    }
   }
 }
 
@@ -3036,6 +3224,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 
   m_pUI->CleanUp();
 
+  CleanUpForwardPBR();
   CleanUpPBR();
   CleanUpHDR(false);
   CleanUpDownscale(false);
@@ -3053,6 +3242,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   SetUpDownscale(false);
   SetUpHDR(false);
   SetUpPBR();
+  SetUpForwardPBR();
 
   m_pUI->Initialize(m_pRhi);
   if (m_cmdList.Size() > 0) {
@@ -3191,6 +3381,7 @@ void Renderer::EnableHDR(b32 enable)
 void Renderer::SortCmdLists()
 {
   m_cmdList.Sort();
+  m_forwardCmdList.Sort();
   // TODO(): Also sort forward list too.
 }
 
@@ -3199,6 +3390,17 @@ void Renderer::ClearCmdLists()
 {
   // TODO(): Clear forward command list as well.
   m_cmdList.Clear();
-  //m_forwardCmdList.Clear();
+  m_forwardCmdList.Clear();
+}
+
+
+void Renderer::PushMeshRender(MeshRenderCmd& cmd)
+{
+  u32 config = cmd._config;
+  if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
+    m_forwardCmdList.PushBack(cmd);
+  } else {
+    m_cmdList.PushBack(cmd);
+  }
 }
 } // Recluse

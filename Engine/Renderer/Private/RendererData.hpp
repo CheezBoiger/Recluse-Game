@@ -66,8 +66,9 @@ extern std::string pbr_VertStr;
 extern std::string pbr_FragStr;
 
 extern GraphicsPipeline* pbr_forwardPipelineKey;
-extern const char* pbr_forwardVertStr;
-extern const char* pbr_forwardFragStr;
+extern GraphicsPipeline* pbr_staticForwardPipelineKey;
+extern VkRenderPass      pbr_forwardRenderPass;
+extern std::string pbr_forwardFragStr;
 
 extern GraphicsPipeline* aa_PipelineKey;
 extern FrameBuffer* aa_FrameBufferKey;
@@ -173,7 +174,9 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
 
 void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpForwardPhysicallyBasedPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
