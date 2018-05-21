@@ -200,18 +200,6 @@ void Renderer::Render()
   pbrSi.pSignalSemaphores = pbr_SignalSemas;
   pbrSi.pWaitDstStageMask = waitFlags;
 
-  VkSubmitInfo forwardSi = { };
-  VkCommandBuffer forwardBuffers[] = { m_Forward._CmdBuffer->Handle() };
-  VkSemaphore forwardSignalSemas[] = { m_Forward._Semaphore->Handle() };
-  forwardSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  forwardSi.commandBufferCount = 1;
-  forwardSi.pCommandBuffers = forwardBuffers;
-  forwardSi.signalSemaphoreCount = 1;
-  forwardSi.waitSemaphoreCount = 1;
-  forwardSi.pWaitSemaphores = pbr_SignalSemas;
-  forwardSi.pSignalSemaphores = forwardSignalSemas;
-  forwardSi.pWaitDstStageMask = waitFlags;
-
   // skybox, waits for pbr to finish rendering.
   VkSubmitInfo skyboxSI = offscreenSI;
   VkSemaphore skybox_SignalSemas[] = { m_SkyboxFinished->Handle() };
@@ -219,7 +207,19 @@ void Renderer::Render()
   skyboxSI.commandBufferCount = 1;
   skyboxSI.pCommandBuffers = &skybox_CmdBuffer;
   skyboxSI.pSignalSemaphores = skybox_SignalSemas;
-  skyboxSI.pWaitSemaphores = forwardSignalSemas;
+  skyboxSI.pWaitSemaphores = pbr_SignalSemas;
+
+  VkSubmitInfo forwardSi = {};
+  VkCommandBuffer forwardBuffers[] = { m_Forward._CmdBuffer->Handle() };
+  VkSemaphore forwardSignalSemas[] = { m_Forward._Semaphore->Handle() };
+  forwardSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  forwardSi.commandBufferCount = 1;
+  forwardSi.pCommandBuffers = forwardBuffers;
+  forwardSi.signalSemaphoreCount = 1;
+  forwardSi.waitSemaphoreCount = 1;
+  forwardSi.pWaitSemaphores = skybox_SignalSemas;
+  forwardSi.pSignalSemaphores = forwardSignalSemas;
+  forwardSi.pWaitDstStageMask = waitFlags;
 
   // Postprocessing, HDR waits for skybox to finish rendering onto scene.
   VkSubmitInfo hdrSI = offscreenSI;
@@ -227,11 +227,10 @@ void Renderer::Render()
   VkCommandBuffer hdrCmd = m_HDR._CmdBuffer->Handle();
   hdrSI.pCommandBuffers = &hdrCmd;
   hdrSI.pSignalSemaphores = hdr_SignalSemas;
-  hdrSI.pWaitSemaphores = skybox_SignalSemas;
+  hdrSI.pWaitSemaphores = forwardSignalSemas;
 
-  VkSemaphore  hdr_Sema = m_HDR._Semaphore->Handle();
-  VkSemaphore* final_WaitSemas = &hdr_Sema;
-  if (!m_HDR._Enabled) final_WaitSemas = skybox_SignalSemas;
+  VkSemaphore* final_WaitSemas = hdr_SignalSemas;
+  if (!m_HDR._Enabled) final_WaitSemas = forwardSignalSemas;
 
   VkSubmitInfo finalSi = { };
   finalSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -262,13 +261,13 @@ void Renderer::Render()
       m_pSky->MarkClean();
     }
 
-    VkSubmitInfo submits[] { offscreenSI, pbrSi, forwardSi, skyboxSI };
+    VkSubmitInfo submits[] { offscreenSI, pbrSi, skyboxSI, forwardSi };
     // Submit to renderqueue.
     m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 4, submits);
 
     // High Dynamic Range and Gamma Pass. Post process after rendering. This will include
     // Bloom, AA, other effects.
-    if (m_HDR._Enabled) m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &hdrSI);
+    if (m_HDR._Enabled) { m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &hdrSI); }
 
     //
     // TODO(): Add antialiasing here.
@@ -3245,9 +3244,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   SetUpForwardPBR();
 
   m_pUI->Initialize(m_pRhi);
-  if (m_cmdList.Size() > 0) {
-    Build();
-  }
+  Build();
 }
 
 

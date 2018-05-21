@@ -140,12 +140,17 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   }  break;
   case WM_SIZE:
   {
+    b32 windowChange = false;
     if (window) {
-      window->mWidth  = LOWORD(lParam);
-      window->mHeight = HIWORD(lParam);
-    } 
+      i32 width = LOWORD(lParam);
+      i32 height = HIWORD(lParam);
+      if (width != window->mWidth || height != window->mHeight) {
+        window->mWidth  = width;
+        window->mHeight = height;
+        windowChange = true;
+      }
 
-    switch (wParam) {
+      switch (wParam) {
       case SIZE_RESTORED:
       {
         if (window->Minimized() && gFullScreenAltTab && !window->FullScreen()) {
@@ -158,10 +163,11 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
       {
         window->mMinimized = true;
       }
-    }
-    
-    if (gWindowResizeCallback) {
-      gWindowResizeCallback(window, window->mWidth, window->mHeight);
+      }
+
+      if (windowChange && gWindowResizeCallback) {
+        gWindowResizeCallback(window, window->mWidth, window->mHeight);
+      }
     }
 
   } break;

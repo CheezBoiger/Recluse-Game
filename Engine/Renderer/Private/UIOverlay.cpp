@@ -6,11 +6,14 @@
 #include "RendererData.hpp"
 #include "Filesystem/Filesystem.hpp"
 
+#include "VertexDescription.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
 #include "RHI/Commandbuffer.hpp"
 #include "RHI/Framebuffer.hpp"
+#include "RHI/DescriptorSet.hpp"
 #include "RHI/Texture.hpp"
+#include "RHI/Shader.hpp"
 
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
@@ -83,23 +86,21 @@ NkObject* gNkDevice()
 void UIOverlay::Render()
 {
   // Ignore if no reference to the rhi.
-  if (!m_pRhi) return;
+  R_ASSERT(m_pRhi, "Null RHI for ui overlay!");
 
   // Render the overlay.
-  u32 currCmdIdx = m_pRhi->CurrentImageIndex();
-  CommandBuffer* cmdBuffer = m_CmdBuffers[currCmdIdx];
+  CommandBuffer* cmdBuffer = m_CmdBuffer;
+
+  
 }
 
 
 void UIOverlay::Initialize(VulkanRHI* rhi)
 {
   m_pRhi = rhi;
-  // Number of framebuffers defines the number of command buffers.
-  m_CmdBuffers.resize(rhi->NumOfFramebuffers());
 
-  for (size_t i = 0; i < m_CmdBuffers.size(); ++i) {
-    m_CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-  }
+  m_CmdBuffer = m_pRhi->CreateCommandBuffer();
+  m_CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   m_pSemaphore = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo semaCi = { };
@@ -107,6 +108,7 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
   m_pSemaphore->Initialize(semaCi);
 
   InitializeRenderPass();
+  CreateDescriptorSetLayout();
   SetUpGraphicsPipeline();
 
   // After initialization of our graphics gui pipeline, it's time to 
@@ -121,17 +123,14 @@ void UIOverlay::CleanUp()
 {
   // Allow us to clean up and release our nk context and object.
   CleanUpNkObject(gNkDevice());  
+  CleanUpDescriptorSetLayout();
 
   m_pRhi->FreeVkSemaphore(m_pSemaphore);
   m_pSemaphore = nullptr;
 
-  if (!m_CmdBuffers.empty()) {
-    for (size_t i = 0; i < m_CmdBuffers.size(); ++i) {
-      CommandBuffer* cmdBuf = m_CmdBuffers[i];
-      m_pRhi->FreeCommandBuffer(cmdBuf);
-      m_CmdBuffers[i] = nullptr;
-    }
-  }
+  CommandBuffer* cmdBuf = m_CmdBuffer;
+  m_pRhi->FreeCommandBuffer(cmdBuf);
+  m_CmdBuffer = nullptr;
 
   if (m_renderPass) {
     vkDestroyRenderPass(m_pRhi->LogicDevice()->Native(), m_renderPass, nullptr);
@@ -151,9 +150,9 @@ void UIOverlay::InitializeRenderPass()
   VkSubpassDependency dependencies[2];
   attachmentDescriptions[0] = CreateAttachmentDescription(
     final_renderTargetKey->Format(),
-    VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -210,15 +209,155 @@ void UIOverlay::SetUpGraphicsPipeline()
     GraphicsPipeline* pipeline = m_pRhi->CreateGraphicsPipeline();
     m_pGraphicsPipeline = pipeline;
 
+    VkPipelineInputAssemblyStateCreateInfo vertInputAssembly = { };
+    vertInputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    vertInputAssembly.primitiveRestartEnable = VK_FALSE;
+    // Triangle strip would be more preferable...
+    vertInputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    
+    auto vertBinding = UIVertexDescription::GetBindingDescription();
+    auto vertAttribs = UIVertexDescription::GetVertexAttributes();
+
+    VkPipelineVertexInputStateCreateInfo vertInputState = { };
+    vertInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertInputState.vertexAttributeDescriptionCount = static_cast<u32>(vertAttribs.size());
+    vertInputState.pVertexAttributeDescriptions = vertAttribs.data();
+    vertInputState.vertexBindingDescriptionCount = 1;
+    vertInputState.pVertexBindingDescriptions = &vertBinding;
+    
+    VkPipelineRasterizationStateCreateInfo rasterCI = { };
+    rasterCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterCI.cullMode =   VK_CULL_MODE_NONE;
+    rasterCI.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterCI.depthBiasClamp = 0.0f;
+    rasterCI.depthBiasEnable = VK_FALSE;
+    rasterCI.lineWidth = 1.0f;
+    rasterCI.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterCI.rasterizerDiscardEnable = VK_FALSE;
+    
+    VkPipelineDepthStencilStateCreateInfo depthStencilCI = { };
+    depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilCI.depthWriteEnable = VK_FALSE;
+    depthStencilCI.depthTestEnable = VK_FALSE;
+    depthStencilCI.minDepthBounds = 0.0f;
+    depthStencilCI.maxDepthBounds = 1.0f;
+    depthStencilCI.front = { };
+    depthStencilCI.back = { };
+    depthStencilCI.stencilTestEnable = VK_FALSE;
+
+    VkPipelineMultisampleStateCreateInfo multisampleCI = { };
+    multisampleCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampleCI.sampleShadingEnable = VK_FALSE;
+    multisampleCI.alphaToOneEnable = VK_FALSE;
+    multisampleCI.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampleCI.alphaToCoverageEnable = VK_FALSE;
+    multisampleCI.pSampleMask = nullptr;
+    multisampleCI.minSampleShading = 1.0f;
+
+
+    VkDynamicState dynamicStates[2] = {
+      VK_DYNAMIC_STATE_SCISSOR,
+      VK_DYNAMIC_STATE_VIEWPORT
+    };
+    VkPipelineDynamicStateCreateInfo dynamicCI = { };
+    dynamicCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicCI.dynamicStateCount = 2;
+    dynamicCI.pDynamicStates = dynamicStates;
+
     VkGraphicsPipelineCreateInfo pipeCI = {};
     VkPipelineLayoutCreateInfo layoutCI = {};
+
+    VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  
+    VkRect2D scissor;
+    scissor.extent = extent;
+    scissor.offset = { 0, 0 };
+
+    VkViewport viewport = { };
+    viewport.height = static_cast<r32>(extent.height);
+    viewport.width = static_cast<r32>(extent.width);
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.maxDepth = 1.0f;
+    viewport.minDepth = 0.0f;
+
+    VkPipelineViewportStateCreateInfo viewportCI = { };
+    viewportCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportCI.viewportCount = 1;
+    viewportCI.scissorCount = 1;
+    viewportCI.pScissors = &scissor;
+    viewportCI.pViewports = &viewport;
+
+    std::array<VkPipelineColorBlendAttachmentState, 1> blendAttachments;
+    blendAttachments[0].blendEnable = VK_TRUE;
+    blendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
+    blendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    blendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    blendAttachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
+    blendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    blendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    blendAttachments[0].colorWriteMask = 0xf; // for rgba components.
+
+    VkPipelineColorBlendStateCreateInfo colorBlendCI = { };
+    colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    // No op as we are dealing with 
+    colorBlendCI.logicOp = VK_LOGIC_OP_COPY;
+    colorBlendCI.logicOpEnable = VK_FALSE;
+    colorBlendCI.attachmentCount = static_cast<u32>(blendAttachments.size());
+    colorBlendCI.pAttachments = blendAttachments.data();
 
     Shader* vert = m_pRhi->CreateShader();
     Shader* frag = m_pRhi->CreateShader();
 
     RendererPass::LoadShader("UI.vert.spv", vert);
     RendererPass::LoadShader("UI.frag.spv", frag);
-    //pipeline->Initialize(pipeCI, layoutCI);
+
+    std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
+    shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    shaderStages[0].pName = kDefaultShaderEntryPointStr;
+    shaderStages[0].pSpecializationInfo = nullptr;
+    shaderStages[0].module = vert->Handle();
+    shaderStages[0].flags = 0;
+    shaderStages[0].pNext = nullptr;
+
+    shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    shaderStages[1].pName = kDefaultShaderEntryPointStr;
+    shaderStages[1].pSpecializationInfo = nullptr;
+    shaderStages[1].module = frag->Handle();
+    shaderStages[1].flags = 0;
+    shaderStages[1].pNext = nullptr;
+
+
+    pipeCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipeCI.pInputAssemblyState = &vertInputAssembly;
+    pipeCI.pVertexInputState = &vertInputState;
+    pipeCI.pRasterizationState = &rasterCI;
+    pipeCI.pDepthStencilState = &depthStencilCI;
+    pipeCI.pMultisampleState = &multisampleCI;
+    pipeCI.pTessellationState = nullptr;
+    pipeCI.pViewportState = &viewportCI;
+    pipeCI.pDynamicState = &dynamicCI;
+    pipeCI.pColorBlendState = &colorBlendCI;
+    pipeCI.pStages = shaderStages.data();
+    pipeCI.stageCount = static_cast<u32>(shaderStages.size());
+    pipeCI.renderPass = m_renderPass;
+    pipeCI.subpass = 0;
+    pipeCI.basePipelineHandle = VK_NULL_HANDLE;
+
+    VkDescriptorSetLayout dSetLayouts[1] = {
+      m_pDescLayout->Layout()
+    };
+
+    layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    layoutCI.pPushConstantRanges = nullptr;
+    layoutCI.pushConstantRangeCount = 0;
+    layoutCI.setLayoutCount = 1;
+    layoutCI.pSetLayouts = dSetLayouts;
+   
+    pipeline->Initialize(pipeCI, layoutCI);
 
     m_pRhi->FreeShader(vert);
     m_pRhi->FreeShader(frag);
@@ -229,5 +368,30 @@ void UIOverlay::SetUpGraphicsPipeline()
 void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>* cmdList)
 {
   // TODO:
+}
+
+
+void UIOverlay::CreateDescriptorSetLayout()
+{
+  std::array<VkDescriptorSetLayoutBinding, 1> bindings;
+  bindings[0].binding = 0;
+  bindings[0].descriptorCount = 1;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[0].pImmutableSamplers = nullptr;
+  bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo descLayoutCI = { };
+  descLayoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  descLayoutCI.bindingCount = static_cast<u32>(bindings.size());
+  descLayoutCI.pBindings = bindings.data();
+
+  m_pDescLayout = m_pRhi->CreateDescriptorSetLayout();
+  m_pDescLayout->Initialize(descLayoutCI);
+}
+
+void UIOverlay::CleanUpDescriptorSetLayout()
+{
+  m_pRhi->FreeDescriptorSetLayout(m_pDescLayout);
+  m_pDescLayout = nullptr;
 }
 } // Recluse

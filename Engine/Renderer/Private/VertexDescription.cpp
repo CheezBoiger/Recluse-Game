@@ -128,4 +128,40 @@ std::vector<VkVertexInputAttributeDescription> StaticVertexDescription::GetVerte
   
   return attribs;
 }
+
+
+VkVertexInputBindingDescription UIVertexDescription::GetBindingDescription()
+{
+  VkVertexInputBindingDescription inputBinding = { };
+  inputBinding.binding = 0;
+  inputBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+  inputBinding.stride = sizeof(UIVertex);
+  return inputBinding;
+}
+
+
+std::vector<VkVertexInputAttributeDescription> UIVertexDescription::GetVertexAttributes()
+{
+  std::vector<VkVertexInputAttributeDescription> attribs(3);
+  u32 offset = 0;
+
+  attribs[0].binding = 0;
+  attribs[0].format = VK_FORMAT_R32G32_SFLOAT;
+  attribs[0].location = 0;
+  attribs[0].offset = offset;
+  offset += sizeof(Vector2);
+
+  attribs[1].binding = 0;
+  attribs[1].format = VK_FORMAT_R32G32_SFLOAT;
+  attribs[1].location = 1;
+  attribs[1].offset = offset;
+  offset += sizeof(Vector2);
+
+  attribs[2].binding = 0;
+  attribs[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  attribs[2].location = 2;
+  attribs[2].offset = offset;
+  
+  return attribs;
+}
 } // Recluse

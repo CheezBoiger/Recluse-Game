@@ -835,7 +835,6 @@ Texture* VulkanRHI::CreateTexture()
 {
   Texture* texture = new Texture();
   texture->SetOwner(mLogicalDevice.Native());
-  
   return texture;
 }
 
@@ -843,7 +842,6 @@ Texture* VulkanRHI::CreateTexture()
 void VulkanRHI::FreeTexture(Texture* texture)
 {
   if (!texture) return;
-
   texture->CleanUp();
   
   delete texture;

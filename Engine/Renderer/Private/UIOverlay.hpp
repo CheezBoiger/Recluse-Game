@@ -26,7 +26,8 @@ class UIOverlay {
 public:
   UIOverlay() 
     : m_pGraphicsPipeline(VK_NULL_HANDLE)
-    , m_pSemaphore(VK_NULL_HANDLE) { }
+    , m_pSemaphore(VK_NULL_HANDLE)
+    , m_pDescLayout(VK_NULL_HANDLE) { }
 
   void                        Initialize(VulkanRHI* rhi);
   void                        CleanUp();
@@ -37,17 +38,20 @@ public:
 
   Semaphore*                  Signal() { return m_pSemaphore; }
 
-  DescriptorSetLayout*        GetMaterialLayout() { return nullptr; /* for now. */ }
+  DescriptorSetLayout*        GetMaterialLayout() { return m_pDescLayout; }
 
 private:
   void                        InitializeRenderPass();
   void                        SetUpGraphicsPipeline();
+  void                        CreateDescriptorSetLayout();
+  void                        CleanUpDescriptorSetLayout();
 
   VulkanRHI*                  m_pRhi;
   Semaphore*                  m_pSemaphore;
-  std::vector<CommandBuffer*> m_CmdBuffers;
+  CommandBuffer*              m_CmdBuffer;
   VkRenderPass                m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
-  friend Renderer;
+  DescriptorSetLayout*        m_pDescLayout;
+  friend class Renderer;
 };
 } // Recluse
