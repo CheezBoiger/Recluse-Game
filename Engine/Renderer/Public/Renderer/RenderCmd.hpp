@@ -18,7 +18,7 @@ class RenderMaterial;
 class MeshData;
 
 
-enum CmdConfigBits {
+enum CmdConfig {
   CMD_RENDERABLE_BIT  = (1 << 0),
   CMD_DEBUG_BIT       = (1 << 2),
   CMD_SHADOWS_BIT     = (1 << 3),
@@ -27,6 +27,9 @@ enum CmdConfigBits {
   CMD_TRANSPARENT_BIT = (1 << 6),
   CMD_FORWARD_BIT = (1 << 7)
 };
+
+  
+typedef u32 CmdConfigBits;
 
 
 struct MeshRenderCmd {
@@ -41,12 +44,15 @@ struct MeshRenderCmd {
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
   MaterialDescriptor*     _pMatDesc;
-  u32                     _config;
+  CmdConfigBits           _config;
   u32                     _instances;
 };
 
 
 struct UiRenderCmd {
-  
+  UiRenderCmd()
+    : _config(false) { }
+
+  CmdConfigBits            _config;
 };
 } // Recluse

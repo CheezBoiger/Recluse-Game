@@ -65,10 +65,11 @@ Renderer::Renderer()
   m_Downscale._Strength = 1.0f;
   m_Downscale._Scale = 1.0f;
 
-  m_cmdList.Resize(1024);
+  m_cmdDeferredList.Resize(1024);
   m_forwardCmdList.Resize(1024);
+  m_uiCmdList.Resize(1024);
 
-  m_cmdList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
+  m_cmdDeferredList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
     if (!cmd1._pMeshDesc || !cmd2._pMeshDesc) return false;
     //if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
@@ -244,6 +245,18 @@ void Renderer::Render()
   finalSi.waitSemaphoreCount = 1;
   finalSi.pWaitSemaphores = final_WaitSemas;
 
+  VkSubmitInfo uiSi = { };
+  uiSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  VkCommandBuffer uiCmdBuffer = { m_pUI->GetCommandBuffer()->Handle() };
+  VkSemaphore uiSignalSema = { m_pUI->GetSemaphore()->Handle() };
+  uiSi.commandBufferCount = 1;
+  uiSi.pCommandBuffers = &uiCmdBuffer;
+  uiSi.waitSemaphoreCount = 1;
+  uiSi.pWaitSemaphores = &finalFinished;
+  uiSi.signalSemaphoreCount = 1;
+  uiSi.pSignalSemaphores = &uiSignalSema;
+  uiSi.pWaitDstStageMask = waitFlags;
+
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
     while (m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
@@ -280,11 +293,11 @@ void Renderer::Render()
     // sent our signal to our swapchain cmd buffers.
     
     // Render the Overlay.
-    RenderOverlay();
+    m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &uiSi);
 
     // Signal graphics finished on the final output.
     VkSemaphore signal = m_pRhi->GraphicsFinishedSemaphore();
-    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &finalFinished, 1, &signal, m_cpuFence->Handle()); // cpuFence will need to wait until overlay is finished.
+    m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &uiSignalSema, 1, &signal, m_cpuFence->Handle()); // cpuFence will need to wait until overlay is finished.
     bNextFrame = true;
   EndFrame();
 
@@ -2311,8 +2324,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    for (size_t i = 0; i < m_cmdList.Size(); ++i) {
-      MeshRenderCmd& renderCmd = m_cmdList.Get(i);
+    for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
+      MeshRenderCmd& renderCmd = m_cmdDeferredList.Get(i);
       // Need to notify that this render command does not have a render object.
       if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) continue;
       if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
@@ -2735,8 +2748,8 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   // Create the shadow rendering pass.
   cmdBuffer->Begin(begin);
     cmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
-      for (size_t i = 0; i < m_cmdList.Size(); ++i) {
-        MeshRenderCmd& renderCmd = m_cmdList[i];
+      for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
+        MeshRenderCmd& renderCmd = m_cmdDeferredList[i];
         render(renderCmd);
       }
 
@@ -3056,6 +3069,8 @@ void Renderer::CheckCmdUpdate()
     BuildShadowCmdBuffer(idx);
   }
 
+  m_pUI->BuildCmdBuffers(m_uiCmdList);
+
 #if 0
   if (m_NeedsUpdate) {
    if (m_AsyncBuild) {
@@ -3125,8 +3140,8 @@ void Renderer::UpdateSceneDescriptors()
   m_pLights->Update();
 
   // Update mesh descriptors in cmd list.
-  for (size_t idx = 0; idx < m_cmdList.Size(); ++idx) {
-    MeshRenderCmd& rnd_cmd = m_cmdList.Get(idx);
+  for (size_t idx = 0; idx < m_cmdDeferredList.Size(); ++idx) {
+    MeshRenderCmd& rnd_cmd = m_cmdDeferredList.Get(idx);
 
     if (rnd_cmd._pMeshDesc) {
       rnd_cmd._pMeshDesc->Update();
@@ -3377,7 +3392,7 @@ void Renderer::EnableHDR(b32 enable)
 
 void Renderer::SortCmdLists()
 {
-  m_cmdList.Sort();
+  m_cmdDeferredList.Sort();
   m_forwardCmdList.Sort();
   // TODO(): Also sort forward list too.
 }
@@ -3386,7 +3401,7 @@ void Renderer::SortCmdLists()
 void Renderer::ClearCmdLists()
 {
   // TODO(): Clear forward command list as well.
-  m_cmdList.Clear();
+  m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();
 }
 
@@ -3397,7 +3412,7 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
   if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
     m_forwardCmdList.PushBack(cmd);
   } else {
-    m_cmdList.PushBack(cmd);
+    m_cmdDeferredList.PushBack(cmd);
   }
 }
 } // Recluse

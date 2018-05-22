@@ -25,8 +25,8 @@ public:
     , m_currIdx(0) { } 
 
   size_t                  Size() const { return m_currIdx; }
-  MeshRenderCmd&          operator[](size_t i) { return mCmdList[i]; }
-  MeshRenderCmd&          Get(size_t i) { return mCmdList[i]; }
+  Cmd&                    operator[](size_t i) { return mCmdList[i]; }
+  Cmd&                    Get(size_t i) { return mCmdList[i]; }
 
   void                    Resize(size_t newSize) { mCmdList.resize(newSize); }
   void                    SetSortFunc(CmdCompareFunc compare) { mCompare = compare; }

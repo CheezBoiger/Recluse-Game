@@ -249,9 +249,9 @@ private:
   void              SortCmdLists();
 
   Window*           m_pWindow;
-  CmdList<MeshRenderCmd>           m_cmdList;
-  CmdList<MeshRenderCmd>           m_deferredCmdList;
-  CmdList<MeshRenderCmd>           m_forwardCmdList;
+  CmdList<MeshRenderCmd>            m_cmdDeferredList;
+  CmdList<MeshRenderCmd>            m_forwardCmdList;
+  CmdList<UiRenderCmd>              m_uiCmdList;
   GlobalDescriptor* m_pGlobal;
   LightDescriptor*  m_pLights;
 
@@ -301,7 +301,7 @@ private:
 
   b32                   m_Rendering : 1;
   b32                   m_Initialized : 1;
-  b32                   m_AntiAliasing : 1;
+  b32                   m_AntiAliasing : 1; 
 };
 
 Renderer&           gRenderer();

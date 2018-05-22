@@ -34,11 +34,15 @@ public:
   void                        Render();
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(CmdList<UiRenderCmd>* cmdList);
+  void                        BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList);
 
   Semaphore*                  Signal() { return m_pSemaphore; }
 
   DescriptorSetLayout*        GetMaterialLayout() { return m_pDescLayout; }
+
+  CommandBuffer*              GetCommandBuffer() { return m_CmdBuffer; }
+
+  Semaphore*                  GetSemaphore() { return m_pSemaphore; }
 
 private:
   void                        InitializeRenderPass();

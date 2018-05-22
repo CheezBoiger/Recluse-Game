@@ -365,9 +365,38 @@ void UIOverlay::SetUpGraphicsPipeline()
 }
 
 
-void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>* cmdList)
+void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
 {
   // TODO:
+  CommandBuffer* cmdBuffer = m_CmdBuffer;
+  cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+
+  VkCommandBufferBeginInfo beginInfo = { };
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+  VkClearValue clearValues[1];
+  clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+  VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkRenderPassBeginInfo renderPassBeginInfo = { };
+  renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassBeginInfo.framebuffer = final_frameBufferKey->Handle();
+  renderPassBeginInfo.renderPass = m_renderPass;
+  renderPassBeginInfo.renderArea.extent = extent;
+  renderPassBeginInfo.renderArea.offset = { 0, 0 };
+  renderPassBeginInfo.clearValueCount = 1;
+  renderPassBeginInfo.pClearValues = clearValues;
+
+  cmdBuffer->Begin(beginInfo);  
+    // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
+    cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+      for (size_t i = 0; i < cmdList.Size(); ++i) {
+        const UiRenderCmd& cmd = cmdList[i];
+        if (!(cmd._config & CMD_RENDERABLE_BIT)) { continue; }
+      }
+    cmdBuffer->EndRenderPass();
+  cmdBuffer->End();
 }
 
 
