@@ -42,7 +42,7 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._fMieStength = 0.1f;
   m_Global._fRayleighStength = 5.0f;
   m_Global._fScatterStrength = 1000.0f;
-  m_Global._vAirColor = Sky::kDefaultAirColor;
+  m_Global._vAirColor = SkyRenderer::kDefaultAirColor;
   
 }
 

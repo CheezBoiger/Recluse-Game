@@ -813,8 +813,8 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   pipelineLayout.setLayoutCount = 2;
   pipelineLayout.pSetLayouts = layouts;
   
-  LoadShader(Sky::kSkyVertStr, vert);
-  LoadShader(Sky::kSkyFragStr, frag);
+  LoadShader(SkyRenderer::kSkyVertStr, vert);
+  LoadShader(SkyRenderer::kSkyFragStr, frag);
 
   std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
@@ -868,7 +868,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   GraphicsPipelineInfo.stageCount = 2;
   GraphicsPipelineInfo.pStages = shaders.data();
   
-  GraphicsPipelineInfo.renderPass = gRenderer().SkyNative()->GetSkyboxRenderPass();
+  GraphicsPipelineInfo.renderPass = gRenderer().SkyRendererNative()->GetSkyboxRenderPass();
   sky->Initialize(GraphicsPipelineInfo, pipelineLayout);
 
   Rhi->FreeShader(vert);

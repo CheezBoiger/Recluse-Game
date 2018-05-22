@@ -9,7 +9,7 @@
 #include "Game/GameObject.hpp"
 #include "Renderer/LightDescriptor.hpp"
 
-#include "Game/Rendering/Skybox.hpp"
+#include "Game/Rendering/Sky.hpp"
 
 #include <set>
 
@@ -54,11 +54,10 @@ public:
   void                      Serialize(IArchive& archive) override { }
   void                      Deserialize(IArchive& archive) override  { }
 
-  DirectionalLight*         GetPrimaryLight() { return &m_PrimaryLight; }
+  Sky*                      GetSky() { return &m_sky; }
 
 private:
-  DirectionalLight          m_PrimaryLight;
-  Skybox                    m_skybox;
+  Sky                       m_sky;
 
   std::string               m_SceneName;
   SceneNode                 m_Root;

@@ -261,7 +261,8 @@ void Engine::UpdateGameLogic(r64 tick)
   }
 
   {
-    DirectionalLight* pPrimary = m_pPushedScene->GetPrimaryLight();
+    Sky* pSky = m_pPushedScene->GetSky();
+    DirectionalLight* pPrimary = pSky->GetSunLight();
     LightBuffer* pLights = gRenderer().LightData();
     pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
     pLights->_PrimaryLight._Color = pPrimary->_Color;

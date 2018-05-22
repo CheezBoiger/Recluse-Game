@@ -23,7 +23,7 @@ class IndexBuffer;
 
 // Sky, which renders the, well, sky, onto a cubemap. This cubemap is then 
 // used to sample to the final render texture.
-class Sky {
+class SkyRenderer {
 public:
   static const std::string  kAtmVertStr;
   static const std::string  kAtmFragStr;
@@ -34,7 +34,7 @@ public:
   static std::array<u32, 36>  kSkyboxIndices;
   static const Vector3      kDefaultAirColor;
 
-  Sky() 
+  SkyRenderer() 
     : m_pCubeMap(nullptr)
     , m_pAtmosphereSema(nullptr)
     , m_pPipeline(nullptr)
@@ -46,7 +46,7 @@ public:
     , m_SkyboxRenderPass(nullptr)
      { }
 
-  ~Sky();
+  ~SkyRenderer();
 
   void                    Initialize();
   void                    CleanUp();

@@ -389,7 +389,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   gMat->Update();
   m_pGlobal = gMat;
 
-  m_pSky = new Sky();
+  m_pSky = new SkyRenderer();
   m_pSky->Initialize();
   m_pSky->MarkDirty();
 

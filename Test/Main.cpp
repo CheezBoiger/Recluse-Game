@@ -81,7 +81,8 @@ int main(int c, char* argv[])
 
   // Set primary light.
   {
-    DirectionalLight* pPrimary = scene.GetPrimaryLight();
+    Sky* pSky = scene.GetSky();
+    DirectionalLight* pPrimary = pSky->GetSunLight();
     pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
     pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
     pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f).Normalize();

@@ -85,11 +85,11 @@ set(GAME_FILES
 
   ${RENDERING_PUBLIC_DIR}/TextureCache.hpp
   ${RENDERING_PUBLIC_DIR}/RendererResourcesCache.hpp
-  ${RENDERING_PUBLIC_DIR}/Skybox.hpp
+  ${RENDERING_PUBLIC_DIR}/Sky.hpp
 
   ${RENDERING_PRIVATE_DIR}/TextureCache.cpp
   ${RENDERING_PRIVATE_DIR}/RendererResourcesCache.cpp
-  ${RENDERING_PRIVATE_DIR}/Skybox.cpp
+  ${RENDERING_PRIVATE_DIR}/Sky.cpp
 
 )
 

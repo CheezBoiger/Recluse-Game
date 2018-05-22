@@ -45,7 +45,7 @@ class UIOverlay;
 class Fence;
 class RenderObject;
 class SkinnedRenderObject;
-class Sky;
+class SkyRenderer;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -184,7 +184,7 @@ public:
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI*        RHI() { return m_pRhi; }
-  Sky*              SkyNative() { return m_pSky; }
+  SkyRenderer*      SkyRendererNative() { return m_pSky; }
 
   GlobalDescriptor* GlobalNative() { return m_pGlobal; }
 
@@ -294,7 +294,7 @@ private:
   RenderQuad            m_RenderQuad;
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
-  Sky*                  m_pSky;
+  SkyRenderer*          m_pSky;
   u32                   m_CurrCmdBufferIdx;
 
   u32                   m_TotalCmdBuffers;

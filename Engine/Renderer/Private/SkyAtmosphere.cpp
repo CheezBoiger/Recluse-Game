@@ -20,13 +20,13 @@
 namespace Recluse {
 
 
-const std::string Sky::kAtmVertStr = "Atmosphere.vert.spv";
-const std::string Sky::kAtmFragStr = "Atmosphere.frag.spv";
-const std::string Sky::kSkyVertStr = "Sky.vert.spv";
-const std::string Sky::kSkyFragStr = "Sky.frag.spv";
-const u32         Sky::kTextureSize = 512;
-const Vector3     Sky::kDefaultAirColor = Vector3(0.18867780436772762f, 0.2978442963618773f, 0.7616065586417131f);
-std::array<Vector4, 36> Sky::kSkyBoxVertices = { 
+const std::string SkyRenderer::kAtmVertStr = "Atmosphere.vert.spv";
+const std::string SkyRenderer::kAtmFragStr = "Atmosphere.frag.spv";
+const std::string SkyRenderer::kSkyVertStr = "Sky.vert.spv";
+const std::string SkyRenderer::kSkyFragStr = "Sky.frag.spv";
+const u32         SkyRenderer::kTextureSize = 512;
+const Vector3     SkyRenderer::kDefaultAirColor = Vector3(0.18867780436772762f, 0.2978442963618773f, 0.7616065586417131f);
+std::array<Vector4, 36> SkyRenderer::kSkyBoxVertices = { 
   // Front
   Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, 1.0f, 1.0f),
@@ -72,7 +72,7 @@ std::array<Vector4, 36> Sky::kSkyBoxVertices = {
 };
 
 
-std::array<u32, 36> Sky::kSkyboxIndices = {
+std::array<u32, 36> SkyRenderer::kSkyboxIndices = {
   0, 1, 2,
   3, 4, 5,
   6, 7, 8,
@@ -88,7 +88,7 @@ std::array<u32, 36> Sky::kSkyboxIndices = {
 };
 
 
-void Sky::Initialize()
+void SkyRenderer::Initialize()
 {
   VulkanRHI* pRhi = gRenderer().RHI();
 
@@ -110,7 +110,7 @@ void Sky::Initialize()
 }
 
 
-Sky::~Sky()
+SkyRenderer::~SkyRenderer()
 {
   if (m_pCubeMap) {
     R_DEBUG(rError, "Skybox cube map was not properly cleaned up prior to class descruction!\n");
@@ -126,14 +126,14 @@ Sky::~Sky()
 }
 
 
-void Sky::CreateCommandBuffer(VulkanRHI* rhi)
+void SkyRenderer::CreateCommandBuffer(VulkanRHI* rhi)
 {
   m_pCmdBuffer = rhi->CreateCommandBuffer();
   m_pCmdBuffer->Allocate(rhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 }
 
 
-void Sky::CreateRenderAttachment(VulkanRHI* rhi)
+void SkyRenderer::CreateRenderAttachment(VulkanRHI* rhi)
 {
   VkExtent2D extent = rhi->SwapchainObject()->SwapchainExtent();
   VkImageCreateInfo imgCi = { };
@@ -166,7 +166,7 @@ void Sky::CreateRenderAttachment(VulkanRHI* rhi)
 } 
 
 
-void Sky::CreateCubeMap(VulkanRHI* rhi)
+void SkyRenderer::CreateCubeMap(VulkanRHI* rhi)
 {
   VkExtent2D extent = rhi->SwapchainObject()->SwapchainExtent();
   VkImageCreateInfo imgCi = {};
@@ -221,7 +221,7 @@ void Sky::CreateCubeMap(VulkanRHI* rhi)
 }
 
 
-void Sky::CreateFrameBuffer(VulkanRHI* rhi)
+void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
 {
   m_pFrameBuffer = rhi->CreateFrameBuffer();
   VkImageView attachment = m_RenderTexture->View();
@@ -377,7 +377,7 @@ void Sky::CreateFrameBuffer(VulkanRHI* rhi)
 }
 
 
-void Sky::CreateGraphicsPipeline(VulkanRHI* rhi)
+void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 {
   VkGraphicsPipelineCreateInfo gpCi = { };
   gpCi.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -529,7 +529,7 @@ void Sky::CreateGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void Sky::BuildCmdBuffer(VulkanRHI* rhi)
+void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
 {
   if (m_pCmdBuffer) {
     rhi->WaitAllGraphicsQueues();
@@ -718,7 +718,7 @@ void Sky::BuildCmdBuffer(VulkanRHI* rhi)
 }
 
 
-void Sky::CleanUp()
+void SkyRenderer::CleanUp()
 {
   VulkanRHI* rhi = gRenderer().RHI();
   if (m_pCubeMap) {
