@@ -372,8 +372,9 @@ vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
 
 void main()
 {
-  vec3 fragAlbedo = matBuffer.color.rgb;
-  float transparency = matBuffer.color.w;
+  vec4 baseColor = matBuffer.color.rgba;
+  vec3 fragAlbedo = baseColor.rgb;
+  float transparency = matBuffer.opaque * baseColor.a;
   vec3 fragNormal = frag_in.normal;
   vec3 fragEmissive = vec3(0.0);
 
@@ -384,8 +385,10 @@ void main()
   if (matBuffer.hasAlbedo >= 1) {
     vec4 alb = texture(albedo, frag_in.texcoord0, objBuffer.lod);
     fragAlbedo = pow(alb.rgb, vec3(2.2));
-    transparency = alb.w;
+    transparency *= alb.w;
   }
+  
+  if (transparency < 0.05) { discard; }
   
   if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
     vec4 roughMetal = texture(roughnessMetallic, frag_in.texcoord0, objBuffer.lod);

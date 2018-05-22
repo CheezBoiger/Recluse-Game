@@ -40,6 +40,7 @@ void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
         for (size_t j = 0; j < 3; ++j) {
           rgba[j] = rgb[j];
         }
+        rgba[3] = 0xff; // For opaque
         rgba += 4;
         rgb += 3;
       } 
