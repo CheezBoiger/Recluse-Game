@@ -7,6 +7,7 @@
 namespace Recluse {
 
 class Log;
+struct Matrix3;
 
 struct Vector3 {
   struct { r32 x, y, z; };
@@ -41,6 +42,9 @@ struct Vector3 {
 
   Vector3         operator*(const r32 scaler) const;
   Vector3         operator/(const r32 scaler) const;
+
+  // Vector3 to matrix3 multiplication in row major order.
+  Vector3         operator*(const Matrix3& other) const;
 
   void            operator+=(const Vector3& other);
   void            operator-=(const Vector3& other);

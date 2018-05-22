@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector3.hpp"
+#include "Math/Matrix3.hpp"
 #include "Math/Ray.hpp"
 #include "Logging/Log.hpp"
 #include <cmath>
@@ -153,6 +154,16 @@ b8 Vector3::operator==(const Vector3& other) const
 b8 Vector3::operator!=(const Vector3& other) const
 {
   return !(*this == other);
+}
+
+
+Vector3 Vector3::operator*(const Matrix3& other) const 
+{
+  return Vector3(
+    other.Data[0][0] * x + other.Data[1][0] * y + other.Data[2][0] * z,
+    other.Data[0][1] * x + other.Data[1][1] * y + other.Data[2][1] * z,
+    other.Data[0][2] * x + other.Data[1][2] * y + other.Data[2][2] * z
+  );
 }
 
 

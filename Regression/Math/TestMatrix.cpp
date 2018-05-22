@@ -27,7 +27,7 @@ b8 BasicMatrixMath()
   TASSERT_E(mat, identity);
   TASSERT_E(multId, identity);
 
-  Log(rNotify) << "Test 4x4 * 4x1:\n";
+  Log(rNotify) << "Test 1x4 * 4x4:\n";
   Matrix4 testMat(
     2.0f, 5.0f,   1.0,    -1.0,
     4.0f, 6.6f,   23.0f,  0.0f,
@@ -37,8 +37,9 @@ b8 BasicMatrixMath()
 
   Vector4 vec(4.0f, 2.0f, 1.0f, 1.0f);
 
-  Vector4 ans = testMat * vec;
-  Vector4 sol = Vector4(18.0f, 52.2f, 64.0f, 40.8f);
+  Vector4 ans = vec * testMat;
+  //Vector4 sol = Vector4(18.0f, 52.2f, 64.0f, 40.8f);
+  Vector4 sol = Vector4(25.2f, 64.2f, 50.0f, 2.0f);
   Log() << "ans: " << ans << "\nsol: " << sol << "\n";
   TASSERT_E(ans, sol);
 

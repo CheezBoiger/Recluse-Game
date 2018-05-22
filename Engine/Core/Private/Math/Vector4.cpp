@@ -1,5 +1,6 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector4.hpp"
+#include "Math/Matrix4.hpp"
 #include "Logging/Log.hpp"
 #include <math.h>
 
@@ -128,6 +129,17 @@ b8 Vector4::operator==(const Vector4& other) const
 b8 Vector4::operator!=(const Vector4& other) const
 {
   return !(*this == other);
+}
+
+
+Vector4 Vector4::operator*(const Matrix4& other) const
+{
+  return Vector4(
+    other.Data[0][0] * x + other.Data[1][0] * y + other.Data[2][0] * z + other.Data[3][0] * w,
+    other.Data[0][1] * x + other.Data[1][1] * y + other.Data[2][1] * z + other.Data[3][1] * w,
+    other.Data[0][2] * x + other.Data[1][2] * y + other.Data[2][2] * z + other.Data[3][2] * w,
+    other.Data[0][3] * x + other.Data[1][3] * y + other.Data[2][3] * z + other.Data[3][3] * w
+  );
 }
 
 

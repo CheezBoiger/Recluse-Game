@@ -360,15 +360,4 @@ Log& operator<<(Log& log, const Matrix4& mat4)
   }
   return log;
 }
-
-
-Vector4 Matrix4::operator*(const Vector4& other) const
-{
-  return Vector4(
-    Data[0][0] * other.x + Data[1][0] * other.y + Data[2][0] * other.z + Data[3][0] * other.w,
-    Data[0][1] * other.x + Data[1][1] * other.y + Data[2][1] * other.z + Data[3][1] * other.w,
-    Data[0][2] * other.x + Data[1][2] * other.y + Data[2][2] * other.z + Data[3][2] * other.w,
-    Data[0][3] * other.x + Data[1][3] * other.y + Data[2][3] * other.z + Data[3][3] * other.w
-  );
-}
 } // Recluse

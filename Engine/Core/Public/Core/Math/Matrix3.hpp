@@ -43,8 +43,6 @@ struct Matrix3 {
   Matrix3     operator+(const Matrix3& other) const;
   Matrix3     operator-(const Matrix3& other) const;
 
-  Vector3     operator*(const Vector3& other) const;
-
   Matrix3     operator*(const r32 scaler) const;
 
   r32*        Raw() { return Data[0]; }

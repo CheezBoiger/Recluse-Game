@@ -42,7 +42,8 @@ struct Vector4 {
 
   r32&            operator[](size_t idx) { return (&x)[ idx ]; }
 
-  
+  // Vector4 to Matrix4 multiplication in row major order.
+  Vector4         operator*(const Matrix4& other) const;
 
   r32             Magnitude() const;
   r32             Dot(const Vector4& other) const;
