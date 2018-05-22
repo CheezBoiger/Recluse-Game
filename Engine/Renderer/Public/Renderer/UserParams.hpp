@@ -51,13 +51,19 @@ enum TextureQuality {
 
 class GraphicsConfigParams {
 public:
-  // Determine draw buffering, and number of back buffers the renderer will use.
-  // This allows for smoother quality of frame transitions (theoretically).
+  // Determine draw buffering, and number of back buffers the renderer will use for 
+  // presenting onto the display.
+  // This allows for smoother quality of frame transitions and input.
   FrameBuffering  _Buffering;
-  // Determine the antialiasing quality of the renderer.
+
+  // Determine the antialiasing quality of the renderer. This helps reduce jagged lines,
+  // or "jaggies", by smoothing them out. Most anti aliasing techniques known are software
+  // methods, while hardware methods, like MSAA, are also common. Recommended to turn this 
+  // off if the display resolution is above 1920x1080 (as it doesn't really need this.)
   AntiAliasing    _AA;
 
-  // Quality of textures ingame.
+  // Quality of textures ingame. The higher the quality, the more work the renderer needs to sample
+  // from texture images.
   TextureQuality  _TextureQuality;
 
   // Determines the quality and details of shadows in the game world.
@@ -67,9 +73,24 @@ public:
   ShadowDetail    _Shadows;
   // Level of detail, by distance.
   r32             _Lod;
-  // Allow vertical sync to reduce tearing of frames. This may have a slight impact
+
+  // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
+  // refresh at max 60 Hz. If this monitor can achieve higher refresh rates, this feature may only
+  // have negative impacts, and is best to leave off. This may have a slight impact
   // in input response.
   b32             _EnableVsync;
+
+  // Enables chromatic aberration. This allows chromatic distortion
+  // by which color fringing occurs and the light fails to focus all colors in one convergence point, 
+  // resulting in rgb colors fringing, or offsetting.
+  // This also applies to water and certain translucent objects.
+  b32             _EnableChromaticAberration;
+
+  // Post processing affects.
+  b32             _EnablePostProcessing;
+
+  // Allows the the renderer engine to multithread its workload.
+  b32             _EnableMultithreadedRendering;
 };
 
 
@@ -79,6 +100,9 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   TEXTURE_QUALITY_ULTRA,
   SHADOWS_NONE,
   1.0f,
+  true,
+  true,
+  true,
   true
 };
 

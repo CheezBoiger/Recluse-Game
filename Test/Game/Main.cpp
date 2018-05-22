@@ -38,7 +38,8 @@ int main(int c, char* argv[])
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = SHADOWS_HIGH;
+    params._Shadows = SHADOWS_ULTRA;
+    params._TextureQuality = TEXTURE_QUALITY_ULTRA;
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
