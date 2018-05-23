@@ -133,8 +133,8 @@ void UIOverlay::CleanUp()
   m_CmdBuffer = nullptr;
 
   if (m_renderPass) {
-    vkDestroyRenderPass(m_pRhi->LogicDevice()->Native(), m_renderPass, nullptr);
-    m_renderPass = VK_NULL_HANDLE;
+    m_pRhi->FreeRenderPass(m_renderPass);
+    m_renderPass = nullptr;
   }
  
   if (m_pGraphicsPipeline) {
@@ -198,8 +198,8 @@ void UIOverlay::InitializeRenderPass()
     &subpass
   );
 
-  VkResult result = vkCreateRenderPass(m_pRhi->LogicDevice()->Native(), &renderpassCI, nullptr, &m_renderPass);
-  R_ASSERT(result ==  VK_SUCCESS, "Failed to create renderpass for ui!\n");
+  m_renderPass = m_pRhi->CreateRenderPass();
+  m_renderPass->Initialize(renderpassCI);
 }
 
 
@@ -343,7 +343,7 @@ void UIOverlay::SetUpGraphicsPipeline()
     pipeCI.pColorBlendState = &colorBlendCI;
     pipeCI.pStages = shaderStages.data();
     pipeCI.stageCount = static_cast<u32>(shaderStages.size());
-    pipeCI.renderPass = m_renderPass;
+    pipeCI.renderPass = m_renderPass->Handle();
     pipeCI.subpass = 0;
     pipeCI.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -382,7 +382,7 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
   VkRenderPassBeginInfo renderPassBeginInfo = { };
   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassBeginInfo.framebuffer = final_frameBufferKey->Handle();
-  renderPassBeginInfo.renderPass = m_renderPass;
+  renderPassBeginInfo.renderPass = m_renderPass->Handle();
   renderPassBeginInfo.renderArea.extent = extent;
   renderPassBeginInfo.renderArea.offset = { 0, 0 };
   renderPassBeginInfo.clearValueCount = 1;

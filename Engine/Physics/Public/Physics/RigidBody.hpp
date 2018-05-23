@@ -34,12 +34,14 @@ public:
   RigidBody() 
     : m_bActivated(true)
     , m_gameObj(nullptr)
-    , m_mass(1.0f) { }
+    , m_mass(1.0f)
+    , m_friction(0.0f) { }
 
   void                  ObjectCollided();
   void                  EnableKinematic(b8 enable);
   void                  SetTransform(const Vector3& newPos, const Quaternion& newRot);
   void                  SetMass(r32 mass);
+  void                  SetFriction(r32 friction);
 
   b32                   Kinematic() const { return m_bKinematic; }
   b32                   Activated() const { return m_bActivated; }
@@ -54,6 +56,7 @@ public:
 
   Vector3               m_vPosition;
   r32                   m_mass;
+  r32                   m_friction;
   Quaternion            m_qRotation;
   b32                   m_bKinematic;
   b32                   m_bActivated;

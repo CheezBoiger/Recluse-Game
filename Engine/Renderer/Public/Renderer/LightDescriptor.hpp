@@ -23,6 +23,7 @@ class Texture1D;
 class Texture2DArray;
 class TextureCube;
 class FrameBuffer;
+class RenderPass;
 
 
 struct DirectionalLight {
@@ -146,6 +147,9 @@ private:
   // statically stored into the renderer pipeline. Only possibility is to create this 
   // outside.
   FrameBuffer*        m_pFrameBuffer;
+
+  // RenderPass instance for the framebuffer.
+  RenderPass*         m_pRenderPass;
 
   // Information of our lights, to which we use this to modify light sources.
   LightViewSpace      m_PrimaryLightSpace;

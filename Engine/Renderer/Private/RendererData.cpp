@@ -40,6 +40,7 @@ Texture* gbuffer_EmissionAttachKey         = nullptr;
 Texture* gbuffer_DepthAttachKey            = nullptr;
 Sampler* gbuffer_SamplerKey                = nullptr;
 FrameBuffer* gbuffer_FrameBufferKey            = nullptr;
+RenderPass* gbuffer_renderPass                = nullptr;
 std::string gbuffer_VertFileStr               = "GBuffer.vert.spv";
 std::string gbuffer_StaticVertFileStr         = "StaticGBuffer.vert.spv";
 std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
@@ -47,8 +48,9 @@ std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
 GraphicsPipeline* pbr_PipelineKey                   = nullptr;
 GraphicsPipeline* pbr_forwardPipelineKey      = nullptr;
 GraphicsPipeline* pbr_staticForwardPipelineKey = nullptr;
-VkRenderPass      pbr_forwardRenderPass       = VK_NULL_HANDLE;
+RenderPass*      pbr_forwardRenderPass       = nullptr;
 FrameBuffer* pbr_FrameBufferKey                = nullptr;
+RenderPass* pbr_renderPass                      = nullptr;
 DescriptorSetLayout* pbr_DescLayoutKey                 = nullptr;
 DescriptorSet* pbr_DescSetKey                    = nullptr;
 Texture* pbr_FinalTextureKey               = nullptr;
@@ -127,6 +129,7 @@ Texture* RenderTargetVelocityKey     = nullptr;
 GraphicsPipeline* hdr_gamma_pipelineKey         = nullptr;
 Texture* hdr_gamma_colorAttachKey      = nullptr;
 FrameBuffer* hdr_gamma_frameBufferKey      = nullptr;
+RenderPass* hdr_renderPass                = nullptr;
 Sampler* hdr_gamma_samplerKey          = nullptr;
 DescriptorSet* hdr_gamma_descSetKey          = nullptr;
 DescriptorSetLayout* hdr_gamma_descSetLayoutKey    = nullptr;
@@ -140,6 +143,7 @@ std::string final_VertFileStr            = "FinalPass.vert.spv";
 std::string final_FragFileStr            = "FinalPass.frag.spv";
 Texture* final_renderTargetKey       = nullptr;
 FrameBuffer* final_frameBufferKey = nullptr;
+RenderPass* final_renderPass = nullptr;
 DescriptorSet*  output_descSetKey = nullptr;
 GraphicsPipeline* output_pipelineKey = nullptr;
 
@@ -194,7 +198,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = GBufferFrameBuffer->RenderPass();
+  GraphicsInfo.renderPass = GBufferFrameBuffer->RenderPassRef()->Handle();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
@@ -255,7 +259,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   LoadShader(hdr_gamma_fragFileStr, HdrFrag);
 
   FrameBuffer* hdrBuffer = hdr_gamma_frameBufferKey;
-  GraphicsInfo.renderPass = hdrBuffer->RenderPass();
+  GraphicsInfo.renderPass = hdrBuffer->RenderPassRef()->Handle();
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
@@ -321,7 +325,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPass();
+  GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPassRef()->Handle();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
@@ -409,7 +413,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = pbr_forwardRenderPass;
+  GraphicsInfo.renderPass = pbr_forwardRenderPass->Handle();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
@@ -559,13 +563,13 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GraphicsInfo.pStages = ShaderModules;
   GraphicsInfo.stageCount = 2;
 
-  GraphicsInfo.renderPass = FrameBuffer2x->RenderPass();
+  GraphicsInfo.renderPass = FrameBuffer2x->RenderPassRef()->Handle();
   Downscale2x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer4x->RenderPass();
+  GraphicsInfo.renderPass = FrameBuffer4x->RenderPassRef()->Handle();
   Downscale4x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer8x->RenderPass();
+  GraphicsInfo.renderPass = FrameBuffer8x->RenderPassRef()->Handle();
   Downscale8x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer16x->RenderPass();
+  GraphicsInfo.renderPass = FrameBuffer16x->RenderPassRef()->Handle();
   Downscale16x->Initialize(GraphicsInfo, DownscaleLayout);
 
   Rhi->FreeShader(DbFrag);
@@ -582,7 +586,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GlowPipelineLayout.pPushConstantRanges = nullptr;
   GlowPipelineLayout.pushConstantRangeCount = 0;
 
-  GraphicsInfo.renderPass = GlowFrameBuffer->RenderPass();
+  GraphicsInfo.renderPass = GlowFrameBuffer->RenderPassRef()->Handle();
   GlowPipeline->Initialize(GraphicsInfo, GlowPipelineLayout);
 
   Rhi->FreeShader(DbVert);
@@ -605,7 +609,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   LoadShader(final_VertFileStr, quadVert);
   LoadShader(final_FragFileStr, quadFrag);
 
-  GraphicsInfo.renderPass = final_frameBufferKey->RenderPass();
+  GraphicsInfo.renderPass = final_frameBufferKey->RenderPassRef()->Handle();
 
   VkPipelineShaderStageCreateInfo FinalShaders[2];
   FinalShaders[0].flags = 0;
@@ -868,7 +872,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   GraphicsPipelineInfo.stageCount = 2;
   GraphicsPipelineInfo.pStages = shaders.data();
   
-  GraphicsPipelineInfo.renderPass = gRenderer().SkyRendererNative()->GetSkyboxRenderPass();
+  GraphicsPipelineInfo.renderPass = gRenderer().SkyRendererNative()->GetSkyboxRenderPass()->Handle();
   sky->Initialize(GraphicsPipelineInfo, pipelineLayout);
 
   Rhi->FreeShader(vert);

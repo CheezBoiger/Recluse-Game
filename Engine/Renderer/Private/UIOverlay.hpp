@@ -14,6 +14,7 @@ class VulkanRHI;
 class CommandBuffer;
 class GraphicsPipeline;
 class FrameBuffer;
+class RenderPass;
 class Texture;
 class Renderer;
 class DescriptorSetLayout;
@@ -27,6 +28,7 @@ public:
   UIOverlay() 
     : m_pGraphicsPipeline(VK_NULL_HANDLE)
     , m_pSemaphore(VK_NULL_HANDLE)
+    , m_renderPass(nullptr)
     , m_pDescLayout(VK_NULL_HANDLE) { }
 
   void                        Initialize(VulkanRHI* rhi);
@@ -44,6 +46,8 @@ public:
 
   Semaphore*                  GetSemaphore() { return m_pSemaphore; }
 
+  RenderPass*                 GetRenderPass() { return m_renderPass; }
+
 private:
   void                        InitializeRenderPass();
   void                        SetUpGraphicsPipeline();
@@ -53,7 +57,7 @@ private:
   VulkanRHI*                  m_pRhi;
   Semaphore*                  m_pSemaphore;
   CommandBuffer*              m_CmdBuffer;
-  VkRenderPass                m_renderPass;
+  RenderPass*                 m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
   DescriptorSetLayout*        m_pDescLayout;
   friend class Renderer;

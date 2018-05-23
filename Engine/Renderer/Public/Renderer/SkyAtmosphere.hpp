@@ -17,6 +17,7 @@ class DescriptorSet;
 class DescriptorSetLayout;
 class Buffer;
 class FrameBuffer;
+class RenderPass;
 class VertexBuffer;
 class IndexBuffer;
 
@@ -41,6 +42,7 @@ public:
     , m_pCmdBuffer(nullptr)
     , m_pSampler(nullptr)
     , m_pFrameBuffer(nullptr)
+    , m_pRenderPass(nullptr)
     , m_RenderTexture(nullptr)
     , m_bDirty(false)
     , m_SkyboxRenderPass(nullptr)
@@ -63,7 +65,7 @@ public:
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
   // This is the renderpass to say NO to clearing out the pbr pass.
-  VkRenderPass            GetSkyboxRenderPass() { return m_SkyboxRenderPass; }
+  RenderPass*             GetSkyboxRenderPass() { return m_SkyboxRenderPass; }
 
   VertexBuffer*           GetSkyboxVertexBuffer() { return &m_SkyboxVertBuf; }
   IndexBuffer*            GetSkyboxIndexBuffer() { return &m_SkyboxIndBuf; }
@@ -88,7 +90,8 @@ private:
   Semaphore*              m_pAtmosphereSema;
   CommandBuffer*          m_pCmdBuffer;
   FrameBuffer*            m_pFrameBuffer;
-  VkRenderPass            m_SkyboxRenderPass;
+  RenderPass*             m_pRenderPass;
+  RenderPass*             m_SkyboxRenderPass;
   VertexBuffer            m_SkyboxVertBuf;
   IndexBuffer             m_SkyboxIndBuf;
   b32                     m_bDirty;

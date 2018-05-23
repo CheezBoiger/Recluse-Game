@@ -112,17 +112,11 @@ void SkyRenderer::Initialize()
 
 SkyRenderer::~SkyRenderer()
 {
-  if (m_pCubeMap) {
-    R_DEBUG(rError, "Skybox cube map was not properly cleaned up prior to class descruction!\n");
-  }
-
-  if (m_RenderTexture) {
-    R_DEBUG(rError, "Sky texture was not cleaned up prior to class destruction!\n");
-  }
-
-  if (m_pFrameBuffer) {
-    R_DEBUG(rError, "Sky frame buffer not cleaned up prior to class descruction!\n");
-  }
+  R_ASSERT(!m_pCubeMap, "Skybox cube map was not properly cleaned up prior to class descruction!\n");
+  R_ASSERT(!m_RenderTexture, "Sky texture was not cleaned up prior to class destruction!\n");
+  R_ASSERT(!m_pFrameBuffer, "Sky frame buffer not cleaned up prior to class descruction!\n");
+  R_ASSERT(!m_pRenderPass, "Sky Renderer renderpass was not destroyed!");
+  R_ASSERT(!m_SkyboxRenderPass, "Skybox renderpass was not destroyed!");
 }
 
 
@@ -224,6 +218,7 @@ void SkyRenderer::CreateCubeMap(VulkanRHI* rhi)
 void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
 {
   m_pFrameBuffer = rhi->CreateFrameBuffer();
+  m_pRenderPass = rhi->CreateRenderPass();
   VkImageView attachment = m_RenderTexture->View();
 
   VkAttachmentDescription attachDesc = CreateAttachmentDescription(
@@ -282,7 +277,8 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
   framebufferCi.layers = 1;
   framebufferCi.pAttachments = &attachment;
 
-  m_pFrameBuffer->Finalize(framebufferCi, renderpassCi);
+  m_pRenderPass->Initialize(renderpassCi);
+  m_pFrameBuffer->Finalize(framebufferCi, m_pRenderPass);
 
   // Create a renderpass for the pbr overlay.
   Texture* pbr_Color = pbr_FinalTextureKey;
@@ -368,12 +364,8 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
     &subpass
   );
 
-  VkResult result = 
-    vkCreateRenderPass(rhi->LogicDevice()->Native(), &renderpassCI, nullptr, &m_SkyboxRenderPass); 
-
-  if (result != VK_SUCCESS) {
-    Log(rError) << "Failed to create native renderpass for skybox!\n";
-  }
+  m_SkyboxRenderPass = rhi->CreateRenderPass();
+  m_SkyboxRenderPass->Initialize(renderpassCI);
 }
 
 
@@ -473,7 +465,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
   RendererPass::LoadShader(kAtmVertStr, vert);
   RendererPass::LoadShader(kAtmFragStr, frag);
 
-  gpCi.renderPass = m_pFrameBuffer->RenderPass();
+  gpCi.renderPass = m_pFrameBuffer->RenderPassRef()->Handle();
   gpCi.pColorBlendState = &blendCi;
   gpCi.pDepthStencilState = &depthCi;
   gpCi.pDynamicState = nullptr;
@@ -548,7 +540,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
     VkRenderPassBeginInfo renderpassBegin = { };
     renderpassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderpassBegin.framebuffer = m_pFrameBuffer->Handle();
-    renderpassBegin.renderPass = m_pFrameBuffer->RenderPass();
+    renderpassBegin.renderPass = m_pFrameBuffer->RenderPassRef()->Handle();
     renderpassBegin.renderArea.extent = { kTextureSize, kTextureSize };
     renderpassBegin.renderArea.offset = { 0, 0 };
     renderpassBegin.clearValueCount = 1;
@@ -738,6 +730,11 @@ void SkyRenderer::CleanUp()
     m_pCmdBuffer = nullptr;
   }
 
+  if (m_pRenderPass) {
+    rhi->FreeRenderPass(m_pRenderPass);
+    m_pRenderPass = nullptr;
+  }
+
   if (m_pFrameBuffer) {
     rhi->FreeFrameBuffer(m_pFrameBuffer);
     m_pFrameBuffer = nullptr;
@@ -754,7 +751,7 @@ void SkyRenderer::CleanUp()
   }
 
   if (m_SkyboxRenderPass) {
-    vkDestroyRenderPass(rhi->LogicDevice()->Native(), m_SkyboxRenderPass, nullptr);
+    rhi->FreeRenderPass(m_SkyboxRenderPass);
     m_SkyboxRenderPass = nullptr;
   }
 

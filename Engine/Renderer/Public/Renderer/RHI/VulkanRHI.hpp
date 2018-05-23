@@ -20,6 +20,7 @@ class Buffer;
 class GraphicsPipeline;
 class ComputePipeline;
 class FrameBuffer;
+class RenderPass;
 class Shader;
 class CommandBuffer;
 class Sampler;
@@ -109,12 +110,14 @@ public:
   DescriptorSet*                CreateDescriptorSet();
   DescriptorSetLayout*          CreateDescriptorSetLayout();
   Query*                        CreateQuery();
+  RenderPass*                   CreateRenderPass();
 
   void                          FreeBuffer(Buffer* buffer);
   void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
   void                          FreeComputePipeline(ComputePipeline* pipeline);
   void                          FreeFrameBuffer(FrameBuffer* buffer);
   void                          FreeSampler(Sampler* sampler);
+  void                          FreeRenderPass(RenderPass* pass);
   void                          FreeTexture(Texture* texture);
   void                          FreeShader(Shader* shader);
   void                          FreeCommandBuffer(CommandBuffer* buffer);

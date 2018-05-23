@@ -10,39 +10,47 @@ namespace Recluse {
 class RenderTarget;
 
 
+// RenderPass instance.
+class RenderPass : public VulkanHandle {
+public:
+  RenderPass()
+    : m_renderPass(VK_NULL_HANDLE) { }
+  void CleanUp();
+  void Initialize(const VkRenderPassCreateInfo& info);
+
+  VkRenderPass Handle() const { return m_renderPass; }
+
+private:
+  VkRenderPass m_renderPass;
+};
+
+
+// FrameBuffer instance.
 class FrameBuffer : public VulkanHandle {
 public:
   FrameBuffer()
     : mHandle(VK_NULL_HANDLE)
-    , mRenderPass(VK_NULL_HANDLE)
+    , m_pRenderPassRef(nullptr)
     , m_Width(0)
     , m_Height(0) { }
 
   void          CleanUp();
-  void          Finalize(VkFramebufferCreateInfo& info, const VkRenderPassCreateInfo& renderpass);
+  
+  // Finalizing handles the .renderPass value for us. As long as the render pass is already
+  // created.
+  void          Finalize(VkFramebufferCreateInfo& info, const RenderPass* renderpass);
 
-  VkRenderPass  RenderPass() { return mRenderPass; } 
   VkFramebuffer Handle() { return mHandle; }
+
+  const RenderPass*   RenderPassRef() { return m_pRenderPassRef; }
 
   u32           Width() const { return m_Width; }
   u32           Height() const { return m_Height; }
 
 private:
-  VkFramebuffer mHandle;
-  VkRenderPass  mRenderPass;
-  u32           m_Width;
-  u32           m_Height;
-};
-
-
-class RenderPass : public VulkanHandle {
-public:
-  void CleanUp();
-  void Initialize(const VkRenderPassCreateInfo& info);
-
-  VkRenderPass Handle() { return m_renderPass; }
-
-private:
-  VkRenderPass m_renderPass;
+  const RenderPass*   m_pRenderPassRef;
+  VkFramebuffer       mHandle;
+  u32                 m_Width;
+  u32                 m_Height;
 };
 } // Recluse

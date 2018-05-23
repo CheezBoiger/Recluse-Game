@@ -92,7 +92,7 @@ public:
   void                          BuildScene();
 
   // Transitions from one scene to another if needed. This is optional.
-  void                          LoadSceneTransition();
+  void                          SignalLoadSceneTransition() { m_bSignalLoadScene = true; }
 
   std::vector<GameObject*>&     GetGameObjectCache() { return m_cachedGameObjects; }
   std::vector<game_uuid_t>&     GetGameObjectKeys() { return m_cachedGameObjectKeys; }
@@ -128,6 +128,7 @@ private:
   u32                           m_sceneObjectCount;
   b32                           m_running  : 1;
   b32                           m_stopping : 1;
+  b32                           m_bSignalLoadScene;
 };
 
 

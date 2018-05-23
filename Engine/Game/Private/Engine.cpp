@@ -88,6 +88,7 @@ Engine::Engine()
   , m_pControlInputFunc(nullptr)
   , m_running(false)
   , m_stopping(false)
+  , m_bSignalLoadScene(false)
   , m_dLag(0.0)
 {
 }

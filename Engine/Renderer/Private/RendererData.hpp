@@ -24,6 +24,7 @@ class Renderer;
 class Sampler;
 class Texture;
 class FrameBuffer;
+class RenderPass;
 class GraphicsPipeline;
 class ComputePipeline;
 class DescriptorSetLayout;
@@ -52,12 +53,14 @@ extern Texture* gbuffer_EmissionAttachKey;
 extern Sampler* gbuffer_SamplerKey;
 extern Texture* gbuffer_DepthAttachKey;
 extern FrameBuffer* gbuffer_FrameBufferKey;
+extern RenderPass* gbuffer_renderPass;
 extern std::string gbuffer_VertFileStr;
 extern std::string gbuffer_StaticVertFileStr;
 extern std::string gbuffer_FragFileStr;
 
 extern GraphicsPipeline* pbr_PipelineKey;
 extern FrameBuffer* pbr_FrameBufferKey;
+extern RenderPass* pbr_renderPass;
 extern DescriptorSetLayout* pbr_DescLayoutKey;
 extern DescriptorSet* pbr_DescSetKey;
 extern Texture* pbr_FinalTextureKey;
@@ -67,7 +70,7 @@ extern std::string pbr_FragStr;
 
 extern GraphicsPipeline* pbr_forwardPipelineKey;
 extern GraphicsPipeline* pbr_staticForwardPipelineKey;
-extern VkRenderPass      pbr_forwardRenderPass;
+extern RenderPass*      pbr_forwardRenderPass;
 extern std::string pbr_forwardFragStr;
 
 extern GraphicsPipeline* aa_PipelineKey;
@@ -142,6 +145,7 @@ extern Texture* RenderTargetVelocityKey;
 extern GraphicsPipeline* hdr_gamma_pipelineKey;
 extern Texture* hdr_gamma_colorAttachKey;
 extern FrameBuffer* hdr_gamma_frameBufferKey;
+extern RenderPass* hdr_renderPass;
 extern Sampler* hdr_gamma_samplerKey;
 extern DescriptorSet* hdr_gamma_descSetKey;
 extern DescriptorSetLayout* hdr_gamma_descSetLayoutKey;
@@ -154,6 +158,7 @@ extern DescriptorSetLayout* final_DescSetLayoutKey;
 extern std::string final_VertFileStr;
 extern std::string final_FragFileStr;
 extern FrameBuffer* final_frameBufferKey;
+extern RenderPass* final_renderPass;
 extern Texture* final_renderTargetKey;
 
 extern DescriptorSet* output_descSetKey;

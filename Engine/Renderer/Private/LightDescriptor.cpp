@@ -44,6 +44,7 @@ LightDescriptor::LightDescriptor()
   , m_pLightBuffer(nullptr)
   , m_pLightViewBuffer(nullptr)
   , m_pFrameBuffer(nullptr)
+  , m_pRenderPass(nullptr)
   , m_PrimaryShadowEnable(true)
   , m_rShadowViewportHeight(40.0f)
   , m_rShadowViewportWidth(40.0f)
@@ -89,6 +90,8 @@ LightDescriptor::~LightDescriptor()
   if (m_pShadowSampler) {
     R_DEBUG(rWarning, "Light Shadow Map sampler was not properly cleaned up!\n");
   }
+
+  R_ASSERT(!m_pRenderPass, "Render pass was not properly discarded from light descriptor!");
 
   if (m_pFrameBuffer) {
     R_DEBUG(rWarning, "Light framebuffer was not properly cleaned up!\n");
@@ -225,6 +228,11 @@ void LightDescriptor::CleanUp()
     m_pLightBuffer = nullptr;
   }
 
+  if (m_pRenderPass) {
+    m_pRhi->FreeRenderPass(m_pRenderPass);
+    m_pRenderPass = nullptr;
+  }
+
   if (m_pFrameBuffer) {
     m_pRhi->FreeFrameBuffer(m_pFrameBuffer);
     m_pFrameBuffer = nullptr;
@@ -338,6 +346,7 @@ void LightDescriptor::InitializePrimaryShadow()
   m_pLightViewDescriptorSet->Update(1, &write);
 
   m_pFrameBuffer = m_pRhi->CreateFrameBuffer();
+  m_pRenderPass = m_pRhi->CreateRenderPass();
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
 
   // Actual depth buffer to write onto.
@@ -405,6 +414,7 @@ void LightDescriptor::InitializePrimaryShadow()
     1
   );
 
-  m_pFrameBuffer->Finalize(frameBufferCi, renderPassCi);
+  m_pRenderPass->Initialize(renderPassCi);
+  m_pFrameBuffer->Finalize(frameBufferCi, m_pRenderPass);
 }
 } // Recluse

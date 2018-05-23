@@ -941,6 +941,22 @@ void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
 }
 
 
+RenderPass* VulkanRHI::CreateRenderPass()
+{
+  RenderPass* renderPass = new RenderPass();
+  renderPass->SetOwner(mLogicalDevice.Native());
+  return renderPass;
+}
+
+
+void VulkanRHI::FreeRenderPass(RenderPass* renderPass)
+{
+  if (!renderPass) return;
+  renderPass->CleanUp();
+  delete renderPass;
+}
+
+
 void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
 {
   if (mDescriptorPool) {

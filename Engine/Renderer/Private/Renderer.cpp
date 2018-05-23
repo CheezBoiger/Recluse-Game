@@ -892,7 +892,9 @@ void Renderer::SetUpFrameBuffers()
       attachments.data(),
       1
     );
-    final_frameBufferKey->Finalize(framebufferCI, renderpassCI);
+    final_renderPass = m_pRhi->CreateRenderPass();
+    final_renderPass->Initialize(renderpassCI);
+    final_frameBufferKey->Finalize(framebufferCI, final_renderPass);
   }
 
   std::array<VkAttachmentDescription, 5> attachmentDescriptions;
@@ -1018,7 +1020,9 @@ void Renderer::SetUpFrameBuffers()
     1
   );
 
-  gbuffer_FrameBuffer->Finalize(framebufferCI, renderpassCI);
+  gbuffer_renderPass = m_pRhi->CreateRenderPass();
+  gbuffer_renderPass->Initialize(renderpassCI);
+  gbuffer_FrameBuffer->Finalize(framebufferCI, gbuffer_renderPass);
 
   // pbr framebuffer.
   {
@@ -1088,7 +1092,9 @@ void Renderer::SetUpFrameBuffers()
       1
     );
 
-    pbr_FrameBuffer->Finalize(pbrFramebufferCI, pbrRenderpassCI);
+    pbr_renderPass = m_pRhi->CreateRenderPass();
+    pbr_renderPass->Initialize(pbrRenderpassCI);
+    pbr_FrameBuffer->Finalize(pbrFramebufferCI, pbr_renderPass);
 
     // Forward renderpass portion.
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
@@ -1124,8 +1130,8 @@ void Renderer::SetUpFrameBuffers()
       gbuffer_Depth->Samples()
     );
 
-    VkResult result = vkCreateRenderPass(m_pRhi->LogicDevice()->Native(), &pbrRenderpassCI, nullptr, &pbr_forwardRenderPass);
-    R_ASSERT(result == VK_SUCCESS, "Failed to create forward pbr render pass.\n");
+    pbr_forwardRenderPass = m_pRhi->CreateRenderPass();
+    pbr_forwardRenderPass->Initialize(pbrRenderpassCI);
   }
   
   // No need to render any depth, as we are only writing on a 2d surface.
@@ -1137,7 +1143,9 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = hdrColor->Samples();
   renderpassCI.attachmentCount = 1;
   subpass.colorAttachmentCount = 1;
-  hdrFrameBuffer->Finalize(framebufferCI, renderpassCI);
+  hdr_renderPass = m_pRhi->CreateRenderPass();
+  hdr_renderPass->Initialize(renderpassCI);
+  hdrFrameBuffer->Finalize(framebufferCI, hdr_renderPass);
 
   // Downscale render textures.
   Texture* rtDownScale2x = RenderTarget2xHorizKey;
@@ -1175,14 +1183,14 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = RenderTarget2xFinal->Samples();
   framebufferCI.width = RenderTarget2xFinal->Width();
   framebufferCI.height = RenderTarget2xFinal->Height();
-  FB2xFinal->Finalize(framebufferCI, renderpassCI);
+  FB2xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale2x->View();
   attachmentDescriptions[0].format = rtDownScale2x->Format();
   attachmentDescriptions[0].samples = rtDownScale2x->Samples();
   framebufferCI.width = rtDownScale2x->Width();
   framebufferCI.height = rtDownScale2x->Height();
-  DownScaleFB2x->Finalize(framebufferCI, renderpassCI);
+  DownScaleFB2x->Finalize(framebufferCI, hdr_renderPass);
 
   // 4x
   attachments[0] = RenderTarget4xFinal->View();
@@ -1190,14 +1198,14 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = RenderTarget4xFinal->Samples();
   framebufferCI.width = RenderTarget4xFinal->Width();
   framebufferCI.height = RenderTarget4xFinal->Height();
-  FB4xFinal->Finalize(framebufferCI, renderpassCI);
+  FB4xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale4x->View();
   attachmentDescriptions[0].format = rtDownScale4x->Format();
   attachmentDescriptions[0].samples = rtDownScale4x->Samples();
   framebufferCI.width = rtDownScale4x->Width();
   framebufferCI.height = rtDownScale4x->Height();
-  DownScaleFB4x->Finalize(framebufferCI, renderpassCI);
+  DownScaleFB4x->Finalize(framebufferCI, hdr_renderPass);
 
   // 8x
   attachments[0] = RenderTarget8xFinal->View();
@@ -1205,14 +1213,14 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = RenderTarget8xFinal->Samples();
   framebufferCI.width = RenderTarget8xFinal->Width();
   framebufferCI.height = RenderTarget8xFinal->Height();
-  FB8xFinal->Finalize(framebufferCI, renderpassCI);
+  FB8xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale8x->View();
   attachmentDescriptions[0].format = rtDownScale8x->Format();
   attachmentDescriptions[0].samples = rtDownScale8x->Samples();
   framebufferCI.width = rtDownScale8x->Width();
   framebufferCI.height = rtDownScale8x->Height();
-  DownScaleFB8x->Finalize(framebufferCI, renderpassCI);
+  DownScaleFB8x->Finalize(framebufferCI, hdr_renderPass);
 
   // 16x
   attachments[0] = RenderTarget16xFinal->View();
@@ -1220,14 +1228,14 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = RenderTarget16xFinal->Samples();
   framebufferCI.width = RenderTarget16xFinal->Width();
   framebufferCI.height = RenderTarget16xFinal->Height();
-  FB16xFinal->Finalize(framebufferCI, renderpassCI);
+  FB16xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale16x->View();
   attachmentDescriptions[0].format = rtDownScale16x->Format();
   attachmentDescriptions[0].samples = rtDownScale16x->Samples();
   framebufferCI.width = rtDownScale16x->Width();
   framebufferCI.height = rtDownScale16x->Height();
-  DownScaleFB16x->Finalize(framebufferCI, renderpassCI);
+  DownScaleFB16x->Finalize(framebufferCI, hdr_renderPass);
 
 
   // Glow
@@ -1236,7 +1244,7 @@ void Renderer::SetUpFrameBuffers()
   attachmentDescriptions[0].samples = GlowTarget->Samples();
   framebufferCI.width = m_pRhi->SwapchainObject()->SwapchainExtent().width;
   framebufferCI.height = m_pRhi->SwapchainObject()->SwapchainExtent().height;
-  GlowFB->Finalize(framebufferCI, renderpassCI);
+  GlowFB->Finalize(framebufferCI, hdr_renderPass);
 }
 
 
@@ -1389,7 +1397,7 @@ void Renderer::SetUpGraphicsPipelines()
     shadowScissor.extent = { m_pLights->m_pFrameBuffer->Width(), m_pLights->m_pFrameBuffer->Height() };
     shadowScissor.offset = { 0, 0 };
     viewportCI.pScissors = &shadowScissor;
-    GraphicsPipelineInfo.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
+    GraphicsPipelineInfo.renderPass = m_pLights->m_pRenderPass->Handle();
     RendererPass::SetUpDirectionalShadowPass(RHI(), GraphicsPipelineInfo);
     GraphicsPipelineInfo.renderPass = nullptr;
     viewportCI.pScissors = &scissor;
@@ -1447,9 +1455,6 @@ void Renderer::CleanUpGraphicsPipelines()
   GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
   m_pRhi->FreeGraphicsPipeline(gbuffer_StaticPipeline);
 
-  vkDestroyRenderPass(m_pRhi->LogicDevice()->Native(), pbr_forwardRenderPass, nullptr);
-  pbr_forwardRenderPass = VK_NULL_HANDLE;
-
   m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineKey);
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineKey);
 
@@ -1494,12 +1499,15 @@ void Renderer::CleanUpGraphicsPipelines()
 void Renderer::CleanUpFrameBuffers()
 {
   FrameBuffer* gbuffer_FrameBuffer = gbuffer_FrameBufferKey;
+  m_pRhi->FreeRenderPass(gbuffer_renderPass);
   m_pRhi->FreeFrameBuffer(gbuffer_FrameBuffer);
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
+  m_pRhi->FreeRenderPass(pbr_renderPass);
   m_pRhi->FreeFrameBuffer(pbr_FrameBuffer);
 
   FrameBuffer* hdrFrameBuffer = hdr_gamma_frameBufferKey;
+  m_pRhi->FreeRenderPass(hdr_renderPass);
   m_pRhi->FreeFrameBuffer(hdrFrameBuffer);
 
   FrameBuffer* DownScaleFB2x = FrameBuffer2xHorizKey;
@@ -1521,7 +1529,11 @@ void Renderer::CleanUpFrameBuffers()
   m_pRhi->FreeFrameBuffer(FB8xFinal);
   m_pRhi->FreeFrameBuffer(FB16xFinal);
   m_pRhi->FreeFrameBuffer(GlowFB);
+  
+  m_pRhi->FreeRenderPass(final_renderPass);
   m_pRhi->FreeFrameBuffer(final_frameBufferKey);
+
+  m_pRhi->FreeRenderPass(pbr_forwardRenderPass);
 }
 
 
@@ -1839,7 +1851,7 @@ void Renderer::BuildPbrCmdBuffer()
   VkRenderPassBeginInfo pbr_RenderPassInfo = {};
   pbr_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   pbr_RenderPassInfo.framebuffer = pbr_FrameBuffer->Handle();
-  pbr_RenderPassInfo.renderPass = pbr_FrameBuffer->RenderPass();
+  pbr_RenderPassInfo.renderPass = pbr_renderPass->Handle();
   pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
   pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
   pbr_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
@@ -2247,7 +2259,7 @@ void Renderer::BuildSkyboxCmdBuffer()
     VkRenderPassBeginInfo renderBegin = { };
     renderBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderBegin.framebuffer = skyFrameBuffer->Handle();
-    renderBegin.renderPass = m_pSky->GetSkyboxRenderPass();
+    renderBegin.renderPass = m_pSky->GetSkyboxRenderPass()->Handle();
     renderBegin.clearValueCount = static_cast<u32>(clearValues.size());
     renderBegin.pClearValues = clearValues.data();
     renderBegin.renderArea.offset = { 0, 0 };
@@ -2306,7 +2318,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->Handle();
-  gbuffer_RenderPassInfo.renderPass = gbuffer_FrameBuffer->RenderPass();
+  gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->Handle();
   gbuffer_RenderPassInfo.pClearValues = clearValues.data();
   gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
   gbuffer_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
@@ -2412,7 +2424,7 @@ void Renderer::BuildFinalCmdBuffer()
   renderpassInfo.framebuffer = finalFrameBuffer->Handle();
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
-  renderpassInfo.renderPass = finalFrameBuffer->RenderPass();
+  renderpassInfo.renderPass = final_renderPass->Handle();
   renderpassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
   renderpassInfo.renderArea.offset = { 0, 0 };
 
@@ -2485,14 +2497,14 @@ void Renderer::BuildHDRCmdBuffer()
   renderpassInfo.framebuffer = hdrFrameBuffer->Handle();
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
-  renderpassInfo.renderPass = hdrFrameBuffer->RenderPass();
+  renderpassInfo.renderPass = hdr_renderPass->Handle();
   renderpassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
   renderpassInfo.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass2x =  { };
   DownscalePass2x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   DownscalePass2x.framebuffer = DownscaleFrameBuffer2x->Handle();
-  DownscalePass2x.renderPass = DownscaleFrameBuffer2x->RenderPass();
+  DownscalePass2x.renderPass = DownscaleFrameBuffer2x->RenderPassRef()->Handle();
   DownscalePass2x.clearValueCount = 1;
   DownscalePass2x.pClearValues = &clearVal;
   DownscalePass2x.renderArea.extent = { DownscaleFrameBuffer2x->Width(), DownscaleFrameBuffer2x->Height() };
@@ -2501,7 +2513,7 @@ void Renderer::BuildHDRCmdBuffer()
   VkRenderPassBeginInfo DownscalePass4x = { };
   DownscalePass4x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   DownscalePass4x.framebuffer = DownscaleFrameBuffer4x->Handle();
-  DownscalePass4x.renderPass = DownscaleFrameBuffer4x->RenderPass();
+  DownscalePass4x.renderPass = DownscaleFrameBuffer4x->RenderPassRef()->Handle();
   DownscalePass4x.clearValueCount = 1;
   DownscalePass4x.pClearValues = &clearVal;
   DownscalePass4x.renderArea.extent = { DownscaleFrameBuffer4x->Width(), DownscaleFrameBuffer4x->Height() };
@@ -2510,7 +2522,7 @@ void Renderer::BuildHDRCmdBuffer()
   VkRenderPassBeginInfo DownscalePass8x = {};
   DownscalePass8x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   DownscalePass8x.framebuffer = DownscaleFrameBuffer8x->Handle();
-  DownscalePass8x.renderPass = DownscaleFrameBuffer8x->RenderPass();
+  DownscalePass8x.renderPass = DownscaleFrameBuffer8x->RenderPassRef()->Handle();
   DownscalePass8x.clearValueCount = 1;
   DownscalePass8x.pClearValues = &clearVal;
   DownscalePass8x.renderArea.extent = { DownscaleFrameBuffer8x->Width(), DownscaleFrameBuffer8x->Height() };
@@ -2519,7 +2531,7 @@ void Renderer::BuildHDRCmdBuffer()
   VkRenderPassBeginInfo DownscalePass16x = {};
   DownscalePass16x.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   DownscalePass16x.framebuffer = DownscaleFrameBuffer16x->Handle();
-  DownscalePass16x.renderPass = DownscaleFrameBuffer16x->RenderPass();
+  DownscalePass16x.renderPass = DownscaleFrameBuffer16x->RenderPassRef()->Handle();
   DownscalePass16x.clearValueCount = 1;
   DownscalePass16x.pClearValues = &clearVal;
   DownscalePass16x.renderArea.extent = { DownscaleFrameBuffer16x->Width(), DownscaleFrameBuffer16x->Height() };
@@ -2528,7 +2540,7 @@ void Renderer::BuildHDRCmdBuffer()
   VkRenderPassBeginInfo GlowPass = {};
   GlowPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   GlowPass.framebuffer = GlowFrameBuffer->Handle();
-  GlowPass.renderPass = GlowFrameBuffer->RenderPass();
+  GlowPass.renderPass = GlowFrameBuffer->RenderPassRef()->Handle();
   GlowPass.clearValueCount = 1;
   GlowPass.pClearValues = &clearVal;
   GlowPass.renderArea.extent = { GlowFrameBuffer->Width(), GlowFrameBuffer->Height() };
@@ -2562,7 +2574,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
     DownscalePass2x.framebuffer = FB2xFinal->Handle();
-    DownscalePass2x.renderPass = FB2xFinal->RenderPass();
+    DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->Handle();
     cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->Handle();
@@ -2586,7 +2598,7 @@ void Renderer::BuildHDRCmdBuffer()
     cmdBuffer->EndRenderPass();
 
     DownscalePass4x.framebuffer = FB4xFinal->Handle();
-    DownscalePass4x.renderPass = FB4xFinal->RenderPass();
+    DownscalePass4x.renderPass = FB4xFinal->RenderPassRef()->Handle();
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->Handle();
@@ -2610,7 +2622,7 @@ void Renderer::BuildHDRCmdBuffer()
     cmdBuffer->EndRenderPass();
 
     DownscalePass8x.framebuffer = FB8xFinal->Handle();
-    DownscalePass8x.renderPass = FB8xFinal->RenderPass();
+    DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->Handle();
     cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->Handle();
@@ -2634,7 +2646,7 @@ void Renderer::BuildHDRCmdBuffer()
     cmdBuffer->EndRenderPass();
 
     DownscalePass16x.framebuffer = FB16xFinal->Handle();
-    DownscalePass16x.renderPass = FB16xFinal->RenderPass();
+    DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->Handle();
     cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet16xFinal->Handle();
@@ -2697,7 +2709,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   VkRenderPassBeginInfo renderPass = { };
   renderPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPass.framebuffer = m_pLights->m_pFrameBuffer->Handle();
-  renderPass.renderPass = m_pLights->m_pFrameBuffer->RenderPass();
+  renderPass.renderPass = m_pLights->m_pFrameBuffer->RenderPassRef()->Handle();
   renderPass.renderArea.extent = { m_pLights->m_pFrameBuffer->Width(), m_pLights->m_pFrameBuffer->Height() };
   renderPass.renderArea.offset = { 0, 0 };
   VkClearValue depthValue = { };
@@ -2800,7 +2812,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
   VkRenderPassBeginInfo renderPassCi = {};
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_FrameBufferKey->Handle();
-  renderPassCi.renderPass = pbr_forwardRenderPass;
+  renderPassCi.renderPass = pbr_forwardRenderPass->Handle();
   renderPassCi.pClearValues = clearValues.data();
   renderPassCi.clearValueCount = static_cast<u32>(clearValues.size());
   renderPassCi.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
