@@ -6,6 +6,7 @@
 #include "Renderer/UserParams.hpp"
 
 #include "Item.hpp"
+#include "CubeObject.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
 #include "../DemoTextureLoad.hpp"
@@ -26,6 +27,16 @@ public:
 
     HelmetObject()
   {
+  }
+
+  // Testing collision callbacking.
+  void OnCollision(Collision* collision) override
+  {
+    GameObject* other = collision->_gameObject;
+    CubeObject* cube = other->CastTo<CubeObject>();
+    if (cube) {
+      m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3());
+    }
   }
 
 

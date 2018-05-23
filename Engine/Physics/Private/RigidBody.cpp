@@ -1,5 +1,8 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
 #include "RigidBody.hpp"
+#include "Core/Exception.hpp"
+#include "Collision.hpp"
+#include "Game/GameObject.hpp"
 #include "Physics.hpp"
 
 
@@ -27,5 +30,12 @@ void RigidBody::AddCollider(Collider* collider)
 {
   if (!collider) return;
   gPhysics().AddCollider(this, collider);
+}
+
+
+void RigidBody::InvokeCollision(Collision* collision)
+{
+  R_ASSERT(m_gameObj, "NULL game object assigned to this rigid body!");
+  m_gameObj->OnCollision(collision);
 }
 } // Recluse 

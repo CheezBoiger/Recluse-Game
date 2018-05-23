@@ -15,10 +15,9 @@
 namespace Recluse {
 
 
-typedef std::function<void()> OnCollisionCallback;
-
 
 class Collider;
+struct Collision;
 class GameObject;
 
 enum ContactType {
@@ -33,8 +32,7 @@ enum ContactType {
 class RigidBody : public PhysicsObject {
 public:
   RigidBody() 
-    : onCollisionCallback(nullptr)
-    , m_bActivated(true)
+    : m_bActivated(true)
     , m_gameObj(nullptr)
     , m_mass(1.0f) { }
 
@@ -49,12 +47,11 @@ public:
   CompoundCollider*     GetCompound() { return &m_compound; }
 
   void                  AddCollider(Collider* collider);
-
+  void                  InvokeCollision(Collision* body);
   void                  RemoveCollider();
   
   void                  ClearForces();
 
-  OnCollisionCallback   onCollisionCallback;
   Vector3               m_vPosition;
   r32                   m_mass;
   Quaternion            m_qRotation;
@@ -63,6 +60,8 @@ public:
   GameObject*           m_gameObj;
 
 private:
+
   CompoundCollider     m_compound;
+  friend class Physics;
 };
 } // Recluse

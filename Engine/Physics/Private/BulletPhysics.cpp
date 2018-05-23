@@ -8,6 +8,7 @@
 #include "Renderer/Renderer.hpp"
 #include "Collider.hpp"
 #include "BoxCollider.hpp"
+#include "Collision.hpp"
 #include "RigidBody.hpp"
 
 #include <unordered_map>
@@ -195,26 +196,48 @@ void BulletPhysics::UpdateState(r64 dt, r64 tick)
   bt_manager._pWorld->stepSimulation(btScalar(dt), 10, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
   u32 numManifolds = pDispatcher->getNumManifolds();
+
   for (u32 i = 0; i < numManifolds; ++i) {
     btPersistentManifold* contactManifold = pDispatcher->getManifoldByIndexInternal(i);
     const btCollisionObject* objA = contactManifold->getBody0();
     const btCollisionObject* objB = contactManifold->getBody1();
 
+    Collision collisionOnA;
+    Collision collisionOnB;
+
     u32 numContacts = contactManifold->getNumContacts();
+    collisionOnA._contactPoints.resize(numContacts);
+    collisionOnB._contactPoints.resize(numContacts);
     for (u32 j = 0; j < numContacts; ++j) {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
       if (pt.getDistance() < 0.0f) {
         const btVector3& ptA = pt.getPositionWorldOnA();
         const btVector3& ptB = pt.getPositionWorldOnB();
         const btVector3& normalOnB = pt.m_normalWorldOnB;
-        // Collision here.
-        RigidBody* bodyA = GetRigidBody(static_cast<RigidBody*>(objA->getUserPointer())->GetUUID());
-        RigidBody* bodyB = GetRigidBody(static_cast<RigidBody*>(objB->getUserPointer())->GetUUID());
-        
-        if (bodyA && bodyA->onCollisionCallback) bodyA->onCollisionCallback();
-        if (bodyB && bodyB->onCollisionCallback) bodyB->onCollisionCallback();
+
+        ContactPoint& contactA = collisionOnA._contactPoints[j];
+        ContactPoint& contactB = collisionOnB._contactPoints[j];
+
+        contactA._point = Vector3(ptB.x(), ptB.y(), ptB.z());
+        contactA._distance = pt.getDistance();
+
+        contactB._point = Vector3(ptA.x(), ptA.y(), ptA.z());
+        contactB._distance = pt.getDistance();
       }  
     }
+
+    // Collision here.
+    RigidBody* bodyA = GetRigidBody(static_cast<RigidBody*>(objA->getUserPointer())->GetUUID());
+    RigidBody* bodyB = GetRigidBody(static_cast<RigidBody*>(objB->getUserPointer())->GetUUID());
+
+    collisionOnA._gameObject = bodyB->GetGameObject();
+    collisionOnA._rigidBody = bodyB;
+
+    collisionOnB._gameObject = bodyA->GetGameObject();
+    collisionOnB._rigidBody = bodyA;
+
+    bodyA->InvokeCollision(&collisionOnA);
+    bodyB->InvokeCollision(&collisionOnB);
   }
 
   // Copy data from physics sim.

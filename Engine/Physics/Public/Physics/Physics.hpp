@@ -10,6 +10,7 @@
 #include "PhysicsConfigs.hpp"
 
 #include "Collider.hpp"
+#include "Collision.hpp"
 #include "RigidBody.hpp"
 
 

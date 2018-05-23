@@ -20,6 +20,7 @@ namespace Recluse {
 
 typedef uuid64  game_uuid_t;
 typedef uuid64  object_uuid_t;
+struct Collision;
 
 
 // Always define this macro when inheriting GameObject (or any child objects that have
@@ -67,6 +68,10 @@ public:
 
   // Puts game object to sleep. Called manually, and allows for certain components to be disabled if needed.
   virtual void                        Sleep() { }
+
+  // On collision call. The can be overridden. 
+  // other - Information of object colliding with this game object.
+  virtual void                        OnCollision(Collision* other) { }
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
