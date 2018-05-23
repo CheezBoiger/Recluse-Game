@@ -129,6 +129,7 @@ private:
   b32                           m_running  : 1;
   b32                           m_stopping : 1;
   b32                           m_bSignalLoadScene;
+  std::vector<std::thread>      m_workers;
 };
 
 

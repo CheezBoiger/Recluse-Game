@@ -91,6 +91,7 @@ Engine::Engine()
   , m_bSignalLoadScene(false)
   , m_dLag(0.0)
 {
+  m_workers.resize(4);
 }
 
 
@@ -190,16 +191,10 @@ void Engine::Stop()
 }
 
 
-std::thread worker0;
-std::thread worker1;
-std::thread worker2;
-std::thread worker3;
-
-
 void Engine::Update()
 {
-  if (worker2.joinable()) {
-    worker2.join();
+  if (m_workers[2].joinable()) {
+    m_workers[2].join();
   }
 
   if (m_window.ShouldClose() || m_stopping) {
@@ -223,28 +218,28 @@ void Engine::Update()
   PhysicsComponent::UpdateFromPreviousGameLogic();
   Transform::UpdateComponents();
 
-  worker2 = std::thread([&] () -> void {
+  m_workers[2] = std::thread([&] () -> void {
     gPhysics().UpdateState(dt, tick);
     PhysicsComponent::UpdateComponents();
   });
 
-  worker0 = std::thread([&]() -> void {
+  m_workers[0] = std::thread([&]() -> void {
     if (Camera::GetMain()) { 
       if (Camera::GetMain()->Enabled()) Camera::GetMain()->Update(); 
     }
     RendererComponent::UpdateComponents();
   });
 
-  worker3 = std::thread([&]() -> void {
+  m_workers[3] = std::thread([&]() -> void {
     SkinnedRendererComponent::UpdateComponents();
   });
 
-  worker1 = std::thread([&]() -> void {
+  m_workers[1] = std::thread([&]() -> void {
     PointLightComponent::UpdateComponents();
   });
-  worker0.join();
-  worker1.join();
-  worker3.join();
+  m_workers[0].join();
+  m_workers[1].join();
+  m_workers[3].join();
 
   gRenderer().Render();
 }
