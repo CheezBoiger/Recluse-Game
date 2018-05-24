@@ -7,7 +7,7 @@
 #include <fstream>
 #include <cmath>
 
-#if defined _M_X64 && __USE_INTEL_INTRINSICS__
+#if defined _M_X64 //&& __USE_INTEL_INTRINSICS__
 #define FAST_INTRINSICS 
 #include <xmmintrin.h>
 #endif 
@@ -278,8 +278,8 @@ Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
   perspective[1][1] = -(1.0f / tanHalfFov);
   perspective[2][3] = 1.0f;
   
-  perspective[2][2] = (zFar + zNear) / (zFar - zNear);
-  perspective[3][2] = -(2.0f * zFar * zNear) / (zFar - zNear);
+  perspective[2][2] = zFar / (zFar - zNear);
+  perspective[3][2] = -zFar * zNear / (zFar - zNear);
   return perspective;
 }
 

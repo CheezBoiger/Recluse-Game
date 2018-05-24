@@ -148,6 +148,19 @@ void RendererComponent::Update()
 }
 
 
+void RendererComponent::SetTransparent(b32 enable)
+{
+  if (enable) { m_configs |= CMD_TRANSPARENT_BIT | CMD_FORWARD_BIT; }
+  else { m_configs &= ~(CMD_TRANSPARENT_BIT | CMD_FORWARD_BIT); }
+}
+
+
+b32 RendererComponent::TransparentEnabled() const
+{
+  return (m_configs & CMD_TRANSPARENT_BIT);
+}
+
+
 void SkinnedRendererComponent::Update()
 {
   JointBuffer* pJointBuffer = m_meshDescriptor->JointData();

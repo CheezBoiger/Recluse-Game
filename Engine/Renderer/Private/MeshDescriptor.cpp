@@ -47,8 +47,8 @@ void MeshDescriptor::Initialize()
   objectCI.size = objectSize;
   objectCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  m_pObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
+  m_pObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pObjectBuffer->Map();
   m_meshSet = m_pRhi->CreateDescriptorSet();
 
   DescriptorSetLayout* MeshLayout = MeshSetLayoutKey;
@@ -77,9 +77,8 @@ void MeshDescriptor::Update()
   }
 
   if ((m_bNeedsUpdate & MESH_BUFFER_UPDATE)) {
-    m_pObjectBuffer->Map();
-      memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
-    m_pObjectBuffer->UnMap();
+    R_ASSERT(m_pObjectBuffer->Mapped(), "Object buffer was not mapped.");
+    memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
   }
 
   m_bNeedsUpdate = 0;
@@ -96,6 +95,7 @@ void MeshDescriptor::CleanUp()
   }
 
   if (m_pObjectBuffer) {
+    m_pObjectBuffer->UnMap();
     m_pRhi->FreeBuffer(m_pObjectBuffer);
     m_pObjectBuffer = nullptr;
   }

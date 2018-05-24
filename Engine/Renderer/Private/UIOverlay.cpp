@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #include "UIOverlay.hpp"
 #include "Core/Exception.hpp"
 #include "Renderer.hpp"
@@ -12,6 +12,7 @@
 #include "RHI/Commandbuffer.hpp"
 #include "RHI/Framebuffer.hpp"
 #include "RHI/DescriptorSet.hpp"
+#include "RHI/Buffer.hpp"
 #include "RHI/Texture.hpp"
 #include "RHI/Shader.hpp"
 
@@ -26,7 +27,11 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #include "nuklear.hpp"
+
+#define MAX_VERTEX_MEMORY 512 * 1024
+#define MAX_ELEMENT_MEMORY 128 * 1024
 
 namespace Recluse {
 
@@ -34,10 +39,18 @@ namespace Recluse {
 // Primitive canvas definition used by nuklear gui.
 struct NkCanvas
 {
-  struct nk_command_buffer*  _pCmds;
+  struct nk_buffer*           _pCmds;
   struct nk_vec2              _vItemSpacing;
   struct nk_vec2              _vPanelSpacing;
   struct nk_style_item       _windowBackground;
+};
+
+
+static const struct nk_draw_vertex_layout_element vertLayout[] = {
+  {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, position)},
+  {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, texcoord)},
+  {NK_VERTEX_COLOR, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, color)},
+  {NK_VERTEX_LAYOUT_END}
 };
 
 
@@ -371,7 +384,6 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
   CommandBuffer* cmdBuffer = m_CmdBuffer;
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-
   VkCommandBufferBeginInfo beginInfo = { };
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -388,12 +400,45 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
   renderPassBeginInfo.clearValueCount = 1;
   renderPassBeginInfo.pClearValues = clearValues;
 
+  // Map vertex and index buffers.
+#if 0
+  NkCanvas canvas;
+  m_indicesBuffer->Map();
+  m_vertBuffer->Map();
+  {
+    struct nk_convert_config cfg = { };
+
+    cfg.line_AA = NK_ANTI_ALIASING_ON;
+    cfg.shape_AA = NK_ANTI_ALIASING_ON;
+    cfg.vertex_layout = vertLayout;
+    cfg.vertex_size = sizeof(UIVertex);
+    cfg.vertex_alignment = NK_ALIGNOF(UIVertex);
+    cfg.global_alpha = 1.0f;
+
+    {
+      struct nk_buffer vbuf, ebuf;
+      nk_buffer_init_fixed(&vbuf, m_vertBuffer->Mapped(), MAX_VERTEX_MEMORY);
+      nk_buffer_init_fixed(&ebuf, m_indicesBuffer->Mapped(), MAX_ELEMENT_MEMORY);
+      // TODO(): canvas needs to be defined by the ui instead.
+      nk_convert(&gNkDevice()->_ctx, canvas._pCmds, &vbuf, &ebuf, &cfg);
+    }
+  }
+  m_vertBuffer->UnMap();
+  m_indicesBuffer->UnMap();
+#endif
+  // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
     cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
       for (size_t i = 0; i < cmdList.Size(); ++i) {
-        const UiRenderCmd& cmd = cmdList[i];
-        if (!(cmd._config & CMD_RENDERABLE_BIT)) { continue; }
+        const UiRenderCmd& uiCmd = cmdList[i];
+        if (!(uiCmd._config & CMD_RENDERABLE_BIT)) { continue; }
+        const struct nk_draw_command* cmd;
+#if 0
+        nk_draw_foreach(cmd, &gNkDevice()->_ctx,  canvas._pCmds) {
+          if (!cmd->elem_count) continue;
+        }
+#endif
       }
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();

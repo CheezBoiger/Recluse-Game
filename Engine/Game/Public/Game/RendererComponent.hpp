@@ -40,8 +40,10 @@ public:
   void                      OnEnable() override;
   void                      EnableShadow(b32 enable);
   void                      ForceForward(b32 enable);
+  void                      SetTransparent(b32 enable);
 
   b32                        Dirty() const { return m_bDirty; }
+  b32                        TransparentEnabled() const;
   b32                        ShadowEnabled() const;
   MeshDescriptor*           GetMeshDescriptor() { return m_meshDescriptor; }
 

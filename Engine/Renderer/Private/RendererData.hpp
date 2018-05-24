@@ -43,6 +43,11 @@ extern std::string ShadowMapFragFileStr;
 extern DescriptorSetLayout* LightViewDescriptorSetLayoutKey;
 extern DescriptorSetLayout* illumination_reflectProbeDescLayoutKey;
 
+// Shadow mapping pipes for transparent/translucent objects.
+extern GraphicsPipeline*    transparent_staticShadowPipe;
+extern GraphicsPipeline*    transparent_dynamicShadowPipe;
+extern GraphicsPipeline*    transparent_colorFilterPipe;
+
 extern GraphicsPipeline* gbuffer_PipelineKey;
 extern GraphicsPipeline* gbuffer_StaticPipelineKey;
 extern DescriptorSetLayout* gbuffer_LayoutKey;

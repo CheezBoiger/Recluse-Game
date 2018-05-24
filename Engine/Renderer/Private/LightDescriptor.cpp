@@ -36,7 +36,7 @@ u32 LightBuffer::MaxNumPointLights()
 
 
 LightDescriptor::LightDescriptor()
-  : m_pShadowMap(nullptr)
+  : m_pOpaqueShadowMap(nullptr)
   , m_pShadowSampler(nullptr)
   , m_pRhi(nullptr)
   , m_pLightDescriptorSet(nullptr)
@@ -83,7 +83,7 @@ LightDescriptor::~LightDescriptor()
     R_DEBUG(rWarning, "Light MaterialDescriptor descriptor set was not properly cleaned up!\n");
   }
   
-  if (m_pShadowMap) {
+  if (m_pOpaqueShadowMap) {
     R_DEBUG(rWarning, "Light Shadow Map texture was not properly cleaned up!\n");
   }
 
@@ -128,19 +128,21 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
   bufferCI.size = dSize;
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-  m_pLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pLightBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pLightBuffer->Map();
 
   // Light view buffer creation.
   m_pLightViewBuffer = m_pRhi->CreateBuffer();
   dSize = sizeof(LightViewSpace);
   bufferCI.size = dSize;
-  m_pLightViewBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pLightViewBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pLightViewBuffer->Map();
 
   // Create our shadow map texture.
-  if (!m_pShadowMap) {
+  if (!m_pOpaqueShadowMap) {
 
     // TODO():
-    m_pShadowMap = m_pRhi->CreateTexture();
+    m_pOpaqueShadowMap = m_pRhi->CreateTexture();
 
     // ShadowMap is a depth image.
     VkImageCreateInfo ImageCi = {};
@@ -170,7 +172,7 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
     ViewCi.subresourceRange.levelCount = 1;
     ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
     
-    m_pShadowMap->Initialize(ImageCi, ViewCi);
+    m_pOpaqueShadowMap->Initialize(ImageCi, ViewCi);
   }
 
   if (!m_pShadowSampler) {
@@ -202,9 +204,9 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
 
 void LightDescriptor::CleanUp()
 {
-  if (m_pShadowMap) {
-    m_pRhi->FreeTexture(m_pShadowMap);
-    m_pShadowMap = nullptr;
+  if (m_pOpaqueShadowMap) {
+    m_pRhi->FreeTexture(m_pOpaqueShadowMap);
+    m_pOpaqueShadowMap = nullptr;
   }
 
   if (m_pShadowSampler) {
@@ -224,6 +226,7 @@ void LightDescriptor::CleanUp()
   }
 
   if (m_pLightBuffer) {
+    m_pLightBuffer->UnMap();
     m_pRhi->FreeBuffer(m_pLightBuffer);
     m_pLightBuffer = nullptr;
   }
@@ -239,6 +242,7 @@ void LightDescriptor::CleanUp()
   }
 
   if (m_pLightViewBuffer) {
+    m_pLightViewBuffer->UnMap();
     m_pRhi->FreeBuffer(m_pLightViewBuffer);
     m_pLightViewBuffer = nullptr;
   }
@@ -268,14 +272,13 @@ void LightDescriptor::Update()
 
   m_PrimaryLightSpace._ViewProj = view * proj;
 
-  m_pLightBuffer->Map();
-    memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
-  m_pLightBuffer->UnMap();
+  R_ASSERT(m_pLightBuffer->Mapped(), "Light buffer was not mapped!");
+  memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
+
 
   if (PrimaryShadowEnabled() && m_pLightViewBuffer) {
-    m_pLightViewBuffer->Map();
-      memcpy(m_pLightViewBuffer->Mapped(), &m_PrimaryLightSpace, sizeof(LightViewSpace));
-    m_pLightViewBuffer->UnMap();
+    R_ASSERT(m_pLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
+    memcpy(m_pLightViewBuffer->Mapped(), &m_PrimaryLightSpace, sizeof(LightViewSpace));
   }
 }
 
@@ -295,7 +298,7 @@ void LightDescriptor::InitializeNativeLights()
   // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalShadowInfo.imageView = m_pShadowMap->View();
+  globalShadowInfo.imageView = m_pOpaqueShadowMap->View();
   globalShadowInfo.sampler = m_pShadowSampler->Handle();
 
   std::array<VkWriteDescriptorSet, 2> writeSets;
@@ -351,14 +354,14 @@ void LightDescriptor::InitializePrimaryShadow()
 
   // Actual depth buffer to write onto.
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    m_pShadowMap->Format(),
+    m_pOpaqueShadowMap->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    m_pShadowMap->Samples()
+    m_pOpaqueShadowMap->Samples()
   );
 
   std::array<VkSubpassDependency, 2> dependencies;
@@ -403,11 +406,11 @@ void LightDescriptor::InitializePrimaryShadow()
   );
 
   std::array<VkImageView, 1> attachments;
-  attachments[0] = m_pShadowMap->View();
+  attachments[0] = m_pOpaqueShadowMap->View();
   
   VkFramebufferCreateInfo frameBufferCi = CreateFrameBufferInfo(
-    m_pShadowMap->Width(),
-    m_pShadowMap->Height(),
+    m_pOpaqueShadowMap->Width(),
+    m_pOpaqueShadowMap->Height(),
     nullptr,
     static_cast<u32>(attachments.size()),
     attachments.data(),

@@ -108,7 +108,7 @@ public:
   DescriptorSet*      Set() { return m_pLightDescriptorSet; }
   DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
 
-  Texture*            PrimaryShadowMap() { return m_pShadowMap; }
+  Texture*            PrimaryShadowMap() { return m_pOpaqueShadowMap; }
   Sampler*            ShadowSampler() { return m_pShadowSampler; }
   void                SetViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
   Vector3             ViewerPos() const { return m_vViewerPos; }
@@ -138,7 +138,13 @@ private:
   Buffer*             m_pLightViewBuffer;
 
   // Shadow map, this is mainly for our directional light, the primary light.
-  Texture*            m_pShadowMap;
+  Texture*            m_pOpaqueShadowMap;
+
+  // Shadow map for transparent objects.
+  Texture*            m_pTransparentShadowMap;
+
+  // Color filter map for transparent objects.
+  Texture*            m_pTransparentColorFilter;
 
   // Shadow map sampler.
   Sampler*            m_pShadowSampler;

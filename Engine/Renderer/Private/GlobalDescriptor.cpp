@@ -79,7 +79,9 @@ void GlobalDescriptor::Initialize()
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  m_pGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pGlobalBuffer->Map();
+
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;
 
   m_pDescriptorSet = m_pRhi->CreateDescriptorSet();
@@ -112,6 +114,7 @@ void GlobalDescriptor::CleanUp()
   }
 
   if (m_pGlobalBuffer) {
+    m_pGlobalBuffer->UnMap();
     m_pRhi->FreeBuffer(m_pGlobalBuffer);
     m_pGlobalBuffer = nullptr;
   }
@@ -120,8 +123,7 @@ void GlobalDescriptor::CleanUp()
 
 void GlobalDescriptor::Update()
 {
-  m_pGlobalBuffer->Map();
-    memcpy(m_pGlobalBuffer->Mapped(), &m_Global, sizeof(GlobalBuffer));
-  m_pGlobalBuffer->UnMap();
+  R_ASSERT(m_pGlobalBuffer->Mapped(), "Global data was not mapped!");
+  memcpy(m_pGlobalBuffer->Mapped(), &m_Global, sizeof(GlobalBuffer));
 }
 } // Recluse

@@ -16,6 +16,7 @@ class GraphicsPipeline;
 class FrameBuffer;
 class RenderPass;
 class Texture;
+class Buffer;
 class Renderer;
 class DescriptorSetLayout;
 class Semaphore;
@@ -57,6 +58,8 @@ private:
   VulkanRHI*                  m_pRhi;
   Semaphore*                  m_pSemaphore;
   CommandBuffer*              m_CmdBuffer;
+  Buffer*                     m_vertBuffer;
+  Buffer*                     m_indicesBuffer;
   RenderPass*                 m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
   DescriptorSetLayout*        m_pDescLayout;

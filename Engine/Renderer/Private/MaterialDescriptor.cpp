@@ -66,6 +66,7 @@ void MaterialDescriptor::Initialize()
   bufferCi.size = memSize;
   
   m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pBuffer->Map();
 
   m_materialSet = m_pRhi->CreateDescriptorSet();
 
@@ -192,9 +193,8 @@ void MaterialDescriptor::Update()
   }
   
   if ((m_bNeedsUpdate & MATERIAL_BUFFER_UPDATE)) {
-    m_pBuffer->Map();
-      memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
-    m_pBuffer->UnMap();
+    R_ASSERT(m_pBuffer->Mapped(), "Material buffer was not mapped!");
+    memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
   }
 
   m_bNeedsUpdate = 0;
@@ -209,6 +209,7 @@ void MaterialDescriptor::CleanUp()
     m_materialSet = nullptr;
   }
   if (m_pBuffer)  {
+    m_pBuffer->UnMap();
     m_pRhi->FreeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }

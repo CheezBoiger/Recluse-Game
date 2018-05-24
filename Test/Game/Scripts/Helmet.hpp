@@ -139,7 +139,7 @@ public:
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
       m_pMaterialComponent->GetMaterial()->SetOpacity(0.5f);
       transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
-      m_pRendererComponent->ForceForward(true);
+      m_pRendererComponent->SetTransparent(true);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
@@ -148,7 +148,7 @@ public:
       m_pMaterialComponent->SetMaterialRef(model->materials[0]);
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
       transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
-      m_pRendererComponent->ForceForward(false);
+      m_pRendererComponent->SetTransparent(false);
     }
   }
 
