@@ -7,6 +7,7 @@
 #include "GlobalDescriptor.hpp"
 #include "Filesystem/Filesystem.hpp"
 
+#include "Core/Utility/Time.hpp"
 #include "VertexDescription.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -31,8 +32,8 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #include "nuklear.hpp"
 
-#define MAX_VERTEX_MEMORY 512 * 1024
-#define MAX_ELEMENT_MEMORY 128 * 1024
+#define MAX_VERTEX_MEMORY 512 * 4096
+#define MAX_ELEMENT_MEMORY 128 * 4096
 
 namespace Recluse {
 
@@ -50,7 +51,7 @@ struct NkCanvas
 static const struct nk_draw_vertex_layout_element vertLayout[] = {
   {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, position)},
   {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, texcoord)},
-  {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(UIVertex, color)},
+  {NK_VERTEX_COLOR, NK_FORMAT_R32G32B32A32_FLOAT, NK_OFFSETOF(UIVertex, color)},
   {NK_VERTEX_LAYOUT_END}
 };
 
@@ -274,7 +275,7 @@ void    InitializeNkObject(NkObject* obj, VulkanRHI* rhi, UIOverlay* overlay)
   nk_buffer_init_default(&obj->_cmds);
   nk_font_atlas_init_default(&obj->_atlas);
   nk_font_atlas_begin(&obj->_atlas);
-  obj->_font = nk_font_atlas_add_default(&obj->_atlas, 80, 0);
+  obj->_font = nk_font_atlas_add_default(&obj->_atlas, 13, 0);
   i32 w, h;
   const void* image = nk_font_atlas_bake(&obj->_atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
   InitImageBuffers(obj, w, h, rhi, overlay);
@@ -528,7 +529,7 @@ void UIOverlay::SetUpGraphicsPipeline()
     blendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     blendAttachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
     blendAttachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    blendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    blendAttachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     blendAttachments[0].colorWriteMask = 0xf; // for rgba components.
 
     VkPipelineColorBlendStateCreateInfo colorBlendCI = { };
@@ -608,10 +609,14 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
   viewport.height = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().height;
   viewport.width = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().width;
 
+  // TODO(): This needs to be fixed, something up with vertex format as it requires offsetting
+  // to see the whole text.
+  std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
   NkObject* nk = gNkDevice();
-  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, viewport.width, viewport.height), NK_WINDOW_NO_SCROLLBAR);
+  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER);
     struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
-    nk_draw_text(cmd_buf, nk_rect(150.0f,150.0f, 650.0f, 620.0f), "Text to draw", 13, &nk->_font->handle, nk_rgb(188, 174, 118), nk_rgb(0, 0, 0));
+    nk_draw_text(cmd_buf, nk_rect(30.0f,30.0f, 150.0f, 20.0f), str.c_str(), 
+        str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
   nk_end(&nk->_ctx);
   // TODO:
   CommandBuffer* cmdBuffer = m_CmdBuffer;
@@ -697,15 +702,17 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
       u32 vertOffset = 0;
       VkRect2D scissor = { };
       nk_draw_foreach(cmd, &nk->_ctx, &nk->_cmds) {
-        if (!cmd->elem_count || !cmd->texture.ptr) continue;
-        DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
-        VkDescriptorSet sets[] = { global->Set()->Handle(), set->Handle() };
         scissor.offset.x = (u32)cmd->clip_rect.x;
         scissor.offset.y = (u32)cmd->clip_rect.y;
         scissor.extent.width = (u32)cmd->clip_rect.w;
         scissor.extent.height = (u32)cmd->clip_rect.h;
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
         cmdBuffer->SetScissor(0, 1, &scissor);
+
+        if (!cmd->elem_count || !cmd->texture.ptr) continue;
+        DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
+        VkDescriptorSet sets[] = { global->Set()->Handle(), set->Handle() };
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
+
         cmdBuffer->DrawIndexed(cmd->elem_count, 1, 0, vertOffset, 0);
         vertOffset += cmd->elem_count;
       }
@@ -751,7 +758,7 @@ void UIOverlay::CreateBuffers()
   {
     VkBufferCreateInfo stagingBufferCi = { };
     stagingBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    stagingBufferCi.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    stagingBufferCi.size = MAX_VERTEX_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     m_vertStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -762,7 +769,7 @@ void UIOverlay::CreateBuffers()
     VkBufferCreateInfo vertBufferCi = { };
     vertBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    vertBufferCi.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    vertBufferCi.size = MAX_VERTEX_MEMORY;
     vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     m_vertBuffer->Initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   }
@@ -770,7 +777,7 @@ void UIOverlay::CreateBuffers()
   {
     VkBufferCreateInfo stagingBufferCi = { };
     stagingBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    stagingBufferCi.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    stagingBufferCi.size = MAX_ELEMENT_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     m_indicesStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -781,7 +788,7 @@ void UIOverlay::CreateBuffers()
     VkBufferCreateInfo indicesBufferCi = {};
     indicesBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    indicesBufferCi.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    indicesBufferCi.size = MAX_ELEMENT_MEMORY;
     indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
     m_indicesBuffer->Initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   }
@@ -821,7 +828,7 @@ void UIOverlay::StreamBuffers()
 
   cmdBuffer.Begin(beginInfo);
     VkBufferCopy region = {};
-    region.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    region.size = MAX_VERTEX_MEMORY;
     region.srcOffset = 0;
     region.dstOffset = 0;
     cmdBuffer.CopyBuffer(m_vertStagingBuffer->NativeBuffer(),
@@ -829,7 +836,7 @@ void UIOverlay::StreamBuffers()
       1,
       &region);
     VkBufferCopy regionIndices = {};
-    regionIndices.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    regionIndices.size = MAX_ELEMENT_MEMORY;
     regionIndices.srcOffset = 0;
     regionIndices.dstOffset = 0;
     cmdBuffer.CopyBuffer(m_indicesStagingBuffer->NativeBuffer(),
