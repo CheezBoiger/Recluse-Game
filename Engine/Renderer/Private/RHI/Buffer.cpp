@@ -33,7 +33,7 @@ void Buffer::Initialize(const VkBufferCreateInfo& info,
   }
 
   vkBindBufferMemory(mOwner, mBuffer, mMemory, 0);
-  mMemSize = memoryRequirements.size;
+  mMemSize = info.size;
 }
 
 
