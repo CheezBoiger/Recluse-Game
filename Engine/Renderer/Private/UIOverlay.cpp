@@ -425,7 +425,27 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
   }
   m_vertBuffer->UnMap();
   m_indicesBuffer->UnMap();
+
+  // Flush memory changes to let gpu sync.
+  {
+    std::array<VkMappedMemoryRange, 2> memRanges;
+    memRanges[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    memRanges[0].memory = m_vertBuffer->Memory();
+    memRanges[0].size = m_vertBuffer->MemorySize();
+    memRanges[0].offset = 0;
+    memRanges[0].pNext = nullptr;
+
+    memRanges[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    memRanges[1].memory = m_indicesBuffer->Memory();
+    memRanges[1].size = m_indicesBuffer->MemorySize();
+    memRanges[1].offset = 0;
+    memRanges[1].pNext = nullptr;
+
+    LogicalDevice* dev = m_pRhi->LogicDevice();
+    dev->FlushMappedMemoryRanges(static_cast<u32>(memRanges.size()), memRanges.data());
+  }
 #endif
+
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
@@ -468,4 +488,7 @@ void UIOverlay::CleanUpDescriptorSetLayout()
   m_pRhi->FreeDescriptorSetLayout(m_pDescLayout);
   m_pDescLayout = nullptr;
 }
+
+
+
 } // Recluse

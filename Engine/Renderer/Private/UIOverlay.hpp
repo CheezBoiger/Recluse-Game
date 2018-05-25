@@ -30,7 +30,11 @@ public:
     : m_pGraphicsPipeline(VK_NULL_HANDLE)
     , m_pSemaphore(VK_NULL_HANDLE)
     , m_renderPass(nullptr)
-    , m_pDescLayout(VK_NULL_HANDLE) { }
+    , m_pDescLayout(VK_NULL_HANDLE)
+    , m_vertBuffer(nullptr)
+    , m_indicesBuffer(nullptr)
+    , m_vertStagingBuffer(nullptr)
+    , m_indicesStagingBuffer(nullptr) { }
 
   void                        Initialize(VulkanRHI* rhi);
   void                        CleanUp();
@@ -51,13 +55,17 @@ public:
 
 private:
   void                        InitializeRenderPass();
+  void                        CreateBuffers();
   void                        SetUpGraphicsPipeline();
   void                        CreateDescriptorSetLayout();
   void                        CleanUpDescriptorSetLayout();
+  void                        CleanUpBuffers();
 
   VulkanRHI*                  m_pRhi;
   Semaphore*                  m_pSemaphore;
   CommandBuffer*              m_CmdBuffer;
+  Buffer*                     m_vertStagingBuffer;
+  Buffer*                     m_indicesStagingBuffer;
   Buffer*                     m_vertBuffer;
   Buffer*                     m_indicesBuffer;
   RenderPass*                 m_renderPass;

@@ -109,6 +109,7 @@ void GlobalDescriptor::CleanUp()
 {
   // TODO
   if (m_pDescriptorSet) {
+
     m_pRhi->FreeDescriptorSet(m_pDescriptorSet);
     m_pDescriptorSet = nullptr;
   }
@@ -125,5 +126,11 @@ void GlobalDescriptor::Update()
 {
   R_ASSERT(m_pGlobalBuffer->Mapped(), "Global data was not mapped!");
   memcpy(m_pGlobalBuffer->Mapped(), &m_Global, sizeof(GlobalBuffer));
+
+  VkMappedMemoryRange range = { };
+  range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+  range.memory = m_pGlobalBuffer->Memory();
+  range.size = m_pGlobalBuffer->MemorySize();
+  m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse

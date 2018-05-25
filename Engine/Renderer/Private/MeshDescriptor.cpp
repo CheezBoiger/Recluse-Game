@@ -79,6 +79,12 @@ void MeshDescriptor::Update()
   if ((m_bNeedsUpdate & MESH_BUFFER_UPDATE)) {
     R_ASSERT(m_pObjectBuffer->Mapped(), "Object buffer was not mapped.");
     memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
+
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = m_pObjectBuffer->Memory();
+    range.size = m_pObjectBuffer->MemorySize();
+    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   m_bNeedsUpdate = 0;
@@ -127,7 +133,8 @@ void SkinnedMeshDescriptor::Initialize()
   jointCI.size = jointsSize;
 
   m_pJointsBuffer = m_pRhi->CreateBuffer();
-  m_pJointsBuffer->Initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pJointsBuffer->Initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pJointsBuffer->Map();
 
   DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
 
@@ -149,9 +156,14 @@ void SkinnedMeshDescriptor::Update()
   }
 
   if ((m_bNeedsUpdate & JOINT_BUFFER_UPDATE)) {
-    m_pJointsBuffer->Map();
-      memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointBuffer));
-    m_pJointsBuffer->UnMap();
+    R_ASSERT(m_pJointsBuffer->Mapped(), "Joint buffer was not mapped.!");
+    memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointBuffer));
+
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = m_pJointsBuffer->Memory();
+    range.size = m_pJointsBuffer->MemorySize();
+    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
   MeshDescriptor::Update();
 }

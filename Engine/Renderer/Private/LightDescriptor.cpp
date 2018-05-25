@@ -275,11 +275,22 @@ void LightDescriptor::Update()
   R_ASSERT(m_pLightBuffer->Mapped(), "Light buffer was not mapped!");
   memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
 
-
   if (PrimaryShadowEnabled() && m_pLightViewBuffer) {
     R_ASSERT(m_pLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
     memcpy(m_pLightViewBuffer->Mapped(), &m_PrimaryLightSpace, sizeof(LightViewSpace));
+
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = m_pLightViewBuffer->Memory();
+    range.size = m_pLightViewBuffer->MemorySize();
+    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
+
+  VkMappedMemoryRange lightRange = { };
+  lightRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+  lightRange.memory = m_pLightBuffer->Memory();
+  lightRange.size = m_pLightBuffer->MemorySize();
+  m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &lightRange);
 }
 
 

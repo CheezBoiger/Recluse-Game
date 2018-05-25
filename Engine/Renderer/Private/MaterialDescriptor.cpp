@@ -65,7 +65,7 @@ void MaterialDescriptor::Initialize()
   bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCi.size = memSize;
   
-  m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   m_pBuffer->Map();
 
   m_materialSet = m_pRhi->CreateDescriptorSet();
@@ -195,6 +195,12 @@ void MaterialDescriptor::Update()
   if ((m_bNeedsUpdate & MATERIAL_BUFFER_UPDATE)) {
     R_ASSERT(m_pBuffer->Mapped(), "Material buffer was not mapped!");
     memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
+
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = m_pBuffer->Memory();
+    range.size = m_pBuffer->MemorySize();
+    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   m_bNeedsUpdate = 0;

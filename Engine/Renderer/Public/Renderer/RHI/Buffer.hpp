@@ -14,7 +14,8 @@ public:
   Buffer()
     : mMapped(nullptr)
     , mBuffer(nullptr)
-    , mMemory(nullptr) { }
+    , mMemory(nullptr)
+    , mMemSize(0) { }
 
   void              CleanUp();
   void              Initialize(const VkBufferCreateInfo& info, 
@@ -27,11 +28,17 @@ public:
 
   VkBuffer          NativeBuffer() const { return mBuffer; }
   VkDeviceMemory    Memory() const { return mMemory; }
+
+  // Memory size of this buffer, in bytes.
+  VkDeviceSize      MemorySize() const { return mMemSize; }
+
+  // Mapped pointer to this buffer.
   void*             Mapped() const { return mMapped; }
 
 private:
   void*             mMapped;
   VkBuffer          mBuffer;
   VkDeviceMemory    mMemory;
+  VkDeviceSize      mMemSize;
 };
 } // Recluse

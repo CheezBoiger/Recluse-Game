@@ -33,6 +33,7 @@ void Buffer::Initialize(const VkBufferCreateInfo& info,
   }
 
   vkBindBufferMemory(mOwner, mBuffer, mMemory, 0);
+  mMemSize = memoryRequirements.size;
 }
 
 
@@ -44,6 +45,7 @@ void Buffer::CleanUp()
 
     mBuffer = VK_NULL_HANDLE;
     mMemory = VK_NULL_HANDLE;
+    mMemSize = 0;
   }
 }
 
