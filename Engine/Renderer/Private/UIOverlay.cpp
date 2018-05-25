@@ -4,6 +4,7 @@
 #include "Renderer.hpp"
 #include "Resources.hpp"
 #include "RendererData.hpp"
+#include "GlobalDescriptor.hpp"
 #include "Filesystem/Filesystem.hpp"
 
 #include "VertexDescription.hpp"
@@ -39,7 +40,7 @@ namespace Recluse {
 // Primitive canvas definition used by nuklear gui.
 struct NkCanvas
 {
-  struct nk_buffer*           _pCmds;
+  struct nk_command_buffer    _commandBuffer;
   struct nk_vec2              _vItemSpacing;
   struct nk_vec2              _vPanelSpacing;
   struct nk_style_item       _windowBackground;
@@ -49,30 +50,248 @@ struct NkCanvas
 static const struct nk_draw_vertex_layout_element vertLayout[] = {
   {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, position)},
   {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, texcoord)},
-  {NK_VERTEX_COLOR, NK_FORMAT_FLOAT, NK_OFFSETOF(UIVertex, color)},
+  {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(UIVertex, color)},
   {NK_VERTEX_LAYOUT_END}
 };
 
 
 struct NkObject 
 {
-  nk_context              _ctx;
-  std::vector<NkCanvas>   _canvasObjects;
+  nk_context                  _ctx;       // Nuklear context.
+  struct nk_buffer            _cmds;      // We'll stick to one canvas for now, since we are
+                                          // still working on the UI.
+  struct nk_font_atlas        _atlas;
+  struct nk_font*             _font;
+  struct nk_draw_null_texture _null;
+  Buffer*                     _cache;
+  Texture*                    _texture;
+  Sampler*                    _sampler;
+  DescriptorSet*              _font_set;
 };
 
 
-void    InitializeNkObject(NkObject* obj)
+void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
+{
+  // Copy over to host visible cache buffer.
+  memcpy(obj->_cache->Mapped(), image, w * h * 4);
+  {
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.size = w * h * 4;
+    range.memory = obj->_cache->Memory();
+    rhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+  }
+  
+  // Submit command buffer to stream over the cache data to gpu texture.
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(rhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(rhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  VkCommandBufferBeginInfo begin = { };
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  
+  // Max barriers.
+  std::vector<VkBufferImageCopy> bufferCopies(obj->_texture->MipLevels());
+  size_t offset = 0;
+  for (u32 mipLevel = 0; mipLevel < obj->_texture->MipLevels(); ++mipLevel) {
+    VkBufferImageCopy region = { };
+    region.bufferOffset = offset;
+    region.bufferImageHeight = 0;
+    region.bufferRowLength = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageSubresource.mipLevel = mipLevel;
+    region.imageExtent.width = obj->_texture->Width();
+    region.imageExtent.height = obj->_texture->Height();
+    region.imageExtent.depth = 1;
+    region.imageOffset = { 0, 0, 0 };
+    bufferCopies[mipLevel] = region;
+  }
+
+  VkImageMemoryBarrier imgBarrier = {};
+  imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgBarrier.image = obj->_texture->Image();
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgBarrier.srcAccessMask = 0;
+  imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  imgBarrier.subresourceRange.baseArrayLayer = 0;
+  imgBarrier.subresourceRange.baseMipLevel = 0;
+  imgBarrier.subresourceRange.layerCount = obj->_texture->ArrayLayers();
+  imgBarrier.subresourceRange.levelCount = obj->_texture->MipLevels();
+
+  // TODO(): Copy buffer to image stream.
+  cmdBuffer.Begin(begin);
+  // Image memory barrier.
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgBarrier
+  );
+
+  // Send buffer image copy cmd.
+  cmdBuffer.CopyBufferToImage(
+    obj->_cache->NativeBuffer(),
+    obj->_texture->Image(),
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    static_cast<u32>(bufferCopies.size()),
+    bufferCopies.data()
+  );
+
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgBarrier
+  );
+
+  cmdBuffer.End();
+
+  // TODO(): Submit it to graphics queue!
+  VkCommandBuffer commandbuffers[] = { cmdBuffer.Handle() };
+
+  VkSubmitInfo submit = {};
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  submit.pCommandBuffers = commandbuffers;
+
+  rhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  rhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+
+  // The buffer after use.
+  cmdBuffer.Free();
+}
+
+
+void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* overlay)
+{
+  obj->_cache = rhi->CreateBuffer();
+  obj->_texture = rhi->CreateTexture();
+  obj->_sampler = rhi->CreateSampler();
+  obj->_font_set = rhi->CreateDescriptorSet();
+  VkImageCreateInfo imgCi = {};
+  VkSamplerCreateInfo samplerCi = {};
+  VkImageViewCreateInfo viewCi = {};
+
+  imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imgCi.arrayLayers = 1;
+  imgCi.extent.depth = 1;
+  imgCi.extent.width = static_cast<u32>(w);
+  imgCi.extent.height = static_cast<u32>(h);
+  imgCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgCi.imageType = VK_IMAGE_TYPE_2D;
+  imgCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgCi.mipLevels = 1;
+  imgCi.samples = VK_SAMPLE_COUNT_1_BIT;
+  imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imgCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+  viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  viewCi.components = {};
+  viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  viewCi.subresourceRange.baseArrayLayer = 0;
+  viewCi.subresourceRange.baseMipLevel = 0;
+  viewCi.subresourceRange.layerCount = 1;
+  viewCi.subresourceRange.levelCount = 1;
+  viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+  samplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  samplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.anisotropyEnable = VK_FALSE;
+  samplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  samplerCi.compareEnable = VK_FALSE;
+  samplerCi.compareOp = VK_COMPARE_OP_LESS;
+  samplerCi.magFilter = VK_FILTER_LINEAR;
+  samplerCi.minFilter = VK_FILTER_LINEAR;
+  samplerCi.maxAnisotropy = 16.0f;
+  samplerCi.maxLod = 1.0f;
+  samplerCi.minLod = 0.0f;
+  samplerCi.mipLodBias = 0.0f;
+  samplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  samplerCi.unnormalizedCoordinates = VK_FALSE;
+
+  VkBufferCreateInfo bufferCi = {};
+  bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferCi.size = w * h * 4; // 4 component * width * height.
+  bufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+  obj->_texture->Initialize(imgCi, viewCi);
+  obj->_sampler->Initialize(samplerCi);
+  obj->_cache->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  obj->_cache->Map();
+
+  obj->_font_set->Allocate(rhi->DescriptorPool(), overlay->GetMaterialLayout());
+  VkDescriptorImageInfo img = { };
+  img.sampler = obj->_sampler->Handle();
+  img.imageView = obj->_texture->View();
+  img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  VkWriteDescriptorSet writeSet = { };
+  writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSet.descriptorCount = 1;
+  writeSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSet.dstArrayElement = 0;
+  writeSet.dstBinding = 0;
+  writeSet.dstSet = 0;
+  writeSet.pImageInfo = &img;
+
+  obj->_font_set->Update(1, &writeSet);
+}
+
+
+void DestroyImageBuffers(NkObject* obj, VulkanRHI* rhi)
+{
+  rhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
+  rhi->FreeTexture(obj->_texture);
+  rhi->FreeDescriptorSet(obj->_font_set);
+  obj->_cache->UnMap();
+  rhi->FreeBuffer(obj->_cache);
+  rhi->FreeSampler(obj->_sampler);
+}
+
+
+void    InitializeNkObject(NkObject* obj, VulkanRHI* rhi, UIOverlay* overlay)
 {
   // TODO:
   nk_init_default(&obj->_ctx, 0); 
+  nk_buffer_init_default(&obj->_cmds);
+  nk_font_atlas_init_default(&obj->_atlas);
+  nk_font_atlas_begin(&obj->_atlas);
+  obj->_font = nk_font_atlas_add_default(&obj->_atlas, 80, 0);
+  i32 w, h;
+  const void* image = nk_font_atlas_bake(&obj->_atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
+  InitImageBuffers(obj, w, h, rhi, overlay);
+  UploadAtlas(obj, image, w, h, rhi);
+  nk_font_atlas_end(&obj->_atlas, nk_handle_ptr(obj->_font_set), &obj->_null);
+  nk_init_default(&obj->_ctx, &obj->_font->handle);
   R_DEBUG(rNotify, "GUI Nuklear initialized.\n");
 }
 
 
-void  CleanUpNkObject(NkObject* obj)
+void  CleanUpNkObject(NkObject* obj, VulkanRHI* rhi)
 {
   // TODO:
+  nk_font_atlas_clear(&obj->_atlas);
   nk_free(&obj->_ctx);
+  nk_buffer_free(&obj->_cmds);
+  DestroyImageBuffers(obj, rhi);
   R_DEBUG(rNotify, "Finished cleaning up Nuklear Gui.\n");
 }
 
@@ -87,7 +306,6 @@ void NkFontAtlasEnd()
 {
   // TODO:
 }
-
 
 NkObject* gNkDevice()
 {
@@ -123,10 +341,10 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
   InitializeRenderPass();
   CreateDescriptorSetLayout();
   SetUpGraphicsPipeline();
-
+  CreateBuffers();
   // After initialization of our graphics gui pipeline, it's time to 
   // initialize nuklear.
-  InitializeNkObject(gNkDevice());
+  InitializeNkObject(gNkDevice(), rhi, this);
 
   // TODO: Fonts should be stashed and loaded on an atlas in gpu memory.
 }
@@ -135,8 +353,9 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
 void UIOverlay::CleanUp()
 {
   // Allow us to clean up and release our nk context and object.
-  CleanUpNkObject(gNkDevice());  
+  CleanUpNkObject(gNkDevice(), m_pRhi);  
   CleanUpDescriptorSetLayout();
+  CleanUpBuffers();
 
   m_pRhi->FreeVkSemaphore(m_pSemaphore);
   m_pSemaphore = nullptr;
@@ -360,14 +579,15 @@ void UIOverlay::SetUpGraphicsPipeline()
     pipeCI.subpass = 0;
     pipeCI.basePipelineHandle = VK_NULL_HANDLE;
 
-    VkDescriptorSetLayout dSetLayouts[1] = {
+    VkDescriptorSetLayout dSetLayouts[2] = {
+      GlobalSetLayoutKey->Layout(),
       m_pDescLayout->Layout()
     };
 
     layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutCI.pPushConstantRanges = nullptr;
     layoutCI.pushConstantRangeCount = 0;
-    layoutCI.setLayoutCount = 1;
+    layoutCI.setLayoutCount = 2;
     layoutCI.pSetLayouts = dSetLayouts;
    
     pipeline->Initialize(pipeCI, layoutCI);
@@ -378,8 +598,21 @@ void UIOverlay::SetUpGraphicsPipeline()
 }
 
 
-void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
+void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor* global)
 {
+  VkViewport viewport = {};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.height = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().height;
+  viewport.width = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().width;
+
+  NkObject* nk = gNkDevice();
+  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, viewport.width, viewport.height), NK_WINDOW_NO_SCROLLBAR);
+    struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
+    nk_draw_text(cmd_buf, nk_rect(150.0f,150.0f, 650.0f, 620.0f), "Text to draw", 13, &nk->_font->handle, nk_rgb(188, 174, 118), nk_rgb(0, 0, 0));
+  nk_end(&nk->_ctx);
   // TODO:
   CommandBuffer* cmdBuffer = m_CmdBuffer;
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -401,10 +634,7 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
   renderPassBeginInfo.pClearValues = clearValues;
 
   // Map vertex and index buffers.
-#if 0
-  NkCanvas canvas;
-  m_indicesBuffer->Map();
-  m_vertBuffer->Map();
+#if 1
   {
     struct nk_convert_config cfg = { };
 
@@ -414,52 +644,73 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList)
     cfg.vertex_size = sizeof(UIVertex);
     cfg.vertex_alignment = NK_ALIGNOF(UIVertex);
     cfg.global_alpha = 1.0f;
+    cfg.circle_segment_count = 22;
+    cfg.arc_segment_count = 22;
+    cfg.curve_segment_count = 22;
 
     {
       struct nk_buffer vbuf, ebuf;
-      nk_buffer_init_fixed(&vbuf, m_vertBuffer->Mapped(), MAX_VERTEX_MEMORY);
-      nk_buffer_init_fixed(&ebuf, m_indicesBuffer->Mapped(), MAX_ELEMENT_MEMORY);
+      nk_buffer_init_fixed(&vbuf, m_vertStagingBuffer->Mapped(), MAX_VERTEX_MEMORY);
+      nk_buffer_init_fixed(&ebuf, m_indicesStagingBuffer->Mapped(), MAX_ELEMENT_MEMORY);
       // TODO(): canvas needs to be defined by the ui instead.
-      nk_convert(&gNkDevice()->_ctx, canvas._pCmds, &vbuf, &ebuf, &cfg);
+      nk_convert(&nk->_ctx, &nk->_cmds, &vbuf, &ebuf, &cfg);
     }
   }
-  m_vertBuffer->UnMap();
-  m_indicesBuffer->UnMap();
 
-  // Flush memory changes to let gpu sync.
+  // Flush memory changes to let host cache flush to gpu. Makes memory visible to gpu.
   {
     std::array<VkMappedMemoryRange, 2> memRanges;
     memRanges[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    memRanges[0].memory = m_vertBuffer->Memory();
-    memRanges[0].size = m_vertBuffer->MemorySize();
+    memRanges[0].memory = m_vertStagingBuffer->Memory();
+    memRanges[0].size = m_vertStagingBuffer->MemorySize();
     memRanges[0].offset = 0;
     memRanges[0].pNext = nullptr;
 
     memRanges[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    memRanges[1].memory = m_indicesBuffer->Memory();
-    memRanges[1].size = m_indicesBuffer->MemorySize();
+    memRanges[1].memory = m_indicesStagingBuffer->Memory();
+    memRanges[1].size = m_indicesStagingBuffer->MemorySize();
     memRanges[1].offset = 0;
     memRanges[1].pNext = nullptr;
 
     LogicalDevice* dev = m_pRhi->LogicDevice();
     dev->FlushMappedMemoryRanges(static_cast<u32>(memRanges.size()), memRanges.data());
   }
+
+  // Stream buffers.
+  StreamBuffers();
 #endif
+
+  VkBuffer vert = m_vertBuffer->NativeBuffer();
+  VkBuffer indx = m_indicesBuffer->NativeBuffer();
+  VkDeviceSize offsets[] = { 0 };
 
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
     cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-      for (size_t i = 0; i < cmdList.Size(); ++i) {
-        const UiRenderCmd& uiCmd = cmdList[i];
-        if (!(uiCmd._config & CMD_RENDERABLE_BIT)) { continue; }
-        const struct nk_draw_command* cmd;
-#if 0
-        nk_draw_foreach(cmd, &gNkDevice()->_ctx,  canvas._pCmds) {
-          if (!cmd->elem_count) continue;
-        }
-#endif
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
+      cmdBuffer->BindVertexBuffers(0, 1, &vert, offsets);
+      cmdBuffer->BindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);
+      const struct nk_draw_command* cmd;
+#if 1
+      u32 vertOffset = 0;
+      VkRect2D scissor = { };
+      nk_draw_foreach(cmd, &nk->_ctx, &nk->_cmds) {
+        if (!cmd->elem_count || !cmd->texture.ptr) continue;
+        DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
+        VkDescriptorSet sets[] = { global->Set()->Handle(), set->Handle() };
+        scissor.offset.x = (u32)cmd->clip_rect.x;
+        scissor.offset.y = (u32)cmd->clip_rect.y;
+        scissor.extent.width = (u32)cmd->clip_rect.w;
+        scissor.extent.height = (u32)cmd->clip_rect.h;
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
+        cmdBuffer->SetScissor(0, 1, &scissor);
+        cmdBuffer->DrawIndexed(cmd->elem_count, 1, 0, vertOffset, 0);
+        vertOffset += cmd->elem_count;
       }
+#endif
+      nk_clear(&nk->_ctx);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
 }
@@ -490,5 +741,112 @@ void UIOverlay::CleanUpDescriptorSetLayout()
 }
 
 
+void UIOverlay::CreateBuffers()
+{
+  m_vertBuffer = m_pRhi->CreateBuffer();
+  m_vertStagingBuffer = m_pRhi->CreateBuffer();
+  m_indicesBuffer = m_pRhi->CreateBuffer();
+  m_indicesStagingBuffer = m_pRhi->CreateBuffer();
 
+  {
+    VkBufferCreateInfo stagingBufferCi = { };
+    stagingBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    stagingBufferCi.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    m_vertStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_vertStagingBuffer->Map();
+  }
+
+  {
+    VkBufferCreateInfo vertBufferCi = { };
+    vertBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    vertBufferCi.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    m_vertBuffer->Initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  }
+
+  {
+    VkBufferCreateInfo stagingBufferCi = { };
+    stagingBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    stagingBufferCi.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    m_indicesStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_indicesStagingBuffer->Map();
+  }
+
+  {
+    VkBufferCreateInfo indicesBufferCi = {};
+    indicesBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    indicesBufferCi.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+    m_indicesBuffer->Initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  }
+}
+
+
+void UIOverlay::CleanUpBuffers()
+{
+  m_vertStagingBuffer->UnMap();
+  m_indicesStagingBuffer->UnMap();
+
+  if (m_vertBuffer) {
+    m_pRhi->FreeBuffer(m_vertStagingBuffer);
+    m_pRhi->FreeBuffer(m_vertBuffer);
+    m_vertBuffer = nullptr;
+    m_vertStagingBuffer = nullptr;
+  }
+
+  if (m_indicesBuffer) {
+    m_pRhi->FreeBuffer(m_indicesStagingBuffer);
+    m_pRhi->FreeBuffer(m_indicesBuffer);
+    m_indicesBuffer = nullptr;
+    m_indicesStagingBuffer = nullptr;
+  }
+}
+
+
+void UIOverlay::StreamBuffers()
+{
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(m_pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmdBuffer.Begin(beginInfo);
+    VkBufferCopy region = {};
+    region.size = sizeof(UIVertex) * MAX_VERTEX_MEMORY;
+    region.srcOffset = 0;
+    region.dstOffset = 0;
+    cmdBuffer.CopyBuffer(m_vertStagingBuffer->NativeBuffer(),
+      m_vertBuffer->NativeBuffer(),
+      1,
+      &region);
+    VkBufferCopy regionIndices = {};
+    regionIndices.size = sizeof(u16) * MAX_ELEMENT_MEMORY;
+    regionIndices.srcOffset = 0;
+    regionIndices.dstOffset = 0;
+    cmdBuffer.CopyBuffer(m_indicesStagingBuffer->NativeBuffer(),
+      m_indicesBuffer->NativeBuffer(),
+      1,
+      &regionIndices);
+  cmdBuffer.End();
+
+  VkCommandBuffer cmd = cmdBuffer.Handle();
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &cmd;
+
+  m_pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  m_pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+
+  cmdBuffer.Free();
+}
 } // Recluse

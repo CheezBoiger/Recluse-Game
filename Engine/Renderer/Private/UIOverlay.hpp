@@ -19,6 +19,7 @@ class Texture;
 class Buffer;
 class Renderer;
 class DescriptorSetLayout;
+class GlobalDescriptor;
 class Semaphore;
 
 
@@ -41,7 +42,7 @@ public:
   void                        Render();
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList);
+  void                        BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor* global);
 
   Semaphore*                  Signal() { return m_pSemaphore; }
 
@@ -60,6 +61,7 @@ private:
   void                        CreateDescriptorSetLayout();
   void                        CleanUpDescriptorSetLayout();
   void                        CleanUpBuffers();
+  void                        StreamBuffers();
 
   VulkanRHI*                  m_pRhi;
   Semaphore*                  m_pSemaphore;

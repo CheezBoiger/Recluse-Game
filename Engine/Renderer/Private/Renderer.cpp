@@ -3081,7 +3081,7 @@ void Renderer::CheckCmdUpdate()
     BuildShadowCmdBuffer(idx);
   }
 
-  m_pUI->BuildCmdBuffers(m_uiCmdList);
+  m_pUI->BuildCmdBuffers(m_uiCmdList, m_pGlobal);
 
 #if 0
   if (m_NeedsUpdate) {

@@ -15,7 +15,7 @@ in FRAG_IN {
 layout (location = 0) out vec4 v4OutColor;
 
 // UI icon used to represent this ui.
-layout (set = 0, binding = 0) uniform sampler2D uiMap;
+layout (set = 1, binding = 0) uniform sampler2D uiMap;
 
 void main()
 {

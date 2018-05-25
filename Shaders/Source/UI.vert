@@ -16,10 +16,47 @@ out FRAG_IN {
 } frag_in;
 
 
+layout (set = 0, binding = 0) uniform GlobalBuffer {
+  mat4  view;
+  mat4  proj;
+  mat4  invView;
+  mat4  invProj;
+  mat4  viewProj;
+  vec4  cameraPos;
+  vec4  l_plane;
+  vec4  r_plane;
+  vec4  t_plane;
+  vec4  b_plane;
+  vec4  n_plane;
+  vec4  f_plane;
+  vec2  mousePos;
+  ivec2 screenSize;
+  vec4  vSun; // Sundir.xyz and w is brightness.
+  vec4  vAirColor;
+  float fEngineTime; // total current time of the engine. 
+  float fDeltaTime; // elapsed time between frames.
+  float gamma;
+  float exposure;
+  float fRayleigh;
+  float fMie;
+  float fMieDist;
+  float fScatterStrength;
+  float fRayleighStength;
+  float fMieStength;
+  float fIntensity;
+  int   bloomEnabled;
+  int   enableShadows;
+  int   enableAA;
+  ivec2 pad;
+} gWorldBuffer;
+
+
 void main()
 {
-  gl_Position = vec4(v2Position, 0.0, 1.0);
+  vec2 localPos = v2Position / vec2(gWorldBuffer.screenSize);
+  localPos = 2.0*localPos - 1.0;
+  gl_Position = vec4(localPos, 0.0, 1.0);
   frag_in.v2Uv = v2Uv;
-  frag_in.v2Position = v2Position;
+  frag_in.v2Position = localPos;
   frag_in.v4Color = v4Color;
 }

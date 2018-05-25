@@ -46,7 +46,7 @@ public:
 
   void            BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipelineLayout layout, u32 firstSet, u32 descriptorSetCount,
                     const VkDescriptorSet* descriptorSets, u32 dynamicOffsetCount, const u32* dynamicOffsets);
-
+  void            SetScissor(u32 firstScissor, u32 scissorCount, const VkRect2D* pScissors);
   void            SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports);
 
   void            BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags);

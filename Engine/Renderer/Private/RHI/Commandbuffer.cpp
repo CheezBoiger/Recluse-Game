@@ -124,6 +124,13 @@ void CommandBuffer::BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipeline
 }
 
 
+void CommandBuffer::SetScissor(u32 firstScissor, u32 scissorCount, const VkRect2D* pScissors)
+{
+  ASSERT_RECORDING();
+  vkCmdSetScissor(mHandle, firstScissor, scissorCount, pScissors);
+}
+
+
 void CommandBuffer::CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
   u32 regionCount, const VkBufferImageCopy* regions)
 {
