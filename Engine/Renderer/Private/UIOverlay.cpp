@@ -613,7 +613,7 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
   // to see the whole text.
   std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
   NkObject* nk = gNkDevice();
-  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER);
+  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
     struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
     nk_draw_text(cmd_buf, nk_rect(30.0f,30.0f, 150.0f, 20.0f), str.c_str(), 
         str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
@@ -688,13 +688,14 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
   VkBuffer vert = m_vertBuffer->NativeBuffer();
   VkBuffer indx = m_indicesBuffer->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
-
+  VkDescriptorSet sets[] = { global->Set()->Handle(), nk->_font_set->Handle() };
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
     cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vert, offsets);
       cmdBuffer->BindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);
       const struct nk_draw_command* cmd;
@@ -702,18 +703,19 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
       u32 vertOffset = 0;
       VkRect2D scissor = { };
       nk_draw_foreach(cmd, &nk->_ctx, &nk->_cmds) {
+        if (!cmd->elem_count) continue;
         scissor.offset.x = (u32)cmd->clip_rect.x;
         scissor.offset.y = (u32)cmd->clip_rect.y;
         scissor.extent.width = (u32)cmd->clip_rect.w;
         scissor.extent.height = (u32)cmd->clip_rect.h;
         cmdBuffer->SetScissor(0, 1, &scissor);
 
-        if (!cmd->elem_count || !cmd->texture.ptr) continue;
-        DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
-        VkDescriptorSet sets[] = { global->Set()->Handle(), set->Handle() };
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
-
-        cmdBuffer->DrawIndexed(cmd->elem_count, 1, 0, vertOffset, 0);
+        if (cmd->texture.ptr) {
+          DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
+          sets[1] = set->Handle();
+          cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
+        }
+        cmdBuffer->DrawIndexed(cmd->elem_count, 1, vertOffset, 0, 0);
         vertOffset += cmd->elem_count;
       }
 #endif
