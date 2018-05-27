@@ -5,7 +5,7 @@
 #include "Core/Utility/Module.hpp"
 
 
-#define SECONDS_PER_FRAME_TO_FPS(spf) (1.0 / (spf)) 
+#define SECONDS_PER_FRAME_TO_FPS(spf) ((u32)((1.0 / (spf)) + 0.5f)) 
 
 namespace Recluse {
 

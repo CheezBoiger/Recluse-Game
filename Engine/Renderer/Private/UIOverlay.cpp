@@ -613,7 +613,7 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
   // to see the whole text.
   std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
   NkObject* nk = gNkDevice();
-  nk_begin(&nk->_ctx, "Testing UI", nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
+  nk_begin(&nk->_ctx, "Recluse Engine v0.0.2a", nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
     struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
     nk_draw_text(cmd_buf, nk_rect(30.0f,30.0f, 150.0f, 20.0f), str.c_str(), 
         str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
