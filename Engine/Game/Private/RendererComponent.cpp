@@ -131,7 +131,7 @@ void RendererComponent::Update()
   // Now push the object into the renderer for updating.
   MeshRenderCmd cmd;
   cmd._pMeshDesc = m_meshDescriptor;
-  cmd._pMatDesc = m_materialRef->GetMaterial()->Native();
+  cmd._pMatDesc = m_materialRef->GetMaterial() ? m_materialRef->GetMaterial()->Native(): Material::Default()->Native();
   cmd._pMeshData = m_meshRef->MeshRef() ? m_meshRef->MeshRef()->Native() : nullptr;
   cmd._config = m_configs;
   gRenderer().PushMeshRender(cmd);

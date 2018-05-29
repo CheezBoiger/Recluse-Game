@@ -17,6 +17,7 @@ struct Material {
   static void               InitializeDefault() {
      _sDefault.Initialize(); 
     _sDefault.Native()->PushUpdate(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE | MaterialDescriptor::MATERIAL_BUFFER_UPDATE);
+    _sDefault.SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     _sDefault.Native()->Update(); 
   }
 
