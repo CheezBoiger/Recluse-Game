@@ -1,6 +1,7 @@
 // Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #include "UIOverlay.hpp"
 #include "Core/Exception.hpp"
+#include "Core/Math/Common.hpp"
 #include "Renderer.hpp"
 #include "Resources.hpp"
 #include "RendererData.hpp"
@@ -609,16 +610,21 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
   viewport.height = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().height;
   viewport.width = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().width;
 
-  // TODO(): This needs to be fixed, something up with vertex format as it requires offsetting
-  // to see the whole text.
+  // TODO(): This needs to be programmable now. Not hardcoded this way...
   std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
+  std::string engine = RTEXT("Recluse Engine v0.0.2a");
+  std::string device = m_pRhi->DeviceName();
   NkObject* nk = gNkDevice();
-  nk_begin(&nk->_ctx, RTEXT("Recluse Engine v0.0.2a"), nk_rect(0.0f, 0.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
+  nk_begin(&nk->_ctx, RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved"), nk_rect(100.0f, 100.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
     struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
-    nk_draw_text(cmd_buf, nk_rect(30.0f,30.0f, 150.0f, 20.0f), str.c_str(), 
-        str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
+    nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 30.0f, 150.0f, 20.0f), engine.c_str(), 
+        engine.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
+    nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 45.0f, 150.0f, 20.0f), device.c_str(),
+      device.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
+    nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 60.0f, 150.0f, 20.0f), str.c_str(),
+      str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
   nk_end(&nk->_ctx);
-  // TODO:
+
   CommandBuffer* cmdBuffer = m_CmdBuffer;
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
@@ -704,8 +710,8 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
       VkRect2D scissor = { };
       nk_draw_foreach(cmd, &nk->_ctx, &nk->_cmds) {
         if (!cmd->elem_count) continue;
-        scissor.offset.x = (u32)cmd->clip_rect.x;
-        scissor.offset.y = (u32)cmd->clip_rect.y;
+        scissor.offset.x = R_Max((i32)cmd->clip_rect.x, 0);
+        scissor.offset.y = R_Max((i32)cmd->clip_rect.y, 0);
         scissor.extent.width = (u32)cmd->clip_rect.w;
         scissor.extent.height = (u32)cmd->clip_rect.h;
         cmdBuffer->SetScissor(0, 1, &scissor);

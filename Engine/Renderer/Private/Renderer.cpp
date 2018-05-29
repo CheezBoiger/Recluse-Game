@@ -393,6 +393,11 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   m_pSky->Initialize();
   m_pSky->MarkDirty();
 
+  m_pLights = new LightDescriptor();
+  m_pLights->m_pRhi = m_pRhi;
+  m_pLights->Initialize(params->_Shadows);
+  m_pLights->Update();
+
   SetUpSkybox();
   SetUpGraphicsPipelines();
   SetUpFinalOutputs();
@@ -401,11 +406,6 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
-
-  m_pLights = new LightDescriptor();
-  m_pLights->m_pRhi = m_pRhi;
-  m_pLights->Initialize(params->_Shadows);
-  m_pLights->Update();
 
   VkFenceCreateInfo fenceCi = { };
   fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -3399,6 +3399,12 @@ void Renderer::EnableHDR(b32 enable)
     m_HDR._Enabled = enable;
     UpdateRendererConfigs(nullptr);
   }
+}
+
+
+const char* Renderer::GetDeviceName()
+{
+  return m_pRhi->DeviceName();
 }
 
 

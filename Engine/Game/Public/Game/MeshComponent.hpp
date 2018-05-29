@@ -16,7 +16,8 @@ class MeshData;
 // A Single instance of a mesh stored in gpu memory.
 class Mesh {
 public:
-  Mesh() : m_pData(nullptr)  { }
+  Mesh() : m_pData(nullptr) 
+          , m_bSkinned(false) { }
 
   // Initialize the mesh object.
   void            Initialize(size_t elementCount, void* data, MeshData::VertexType type, 
@@ -26,9 +27,10 @@ public:
   void            CleanUp();
 
   MeshData*       Native() { return m_pData; }
-
+  b32             Skinned() { return m_bSkinned; }
 private:
   MeshData*       m_pData;
+  b32             m_bSkinned;
 };
 
 

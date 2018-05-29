@@ -89,9 +89,38 @@ public:
       if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Front() * m_speed * tick; }
       if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Front() * m_speed * tick; }
     }
-    if (Keyboard::KeyPressed(KEY_CODE_N)) { Time::ScaleTime -= 1.0 * Time::DeltaTime; }
-    if (Keyboard::KeyPressed(KEY_CODE_M)) { Time::ScaleTime += 1.0 * Time::DeltaTime; }
 
+    // Test window resizing.
+    if (Keyboard::KeyPressed(KEY_CODE_N)) { 
+      gEngine().GetWindow()->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true); 
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_M)) { 
+      gEngine().GetWindow()->SetToWindowed(1200, 800); 
+      gEngine().GetWindow()->SetToCenter();
+      gEngine().GetWindow()->Show(); 
+    }
+
+    // Testing renderer configurations during runtime.
+    if (Keyboard::KeyPressed(KEY_CODE_8)) {
+      GraphicsConfigParams params;
+      params._Buffering = DOUBLE_BUFFER;
+      params._EnableVsync = true;
+      params._AA = AA_FXAA_2x;
+      params._Shadows = SHADOWS_NONE;
+      params._TextureQuality = TEXTURE_QUALITY_ULTRA;
+      gRenderer().UpdateRendererConfigs(&params);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_9)) {
+      GraphicsConfigParams params;
+      params._Buffering = DOUBLE_BUFFER;
+      params._EnableVsync = true;
+      params._AA = AA_FXAA_2x;
+      params._Shadows = SHADOWS_ULTRA;
+      params._TextureQuality = TEXTURE_QUALITY_ULTRA;
+      gRenderer().UpdateRendererConfigs(&params);
+    }
 
     if (bFirstLook) {
       m_lastX = (r32)Mouse::X();

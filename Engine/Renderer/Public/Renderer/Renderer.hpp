@@ -199,6 +199,8 @@ public:
   // Push mesh to render.
   void              PushMeshRender(MeshRenderCmd& cmd);
 
+  const char*       GetDeviceName();
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
