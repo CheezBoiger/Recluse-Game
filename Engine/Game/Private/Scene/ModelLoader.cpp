@@ -298,11 +298,11 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
           if (bufferWeights && bufferJoints) {
-            vertex.boneWeights = Vector4(&bufferWeights[value * 3]);
-            vertex.boneIds[0] = bufferJoints[value * 3];
-            vertex.boneIds[1] = bufferJoints[value * 4];
-            vertex.boneIds[2] = bufferJoints[value * 5];
-            vertex.boneIds[3] = bufferJoints[value * 6];
+            vertex.boneWeights = Vector4(&bufferWeights[value * 4]);
+            vertex.boneIds[0] = bufferJoints[value * 4 + 0];
+            vertex.boneIds[1] = bufferJoints[value * 4 + 1];
+            vertex.boneIds[2] = bufferJoints[value * 4 + 2];
+            vertex.boneIds[3] = bufferJoints[value * 4 + 3];
           }
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
