@@ -73,7 +73,7 @@ int main(int c, char* argv[])
   window->Show();
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
-  printf("App directory: %s\n", gFilesystem().CurrentAppDirectory());
+  printf(RTEXT("App directory: %s\n"), gFilesystem().CurrentAppDirectory());
 
   // Create a game object.
   // Create the scene.
@@ -110,7 +110,7 @@ int main(int c, char* argv[])
   mesh.CleanUp();
   gEngine().CleanUp();
 #if (_DEBUG)
-  Log() << "Engine modules cleaned up, press enter to continue...\n";
+  Log() << RTEXT("Engine modules cleaned up, press enter to continue...\n");
   std::cin.ignore();
 #endif
   return 0;

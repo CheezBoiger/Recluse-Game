@@ -36,6 +36,13 @@ extern std::string ShadersPath;
 extern Texture* DefaultTextureKey;
 extern Sampler* DefaultSamplerKey;
 
+// Debug pipeline, for debugging purposes.
+// This allows drawing lines, shapes, or anything that 
+// may be needed to debug the renderer.
+extern GraphicsPipeline*  debug_linePipeline;
+extern GraphicsPipeline*  debug_wireframePipeline;
+extern RenderPass*        debug_renderPass;
+
 extern GraphicsPipeline* ShadowMapPipelineKey;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;
 extern std::string ShadowMapVertFileStr;

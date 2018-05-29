@@ -119,50 +119,8 @@ void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
 }
 
 
-void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
 {
-  Vector3 t;
-  Quaternion r;
-  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
-  if (node.translation.size() == 3) {
-    const double* tnative = node.translation.data();
-    t = Vector3(static_cast<r32>(tnative[0]),
-      static_cast<r32>(tnative[1]),
-      static_cast<r32>(tnative[2]));
-  }
-
-  if (node.rotation.size() == 4) {
-    const double* rq = node.rotation.data();
-    r = Quaternion(static_cast<r32>(rq[0]),
-      static_cast<r32>(rq[1]),
-      static_cast<r32>(rq[2]),
-      static_cast<r32>(rq[3]));
-    //r = r.Inverse();
-  }
-
-  if (node.scale.size() == 3) {
-    const double* sv = node.scale.data();
-    s = Vector3(static_cast<r32>(sv[0]),
-      static_cast<r32>(sv[1]),
-      static_cast<r32>(sv[2]));
-  }
-
-  Matrix4 localMatrix = Matrix4::Identity();
-  if (node.matrix.size() == 16) {
-    localMatrix = Matrix4(node.matrix.data()).Transpose();
-  } else {
-    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
-    Matrix4 R = r.ToMatrix4();
-    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
-    localMatrix = S * R * T;
-  }
-  localMatrix = localMatrix * parentMatrix;
-  if (!node.children.empty()) {
-    for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
-    }
-  }
-
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
@@ -270,6 +228,237 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
 }
 
 
+void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
+{
+  if (node.mesh > -1) {
+    const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+    // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
+    // defines some submesh in the full mesh object.
+    Mesh* pMesh = new Mesh();
+
+    std::vector<SkinnedVertex> vertices;
+    std::vector<u32>          indices;
+
+    for (size_t i = 0; i < mesh.primitives.size(); ++i) {
+      const tinygltf::Primitive& primitive = mesh.primitives[i];
+      u32   vertexStart = static_cast<u32>(vertices.size());
+      u32   indexStart = static_cast<u32>(indices.size());
+      u32   indexCount = 0;
+      if (primitive.indices < 0) continue;
+      R_ASSERT(primitive.attributes.find("POSITION") != primitive.attributes.end(), "No position values within mesh!");
+
+      {
+        const r32* bufferPositions = nullptr;
+        const r32* bufferNormals = nullptr;
+        const r32* bufferTexCoords = nullptr;
+        const r32* bufferWeights = nullptr; 
+        const u16* bufferJoints = nullptr;
+
+        const tinygltf::Accessor& positionAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
+        const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
+        bufferPositions =
+          reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
+
+        if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
+          const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
+          const tinygltf::BufferView& bufViewNorm = model.bufferViews[normalAccessor.bufferView];
+          bufferNormals =
+            reinterpret_cast<const r32*>(&model.buffers[bufViewNorm.buffer].data[normalAccessor.byteOffset + bufViewNorm.byteOffset]);
+        }
+
+        if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end()) {
+          const tinygltf::Accessor& texcoordAccessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+          const tinygltf::BufferView& bufViewTexCoord0 = model.bufferViews[texcoordAccessor.bufferView];
+          bufferTexCoords =
+            reinterpret_cast<const r32*>(&model.buffers[bufViewTexCoord0.buffer].data[texcoordAccessor.byteOffset + bufViewTexCoord0.byteOffset]);
+        }
+
+        if (primitive.attributes.find("JOINTS_0") != primitive.attributes.end()) {
+          const tinygltf::Accessor& jointAccessor = model.accessors[primitive.attributes.find("JOINTS_0")->second];
+          const tinygltf::BufferView& bufferViewJoints = model.bufferViews[jointAccessor.bufferView];
+          bufferJoints = 
+            reinterpret_cast<const u16*>(&model.buffers[bufferViewJoints.buffer].data[jointAccessor.byteOffset + bufferViewJoints.byteOffset]);
+        }
+
+        if (primitive.attributes.find("WEIGHTS_0") != primitive.attributes.end()) {
+          const tinygltf::Accessor& weightAccessor = model.accessors[primitive.attributes.find("WEIGHTS_0")->second];
+          const tinygltf::BufferView& bufferViewWeight = model.bufferViews[weightAccessor.bufferView];
+          bufferWeights =
+            reinterpret_cast<const r32*>(&model.buffers[bufferViewWeight.buffer].data[weightAccessor.byteOffset + bufferViewWeight.byteOffset]);
+        }
+
+        for (size_t value = 0; value < positionAccessor.count; ++value) {
+          SkinnedVertex vertex;
+          null_bones(vertex);
+          Vector3 p(&bufferPositions[value * 3]);
+          vertex.position = Vector4(p, 1.0f) * localMatrix;
+          vertex.position.w = 1.0f;
+          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 1.0f);
+          vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
+          vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
+          vertex.texcoord1 = Vector2();
+          if (bufferWeights && bufferJoints) {
+            vertex.boneWeights = Vector4(&bufferWeights[value * 3]);
+            vertex.boneIds[0] = bufferJoints[value * 3];
+            vertex.boneIds[1] = bufferJoints[value * 4];
+            vertex.boneIds[2] = bufferJoints[value * 5];
+            vertex.boneIds[3] = bufferJoints[value * 6];
+          }
+          //vertex.position.y *= -1.0f;
+          //vertex.normal.y *= -1.0f;
+          vertices.push_back(vertex);
+        }
+      }
+
+      // Indices.
+      {
+        const tinygltf::Accessor& indAccessor = model.accessors[primitive.indices];
+        const tinygltf::BufferView& iBufView = model.bufferViews[indAccessor.bufferView];
+        const tinygltf::Buffer& iBuf = model.buffers[iBufView.buffer];
+        indexCount = static_cast<u32>(indAccessor.count);
+
+        // TODO(): In progress. 
+        switch (indAccessor.componentType) {
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
+        {
+          const u32* buf = (const u32*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(buf[index] + vertexStart);
+          }
+        } break;
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+        {
+          const u16* buf = (const u16*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(((u32)buf[index]) + vertexStart);
+          }
+        } break;
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE:
+        {
+          const u8* buf = (const u8*)&iBuf.data[indAccessor.byteOffset + iBufView.byteOffset];
+          for (size_t index = 0; index < indAccessor.count; ++index) {
+            indices.push_back(((u32)buf[index]) + vertexStart);
+          }
+        } break;
+        };
+      }
+
+      Primitive prim;
+      prim._meshRef = pMesh;
+      prim._materialRef = primitive.material != -1 ? engineModel->materials[primitive.material] : nullptr;
+      prim._firstIndex = indexStart;
+      prim._indexCount = indexCount;
+
+      // TODO():
+      //    Still need to add start and index count.
+      engineModel->primitives.push_back(prim);
+    }
+
+    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data());
+    MeshCache::Cache(mesh.name, pMesh);
+    engineModel->meshes.push_back(pMesh);
+  }
+}
+
+
+void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+{
+  Vector3 t;
+  Quaternion r;
+  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
+  if (node.translation.size() == 3) {
+    const double* tnative = node.translation.data();
+    t = Vector3(static_cast<r32>(tnative[0]),
+      static_cast<r32>(tnative[1]),
+      static_cast<r32>(tnative[2]));
+  }
+
+  if (node.rotation.size() == 4) {
+    const double* rq = node.rotation.data();
+    r = Quaternion(static_cast<r32>(rq[0]),
+      static_cast<r32>(rq[1]),
+      static_cast<r32>(rq[2]),
+      static_cast<r32>(rq[3]));
+    //r = r.Inverse();
+  }
+
+  if (node.scale.size() == 3) {
+    const double* sv = node.scale.data();
+    s = Vector3(static_cast<r32>(sv[0]),
+      static_cast<r32>(sv[1]),
+      static_cast<r32>(sv[2]));
+  }
+
+  Matrix4 localMatrix = Matrix4::Identity();
+  if (node.matrix.size() == 16) {
+    localMatrix = Matrix4(node.matrix.data()).Transpose();
+  } else {
+    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
+    Matrix4 R = r.ToMatrix4();
+    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
+    localMatrix = S * R * T;
+  }
+  localMatrix = localMatrix * parentMatrix;
+  if (!node.children.empty()) {
+    for (size_t i = 0; i < node.children.size(); ++i) {
+      LoadSkinnedNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
+    }
+  }
+
+  LoadSkinnedMesh(node, model, engineModel, localMatrix);
+  // TODO(): Load animations from gltf.
+}
+
+
+void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+{
+  Vector3 t;
+  Quaternion r;
+  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
+  if (node.translation.size() == 3) {
+    const double* tnative = node.translation.data();
+    t = Vector3(static_cast<r32>(tnative[0]),
+      static_cast<r32>(tnative[1]),
+      static_cast<r32>(tnative[2]));
+  }
+
+  if (node.rotation.size() == 4) {
+    const double* rq = node.rotation.data();
+    r = Quaternion(static_cast<r32>(rq[0]),
+      static_cast<r32>(rq[1]),
+      static_cast<r32>(rq[2]),
+      static_cast<r32>(rq[3]));
+    //r = r.Inverse();
+  }
+
+  if (node.scale.size() == 3) {
+    const double* sv = node.scale.data();
+    s = Vector3(static_cast<r32>(sv[0]),
+      static_cast<r32>(sv[1]),
+      static_cast<r32>(sv[2]));
+  }
+
+  Matrix4 localMatrix = Matrix4::Identity();
+  if (node.matrix.size() == 16) {
+    localMatrix = Matrix4(node.matrix.data()).Transpose();
+  }
+  else {
+    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
+    Matrix4 R = r.ToMatrix4();
+    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
+    localMatrix = S * R * T;
+  }
+  localMatrix = localMatrix * parentMatrix;
+  if (!node.children.empty()) {
+    for (size_t i = 0; i < node.children.size(); ++i) {
+      LoadNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
+    }
+  }
+
+  LoadMesh(node, model, engineModel, localMatrix);
+}
+
+
 ModelResult Load(const std::string path)
 {
   Model*           model = nullptr;
@@ -298,6 +487,51 @@ ModelResult Load(const std::string path)
     tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
     Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
     LoadNode(node, gltfModel, model, mat, 1.0);
+  }
+
+  static u64 copy = 0;
+  model->name = "Unknown" + std::to_string(copy++);
+  size_t cutoff = path.find_last_of('/');
+  if (cutoff != std::string::npos) {
+    size_t removeExtId = path.find_last_of('.');
+    if (removeExtId != std::string::npos) {
+      std::string fileName = path.substr(cutoff + 1, removeExtId - (cutoff + 1));
+      model->name = fileName;
+    }
+  }
+  ModelCache::Cache(model->name, model);
+  return Model_Success;
+}
+
+
+ModelResult LoadAnimatedModel(const std::string path)
+{
+  AnimModel*      model = nullptr;
+  tinygltf::Model gltfModel;
+  tinygltf::TinyGLTF loader;
+  std::string err;
+
+  bool success = loader.LoadASCIIFromFile(&gltfModel, &err, path);
+  if (!err.empty()) {
+    Log() << err << "\n";
+  }
+
+  if (!success) {
+    Log() << "Failed to parse glTF\n";
+    return Model_Fail;
+  }
+
+  // Successful loading from tinygltf.
+  model = new AnimModel();
+
+  LoadTextures(&gltfModel, model);
+  LoadMaterials(&gltfModel, model);
+
+  tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
+  for (size_t i = 0; i < scene.nodes.size(); ++i) {
+    tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
+    Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
+    LoadSkinnedNode(node, gltfModel, model, mat, 1.0);
   }
 
   static u64 copy = 0;

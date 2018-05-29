@@ -17,7 +17,7 @@ std::string TextureBase::kDefaultName = "DefaultTexture_";
 u64         TextureBase::sIteration = 0;
 
 
-void Texture2D::Initialize(u32 width, u32 height)
+void Texture2D::Initialize(u32 width, u32 height, b32 genMips)
 {
   if (texture) return;
 
@@ -25,9 +25,10 @@ void Texture2D::Initialize(u32 width, u32 height)
 
   VkImageCreateInfo imgCI = { };
   VkImageViewCreateInfo imgViewCI = { };
-
+  
+  u32 mips = (!genMips ? 1 : u32((Log2f(static_cast<r32>(R_Max(width, height)) + 1))));
   imgCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  imgCI.mipLevels = 1;//log2f(Max(image->Width, image->Height)) + 1;
+  imgCI.mipLevels = mips;
   imgCI.arrayLayers = 1;
   imgCI.format = VK_FORMAT_R8G8B8A8_UNORM;
   imgCI.imageType = VK_IMAGE_TYPE_2D;
@@ -39,7 +40,7 @@ void Texture2D::Initialize(u32 width, u32 height)
   imgCI.extent.height = height;
   imgCI.extent.depth = 1;
   imgCI.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-
+  
   imgViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
   imgViewCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
   imgViewCI.subresourceRange = { };
@@ -47,7 +48,7 @@ void Texture2D::Initialize(u32 width, u32 height)
   imgViewCI.subresourceRange.baseArrayLayer = 0;
   imgViewCI.subresourceRange.baseMipLevel = 0;
   imgViewCI.subresourceRange.layerCount = 1;
-  imgViewCI.subresourceRange.levelCount = 1;
+  imgViewCI.subresourceRange.levelCount = mips;
   imgViewCI.components = { };
   imgViewCI.format = VK_FORMAT_R8G8B8A8_UNORM;
   

@@ -77,7 +77,7 @@ public:
   // All images that are uploaded to this texture must then be the 
   // same width and height in order to render properly. To write 
   // texture over to this object, call Update() after this call.
-  void        Initialize(u32 width, u32 height);
+  void        Initialize(u32 width, u32 height, b32 genMips = false);
   // Update texture with a new image to be written over.
   void        Update(Image const& image);
   void        CleanUp();

@@ -45,13 +45,13 @@ int main(int c, char* argv[])
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
   }
 
+  // One may also adjust the renderer settings during runtime as well, using the call
+  // gRenderer().UpdateRendererConfigs().
+
   Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
   window->Show();
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
-
-  // Add game object in scene.
-  LoadTextures();
 
   ///////////////////////////////////////////////////////////////////////////////////
   // Everything within initialization will normally be handled by Managers, for now
@@ -59,40 +59,47 @@ int main(int c, char* argv[])
   // control something on the display.
   ///////////////////////////////////////////////////////////////////////////////////
 
+  // manual loading of textures.
+  LoadTextures();
+
+  // Mesh Loading.
   {
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
     mesh->Initialize(boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data());
-    MeshCache::Cache("NativeCube", mesh);
+    MeshCache::Cache(RTEXT("NativeCube"), mesh);
   }
 
-  ModelLoader::Load("Assets/DamagedHelmet/DamagedHelmet.gltf");
-  ModelLoader::Load("Assets/BoomBox/BoomBox.gltf");
-  ModelLoader::Load("Assets/Lantern/lantern.gltf");
-  ModelLoader::Load("Assets/Lantern2/Lantern.gltf");
+  // Model Loading.
+  ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
+  ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
+  ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
+  ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
 
   {
     Material* material = new Material();
     material->Initialize();
     Texture2D* tex;
-    TextureCache::Get("RustedAlbedo", &tex);
+    TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
 
     material->SetAlbedo(tex);
     material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     material->EnableAlbedo(true);
     material->SetRoughnessFactor(1.0f);
     material->SetMetallicFactor(1.0f);
-    TextureCache::Get("RustedNormal", &tex);
+    TextureCache::Get(RTEXT("RustedNormal"), &tex);
     material->SetNormal(tex);
     material->EnableNormal(true);
 
-    TextureCache::Get("RustedRough", &tex);
+    TextureCache::Get(RTEXT("RustedRough"), &tex);
     material->SetRoughnessMetallic(tex);
     material->EnableRoughness(true);
-    MaterialCache::Cache("RustySample", material);
+    MaterialCache::Cache(TEXT("RustySample"), material);
   }
 
+  // Create and set up scene.
   MainCamera* mainCam = new MainCamera();
   // Create scene.
   Scene scene;
@@ -145,14 +152,12 @@ int main(int c, char* argv[])
   gEngine().BuildScene();
   ///////////////////////////////////////////////////////////////////////////////////
 
-  Log() << "Timer Start: " << Time::CurrentTime() << " s\n";
+  Log() << RTEXT("Timer Start: ") << Time::CurrentTime() << RTEXT(" s\n");
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
-
     gEngine().Update();
-    Log() << "FPS: " << SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime) << " fps\t\t\r";
   }
   
 
@@ -179,7 +184,7 @@ int main(int c, char* argv[])
   // Clean up engine
   gEngine().CleanUp();
 #if (_DEBUG)
-  Log() << "Game is cleaned up. Press Enter to continue...\n";
+  Log() << RTEXT("Game is cleaned up. Press Enter to continue...\n");
   std::cin.ignore();
 #endif
   return 0;

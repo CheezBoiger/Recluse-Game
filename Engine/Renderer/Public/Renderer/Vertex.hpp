@@ -8,6 +8,31 @@
 #include "Core/Math/Vector2.hpp"
 
 
+#define load_position_v4(m, p) { \
+  m.position[0] = p.x; m.position[1] = p.y; m.position[2] = p.z; m.position[3] = p.w; \
+} 
+
+#define load_normal_v4(m, n) { \
+  m.normal[0] = n.x; m.normal[1] = n.y; m.normal[2] = n.z; m.normal[3] = n.w; \
+}
+
+
+#define load_texcoords(m, t) { \
+  m.texcoord0[0] = t.x; m.texcoord0[1] = t.y; \
+  m.texcoord1[0] = t.z; m.texcoord1[1] = t.z; \
+}
+
+
+#define load_color(m, c) { \
+  m.color[0] = c.x; m.color[1] = c.y; m.color[2] = c.z; m.color[3] = c.w; \
+}
+
+#define null_bones(m) { \
+  m.boneWeights.x = 0.0f; m.boneWeights.y = 0.0f; m.boneWeights.z = 0.0f; m.boneWeights.w = 0.0f; \
+  m.boneIds[0] = 0; m.boneIds[1] = 0; m.boneIds[2] = 0; m.boneIds[3] = 0; \
+}
+
+
 namespace Recluse {
 
 
