@@ -222,8 +222,7 @@ vec3 LambertDiffuse(vec3 kD, vec3 albedoFrag)
 
 vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 {
-  vec3 brdf = D * F * G / ((4 * NoL * NoV) + 0.001);
-  if (isnan(brdf).x == true || isinf(brdf).x == true) discard;
+  vec3 brdf = D * F * G / (4 * NoL * NoV);
   return brdf;
 }
 
@@ -245,8 +244,8 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, ve
   
   vec3 H = normalize(nV + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
-  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
@@ -280,8 +279,8 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
   
   vec3 H = normalize(nV + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
-  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
@@ -314,8 +313,8 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
   
   vec3 H = normalize(nV + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.0, 1.0);
-  float NoV = clamp(dot(nN, nV), 0.0, 1.0);
+  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
