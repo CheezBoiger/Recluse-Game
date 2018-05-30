@@ -252,7 +252,8 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
         const r32* bufferNormals = nullptr;
         const r32* bufferTexCoords = nullptr;
         const r32* bufferWeights = nullptr; 
-        const u16* bufferJoints = nullptr;
+        const u8* bufferJoints = nullptr;
+        i32 jointType = -1;
 
         const tinygltf::Accessor& positionAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
         const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
@@ -277,7 +278,8 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
           const tinygltf::Accessor& jointAccessor = model.accessors[primitive.attributes.find("JOINTS_0")->second];
           const tinygltf::BufferView& bufferViewJoints = model.bufferViews[jointAccessor.bufferView];
           bufferJoints = 
-            reinterpret_cast<const u16*>(&model.buffers[bufferViewJoints.buffer].data[jointAccessor.byteOffset + bufferViewJoints.byteOffset]);
+            reinterpret_cast<const u8*>(&model.buffers[bufferViewJoints.buffer].data[jointAccessor.byteOffset + bufferViewJoints.byteOffset]);
+          jointType = jointAccessor.componentType;
         }
 
         if (primitive.attributes.find("WEIGHTS_0") != primitive.attributes.end()) {
@@ -299,10 +301,23 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
           vertex.texcoord1 = Vector2();
           if (bufferWeights && bufferJoints) {
             vertex.boneWeights = Vector4(&bufferWeights[value * 4]);
-            vertex.boneIds[0] = bufferJoints[value * 4 + 0];
-            vertex.boneIds[1] = bufferJoints[value * 4 + 1];
-            vertex.boneIds[2] = bufferJoints[value * 4 + 2];
-            vertex.boneIds[3] = bufferJoints[value * 4 + 3];
+            switch (jointType) {
+              case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+              {
+                vertex.boneIds[0] = (i32)((u16*)bufferJoints)[value * 4 + 0];
+                vertex.boneIds[1] = (i32)((u16*)bufferJoints)[value * 4 + 1];
+                vertex.boneIds[2] = (i32)((u16*)bufferJoints)[value * 4 + 2];
+                vertex.boneIds[3] = (i32)((u16*)bufferJoints)[value * 4 + 3];
+              } break;
+              case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+              default: 
+              {
+                vertex.boneIds[0] = (i32)bufferJoints[value * 4 + 0];
+                vertex.boneIds[1] = (i32)bufferJoints[value * 4 + 1];
+                vertex.boneIds[2] = (i32)bufferJoints[value * 4 + 2];
+                vertex.boneIds[3] = (i32)bufferJoints[value * 4 + 3];
+              }break;
+            }
           }
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
