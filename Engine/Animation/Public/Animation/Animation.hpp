@@ -2,25 +2,36 @@
 #pragma once
 
 #include "Core/Types.hpp"
-
 #include "Core/Utility/Module.hpp"
 #include "Core/Math/Matrix4.hpp"
+
+#include "Clip.hpp"
+
+#include <vector>
 
 namespace Recluse {
 
 
 class AnimObject;
+class AnimSampler;
+struct AnimClip;
+struct AnimClipState;
 
 
+// Animation sampling jobs are done by this engine module.
+// 
 class Animation : public EngineModule<Animation> {
 public:
   Animation() { }
 
+  // On startup event.
+  void          OnStartUp() override;
 
-  void OnStartUp() override;
-  void OnShutDown() override;
+  // On Shutdown event.
+  void          OnShutDown() override;
 
-  void UpdateState(r64 dt);
+  // Update event.
+  void          UpdateState(r64 dt);
 
   // Create an animation object with specified gameobject id.
   AnimObject*   CreateAnimObject(uuid64 id);
@@ -29,7 +40,10 @@ public:
   void          FreeAnimObject(AnimObject* obj);
 
 private:
-
+  // Samplers to sample current animations during game runtime.
+  std::vector<AnimSampler>      m_samplers;
+  // Handler to the animation objects generated currently in use.
+  std::vector<AnimObject*>       m_animObjects;
 };
 
 

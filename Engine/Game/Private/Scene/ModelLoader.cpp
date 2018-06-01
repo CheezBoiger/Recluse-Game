@@ -105,6 +105,11 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
       engineMat->EnableEmissive(true);
     }
 
+    if (mat.values.find("baseColorFactor") != mat.values.end()) {
+      tinygltf::ColorValue& value = mat.values["baseColorFactor"].ColorFactor();
+      engineMat->SetBaseColor(Vector4(value[0], value[1], value[2], value[3]));
+    }
+
 
     MaterialCache::Cache(mat.name, engineMat);
     engineModel->materials.push_back(engineMat);
@@ -376,7 +381,12 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
 }
 
 
-void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
+{
+}
+
+
+void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   Vector3 t;
   Quaternion r;
@@ -406,7 +416,7 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, M
 
   Matrix4 localMatrix = Matrix4::Identity();
   if (node.matrix.size() == 16) {
-    localMatrix = Matrix4(node.matrix.data()).Transpose();
+    localMatrix = Matrix4(node.matrix.data());
   } else {
     Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
     Matrix4 R = r.ToMatrix4();
@@ -421,6 +431,7 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, M
   }
 
   LoadSkinnedMesh(node, model, engineModel, localMatrix);
+  LoadSkin(node, model, engineModel, localMatrix);
   // TODO(): Load animations from gltf.
 }
 
