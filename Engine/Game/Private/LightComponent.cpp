@@ -17,6 +17,7 @@ namespace Recluse {
 std::queue<u32> PointLightComponent::sAvailablePointLightIds;
 std::queue<u32> LightComponent::sAvailableDirectionalLightIds;
 Mesh*           kPointLightMesh = nullptr;
+Primitive       pointLightPrim;
 
 DEFINE_COMPONENT_MAP(PointLightComponent);
 
@@ -98,7 +99,8 @@ void PointLightComponent::Update()
     cmd._config = CMD_RENDERABLE_BIT;
     cmd._pMeshDesc = m_descriptor;
     cmd._pMeshData = kPointLightMesh->Native();
-    cmd._pMatDesc = Material::Default()->Native();
+    cmd._pPrimitives = &pointLightPrim;
+    cmd._primitiveCount = 1;
 
     ObjectBuffer* buffer = m_descriptor->ObjectData();
     buffer->_Model = Matrix4(
@@ -128,6 +130,9 @@ void PointLightComponent::InitializeMeshDebug()
   auto vertices = UVSphere::MeshInstance(1.0f, g, g);
   auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), g, g);
   kPointLightMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data());
+  pointLightPrim._firstIndex = 0;
+  pointLightPrim._indexCount = kPointLightMesh->Native()->IndexData()->IndexCount();
+  pointLightPrim._pMat = Material::Default()->Native();
 }
 
 

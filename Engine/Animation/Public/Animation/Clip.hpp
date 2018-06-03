@@ -61,10 +61,14 @@ public:
   // Step into animation and sample from given animation clip.
   void                      Step(r32 dt);
 
+  std::vector<Matrix4>&     GetOutput() { return m_output; }
+
+  r32                       GetLocalTime() { return _state._fCurrLocalTime; }
 
 private:
   AnimClipState             _state;     // 
   AnimClip*                 _pClip;     // Animation clip we are sampling from.
+  std::vector<Matrix4>      m_output;  // Matrix palette output during sampling. 
 };
 
 

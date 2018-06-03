@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #pragma once
 
 #include "Core/Types.hpp"
@@ -13,6 +13,22 @@ namespace Recluse {
 
 
 class VulkanRHI;
+class MaterialDescriptor;
+class MeshData;
+
+
+struct Primitive {
+  Primitive()
+    : _firstIndex(0)
+    , _indexCount(0)
+    , _pMesh(nullptr)
+    , _pMat(nullptr) { }
+
+  MeshData*             _pMesh;
+  MaterialDescriptor*   _pMat;
+  u32                   _firstIndex;
+  u32                   _indexCount;
+};
 
 // Mesh data represents data, in the form of gpu friendly buffers, to which we draw onto the 
 // frame. We use mesh data to represent the model we are drawing.

@@ -77,6 +77,7 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
+  ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
 
   {
     Material* material = new Material();
@@ -106,7 +107,7 @@ int main(int c, char* argv[])
   scene.GetRoot()->AddChild(mainCam);
   
   std::vector<HelmetObject*> helmets;
-  #define HELM_COUNT 100
+  #define HELM_COUNT 1
   for (u32 i = 0; i < HELM_COUNT; ++i) {
     helmets.push_back(new HelmetObject());
     scene.GetRoot()->AddChild(helmets[i]);

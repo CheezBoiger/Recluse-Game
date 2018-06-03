@@ -53,13 +53,17 @@ public:
 #endif
       , &material);
 */
-    m_pMaterialComponent->SetMaterialRef(material);
     m_pMaterialComponent->Initialize(this);
+    m_pMaterialComponent->SetMaterialRef(material);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = material->Native();
+    m_pRendererComponent->SetPrimitive(prim);
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -148,9 +152,13 @@ public:
     m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = material->Native();
+    m_pRendererComponent->SetPrimitive(prim);
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -241,9 +249,15 @@ public:
 */
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = material->Native();
+    m_pRendererComponent->SetPrimitive(prim);
+
     material->SetEmissiveFactor(0.2f);
 
     std::random_device r;

@@ -2339,52 +2339,51 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
     for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
       MeshRenderCmd& renderCmd = m_cmdDeferredList.Get(i);
       // Need to notify that this render command does not have a render object.
-      if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) continue;
+      if (!renderCmd._pMeshDesc) continue;
       if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
           (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
-      MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
-      b8 Skinned = pMeshDesc->Skinned();
-      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-
-      DescriptorSets[0] = m_pGlobal->Set()->Handle();
-      DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
-      DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
-      DescriptorSets[3] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
-
-      // Bind materials.
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-        Pipe->Layout(), 
-        0,
-        (Skinned ? 4 : 3), 
-        DescriptorSets, 
-        0, 
-        nullptr
-      );
-  
-      // Set up the render mesh
-      MeshData* data = renderCmd._pMeshData;
-      // TODO(): Do culling if needed here.
-      if (!data) {
+      if (!renderCmd._pMeshData) {
         R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
         continue;
       }
 
+      MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
+      b8 Skinned = pMeshDesc->Skinned();
+      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
+
+      // Set up the render mesh
+      MeshData* data = renderCmd._pMeshData;
+      // TODO(): Do culling if needed here.
       VertexBuffer* vertexBuffer = data->VertexData();
       IndexBuffer* indexBuffer = data->IndexData();
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
 
       VkDeviceSize offsets[] = { 0 };
       cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+
+      DescriptorSets[0] = m_pGlobal->Set()->Handle();
+      DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
+      DescriptorSets[3] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
         cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-        cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), renderCmd._instances, 0, 0, 0);
-      } else {
-        cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+      }
+
+      for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
+        Primitive& primitive = renderCmd._pPrimitives[i];
+        MaterialDescriptor* pMatDesc = primitive._pMat;
+        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
+        // Bind materials.
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+          Pipe->Layout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
+        if (indexBuffer) {
+          cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
+        } else {
+          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+        }
       }
     }
   cmdBuffer->EndRenderPass();
@@ -2726,10 +2725,10 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   viewport.x = 0.0f;
 
   auto render = [&] (MeshRenderCmd& renderCmd) -> void {
-    if (!renderCmd._pMeshDesc || !renderCmd._pMatDesc) return;
+    if (!renderCmd._pMeshDesc) return;
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
+    if (!renderCmd._pMeshData) return;
     MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-    MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
     b8 skinned = pMeshDesc->Skinned();
     VkDescriptorSet descriptorSets[3];
     descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
@@ -2740,20 +2739,23 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
     MeshData* mesh = renderCmd._pMeshData;
-    if (!mesh) return;
     VertexBuffer* vertex = mesh->VertexData();
     IndexBuffer* index = mesh->IndexData();
     VkBuffer buf = vertex->Handle()->NativeBuffer();
-
     VkDeviceSize offset[] = { 0 };
     cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
     if (index) {
       VkBuffer ind = index->Handle()->NativeBuffer();
       cmdBuffer->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
-      cmdBuffer->DrawIndexed(index->IndexCount(), renderCmd._instances, 0, 0, 0);
     }
-    else {
-      cmdBuffer->Draw(vertex->VertexCount(), renderCmd._instances, 0, 0);
+
+    for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
+      Primitive& primitive = renderCmd._pPrimitives[i];
+      if (index) {
+        cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
+      } else {
+        cmdBuffer->Draw(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0);
+      }
     }
   };
 
@@ -2833,52 +2835,56 @@ void Renderer::BuildForwardPBRCmdBuffer()
       for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
         MeshRenderCmd& renderCmd = m_forwardCmdList[i];
         if (!(renderCmd._config & CMD_FORWARD_BIT) || !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
+        if (!renderCmd._pMeshData) {
+          R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
+          continue;
+        }
+
         MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-        MaterialDescriptor* pMatDesc = renderCmd._pMatDesc;
         b8 Skinned = pMeshDesc->Skinned();
         GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipelineKey : pbr_staticForwardPipelineKey;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
 
-        DescriptorSets[0] = m_pGlobal->Set()->Handle();
-        DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
-        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
-        DescriptorSets[3] = m_pLights->Set()->Handle();
-        DescriptorSets[4] = m_pLights->ViewSet()->Handle();
-        DescriptorSets[5] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
-
-        // Bind materials.
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
-          Pipe->Layout(),
-          0,
-          (Skinned ? 6 : 5),
-          DescriptorSets,
-          0,
-          nullptr
-        );
-
         // Set up the render mesh
         MeshData* data = renderCmd._pMeshData;
         // TODO(): Do culling if needed here.
-        if (!data) {
-          R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
-          continue;
-        }
 
         VertexBuffer* vertexBuffer = data->VertexData();
         IndexBuffer* indexBuffer = data->IndexData();
         VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
-
         VkDeviceSize offsets[] = { 0 };
         cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
 
         if (indexBuffer) {
           VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
           cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
-          cmdBuffer->DrawIndexed(indexBuffer->IndexCount(), renderCmd._instances, 0, 0, 0);
         }
-        else {
-          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+
+        DescriptorSets[0] = m_pGlobal->Set()->Handle();
+        DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
+        DescriptorSets[3] = m_pLights->Set()->Handle();
+        DescriptorSets[4] = m_pLights->ViewSet()->Handle();
+        DescriptorSets[5] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
+
+        // Bind materials.
+        for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
+          Primitive& primitive = renderCmd._pPrimitives[i];
+          DescriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
+          cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
+            Pipe->Layout(),
+            0,
+            (Skinned ? 6 : 5),
+            DescriptorSets,
+            0,
+            nullptr
+          );
+
+          if (indexBuffer) {
+            cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
+          } else {
+            cmdBuffer->Draw(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0);
+          }
         }
       }
     cmdBuffer->EndRenderPass();
@@ -3159,8 +3165,10 @@ void Renderer::UpdateSceneDescriptors()
       rnd_cmd._pMeshDesc->Update();
     }
 
-    if (rnd_cmd._pMatDesc) {
-      rnd_cmd._pMatDesc->Update();
+    for (size_t i = 0; i < rnd_cmd._primitiveCount; ++i) {
+      Primitive& prim = rnd_cmd._pPrimitives[i];
+      R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
+      prim._pMat->Update();
     }
   }
 
@@ -3170,8 +3178,10 @@ void Renderer::UpdateSceneDescriptors()
       rnd_cmd._pMeshDesc->Update();
     }
 
-    if (rnd_cmd._pMatDesc) {
-      rnd_cmd._pMatDesc->Update();
+    for (size_t i = 0; i < rnd_cmd._primitiveCount; ++i) {
+      Primitive& prim = rnd_cmd._pPrimitives[i];
+      R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
+      prim._pMat->Update();
     }
   }
 }

@@ -26,9 +26,8 @@ public:
     m_pMeshComponent->Initialize(this);
     m_pMaterialComponent->Initialize(this);
 
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
   }
 
 

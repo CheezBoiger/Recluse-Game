@@ -17,6 +17,8 @@ class MeshDescriptor;
 class RenderMaterial;
 class MeshData;
 
+struct Primitive;
+
 
 enum CmdConfig {
   CMD_RENDERABLE_BIT  = (1 << 0),
@@ -36,16 +38,17 @@ struct MeshRenderCmd {
   MeshRenderCmd()
     : _config(false)
     , _pMeshDesc(nullptr)
-    , _pMatDesc(nullptr)
+    , _pPrimitives(nullptr)
     , _pMeshData(nullptr)
     , _instances(1) { }
 
 
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
-  MaterialDescriptor*     _pMatDesc;
-  CmdConfigBits           _config;
+  Primitive*              _pPrimitives;
+  u32                     _primitiveCount;
   u32                     _instances;
+  CmdConfigBits           _config;
 };
 
 

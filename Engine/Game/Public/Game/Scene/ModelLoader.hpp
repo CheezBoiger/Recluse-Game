@@ -22,14 +22,6 @@ enum ModelResult {
 };
 
 
-struct Primitive {
-  Mesh*           _meshRef;
-  Material*       _materialRef;
-  u32             _firstIndex;
-  u32             _indexCount;
-};
-
-
 // Model is a container of meshes that correspond to materials.
 struct Model {
   // Name of the model

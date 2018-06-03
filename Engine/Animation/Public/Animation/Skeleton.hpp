@@ -27,6 +27,19 @@ struct Joint {
 // This is a simple skeleton layout for the architecture of our 
 // engine.
 struct Skeleton {
+private:
+  static skeleton_uuid_t                          kCurrSkeleCount;
+  static std::map<skeleton_uuid_t, Skeleton>      kSkeletons;
+public:
+
+  static Skeleton&            GetSkeleton(skeleton_uuid_t id) { return kSkeletons[id]; }
+  static void                 PushSkeleton(Skeleton skele) { kSkeletons[skele._uuid] = skele; }
+
+  Skeleton()
+    : _uuid(kCurrSkeleCount++) { }
+
+  // The name of this skeleton.
+  std::string                 _name;
   // Full joint transformation that corresponds to a bone.
   std::vector<Joint>          _joints;
 

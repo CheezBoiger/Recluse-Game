@@ -77,15 +77,18 @@ public:
 #endif
     m_pMaterialComponent->Initialize(this);
     m_pMaterialComponent->SetMaterialRef(material);
-    material->SetEmissiveFactor(0.01f);
+    //material->SetEmissiveFactor(0.01f);
 
     //material->SetRoughnessFactor(1.0f);
     //material->SetMetallicFactor(1.0f);
     //material->SetEmissiveFactor(1.0f);
 
-    m_pRendererComponent->SetMaterialComponent(m_pMaterialComponent);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    for (size_t i = 0; i < model->primitives.size(); ++i) {
+      Primitive& prim = model->primitives[i];
+      m_pRendererComponent->SetPrimitive(prim);
+    }
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -140,6 +143,12 @@ public:
       m_pMaterialComponent->GetMaterial()->SetOpacity(0.5f);
       transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
       m_pRendererComponent->SetTransparent(true);
+      m_pRendererComponent->ClearPrimitives();
+      Primitive prim;
+      prim._firstIndex = 0;
+      prim._indexCount = m_pMeshComponent->MeshRef()->Native()->IndexData()->IndexCount();
+      prim._pMat = m_pMaterialComponent->GetMaterial()->Native();
+      m_pRendererComponent->SetPrimitive(prim);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
@@ -149,6 +158,12 @@ public:
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
       transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
       m_pRendererComponent->SetTransparent(false);
+      m_pRendererComponent->ClearPrimitives();
+      Primitive prim;
+      prim._firstIndex = 0;
+      prim._indexCount = m_pMeshComponent->MeshRef()->Native()->IndexData()->IndexCount();
+      prim._pMat = m_pMaterialComponent->GetMaterial()->Native();
+      m_pRendererComponent->SetPrimitive(prim);
     }
   }
 

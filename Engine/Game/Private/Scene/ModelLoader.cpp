@@ -6,10 +6,11 @@
 
 #include "Game/Rendering/RendererResourcesCache.hpp"
 #include "Rendering/TextureCache.hpp"
-
+#include "Animation/Skeleton.hpp"
+#include "Animation/Clip.hpp"
 
 #include "Renderer/Vertex.hpp"
-
+#include "Renderer/MeshData.hpp"
 #include "Renderer/Renderer.hpp"
 
 #include "tiny_gltf.hpp"
@@ -216,8 +217,8 @@ void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
       }
 
       Primitive prim;
-      prim._meshRef = pMesh;
-      prim._materialRef = primitive.material != -1 ? engineModel->materials[primitive.material] : nullptr;
+      prim._pMesh = pMesh->Native();
+      prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
       prim._firstIndex = indexStart;
       prim._indexCount = indexCount;
 
@@ -364,8 +365,8 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
       }
 
       Primitive prim;
-      prim._meshRef = pMesh;
-      prim._materialRef = primitive.material != -1 ? engineModel->materials[primitive.material] : nullptr;
+      prim._pMesh = pMesh->Native();
+      prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
       prim._firstIndex = indexStart;
       prim._indexCount = indexCount;
 
@@ -383,6 +384,28 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
 
 void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
 {
+  if (node.skin == -1) return;
+
+  Skeleton skeleton;
+  tinygltf::Skin skin = model.skins[node.skin];
+  skeleton._joints.resize(skin.joints.size());
+  skeleton._name = skin.name;
+
+  const tinygltf::Accessor& accessor = model.accessors[skin.inverseBindMatrices];
+  const tinygltf::BufferView& bufView = model.bufferViews[accessor.bufferView];
+  const tinygltf::Buffer& buf = model.buffers[bufView.buffer];
+  
+  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);  
+
+  for (size_t i = 0; i < skeleton._joints.size(); ++i) {
+    Matrix4 invBindMat(&bindMatrices[i * 16]);
+    skeleton._joints[i]._InvBindPose = invBindMat;
+  }
+
+  for (size_t i = 0; i < skin.joints.size(); ++i) {
+    const tinygltf::Node& jointNode = model.nodes[skin.joints[i]];
+    skeleton._joints[i]._name = jointNode.name;
+  }
 }
 
 
