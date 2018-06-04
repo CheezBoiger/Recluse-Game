@@ -12,9 +12,6 @@
 #include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
 
-// TODO(): Do not leave this here! Just for testing!
-#include "Game/Scene/ModelLoader.hpp"
-#include "Game/Rendering/RendererResourcesCache.hpp"
 
 namespace Recluse {
 
@@ -165,17 +162,26 @@ void SkinnedRendererComponent::Update()
   // TODO(): Need to extract joint pose matrices from animation
   // component!
 
-  // TODO(): Do not leave this here! Just for testing!
-  ModelLoader::Model* anim = nullptr;
-  ModelCache::Get("BrainStem", &anim);
-  ModelLoader::AnimModel* a = static_cast<ModelLoader::AnimModel*>(anim);
-  Skeleton* skele = a->skeletons[0];
+  const Matrix4* palette = nullptr;
+  u32 paletteSz = 0;
+  if (m_pAnimComponent) {
+    AnimObject* obj = m_pAnimComponent->GetAnimObject();
+    AnimSampler* sampler = obj->GetSampler(); 
+    if (sampler) {
+      auto& kS = sampler->GetOutput();
+      palette = kS.data();
+      paletteSz = static_cast<u32>(kS.size());
+    }
+  }
 
   for (u32 i = 0; i < jointCount; ++i) {
     // Update descriptor joints.
-    pJointBuffer->_mJoints[i] = skele->_joints[i]._InvBindPose;
-    // Be sure to update the normals as well.
-    
+    // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
+    if (i < paletteSz) { 
+      pJointBuffer->_mJoints[i] = palette[i];
+      continue;
+    } 
+    pJointBuffer->_mJoints[i] = Matrix4::Identity();
   }
   m_meshDescriptor->PushUpdate(MeshDescriptor::JOINT_BUFFER_UPDATE);
   RendererComponent::Update();

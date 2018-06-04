@@ -18,6 +18,18 @@ struct AnimClip;
 struct AnimClipState;
 
 
+class AnimObject {
+public:
+  AnimObject()
+    : m_pSamplerRef(nullptr) { }
+
+
+  AnimSampler*      GetSampler() { return m_pSamplerRef; }
+private:
+  AnimSampler*      m_pSamplerRef;
+};
+
+
 // Animation sampling jobs are done by this engine module.
 // 
 class Animation : public EngineModule<Animation> {

@@ -123,6 +123,25 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 
 void LoadAnimations(tinygltf::Model* gltfModel, Model* engineModel)
 {
+  if (gltfModel->animations.empty()) return;
+  for (size_t i = 0; i < gltfModel->animations.size(); ++i) {
+    const tinygltf::Animation& animation = gltfModel->animations[i];
+    //AnimClip* clip = new AnimClip();
+    for (const tinygltf::AnimationChannel& channel : animation.channels) {
+      const tinygltf::AnimationSampler& sampler = animation.samplers[channel.sampler];
+      
+      const tinygltf::Accessor& inputAccessor = gltfModel->accessors[sampler.input];
+      const tinygltf::BufferView& inputBufView = gltfModel->bufferViews[inputAccessor.bufferView];
+      const r32* inputValues = reinterpret_cast<const r32*>(&gltfModel->buffers[inputBufView.buffer].data[inputAccessor.byteOffset + inputBufView.byteOffset]);
+      // Read input data.
+    
+      const tinygltf::Accessor& outputAccessor = gltfModel->accessors[sampler.output];
+      const tinygltf::BufferView& outputBufView = gltfModel->bufferViews[outputAccessor.bufferView];
+      const r32* outputValues = reinterpret_cast<const r32*>(&gltfModel->buffers[outputBufView.buffer].data[outputAccessor.byteOffset + outputBufView.byteOffset]);
+      // Read output data.
+
+    }
+  }
 }
 
 
@@ -416,7 +435,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
     Matrix4 invBindMat(&bindMatrices[i * 16]);
     skeleton._joints[i]._InvBindPose = invBindMat;
   }
-  
+
   // Traverse joint information.
   struct NodeTag {
     const tinygltf::Node* _pNode;
@@ -424,12 +443,13 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   };
 
   std::queue<NodeTag> nodes;
-  
   // extract skeleton root children joints.
   for (size_t i = 0; i < model.nodes[skin.skeleton].children.size(); ++i) {
     const tinygltf::Node& node = model.nodes[model.nodes[skin.skeleton].children[i]]; 
     nodes.push({ &node, 0xffu });
   }
+
+  // TODO(): Figure out what we need to do with global transform bind pose.
 
   // now traverse skeleton joints.
   u8 idx = 0;
@@ -490,14 +510,16 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, A
     localMatrix = S * R * T;
   }
   localMatrix = localMatrix * parentMatrix;
+
+  // if skin, this must be the root.
   if (!node.children.empty()) {
     for (size_t i = 0; i < node.children.size(); ++i) {
       LoadSkinnedNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
     }
   }
 
+  LoadSkin(node, model, engineModel, localMatrix);
   LoadSkinnedMesh(node, model, engineModel, localMatrix);
-  if (node.skin != -1) { LoadSkin(node, model, engineModel, localMatrix); }
   // TODO(): Load animations from gltf.
 }
 

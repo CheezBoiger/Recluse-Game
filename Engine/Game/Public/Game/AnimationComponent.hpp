@@ -3,6 +3,7 @@
 
 #include "Animation/Clip.hpp"
 #include "Animation/Skeleton.hpp"
+#include "Animation//Animation.hpp"
 
 #include "Core/Types.hpp"
 #include "Component.hpp"
@@ -18,7 +19,9 @@ namespace Recluse {
 class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
-  
+  AnimationComponent()
+    : m_object(nullptr) { }
+
   // Add an animation clip to the component to playback in the future.
   void AddClip(AnimClip* clip, const std::string& name);
 
@@ -46,7 +49,11 @@ public:
   //
   virtual void              Update() override;
 
+
+  AnimObject*               GetAnimObject() { return m_object; }
+
 private:
   std::map<std::string, AnimClip*>    m_clips;
+  AnimObject*                         m_object;
 };
 } // Recluse
