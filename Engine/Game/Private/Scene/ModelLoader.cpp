@@ -14,7 +14,7 @@
 #include "Renderer/Renderer.hpp"
 
 #include "tiny_gltf.hpp"
-
+#include <queue>
 
 namespace Recluse {
 namespace ModelLoader {
@@ -108,7 +108,10 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 
     if (mat.values.find("baseColorFactor") != mat.values.end()) {
       tinygltf::ColorValue& value = mat.values["baseColorFactor"].ColorFactor();
-      engineMat->SetBaseColor(Vector4(value[0], value[1], value[2], value[3]));
+      engineMat->SetBaseColor(Vector4(static_cast<r32>(value[0]), 
+                                      static_cast<r32>(value[1]), 
+                                      static_cast<r32>(value[2]), 
+                                      static_cast<r32>(value[3])));
     }
 
 
@@ -221,10 +224,13 @@ void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
       prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
       prim._firstIndex = indexStart;
       prim._indexCount = indexCount;
-
+      PrimitiveHandle primData;
+      primData._primitive = prim;
+      primData._pMaterial = engineModel->materials[primitive.material];
+      primData._pMesh = pMesh;
       // TODO():
       //    Still need to add start and index count.
-      engineModel->primitives.push_back(prim);
+      engineModel->primitives.push_back(primData);
     }
 
     pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data());
@@ -369,10 +375,14 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
       prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
       prim._firstIndex = indexStart;
       prim._indexCount = indexCount;
+      PrimitiveHandle primData;
+      primData._pMaterial = engineModel->materials[primitive.material];
+      primData._pMesh = pMesh;
+      primData._primitive = prim;
 
       // TODO():
       //    Still need to add start and index count.
-      engineModel->primitives.push_back(prim);
+      engineModel->primitives.push_back(std::move(primData));
     }
 
     pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data());
@@ -401,11 +411,39 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
     Matrix4 invBindMat(&bindMatrices[i * 16]);
     skeleton._joints[i]._InvBindPose = invBindMat;
   }
+  
+  // Traverse joint information.
+  struct NodeTag {
+    const tinygltf::Node* _pNode;
+    u8                    _parent;
+  };
 
-  for (size_t i = 0; i < skin.joints.size(); ++i) {
-    const tinygltf::Node& jointNode = model.nodes[skin.joints[i]];
-    skeleton._joints[i]._name = jointNode.name;
+  std::queue<NodeTag> nodes;
+  
+  // extract skeleton root children joints.
+  for (size_t i = 0; i < model.nodes[skin.skeleton].children.size(); ++i) {
+    const tinygltf::Node& node = model.nodes[model.nodes[skin.skeleton].children[i]]; 
+    nodes.push({ &node, 0xffu });
   }
+
+  // now traverse skeleton joints.
+  u8 idx = 0;
+  while (!nodes.empty()) {
+    NodeTag& tag = nodes.front();
+    const tinygltf::Node* node = tag._pNode;
+    for (size_t i = 0; i < node->children.size(); ++i) {
+      nodes.push({ &model.nodes[node->children[i]], idx });
+    }
+
+    Joint& joint = skeleton._joints[idx];
+    joint._name = node->name;
+    joint._iParent = tag._parent;
+    nodes.pop();
+    ++idx;
+  } 
+
+  Skeleton::PushSkeleton(skeleton);
+  engineModel->skeletons.push_back(&Skeleton::GetSkeleton(skeleton._uuid));
 }
 
 

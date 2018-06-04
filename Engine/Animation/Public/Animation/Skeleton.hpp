@@ -33,7 +33,12 @@ private:
 public:
 
   static Skeleton&            GetSkeleton(skeleton_uuid_t id) { return kSkeletons[id]; }
-  static void                 PushSkeleton(Skeleton skele) { kSkeletons[skele._uuid] = skele; }
+  static void                 PushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
+  static void             RemoveSkeleton(skeleton_uuid_t id) { 
+    auto it = kSkeletons.find(id);
+    if (it == kSkeletons.end()) return;
+    kSkeletons.erase(it);
+  }
 
   Skeleton()
     : _uuid(kCurrSkeleCount++) { }
@@ -42,7 +47,6 @@ public:
   std::string                 _name;
   // Full joint transformation that corresponds to a bone.
   std::vector<Joint>          _joints;
-
   // This skeleton's unique id.
   skeleton_uuid_t             _uuid;
 };

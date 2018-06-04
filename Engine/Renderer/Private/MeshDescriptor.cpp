@@ -113,6 +113,8 @@ SkinnedMeshDescriptor::SkinnedMeshDescriptor()
   , MeshDescriptor()
 {
   m_jointSet = nullptr;
+  m_ObjectData._HasBones = true;
+  m_ObjectData._LoD = 0.0f;
 }
 
 

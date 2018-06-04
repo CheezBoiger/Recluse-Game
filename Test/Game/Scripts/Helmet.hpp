@@ -45,7 +45,7 @@ public:
     SetName("Mister helmet");
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
-    m_pRendererComponent = new RendererComponent();
+    m_pRendererComponent = new SkinnedRendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
@@ -55,7 +55,7 @@ public:
      m_pPhysicsComponent->Enable(false);
 
     ModelLoader::Model* model;
-    ModelCache::Get("DamagedHelmet", &model);
+    ModelCache::Get("BrainStem", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -86,8 +86,8 @@ public:
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     for (size_t i = 0; i < model->primitives.size(); ++i) {
-      Primitive& prim = model->primitives[i];
-      m_pRendererComponent->SetPrimitive(prim);
+      ModelLoader::PrimitiveHandle& primHandle = model->primitives[i];
+      m_pRendererComponent->SetPrimitive(primHandle._primitive);
     }
 
     std::random_device r;
@@ -115,16 +115,18 @@ public:
     transform->Rotation = targ;
 #endif
     if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
-      transform->Position.x += 1.0f * tick;
+      transform->Position += transform->Front() * 1.0f * tick;
     }
     if (Keyboard::KeyPressed(KEY_CODE_DOWN_ARROW)) {
-      transform->Position.x -= 1.0f * tick;
+      transform->Position -= transform->Front() * 1.0f * tick;
     }
     if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) {
-      transform->Position.z += 1.0f * tick;
+      transform->Rotation = transform->Rotation * 
+        Quaternion::AngleAxis(Radians(45.0f) * tick, Vector3::UP);
     }
     if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
-      transform->Position.z -= 1.0f * tick;
+      transform->Rotation = transform->Rotation * 
+        Quaternion::AngleAxis(Radians(-45.0f) * tick, Vector3::UP);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
@@ -136,6 +138,8 @@ public:
     m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(m_factor);
 
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
+      // NOTE(): If using SkinnedRendererComponent, this will not work for static meshes like
+      // this! End up with incorrect reading to the gpu!
       ModelLoader::Model* model = nullptr;  
       ModelCache::Get("BoomBox", &model);
       m_pMaterialComponent->SetMaterialRef(model->materials[0]);
@@ -152,6 +156,8 @@ public:
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
+      // NOTE(): If using SkinnedRendererComponent, this will not work for static meshes like
+      // this! End up with incorrect reading to the gpu!
       ModelLoader::Model* model = nullptr;
       ModelCache::Get("DamagedHelmet", &model);
       m_pMaterialComponent->SetMaterialRef(model->materials[0]);

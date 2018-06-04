@@ -22,20 +22,29 @@ enum ModelResult {
 };
 
 
+// Primitive handle to the native primitive gpu friendly data. Handle holds material and mesh
+// handles that update when configured.
+struct PrimitiveHandle {
+  Mesh*           _pMesh;       // Better handle to the mesh data held by this primitive.
+  Material*       _pMaterial;   // Better Handle to the material descriptor held by this primitive.
+  Primitive       _primitive;   // native primitive data to be sent to a renderer component.
+};
+
+
 // Model is a container of meshes that correspond to materials.
 struct Model {
   // Name of the model
-  std::string               name;
-
-  std::vector<Mesh*>        meshes;
-  std::vector<Material*>    materials;
-  std::vector<Texture2D*>   textures;
-  std::vector<Primitive>    primitives;
+  std::string                   name;
+  std::vector<Mesh*>            meshes;
+  std::vector<Material*>        materials;
+  std::vector<Texture2D*>       textures;
+  std::vector<PrimitiveHandle>    primitives;
 };
 
 
 // Animation model.
 struct AnimModel : public Model {
+  std::vector<Skeleton*>    skeletons;
   std::vector<AnimClip*>    animations;
 };
 
