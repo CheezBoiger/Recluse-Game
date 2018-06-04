@@ -121,6 +121,11 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 }
 
 
+void LoadAnimations(tinygltf::Model* gltfModel, Model* engineModel)
+{
+}
+
+
 void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
 {
   for (size_t i = 0, count = vertices.size(); i < count - 2; i += 3)
@@ -176,7 +181,7 @@ void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 1.0f);
+          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
@@ -307,7 +312,7 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 1.0f);
+          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
@@ -492,7 +497,7 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, A
   }
 
   LoadSkinnedMesh(node, model, engineModel, localMatrix);
-  LoadSkin(node, model, engineModel, localMatrix);
+  if (node.skin != -1) { LoadSkin(node, model, engineModel, localMatrix); }
   // TODO(): Load animations from gltf.
 }
 
@@ -620,6 +625,8 @@ ModelResult LoadAnimatedModel(const std::string path)
     Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
     LoadSkinnedNode(node, gltfModel, model, mat, 1.0);
   }
+
+  LoadAnimations(&gltfModel, model);
 
   static u64 copy = 0;
   model->name = "Unknown" + std::to_string(copy++);

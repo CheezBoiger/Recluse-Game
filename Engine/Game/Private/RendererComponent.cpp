@@ -12,6 +12,10 @@
 #include "Core/Logging/Log.hpp"
 #include "Core/Exception.hpp"
 
+// TODO(): Do not leave this here! Just for testing!
+#include "Game/Scene/ModelLoader.hpp"
+#include "Game/Rendering/RendererResourcesCache.hpp"
+
 namespace Recluse {
 
 
@@ -161,9 +165,17 @@ void SkinnedRendererComponent::Update()
   // TODO(): Need to extract joint pose matrices from animation
   // component!
 
+  // TODO(): Do not leave this here! Just for testing!
+  ModelLoader::Model* anim = nullptr;
+  ModelCache::Get("BrainStem", &anim);
+  ModelLoader::AnimModel* a = static_cast<ModelLoader::AnimModel*>(anim);
+  Skeleton* skele = a->skeletons[0];
+
   for (u32 i = 0; i < jointCount; ++i) {
     // Update descriptor joints.
-    pJointBuffer->_mJoints[i];
+    pJointBuffer->_mJoints[i] = skele->_joints[i]._InvBindPose;
+    // Be sure to update the normals as well.
+    
   }
   m_meshDescriptor->PushUpdate(MeshDescriptor::JOINT_BUFFER_UPDATE);
   RendererComponent::Update();

@@ -89,7 +89,7 @@ public:
       ModelLoader::PrimitiveHandle& primHandle = model->primitives[i];
       m_pRendererComponent->SetPrimitive(primHandle._primitive);
     }
-
+   
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);

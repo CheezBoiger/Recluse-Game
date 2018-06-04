@@ -619,7 +619,7 @@ void UIOverlay::BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor*
     struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
     nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 30.0f, 150.0f, 20.0f), engine.c_str(), 
         engine.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
-    nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 45.0f, 150.0f, 20.0f), device.c_str(),
+    nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 45.0f, 300.0f, 20.0f), device.c_str(),
       device.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));
     nk_draw_text(cmd_buf, nk_rect(100.0f + 30.0f, 100.0f + 60.0f, 150.0f, 20.0f), str.c_str(),
       str.size(), &nk->_font->handle, nk_rgba(0, 0, 0, 0), nk_rgb(255, 255, 255));

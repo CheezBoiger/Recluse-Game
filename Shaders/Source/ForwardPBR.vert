@@ -77,7 +77,7 @@ out FRAG_IN {
 void main()
 {
   vec4 worldPosition = position;
- 
+  vec4 skinNormal = normal;
   // Compute the bone transform 
   if (objBuffer.hasBones >= 1) {
     mat4 boneTransform  = boneBuffer.bones[boneIDs[0]] * boneWeights[0];
@@ -86,6 +86,7 @@ void main()
     boneTransform      += boneBuffer.bones[boneIDs[3]] * boneWeights[3];
     
     worldPosition = boneTransform * worldPosition;
+    skinNormal = normalize(boneTransform * skinNormal);
   }
   
   worldPosition = objBuffer.model * worldPosition;
@@ -93,7 +94,7 @@ void main()
   frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
-  frag_in.normal = normalize(objBuffer.normalMatrix * normal).xyz;
+  frag_in.normal = normalize(objBuffer.normalMatrix * skinNormal).xyz;
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 }
