@@ -266,7 +266,7 @@ public:
     Transform* trans = GetTransform();
     trans->Scale = Vector3(0.2f, 0.2f, 0.2f);
     trans->Position = Vector3(-4.0f, 0.0f, 4.0f);
-    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f + 45.0f), Vector3(0.0f, 1.0f, 0.0f));
+    trans->Rotation = Quaternion::AngleAxis(Radians(180.0f + 0.0f), Vector3(0.0f, 1.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_pCage = new LanternCage();
     AddChild(m_pCage);

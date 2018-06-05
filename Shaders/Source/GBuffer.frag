@@ -116,9 +116,8 @@ vec3 GetNormal(vec3 N, vec3 V, vec2 TexCoord)
 
 vec2 EncodeNormal(vec3 n)
 {
-  vec2 enc = normalize(n.xy) * (sqrt(-n.z * 0.5 + 0.5));
-  enc = enc * 0.5 + 0.5;
-  return enc;
+  float p = sqrt(n.z * 8.0 + 8.0);
+  return vec2(n.xy / p + 0.5);
 }
 
 
@@ -138,7 +137,7 @@ struct GBuffer
 void WriteGBuffer(GBuffer gbuffer)
 {
   rt0 = vec4(gbuffer.albedo, gbuffer.ao);
-  rt1 = vec4(EncodeNormal(gbuffer.normal), 0.0, 0.0);
+  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
   rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
   rt3 = vec4(gbuffer.emission, 1.0);
 }

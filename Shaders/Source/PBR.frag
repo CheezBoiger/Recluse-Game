@@ -105,11 +105,13 @@ struct GBuffer
 
 vec3 DecodeNormal(vec4 enc)
 {
-  vec4 nn = enc * vec4(2.0, 2.0, 0.0, 0.0) + vec4(-1.0, -1.0, 1.0, -1.0);
-  float l = dot(nn.xyz, -nn.xyw);
-  nn.z = l;
-  nn.xy *= sqrt(l);
-  return nn.xyz * 2.0 + vec3(0.0, 0.0, -1.0);
+  vec2 fenc = enc.xy * 4.0 - 2.0;
+  float f = dot(fenc, fenc);
+  float g = sqrt(1.0 - f / 4.0);
+  vec3 n;
+  n.xy = fenc * g;
+  n.z = 1.0 - f / 2.0;
+  return n;
 }
 
 
@@ -123,7 +125,7 @@ GBuffer ReadGBuffer(vec2 uv)
   vec4 encodedN             = vec4(normalFrag.xy, 0.0, 0.0);
   
   gbuffer.albedo            = albedoFrag.rgb;
-  gbuffer.normal            = DecodeNormal(encodedN);
+  gbuffer.normal            = normalFrag.xyz * 2.0 - 1.0;
   gbuffer.emission          = emissionFrag.rgb;
   gbuffer.emissionStrength  = erm.r;
   gbuffer.roughness         = erm.g;
