@@ -273,6 +273,7 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, ve
   float NoL = clamp(dot(nN, nL), 0.001, 1.0);
   float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
   F0 = mix(F0, Albedo, metallic);
@@ -281,7 +282,7 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, ve
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
     float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(NoH, F0);
+    vec3 F = FSchlick(VoH, F0);
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
@@ -308,6 +309,7 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
   float NoL = clamp(dot(nN, nL), 0.001, 1.0);
   float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
   F0 = mix(F0, Albedo, metallic);
@@ -315,7 +317,7 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
     float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(NoH, F0);
+    vec3 F = FSchlick(VoH, F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
@@ -342,6 +344,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
   float NoL = clamp(dot(nN, nL), 0.001, 1.0);
   float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
   float NoH = clamp(dot(nN, H), 0.0, 1.0);
+  float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
   F0 = mix(F0, Albedo, metallic);
@@ -349,7 +352,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
     float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(NoH, F0);
+    vec3 F = FSchlick(VoH, F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
