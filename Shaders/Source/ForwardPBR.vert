@@ -7,11 +7,11 @@ layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
 layout (location = 2) in vec2   texcoord0;
 layout (location = 3) in vec2   texcoord1;
-layout (location = 4) in vec4   boneWeights;
-layout (location = 5) in ivec4  boneIDs;
+layout (location = 4) in vec4   jointWeights;
+layout (location = 5) in ivec4  jointIDs;
 
 
-#define MAX_BONES     128
+#define MAX_JOINTS     128
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
@@ -55,13 +55,13 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;  
   float lod;
-  int   hasBones; 
+  int   hasJoints; 
 } objBuffer;
 
 
-layout (set = 5, binding = 0) uniform BonesBuffer {
-  mat4 bones[MAX_BONES];
-} boneBuffer;
+layout (set = 5, binding = 0) uniform JointsBuffer {
+  mat4 joints[MAX_JOINTS];
+} jointsBuffer;
 
 
 out FRAG_IN {
@@ -76,20 +76,20 @@ out FRAG_IN {
 
 void main()
 {
-  vec4 worldPosition = position;
+  vec4 skinPosition = position;
   vec4 skinNormal = normal;
-  // Compute the bone transform 
-  if (objBuffer.hasBones >= 1) {
-    mat4 boneTransform  = boneBuffer.bones[boneIDs[0]] * boneWeights[0];
-    boneTransform      += boneBuffer.bones[boneIDs[1]] * boneWeights[1];
-    boneTransform      += boneBuffer.bones[boneIDs[2]] * boneWeights[2];
-    boneTransform      += boneBuffer.bones[boneIDs[3]] * boneWeights[3];
+  // Compute the skin matrix transform.
+  if (objBuffer.hasJoints >= 1) {
+    mat4 skinMatrix  = jointsBuffer.joints[jointIDs[0]] * jointWeights[0];
+    skinMatrix      += jointsBuffer.joints[jointIDs[1]] * jointWeights[1];
+    skinMatrix      += jointsBuffer.joints[jointIDs[2]] * jointWeights[2];
+    skinMatrix      += jointsBuffer.joints[jointIDs[3]] * jointWeights[3];
     
-    worldPosition = boneTransform * worldPosition;
-    skinNormal = normalize(boneTransform * skinNormal);
+    skinPosition = skinMatrix * skinPosition;
+    skinNormal = normalize(skinMatrix * skinNormal);
   }
   
-  worldPosition = objBuffer.model * worldPosition;
+  vec4 worldPosition = objBuffer.model * skinPosition;
   
   frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = texcoord0;

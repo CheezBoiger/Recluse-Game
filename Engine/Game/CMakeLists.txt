@@ -69,16 +69,18 @@ set(GAME_FILES
   ${SCENE_PUBLIC_DIR}/Scene.hpp
   ${SCENE_PUBLIC_DIR}/SceneCache.hpp
   ${SCENE_PUBLIC_DIR}/ModelLoader.hpp
+  ${SCENE_PUBLIC_DIR}/AssetManager.hpp
   ${SCENE_PRIVATE_DIR}/Scene.cpp
   ${SCENE_PRIVATE_DIR}/ModelLoader.cpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.hpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.cpp
   ${SCENE_PRIVATE_DIR}/json.hpp
   ${SCENE_PRIVATE_DIR}/stb_image_write.hpp
+  ${SCENE_PRIVATE_DIR}/AssetManager.cpp
   
   ${SCRIPTS_PUBLIC_DIR}/Behavior.hpp
   ${SCRIPTS_PUBLIC_DIR}/ScriptCache.hpp
-
+  
   ${VISIBLE_PUBLIC_DIR}/Octree.hpp
 
   ${VISIBLE_PRIVATE_DIR}/Octree.cpp

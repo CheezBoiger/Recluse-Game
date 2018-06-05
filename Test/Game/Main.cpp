@@ -178,10 +178,7 @@ int main(int c, char* argv[])
   delete mainCam;
 
   // Finish.
-  ModelCache::CleanUpAll();
-  MaterialCache::CleanUpAll();
-  MeshCache::CleanUpAll();
-  TextureCache::CleanUpAll();
+  AssetManager::CleanUpAssets();
   // Clean up engine
   gEngine().CleanUp();
 #if (_DEBUG)

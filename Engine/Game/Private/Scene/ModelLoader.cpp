@@ -8,6 +8,7 @@
 #include "Rendering/TextureCache.hpp"
 #include "Animation/Skeleton.hpp"
 #include "Animation/Clip.hpp"
+#include "Game/Scene/AssetManager.hpp"
 
 #include "Renderer/Vertex.hpp"
 #include "Renderer/MeshData.hpp"
@@ -15,6 +16,7 @@
 
 #include "tiny_gltf.hpp"
 #include <queue>
+#include <vector>
 
 namespace Recluse {
 namespace ModelLoader {
@@ -121,26 +123,82 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 }
 
 
-void LoadAnimations(tinygltf::Model* gltfModel, Model* engineModel)
+void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
 {
   if (gltfModel->animations.empty()) return;
+  
   for (size_t i = 0; i < gltfModel->animations.size(); ++i) {
     const tinygltf::Animation& animation = gltfModel->animations[i];
-    //AnimClip* clip = new AnimClip();
+    AnimClip* clip = new AnimClip();
+    clip->_name = animation.name;
+    if (animation.name.empty()) {
+      clip->_name = "Animation_" + std::to_string(engineModel->animations.size() + 1);
+    }
+
+    i32 prevTarget = -1;
+    size_t jointIndex = -1;
+    // channels follow the same pattern as its corresponding skeleton joint hierarchy.
     for (const tinygltf::AnimationChannel& channel : animation.channels) {
+      i32 node = channel.target_node;
+      if (node != prevTarget) {
+        prevTarget = node;
+        ++jointIndex;
+      }
       const tinygltf::AnimationSampler& sampler = animation.samplers[channel.sampler];
       
       const tinygltf::Accessor& inputAccessor = gltfModel->accessors[sampler.input];
       const tinygltf::BufferView& inputBufView = gltfModel->bufferViews[inputAccessor.bufferView];
       const r32* inputValues = reinterpret_cast<const r32*>(&gltfModel->buffers[inputBufView.buffer].data[inputAccessor.byteOffset + inputBufView.byteOffset]);
       // Read input data.
+      // TODO():
     
       const tinygltf::Accessor& outputAccessor = gltfModel->accessors[sampler.output];
       const tinygltf::BufferView& outputBufView = gltfModel->bufferViews[outputAccessor.bufferView];
       const r32* outputValues = reinterpret_cast<const r32*>(&gltfModel->buffers[outputBufView.buffer].data[outputAccessor.byteOffset + outputBufView.byteOffset]);
       // Read output data.
+      // TODO():
+      if (clip->_aAnimPoseSamples.empty()) { 
+        clip->_aAnimPoseSamples.resize(inputAccessor.count); 
+      }
+      
+      for (size_t inputId = 0; inputId < inputAccessor.count; ++inputId) {
+        clip->_aAnimPoseSamples[inputId]._time = inputValues[inputId];
+      }
 
+      if (channel.target_path == "translation") {
+        for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
+          AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+          if (jointIndex >= pose._aLocalPoses.size()) {
+            pose._aLocalPoses.push_back(JointPose());
+            pose._aGlobalPoses.push_back(Matrix4());
+          }
+          pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3]);
+        }
+      }
+      if (channel.target_path == "rotation") {
+        for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
+          AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+          if (jointIndex >= pose._aLocalPoses.size()) {
+            pose._aLocalPoses.push_back(JointPose());
+            pose._aGlobalPoses.push_back(Matrix4());
+          }
+          pose._aLocalPoses[jointIndex]._rot = Quaternion(outputValues[outputId * 4]);
+        }
+      }
+      if (channel.target_path == "scale") {
+        for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
+          AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+          if (jointIndex >= pose._aLocalPoses.size()) {
+            pose._aLocalPoses.push_back(JointPose());
+            pose._aGlobalPoses.push_back(Matrix4());
+          }
+          pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3]);
+        }
+      }
     }
+
+    engineModel->animations.push_back(clip);
+    AnimAssetManager::Cache(clip->_name, clip);
   }
 }
 
@@ -416,6 +474,59 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
 }
 
 
+struct NodeTransform {
+  Vector3     _localTrans;
+  Quaternion  _localRot;
+  Vector3     _localScale;
+  Matrix4     _globalMatrix;
+};
+
+
+NodeTransform CalculateGlobalTransform(const tinygltf::Node& node, Matrix4 parentMatrix)
+{
+  NodeTransform transform;
+  Vector3 t;
+  Quaternion r;
+  Vector3 s = Vector3(1.0f, 1.0f, 1.0f);
+  if (node.translation.size() == 3) {
+    const double* tnative = node.translation.data();
+    t = Vector3(static_cast<r32>(tnative[0]),
+      static_cast<r32>(tnative[1]),
+      static_cast<r32>(tnative[2]));
+  }
+
+  if (node.rotation.size() == 4) {
+    const double* rq = node.rotation.data();
+    r = Quaternion(static_cast<r32>(rq[0]),
+      static_cast<r32>(rq[1]),
+      static_cast<r32>(rq[2]),
+      static_cast<r32>(rq[3]));
+  }
+
+  if (node.scale.size() == 3) {
+    const double* sv = node.scale.data();
+    s = Vector3(static_cast<r32>(sv[0]),
+      static_cast<r32>(sv[1]),
+      static_cast<r32>(sv[2]));
+  }
+
+  Matrix4 localMatrix = Matrix4::Identity();
+  if (node.matrix.size() == 16) {
+    localMatrix = Matrix4(node.matrix.data());
+  } else {
+    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
+    Matrix4 R = r.ToMatrix4();
+    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
+    localMatrix = S * R * T;
+  }
+
+  transform._globalMatrix = localMatrix * parentMatrix;;
+  transform._localRot = r;
+  transform._localTrans = t;
+  transform._localScale = s;
+  return transform;
+}
+
 void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
 {
   if (node.skin == -1) return;
@@ -436,140 +547,92 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
     skeleton._joints[i]._InvBindPose = invBindMat;
   }
 
+  AnimClip* clip = new AnimClip();
+  clip->_name = node.name + "_bind_pose";
+  clip->_aAnimPoseSamples.resize(1);
+  clip->_aAnimPoseSamples[0]._aLocalPoses.resize(skeleton.NumJoints());
+  clip->_aAnimPoseSamples[0]._aGlobalPoses.resize(skeleton.NumJoints());
+  clip->_skeletonId = skeleton._uuid;
+
+#if 1
   // Traverse joint information.
   struct NodeTag {
     const tinygltf::Node* _pNode;
     u8                    _parent;
+    Matrix4               _parentMatrix;
   };
 
   std::queue<NodeTag> nodes;
   // extract skeleton root children joints.
+  const tinygltf::Node& root = model.nodes[skin.skeleton];
+  NodeTransform rootTransform = CalculateGlobalTransform(root, Matrix4());
+
   for (size_t i = 0; i < model.nodes[skin.skeleton].children.size(); ++i) {
     const tinygltf::Node& node = model.nodes[model.nodes[skin.skeleton].children[i]]; 
-    nodes.push({ &node, 0xffu });
+    nodes.push({ &node, 0xffu, rootTransform._globalMatrix });
   }
-
+#endif
   // TODO(): Figure out what we need to do with global transform bind pose.
 
-  // now traverse skeleton joints.
+  // now traverse skeleton joints in DAG format. Start with skeleton root if applicable.
   u8 idx = 0;
+# if 1
   while (!nodes.empty()) {
     NodeTag& tag = nodes.front();
     const tinygltf::Node* node = tag._pNode;
+    NodeTransform localTransform = CalculateGlobalTransform(*node, tag._parentMatrix);
     for (size_t i = 0; i < node->children.size(); ++i) {
-      nodes.push({ &model.nodes[node->children[i]], idx });
+      nodes.push({ &model.nodes[node->children[i]], idx, localTransform._globalMatrix });
     }
 
     Joint& joint = skeleton._joints[idx];
     joint._name = node->name;
     joint._iParent = tag._parent;
+
+    clip->_aAnimPoseSamples[0]._aGlobalPoses[idx] = localTransform._globalMatrix;
+    clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._rot = localTransform._localRot;
+    clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._scale = localTransform._localScale;
+    clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._trans = localTransform._localTrans;
+
     nodes.pop();
     ++idx;
   } 
-
+#endif
   Skeleton::PushSkeleton(skeleton);
+  
   engineModel->skeletons.push_back(&Skeleton::GetSkeleton(skeleton._uuid));
+  engineModel->animations.push_back(clip);
+  AnimAssetManager::Cache(clip->_name, clip);
 }
 
 
 void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
-  Vector3 t;
-  Quaternion r;
-  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
-  if (node.translation.size() == 3) {
-    const double* tnative = node.translation.data();
-    t = Vector3(static_cast<r32>(tnative[0]),
-      static_cast<r32>(tnative[1]),
-      static_cast<r32>(tnative[2]));
-  }
-
-  if (node.rotation.size() == 4) {
-    const double* rq = node.rotation.data();
-    r = Quaternion(static_cast<r32>(rq[0]),
-      static_cast<r32>(rq[1]),
-      static_cast<r32>(rq[2]),
-      static_cast<r32>(rq[3]));
-    //r = r.Inverse();
-  }
-
-  if (node.scale.size() == 3) {
-    const double* sv = node.scale.data();
-    s = Vector3(static_cast<r32>(sv[0]),
-      static_cast<r32>(sv[1]),
-      static_cast<r32>(sv[2]));
-  }
-
-  Matrix4 localMatrix = Matrix4::Identity();
-  if (node.matrix.size() == 16) {
-    localMatrix = Matrix4(node.matrix.data());
-  } else {
-    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
-    Matrix4 R = r.ToMatrix4();
-    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
-    localMatrix = S * R * T;
-  }
-  localMatrix = localMatrix * parentMatrix;
+  NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
 
   // if skin, this must be the root.
   if (!node.children.empty()) {
     for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadSkinnedNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
+      LoadSkinnedNode(model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
     }
   }
 
-  LoadSkin(node, model, engineModel, localMatrix);
-  LoadSkinnedMesh(node, model, engineModel, localMatrix);
+  LoadSkin(node, model, engineModel, transform._globalMatrix);
+  LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
   // TODO(): Load animations from gltf.
 }
 
 
 void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
-  Vector3 t;
-  Quaternion r;
-  Vector3 s = Vector3(1.0f, 1.0f, 1.0f); // Reversing z coords, since we are in a left hand coordinate system.
-  if (node.translation.size() == 3) {
-    const double* tnative = node.translation.data();
-    t = Vector3(static_cast<r32>(tnative[0]),
-      static_cast<r32>(tnative[1]),
-      static_cast<r32>(tnative[2]));
-  }
-
-  if (node.rotation.size() == 4) {
-    const double* rq = node.rotation.data();
-    r = Quaternion(static_cast<r32>(rq[0]),
-      static_cast<r32>(rq[1]),
-      static_cast<r32>(rq[2]),
-      static_cast<r32>(rq[3]));
-    //r = r.Inverse();
-  }
-
-  if (node.scale.size() == 3) {
-    const double* sv = node.scale.data();
-    s = Vector3(static_cast<r32>(sv[0]),
-      static_cast<r32>(sv[1]),
-      static_cast<r32>(sv[2]));
-  }
-
-  Matrix4 localMatrix = Matrix4::Identity();
-  if (node.matrix.size() == 16) {
-    localMatrix = Matrix4(node.matrix.data()).Transpose();
-  }
-  else {
-    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
-    Matrix4 R = r.ToMatrix4();
-    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
-    localMatrix = S * R * T;
-  }
-  localMatrix = localMatrix * parentMatrix;
+  NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
   if (!node.children.empty()) {
     for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadNode(model.nodes[node.children[i]], model, engineModel, localMatrix, scale);
+      LoadNode(model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
     }
   }
 
-  LoadMesh(node, model, engineModel, localMatrix);
+  LoadMesh(node, model, engineModel, transform._globalMatrix);
 }
 
 

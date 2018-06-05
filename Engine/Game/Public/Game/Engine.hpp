@@ -11,6 +11,7 @@
 
 #include "Geometry/Cube.hpp"
 #include "Rendering/TextureCache.hpp"
+#include "Scene/AssetManager.hpp"
 #include "Camera.hpp"
 #include "GameObject.hpp"
 #include "Component.hpp"

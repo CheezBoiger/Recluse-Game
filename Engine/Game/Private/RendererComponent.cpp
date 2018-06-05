@@ -174,14 +174,14 @@ void SkinnedRendererComponent::Update()
     }
   }
 
-  for (u32 i = 0; i < jointCount; ++i) {
+  for (u32 i = 0; i < paletteSz; ++i) {
     // Update descriptor joints.
     // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
-    if (i < paletteSz) { 
-      pJointBuffer->_mJoints[i] = palette[i];
-      continue;
-    } 
-    pJointBuffer->_mJoints[i] = Matrix4::Identity();
+    if (palette) {
+      pJointBuffer->_mJoints[i] = palette[i]; 
+    } else {
+      pJointBuffer->_mJoints[i] = Matrix4::Identity();
+    }
   }
   m_meshDescriptor->PushUpdate(MeshDescriptor::JOINT_BUFFER_UPDATE);
   RendererComponent::Update();

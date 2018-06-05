@@ -39,7 +39,7 @@ struct AnimClip {
   r32                           _fFps;                // frames per second time.
   u32                           _uFrameCount;         // Number of frames this clip occupies.
   skeleton_uuid_t               _skeletonId;          // id of skeleton that this clip works with.
-  AnimPose*                     _aAnimPoseSamples;    //
+  std::vector<AnimPose>         _aAnimPoseSamples;    //
   b32                           _bLooping;            //
   std::string                   _name;                // name of this clip.
 };

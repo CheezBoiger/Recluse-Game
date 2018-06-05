@@ -43,6 +43,8 @@ public:
   Skeleton()
     : _uuid(kCurrSkeleCount++) { }
 
+  size_t                      NumJoints() const { return _joints.size(); }
+
   // The name of this skeleton.
   std::string                 _name;
   // Full joint transformation that corresponds to a bone.
