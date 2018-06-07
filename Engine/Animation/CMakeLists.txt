@@ -17,6 +17,8 @@ set(ANIMATION_FILES
   ${ANIMATION_PUBLIC_DIR}/Skeleton.hpp
 
   ${ANIMATION_PRIVATE_DIR}/Animation.cpp
+  ${ANIMATION_PRIVATE_DIR}/Clip.cpp
+  ${ANIMATION_PRIVATE_DIR}/Skeleton.cpp
 )
 
 

@@ -179,15 +179,18 @@ public:
     m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
+    m_pAnim->CleanUp();
 
     delete m_pMeshComponent;
     delete m_pMaterialComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
+    delete m_pAnim;
   }
 
 private:
   Vector3             m_vRandDir;
   r32                 m_factor;
+  AnimationComponent*  m_pAnim;
 };

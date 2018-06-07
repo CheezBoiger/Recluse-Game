@@ -14,10 +14,11 @@
 
 #define Radians(deg)            ((deg) * (static_cast<r32>(CONST_PI) / 180.0f))
 #define Degrees(rad)            ((rad) * (180.0f / static_cast<r32>(CONST_PI)))
-#define Clamp(v, min, max)      (v) = ((v) > max ? max : (v < min ? min : v))  
+#define Clamp(v, min, max)      (v) = ((v) > (max) ? (max) : ((v) < (min) ? (min) : (v)))  
 #define R_Max(a, b)             ((a) > (b) ? (a) : (b))
 #define R_Min(a, b)             ((a) < (b) ? (a) : (b))
 #define Absf(a)                 ((a) >= 0.0f ? (a) : -(a))
 #define SmoothStepf(e0, e1, t)  Clamp(((t) - (e0)) / ((e1) - (e0))), 0.0f, 1.0f) 
 #define Floorf(a)               floorf((a))
 #define Log2f(a)                log2f((a))
+#define Ceilf(a)                ceilf((a))

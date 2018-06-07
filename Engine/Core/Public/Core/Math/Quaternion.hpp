@@ -10,7 +10,8 @@ namespace Recluse {
 
 class Log;
 
-// Quaternion mathematical object.
+// Quaternion mathematical object for spatial rotations.
+// Quaternions of this library are formatted as XYZW form.
 struct Quaternion {
   struct { r32 x, y, z, w; };
 

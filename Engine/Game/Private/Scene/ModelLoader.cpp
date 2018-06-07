@@ -553,6 +553,9 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   clip->_aAnimPoseSamples[0]._aLocalPoses.resize(skeleton.NumJoints());
   clip->_aAnimPoseSamples[0]._aGlobalPoses.resize(skeleton.NumJoints());
   clip->_skeletonId = skeleton._uuid;
+  clip->_bLooping = true;
+  clip->_fDuration = 1.0f;
+  clip->_fFps = 60.0f;
 
 #if 1
   // Traverse joint information.

@@ -9,6 +9,7 @@ namespace Recluse {
 class Log;
 struct Matrix3;
 
+// Math vector object of 3 components <x, y, z>.
 struct Vector3 {
   struct { r32 x, y, z; };
 
