@@ -11,6 +11,7 @@ namespace Recluse {
 struct Matrix4;
 class Log;
 
+// Math object of 4 components. formatted as (x,y,z,w)
 struct Vector4 {
   struct { r32 x, y, z, w; };
 

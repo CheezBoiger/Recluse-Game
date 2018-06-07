@@ -9,6 +9,7 @@
 #include "Component.hpp"
 
 #include "Core/Utility/Vector.hpp"
+#include "Core/Math/ViewFrustum.hpp"
 
 
 namespace Recluse {
@@ -77,6 +78,7 @@ public:
   void                EnableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 protected:
+  ViewFrustum         m_viewFrustum;
   Matrix4             m_projectionMatrix;
   Matrix4             m_viewMatrix;
   Project             m_ProjType;

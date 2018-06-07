@@ -8,6 +8,7 @@
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Win32/Keyboard.hpp"
 #include "Core/Math/Quaternion.hpp"
+#include "Core/Math/ViewFrustum.hpp"
 
 #include "Geometry/Cube.hpp"
 #include "Rendering/TextureCache.hpp"
@@ -23,7 +24,6 @@
 #include "MeshComponent.hpp"
 #include "RendererComponent.hpp"
 #include "PointLightComponent.hpp"
-#include "CameraViewFrustum.hpp"
 #include "Rendering/RendererResourcesCache.hpp"
 #include "Core/Logging/Log.hpp"
 

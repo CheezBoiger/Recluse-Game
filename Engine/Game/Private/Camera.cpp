@@ -104,13 +104,13 @@ void Camera::Update()
   gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
 
   // TODO(): Move cam frustum to camera.
-  //m_camFrustum.Update();
-  //gGlobalBuffer->_LPlane = m_camFrustum._Planes[CCamViewFrustum::PLEFT];
-  //gGlobalBuffer->_RPlane = m_camFrustum._Planes[CCamViewFrustum::PRIGHT];
-  //gGlobalBuffer->_TPlane = m_camFrustum._Planes[CCamViewFrustum::PTOP];
-  //gGlobalBuffer->_BPlane = m_camFrustum._Planes[CCamViewFrustum::PBOTTOM];
-  //gGlobalBuffer->_NPlane = m_camFrustum._Planes[CCamViewFrustum::PNEAR];
-  //gGlobalBuffer->_FPlane = m_camFrustum._Planes[CCamViewFrustum::PFAR];
+  m_viewFrustum.Update(gGlobalBuffer->_ViewProj);
+  gGlobalBuffer->_LPlane = m_viewFrustum[ViewFrustum::PLEFT];
+  gGlobalBuffer->_RPlane = m_viewFrustum[ViewFrustum::PRIGHT];
+  gGlobalBuffer->_BPlane = m_viewFrustum[ViewFrustum::PBOTTOM];
+  gGlobalBuffer->_TPlane = m_viewFrustum[ViewFrustum::PTOP];
+  gGlobalBuffer->_NPlane = m_viewFrustum[ViewFrustum::PNEAR];
+  gGlobalBuffer->_FPlane = m_viewFrustum[ViewFrustum::PFAR];
 }
 
 #if 0

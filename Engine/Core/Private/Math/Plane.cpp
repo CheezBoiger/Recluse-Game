@@ -25,7 +25,7 @@ Plane::Plane(const Vector3& a, const Vector3& b, const Vector3& c)
 
 Log& operator<<(Log& log, const Plane& plane)
 {
-  log << "(" << plane.x << ", " << plane.y << ", " << plane.z << ") W: " << plane.w;
+  log << "Normal: (" << plane.x << ", " << plane.y << ", " << plane.z << ") D: " << plane.w;
   return log;
 }
 } // Recluse

@@ -14,6 +14,7 @@ class Log;
 // Where (A, B, C) define the plane normal vector.
 // D defines the distance to the origin.
 struct Plane : public Vector4 {
+
   Plane() { }
 
   // Use a starting point vec4
@@ -22,6 +23,17 @@ struct Plane : public Vector4 {
 
   // Define plane using three points.
   Plane(const Vector3& a, const Vector3& b, const Vector3& c);
+
+  // Define a plane with 4 coefficients.
+  Plane(const r32 a, const r32 b, const r32 c, const r32 d) {
+    Vector3 normal = Vector3(a, b, c);
+    r32 l = normal.Magnitude();
+    normal = normal.Normalize();
+    x = normal.x;
+    y = normal.y;
+    z = normal.z;
+    w = d / l;
+  }
 
   Plane(const Plane& plane)
     : Vector4(plane.x, plane.y, plane.z, plane.w) { }
