@@ -18,4 +18,10 @@ void AnimationComponent::OnInitialize(GameObject* owner)
 {
 
 }
+
+
+void AnimationComponent::AddClip(AnimClip* clip, const std::string& name)
+{
+  m_clips[name] = clip;
+}
 } // Recluse

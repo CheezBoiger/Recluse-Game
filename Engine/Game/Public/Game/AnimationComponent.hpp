@@ -34,20 +34,20 @@ public:
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
 
-  // 
+  // TODO():
   virtual void              OnInitialize(GameObject* owner) override;
 
-  // 
+  // TODO():
   virtual void              OnCleanUp() override;
 
-  //
+  // TODO():
   virtual void              Serialize(IArchive& archive) override { }
 
-  //
+  // TODO():
   virtual void              Deserialize(IArchive& archive) override { }
 
-  //
-  virtual void              Update() override;
+  // TODO():
+  virtual void              Update() override { }
 
 
   AnimObject*               GetAnimObject() { return m_object; }

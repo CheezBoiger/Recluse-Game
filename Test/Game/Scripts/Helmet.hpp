@@ -47,6 +47,7 @@ public:
     m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new SkinnedRendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
+    m_pAnim = new AnimationComponent();
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
@@ -99,6 +100,9 @@ public:
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_factor = 0.01f;
+
+    AnimClip* clip = AnimAssetManager::Get("_bind_pose");
+    m_pAnim->AddClip(clip, "InitialPose");
   }
 
   // Updating game logic...
