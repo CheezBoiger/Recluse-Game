@@ -197,6 +197,10 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
       }
     }
 
+    clip->_fDuration = clip->_aAnimPoseSamples[clip->_aAnimPoseSamples.size() - 1]._time;
+    clip->_bLooping = true;
+    clip->_fFps = 60.0f;
+    // TODO(): Need to figure out how to target the skeleton for this clip.
     engineModel->animations.push_back(clip);
     AnimAssetManager::Cache(clip->_name, clip);
   }
@@ -529,6 +533,8 @@ NodeTransform CalculateGlobalTransform(const tinygltf::Node& node, Matrix4 paren
 
 void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
 {
+  // TODO(): JointPoses are in the wrong order as invBinding matrices, need to sort them in the
+  // order of joint array in GLTF file!!
   if (node.skin == -1) return;
 
   Skeleton skeleton;

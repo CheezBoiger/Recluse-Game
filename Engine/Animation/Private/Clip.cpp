@@ -13,7 +13,7 @@ AnimSampler::AnimSampler()
   , m_output(128)
 {
   _state._bEnabled          = true;
-  _state._bLooping          = false;
+  _state._bLooping          = true;
   _state._fCurrLocalTime    = 0.0f;
   _state._fPlaybackRate     = 1.0f;
   _state._fWeight           = 1.0f;
@@ -33,7 +33,7 @@ void AnimSampler::Step(r32 gt)
   }
   _state._fCurrLocalTime = t;
 
-  // Now find the local poses of t.
-  Log() << "local time t: " << t << "\n";
+  // TODO(): Now find the local poses of t.
+  Log() << "local time t: " << t << " sec\t\t\r";
 }
 } // Recluse

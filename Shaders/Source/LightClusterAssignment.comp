@@ -61,13 +61,24 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   ivec2 pad;
 } gWorldBuffer;
 
+// Depth information.
+layout (set = 1, binding = 0) uniform readonly  image2D inDepth;
+layout (set = 1, binding = 1) uniform writeonly image2D resultLightIndices;
+
+// Cluster keys.
+layout (set = 1, binding = 2) buffer writeonly cluster {
+  uint keys[ ];
+};
+
+// Light data to use for intersection tests.
+layout (set = 1, binding = 3) buffer readonly light_data {
+  PointLight pointLights[ ];
+};
 
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 64) in;
-
-
 void main()
 {
-  ivec2 tex_coord = gWorldBuffer.screenSize;
-  float Depth = texture(depth, tex_coord).r;
+  ivec2 tex_coord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+  float depth = imageLoad(inDepth, tex_coord).r;
   
 }

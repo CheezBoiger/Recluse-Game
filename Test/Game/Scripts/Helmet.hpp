@@ -101,8 +101,11 @@ public:
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_factor = 0.01f;
 
-    AnimClip* clip = AnimAssetManager::Get("_bind_pose");
+    m_pAnim->Initialize(this);
+    m_pRendererComponent->SetAnimationComponent(m_pAnim);
+    AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[1];
     m_pAnim->AddClip(clip, "InitialPose");
+    m_pAnim->Playback("InitialPose");
   }
 
   // Updating game logic...
