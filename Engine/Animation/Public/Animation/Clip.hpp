@@ -20,6 +20,7 @@ struct JointPose {
   Quaternion  _rot;   // rotation.
   Vector3     _trans; // translation.
   Vector3     _scale; // scale.
+  u8          _id;     // node id sample.
 };
 
 
@@ -88,6 +89,8 @@ private:
   AnimClip*                 _pClip;     // Animation clip we are sampling from.
   std::vector<Matrix4>      m_output;   // Matrix palette output during sampling. 
   r32                       _tauS;      // global start time given when play is called.
+  size_t                    _prevPoseIdx; // 
+  size_t                    _nextPoseIdx; //
 };
 
 

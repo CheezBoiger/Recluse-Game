@@ -15,9 +15,11 @@ class Log;
 struct Quaternion {
   struct { r32 x, y, z, w; };
 
-
   Quaternion(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 1.0f)
     : x(x), y(y), z(z), w(w) { }
+
+  Quaternion(const r32* raw)
+    : x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { }
 
   static Quaternion AngleAxis(const r32 radians, const Vector3& axis);
   static Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);

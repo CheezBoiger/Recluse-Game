@@ -81,6 +81,7 @@ layout (set = 2, binding = 3) uniform sampler2D normal;
 layout (set = 2, binding = 4) uniform sampler2D ao;
 layout (set = 2, binding = 5) uniform sampler2D emissive;
 
+#ifndef _DEBUG
 
 layout (location = 0) out vec4 rt0;
 layout (location = 1) out vec4 rt1;
@@ -141,7 +142,17 @@ void WriteGBuffer(GBuffer gbuffer)
   rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
   rt3 = vec4(gbuffer.emission, 1.0);
 }
+#else
+//
+//
+// 
+//
+layout (push_constant) uniform Debug {
+  ivec4 config;
+} kDebug;
 
+layout (location = 0) out vec4 debugColor;
+#endif
 
 void main()
 { 
@@ -182,6 +193,7 @@ void main()
   
   vec3 N = normalize(fragNormal);
   
+#ifndef _DEBUG
   GBuffer gbuffer;
   gbuffer.albedo = fragAlbedo;
   gbuffer.pos = frag_in.position;
@@ -193,4 +205,7 @@ void main()
   gbuffer.ao = fragAO;
   
   WriteGBuffer(gbuffer);
+#else
+  debugColor = vec4(fragAlbedo, 1.0);
+#endif
 }
