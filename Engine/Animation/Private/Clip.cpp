@@ -17,7 +17,7 @@ AnimSampler::AnimSampler()
   _state._bEnabled          = true;
   _state._bLooping          = true;
   _state._fCurrLocalTime    = 0.0f;
-  _state._fPlaybackRate     = 0.1f;
+  _state._fPlaybackRate     = 0.5f;
   _state._fWeight           = 1.0f;
 }
 
@@ -32,6 +32,8 @@ void AnimSampler::Step(r32 gt)
   if (_state._bLooping && t > _pClip->_fDuration) {
     Play(gt);
     t = t - _pClip->_fDuration;
+    _prevPoseIdx = 0;
+    _nextPoseIdx = 0;
   }
   _state._fCurrLocalTime = t;
 
@@ -48,6 +50,10 @@ void AnimSampler::Step(r32 gt)
     prevPose = &_pClip->_aAnimPoseSamples[_prevPoseIdx];
     nextPose = &_pClip->_aAnimPoseSamples[_nextPoseIdx];
   }
+
+  // We don't have to clean out all C matrices, just the root. All others will be 
+  // flushed out from here.
+  m_output[0] = Matrix4::Identity();
   
   for (size_t i = 0; i < _pClip->_aAnimPoseSamples[_prevPoseIdx]._aLocalPoses.size(); ++i) {
     JointPose& prevJointPose = prevPose->_aLocalPoses[i];
@@ -64,12 +70,17 @@ void AnimSampler::Step(r32 gt)
     Matrix4 _T = Matrix4::Translate(Matrix4(), trans);
     Matrix4 _S = Matrix4::Scale(Matrix4(), scale);
     Matrix4 _R = rot.ToMatrix4();
+    Matrix4 resultTransform = _S * _R * _T;
+    Matrix4 parentTransform = m_output[skeleton._joints[i]._iParent];
 
-    // TODO(): Need to fix this as transform works, but adding the inv bind pose causes issues.
-    // Need to multiplay the parent matrix as well!
-    Matrix4 resultTransform = _R * _T;
-
-    m_output[i] = resultTransform * skeleton._joints[i]._InvBindPose;
+    // Combine result and parent matrices to produce the current C pose. This is in world joint space.
+    m_output[i] = resultTransform * parentTransform;
   }
+
+  // Multiplay matrices by their inverse bind to transform our vertices to local joint space.
+  for (size_t i = 0; i < _pClip->_aAnimPoseSamples[_prevPoseIdx]._aLocalPoses.size(); ++i) {
+    m_output[i] *= skeleton._joints[i]._InvBindPose;
+  }
+  
 }
 } // Recluse

@@ -200,7 +200,9 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
             pose._aLocalPoses.push_back(JointPose());
             pose._aGlobalPoses.push_back(Matrix4());
           }
-          pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3]);
+          pose._aLocalPoses[jointIndex]._scale = Vector3(outputValues[outputId * 3 + 0],
+                                                         outputValues[outputId * 3 + 1],
+                                                         outputValues[outputId * 3 + 2]);
           pose._aLocalPoses[jointIndex]._id = node;
         }
       }
@@ -566,7 +568,6 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
     skeleton._joints[rootInJoints ? i : i + 1]._InvBindPose = invBindMat;
-    Log() << "\n" << invBindMat << "\n";
   }
 
   AnimClip* clip = new AnimClip();
@@ -592,6 +593,9 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
     NodeTransform rootTransform = CalculateGlobalTransform(root, Matrix4());
+    if (!rootInJoints) {
+      skeleton._joints[0]._InvBindPose = rootTransform._globalMatrix.Inverse();
+    }
     for (size_t i = 0; i < root.children.size(); ++i) {
       NodeTag tag = { 0, rootTransform._globalMatrix };
       nodeMap[root.children[i]] = tag;

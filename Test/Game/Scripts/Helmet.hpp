@@ -103,7 +103,7 @@ public:
 
     m_pAnim->Initialize(this);
     m_pRendererComponent->SetAnimationComponent(m_pAnim);
-    AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[1];
+    AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
     m_pAnim->AddClip(clip, "InitialPose");
     m_pAnim->Playback("InitialPose");
   }
