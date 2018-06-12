@@ -56,7 +56,6 @@ void AnimSampler::Step(r32 gt)
   // flushed out from here.
   {
     Matrix4 localTransform = Interpolate(currPose, nextPose, t, 0);
-    //localTransform[0][0] *= -1.0f;
     if (rootInJoints) {
       _output[0] = localTransform;
     }
@@ -96,7 +95,6 @@ Matrix4 AnimSampler::Interpolate(AnimPose* currPose, AnimPose* nextPose, r32 t, 
   Vector3 trans = Vector3::Lerp(currJointPose._trans, nextJointPose._trans, dt);
   Vector3 scale = Vector3::Lerp(currJointPose._scale, nextJointPose._scale, dt);
   Quaternion rot = Quaternion::Slerp(currJointPose._rot, nextJointPose._rot, dt);
-
   Matrix4 _T = Matrix4::Translate(Matrix4(), trans);
   Matrix4 _S = Matrix4::Scale(Matrix4(), scale);
   Matrix4 _R = rot.ToMatrix4();

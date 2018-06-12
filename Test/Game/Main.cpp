@@ -78,6 +78,7 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
+  ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
 
   {
     Material* material = new Material();

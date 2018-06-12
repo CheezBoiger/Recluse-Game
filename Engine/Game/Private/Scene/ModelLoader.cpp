@@ -552,7 +552,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   tinygltf::Skin skin = model.skins[node.skin];
   b32 rootInJoints = false;
   for (size_t i = 0; i < skin.joints.size(); ++i) {
-    if (skin.joints[i] == node.skin) {
+    if (skin.joints[i] == skin.skeleton) {
       rootInJoints = true; break;
     }
   }
@@ -568,22 +568,10 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
 
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
-    skeleton._joints[i]._InvBindPose = invBindMat;
+    Matrix4 bindMat = invBindMat.Inverse();
+    bindMat = bindMat * parentMatrix;
+    skeleton._joints[i]._InvBindPose = bindMat.Inverse();
   }
-
-  AnimClip* clip = new AnimClip();
-  clip->_name = node.name + "_bind_pose";
-  clip->_aAnimPoseSamples.resize(2);
-  clip->_aAnimPoseSamples[0]._aLocalPoses.resize(skeleton.NumJoints());
-  clip->_aAnimPoseSamples[0]._aGlobalPoses.resize(skeleton.NumJoints());
-  clip->_aAnimPoseSamples[0]._time = 0.0f;
-  clip->_aAnimPoseSamples[1]._aLocalPoses.resize(skeleton.NumJoints());
-  clip->_aAnimPoseSamples[1]._aGlobalPoses.resize(skeleton.NumJoints());
-  clip->_aAnimPoseSamples[1]._time = 1.0f;
-  clip->_skeletonId = skeleton._uuid;
-  clip->_bLooping = true;
-  clip->_fDuration = 1.0f;
-  clip->_fFps = 60.0f;
 
   struct NodeTag {
     u8                _parent;
@@ -593,9 +581,12 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   std::map<i32, NodeTag> nodeMap;
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
-    NodeTransform rootTransform = CalculateGlobalTransform(root, parentMatrix);
+    NodeTransform rootTransform = CalculateGlobalTransform(root, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
     if (!rootInJoints) {
       skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
+    } else {
+      NodeTag tag{ 0xff, Matrix4() };
+      nodeMap[skin.skeleton] = tag;
     }
     for (size_t i = 0; i < root.children.size(); ++i) {
       NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)), 
@@ -617,16 +608,6 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
       localTransform = CalculateGlobalTransform(node, tag._parentTransform);
     
       joint._iParent = tag._parent;
-      
-      clip->_aAnimPoseSamples[0]._aGlobalPoses[idx] = localTransform._globalMatrix;
-      clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._trans = localTransform._localTrans;
-      clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._scale = localTransform._localScale;
-      clip->_aAnimPoseSamples[0]._aLocalPoses[idx]._rot = localTransform._localRot;
-
-      clip->_aAnimPoseSamples[1]._aGlobalPoses[idx] = localTransform._globalMatrix;
-      clip->_aAnimPoseSamples[1]._aLocalPoses[idx]._trans = localTransform._localTrans;
-      clip->_aAnimPoseSamples[1]._aLocalPoses[idx]._scale = localTransform._localScale;
-      clip->_aAnimPoseSamples[1]._aLocalPoses[idx]._rot = localTransform._localRot;
     }
 
     joint._id = static_cast<u8>(skinJointIdx);
@@ -639,8 +620,6 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   Skeleton::PushSkeleton(skeleton);
   
   engineModel->skeletons.push_back(&Skeleton::GetSkeleton(skeleton._uuid));
-  engineModel->animations.push_back(clip);
-  AnimAssetManager::Cache(clip->_name, clip);
 }
 
 
@@ -656,7 +635,12 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, A
   }
 
   LoadSkin(node, model, engineModel, transform._globalMatrix);
-  LoadSkinnedMesh(node, model, engineModel, Matrix4());
+
+  if (node.skin != -1) {
+    LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+  } else {
+    LoadMesh(node, model, engineModel, transform._globalMatrix);
+  }
   // TODO(): Load animations from gltf.
 }
 
