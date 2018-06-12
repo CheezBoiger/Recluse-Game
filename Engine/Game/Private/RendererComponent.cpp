@@ -188,6 +188,13 @@ void SkinnedRendererComponent::Update()
 }
 
 
+void RendererComponent::EnableSkin(b32 enable)
+{
+  ObjectBuffer* buffer = m_meshDescriptor->ObjectData();
+  buffer->_HasJoints = enable;
+}
+
+
 void SkinnedRendererComponent::OnInitialize(GameObject* owner)
 {
   m_meshDescriptor = gRenderer().CreateSkinnedMeshDescriptor();

@@ -18,7 +18,7 @@ MeshDescriptor::MeshDescriptor()
   , m_pRhi(nullptr)
   , m_bNeedsUpdate(true)
 {
-  m_ObjectData._HasBones = false;
+  m_ObjectData._HasJoints = false;
   m_ObjectData._LoD = 0.0f;
   m_meshSet = nullptr;
 
@@ -113,7 +113,7 @@ SkinnedMeshDescriptor::SkinnedMeshDescriptor()
   , MeshDescriptor()
 {
   m_jointSet = nullptr;
-  m_ObjectData._HasBones = true;
+  m_ObjectData._HasJoints = true;
   m_ObjectData._LoD = 0.0f;
 }
 

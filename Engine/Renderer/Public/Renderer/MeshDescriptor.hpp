@@ -20,7 +20,7 @@ struct ObjectBuffer {
   Matrix4 _Model;          // Model matrix
   Matrix4 _NormalMatrix;   // Normal matrix.
   r32     _LoD;            // Level of Detail.
-  u32     _HasBones;       // does object have bones?
+  u32     _HasJoints;      // does object have joints?
   u32     _Pad[2];
 };
 

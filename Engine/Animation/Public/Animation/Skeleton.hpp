@@ -35,7 +35,7 @@ public:
 
   static Skeleton&            GetSkeleton(skeleton_uuid_t id) { return kSkeletons[id]; }
   static void                 PushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
-  static void             RemoveSkeleton(skeleton_uuid_t id) { 
+  static void                 RemoveSkeleton(skeleton_uuid_t id) { 
     auto it = kSkeletons.find(id);
     if (it == kSkeletons.end()) return;
     kSkeletons.erase(it);
@@ -52,5 +52,7 @@ public:
   std::vector<Joint>          _joints;
   // This skeleton's unique id.
   skeleton_uuid_t             _uuid;
+  b32                         _rootInJoints;
+  Matrix4                     _rootInvTransform;
 };
 } // Recluse

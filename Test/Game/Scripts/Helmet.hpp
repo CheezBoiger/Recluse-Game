@@ -103,7 +103,8 @@ public:
 
     m_pAnim->Initialize(this);
     m_pRendererComponent->SetAnimationComponent(m_pAnim);
-    AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
+    AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[1];
+    clip->_skeletonId = static_cast<ModelLoader::AnimModel*>(model)->skeletons[0]->_uuid;
     m_pAnim->AddClip(clip, "InitialPose");
     m_pAnim->Playback("InitialPose");
   }
@@ -138,6 +139,10 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
       m_pPhysicsComponent->Enable(true);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_3)) {
+      ;
     }
 
     // Make emission glow.

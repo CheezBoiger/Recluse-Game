@@ -556,8 +556,9 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
       rootInJoints = true; break;
     }
   }
-  skeleton._joints.resize(rootInJoints ? skin.joints.size() : skin.joints.size() + 1);
+  skeleton._joints.resize(skin.joints.size());
   skeleton._name = skin.name;
+  skeleton._rootInJoints = rootInJoints;
 
   const tinygltf::Accessor& accessor = model.accessors[skin.inverseBindMatrices];
   const tinygltf::BufferView& bufView = model.bufferViews[accessor.bufferView];
@@ -567,7 +568,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
 
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
-    skeleton._joints[rootInJoints ? i : i + 1]._InvBindPose = invBindMat;
+    skeleton._joints[i]._InvBindPose = invBindMat;
   }
 
   AnimClip* clip = new AnimClip();
@@ -592,18 +593,19 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   std::map<i32, NodeTag> nodeMap;
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
-    NodeTransform rootTransform = CalculateGlobalTransform(root, Matrix4());
+    NodeTransform rootTransform = CalculateGlobalTransform(root, parentMatrix);
     if (!rootInJoints) {
-      skeleton._joints[0]._InvBindPose = rootTransform._globalMatrix.Inverse();
+      skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
     }
     for (size_t i = 0; i < root.children.size(); ++i) {
-      NodeTag tag = { 0, rootTransform._globalMatrix };
+      NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)), 
+        rootTransform._globalMatrix };
       nodeMap[root.children[i]] = tag;
     }
   }
 
   for (size_t i = 0; i < skin.joints.size(); ++i) {
-    size_t idx = (rootInJoints ? i : i + 1);
+    size_t idx = i;
     Joint& joint = skeleton._joints[idx];
     i32 skinJointIdx = skin.joints[i];
     const tinygltf::Node& node = model.nodes[skinJointIdx];
@@ -629,7 +631,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
 
     joint._id = static_cast<u8>(skinJointIdx);
     for (size_t child = 0; child < node.children.size(); ++child) {
-      NodeTag tag = { idx, localTransform._globalMatrix };
+      NodeTag tag = { static_cast<u8>(idx), localTransform._globalMatrix };
       nodeMap[node.children[child]] = tag;
     }
   }
@@ -654,7 +656,7 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, A
   }
 
   LoadSkin(node, model, engineModel, transform._globalMatrix);
-  LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+  LoadSkinnedMesh(node, model, engineModel, Matrix4());
   // TODO(): Load animations from gltf.
 }
 

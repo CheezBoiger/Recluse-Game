@@ -68,7 +68,7 @@ public:
   void                      Step(r32 gt);
 
   // Get the output of this sampler.
-  std::vector<Matrix4>&     GetOutput() { return m_output; }
+  std::vector<Matrix4>&     GetOutput() { return _output; }
 
   r32                       GetLocalTime() { return _state._fCurrLocalTime; }
 
@@ -84,13 +84,15 @@ public:
 private:
 
   void                      ResetLocal() { _state._fCurrLocalTime = 0.0f; }
+  Matrix4                   Interpolate(AnimPose* currPose, AnimPose* nextPose, r32 t, size_t i);
 
-  AnimClipState             _state;     // 
-  AnimClip*                 _pClip;     // Animation clip we are sampling from.
-  std::vector<Matrix4>      m_output;   // Matrix palette output during sampling. 
-  r32                       _tauS;      // global start time given when play is called.
-  size_t                    _prevPoseIdx; // 
+  AnimClipState             _state;       // 
+  AnimClip*                 _pClip;       // Animation clip we are sampling from.
+  std::vector<Matrix4>      _output;      // Matrix palette output during sampling. 
+  r32                       _tauS;        // global start time given when play is called.
+  size_t                    _currPoseIdx; // 
   size_t                    _nextPoseIdx; //
+  Matrix4                   _globalTransform; //
 };
 
 
