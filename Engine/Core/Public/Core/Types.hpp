@@ -29,3 +29,9 @@ typedef u64               uuid64;
 } // Recluse
 
 #define RTEXT(s)          u8##s
+
+#if _DEBUG
+ #define DEBUG_OP(param) param
+#else
+ #define DEBUG_OP(param)
+#endif

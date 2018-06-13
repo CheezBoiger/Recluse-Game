@@ -18,7 +18,7 @@ struct Joint {
   Matrix4       _InvBindPose;     // Bind pose transform of this joint.
   std::string   _name;            // name of the joint.
   u8            _iParent;         // Joint parent, represented as an id in byte form.
-  u8            _id;              // node id test.
+  DEBUG_OP(u8            _id);              // node id test.
 };
 
 

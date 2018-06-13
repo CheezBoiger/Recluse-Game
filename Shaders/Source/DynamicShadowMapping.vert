@@ -7,16 +7,16 @@ layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
 layout (location = 2) in vec2   texcoord0;
 layout (location = 3) in vec2   texcoord1;
-layout (location = 4) in vec4   boneWeights;
-layout (location = 5) in ivec4  boneIDs;
+layout (location = 4) in vec4   jointWeights;
+layout (location = 5) in ivec4  jointIDs;
 
-#define MAX_BONES     64
+#define MAX_JOINTS     64
 
 layout (set = 0, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
   float lod;
-  int   hasBones; 
+  int   hasJoints; 
 } obj_buffer;
 
 
@@ -26,9 +26,9 @@ layout (set = 1, binding = 0) uniform LightSpace {
 } light_space;
 
 
-layout (set = 2, binding = 0) uniform BonesBuffer {
-  mat4 bones[MAX_BONES];
-} bone_buffer;
+layout (set = 2, binding = 0) uniform JointsBuffer {
+  mat4 joints[MAX_JOINTS];
+} joints_buffer;
 
 
 void main()
@@ -36,13 +36,13 @@ void main()
   vec4 worldPosition = position;
  
   // Compute the bone transform 
-  if (obj_buffer.hasBones >= 1) {
-    mat4 boneTransform  = bone_buffer.bones[boneIDs[0]] * boneWeights[0];
-    boneTransform      += bone_buffer.bones[boneIDs[1]] * boneWeights[1];
-    boneTransform      += bone_buffer.bones[boneIDs[2]] * boneWeights[2];
-    boneTransform      += bone_buffer.bones[boneIDs[3]] * boneWeights[3];
+  if (obj_buffer.hasJoints >= 1) {
+    mat4 skinMatrix  = joints_buffer.joints[jointIDs[0]] * jointWeights[0];
+    skinMatrix      += joints_buffer.joints[jointIDs[1]] * jointWeights[1];
+    skinMatrix      += joints_buffer.joints[jointIDs[2]] * jointWeights[2];
+    skinMatrix      += joints_buffer.joints[jointIDs[3]] * jointWeights[3];
     
-    worldPosition = boneTransform * worldPosition;
+    worldPosition = skinMatrix * worldPosition;
   }
   
   worldPosition = obj_buffer.model * worldPosition;

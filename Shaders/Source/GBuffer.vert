@@ -11,7 +11,7 @@ layout (location = 4) in vec4   jointWeights;
 layout (location = 5) in ivec4  jointIDs;
 
 
-#define MAX_JOINTS     128
+#define MAX_JOINTS     64
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 

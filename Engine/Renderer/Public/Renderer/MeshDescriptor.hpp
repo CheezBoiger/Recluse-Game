@@ -26,7 +26,7 @@ struct ObjectBuffer {
 
 
 struct JointBuffer {
-  Matrix4 _mJoints[128];
+  Matrix4 _mJoints[64];
 };
 
 

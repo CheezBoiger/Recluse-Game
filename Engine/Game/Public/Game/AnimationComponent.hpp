@@ -52,6 +52,15 @@ public:
 
   AnimObject*               GetAnimObject() { return m_object; }
 
+  // Set the playback rate of this animation. Current animations will also experience 
+  // this rate change as well...
+  void                      SetPlaybackRate(r32 rate) { 
+    m_object->GetSampler()->GetClipState()->_fPlaybackRate = rate;
+  }
+
+  // Get the current playback rate.
+  r32                       GetPlaybackRate() const { return m_object->GetSampler()->GetClipState()->_fPlaybackRate; }
+
 private:
   std::map<std::string, AnimClip*>    m_clips;
   AnimObject*                         m_object;

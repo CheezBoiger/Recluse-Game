@@ -95,8 +95,8 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
-    //trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
+    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
+    trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_factor = 0.01f;

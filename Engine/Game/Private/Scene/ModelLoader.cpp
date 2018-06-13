@@ -177,6 +177,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
           pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
                                                          outputValues[outputId * 3 + 2]);
+          DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
         }
       }
       if (channel.target_path == "rotation") {
@@ -190,7 +191,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
                                                           outputValues[outputId * 4 + 1],
                                                           outputValues[outputId * 4 + 2],
                                                           outputValues[outputId * 4 + 3]);
-          pose._aLocalPoses[jointIndex]._id = node;
+
         }
       }
       if (channel.target_path == "scale") {
@@ -203,7 +204,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
           pose._aLocalPoses[jointIndex]._scale = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
                                                          outputValues[outputId * 3 + 2]);
-          pose._aLocalPoses[jointIndex]._id = node;
+          DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
         }
       }
     }
@@ -581,13 +582,11 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   std::map<i32, NodeTag> nodeMap;
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
-    NodeTransform rootTransform = CalculateGlobalTransform(root, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
-    if (!rootInJoints) {
-      skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
-    } else {
-      NodeTag tag{ 0xff, Matrix4() };
-      nodeMap[skin.skeleton] = tag;
-    }
+    NodeTransform rootTransform = CalculateGlobalTransform(root, 
+      Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
+    skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
+    NodeTag tag{ 0xff, Matrix4() };
+    nodeMap[skin.skeleton] = tag;
     for (size_t i = 0; i < root.children.size(); ++i) {
       NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)), 
         rootTransform._globalMatrix };
@@ -610,7 +609,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
       joint._iParent = tag._parent;
     }
 
-    joint._id = static_cast<u8>(skinJointIdx);
+    DEBUG_OP(joint._id = static_cast<u8>(skinJointIdx));
     for (size_t child = 0; child < node.children.size(); ++child) {
       NodeTag tag = { static_cast<u8>(idx), localTransform._globalMatrix };
       nodeMap[node.children[child]] = tag;

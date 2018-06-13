@@ -10,14 +10,14 @@ namespace Recluse {
 
 AnimSampler::AnimSampler()
   : _pClip(nullptr)
-  , _output(128)
+  , _output(64)
   , _currPoseIdx(0)
   , _nextPoseIdx(0)
 {
   _state._bEnabled          = true;
   _state._bLooping          = true;
   _state._fCurrLocalTime    = 0.0f;
-  _state._fPlaybackRate     = 0.5f;
+  _state._fPlaybackRate     = 0.6f;
   _state._fWeight           = 1.0f;
 }
 
