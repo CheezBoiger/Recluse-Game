@@ -51,7 +51,7 @@ public:
   MeshDescriptor*           GetMeshDescriptor() { return m_meshDescriptor; }
 
   void                      SignalClean() { m_bDirty = false; }
-  inline void                      SetPrimitive(Primitive& primitive) { m_primitives.push_back(primitive); }
+  inline void               SetPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
   void                      SetMeshComponent(MeshComponent* mesh) { m_meshRef = mesh; }
   virtual void              SetAnimationComponent(AnimationComponent* anim) { }
 

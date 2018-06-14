@@ -317,15 +317,9 @@ void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
         };
       }
 
-      Primitive prim;
-      prim._pMesh = pMesh->Native();
-      prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
-      prim._firstIndex = indexStart;
-      prim._indexCount = indexCount;
+
       PrimitiveHandle primData;
-      primData._primitive = prim;
-      primData._pMaterial = engineModel->materials[primitive.material];
-      primData._pMesh = pMesh;
+      GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
       // TODO():
       //    Still need to add start and index count.
       engineModel->primitives.push_back(primData);
@@ -468,15 +462,8 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
         };
       }
 
-      Primitive prim;
-      prim._pMesh = pMesh->Native();
-      prim._pMat = primitive.material != -1 ? engineModel->materials[primitive.material]->Native() : nullptr;
-      prim._firstIndex = indexStart;
-      prim._indexCount = indexCount;
       PrimitiveHandle primData;
-      primData._pMaterial = engineModel->materials[primitive.material];
-      primData._pMesh = pMesh;
-      primData._primitive = prim;
+      GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
 
       // TODO():
       //    Still need to add start and index count.
@@ -746,6 +733,20 @@ ModelResult LoadAnimatedModel(const std::string path)
   }
   ModelCache::Cache(model->name, model);
   return Model_Success;
+}
+
+
+void GeneratePrimitive(PrimitiveHandle& handle, Material* mat, Mesh* mesh, u32 firstIndex, u32 indexCount)
+{
+  Primitive prim;
+  prim._pMesh = mesh->Native();
+  prim._pMat = mat->Native() ? mat->Native() : nullptr;
+  prim._firstIndex = firstIndex;
+  prim._indexCount = indexCount;
+
+  handle._pMaterial = mat;
+  handle._pMesh = mesh;
+  handle._primitive = prim;
 }
 } // ModelLoader
 } // Recluse

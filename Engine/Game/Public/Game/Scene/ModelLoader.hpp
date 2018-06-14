@@ -24,10 +24,25 @@ enum ModelResult {
 
 // Primitive handle to the native primitive gpu friendly data. Handle holds material and mesh
 // handles that update when configured.
-struct PrimitiveHandle {
-  Mesh*           _pMesh;       // Better handle to the mesh data held by this primitive.
-  Material*       _pMaterial;   // Better Handle to the material descriptor held by this primitive.
-  Primitive       _primitive;   // native primitive data to be sent to a renderer component.
+class PrimitiveHandle {
+public:
+  PrimitiveHandle()
+    : _pMesh(nullptr)
+    , _pMaterial(nullptr)
+  { }
+
+  const Primitive&      GetPrimitive() const { return _primitive; }
+  void                  SetMaterial(Material* mat) { _pMaterial = mat; _primitive._pMat = _pMaterial->Native(); }
+  void                  SetMesh(Mesh* mesh) { _pMesh = mesh; _primitive._pMesh = mesh->Native(); }
+  const Material*       GetMaterial() const { return _pMaterial; }
+  const Mesh*           GetMesh() const { return _pMesh; }
+
+private:
+  Mesh*                 _pMesh;       // Better handle to the mesh data held by this primitive.
+  Material*             _pMaterial;   // Better Handle to the material descriptor held by this primitive.
+  Primitive             _primitive;   // native primitive data to be sent to a renderer component.
+
+  friend void           GeneratePrimitive(PrimitiveHandle& handle, Material* mat, Mesh* mesh, u32 firstIndex, u32 indexCount);
 };
 
 
@@ -38,7 +53,7 @@ struct Model {
   std::vector<Mesh*>            meshes;
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;
-  std::vector<PrimitiveHandle>    primitives;
+  std::vector<PrimitiveHandle>  primitives;
 };
 
 

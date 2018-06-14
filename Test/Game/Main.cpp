@@ -61,6 +61,7 @@ int main(int c, char* argv[])
 
   // manual loading of textures.
   LoadTextures();
+  LoadMaterials();
 
   // Mesh Loading.
   {
@@ -79,27 +80,6 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
-
-  {
-    Material* material = new Material();
-    material->Initialize();
-    Texture2D* tex;
-    TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
-
-    material->SetAlbedo(tex);
-    material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-    material->EnableAlbedo(true);
-    material->SetRoughnessFactor(1.0f);
-    material->SetMetallicFactor(1.0f);
-    TextureCache::Get(RTEXT("RustedNormal"), &tex);
-    material->SetNormal(tex);
-    material->EnableNormal(true);
-
-    TextureCache::Get(RTEXT("RustedRough"), &tex);
-    material->SetRoughnessMetallic(tex);
-    material->EnableRoughness(true);
-    MaterialCache::Cache(TEXT("RustySample"), material);
-  }
 
   // Create and set up scene.
   MainCamera* mainCam = new MainCamera();
