@@ -44,17 +44,19 @@ public:
   void                          ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
                                   VkSurfaceCapabilitiesKHR capabilities, u32 desiredBuffers = 0);
 
-  VkFormat                      SwapchainFormat() const { return mSwapchainFormat; }
+  VkSurfaceFormatKHR            SwapchainSurfaceFormat() const { return mCurrentSurfaceFormat; }
   VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }
   VkPresentModeKHR              CurrentPresentMode() const { return mCurrentPresentMode; }
+  u32                           CurrentBufferCount() const { return mCurrentBufferCount; }
   
 private:
   void                          QuerySwapchainImages();
 
   VkSwapchainKHR                mSwapchain;
 
-  VkFormat                      mSwapchainFormat;
   VkExtent2D                    mSwapchainExtent;
+  u32                           mCurrentBufferCount;
+  VkSurfaceFormatKHR            mCurrentSurfaceFormat;
   VkPresentModeKHR              mCurrentPresentMode;
   std::vector<SwapchainImage>   SwapchainImages;
 

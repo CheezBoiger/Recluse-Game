@@ -421,7 +421,7 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   
   // Color description. Our final layout is meant for presentation on a window,
   // if this were a separate framebuffer, we would go with VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL.
-  aDs[0].format = mSwapchain.SwapchainFormat();
+  aDs[0].format = mSwapchain.SwapchainSurfaceFormat().format;
   aDs[0].samples = VK_SAMPLE_COUNT_1_BIT;
   aDs[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   aDs[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -538,8 +538,13 @@ void VulkanRHI::FreeVkFence(Fence* fence)
 
 void VulkanRHI::AcquireNextImage()
 {
-  vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
+  VkResult result = vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
     mLogicalDevice.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
+  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+    VkExtent2D windowExtent = mSwapchain.SwapchainExtent();
+    ReConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width, 
+      windowExtent.height, mSwapchain.CurrentBufferCount());
+  }
 }
 
 

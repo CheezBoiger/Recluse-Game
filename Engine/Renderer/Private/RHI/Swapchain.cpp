@@ -77,8 +77,9 @@ void Swapchain::ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat,
 
   // Storing data of swapchains and querying images.
   mSwapchainExtent = capabilities.currentExtent;
-  mSwapchainFormat = surfaceFormat.format;
+  mCurrentSurfaceFormat = surfaceFormat;
   mCurrentPresentMode = presentMode;
+  mCurrentBufferCount = imageCount;
 
   if (oldSwapChain) {
     vkDestroySwapchainKHR(mOwner, oldSwapChain, nullptr);
@@ -121,7 +122,7 @@ void Swapchain::QuerySwapchainImages()
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {
     VkImageViewCreateInfo ivInfo = { };
     ivInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    ivInfo.format = mSwapchainFormat;
+    ivInfo.format = mCurrentSurfaceFormat.format;
     ivInfo.image = images[i];
     ivInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     ivInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;

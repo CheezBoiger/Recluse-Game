@@ -56,6 +56,7 @@ Renderer::Renderer()
   , m_SkyboxFinished(nullptr)
   , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
+  , m_Minimized(false)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
@@ -147,9 +148,28 @@ void Renderer::EndFrame()
 }
 
 
+void Renderer::WaitForCpuFence()
+{
+  VkFence fence[] = { m_cpuFence->Handle() };
+  m_pRhi->WaitForFences(1, fence, VK_TRUE, UINT64_MAX);
+  m_pRhi->ResetFences(1, fence);
+}
+
+
 void Renderer::Render()
 {
   static u32 bNextFrame = false;
+
+  if (m_Minimized) {
+    // Window was minimized, ignore any cpu draw requests and prevent frame rendering
+    // until window is back up.
+    ClearCmdLists();
+    if (bNextFrame) {
+      WaitForCpuFence();
+      bNextFrame = false;
+    }
+    return;
+  }
 
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
@@ -157,11 +177,7 @@ void Renderer::Render()
   SortCmdLists();
 
   // Wait for fences before starting next frame.
-  if (bNextFrame) {
-    VkFence fence[] = { m_cpuFence->Handle() };
-    m_pRhi->WaitForFences(1, fence, VK_TRUE, UINT64_MAX);
-    m_pRhi->ResetFences(1, fence);
-  }
+  if (bNextFrame) { WaitForCpuFence(); }
 
   UpdateSceneDescriptors();
   CheckCmdUpdate();
@@ -415,9 +431,10 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pRhi->SetSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
+    VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
     VkViewport viewport = { };
-    viewport.height = (r32) m_pWindow->Height();
-    viewport.width = (r32) m_pWindow->Width();
+    viewport.height = (r32) windowExtent.height;
+    viewport.width = (r32) windowExtent.width;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     viewport.x = 0.0f;
@@ -810,6 +827,7 @@ void Renderer::CleanUpDescriptorSetLayouts()
 
 void Renderer::SetUpFrameBuffers()
 {
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   Texture* gbuffer_Albedo = gbuffer_AlbedoAttachKey;
   Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
   Texture* gbuffer_Position = gbuffer_PositionAttachKey;
@@ -883,10 +901,9 @@ void Renderer::SetUpFrameBuffers()
 
     std::array<VkImageView, 1> attachments;
     attachments[0] = final_renderTargetKey->View();
-
     VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
-      m_pWindow->Width(),
-      m_pWindow->Height(),
+      windowExtent.width,
+      windowExtent.height,
       nullptr, // Finalize() call handles this for us.
       static_cast<u32>(attachments.size()),
       attachments.data(),
@@ -1012,8 +1029,8 @@ void Renderer::SetUpFrameBuffers()
   attachments[4] = gbuffer_Depth->View();
 
   VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
-    m_pWindow->Width(),
-    m_pWindow->Height(),
+    windowExtent.width,
+    windowExtent.height,
     nullptr, // Finalize() call handles this for us.
     static_cast<u32>(attachments.size()),
     attachments.data(),
@@ -1084,8 +1101,8 @@ void Renderer::SetUpFrameBuffers()
     pbrAttachments[2] = gbuffer_Depth->View();
 
     VkFramebufferCreateInfo pbrFramebufferCI = CreateFrameBufferInfo(
-      m_pWindow->Width(),
-      m_pWindow->Height(),
+      windowExtent.width,
+      windowExtent.height,
       nullptr, // Finalize() call handles this for us.
       static_cast<u32>(pbrAttachments.size()),
       pbrAttachments.data(),
@@ -1256,12 +1273,13 @@ void Renderer::SetUpGraphicsPipelines()
   assemblyCI.primitiveRestartEnable = VK_FALSE;
 
   VkViewport viewport = { };
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = static_cast<r32>(m_pRhi->SwapchainObject()->SwapchainExtent().height);
-  viewport.width = static_cast<r32>(m_pRhi->SwapchainObject()->SwapchainExtent().width);
+  viewport.height = static_cast<r32>(windowExtent.height);
+  viewport.width = static_cast<r32>(windowExtent.width);
 
   VkRect2D scissor = { };
   scissor.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
@@ -1587,6 +1605,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
 
   // TODO(): Need to make this more adaptable, as intel chips have trouble with srgb optimal tiling.
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1597,8 +1616,8 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cImageInfo.mipLevels = 1;
   cImageInfo.extent.depth = 1;
   cImageInfo.arrayLayers = 1;
-  cImageInfo.extent.width = m_pWindow->Width();
-  cImageInfo.extent.height = m_pWindow->Height();
+  cImageInfo.extent.width = windowExtent.width;
+  cImageInfo.extent.height = windowExtent.height;
   cImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   cImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -1659,36 +1678,36 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   pbr_Bright->Initialize(cImageInfo, cViewInfo);
   GlowTarget->Initialize(cImageInfo, cViewInfo);
   // Initialize downscaled render textures.
-  cImageInfo.extent.width = m_pWindow->Width()    >> 1;
-  cImageInfo.extent.height = m_pWindow->Height()  >> 1;
+  cImageInfo.extent.width = windowExtent.width    >> 1;
+  cImageInfo.extent.height = windowExtent.height  >> 1;
   renderTarget2xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget2xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = m_pWindow->Width()    >> 2;
-  cImageInfo.extent.height = m_pWindow->Height()  >> 2;
+  cImageInfo.extent.width = windowExtent.width    >> 2;
+  cImageInfo.extent.height = windowExtent.height  >> 2;
   renderTarget4xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget4xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = m_pWindow->Width()    >> 3;
-  cImageInfo.extent.height = m_pWindow->Height()  >> 3;
+  cImageInfo.extent.width = windowExtent.width    >> 3;
+  cImageInfo.extent.height = windowExtent.height  >> 3;
   renderTarget8xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget8xFinal->Initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = m_pWindow->Width()    >> 4;
-  cImageInfo.extent.height = m_pWindow->Height()  >> 4;
+  cImageInfo.extent.width = windowExtent.width    >> 4;
+  cImageInfo.extent.height = windowExtent.height  >> 4;
   RenderTarget16xScaled->Initialize(cImageInfo, cViewInfo);
   RenderTarget16xFinal->Initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  cImageInfo.extent.width = m_pWindow->Width();
-  cImageInfo.extent.height = m_pWindow->Height();
+  cImageInfo.extent.width = windowExtent.width;
+  cImageInfo.extent.height = windowExtent.height;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   hdr_Texture->Initialize(cImageInfo, cViewInfo);
 
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-  cImageInfo.extent.width = m_pWindow->Width();
-  cImageInfo.extent.height = m_pWindow->Height();
+  cImageInfo.extent.width = windowExtent.width;
+  cImageInfo.extent.height = windowExtent.height;
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.usage = m_pRhi->DepthUsageFlags() | VK_IMAGE_USAGE_SAMPLED_BIT;
   cImageInfo.format = m_pRhi->DepthFormat();
@@ -1734,8 +1753,8 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
     dImageInfo.mipLevels = 1;
     dImageInfo.extent.depth = 1;
     dImageInfo.arrayLayers = 1;
-    dImageInfo.extent.width = m_pWindow->Width();
-    dImageInfo.extent.height = m_pWindow->Height();
+    dImageInfo.extent.width = windowExtent.width;
+    dImageInfo.extent.height = windowExtent.height;
     dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -1830,9 +1849,10 @@ void Renderer::BuildPbrCmdBuffer()
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   VkViewport viewport = {};
-  viewport.height = (r32)m_pWindow->Height();
-  viewport.width = (r32)m_pWindow->Width();
+  viewport.height = (r32)windowExtent.height;
+  viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -1854,7 +1874,7 @@ void Renderer::BuildPbrCmdBuffer()
   pbr_RenderPassInfo.renderPass = pbr_renderPass->Handle();
   pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
   pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
-  pbr_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  pbr_RenderPassInfo.renderArea.extent = windowExtent;
   pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
 
   cmdBuffer->Begin(beginInfo);
@@ -1893,7 +1913,7 @@ void Renderer::SetUpOffscreen(b32 fullSetup)
       m_Offscreen._CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
       m_Offscreen._ShadowCmdBuffers[i] = m_pRhi->CreateCommandBuffer();
       m_Offscreen._ShadowCmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);  
-  }
+    }
   }
 }
 
@@ -2248,9 +2268,10 @@ void Renderer::BuildSkyboxCmdBuffer()
     clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
     clearValues[2].depthStencil = { 1.0f, 0 };
 
+    VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
     VkViewport viewport = {};
-    viewport.height = (r32)m_pWindow->Height();
-    viewport.width = (r32)m_pWindow->Width();
+    viewport.height = (r32)windowExtent.height;
+    viewport.width = (r32)windowExtent.width;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     viewport.y = 0.0f;
@@ -2263,7 +2284,7 @@ void Renderer::BuildSkyboxCmdBuffer()
     renderBegin.clearValueCount = static_cast<u32>(clearValues.size());
     renderBegin.pClearValues = clearValues.data();
     renderBegin.renderArea.offset = { 0, 0 };
-    renderBegin.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+    renderBegin.renderArea.extent = windowExtent;
     
     // Start the renderpass.
     buf->BeginRenderPass(renderBegin, VK_SUBPASS_CONTENTS_INLINE);
@@ -2316,17 +2337,18 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
   clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->Handle();
   gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->Handle();
   gbuffer_RenderPassInfo.pClearValues = clearValues.data();
   gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-  gbuffer_RenderPassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  gbuffer_RenderPassInfo.renderArea.extent = windowExtent;
   gbuffer_RenderPassInfo.renderArea.offset = { 0, 0 };
 
   VkViewport viewport =  { };
-  viewport.height = (r32)m_pWindow->Height();
-  viewport.width = (r32)m_pWindow->Width();
+  viewport.height = (r32)windowExtent.height;
+  viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -2402,10 +2424,11 @@ void Renderer::BuildFinalCmdBuffer()
   cmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   // Do stuff with the buffer.
   VkViewport viewport = {};
-  viewport.height = (r32)m_pWindow->Height();
-  viewport.width = (r32)m_pWindow->Width();
+  viewport.height = (r32)windowExtent.height;
+  viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.x = 0.0f;
@@ -2424,7 +2447,7 @@ void Renderer::BuildFinalCmdBuffer()
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
   renderpassInfo.renderPass = final_renderPass->Handle();
-  renderpassInfo.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  renderpassInfo.renderArea.extent = windowExtent;
   renderpassInfo.renderArea.offset = { 0, 0 };
 
   cmdBuffer->Begin(cmdBi);
@@ -2546,8 +2569,9 @@ void Renderer::BuildHDRCmdBuffer()
   GlowPass.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  viewport.height = (r32)m_pWindow->Height();
-  viewport.width = (r32)m_pWindow->Width();
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  viewport.height = (r32)windowExtent.height;
+  viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -2559,8 +2583,8 @@ void Renderer::BuildHDRCmdBuffer()
     m_Downscale._Scale = 3.3f;
     m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
-    viewport.height = (r32)(m_pWindow->Height() >> 1);
-    viewport.width =  (r32)(m_pWindow->Width() >> 1);
+    viewport.height = (r32)(windowExtent.height >> 1);
+    viewport.width =  (r32)(windowExtent.width  >> 1);
     cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
@@ -2582,8 +2606,8 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)(m_pWindow->Height() >> 2);
-    viewport.width = (r32)(m_pWindow->Width() >> 2);
+    viewport.height = (r32)(windowExtent.height >> 2);
+    viewport.width = (r32)(windowExtent.width   >> 2);
     DownscaleSetNative = DownscaleSet4x->Handle();
     i32 _Horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
@@ -2606,8 +2630,8 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)(m_pWindow->Height() >> 3);
-    viewport.width = (r32)(m_pWindow->Width() >> 3);
+    viewport.height = (r32)(windowExtent.height >> 3);
+    viewport.width = (r32)(windowExtent.width   >> 3);
     DownscaleSetNative = DownscaleSet8x->Handle();
     _Horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
@@ -2630,8 +2654,8 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)(m_pWindow->Height() >> 4);
-    viewport.width = (r32)(m_pWindow->Width() >> 4);
+    viewport.height = (r32)(windowExtent.height >> 4);
+    viewport.width = (r32)(windowExtent.width   >> 4);
     DownscaleSetNative = DownscaleSet16x->Handle();
     _Horizontal = true;
     cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
@@ -2654,8 +2678,8 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    viewport.height = (r32)m_pWindow->Height();
-    viewport.width = (r32)m_pWindow->Width();
+    viewport.height = (r32)windowExtent.height;
+    viewport.width = (r32)windowExtent.width;
     VkDescriptorSet GlowDescriptorNative = GlowSet->Handle();
     cmdBuffer->BeginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -2812,17 +2836,18 @@ void Renderer::BuildForwardPBRCmdBuffer()
   clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
+  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_FrameBufferKey->Handle();
   renderPassCi.renderPass = pbr_forwardRenderPass->Handle();
   renderPassCi.pClearValues = clearValues.data();
   renderPassCi.clearValueCount = static_cast<u32>(clearValues.size());
-  renderPassCi.renderArea.extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  renderPassCi.renderArea.extent = windowExtent;
   renderPassCi.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  viewport.height = (r32)m_pWindow->Height();
-  viewport.width = (r32)m_pWindow->Width();
+  viewport.height = (r32)windowExtent.height;
+  viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -3230,7 +3255,13 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 {
   m_pRhi->DeviceWaitIdle();
 
-  if (m_pWindow->Width() <= 0 || m_pWindow <= 0) return;
+  if (m_pWindow->Width() <= 0 || m_pWindow->Height() <= 0) { 
+    m_Minimized = true;
+    return;
+  } else {
+    m_Minimized = false;
+  }
+
   VkPresentModeKHR presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode();
   u32 bufferCount = 2;
 
@@ -3436,6 +3467,8 @@ void Renderer::ClearCmdLists()
 
 void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 {
+  if (m_Minimized) return;
+
   u32 config = cmd._config;
   if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
     m_forwardCmdList.PushBack(cmd);

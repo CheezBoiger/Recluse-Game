@@ -85,7 +85,7 @@ public:
     //transform->Rotation = transform->Rotation * q;
     // Test sun rendering. This is not mandatory for running the engine!
     //Scene* scene = gEngine().GetScene();
-    //DirectionalLight* light = scene->GetPrimaryLight();
+    //DirectionalLight* light = scene->GetSky()->GetSunLight();
     //light->_Direction = Vector3(
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();

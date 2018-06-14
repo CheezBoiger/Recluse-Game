@@ -249,6 +249,7 @@ private:
 
   void              ClearCmdLists();
   void              SortCmdLists();
+  void              WaitForCpuFence();
 
   Window*           m_pWindow;
   CmdList<MeshRenderCmd>            m_cmdDeferredList;
@@ -304,6 +305,7 @@ private:
   b32                   m_Rendering : 1;
   b32                   m_Initialized : 1;
   b32                   m_AntiAliasing : 1; 
+  b32                   m_Minimized : 1;
 };
 
 Renderer&           gRenderer();

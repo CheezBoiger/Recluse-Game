@@ -51,6 +51,7 @@ int main(int c, char* argv[])
   Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
   window->Show();
+  //window->SetToFullScreen();
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   ///////////////////////////////////////////////////////////////////////////////////

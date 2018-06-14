@@ -56,7 +56,7 @@ public:
      m_pPhysicsComponent->Enable(false);
 
     ModelLoader::Model* model;
-    ModelCache::Get("Monster", &model);
+    ModelCache::Get("BrainStem", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -67,7 +67,7 @@ public:
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = model->materials[0];
-#if 1
+#if 0
     MaterialCache::Get(
 #if 0
       "BoomBox_Mat"
@@ -88,7 +88,7 @@ public:
     m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
     for (size_t i = 0; i < model->primitives.size(); ++i) {
       ModelLoader::PrimitiveHandle& primHandle = model->primitives[i];
-      primHandle.SetMaterial(material);
+      //primHandle.SetMaterial(material);
       m_pRendererComponent->SetPrimitive(primHandle.GetPrimitive());
     }
    
@@ -96,7 +96,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(0.001f, 0.001f, 0.001f);
+    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
