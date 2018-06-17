@@ -16,7 +16,8 @@ public:
   IndexBuffer()
     : mBuffer(nullptr)
     , mRhi(nullptr)
-    , mIndexCount(0) { }
+    , mIndexCount(0)
+    , m_sizeType(0) { }
 
   void        Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType, void* data);
   void        CleanUp();
@@ -24,9 +25,11 @@ public:
   Buffer*     Handle() { return mBuffer; }
   u32         IndexCount() { return mIndexCount; }
 
+  u32         GetSizeType() const { return m_sizeType; }
 private:
   VulkanRHI*  mRhi;
   Buffer*     mBuffer;
   u32         mIndexCount;
+  u32         m_sizeType;
 };
 } // Recluse

@@ -8,8 +8,9 @@
 
 namespace Recluse {
 
-skeleton_uuid_t Skeleton::kCurrSkeleCount = 0;
+skeleton_uuid_t                     Skeleton::kCurrSkeleCount             = 0;
 std::map<skeleton_uuid_t, Skeleton> Skeleton::kSkeletons;
+const size_t                        Animation::kMaxAnimationThreadCount   = 2;
 
 Animation& gAnimation()
 {
@@ -29,9 +30,11 @@ void Animation::OnShutDown()
 
 void Animation::UpdateState(r64 dt)
 {
+  r32 globalTime = static_cast<r32>(Time::CurrentTime());
+  size_t H = (m_samplers.size() >> 1);
   for (auto& it : m_samplers) {
     AnimSampler& sampler = it.second;
-    sampler.Step(static_cast<r32>(Time::CurrentTime()));
+    sampler.Step(globalTime);
   }
 }
 

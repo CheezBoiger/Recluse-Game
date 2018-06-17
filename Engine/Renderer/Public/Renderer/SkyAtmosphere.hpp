@@ -32,7 +32,7 @@ public:
   static const std::string  kSkyFragStr;
   static const u32          kTextureSize;
   static std::array<Vector4, 36> kSkyBoxVertices;
-  static std::array<u32, 36>  kSkyboxIndices;
+  static std::array<u16, 36>  kSkyboxIndices;
   static const Vector3      kDefaultAirColor;
 
   SkyRenderer() 

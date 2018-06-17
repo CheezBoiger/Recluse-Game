@@ -10,6 +10,7 @@
 #include "Scripts/Helmet.hpp"
 #include "Scripts/CubeObject.hpp"
 #include "Scripts/Lantern.hpp"
+#include "Core/Utility/Cpu.hpp"
 
 // Scripts.
 #include <array>

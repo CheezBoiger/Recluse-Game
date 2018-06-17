@@ -11,6 +11,9 @@
 #define INTEL_VENDOR_ID         0x1F96
 #define AMD_VENDOR_ID           0x1022
 
+#define INDEX_SIZE_TYPE_16_BIT      2
+#define INDEX_SIZE_TYPE_32_BIT      4
+
 typedef unsigned long graphics_uuid_t;
 
 class VulkanHandle {
@@ -163,6 +166,18 @@ VkPipelineColorBlendStateCreateInfo CreateBlendStateInfo(u32 attachmentCount,
   blend.blendConstants[3] = constant3;
   blend.flags = flags;
   return blend;
+}
+
+
+inline VkIndexType GetNativeIndexType(u32 sizeType)
+{
+  VkIndexType indexType;
+  switch (sizeType) {
+  case INDEX_SIZE_TYPE_16_BIT: indexType = VK_INDEX_TYPE_UINT16; break;
+  case INDEX_SIZE_TYPE_32_BIT:
+  default:  indexType = VK_INDEX_TYPE_UINT32; break;
+  }
+  return indexType;
 }
 }
 } // Recluse

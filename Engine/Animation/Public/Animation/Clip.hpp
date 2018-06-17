@@ -15,7 +15,7 @@ namespace Recluse {
 
 
 // The joint pose that represents current position and orientation
-// of a joint at a specified key frame.
+// of a joint at a specified key frame. This is in SQT format.
 struct JointPose {
   Quaternion  _rot;   // rotation.
   Vector3     _trans; // translation.
@@ -72,8 +72,9 @@ public:
 
   r32                       GetLocalTime() { return _state._fCurrLocalTime; }
 
-  void                      SetClip(AnimClip* clip) { _pClip = clip; }
+  void                      SetClip(AnimClip* clip) { _pClip = clip; ReadClip(); }
 
+  // Get this sampler's clip state.
   AnimClipState*            GetClipState() { return &_state; }
 
   // Play the clip sampling, provides the global start time for the sampler to begin
@@ -84,15 +85,18 @@ public:
 private:
 
   void                      ResetLocal() { _state._fCurrLocalTime = 0.0f; }
-  Matrix4                   Interpolate(AnimPose* currPose, AnimPose* nextPose, r32 t, size_t i);
+  Matrix4                   Interpolate(r32 t, size_t i);
+  void                      ApplyCurrentPose(Skeleton& skeleton);
+  
+  void                      ReadClip();
 
-  AnimClipState             _state;       // 
-  AnimClip*                 _pClip;       // Animation clip we are sampling from.
-  std::vector<Matrix4>      _output;      // Matrix palette output during sampling. 
-  r32                       _tauS;        // global start time given when play is called.
-  size_t                    _currPoseIdx; // 
-  size_t                    _nextPoseIdx; //
-  Matrix4                   _globalTransform; //
+  AnimClipState             _state;           // 
+  AnimClip*                 _pClip;           // Animation clip we are sampling from.
+  std::vector<Matrix4>      _output;          // Matrix palette output during sampling. 
+  r32                       _tauS;            // global start time given when play is called.
+  size_t                    _currPoseIdx;     // 
+  size_t                    _nextPoseIdx;     //
+  Matrix4                   _globalTransform; // root animation global bind. Pertains to its global transformation.
 };
 
 

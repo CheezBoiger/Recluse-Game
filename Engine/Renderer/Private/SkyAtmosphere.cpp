@@ -72,7 +72,7 @@ std::array<Vector4, 36> SkyRenderer::kSkyBoxVertices = {
 };
 
 
-std::array<u32, 36> SkyRenderer::kSkyboxIndices = {
+std::array<u16, 36> SkyRenderer::kSkyboxIndices = {
   0, 1, 2,
   3, 4, 5,
   6, 7, 8,
@@ -106,7 +106,7 @@ void SkyRenderer::Initialize()
 
   m_SkyboxVertBuf.Initialize(pRhi, static_cast<u32>(kSkyBoxVertices.size()), 
     sizeof(Vector4), kSkyBoxVertices.data());
-  m_SkyboxIndBuf.Initialize(pRhi, static_cast<u32>(kSkyboxIndices.size()), sizeof(u32), kSkyboxIndices.data());
+  m_SkyboxIndBuf.Initialize(pRhi, static_cast<u32>(kSkyboxIndices.size()), sizeof(u16), kSkyboxIndices.data());
 }
 
 
@@ -578,6 +578,8 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
     VkDescriptorSet globalDesc = global->Set()->Handle();
     VkBuffer vertexbuf = quad->Quad()->Handle()->NativeBuffer();
     VkBuffer indexbuf = quad->Indices()->Handle()->NativeBuffer();
+    VkIndexType indexType = GetNativeIndexType(quad->Indices()->GetSizeType());
+    u32 indexCount = quad->Indices()->IndexCount();
   
     VkDeviceSize offsets = { 0 };
 
@@ -618,8 +620,8 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
         cmdBuffer->PushConstants(m_pPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
         
         cmdBuffer->BindVertexBuffers(0, 1, &vertexbuf, &offsets);
-        cmdBuffer->BindIndexBuffer(indexbuf, 0, VK_INDEX_TYPE_UINT32);
-        cmdBuffer->DrawIndexed(quad->Indices()->IndexCount(), 1, 0, 0, 0);
+        cmdBuffer->BindIndexBuffer(indexbuf, 0, indexType);
+        cmdBuffer->DrawIndexed(indexCount, 1, 0, 0, 0);
       cmdBuffer->EndRenderPass();
     
       // TODO(): Perform copy to cubemap, here.

@@ -4,7 +4,7 @@
 #include "Core/Types.hpp"
 #include "Core/Utility/Module.hpp"
 #include "Core/Math/Matrix4.hpp"
-
+#include "Core/Thread/Threading.hpp"
 #include "Clip.hpp"
 
 #include <vector>
@@ -39,8 +39,10 @@ private:
 // Animation sampling jobs are done by this engine module.
 // 
 class Animation : public EngineModule<Animation> {
+  static const size_t     kMaxAnimationThreadCount;
 public:
-  Animation() { }
+  Animation() 
+    : m_workers(kMaxAnimationThreadCount) { }
 
   // On startup event.
   void          OnStartUp() override;
@@ -62,6 +64,8 @@ private:
   std::unordered_map<uuid64, AnimSampler>      m_samplers;
   // Handler to the animation objects generated currently in use.
   std::unordered_map<uuid64, AnimObject*>       m_animObjects;
+  // Thread workers for this animation submodule.
+  std::vector<std::thread>                      m_workers;
 };
 
 

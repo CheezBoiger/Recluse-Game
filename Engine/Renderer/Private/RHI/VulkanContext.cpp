@@ -181,4 +181,5 @@ void Context::CleanUpDebugCallback()
 
   vkDestroyDebugReportCallbackEXT(mInstance, mDebugReportCallback, nullptr);
 }
+
 } // Recluse 

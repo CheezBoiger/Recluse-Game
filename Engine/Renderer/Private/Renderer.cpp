@@ -453,7 +453,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
       VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
-      cmdBuffer.BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer.BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.Indices()->GetSizeType()));
       cmdBuffer.BindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
       cmdBuffer.DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
@@ -1893,7 +1893,7 @@ void Renderer::BuildPbrCmdBuffer()
     VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
     VkDeviceSize offsets[] = { 0 };
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.Indices()->GetSizeType()));
     cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
@@ -2298,7 +2298,7 @@ void Renderer::BuildSkyboxCmdBuffer()
       VkBuffer vert = vertexbuffer->Handle()->NativeBuffer();
       VkBuffer ind = idxBuffer->Handle()->NativeBuffer();
       buf->BindVertexBuffers(0 , 1, &vert, offsets);  
-      buf->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
+      buf->BindIndexBuffer(ind, 0, GetNativeIndexType(idxBuffer->GetSizeType()));
       buf->DrawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
     buf->EndRenderPass();
   buf->End();
@@ -2391,7 +2391,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
-        cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+        cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
       for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
@@ -2461,7 +2461,7 @@ void Renderer::BuildFinalCmdBuffer()
       VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.Indices()->GetSizeType()));
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
@@ -2475,6 +2475,8 @@ void Renderer::BuildHDRCmdBuffer()
   CommandBuffer* cmdBuffer = m_HDR._CmdBuffer;
   if (!cmdBuffer) return;
 
+
+  VkIndexType indexType = GetNativeIndexType(m_RenderQuad.Indices()->GetSizeType());
   VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
   VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
@@ -2590,7 +2592,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
       cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
@@ -2616,7 +2618,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
@@ -2640,7 +2642,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
@@ -2664,7 +2666,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
@@ -2686,7 +2688,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Layout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
@@ -2698,7 +2700,7 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, dSets, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
@@ -2770,7 +2772,7 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
     if (index) {
       VkBuffer ind = index->Handle()->NativeBuffer();
-      cmdBuffer->BindIndexBuffer(ind, 0, VK_INDEX_TYPE_UINT32);
+      cmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
     for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
@@ -2883,7 +2885,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
 
         if (indexBuffer) {
           VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
-          cmdBuffer->BindIndexBuffer(ib, 0, VK_INDEX_TYPE_UINT32);
+          cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
         }
 
         DescriptorSets[0] = m_pGlobal->Set()->Handle();
