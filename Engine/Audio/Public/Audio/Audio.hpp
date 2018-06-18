@@ -13,6 +13,16 @@ namespace Recluse {
 class WwiseEngine;
 
 
+enum AudioResult {
+  Audio_Success,
+  Audio_Failed_SoundEngine,
+  Audio_Failed_MusicEngine,
+  Audio_Failed_StreamManager,
+  Audio_Failed_MemoryManager,
+  Audio_Failed_FilePackage
+};
+
+
 // Audio Engine stuff.
 class Audio : public EngineModule<Audio> {
 public:

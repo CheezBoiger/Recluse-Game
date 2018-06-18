@@ -34,8 +34,8 @@ public:
   const Primitive&      GetPrimitive() const { return _primitive; }
   void                  SetMaterial(Material* mat) { _pMaterial = mat; _primitive._pMat = _pMaterial->Native(); }
   void                  SetMesh(Mesh* mesh) { _pMesh = mesh; _primitive._pMesh = mesh->Native(); }
-  const Material*       GetMaterial() const { return _pMaterial; }
-  const Mesh*           GetMesh() const { return _pMesh; }
+  Material*             GetMaterial() { return _pMaterial; }
+  Mesh*                 GetMesh() { return _pMesh; }
 
 private:
   Mesh*                 _pMesh;       // Better handle to the mesh data held by this primitive.

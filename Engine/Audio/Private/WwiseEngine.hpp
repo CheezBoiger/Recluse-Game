@@ -1,6 +1,10 @@
-// Copyright (c) 2017 Recluse Project. All rights reserved.
+// Copyright (c) 2017-2018 Recluse Project. All rights reserved.
+#pragma once
+
 #include "Core/Types.hpp"
 #include "Core/Win32/Win32Configs.hpp"
+
+#include "Audio/Audio.hpp"
 
 #include "AK/SoundEngine/Common/AkMemoryMgr.h"
 #include "AK/SoundEngine/Common/AkSoundEngine.h"
@@ -28,13 +32,22 @@ namespace Recluse {
 
 class WwiseEngine {
 public:
-  b8                                  Initialize();
+  AudioResult                         Initialize();
   void                                CleanUp();
 
-  CAkFilePackageLowLevelIOBlocking&   FilePackage() { return mLowLevelFilePackage; }
+  CAkFilePackageLowLevelIOBlocking&   GetFilePackage() { return m_lowLevelFilePackage; }
+
+  void                                Update(r64 dt);
 
 private:
-  CAkFilePackageLowLevelIOBlocking    mLowLevelFilePackage;
+
+  AudioResult                                InitSoundEngine();
+  AudioResult                                InitMusicEngine();
+
+  AudioResult                                InitMemoryManager();
+  AudioResult                                InitStreamManager();
+
+  CAkFilePackageLowLevelIOBlocking    m_lowLevelFilePackage;
 
 };
 } // Recluse

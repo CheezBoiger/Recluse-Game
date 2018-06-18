@@ -14,8 +14,10 @@ Audio& gAudio()
 
 void Audio::OnStartUp()
 {
-  mWwise = new WwiseEngine();
-  mWwise->Initialize();
+  if (!mWwise) {
+    mWwise = new WwiseEngine();
+    mWwise->Initialize();
+  }
 }
 
 
@@ -30,5 +32,7 @@ void Audio::OnShutDown()
 
 void Audio::UpdateState(r64 dt)
 {
+  R_ASSERT(mWwise, "Wise was not initialized prior to updating audio.");
+  mWwise->Update(dt);
 }
 } // Recluse

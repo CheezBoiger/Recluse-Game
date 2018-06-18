@@ -35,7 +35,7 @@ void main()
 {
   vec4 worldPosition = position;
  
-  // Compute the bone transform 
+  // Compute the skin matrix.
   if (obj_buffer.hasJoints >= 1) {
     mat4 skinMatrix  = joints_buffer.joints[jointIDs[0]] * jointWeights[0];
     skinMatrix      += joints_buffer.joints[jointIDs[1]] * jointWeights[1];

@@ -102,7 +102,7 @@ Matrix4 AnimSampler::Interpolate(r32 t, size_t i)
   }
 
   // clip is running in reverse.
-  if (dt < 0.0f) {
+  if (dt < -1.0f) {
     _nextPoseIdx = _currPoseIdx;
     _currPoseIdx -= 1;
     if (_currPoseIdx < 0) _currPoseIdx = _pClip->_aAnimPoseSamples.size() - 1;
