@@ -53,6 +53,7 @@ public:
   void            EndQuery(VkQueryPool queryPool, u32 query);
 
   void            PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values);
+  void            Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ);
 
   void            Reset(const VkCommandBufferResetFlags flags);
   VkCommandBuffer Handle() { return mHandle; }

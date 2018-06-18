@@ -194,10 +194,17 @@ public:
   // Enable HDR Post processing.
   void              EnableHDR(b32 enable);
 
+  // Get this renderer's render quad.
   RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
 
   // Push mesh to render.
   void              PushMeshRender(MeshRenderCmd& cmd);
+
+  // Set up irradiance maps for this renderer to use for look up.
+  void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
+
+  // Set up enviroment maps for this renderer to use for look up.
+  void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
 
   const char*       GetDeviceName();
 
@@ -245,6 +252,8 @@ private:
   void              RenderOverlay();
   void              RenderPrimaryShadows();
   void              CheckCmdUpdate();
+  void              SetUpGlobalIlluminationBuffer();
+  void              CleanUpGlobalIlluminationBuffer();
   inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
 
   void              ClearCmdLists();
@@ -298,6 +307,9 @@ private:
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
   SkyRenderer*          m_pSky;
+  TextureCubeArray*     m_pEnvMaps;
+  TextureCubeArray*     m_pIrrMaps;
+  DescriptorSet*        m_pGlobalIllumination;
   u32                   m_CurrCmdBufferIdx;
 
   u32                   m_TotalCmdBuffers;

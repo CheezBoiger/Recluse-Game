@@ -119,8 +119,13 @@ layout (set = 4, binding = 0) uniform LightSpace {
   mat4 viewProj;
 } lightSpace;
 
-//layout (set = 5, binding = 0) uniform samplerCubeArray envMaps;
 
+layout (set = 5, binding = 0) uniform samplerCube irrMap;
+layout (set = 5, binding = 1) uniform samplerCube envMap;
+#if defined(LOCAL_REFLECTIONS)
+layout (set = 5, binding = 2) uniform samplerCubeArray irrMaps;   // Current set of irradiance maps.
+layout (set = 5, binding = 3) uniform samplerCubeArray envMaps;   // Current set of enviroment maps (radiance).
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shadowing.

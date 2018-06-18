@@ -57,6 +57,7 @@ Renderer::Renderer()
   , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
   , m_Minimized(false)
+  , m_pGlobalIllumination(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
@@ -358,6 +359,8 @@ void Renderer::CleanUp()
     m_pUI = nullptr;
   }
 
+  CleanUpGlobalIlluminationBuffer();
+
   m_RenderQuad.CleanUp();
   CleanUpForwardPBR();
   CleanUpPBR();
@@ -466,6 +469,8 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
     m_pUI = new UIOverlay();
     m_pUI->Initialize(m_pRhi);
   }
+
+  SetUpGlobalIlluminationBuffer();
 
   m_Initialized = true;
   return true;
@@ -660,14 +665,34 @@ void Renderer::SetUpDescriptorSetLayouts()
   // Global Illumination reflection probe layout.
   {
     DescriptorSetLayout* globalIllumLayout = m_pRhi->CreateDescriptorSetLayout();
-    illumination_reflectProbeDescLayoutKey = globalIllumLayout;
+    globalIllumination_DescNoLR = m_pRhi->CreateDescriptorSetLayout();
+    globalIllumination_DescLR = globalIllumLayout;
     
-    std::array<VkDescriptorSetLayoutBinding, 1> globalIllum;
+    std::array<VkDescriptorSetLayoutBinding, 4> globalIllum;
+    // Global IrrMap.
     globalIllum[0].binding = 0;
     globalIllum[0].descriptorCount = 1;
     globalIllum[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     globalIllum[0].pImmutableSamplers = nullptr;
     globalIllum[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // Global EnvMap.
+    globalIllum[1].binding = 1;
+    globalIllum[1].descriptorCount = 1;
+    globalIllum[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[1].pImmutableSamplers = nullptr;
+    globalIllum[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // Irradiance Map array.
+    globalIllum[2].binding = 2;
+    globalIllum[2].descriptorCount = 1;
+    globalIllum[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[2].pImmutableSamplers = nullptr;
+    globalIllum[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    // Radiance (Enviroment Map) array.
+    globalIllum[3].binding = 3;
+    globalIllum[3].descriptorCount = 1;
+    globalIllum[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[3].pImmutableSamplers = nullptr;
+    globalIllum[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     
     VkDescriptorSetLayoutCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -676,6 +701,10 @@ void Renderer::SetUpDescriptorSetLayouts()
     info.pBindings = globalIllum.data();
     info.pNext = nullptr;
     globalIllumLayout->Initialize(info);
+    info.bindingCount = static_cast<u32>(globalIllum.size() - 2);
+    globalIllumination_DescNoLR->Initialize(info);
+
+    
   }
 
   // Light layout.
@@ -815,13 +844,14 @@ void Renderer::CleanUpDescriptorSetLayouts()
   m_pRhi->FreeDescriptorSetLayout(LightSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(BonesSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(skybox_setLayoutKey);
-  m_pRhi->FreeDescriptorSetLayout(illumination_reflectProbeDescLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(LightViewDescriptorSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(final_DescSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(hdr_gamma_descSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(DownscaleBlurLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(GlowDescriptorSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(pbr_DescLayoutKey);
+  m_pRhi->FreeDescriptorSetLayout(globalIllumination_DescLR);
+  m_pRhi->FreeDescriptorSetLayout(globalIllumination_DescNoLR);
 }
 
 
@@ -1467,14 +1497,18 @@ void Renderer::CleanUpGraphicsPipelines()
   GraphicsPipeline* gbuffer_Pipeline = gbuffer_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(gbuffer_Pipeline);
 
-  GraphicsPipeline* pbr_Pipeline = pbr_PipelineKey;
+  GraphicsPipeline* pbr_Pipeline = pbr_Pipeline_LR;
   m_pRhi->FreeGraphicsPipeline(pbr_Pipeline);
+
+  m_pRhi->FreeGraphicsPipeline(pbr_Pipeline_NoLR);
 
   GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
   m_pRhi->FreeGraphicsPipeline(gbuffer_StaticPipeline);
 
-  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineKey);
-  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineKey);
+  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipeline_LR);
+  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipeline_LR);
+  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipeline_NoLR);
+  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipeline_NoLR);
 
   GraphicsPipeline* QuadPipeline = final_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
@@ -1740,7 +1774,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   if (fullSetup) {
     Sampler* defaultSampler = m_pRhi->CreateSampler();
     defaultSampler->Initialize(samplerCI);
-    DefaultSamplerKey = defaultSampler;
+    DefaultSampler2DKey = defaultSampler;
 
     VkImageCreateInfo dImageInfo = {};
     VkImageViewCreateInfo dViewInfo = {};
@@ -1832,7 +1866,7 @@ void Renderer::CleanUpRenderTextures(b32 fullCleanup)
   }
   if (fullCleanup) {
     Texture* defaultTexture = DefaultTextureKey;
-    Sampler* defaultSampler = DefaultSamplerKey;
+    Sampler* defaultSampler = DefaultSampler2DKey;
 
     m_pRhi->FreeTexture(defaultTexture);
     m_pRhi->FreeSampler(defaultSampler);
@@ -1842,6 +1876,11 @@ void Renderer::CleanUpRenderTextures(b32 fullCleanup)
 
 void Renderer::BuildPbrCmdBuffer() 
 {
+  GraphicsPipeline* pPipeline = nullptr;
+  pPipeline = pbr_Pipeline_NoLR;
+  if (m_currentGraphicsConfigs._EnableLocalReflections) {
+    pPipeline = pbr_Pipeline_LR;
+  }
   CommandBuffer* cmdBuffer = m_Pbr._CmdBuffer;
   if (cmdBuffer) {
     cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -1877,18 +1916,20 @@ void Renderer::BuildPbrCmdBuffer()
   pbr_RenderPassInfo.renderArea.extent = windowExtent;
   pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
 
+  const u32 dSetCount = 5;
   cmdBuffer->Begin(beginInfo);
     cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    GraphicsPipeline* pbr_Pipeline = pbr_PipelineKey;
-    VkDescriptorSet sets[4] = {
+    GraphicsPipeline* pbr_Pipeline = pPipeline;
+    VkDescriptorSet sets[dSetCount] = {
       m_pGlobal->Set()->Handle(),
       pbr_DescSetKey->Handle(),
       m_pLights->Set()->Handle(),
-      m_pLights->ViewSet()->Handle()
+      m_pLights->ViewSet()->Handle(),
+      m_pGlobalIllumination->Handle()
     };
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Layout(), 0, 4, sets, 0, nullptr);
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Layout(), 0, dSetCount, sets, 0, nullptr);
     VkBuffer vertexBuffer = m_RenderQuad.Quad()->Handle()->NativeBuffer();
     VkBuffer indexBuffer = m_RenderQuad.Indices()->Handle()->NativeBuffer();
     VkDeviceSize offsets[] = { 0 };
@@ -2855,7 +2896,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
   viewport.y = 0.0f;
   viewport.x = 0.0f;
   
-  VkDescriptorSet DescriptorSets[6];
+  VkDescriptorSet DescriptorSets[7];
 
   cmdBuffer->Begin(begin);
     cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
@@ -2869,7 +2910,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
 
         MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
         b8 Skinned = pMeshDesc->Skinned();
-        GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipelineKey : pbr_staticForwardPipelineKey;
+        GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipeline_LR : pbr_staticForwardPipeline_LR;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
 
@@ -2892,7 +2933,8 @@ void Renderer::BuildForwardPBRCmdBuffer()
         DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
         DescriptorSets[3] = m_pLights->Set()->Handle();
         DescriptorSets[4] = m_pLights->ViewSet()->Handle();
-        DescriptorSets[5] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
+        DescriptorSets[5] = m_pGlobalIllumination->Handle(); // Need global illumination data.
+        DescriptorSets[6] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
 
         // Bind materials.
         for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
@@ -2901,7 +2943,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
           cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
             Pipe->Layout(),
             0,
-            (Skinned ? 6 : 5),
+            (Skinned ? 7 : 6),
             DescriptorSets,
             0,
             nullptr
@@ -2916,6 +2958,98 @@ void Renderer::BuildForwardPBRCmdBuffer()
       }
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
+}
+
+
+void Renderer::SetUpGlobalIlluminationBuffer()
+{
+  m_pGlobalIllumination = m_pRhi->CreateDescriptorSet();
+  DescriptorSetLayout* layout = nullptr;
+  std::array<VkWriteDescriptorSet, 4> writeSets;
+  u32 count = 2;
+
+  VkDescriptorImageInfo globalIrrMap = { };
+  VkDescriptorImageInfo globalEnvMap = { };
+  VkDescriptorImageInfo localIrrMaps = { };
+  VkDescriptorImageInfo localEnvMaps = { };
+
+  globalIrrMap.sampler = DefaultSampler2DKey->Handle();
+  globalEnvMap.sampler = DefaultSampler2DKey->Handle();
+  localIrrMaps.sampler = DefaultSampler2DKey->Handle();
+  localEnvMaps.sampler = DefaultSampler2DKey->Handle();
+
+  globalIrrMap.imageView = m_pSky->GetCubeMap()->View();
+  globalIrrMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalEnvMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  localIrrMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  localEnvMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalEnvMap.imageView = m_pSky->GetCubeMap()->View();
+
+  // TODO(): These are place holders, we don't have data for these yet!
+  // Obtain env and irr maps from scene when building!
+  localIrrMaps.imageView = DefaultTextureKey->View();
+  localEnvMaps.imageView = DefaultTextureKey->View();
+
+  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[0].descriptorCount = 1;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[0].dstBinding = 0;
+  writeSets[0].dstArrayElement = 0;
+  writeSets[0].pImageInfo = &globalIrrMap;
+  writeSets[0].dstSet = nullptr;
+  writeSets[0].pBufferInfo = nullptr;
+  writeSets[0].pTexelBufferView = nullptr;
+  writeSets[0].pNext = nullptr;
+
+  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[1].descriptorCount = 1;
+  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[1].dstBinding = 1;
+  writeSets[1].dstArrayElement = 0;
+  writeSets[1].pImageInfo = &globalEnvMap;
+  writeSets[1].dstSet = nullptr;
+  writeSets[1].pBufferInfo = nullptr;
+  writeSets[1].pTexelBufferView = nullptr;
+  writeSets[1].pNext = nullptr;
+
+  writeSets[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[2].descriptorCount = 1;
+  writeSets[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[2].dstBinding = 2;
+  writeSets[2].dstArrayElement = 0;
+  writeSets[2].pImageInfo = &localIrrMaps;
+  writeSets[2].dstSet = nullptr;
+  writeSets[2].pBufferInfo = nullptr;
+  writeSets[2].pTexelBufferView = nullptr;
+  writeSets[2].pNext = nullptr;
+
+  writeSets[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[3].descriptorCount = 1;
+  writeSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[3].dstBinding = 3;
+  writeSets[3].dstArrayElement = 0;
+  writeSets[3].pImageInfo = &localEnvMaps;
+  writeSets[3].dstSet = nullptr;
+  writeSets[3].pBufferInfo = nullptr;
+  writeSets[3].pTexelBufferView = nullptr;
+  writeSets[3].pNext = nullptr;
+
+  if (m_currentGraphicsConfigs._EnableLocalReflections) {
+    layout = globalIllumination_DescLR;
+    count = 4;
+  } else {
+    layout = globalIllumination_DescNoLR;
+  }
+
+  m_pGlobalIllumination->Allocate(m_pRhi->DescriptorPool(), layout);
+  m_pGlobalIllumination->Update(count, writeSets.data());
+}
+
+
+void Renderer::CleanUpGlobalIlluminationBuffer()
+{
+  m_pRhi->FreeDescriptorSet(m_pGlobalIllumination);
+  m_pGlobalIllumination = nullptr;
 }
 
 
@@ -3227,8 +3361,6 @@ void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
   switch (params->_AA) {
     case AA_None: m_AntiAliasing = false; break;
     case AA_FXAA_2x:
-    case AA_FXAA_4x:
-    case AA_FXAA_8x:
     default:
       m_AntiAliasing = true; break;
     }
@@ -3266,6 +3398,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 
   VkPresentModeKHR presentMode = m_pRhi->SwapchainObject()->CurrentPresentMode();
   u32 bufferCount = 2;
+  b32 reconstruct = false;
 
   if (params) {
     switch (params->_Buffering) {
@@ -3282,38 +3415,44 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
     UpdateRuntimeConfigs(params);
   }
 
-  if (params && presentMode == m_pRhi->SwapchainObject()->CurrentPresentMode()) {
-    // No need to reconstruct the swapchain, since these parameters won't affect
-    // the hardcoded pipeline.
-    return;
+  VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  if (!params || (presentMode != m_pRhi->SwapchainObject()->CurrentPresentMode()) 
+    || (bufferCount != m_pRhi->SwapchainObject()->CurrentBufferCount()) || 
+    (extent.height  != m_pWindow->Height() || extent.width != m_pWindow->Width())) {
+    reconstruct = true;
   }
 
-  // Triple buffering atm, we will need to use user params to switch this.
-  m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height(), bufferCount);
+  if (reconstruct) {
+    // Triple buffering atm, we will need to use user params to switch this.
+    m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height(), bufferCount);
 
-  m_pUI->CleanUp();
+    m_pUI->CleanUp();
 
-  CleanUpForwardPBR();
-  CleanUpPBR();
-  CleanUpHDR(false);
-  CleanUpDownscale(false);
-  CleanUpOffscreen(false);
-  CleanUpFinalOutputs();
-  CleanUpGraphicsPipelines();
-  CleanUpFrameBuffers();
-  CleanUpRenderTextures(false);
+    CleanUpForwardPBR();
+    CleanUpPBR();
+    CleanUpHDR(false);
+    CleanUpDownscale(false);
+    CleanUpOffscreen(false);
+    CleanUpFinalOutputs();
+    CleanUpGraphicsPipelines();
+    CleanUpFrameBuffers();
+    CleanUpRenderTextures(false);
 
-  SetUpRenderTextures(false);
-  SetUpFrameBuffers();
-  SetUpGraphicsPipelines();
-  SetUpFinalOutputs();
-  SetUpOffscreen(false);
-  SetUpDownscale(false);
-  SetUpHDR(false);
-  SetUpPBR();
-  SetUpForwardPBR();
+    SetUpRenderTextures(false);
+    SetUpFrameBuffers();
+    SetUpGraphicsPipelines();
+    SetUpFinalOutputs();
+    SetUpOffscreen(false);
+    SetUpDownscale(false);
+    SetUpHDR(false);
+    SetUpPBR();
+    SetUpForwardPBR();
+    m_pUI->Initialize(m_pRhi);
+  }
 
-  m_pUI->Initialize(m_pRhi);
+  CleanUpGlobalIlluminationBuffer();
+  SetUpGlobalIlluminationBuffer();
+
   Build();
 }
 

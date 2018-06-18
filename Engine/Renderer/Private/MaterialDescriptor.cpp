@@ -80,7 +80,7 @@ void MaterialDescriptor::Update()
 {
   if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
-    Sampler* sampler = DefaultSamplerKey;
+    Sampler* sampler = DefaultSampler2DKey;
     if (m_pSampler) sampler = m_pSampler->Handle();
 
     Texture* defaultTexture = DefaultTextureKey;

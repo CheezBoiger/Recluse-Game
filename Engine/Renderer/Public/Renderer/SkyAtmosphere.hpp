@@ -61,6 +61,7 @@ public:
   Sampler*                GetSampler() { return m_pSampler; }
 
   b32                     NeedsRendering() { return m_bDirty; }
+  b32                     UsingPredefinedSkybox() const { return m_bUsingPredefined; }
   CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
@@ -95,6 +96,7 @@ private:
   VertexBuffer            m_SkyboxVertBuf;
   IndexBuffer             m_SkyboxIndBuf;
   b32                     m_bDirty;
+  b32                     m_bUsingPredefined;
   Vector3                 m_vAirColor;
 };
 } // Recluse 

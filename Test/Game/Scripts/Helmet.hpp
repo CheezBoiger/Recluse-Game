@@ -109,6 +109,7 @@ public:
     
     m_pAnim->AddClip(clip, "InitialPose");
     m_pAnim->Playback("InitialPose");
+    m_pAnim->SetPlaybackRate(0.6f);
   }
 
   // Updating game logic...
@@ -207,4 +208,57 @@ private:
   Vector3             m_vRandDir;
   r32                 m_factor;
   AnimationComponent*  m_pAnim;
+};
+
+
+class Monster : public GameObject {
+  R_GAME_OBJECT(Monster)
+public:
+  Monster() { }
+
+  void OnStart() override 
+  {
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("Monster", &model);
+    ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
+
+    m_rendererComponent.Initialize(this);
+    m_meshComponent.Initialize(this);
+    m_animationComponent.Initialize(this);
+
+    m_meshComponent.SetMeshRef(animModel->meshes[0]);
+
+    // Clips don't have a skeleton to refer to, so be sure to know which skeleton to refer the clip to.
+    AnimClip* clip = animModel->animations[0];
+    clip->_skeletonId = animModel->skeletons[0]->_uuid;
+    m_animationComponent.AddClip(clip, "WalkPose");
+    
+    m_animationComponent.Playback("WalkPose");
+
+    m_rendererComponent.SetMeshComponent(&m_meshComponent);
+    m_rendererComponent.SetAnimationComponent(&m_animationComponent);
+    for (size_t i = 0; i < animModel->primitives.size(); ++i) {
+      ModelLoader::PrimitiveHandle& primitiveHandle = animModel->primitives[i];
+      m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
+    }
+    
+    Transform* transform = GetTransform();
+    transform->Scale = Vector3(0.001f, 0.001f, 0.001f);
+    transform->Position = Vector3(2.0f, 0.3f, 0.0f);
+  }
+
+  void Update(r32 tick) override
+  { 
+  }
+
+  void OnCleanUp() override 
+  {
+    m_rendererComponent.CleanUp();
+    m_meshComponent.CleanUp();
+    m_animationComponent.CleanUp();
+  }
+private:
+  SkinnedRendererComponent  m_rendererComponent;
+  MeshComponent             m_meshComponent;
+  AnimationComponent        m_animationComponent;
 };

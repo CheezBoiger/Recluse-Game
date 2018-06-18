@@ -59,7 +59,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 } objBuffer;
 
 
-layout (set = 5, binding = 0) uniform JointsBuffer {
+layout (set = 6, binding = 0) uniform JointsBuffer {
   mat4 joints[MAX_JOINTS];
 } jointsBuffer;
 

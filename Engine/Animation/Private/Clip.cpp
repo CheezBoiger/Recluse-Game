@@ -72,7 +72,6 @@ void AnimSampler::Step(r32 gt)
   }
 
   ApplyCurrentPose(skeleton);
-  Log() << t << "\t\t\r";
 }
 
 

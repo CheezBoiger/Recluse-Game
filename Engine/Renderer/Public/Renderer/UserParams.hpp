@@ -25,8 +25,7 @@ enum WindowType {
 enum AntiAliasing {
   AA_None,
   AA_FXAA_2x,
-  AA_FXAA_4x,
-  AA_FXAA_8x
+  AA_SMAA_2x
 };
 
 
@@ -71,6 +70,7 @@ public:
   // NOTE(): You must restart the game in order for qualities to take effect!
   //          Otherwise, disabling and enabling shadows can be done in runtime.
   ShadowDetail    _Shadows;
+
   // Level of detail, by distance.
   r32             _Lod;
 
@@ -89,6 +89,10 @@ public:
   // Post processing affects.
   b32             _EnablePostProcessing;
 
+  // Enable local reflections. Global illumination for local enviroments which adds some 
+  // quality to object surfaces. Disabling will improve performance, but reduce quality.
+  b32             _EnableLocalReflections;
+
   // Allows the the renderer engine to multithread its workload.
   b32             _EnableMultithreadedRendering;
 };
@@ -100,6 +104,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   TEXTURE_QUALITY_ULTRA,
   SHADOWS_NONE,
   1.0f,
+  true,
   true,
   true,
   true,

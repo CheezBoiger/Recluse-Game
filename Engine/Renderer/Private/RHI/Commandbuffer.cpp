@@ -2,7 +2,7 @@
 #include "RHI/CommandBuffer.hpp"
 #include "Core/Exception.hpp"
 
-#define ASSERT_RECORDING() if (!mRecording) { R_DEBUG(rError, "CommandBuffer not recording! Aborting cmd call.\n"); return; }
+#define ASSERT_RECORDING() R_ASSERT(mRecording, "Command buffer not in record state prior to issued command!");
 
 namespace Recluse {
 
@@ -185,5 +185,12 @@ void CommandBuffer::CopyImage(VkImage srcImage, VkImageLayout srcImageLayout, Vk
 {
   ASSERT_RECORDING();
   vkCmdCopyImage(mHandle, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
+}
+
+
+void CommandBuffer::Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ)
+{
+  ASSERT_RECORDING();
+  vkCmdDispatch(mHandle, groupCountX, groupCountY, groupCountZ);
 }
 } // Recluse

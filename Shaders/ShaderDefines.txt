@@ -1,0 +1,11 @@
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V PBR.frag -o PBR_NoLR.frag.spv
+PBR.frag
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.frag -o PBR_LR.frag.spv
+PBR.frag
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V ForwardPBR.frag -o ForwardPBR_NoLR.frag.spv
+ForwardPBR.frag
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V ForwardPBR.frag -o ForwardPBR_LR.frag.spv
+ForwardPBR.frag
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V ForwardPBR.vert -o ForwardPBR.vert.spv
+ForwardPBR.vert
+PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source>
