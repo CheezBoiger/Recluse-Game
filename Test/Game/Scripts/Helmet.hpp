@@ -103,6 +103,7 @@ public:
     m_factor = 0.01f;
 
     m_pAnim->Initialize(this);
+    m_pAnim->SetSampler(gAnimation().CreateAnimSampler());
     m_pRendererComponent->SetAnimationComponent(m_pAnim);
     AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
     clip->_skeletonId = static_cast<ModelLoader::AnimModel*>(model)->skeletons[0]->_uuid;
@@ -232,19 +233,23 @@ public:
     AnimClip* clip = animModel->animations[0];
     clip->_skeletonId = animModel->skeletons[0]->_uuid;
     m_animationComponent.AddClip(clip, "WalkPose");
-    
-    m_animationComponent.Playback("WalkPose");
+    m_animationComponent.Playback("WalkPose");  
+    m_animationComponent.SetSampler(gAnimation().CreateAnimSampler());
 
     m_rendererComponent.SetMeshComponent(&m_meshComponent);
     m_rendererComponent.SetAnimationComponent(&m_animationComponent);
+
+    Material* rusted = nullptr;
+    MaterialCache::Get("RustedSample", &rusted);
     for (size_t i = 0; i < animModel->primitives.size(); ++i) {
       ModelLoader::PrimitiveHandle& primitiveHandle = animModel->primitives[i];
+      primitiveHandle.SetMaterial(rusted);
       m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
     }
     
     Transform* transform = GetTransform();
-    transform->Scale = Vector3(0.001f, 0.001f, 0.001f);
-    transform->Position = Vector3(2.0f, 0.3f, 0.0f);
+    transform->Scale = Vector3(0.002f, 0.002f, 0.002f);
+    transform->Position = Vector3(2.0f, 0.5f, 0.0f);
   }
 
   void Update(r32 tick) override

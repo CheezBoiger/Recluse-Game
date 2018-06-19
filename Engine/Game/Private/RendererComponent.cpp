@@ -166,11 +166,9 @@ void SkinnedRendererComponent::Update()
   u32 paletteSz = 0;
   if (m_pAnimComponent) {
     AnimObject* obj = m_pAnimComponent->GetAnimObject();
-    AnimSampler* sampler = obj->GetSampler(); 
-    if (sampler) {
-      auto& kS = sampler->GetOutput();
-      palette = kS.data();
-      paletteSz = static_cast<u32>(kS.size());
+    if (obj) {
+      palette = obj->GetPalette();
+      paletteSz = obj->GetPaletteSz();
     }
   }
 

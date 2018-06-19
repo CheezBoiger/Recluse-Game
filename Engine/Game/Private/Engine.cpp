@@ -206,15 +206,18 @@ void Engine::Update()
   r64 tick = Time::FixTime * Time::ScaleTime;
   m_dLag += Time::DeltaTime;
 
-  gAnimation().UpdateState(dt);
-  gUI().UpdateState(dt);
 
 #if !defined FORCE_AUDIO_OFF
   gAudio().UpdateState(dt);
 #endif
 
   // Update using next frame input.
+  AnimationComponent::UpdateComponents();
+  gAnimation().UpdateState(dt);
+  gUI().UpdateState(dt);
+
   UpdateGameLogic(tick);
+
   PhysicsComponent::UpdateFromPreviousGameLogic();
   Transform::UpdateComponents();
 

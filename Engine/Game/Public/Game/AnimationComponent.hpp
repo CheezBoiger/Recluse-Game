@@ -20,7 +20,9 @@ class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
   AnimationComponent()
-    : m_object(nullptr) { }
+    : m_object(nullptr)
+    , m_playbackRate(1.0f)
+    , m_currPlaybackClip(nullptr) { }
 
   // Add an animation clip to the component to playback in the future.
   void AddClip(AnimClip* clip, const std::string& name);
@@ -33,6 +35,9 @@ public:
   
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
+
+  // Set an animation sampler used for sampling animation.
+  void                      SetSampler(AnimSampler* sampler) { m_object->SetSampler(sampler); }
 
   // TODO():
   virtual void              OnInitialize(GameObject* owner) override;
@@ -47,22 +52,31 @@ public:
   virtual void              Deserialize(IArchive& archive) override { }
 
   // TODO():
-  virtual void              Update() override { }
+  virtual void              Update() override {
+    AnimSampler* pSampler = m_object->GetSampler();
+    if (pSampler) {
+      AnimClipState* state = pSampler->GetClipState();
+      state->_fPlaybackRate = m_playbackRate;
+      if (m_currPlaybackClip != pSampler->GetClip()) {
+        pSampler->SetClip(m_currPlaybackClip);
+      }
+    }
+  }
 
 
   AnimObject*               GetAnimObject() { return m_object; }
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      SetPlaybackRate(r32 rate) { 
-    m_object->GetSampler()->GetClipState()->_fPlaybackRate = rate;
-  }
+  void                      SetPlaybackRate(r32 rate) { m_playbackRate = rate; }
 
   // Get the current playback rate.
-  r32                       GetPlaybackRate() const { return m_object->GetSampler()->GetClipState()->_fPlaybackRate; }
+  r32                       GetPlaybackRate() const { return m_playbackRate; }
 
 private:
   std::map<std::string, AnimClip*>    m_clips;
+  AnimClip*                           m_currPlaybackClip;
   AnimObject*                         m_object;
+  r32                                 m_playbackRate;
 };
 } // Recluse

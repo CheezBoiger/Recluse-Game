@@ -5,8 +5,11 @@
 #include "Core/Exception.hpp"
 #include "Core/Math/Common.hpp"
 
-
+#include <assert.h>
 namespace Recluse {
+
+
+sampler_id_t AnimSampler::kSamplerCount = 0;
 
 
 AnimSampler::AnimSampler()
@@ -14,6 +17,7 @@ AnimSampler::AnimSampler()
   , _output(64)
   , _currPoseIdx(0)
   , _nextPoseIdx(0)
+  , _samplerId(kSamplerCount++)
 {
   _state._bEnabled          = true;
   _state._bLooping          = true;
@@ -50,7 +54,7 @@ void AnimSampler::Step(r32 gt)
   // We don't have to clean out all C matrices, just the root. All others will be 
   // flushed out from here.
   {
-    Matrix4 localTransform = Interpolate(t, 0);
+    Matrix4 localTransform = LinearInterpolate(t, 0);
     if (rootInJoints) {
       _output[0] = localTransform;
     }
@@ -59,7 +63,7 @@ void AnimSampler::Step(r32 gt)
   
   for (size_t i = 1; i < _pClip->_aAnimPoseSamples[_currPoseIdx]._aLocalPoses.size(); ++i) {
     size_t idx = (rootInJoints ? i : i - 1);
-    Matrix4 localTransform = Interpolate(t, i);
+    Matrix4 localTransform = LinearInterpolate(t, i);
     Matrix4 parentTransform;
     u8 parentId = skeleton._joints[idx]._iParent;
     if (parentId == 0xff) {
@@ -75,6 +79,13 @@ void AnimSampler::Step(r32 gt)
 }
 
 
+u32 AnimSampler::GetPaletteSz()
+{
+  R_ASSERT(_pClip, "Clip is null for this sampler.");
+  return _pClip->_aAnimPoseSamples[_currPoseIdx]._aLocalPoses.size();
+}
+
+
 void AnimSampler::ApplyCurrentPose(Skeleton& skeleton)
 {
   // Multiplay matrices by their inverse bind to transform our vertices to local joint space.
@@ -84,7 +95,7 @@ void AnimSampler::ApplyCurrentPose(Skeleton& skeleton)
 }
 
 
-Matrix4 AnimSampler::Interpolate(r32 t, size_t i)
+Matrix4 AnimSampler::LinearInterpolate(r32 t, size_t i)
 {
   AnimPose* currPose = &_pClip->_aAnimPoseSamples[_currPoseIdx];
   AnimPose* nextPose = &_pClip->_aAnimPoseSamples[_nextPoseIdx];

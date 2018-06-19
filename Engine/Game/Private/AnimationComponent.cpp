@@ -11,16 +11,21 @@
 namespace Recluse {
 
 
+DEFINE_COMPONENT_MAP(AnimationComponent);
+
+
 void AnimationComponent::OnCleanUp()
 {
   gAnimation().FreeAnimObject(m_object);
   m_object = nullptr;
+  UNREGISTER_COMPONENT(AnimationComponent);
 }
 
 
 void AnimationComponent::OnInitialize(GameObject* owner)
 {
   m_object = gAnimation().CreateAnimObject(owner->GetId());
+  REGISTER_COMPONENT(AnimationComponent, this);
 }
 
 
@@ -34,10 +39,7 @@ void AnimationComponent::Playback(const std::string& name)
 {
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
-  R_ASSERT(m_object, "Anim object was null.");
   AnimClip* clip = it->second;
-  AnimSampler* pSampler = m_object->GetSampler();
-  pSampler->SetClip(clip);
-  pSampler->Play(static_cast<r32>(Time::CurrentTime()));
+  m_currPlaybackClip = clip;
 }
 } // Recluse
