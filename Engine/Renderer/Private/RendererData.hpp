@@ -169,7 +169,7 @@ extern char const* kDefaultShaderEntryPointStr;
 namespace RendererPass {
 
 
-void LoadShader(std::string Filename, Shader* S);
+void LoadShader(const std::string& Filename, Shader* S);
 
 // Set up the downscale pass.
 void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
@@ -188,6 +188,8 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+
+void SetUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultInfo);
 
 void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 

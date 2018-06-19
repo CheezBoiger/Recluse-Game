@@ -108,7 +108,7 @@ Matrix4 AnimSampler::LinearInterpolate(r32 t, size_t i)
   if (dt > 1.0f) {
     _currPoseIdx = _nextPoseIdx;
     _nextPoseIdx += 1;
-    if (_nextPoseIdx > _pClip->_aAnimPoseSamples.size()) _nextPoseIdx = 0;
+    if (_nextPoseIdx >= _pClip->_aAnimPoseSamples.size()) _nextPoseIdx = 0;
   }
 
   // clip is running in reverse.

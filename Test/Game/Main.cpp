@@ -83,6 +83,7 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
+  ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
 
   // Create and set up scene.
   MainCamera* mainCam = new MainCamera();

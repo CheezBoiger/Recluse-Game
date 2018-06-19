@@ -27,7 +27,8 @@ enum CmdConfig {
   CMD_INSTANCING_BIT  = (1 << 4),
   CMD_TRANSLUCENT_BIT = (1 << 5),
   CMD_TRANSPARENT_BIT = (1 << 6),
-  CMD_FORWARD_BIT = (1 << 7)
+  CMD_FORWARD_BIT     = (1 << 7),
+  CMD_ALLOW_CULL_BIT  = (1 << 8)
 };
 
   

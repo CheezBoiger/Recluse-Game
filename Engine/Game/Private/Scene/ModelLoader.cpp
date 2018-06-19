@@ -340,7 +340,7 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
     // defines some submesh in the full mesh object.
     Mesh* pMesh = new Mesh();
 
-    std::vector<SkinnedVertex> vertices;
+    std::vector<SkinnedVertex> vertices; 
     std::vector<u32>          indices;
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
@@ -350,7 +350,7 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
       u32   indexCount = 0;
       if (primitive.indices < 0) continue;
       R_ASSERT(primitive.attributes.find("POSITION") != primitive.attributes.end(), "No position values within mesh!");
-
+      
       {
         const r32* bufferPositions = nullptr;
         const r32* bufferNormals = nullptr;

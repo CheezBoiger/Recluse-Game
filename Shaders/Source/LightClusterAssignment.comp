@@ -62,8 +62,8 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 // Depth information.
-layout (set = 1, binding = 0) uniform readonly  image2D inDepth;
-layout (set = 1, binding = 1) uniform writeonly image2D resultLightIndices;
+layout (set = 1, binding = 0, r32f) uniform readonly  image2D inDepth;
+layout (set = 1, binding = 1, rgba8) uniform writeonly image2D resultLightIndices;
 
 // Cluster keys.
 layout (set = 1, binding = 2) buffer writeonly cluster {

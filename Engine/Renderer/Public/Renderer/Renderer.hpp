@@ -232,6 +232,9 @@ private:
   void              BuildForwardPBRCmdBuffer();
   void              SetUpRenderTextures(b32 fullSetup);
   void              SetUpOffscreen(b32 fullSetup);
+  void              SetUpDebugPass();
+  void              CleanUpDebugPass();
+  void              BuildDebugCmdBuffer();
   void              SetUpPBR();
   void              SetUpSkybox();
   void              BuildOffScreenBuffer(u32 cmdBufferIndex);
@@ -289,7 +292,7 @@ private:
   struct {
     CommandBuffer*                _CmdBuffer;
     Semaphore*                    _Semaphore;
-    b8                            _Enabled;
+    b32                           _Enabled;
   } m_HDR;
 
   struct {
@@ -297,6 +300,11 @@ private:
     r32                           _Strength;
     r32                           _Scale;
   } m_Downscale;
+
+  struct {
+    CommandBuffer*              _cmdBuffer;
+    Semaphore*                  _semaphore;
+  };
 
   CommandBuffer*        m_pSkyboxCmdBuffer;
   CommandBuffer*        m_pFinalCommandBuffer;

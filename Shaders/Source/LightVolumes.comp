@@ -1,0 +1,83 @@
+// Copyright (c) 2018 Recluse Project. All rights reserved.
+#version 430
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : enable
+#extension GL_ARB_compute_shader : enable
+
+
+layout (set = 0, binding = 0) uniform GlobalBuffer {
+  mat4  view;
+  mat4  proj;
+  mat4  invView;
+  mat4  invProj;
+  mat4  viewProj;
+  vec4  cameraPos;
+  vec4  l_plane;
+  vec4  r_plane;
+  vec4  t_plane;
+  vec4  b_plane;
+  vec4  n_plane;
+  vec4  f_plane;
+  vec2  mousePos;
+  ivec2 screenSize;
+  vec4  vSun; // Sundir.xyz and w is brightness.
+  vec4  vAirColor;
+  float fEngineTime; // total current time of the engine. 
+  float fDeltaTime; // elapsed time between frames.
+  float gamma;
+  float exposure;
+  float fRayleigh;
+  float fMie;
+  float fMieDist;
+  float fScatterStrength;
+  float fRayleighStength;
+  float fMieStength;
+  float fIntensity;
+  int   bloomEnabled;
+  int   enableShadows;
+  int   enableAA;
+  ivec2 pad;
+} gWorldBuffer;
+
+// Shadow map used to compare values and determine which pixel samples are lit.
+layout (set = 1, binding = 0, r32f) uniform readonly image2D inShadowMap;
+
+// Scene depth to reconstruct the world position.
+layout (set = 2, binding = 0, r32f) uniform readonly image2D inSceneDepth;
+
+// Output texture.
+layout (set = 2, binding = 1, rgba8) uniform writeonly image2D outputTex;
+
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+void main()
+{
+  ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
+  ivec2 texCoord = ivec2(iPixCoord.x / gWorldBuffer.screenSize.x, iPixCoord.y / gWorldBuffer.screenSize.y);
+  float sceneDepthFactor = imageLoad(inSceneDepth, texCoord).r;
+  
+  // reconstruct the world position
+  vec4 clipPos;
+  clipPos.x = float(2 * texCoord.x - 1);
+  clipPos.y = float(-2 * texCoord.y + 1);
+  clipPos.z = sceneDepthFactor;
+  clipPos.w = 1.0;
+  
+  vec4 positionWs = clipPos * gWorldBuffer.invProj * gWorldBuffer.invView;
+  // Perspective division.
+  positionWs.w = 1.0 / positionWs.w;
+  positionWs.xyz *= positionWs.w;
+  
+  // perform comparing.
+  
+  
+  vec4 resultColor = vec4(0.0);
+  
+  // Store the final resulting color.
+  imageStore(outputTex, texCoord, resultColor);
+}
+
+
+
+
+

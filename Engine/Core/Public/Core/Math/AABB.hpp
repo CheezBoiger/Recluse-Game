@@ -1,0 +1,32 @@
+// Copyright (c) 2018 Recluse Project. All rights reserved.
+#pragma once
+
+#include "Vector3.hpp"
+#include "Matrix4.hpp"
+
+
+namespace Recluse {
+
+
+// Axis Aligned Bounding Box, based on Erin Catto's Box2D implementation, as well
+// as Lester Hedges implementation! Many thanks to them!
+struct AABB {
+  void      ComputeCenter();
+
+  b32       Overlaps(const AABB& other) const;
+
+  b32       Contains(const AABB& other) const;
+  
+  // Minimum lower bound of the bounding box.
+  Vector3     min;
+
+  // Maximum upper bound of the bounding box.
+  Vector3     max;
+
+  // Center of the bounding box.
+  Vector3     center;
+  
+  // Surface area.
+  r32         sA;
+};
+} // Recluse

@@ -160,7 +160,7 @@ char const* kDefaultShaderEntryPointStr = "main";
 namespace RendererPass {
 
 
-void LoadShader(std::string Filename, Shader* S)
+void LoadShader(const std::string& Filename, Shader* S)
 {
   if (!S) { Log(rError) << "Shader module is null! Can not load a shader!\n"; }
   std::string Filepath = gFilesystem().CurrentAppDirectory();
