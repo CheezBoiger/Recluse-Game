@@ -204,11 +204,10 @@ public:
   Matrix4       GetLocalToWorldMatrix() const { return m_LocalToWorldMatrix; }
   Matrix4       GetWorldToLocalMatrix() const { return m_WorldToLocalMatrix; }
 
-protected:
-  // TODO():
+  // Update transform that will be used by renderer. Called during scene graph traversal.
   void          Update() override;
-  void          OnInitialize(GameObject* owner) override;
-  void          OnCleanUp() override;
+
+protected:
 
   Matrix4       m_LocalToWorldMatrix;
   Matrix4       m_WorldToLocalMatrix;

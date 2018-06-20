@@ -10,6 +10,7 @@
 #include "Core/Utility/CharHash.hpp"
 
 #include "Component.hpp"
+#include "Scene/Scene.hpp"
 #include "Scripts/Behavior.hpp"
 
 #include <unordered_map>
@@ -21,6 +22,7 @@ namespace Recluse {
 typedef uuid64  game_uuid_t;
 typedef uuid64  object_uuid_t;
 struct Collision;
+class Scene;
 
 
 // Always define this macro when inheriting GameObject (or any child objects that have
@@ -55,7 +57,12 @@ public:
   void                                SetParent(GameObject* parent) { m_pParent = parent; }
   void                                SetName(std::string name) { m_name = name; }
   void                                SetTag(std::string tag) { m_tag = tag; }
-  void                                AddChild(GameObject* child) { child->SetParent(this); m_children.push_back(child); }
+
+  void AddChild(GameObject* child) { 
+    child->SetParent(this); 
+    m_children.push_back(child); 
+    child->SetSceneOwner(m_pScene);
+  }
   
   // Update the object. Can be overridable from inherited classes.
   virtual void                        Update(r32 tick) { }
@@ -83,6 +90,10 @@ public:
   game_uuid_t                         GetId() const { return m_id; }
   size_t                              GetChildrenCount() const { return m_children.size(); }
 
+  Scene*                              GetSceneOwner() { return m_pScene; }
+
+  void                                SetSceneOwner(Scene* scene) { m_pScene = scene; }
+
   template<typename T>
   T*  CastTo() {
     return dynamic_cast<T*>(this);
@@ -98,8 +109,8 @@ public:
   void                                CleanUp() { if (m_bStarted) { OnCleanUp(); m_bStarted = false; } }
   void                                Start() { if (!m_bStarted) { OnStart(); m_bStarted = true; } }
 
-
 private:
+
   std::string                         m_name;
   std::string                         m_tag;
 
@@ -108,13 +119,13 @@ private:
 
   // Possible parent.
   GameObject*                         m_pParent;
+  Scene*                              m_pScene;
   Transform                           m_transform;
   game_uuid_t                         m_id;
   b32                                 m_bStarted;
   
   friend class GameObjectManager;
   friend class Component;
-  friend class Scene;
   friend class Engine;
 };
 } // Recluse

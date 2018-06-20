@@ -79,17 +79,6 @@ int main(int c, char* argv[])
   // Create the scene.
   Scene scene;
 
-  // Set primary light.
-  {
-    Sky* pSky = scene.GetSky();
-    DirectionalLight* pPrimary = pSky->GetSunLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-    pPrimary->_Color = Vector4(0.7f, 0.7f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector4(1.0f, -1.0f, 1.0f).Normalize();
-    pPrimary->_Enable = true;
-    pPrimary->_Intensity = 5.0f;
-  }
-
   Mesh mesh;
   {
     auto boxVerts = Cube::MeshInstance();
@@ -99,7 +88,6 @@ int main(int c, char* argv[])
 
   gEngine().Run();
   gEngine().PushScene(&scene);
-  gEngine().BuildScene();
 
   while (gEngine().Running()) {
     Time::Update();

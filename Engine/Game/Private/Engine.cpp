@@ -21,6 +21,12 @@
 namespace Recluse {
 
 
+void UpdateTransform(Engine* engine, GameObject* object, size_t currNum)
+{ 
+  object->GetTransform()->Update();
+}
+
+
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   Keyboard::keys[key] = (KeyAction)action;
@@ -136,10 +142,6 @@ void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   } else {
     m_window.SetToCenter();
   }
-    
-
-  m_cachedGameObjects.resize(1024);
-  m_cachedGameObjectKeys.resize(1024);
 }
 
 
@@ -177,6 +179,7 @@ void Engine::Run()
 
   // Start up the time as the engine begins running.
   Time::Start();
+  gRenderer().Build();
   m_running = true;
 }
 
@@ -193,9 +196,7 @@ void Engine::Stop()
 
 void Engine::Update()
 {
-  if (m_workers[2].joinable()) {
-    m_workers[2].join();
-  }
+  // TODO(): Work on loop update step a little more...
 
   if (m_window.ShouldClose() || m_stopping) {
     Stop();
@@ -203,7 +204,7 @@ void Engine::Update()
   }
   // Render out the scene.
   r64 dt = Time::DeltaTime;
-  r64 tick = Time::FixTime * Time::ScaleTime;
+  r64 tick = Time::FixTime;
   m_dLag += Time::DeltaTime;
 
 
@@ -216,110 +217,66 @@ void Engine::Update()
   gAnimation().UpdateState(dt);
   gUI().UpdateState(dt);
 
-  UpdateGameLogic(tick);
-
   PhysicsComponent::UpdateFromPreviousGameLogic();
-  Transform::UpdateComponents();
+  TraverseScene(UpdateTransform);
+  UpdateSunLight();
 
-  m_workers[2] = std::thread([&] () -> void {
+  m_workers[0] = std::thread([&] () -> void {
     gPhysics().UpdateState(dt, tick);
     PhysicsComponent::UpdateComponents();
   });
 
-  m_workers[0] = std::thread([&]() -> void {
+  m_workers[1] = std::thread([&]() -> void {
     if (Camera::GetMain()) { 
       if (Camera::GetMain()->Enabled()) Camera::GetMain()->Update(); 
     }
     RendererComponent::UpdateComponents();
   });
 
-  m_workers[3] = std::thread([&]() -> void {
+  m_workers[2] = std::thread([&]() -> void {
     SkinnedRendererComponent::UpdateComponents();
   });
 
-  m_workers[1] = std::thread([&]() -> void {
+  m_workers[3] = std::thread([&]() -> void {
     PointLightComponent::UpdateComponents();
   });
   m_workers[0].join();
   m_workers[1].join();
+  m_workers[2].join();
   m_workers[3].join();
 
   gRenderer().Render();
 }
 
 
-void Engine::UpdateGameLogic(r64 tick)
+void Engine::UpdateSunLight()
 {
   if (!m_pPushedScene) return;
-
-  for ( u32 i = 0; i < m_sceneObjectCount; ++i ) {
-    GameObject* object = m_cachedGameObjects[i];
-    if ( object ) {
-      object->Update(static_cast<r32>(tick));
-    }
-  }
-
-  {
-    Sky* pSky = m_pPushedScene->GetSky();
-    DirectionalLight* pPrimary = pSky->GetSunLight();
-    LightBuffer* pLights = gRenderer().LightData();
-    pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
-    pLights->_PrimaryLight._Color = pPrimary->_Color;
-    pLights->_PrimaryLight._Direction = pPrimary->_Direction;
-    pLights->_PrimaryLight._Enable = pPrimary->_Enable;
-    pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
-  }
- //TraverseScene(UpdateGameObject);
-}
-
-
-void BuildSceneCallback(Engine* engine, GameObject* object, size_t currNum)
-{ 
-  auto&     cache = engine->GetGameObjectCache();
-  auto&     cachedKeys = engine->GetGameObjectKeys();
-
-  if (currNum >= cache.size()) {
-    cache.resize(cache.size() << 1);
-    cachedKeys.resize(cachedKeys.size() << 1);
-  }
-
-  cache[currNum] = object;
-  cachedKeys[currNum] = object->GetId();
-  
-  // Wake the object.
-  object->Start(); 
-}
-
-
-void Engine::BuildScene()
-{
-  if (!m_pPushedScene) return;
-  m_cachedGameObjects.clear();
-  m_cachedGameObjectKeys.clear();
-  m_cachedGameObjectKeys.resize(1);
-  m_cachedGameObjects.resize(1);
-
-  TraverseScene(BuildSceneCallback);
-  gRenderer().Build();
+  Sky* pSky = m_pPushedScene->GetSky();
+  DirectionalLight* pPrimary = pSky->GetSunLight();
+  LightBuffer* pLights = gRenderer().LightData();
+  pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
+  pLights->_PrimaryLight._Color = pPrimary->_Color;
+  pLights->_PrimaryLight._Direction = pPrimary->_Direction;
+  pLights->_PrimaryLight._Enable = pPrimary->_Enable;
+  pLights->_PrimaryLight._Intensity = pPrimary->_Intensity;
 }
 
 
 void Engine::TraverseScene(GameObjectActionCallback callback)
 {
   // Traversing the scene graph using DFS.
-  // TODO(): Probably want to make a real stack allocator that doesn't have a terrible
-  // amortized time complex like this vector.
-  std::vector<GameObject*> nodes;
+  static GameObject* nodes[1024];
+  i32 top = -1;
   m_sceneObjectCount = 0;
   SceneNode* root = m_pPushedScene->GetRoot();
 
   for (size_t i = 0; i < root->GetChildCount(); ++i) {
-    nodes.push_back(root->GetChild(i));
+    nodes[++top] = root->GetChild(i);
   }
   
-  while (!nodes.empty()) {
-    GameObject* object = nodes.back();
-    nodes.pop_back();
+  while (top != -1) {
+    GameObject* object = nodes[top--];
 
     callback(this, object, m_sceneObjectCount);
     m_sceneObjectCount++;
@@ -328,7 +285,7 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     size_t child_count = object->GetChildrenCount();
     for (size_t i = 0; i < child_count; ++i) {
       GameObject* child = object->GetChild(i);
-      nodes.push_back(child);
+      nodes[++top] = child;
     }
   }
 }

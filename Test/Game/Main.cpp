@@ -19,6 +19,91 @@
 
 using namespace Recluse;
 
+
+// Test scene that is used for setting up the game world.
+class TestScene : public Scene {
+  static const u32 kMaxCount = 1;
+public:
+
+  // Used to set up the scene. Call before updating.
+  void SetUp() override {
+    cube = new CubeObject();
+    lantern = new LanternObject();
+    monster = new Monster();
+    mainCam = new MainCamera();
+
+    GetRoot()->AddChild(mainCam);
+    mainCam->Start();
+
+    for (u32 i = 0; i < kMaxCount; ++i) {
+      helmets.push_back(new HelmetObject());
+      GetRoot()->AddChild(helmets[i]);
+      helmets[i]->Start();
+    }
+
+    GetRoot()->AddChild(cube);
+    GetRoot()->AddChild(lantern);
+    GetRoot()->AddChild(monster);
+    cube->Start();
+    lantern->Start();
+    monster->Start();
+
+    // Set primary light.
+    {
+      Sky* pSky = GetSky();
+      DirectionalLight* pPrimary = pSky->GetSunLight();
+      pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
+      pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+      pPrimary->_Direction = Vector3(1.0f, -0.5f, 0.0f).Normalize();
+      pPrimary->_Enable = true;
+      pPrimary->_Intensity = 5.0f;
+    }
+  }
+
+  // Start up function call, optional if no game object was called.
+  void StartUp() override {
+  }
+
+  // Update function call. Called very loop iteration.
+  void Update(r32 tick) override {
+    mainCam->Update(tick);
+    lantern->Update(tick);
+    for (size_t i = 0; i < kMaxCount; ++i) {
+      helmets[i]->Update(tick);
+    }
+  }
+
+
+  // Clean up function call.
+  void CleanUp() override {
+    // Clean up all game objects with done.
+    for (u32 i = 0; i < kMaxCount; ++i) {
+      helmets[i]->CleanUp();
+      delete helmets[i];
+    }
+
+    cube->CleanUp();
+    delete cube;
+
+    lantern->CleanUp();
+    delete lantern;
+
+    monster->CleanUp();
+    delete monster;
+
+    mainCam->CleanUp();
+    delete mainCam;
+  }
+
+private:
+  std::vector<HelmetObject*> helmets;
+  CubeObject* cube;
+  LanternObject* lantern;
+  Monster* monster;
+  MainCamera* mainCam;
+};
+
+
 /*
   Requirements for rendering something on screen:
     Material -> MaterialComponent.
@@ -36,7 +121,7 @@ int main(int c, char* argv[])
   // Inputting gpu params is optional, and can pass nullptr if you prefer default.
   {
     GraphicsConfigParams params;
-    params._Buffering = DOUBLE_BUFFER;
+    params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
     params._Shadows = SHADOWS_ULTRA;
@@ -86,86 +171,30 @@ int main(int c, char* argv[])
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
 
   // Create and set up scene.
-  MainCamera* mainCam = new MainCamera();
+
   // Create scene.
-  Scene scene;
-  scene.GetRoot()->AddChild(mainCam);
-  
-  std::vector<HelmetObject*> helmets;
-  #define HELM_COUNT 1
-  for (u32 i = 0; i < HELM_COUNT; ++i) {
-    helmets.push_back(new HelmetObject());
-    scene.GetRoot()->AddChild(helmets[i]);
-  }
+  TestScene scene;
+  scene.SetUp();
 
-  CubeObject* cube = new CubeObject();
-  LanternObject* lantern = new LanternObject();
-  Monster* monster = new Monster();
-  scene.GetRoot()->AddChild(cube);
-  scene.GetRoot()->AddChild(lantern);
-  scene.GetRoot()->AddChild(monster);
-
-  // Add game objects into scene. This demonstrates parent-child transformation as well.
-
-  // Set primary light.
-  {
-    Sky* pSky = scene.GetSky();
-    DirectionalLight* pPrimary = pSky->GetSunLight();
-    pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
-    pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector3(1.0f, -0.5f, 0.0f).Normalize();
-    pPrimary->_Enable = true;
-    pPrimary->_Intensity = 5.0f;
-  }
-
-  // Second scene, to demonstrate the renderer's capabilities of transitioning multiple scenes.
-  Scene scene2;
-  scene2.GetRoot()->AddChild(mainCam);
-
-  // Set primary light.
-  {
-    Sky* pSky = scene2.GetSky();
-    DirectionalLight* pPrimary = pSky->GetSunLight();
-    pPrimary->_Ambient = Vector4(0.3f, 0.3f, 0.66f, 1.0f);
-    pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    pPrimary->_Direction = Vector3(1.0f, -1.0f, 1.0f).Normalize();
-    pPrimary->_Enable = true;
-    pPrimary->_Intensity = 2.0f;
-  }
-
-
-  // Run engine, and build the scene to render.
+  // Run engine, and push the scene to reference.
   gEngine().Run();
   gEngine().PushScene(&scene);
-  gEngine().BuildScene();
+
+  // Optional startup call.
+  scene.StartUp();
+
   ///////////////////////////////////////////////////////////////////////////////////
 
-  Log() << RTEXT("Timer Start: ") << Time::CurrentTime() << RTEXT(" s\n");
   // Game loop.
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
+    scene.Update((r32)Time::FixTime);
     gEngine().Update();
   }
-  
 
-  // Clean up all game objects with done.
-  for (u32 i = 0; i < HELM_COUNT; ++i) {
-    helmets[i]->CleanUp();
-    delete helmets[i];
-  }
-
-  cube->CleanUp();
-  delete cube;
-
-  lantern->CleanUp();
-  delete lantern;
-
-  monster->CleanUp();
-  delete monster;
-
-  mainCam->CleanUp();
-  delete mainCam;
+  // Once done using the scene, clean it up.
+  scene.CleanUp();
 
   // Finish.
   AssetManager::CleanUpAssets();

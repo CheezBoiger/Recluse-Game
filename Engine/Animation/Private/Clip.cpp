@@ -82,7 +82,7 @@ void AnimSampler::Step(r32 gt)
 u32 AnimSampler::GetPaletteSz()
 {
   R_ASSERT(_pClip, "Clip is null for this sampler.");
-  return _pClip->_aAnimPoseSamples[_currPoseIdx]._aLocalPoses.size();
+  return (u32 )_pClip->_aAnimPoseSamples[_currPoseIdx]._aLocalPoses.size();
 }
 
 

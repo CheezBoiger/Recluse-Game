@@ -10,9 +10,6 @@
 namespace Recluse {
 
 
-DEFINE_COMPONENT_MAP(Transform);
-
-
 Transform* Component::GetTransform()
 {
   if (!GetOwner()) return nullptr;
@@ -50,17 +47,5 @@ void Transform::Update()
   m_Up =    u * (u.Dot(Vector3::UP) * 2.0f)     + (Vector3::UP * (s*s - u.Dot(u)))    + ((u ^ Vector3::UP) * s * 2.0f);
 
   m_WorldToLocalMatrix = m_LocalToWorldMatrix.Inverse();
-}
-
-
-void Transform::OnInitialize(GameObject* owner)
-{
-  REGISTER_COMPONENT(Transform, this);
-}
-
-
-void Transform::OnCleanUp()
-{
-  UNREGISTER_COMPONENT(Transform);
 }
 } // Recluse

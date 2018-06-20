@@ -169,10 +169,12 @@ public:
 
     m_pHandle = new LanternHandle();
     AddChild(m_pHandle);
+    m_pHandle->Start();
   }
 
   void Update(r32 tick) override
   {
+    m_pHandle->Update(tick);
   }
 
   void OnCleanUp() override
@@ -270,7 +272,7 @@ public:
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
     m_pCage = new LanternCage();
     AddChild(m_pCage);
-
+    m_pCage->Start();
     bFollow = false;
   }
 
@@ -303,6 +305,8 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_Y)) {
       m_pRendererComponent->Enable(true);
     }
+
+    m_pCage->Update(tick);
   }
 
   void OnCleanUp() override
