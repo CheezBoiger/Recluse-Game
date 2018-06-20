@@ -60,7 +60,7 @@ void AnimSampler::Step(r32 gt)
     }
     _globalTransform = localTransform;
   }
-  
+
   for (size_t i = 1; i < _pClip->_aAnimPoseSamples[_currPoseIdx]._aLocalPoses.size(); ++i) {
     size_t idx = (rootInJoints ? i : i - 1);
     Matrix4 localTransform = LinearInterpolate(t, i);
@@ -109,13 +109,6 @@ Matrix4 AnimSampler::LinearInterpolate(r32 t, size_t i)
     _currPoseIdx = _nextPoseIdx;
     _nextPoseIdx += 1;
     if (_nextPoseIdx >= _pClip->_aAnimPoseSamples.size()) _nextPoseIdx = 0;
-  }
-
-  // clip is running in reverse.
-  if (dt < -1.0f) {
-    _nextPoseIdx = _currPoseIdx;
-    _currPoseIdx -= 1;
-    if (_currPoseIdx < 0) _currPoseIdx = _pClip->_aAnimPoseSamples.size() - 1;
   }
 
   Matrix4 resultTransform = Matrix4::Identity();

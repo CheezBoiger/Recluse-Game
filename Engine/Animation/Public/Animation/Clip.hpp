@@ -102,8 +102,8 @@ private:
   AnimClip*                 _pClip;           // Animation clip we are sampling from.
   std::vector<Matrix4>      _output;          // Matrix palette output during sampling. 
   r32                       _tauS;            // global start time given when play is called.
-  size_t                    _currPoseIdx;     // 
-  size_t                    _nextPoseIdx;     //
+  i32                       _currPoseIdx;     // 
+  i32                       _nextPoseIdx;     //
   sampler_id_t              _samplerId;       //
   Matrix4                   _globalTransform; // root animation global bind. Pertains to its global transformation.
 };
