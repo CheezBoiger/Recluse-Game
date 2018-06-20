@@ -9,9 +9,7 @@
 namespace Recluse {
 
 
-class AABB;
-
-typedef struct CCamViewFrustum CFrustum;
+struct AABB;
 
 // View frustum object.
 struct ViewFrustum {

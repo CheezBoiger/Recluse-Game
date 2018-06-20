@@ -226,13 +226,14 @@ void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
 }
 
 
-void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
+Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
 {
+  Mesh* pMesh = nullptr;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
-    Mesh* pMesh = new Mesh();
+    pMesh = new Mesh();
 
     std::vector<StaticVertex> vertices;
     std::vector<u32>          indices;
@@ -329,16 +330,18 @@ void LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
   }
+  return pMesh;
 }
 
 
-void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
+Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
 {
+  Mesh* pMesh = nullptr;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
-    Mesh* pMesh = new Mesh();
+    pMesh = new Mesh();
 
     std::vector<SkinnedVertex> vertices; 
     std::vector<u32>          indices;
@@ -474,6 +477,8 @@ void LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, M
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
   }
+
+  return pMesh;
 }
 
 
@@ -530,11 +535,11 @@ NodeTransform CalculateGlobalTransform(const tinygltf::Node& node, Matrix4 paren
   return transform;
 }
 
-void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
+skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
 {
   // TODO(): JointPoses are in the wrong order as invBinding matrices, need to sort them in the
   // order of joint array in GLTF file!!
-  if (node.skin == -1) return;
+  if (node.skin == -1) return Skeleton::kNoSkeletonId;
 
   Skeleton skeleton;
   tinygltf::Skin skin = model.skins[node.skin];
@@ -606,6 +611,7 @@ void LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimMode
   Skeleton::PushSkeleton(skeleton);
   
   engineModel->skeletons.push_back(&Skeleton::GetSkeleton(skeleton._uuid));
+  return skeleton._uuid;
 }
 
 
@@ -620,10 +626,13 @@ void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, A
     }
   }
 
-  LoadSkin(node, model, engineModel, transform._globalMatrix);
+  // TODO(): Need to avoid re importing the same mesh or skin from gltf files!
+  // Get the skeleton from this node to apply to the corresponding mesh. 
+  skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
 
   if (node.skin != -1) {
-    LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+    pMesh->SetSkeletonReference(skeleId);
   } else {
     LoadMesh(node, model, engineModel, transform._globalMatrix);
   }

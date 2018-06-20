@@ -106,7 +106,7 @@ public:
     m_pAnim->SetSampler(gAnimation().CreateAnimSampler());
     m_pRendererComponent->SetAnimationComponent(m_pAnim);
     AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
-    clip->_skeletonId = static_cast<ModelLoader::AnimModel*>(model)->skeletons[0]->_uuid;
+    clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
     
     m_pAnim->AddClip(clip, "InitialPose");
     m_pAnim->Playback("InitialPose");
@@ -231,7 +231,7 @@ public:
 
     // Clips don't have a skeleton to refer to, so be sure to know which skeleton to refer the clip to.
     AnimClip* clip = animModel->animations[0];
-    clip->_skeletonId = animModel->skeletons[0]->_uuid;
+    clip->_skeletonId = m_meshComponent.MeshRef()->GetSkeletonReference();
     m_animationComponent.AddClip(clip, "WalkPose");
     m_animationComponent.Playback("WalkPose");  
     m_animationComponent.SetSampler(gAnimation().CreateAnimSampler());

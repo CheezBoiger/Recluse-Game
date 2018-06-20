@@ -3,8 +3,10 @@
 
 #include "Core/Types.hpp"
 #include "Game/Component.hpp"
-
+#include "Core/Math/AABB.hpp"
 #include "Renderer/MeshData.hpp"
+
+#include "Animation/Skeleton.hpp"
 
 
 namespace Recluse {
@@ -17,7 +19,8 @@ class MeshData;
 class Mesh {
 public:
   Mesh() : m_pData(nullptr) 
-          , m_bSkinned(false) { }
+          , m_bSkinned(false)
+          , m_skeleId(Skeleton::kNoSkeletonId) { }
 
   // Initialize the mesh object.
   void            Initialize(size_t elementCount, void* data, MeshData::VertexType type, 
@@ -28,9 +31,14 @@ public:
 
   MeshData*       Native() { return m_pData; }
   b32             Skinned() { return m_bSkinned; }
+
+  void            SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
+  skeleton_uuid_t GetSkeletonReference() const { return m_skeleId; }
+
 private:
   MeshData*       m_pData;
   b32             m_bSkinned;
+  skeleton_uuid_t m_skeleId;
 };
 
 

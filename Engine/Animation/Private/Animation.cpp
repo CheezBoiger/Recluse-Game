@@ -8,8 +8,6 @@
 
 namespace Recluse {
 
-skeleton_uuid_t                     Skeleton::kCurrSkeleCount             = 0;
-std::map<skeleton_uuid_t, Skeleton> Skeleton::kSkeletons;
 const size_t                        Animation::kMaxAnimationThreadCount   = 2;
 
 Animation& gAnimation()

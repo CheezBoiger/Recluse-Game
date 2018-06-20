@@ -9,7 +9,7 @@
 
 namespace Recluse {
 
-typedef u32      skeleton_uuid_t;
+typedef i32      skeleton_uuid_t;
 
 
 // Joint represents the overall skeleton pose of our model. 
@@ -32,6 +32,8 @@ private:
   static skeleton_uuid_t                          kCurrSkeleCount;
   static std::map<skeleton_uuid_t, Skeleton>      kSkeletons;
 public:
+
+  static const skeleton_uuid_t      kNoSkeletonId = -1;
 
   static Skeleton&            GetSkeleton(skeleton_uuid_t id) { return kSkeletons[id]; }
   static void                 PushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
