@@ -2,34 +2,52 @@
 #pragma once
 
 #include "Core/Types.hpp"
-#include "RHI/VulkanConfigs.hpp"
+#include "Vertex.hpp"
 
+#include "CmdList.hpp"
+#include "RenderCmd.hpp"
 
 namespace Recluse {
 
 
 class Texture2D;
-
+class GraphicsPipeline;
+class RenderPass;
+class Semaphore;
+class CommandBuffer;
+class VulkanRHI;
 
 // Maximum decals that can be tagged into the world.
-#define DECAL_MAX         4
+#define DECAL_MAX         1024
 
-// Decal structure.
-struct Decal {
-  u32           _id;
-  Texture2D*    _texture;
-};
 
 // Decal manager engine. this engine keeps track, and updates,
-// decals within the game world.
+// decals within the game world. Decals are stored per instance.
 class DecalEngine {
+  static const u32 kMaxDecalCount = DECAL_MAX;
 public:
   DecalEngine() { }
 
-  // Uhhh, probably don't want to do this...
-  Decal&      GetDecal(size_t idx) { return m_decals[idx]; }
 
+  static u32 GetMaxDecalCount() { return kMaxDecalCount; }
+
+  void        Initialize(VulkanRHI* rhi);
+  void        CleanUp(VulkanRHI* rhi);
+
+  // Get decal data information.
+  DecalPerInstanceInfo&      GetDecalInfo(size_t idx) { return m_decals[idx]; }
+
+  void      PushDecal(DecalPerInstanceInfo& decal);
+
+  // Decals are set as the next subpass within the offscreen cmdbuffer;
+  void        BuildDecals(CommandBuffer* offscreenCmdBuffer);
+
+  void        ClearDecalBuffer();
+  
 private:
-  Decal       m_decals[DECAL_MAX];
+  std::vector<DecalPerInstanceInfo>   m_decals;
+  u32                                 m_decalCount;
+  GraphicsPipeline*                   m_pipeline;
+  RenderPass*                         m_renderPass;
 };
 } // Recluse

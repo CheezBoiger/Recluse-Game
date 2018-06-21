@@ -124,7 +124,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = SHADOWS_ULTRA;
+    params._Shadows = SHADOWS_HIGH;
     params._TextureQuality = TEXTURE_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
 

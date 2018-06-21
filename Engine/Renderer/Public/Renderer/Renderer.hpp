@@ -46,6 +46,7 @@ class Fence;
 class RenderObject;
 class SkinnedRenderObject;
 class SkyRenderer;
+class DecalEngine;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -314,6 +315,7 @@ private:
   RenderQuad            m_RenderQuad;
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
+  DecalEngine*          m_decalEngine;
   SkyRenderer*          m_pSky;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;

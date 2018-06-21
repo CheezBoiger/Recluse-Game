@@ -69,4 +69,13 @@ struct SkinnedVertex {
   Vector4 boneWeights;
   i32     boneIds       [4];
 };
+
+
+// Per instance information.
+struct DecalPerInstanceInfo {
+  Vector3 position;
+  Vector3 scale;
+  r32     lodBias;
+  i32     texIndex;
+};
 } // Recluse

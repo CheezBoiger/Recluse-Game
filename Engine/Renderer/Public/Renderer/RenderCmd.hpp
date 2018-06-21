@@ -59,4 +59,8 @@ struct UiRenderCmd {
 
   CmdConfigBits            _config;
 };
+
+
+struct DecalRenderCmd {
+};
 } // Recluse

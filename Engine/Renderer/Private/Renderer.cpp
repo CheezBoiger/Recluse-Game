@@ -17,6 +17,7 @@
 #include "StructuredBuffer.hpp"
 #include "VertexDescription.hpp"
 #include "SkyAtmosphere.hpp"
+#include "Decal.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -58,6 +59,7 @@ Renderer::Renderer()
   , m_CurrCmdBufferIdx(0)
   , m_Minimized(false)
   , m_pGlobalIllumination(nullptr)
+  , m_decalEngine(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);

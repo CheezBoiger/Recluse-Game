@@ -66,12 +66,13 @@ public:
   TextureQuality  _TextureQuality;
 
   // Determines the quality and details of shadows in the game world.
-  // This will have a performance impact the better the quality. 
+  // This will have a performance impact the better the quality. Recommended to
+  // Stay at HIGH, since ULTRA is pretty hefty.
   // NOTE(): You must restart the game in order for qualities to take effect!
   //          Otherwise, disabling and enabling shadows can be done in runtime.
   ShadowDetail    _Shadows;
 
-  // Level of detail, by distance.
+  // Level of detail, by distance. The higher, the better the models in the world.
   r32             _Lod;
 
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
@@ -86,12 +87,16 @@ public:
   // This also applies to water and certain translucent objects.
   b32             _EnableChromaticAberration;
 
-  // Post processing affects.
+  // Post processing affects. This includes HDR.
   b32             _EnablePostProcessing;
 
   // Enable local reflections. Global illumination for local enviroments which adds some 
   // quality to object surfaces. Disabling will improve performance, but reduce quality.
   b32             _EnableLocalReflections;
+
+  // Allow blooms ingame. This allows light to bleed out of emissive, shiny, and metallic objects,
+  // depending on how intense the light reflection, or light emission, is.
+  b32             _EnableBloom;
 
   // Allows the the renderer engine to multithread its workload.
   b32             _EnableMultithreadedRendering;
@@ -104,6 +109,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   TEXTURE_QUALITY_ULTRA,
   SHADOWS_NONE,
   1.0f,
+  true,
   true,
   true,
   true,
