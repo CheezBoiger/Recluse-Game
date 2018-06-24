@@ -161,16 +161,11 @@ void Renderer::WaitForCpuFence()
 
 void Renderer::Render()
 {
-  static u32 bNextFrame = false;
-
   if (m_Minimized) {
     // Window was minimized, ignore any cpu draw requests and prevent frame rendering
     // until window is back up.
     ClearCmdLists();
-    if (bNextFrame) {
-      WaitForCpuFence();
-      bNextFrame = false;
-    }
+    //WaitForCpuFence();
     return;
   }
 
@@ -180,7 +175,7 @@ void Renderer::Render()
   SortCmdLists();
 
   // Wait for fences before starting next frame.
-  if (bNextFrame) { WaitForCpuFence(); }
+  WaitForCpuFence();
 
   UpdateSceneDescriptors();
   CheckCmdUpdate();
@@ -317,7 +312,6 @@ void Renderer::Render()
     // Signal graphics finished on the final output.
     VkSemaphore signal = m_pRhi->GraphicsFinishedSemaphore();
     m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &uiSignalSema, 1, &signal, m_cpuFence->Handle()); // cpuFence will need to wait until overlay is finished.
-    bNextFrame = true;
   EndFrame();
 
 
@@ -430,6 +424,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   VkFenceCreateInfo fenceCi = { };
   fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceCi.flags = VK_FENCE_CREATE_SIGNALED_BIT;
   
   m_cpuFence = m_pRhi->CreateVkFence();
   m_cpuFence->Initialize(fenceCi);

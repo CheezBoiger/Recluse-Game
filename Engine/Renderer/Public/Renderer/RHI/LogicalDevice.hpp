@@ -24,7 +24,7 @@ public:
     , mGraphicsFinishedSemaphore(VK_NULL_HANDLE) { }
 
 
-  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
+  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info, u32 swapchainImageCount,
                           QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation);
   void                  CleanUp();
 
@@ -65,11 +65,15 @@ private:
   QueueFamily                   mComputeQueueFamily;
   QueueFamily                   mTransferQueueFamily;
 
+  // Each semaphore corresponds to the number of swapchain images in the swapchain.
+  std::vector<VkSemaphore>      m_imageAvailableSemas;
+  std::vector<VkSemaphore>      m_graphicsFinishedSemas;
+
   VkSemaphore                   mImageAvailableSemaphore;
   VkSemaphore                   mGraphicsFinishedSemaphore;
   VkFence                       mDefaultComputeFence;
 
-  void                          CreateSemaphores();
+  void                          CreateSemaphores(u32 count);
   void                          CreateComputeFence();
 };
 } // Recluse

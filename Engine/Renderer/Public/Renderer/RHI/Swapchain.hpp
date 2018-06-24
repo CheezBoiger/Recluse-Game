@@ -32,8 +32,8 @@ public:
 
   VkSwapchainKHR                Handle() { return mSwapchain; }
 
-
-  size_t                        ImageCount() const { return SwapchainImages.size(); }
+  // Current number of images available in the swapchain.
+  u32                        ImageCount() const { return static_cast<u32>(SwapchainImages.size()); }
 
   SwapchainImage&               Get(const size_t index) { return SwapchainImages[index]; }
   SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }

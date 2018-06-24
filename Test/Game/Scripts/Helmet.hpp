@@ -80,7 +80,7 @@ public:
     m_pMaterialComponent->SetMaterialRef(material);
     //material->SetEmissiveFactor(0.01f);
 
-    //material->SetRoughnessFactor(1.0f);
+    //material->SetRoughnessFactor(0.3f);
     //material->SetMetallicFactor(1.0f);
     //material->SetEmissiveFactor(1.0f);
 

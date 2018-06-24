@@ -215,7 +215,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
-  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate,
+  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate, mSwapchain.ImageCount(),
       &graphicsQueueFamily, &computeQueueFamily, &transferQueueFamily, &presentationQueueFamily)) {
     R_DEBUG(rError, "Vulkan logical device failed to create.\n");
     return;
