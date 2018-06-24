@@ -53,6 +53,8 @@ class DecalEngine;
 // onto a window surface. This module is important as it is the only way to see 
 // stuff on screen, and to display pretty graphics!
 class Renderer : public EngineModule<Renderer> {
+  // Maximum number of workers allowed in renderer for multithreaded rendering.
+  static const u32  kMaxRendererThreadWorkerCount = 3;
 public:
 
   Renderer();
@@ -265,9 +267,15 @@ private:
   void              WaitForCpuFence();
 
   Window*           m_pWindow;
+
+  // Command lists used by the renderer.
   CmdList<MeshRenderCmd>            m_cmdDeferredList;
   CmdList<MeshRenderCmd>            m_forwardCmdList;
   CmdList<UiRenderCmd>              m_uiCmdList;
+
+  // Number of workers in this renderer instance. Used to enable multithreading.
+  std::vector<std::thread>          m_workers;
+
   GlobalDescriptor* m_pGlobal;
   LightDescriptor*  m_pLights;
 
@@ -328,6 +336,7 @@ private:
   b32                   m_Initialized : 1;
   b32                   m_AntiAliasing : 1; 
   b32                   m_Minimized : 1;
+  b32                   m_multithreaded : 1;
 };
 
 Renderer&           gRenderer();
