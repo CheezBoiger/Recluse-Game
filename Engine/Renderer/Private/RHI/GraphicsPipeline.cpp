@@ -26,6 +26,7 @@ void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
 
   if (vkCreateGraphicsPipelines(mOwner, VK_NULL_HANDLE, 1, &info, nullptr, &mPipeline) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create pipeline!\n");
+    R_ASSERT(false, "");
     return;
   }
 }

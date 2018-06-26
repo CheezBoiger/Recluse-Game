@@ -15,12 +15,15 @@ layout (set = 0, binding = 0) uniform sampler2D sceneSurface;
 layout (set = 0, binding = 1) uniform sampler2D bloomSurface;
 
 
+// Global const buffer ALWAYS bound to descriptor set 0, or the 
+// first descriptor set.
 layout (set = 0, binding = 2) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  invView;
   mat4  invProj;
   mat4  viewProj;
+  mat4  invViewProj;
   vec4  cameraPos;
   vec4  l_plane;
   vec4  r_plane;

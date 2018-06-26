@@ -139,8 +139,8 @@ RenderPass* hdr_renderPass                = nullptr;
 Sampler* hdr_gamma_samplerKey          = nullptr;
 DescriptorSet* hdr_gamma_descSetKey          = nullptr;
 DescriptorSetLayout* hdr_gamma_descSetLayoutKey    = nullptr;
-std::string hdr_gamma_vertFileStr         = "HDRGammaPass.vert.spv";
-std::string hdr_gamma_fragFileStr         = "HDRGammaPass.frag.spv";
+std::string hdr_gamma_vertFileStr         = "HDR.vert.spv";
+std::string hdr_gamma_fragFileStr         = "HDR.frag.spv";
 
 GraphicsPipeline* final_PipelineKey            = nullptr;
 DescriptorSet* final_DescSetKey             = nullptr;

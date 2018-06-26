@@ -11,6 +11,7 @@ layout (location = 2) in vec2 uv1;
 
 layout (push_constant) uniform DecalTransform {
   mat4      model;
+  mat4      invModel;
   float     lodBias;
   float     opacity;
 } transform;
@@ -23,6 +24,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  invView;
   mat4  invProj;
   mat4  viewProj;
+  mat4  invViewProj;
   vec4  cameraPos;
   vec4  l_plane;
   vec4  r_plane;

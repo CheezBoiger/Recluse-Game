@@ -92,6 +92,7 @@ void Camera::Update()
   gGlobalBuffer->_Proj = m_projectionMatrix;
   gGlobalBuffer->_View = m_viewMatrix;
   gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
+  gGlobalBuffer->_InvViewProj = gGlobalBuffer->_ViewProj.Inverse();
   gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
   gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
   gGlobalBuffer->_ScreenSize[0] = pWindow->Width();

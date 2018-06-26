@@ -65,9 +65,13 @@ layout (location = 3) out vec4 rt3; // emissive.
 void main()
 {
   // coordinates of screen from gl_FragCoord, which is in window space.
-  vec2 sPos = gl_FragCoord.xy / gWorldBuffer.screenSize.xy;
-  vec2 depthUV = sPos * 0.5 + 0.5;
+  vec2 sPos = gl_FragCoord.xy / gWorldBuffer.screenSize.xy; // gl_FragCoord already includes the half-pixel offset.
+  vec2 depthUV = sPos;
   float depth = texture(gDepth, depthUV);
+  
+  vec4 tempPosWS = vec4(depthUV * 2.0 - 1.0, depth, 1.0);
+  vec4 posWS = gWorldBuffer.invView * tempPosWS;
+  posWS = posWS / posWS.w;
 }
 
 

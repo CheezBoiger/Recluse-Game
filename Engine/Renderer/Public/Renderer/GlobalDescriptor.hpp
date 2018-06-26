@@ -32,6 +32,7 @@ struct GlobalBuffer {
   Matrix4         _InvView;
   Matrix4         _InvProj;
   Matrix4         _ViewProj;
+  Matrix4         _InvViewProj;
   Vector4         _CameraPos;
   Vector4         _LPlane;
   Vector4         _RPlane;

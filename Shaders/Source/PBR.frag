@@ -34,12 +34,15 @@ in FRAG_IN {
 } frag_in;
 
 
+// Global const buffer ALWAYS bound to descriptor set 0, or the 
+// first descriptor set.
 layout (set = 0, binding = 0) uniform GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  invView;
   mat4  invProj;
   mat4  viewProj;
+  mat4  invViewProj;
   vec4  cameraPos;
   vec4  l_plane;
   vec4  r_plane;
@@ -145,10 +148,9 @@ GBuffer ReadGBuffer(vec2 uv)
   float z = texture(rtDepth, uv).r;
   float x = uv.x * 2.0 - 1.0;
   float y = uv.y * 2.0 - 1.0;
-  vec4 vProjectedPos = vec4(x, y, z, 1.0);
-  vec4 vViewPos = gWorldBuffer.invProj * vProjectedPos;
-  vViewPos /= vViewPos.w;
-  vec4 vWorldPos = gWorldBuffer.invView * vViewPos;
+  vec4 vClipPos = vec4(x, y, z, 1.0);
+  vec4 vWorldPos = gWorldBuffer.invViewProj * vClipPos;
+  vWorldPos /= vWorldPos.w;
   gbuffer.pos = vWorldPos.xyz;
   
   return gbuffer;
