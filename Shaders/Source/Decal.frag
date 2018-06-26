@@ -5,12 +5,11 @@
 
 
 in FRAG_IN {
-  vec3    position;
+  vec3    positionCS;
   float   lodBias;
-  vec3    normal;
-  int     texIndex;
   vec2    uv0;
   vec2    uv1;
+  vec4    opacity;
 } fragIn;
 
 
@@ -51,15 +50,25 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 // Texture lookups using the texIndex.
-layout (set = 1, binding = 0) uniform sampler2DArray albedo;
-layout (set = 1, binding = 1) uniform sampler2DArray normal;
-layout (set = 1, binding = 2) uniform sampler2DArray emissive;
+layout (set = 1, binding = 0) uniform sampler2D albedo;
+layout (set = 1, binding = 1) uniform sampler2D normal;
+layout (set = 1, binding = 2) uniform sampler2D emissive;
+
+// Depth from gbuffer pass. Readonly.
+layout (set = 2, binding = 3) uniform sampler2D gDepth;
 
 layout (location = 0) out vec4 rt0; // albedo
 layout (location = 1) out vec4 rt1; // normal
 layout (location = 2) out vec4 rt2; // roughmetal.
-layout (location = 3) out vec4 rt3; // emission.
+layout (location = 3) out vec4 rt3; // emissive.
 
 void main()
 {
+  // coordinates of screen from gl_FragCoord, which is in window space.
+  vec2 sPos = gl_FragCoord.xy / gWorldBuffer.screenSize.xy;
+  vec2 depthUV = sPos * 0.5 + 0.5;
+  float depth = texture(gDepth, depthUV);
 }
+
+
+

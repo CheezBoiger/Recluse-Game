@@ -6,6 +6,7 @@
 #include "Core/Math/Vector4.hpp"
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Vector2.hpp"
+#include "Core/Math/Quaternion.hpp"
 
 
 #define load_position_v4(m, p) { \
@@ -71,11 +72,19 @@ struct SkinnedVertex {
 };
 
 
+// For Meshes with no normal data needed.
+struct VertexNoNormal {
+  Vector4 position;
+  Vector2 uv0;
+  Vector2 uv1;
+};
+
+
 // Per instance information.
 struct DecalPerInstanceInfo {
-  Vector3 position;
-  Vector3 scale;
-  r32     lodBias;
-  i32     texIndex;
+  Vector4       position;
+  Quaternion    rotation;
+  Vector4       scale;
+  Vector4       textureInfo;  // x -> lodBias, y -> textureIndex within a Texture array.
 };
 } // Recluse

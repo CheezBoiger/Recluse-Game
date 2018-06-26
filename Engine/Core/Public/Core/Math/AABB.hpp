@@ -11,7 +11,8 @@ namespace Recluse {
 // Axis Aligned Bounding Box, based on Erin Catto's Box2D implementation, as well
 // as Lester Hedges implementation! Many thanks to them!
 struct AABB {
-  void      ComputeCenter();
+  // Compute the center of the  bounding box.
+  void      ComputeCentroid();
 
   b32       Overlaps(const AABB& other) const;
 
@@ -23,8 +24,8 @@ struct AABB {
   // Maximum upper bound of the bounding box.
   Vector3     max;
 
-  // Center of the bounding box.
-  Vector3     center;
+  // Center of the bounding box, otherwise known as a centroid.
+  Vector3     centroid;
   
   // Surface area.
   r32         sA;

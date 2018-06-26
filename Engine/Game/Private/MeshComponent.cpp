@@ -15,6 +15,7 @@ void Mesh::Initialize(size_t elementCount, void* data, MeshData::VertexType type
   m_pData->Initialize(elementCount, data, type, indexCount, indices);
   m_pData->SetMin(min);
   m_pData->SetMax(max);
+  m_pData->UpdateAABB();
   if (type == MeshData::VertexType::SKINNED) m_bSkinned = true;
 }
 

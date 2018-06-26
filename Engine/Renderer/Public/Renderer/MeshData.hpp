@@ -5,7 +5,7 @@
 
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
-
+#include "Core/Math/AABB.hpp"
 #include "Core/Math/Vector3.hpp"
 
 
@@ -45,8 +45,8 @@ public:
 
   void            Initialize(size_t elementCount, void* data, VertexType type = STATIC,
     size_t indexCount = 0, void* indices = nullptr);
-  void            SetMin(const Vector3& min) { m_min = min; }
-  void            SetMax(const Vector3& max) { m_max = max; }
+  void            SetMin(const Vector3& min) { m_aabb.min = min; }
+  void            SetMax(const Vector3& max) { m_aabb.max = max; }
 
   void            CleanUp();
 
@@ -57,15 +57,13 @@ public:
     else return nullptr; 
   }
 
-  Vector3 GetMin() const { return m_min; }
-  Vector3 GetMax() const { return m_max; }
+  void            UpdateAABB() { m_aabb.ComputeCentroid(); }
 
 private:
   VertexBuffer    mVertexBuffer;
   IndexBuffer     mIndexBuffer;
   VulkanRHI*      mRhi;
-  Vector3         m_min;
-  Vector3         m_max;
+  AABB            m_aabb;
 
   friend class Renderer;
 };

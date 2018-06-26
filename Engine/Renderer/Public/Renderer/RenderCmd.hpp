@@ -16,6 +16,7 @@ class MaterialDescriptor;
 class MeshDescriptor;
 class RenderMaterial;
 class MeshData;
+class Texture2D;
 
 struct Primitive;
 
@@ -28,7 +29,8 @@ enum CmdConfig {
   CMD_TRANSLUCENT_BIT = (1 << 5),
   CMD_TRANSPARENT_BIT = (1 << 6),
   CMD_FORWARD_BIT     = (1 << 7),
-  CMD_ALLOW_CULL_BIT  = (1 << 8)
+  CMD_ALLOW_CULL_BIT  = (1 << 8),
+  CMD_DECAL_BIT       = (1 << 9)
 };
 
   
@@ -62,5 +64,11 @@ struct UiRenderCmd {
 
 
 struct DecalRenderCmd {
+  DecalRenderCmd()
+    : _pTexture(nullptr)
+      { }
+
+  Texture2D*  _pTexture;
+  Matrix4     _transform;
 };
 } // Recluse

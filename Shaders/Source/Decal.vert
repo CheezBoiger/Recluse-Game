@@ -3,15 +3,17 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
+// Bounding box and it's uv coordinates. No normal is required as it only defines 
+// the bounds of the decal.
 layout (location = 0) in vec4 position;
-layout (location = 1) in vec4 normal;
-layout (location = 2) in vec2 uv0;
-layout (location = 3) in vec2 uv1;
+layout (location = 1) in vec2 uv0;
+layout (location = 2) in vec2 uv1;
 
-layout (location = 4) in vec3 pos;
-layout (location = 6) in vec3 scale;
-layout (location = 7) in float lodBias;
-layout (location = 8) in int texIndex;
+layout (push_constant) uniform DecalTransform {
+  mat4      model;
+  float     lodBias;
+  float     opacity;
+} transform;
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -50,23 +52,21 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 out FRAG_IN {
-  vec3  position;
-  float lodBias;
-  vec3  normal;
-  int   texIndex;
-  vec2  uv0;
-  vec2  uv1;
+  vec3  positionCS;   // position of boundingbox in clip space.
+  float lodBias;      // level of detail.
+  vec2  uv0;          // uv coords.
+  vec2  uv1;          // second uv coords.
+  vec4  opacity;      // opacity.
 } fragIn;
 
 void main()
 {
-  fragIn.lodBias = lodBias;
-  fragIn.texIndex = texIndex;
+  fragIn.lodBias = transform.lodBias;
+  fragIn.opacity.x = transform.opacity;
   fragIn.uv0 = uv0;
   fragIn.uv1 = uv1;
   
-  vec4 worldPos = vec4((position.xyz + pos) * scale, 1.0);
-  gl_Position = gWorldBuffer.viewProj * worldPos;
-  fragIn.normal = normal;
-  fragIn.position = position;
+  vec4 clipPos = gWorldBuffer.viewProj * transform.model * position;
+  gl_Position = clipPos;
+  fragIn.positionCS = clipPos.xyz;
 }
