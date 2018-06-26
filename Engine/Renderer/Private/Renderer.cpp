@@ -3410,6 +3410,10 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
       presentMode = VK_PRESENT_MODE_FIFO_KHR;
     }
 
+    if (m_currentGraphicsConfigs._EnableLocalReflections != params->_EnableLocalReflections) {
+      reconstruct = true;
+    }
+
     UpdateRuntimeConfigs(params);
   }
 
