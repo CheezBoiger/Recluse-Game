@@ -53,4 +53,13 @@ void DecalEngine::CreateBoundingBox()
 {
   
 }
+
+
+void DecalEngine::BuildDecals(CommandBuffer* offscreenCmdBuffer)
+{
+  R_ASSERT(offscreenCmdBuffer, "Offscreen command buffer is null prior to building decals.");
+  R_ASSERT(offscreenCmdBuffer->Recording(), "Offscreen command buffer not in recording state.");
+
+
+}
 } // Recluse

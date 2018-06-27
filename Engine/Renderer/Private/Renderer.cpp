@@ -2448,6 +2448,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       }
     }
   cmdBuffer->EndRenderPass();
+
+  // Build decals after.
+  m_decalEngine->BuildDecals(cmdBuffer);
+
   cmdBuffer->End();
 }
 

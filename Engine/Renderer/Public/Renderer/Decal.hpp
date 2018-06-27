@@ -51,7 +51,7 @@ public:
   // Decals are set as the next subpass within the offscreen cmdbuffer;
   void        BuildDecals(CommandBuffer* offscreenCmdBuffer);
   
-  void        ClearDecalBuffer();
+  void        ClearDecalBuffer() { m_decalCmds.Clear(); }
   void        PushDecal(const DecalRenderCmd& cmd);
   
 private:
