@@ -58,6 +58,10 @@ public:
       pPrimary->_Enable = true;
       pPrimary->_Intensity = 5.0f;
     }
+    
+    // You are also allowed to configure hdr settings of the scene. This doesn't affect user parameters of
+    // setting bloom on or off, or anything else...
+    m_hdrSettings._bloomStrength = 1.0f;
   }
 
   // Start up function call, optional if no game object was called.

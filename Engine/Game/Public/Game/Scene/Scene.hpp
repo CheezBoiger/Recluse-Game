@@ -7,6 +7,7 @@
 #include "Core/Utility/Vector.hpp"
 
 #include "Renderer/LightDescriptor.hpp"
+#include "Renderer/HDR.hpp"
 
 #include "Game/Rendering/Sky.hpp"
 
@@ -46,7 +47,10 @@ class Scene : public ISerializable {
   static std::string        default_name;
 public:
   Scene(std::string name = default_name)
-    : m_SceneName(name) { m_Root.SetSceneOwner(this); }
+    : m_SceneName(name) { 
+    m_Root.SetSceneOwner(this);
+  }
+
   ~Scene() { }
 
   // Set the name of this scene.
@@ -70,9 +74,13 @@ public:
   void                      Deserialize(IArchive& archive) override  { }
 
   Sky*                      GetSky() { return &m_sky; }
+  const ParamsHDR&          GetHDRSettings() const { return m_hdrSettings; }
+
+protected:
+  // hdr settings allowed to be adjusted for this scene.
+  ParamsHDR                 m_hdrSettings;
 
 private:
-
   Sky                       m_sky;
 
   std::string               m_SceneName;

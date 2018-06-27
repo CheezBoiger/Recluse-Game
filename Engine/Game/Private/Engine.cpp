@@ -292,4 +292,12 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     }
   }
 }
+
+
+void Engine::PushScene(Scene* scene)
+{
+  R_ASSERT(scene, "Attempting to push a null scene!");
+  m_pPushedScene = scene;
+  gRenderer().AdjustHDRSettings(scene->GetHDRSettings());
+}
 } // Recluse

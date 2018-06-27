@@ -53,6 +53,12 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
+// TODO(): We might turn this into a descriptor set instead...
+layout (push_constant) uniform ParamsHDR {
+  float bloomStrength;
+} paramConfigs;
+
+
 vec3 Uncharted2Tonemap(vec3 x)
 {
   float A = 0.15;
@@ -74,7 +80,7 @@ void main()
  
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (gWorldBuffer.bloomEnabled >= 1) { color += bloom; }
+  if (gWorldBuffer.bloomEnabled >= 1) { color += bloom * paramConfigs.bloomStrength; }
   
   // Extended exposure pass with Uncharted 2 tone mapping. Gamma correction
   // is also enabled.

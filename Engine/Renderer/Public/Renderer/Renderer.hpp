@@ -15,6 +15,7 @@
 #include "LightDescriptor.hpp"
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
+#include "HDR.hpp"
 
 namespace Recluse {
 
@@ -47,6 +48,7 @@ class RenderObject;
 class SkinnedRenderObject;
 class SkyRenderer;
 class DecalEngine;
+class HDR;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -211,6 +213,9 @@ public:
 
   const char*       GetDeviceName();
 
+  // Adjusts bloom strength of the renderer.
+  void              AdjustHDRSettings(const ParamsHDR& hdrSettings);
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -299,6 +304,7 @@ private:
   } m_Forward;
 
   struct {
+    ParamsHDR                     _pushCnst;
     CommandBuffer*                _CmdBuffer;
     Semaphore*                    _Semaphore;
     b32                           _Enabled;
@@ -329,7 +335,6 @@ private:
   TextureCubeArray*     m_pIrrMaps;
   DescriptorSet*        m_pGlobalIllumination;
   u32                   m_CurrCmdBufferIdx;
-
   u32                   m_TotalCmdBuffers;
 
   b32                   m_Rendering : 1;

@@ -88,7 +88,7 @@ public:
   void                          Update();
 
   // Push the new scene to into this engine for extraction.
-  void                          PushScene(Scene* scene) { m_pPushedScene = scene; }
+  void                          PushScene(Scene* scene);
 
   // Transitions from one scene to another if needed. This is optional.
   void                          SignalLoadSceneTransition() { m_bSignalLoadScene = true; }

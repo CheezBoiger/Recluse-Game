@@ -4,6 +4,7 @@
 #include "Resources.hpp"
 #include "Core/Logging/Log.hpp"
 #include "Renderer.hpp"
+#include "HDR.hpp"
 #include "SkyAtmosphere.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/Shader.hpp"
@@ -287,9 +288,17 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   GraphicsInfo.pStages = ShaderModules;
   GraphicsInfo.stageCount = 2;
 
+  // For parameter push constant in HDR.
+  VkPushConstantRange pushConstantRange = { };
+  pushConstantRange.offset = 0;
+  pushConstantRange.size = sizeof(ParamsHDR);
+  pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
   hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   hdrLayout.setLayoutCount = 1;
   hdrLayout.pSetLayouts = hdrSetLayout;
+  hdrLayout.pPushConstantRanges = &pushConstantRange;
+  hdrLayout.pushConstantRangeCount = 1;
 
   hdrPipeline->Initialize(GraphicsInfo, hdrLayout);
 

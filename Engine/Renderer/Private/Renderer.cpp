@@ -18,6 +18,7 @@
 #include "VertexDescription.hpp"
 #include "SkyAtmosphere.hpp"
 #include "Decal.hpp"
+#include "HDR.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -336,7 +337,7 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->DeviceWaitIdle();
 
-  // We properly want to use smart ptrs...
+  // We probably want to use smart ptrs...
   m_pGlobal->CleanUp();
   delete m_pGlobal;
   m_pGlobal = nullptr;
@@ -469,7 +470,6 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   }
 
   SetUpGlobalIlluminationBuffer();
-
   m_Initialized = true;
   return true;
 }
@@ -2742,11 +2742,19 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, dSets, 0, nullptr);
+      cmdBuffer->PushConstants(hdrPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
   cmdBuffer->End();
+}
+
+
+void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
+{
+  m_HDR._pushCnst = hdrSettings;
+  BuildHDRCmdBuffer();
 }
 
 
