@@ -16,7 +16,7 @@ AnimSampler::AnimSampler()
   : _pClip(nullptr)
   , _output(64)
   , _currPoseIdx(0)
-  , _nextPoseIdx(0)
+  , _nextPoseIdx(1)
   , _samplerId(kSamplerCount++)
 {
   _state._bEnabled          = true;

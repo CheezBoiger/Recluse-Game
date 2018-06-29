@@ -223,8 +223,8 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 2.5f, 0.2f));
     m_secondCollider = gPhysics().CreateBoxCollider(Vector3(1.5f, 0.2f, 0.2f));
-    m_pCollider->center = Vector3(0.0f, 2.7f, 0.0f);
-    m_secondCollider->center = Vector3(0.0f, 4.4f, 0.0f);
+    m_pCollider->SetCenter(Vector3(0.0f, 2.7f, 0.0f));
+    m_secondCollider->SetCenter(Vector3(0.0f, 4.4f, 0.0f));
 
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);

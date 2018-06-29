@@ -9,6 +9,7 @@
 #include "CubeObject.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
+#include "Physics/SphereCollider.hpp"
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
@@ -212,6 +213,7 @@ private:
 };
 
 
+#define SPHERE 1
 class Monster : public GameObject {
   R_GAME_OBJECT(Monster)
 public:
@@ -219,16 +221,18 @@ public:
 
   void OnStart() override 
   {
+    m_rendererComponent.Initialize(this);
+    m_meshComponent.Initialize(this);
+    m_animationComponent.Initialize(this);
+    m_physicsComponent.Initialize(this);
+
+#if !SPHERE
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);
     ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
 
-    m_rendererComponent.Initialize(this);
-    m_meshComponent.Initialize(this);
-    m_animationComponent.Initialize(this);
-
     m_meshComponent.SetMeshRef(animModel->meshes[0]);
-
+ 
     // Clips don't have a skeleton to refer to, so be sure to know which skeleton to refer the clip to.
     AnimClip* clip = animModel->animations[0];
     clip->_skeletonId = m_meshComponent.MeshRef()->GetSkeletonReference();
@@ -246,10 +250,27 @@ public:
       primitiveHandle.SetMaterial(rusted);
       m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
     }
-    
+#else
+    Mesh* mesh = nullptr;
+    MeshCache::Get("NativeSphere", &mesh);
+    m_meshComponent.SetMeshRef(mesh);
+    Material* mat = nullptr;
+    MaterialCache::Get("RustedSample", &mat);
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = mat->Native();
+    prim._pMesh = mesh->Native();
+    m_rendererComponent.SetPrimitive(prim);
+    m_rendererComponent.SetMeshComponent(&m_meshComponent);
+ #endif
+
     Transform* transform = GetTransform();
-    transform->Scale = Vector3(0.002f, 0.002f, 0.002f);
+    transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
     transform->Position = Vector3(2.0f, 0.5f, 0.0f);
+
+    m_sphereCollider = gPhysics().CreateSphereCollider(1.0f);
+    m_physicsComponent.AddCollider(m_sphereCollider);
   }
 
   void Update(r32 tick) override
@@ -261,9 +282,19 @@ public:
     m_rendererComponent.CleanUp();
     m_meshComponent.CleanUp();
     m_animationComponent.CleanUp();
+    m_physicsComponent.CleanUp();
+
+    gPhysics().FreeCollider(m_sphereCollider);
   }
+
 private:
+#if !SPHERE
   SkinnedRendererComponent  m_rendererComponent;
+#else
+  RendererComponent m_rendererComponent;
+#endif
   MeshComponent             m_meshComponent;
   AnimationComponent        m_animationComponent;
+  PhysicsComponent          m_physicsComponent;
+  SphereCollider*           m_sphereCollider;
 };

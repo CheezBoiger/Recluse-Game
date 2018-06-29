@@ -46,7 +46,7 @@ public:
   b32                   Kinematic() const { return m_bKinematic; }
   b32                   Activated() const { return m_bActivated; }
   GameObject*           GetGameObject() const { return m_gameObj; }
-  CompoundCollider*     GetCompound() { return &m_compound; }
+  CompoundCollider*     GetCollider() { return &m_compound; }
 
   void                  AddCollider(Collider* collider);
   void                  InvokeCollision(Collision* body);

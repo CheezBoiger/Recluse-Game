@@ -16,9 +16,15 @@ typedef uuid64 collider_uuid_t;
 
 class Collider : public PhysicsObject {
 public:
+  Collider(const Vector3& center = Vector3())
+    : m_center(center) { }
 
+  Vector3     GetCenter() const { return m_center; }
   // Center point of this collider.
-  Vector3     center;
+
+  void        SetCenter(const Vector3& center) { m_center = center; }
+private:
+  Vector3     m_center;
 };
 
 

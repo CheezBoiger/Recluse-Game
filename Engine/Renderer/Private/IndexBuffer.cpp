@@ -44,7 +44,7 @@ void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   mBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
   CommandBuffer* cmdBuffer = rhi->CreateCommandBuffer();
-  cmdBuffer->Allocate(rhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer->Allocate(rhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -64,8 +64,8 @@ void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  rhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
-  rhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
+  rhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  rhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
 
   rhi->FreeCommandBuffer(cmdBuffer);
   rhi->FreeBuffer(stagingBuffer);

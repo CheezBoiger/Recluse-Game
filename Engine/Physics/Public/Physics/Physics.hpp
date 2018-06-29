@@ -24,6 +24,7 @@ class SphereCollider;
 class CompoundCollider;
 
 
+// Ray test output that results in the closest rigidbody hit by the ray.
 struct RayTestHit {
   // Rigid body that was hit by the ray.
   RigidBody* _rigidbody;
@@ -31,6 +32,14 @@ struct RayTestHit {
   Collider*  _collider;
   
   Vector3   _normal;
+};
+
+
+// Ray test output that results in all rigidbodies hit by the ray.
+struct RayTestHitAll {
+  std::vector<RigidBody*> _rigidBodies;
+  std::vector<Collider*>  _colliders;
+  std::vector<Vector3>    _normals;
 };
 
 // Our physics engine.
@@ -46,7 +55,7 @@ public:
   virtual RigidBody*                      CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
 
   virtual BoxCollider*                    CreateBoxCollider(const Vector3& scale) { return nullptr; }
-  virtual SphereCollider*                 CreateSphereCollider() { return nullptr; }
+  virtual SphereCollider*                 CreateSphereCollider(r32 radius) { return nullptr; }
   virtual CompoundCollider*               CreateCompoundCollider() { return nullptr; }
   virtual void                            FreeRigidBody(RigidBody* body) { }
 
@@ -65,7 +74,7 @@ public:
   virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
   virtual void                            AddCollider(RigidBody* body, Collider* collider) { }
   virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
-  virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance) { return false; }
+  virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) { return false; }
 
 private:
 };

@@ -164,6 +164,14 @@ int main(int c, char* argv[])
     MeshCache::Cache(RTEXT("NativeCube"), mesh);
   }
 
+  {
+    Mesh* mesh = new Mesh();
+    auto sphereVerts = UVSphere::MeshInstance(1.0f, 32, 32);
+    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 32, 32);
+    mesh->Initialize(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
+    MeshCache::Cache(RTEXT("NativeSphere"), mesh);
+  }
+
   // Model Loading.
   ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
   ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));

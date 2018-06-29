@@ -8,6 +8,7 @@
 #include "Renderer/Renderer.hpp"
 #include "Collider.hpp"
 #include "BoxCollider.hpp"
+#include "SphereCollider.hpp"
 #include "Collision.hpp"
 #include "RigidBody.hpp"
 
@@ -350,7 +351,7 @@ b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, cons
   if (!hit.hasHit()) return false; 
   RigidBody* rbHit = static_cast<RigidBody*>(hit.m_collisionObject->getUserPointer());
   output->_rigidbody = rbHit;
-  output->_collider = rbHit->GetCompound();
+  output->_collider = rbHit->GetCollider();
   output->_normal = Vector3(hit.m_hitNormalWorld.x(),
                             hit.m_hitNormalWorld.y(),
                             hit.m_hitNormalWorld.z());
@@ -359,7 +360,7 @@ b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, cons
 }
 
 
-b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance)
+b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output)
 {
   btVector3 start(btScalar(origin.x),
     btScalar(origin.y),
@@ -370,12 +371,20 @@ b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, c
   dir.normalize();
 
   btVector3 end = start + dir * maxDistance;
-  btCollisionWorld::ClosestRayResultCallback allHits(start, end);
+  btCollisionWorld::AllHitsRayResultCallback allHits(start, end);
   bt_manager._pWorld->rayTest(start, end, allHits);
 
   // Register hits.
-
-
+  if (!allHits.hasHit()) return false;
+  output->_colliders.resize(allHits.m_collisionObjects.size());
+  output->_colliders.resize(allHits.m_collisionObjects.size());
+  output->_normals.resize(allHits.m_hitNormalWorld.size());
+  for (u32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
+    const btVector3& n = allHits.m_hitNormalWorld[i];
+    output->_rigidBodies[i] = static_cast<RigidBody*>(allHits.m_collisionObjects[i]->getUserPointer());
+    output->_colliders[i] = output->_rigidBodies[i]->GetCollider();
+    output->_normals[i] = Vector3(n.x(), n.y(), n.z());
+  }
   return allHits.hasHit();
 }
 
@@ -392,7 +401,20 @@ void BulletPhysics::ClearForces(RigidBody* body)
 CompoundCollider* BulletPhysics::CreateCompoundCollider()
 {
   CompoundCollider* collider = new CompoundCollider();
+  btCompoundShape* pCompound = new btCompoundShape();
+  kCollisionShapes[collider->GetUUID()] = pCompound;
+
   return collider;
+}
+
+
+SphereCollider* BulletPhysics::CreateSphereCollider(r32 radius)
+{
+  SphereCollider* sphere = new SphereCollider(radius);
+  btSphereShape* nativeSphere = new btSphereShape(btScalar(radius));
+  kCollisionShapes[sphere->GetUUID()] = nativeSphere;
+  
+  return sphere;
 }
 
 
@@ -405,10 +427,11 @@ void BulletPhysics::AddCollider(RigidBody* body, Collider* collider)
   btCollisionShape* shape = kCollisionShapes[collider->GetUUID()];
   btTransform localTransform;
   localTransform.setIdentity();
+  Vector3 center = collider->GetCenter();
   localTransform.setOrigin(btVector3(
-    btScalar(collider->center.x),
-    btScalar(collider->center.y),
-    btScalar(collider->center.z)
+    btScalar(center.x),
+    btScalar(center.y),
+    btScalar(center.z)
   ));
   bundle.compound->addChildShape(localTransform, shape);
 
@@ -418,5 +441,19 @@ void BulletPhysics::AddCollider(RigidBody* body, Collider* collider)
 
   bundle.native->setMassProps(btScalar(mass), inertia);
   bundle.native->updateInertiaTensor();
+}
+
+
+void BulletPhysics::FreeCollider(Collider* collider)
+{
+  if (!collider) return;
+  auto it = kCollisionShapes.find(collider->GetUUID());
+  if (it == kCollisionShapes.end()) return;
+
+  btCollisionShape* native = it->second;
+  kCollisionShapes.erase(it);
+
+  delete native;
+  delete collider;
 }
 } // Recluse
