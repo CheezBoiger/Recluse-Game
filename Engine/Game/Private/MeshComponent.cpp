@@ -3,9 +3,12 @@
 #include "GameObject.hpp"
 #include "Renderer/MeshData.hpp"
 #include "Renderer/Renderer.hpp"
-
+#include "Engine.hpp"
 
 namespace Recluse {
+
+
+DEFINE_COMPONENT_MAP(MeshComponent);
 
 
 void Mesh::Initialize(size_t elementCount, void* data, MeshData::VertexType type,size_t indexCount, 
@@ -24,5 +27,43 @@ void Mesh::CleanUp()
 {
   gRenderer().FreeMeshData(m_pData);
   m_pData = nullptr;
+}
+
+
+void MeshComponent::OnInitialize(GameObject* owner)
+{
+  REGISTER_COMPONENT(MeshComponent, this);
+}
+
+
+void MeshComponent::OnCleanUp()
+{
+  UNREGISTER_COMPONENT(MeshComponent);
+}
+
+
+void MeshComponent::Update()
+{
+  if (!m_pMeshRef) return;
+  size_t viewFrustumCount = gEngine().GetViewFrustumCount();
+  if (viewFrustumCount == 0) return;
+
+  ViewFrustum** viewFrustums = gEngine().GetViewFrustums();
+  AABB aabb = m_pMeshRef->Native()->GetAABB();
+  Matrix4 model = GetOwner()->GetTransform()->GetLocalToWorldMatrix();
+
+  aabb.max = aabb.max * model;
+  aabb.min = aabb.min * model;
+  aabb.ComputeCentroid();
+
+  ClearFrustumCullBits();
+
+  for (size_t i = 0; i < viewFrustumCount; ++i) {
+    ViewFrustum* viewFrustum = viewFrustums[i];
+    b32 intersects = viewFrustum->Intersect(aabb);
+    if (intersects) {
+      m_frustumCull = m_frustumCull | (1 << i);
+    }
+  }
 }
 } // Recluse

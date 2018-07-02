@@ -21,40 +21,41 @@ class RigidBody;
 class PhysicsComponent : public Component {
   RCOMPONENT(PhysicsComponent);
 public:
-  static void UpdateFromPreviousGameLogic();
+  static void     UpdateFromPreviousGameLogic();
 
   PhysicsComponent() 
     : m_pRigidBody(nullptr) { }
 
 protected:
-  void Update() override;
-  virtual void OnInitialize(GameObject* owner) override;  
-  virtual void OnCleanUp() override;
+  void            Update() override;
+  virtual void    OnInitialize(GameObject* owner) override;  
+  virtual void    OnCleanUp() override;
 public:
 
-  void OnEnable() override;
-
-  void AddCollider(Collider* collider) { m_pRigidBody->AddCollider(collider); }
-  void SetMass(r32 mass);
+  void            OnEnable() override;
+  void            AddCollider(Collider* collider) { m_pRigidBody->AddCollider(collider); }
+  void            SetMass(r32 mass);
   //void SetRelativeOffset(const Vector3& offset);
-  void ApplyForce(const Vector3& force);
-  void SetGravity(const Vector3& gravity);
-  void ClearForces();
-  void ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
-  void SetCenterOfMass(const Vector3& centerOfMass);
-  Vector3 GetCenterOfMassPosition();
+  void            ApplyForce(const Vector3& force);
+  void            SetGravity(const Vector3& gravity);
+  void            ClearForces();
+  void            ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
+  void            SetCenterOfMass(const Vector3& centerOfMass);
+  Vector3         GetCenterOfMassPosition();
 
-  r32 GetMass() const { return m_mass; }
-  void UpdateFromGameObject();
-  void SetFriction(const r32 friction);
+  r32             GetMass() const { return m_mass; }
+  void            UpdateFromGameObject();
+  void            SetFriction(r32 friction);
+  void            SetRollingFriction(r32 friction);
+  void            SetSpinningFriction(r32 friction);
 
-  RigidBody* GetRigidBody() { return m_pRigidBody; }
+  RigidBody*      GetRigidBody() { return m_pRigidBody; }
 
 private:
 
-  void SetTransform(const Vector3& newPos, const Quaternion& newRot);
+  void            SetTransform(const Vector3& newPos, const Quaternion& newRot);
 
-  RigidBody*  m_pRigidBody;
-  r32         m_mass;
+  RigidBody*      m_pRigidBody;
+  r32             m_mass;
 };
 } // Recluse

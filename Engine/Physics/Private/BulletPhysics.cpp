@@ -31,23 +31,30 @@ std::unordered_map<physics_uuid_t, btCollisionShape*> kCollisionShapes;
 struct bt_physics_manager 
 {
   // 
-  btDefaultCollisionConfiguration*      _pCollisionConfiguration;
+  btDefaultCollisionConfiguration*            _pCollisionConfiguration;
 
   // 
-  btCollisionDispatcher*                _pDispatcher;
+  btCollisionDispatcher*                      _pDispatcher;
 
-
-  btBroadphaseInterface*                _pOverlappingPairCache;
+  //
+  btBroadphaseInterface*                      _pOverlappingPairCache;
 
   // Interchangeable constraint solver. We will use Sequential Impulse, as it is
   // popular. We can use Projected Gauss-Seidel for experimentation later... 
-  btSequentialImpulseConstraintSolver*  _pSolver;
+  btSequentialImpulseConstraintSolver*        _pSolver;
 
-  btDiscreteDynamicsWorld*              _pWorld;
+  //
+  btDiscreteDynamicsWorld*                    _pWorld;
+
+  // World soft.
+  btSoftRigidDynamicsWorld*                   _pSoftWorld;
+
+  //
+  btSoftBodyRigidBodyCollisionConfiguration*  _pSoftCollisionConfiguration;
 } bt_manager;
 
 
-RigidBody* GetRigidBody(uuid64 key)
+RigidBody* GetRigidBody(physics_uuid_t key)
 {
   RigidBody* body = nullptr;
 
@@ -56,6 +63,15 @@ RigidBody* GetRigidBody(uuid64 key)
   }
 
   return body;
+}
+
+
+RigidBundle* GetRigidBundle(physics_uuid_t key)
+{
+  RigidBundle* pBundle = nullptr;
+  auto it = kRigidBodyMap.find(key);
+  if (it != kRigidBodyMap.end()) pBundle = &it->second;
+  return pBundle;
 }
 
 
@@ -177,7 +193,7 @@ void BulletPhysics::FreeRigidBody(RigidBody* body)
 {
   if (!body) return;
   R_DEBUG(rVerbose, "Freeing rigid body.\n");
-  uuid64 uuid = body->GetUUID();
+  physics_uuid_t uuid = body->GetUUID();
   RigidBundle& bundle = kRigidBodyMap[uuid];
   
   bt_manager._pWorld->removeRigidBody(bundle.native);
@@ -259,7 +275,7 @@ void BulletPhysics::UpdateState(r64 dt, r64 tick)
 void BulletPhysics::SetMass(RigidBody* body, r32 mass)
 {
   if (!body) return;
-  uuid64 key = body->GetUUID();
+  physics_uuid_t key = body->GetUUID();
   btRigidBody* obj = kRigidBodyMap[key].native;
 
   bt_manager._pWorld->removeRigidBody(obj);
@@ -274,7 +290,7 @@ void BulletPhysics::SetMass(RigidBody* body, r32 mass)
 void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Quaternion& newRot)
 {
   if (!body) return;
-  uuid64 key = body->GetUUID();
+  physics_uuid_t key = body->GetUUID();
   btRigidBody* obj = kRigidBodyMap[key].native;
   btTransform transform = obj->getWorldTransform();
   transform.setOrigin(btVector3(newPos.x, newPos.y, newPos.z));
@@ -295,7 +311,7 @@ void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Q
 void BulletPhysics::ActivateRigidBody(RigidBody* body)
 {
   if (!body) return;
-  uuid64 key = body->GetUUID();
+  physics_uuid_t key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
   body->m_bActivated = true;
   rb->activate();
@@ -305,7 +321,7 @@ void BulletPhysics::ActivateRigidBody(RigidBody* body)
 void BulletPhysics::DeactivateRigidBody(RigidBody* body)
 {
   if (!body) return;
-  uuid64 key = body->GetUUID();
+  physics_uuid_t key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
   body->m_bActivated = false;
   rb->setActivationState(WANTS_DEACTIVATION);
@@ -325,7 +341,7 @@ void BulletPhysics::SetWorldGravity(const Vector3& gravity)
 void BulletPhysics::ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos)
 {
   R_ASSERT(body, "Rigid Body was null.");
-  uuid64 k = body->GetUUID();
+  physics_uuid_t k = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[k].native;
   rb->applyImpulse(btVector3(btScalar(impulse.x), btScalar(impulse.y), btScalar(impulse.z)), 
     btVector3(btScalar(relPos.x), btScalar(relPos.y), btScalar(relPos.z)));
@@ -379,7 +395,7 @@ b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, c
   output->_colliders.resize(allHits.m_collisionObjects.size());
   output->_colliders.resize(allHits.m_collisionObjects.size());
   output->_normals.resize(allHits.m_hitNormalWorld.size());
-  for (u32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
+  for (i32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
     const btVector3& n = allHits.m_hitNormalWorld[i];
     output->_rigidBodies[i] = static_cast<RigidBody*>(allHits.m_collisionObjects[i]->getUserPointer());
     output->_colliders[i] = output->_rigidBodies[i]->GetCollider();
@@ -392,7 +408,7 @@ b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, c
 void BulletPhysics::ClearForces(RigidBody* body)
 {
   R_ASSERT(body, "Rigid Body was null.");
-  uuid64 k = body->GetUUID();
+  physics_uuid_t k = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[k].native;
   rb->clearForces();
 }
@@ -455,5 +471,75 @@ void BulletPhysics::FreeCollider(Collider* collider)
 
   delete native;
   delete collider;
+}
+
+
+void BulletPhysics::SetFriction(RigidBody* body, r32 friction)
+{
+  R_ASSERT(body, "Body is null.");
+  physics_uuid_t uuid = body->GetUUID();
+  RigidBundle* bundle = GetRigidBundle(uuid);
+  btRigidBody* native = bundle->native;
+  native->setFriction(btScalar(friction));
+}
+
+
+void BulletPhysics::SetRollingFriction(RigidBody* body, r32 friction)
+{
+  R_ASSERT(body, "Body is null.");
+  physics_uuid_t uuid = body->GetUUID();
+  RigidBundle* bundle = GetRigidBundle(uuid);
+  btRigidBody* native = bundle->native;
+  native->setRollingFriction(friction);
+}
+
+
+void BulletPhysics::SetSpinningFriction(RigidBody* body, r32 friction)
+{
+  R_ASSERT(body, "Body is null.");
+  physics_uuid_t uuid = body->GetUUID();
+  RigidBundle* bundle = GetRigidBundle(uuid);
+  btRigidBody* native = bundle->native;
+  native->setSpinningFriction(friction);
+}
+
+
+void BulletPhysics::UpdateCompoundCollider(RigidBody* body, CompoundCollider* collider)
+{
+  R_ASSERT(body, "body is null.");
+  physics_uuid_t uuid = body->GetUUID();
+  RigidBundle* bundle = GetRigidBundle(uuid);
+  btCompoundShape* pCompound = nullptr;
+
+  {
+    btCollisionShape* pShape = GetCollisionShape(collider);
+    if (!pShape->isCompound()) {
+      R_ASSERT(false, "Collider is not a compound shape!");
+      return;
+    }
+    pCompound = static_cast<btCompoundShape*>(pShape);
+  }
+
+  i32 childCount = pCompound->getNumChildShapes();
+  for (i32 i = 0; i < childCount; ++i) {
+    btCollisionShape* pChild = pCompound->getChildShape(0);
+    pCompound->removeChildShape(pChild);
+  }
+
+
+  auto& colliders = collider->m_colliders;
+  for (i32 i = 0; i < colliders.size(); ++i) {
+    btCollisionShape* shape = GetCollisionShape(colliders[i]);
+    if (!shape) continue;
+    btTransform localTransform;
+    localTransform.setIdentity();
+    Vector3 center = colliders[i]->GetCenter();
+    localTransform.setOrigin(btVector3(
+      btScalar(center.x),
+      btScalar(center.y),
+      btScalar(center.z)
+    ));
+    pCompound->addChildShape(localTransform, shape);
+  }
 }
 } // Recluse

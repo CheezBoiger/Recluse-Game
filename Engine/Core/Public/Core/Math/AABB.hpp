@@ -13,6 +13,9 @@ namespace Recluse {
 struct AABB {
   // Compute the center of the  bounding box.
   void      ComputeCentroid();
+  
+  // Compute the surface area of this box. Stored in sA.
+  void      ComputeSurfaceArea();
 
   b32       Overlaps(const AABB& other) const;
 

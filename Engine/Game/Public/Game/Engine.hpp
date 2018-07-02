@@ -42,7 +42,6 @@
 #include "Audio/Audio.hpp"
 #include "UI/UI.hpp"
 
-
 namespace Recluse {
 
 
@@ -63,6 +62,7 @@ struct InputAxis {
 
 // Engine object.
 class Engine {
+  static const size_t kMaxViewFrustums = 32;
 public:
   // Callback to determine the manipulation of a game object in this engine.
   typedef void (*GameObjectActionCallback)(Engine*, GameObject*, size_t);
@@ -108,6 +108,21 @@ public:
   b32                           Running() { return m_running; }
   b32                           MultiThreading() const { return m_multiThreading; }
 
+  // Get array of view frustum references.
+  ViewFrustum**                 GetViewFrustums() { return m_frustums; }  
+
+  // Add a frustum to the engine for culling, returns the index of which the frustum was stored in the 
+  // engine's reference array.
+  i32 AddFrustum(ViewFrustum* frustum) { 
+    i32 c = m_currFrustumCount; 
+    m_frustums[m_currFrustumCount++] = frustum; 
+    return c; 
+  } 
+
+  size_t                        GetViewFrustumCount() const { return m_currFrustumCount; }
+  
+  static size_t                 GetMaxViewFrustumCount() { return kMaxViewFrustums; }
+
 private:
 
   void                          Stop();
@@ -127,6 +142,8 @@ private:
   b32                           m_multiThreading : 1;
   b32                           m_bSignalLoadScene;
   std::vector<std::thread>      m_workers;
+  ViewFrustum*                  m_frustums[kMaxViewFrustums];
+  i32                           m_currFrustumCount;
 };
 
 

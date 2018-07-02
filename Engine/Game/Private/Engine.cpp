@@ -98,6 +98,9 @@ Engine::Engine()
   , m_dLag(0.0)
 {
   m_workers.resize(4);
+  for (size_t i = 0; i < kMaxViewFrustums; ++i) {
+    m_frustums[i] = nullptr;
+  }
 }
 
 
@@ -230,6 +233,7 @@ void Engine::Update()
     if (Camera::GetMain()) { 
       if (Camera::GetMain()->Enabled()) Camera::GetMain()->Update(); 
     }
+    MeshComponent::UpdateComponents();
     RendererComponent::UpdateComponents();
   });
 

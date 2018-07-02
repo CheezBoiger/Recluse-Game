@@ -267,10 +267,14 @@ public:
 
     Transform* transform = GetTransform();
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
-    transform->Position = Vector3(2.0f, 0.5f, 0.0f);
+    transform->Position = Vector3(2.0f, 5.0f, 0.0f);
 
     m_sphereCollider = gPhysics().CreateSphereCollider(1.0f);
     m_physicsComponent.AddCollider(m_sphereCollider);
+    m_physicsComponent.SetMass(0.5f);
+    m_physicsComponent.SetFriction(1.0f);
+    m_physicsComponent.SetRollingFriction(0.1f);
+    m_physicsComponent.SetSpinningFriction(0.1f);
   }
 
   void Update(r32 tick) override

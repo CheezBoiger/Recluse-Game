@@ -96,4 +96,22 @@ void PhysicsComponent::ClearForces()
 {
   gPhysics().ClearForces(m_pRigidBody);
 }
+
+
+void PhysicsComponent::SetFriction(r32 friction)
+{
+  gPhysics().SetFriction(m_pRigidBody, friction);
+}
+
+
+void PhysicsComponent::SetRollingFriction(r32 friction)
+{
+  gPhysics().SetRollingFriction(m_pRigidBody, friction);
+}
+
+
+void PhysicsComponent::SetSpinningFriction(r32 friction)
+{
+  gPhysics().SetSpinningFriction(m_pRigidBody, friction);
+}
 } // Recluse

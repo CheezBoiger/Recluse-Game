@@ -46,15 +46,33 @@ private:
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent);
 protected:
-  virtual void OnInitialize(GameObject* owner) override { }
-  virtual void OnCleanUp() override { }
+  virtual void OnInitialize(GameObject* owner) override;
+  virtual void OnCleanUp() override;
 public:
 
   void SetMeshRef(Mesh* pData) { m_pMeshRef = pData; }
   
   Mesh* MeshRef() { return m_pMeshRef; }
 
+  // updates this mesh component instance frustum bit cull.
+  void  Update() override;
+
+  // Cull bit set map. Each bit represents a frustum, and when flipped, means this mesh is culled
+  // for that given frustum. Max 32 frustums can be supported.
+  b32                                 GetFrustumCullMap() const { return m_frustumCull; }
+
+  // Set a frustum bit to 1.
+  void                                SetFrustumCull(b32 mask) { m_frustumCull |= mask; }
+
+  // Unset a frustum bit to 0.
+  void                                UnsetFrustumCull(b32 mask) { m_frustumCull &= ~mask; }
+
+  // Clear and reset all frustum bits to 0.
+  void                                ClearFrustumCullBits() { m_frustumCull &= 0; }
+
 private:
   Mesh*       m_pMeshRef;
+
+  b32                                 m_frustumCull;
 };
 } // Recluse

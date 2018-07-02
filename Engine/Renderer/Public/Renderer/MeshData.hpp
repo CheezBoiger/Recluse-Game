@@ -57,8 +57,9 @@ public:
     else return nullptr; 
   }
 
-  void            UpdateAABB() { m_aabb.ComputeCentroid(); }
+  void            UpdateAABB() { m_aabb.ComputeCentroid(); m_aabb.ComputeSurfaceArea(); }
 
+  const AABB&     GetAABB() const { return m_aabb; }
 private:
   VertexBuffer    mVertexBuffer;
   IndexBuffer     mIndexBuffer;

@@ -25,6 +25,7 @@ public:
   SceneNode()
     : m_pScene(nullptr) { }
 
+  // Adds a child game object to the scene graph root.
   void                      AddChild(GameObject* child);
 
   size_t                    GetChildCount() const { return m_GameObjects.size(); }
@@ -55,6 +56,9 @@ public:
 
   // Set the name of this scene.
   void                      SetName(std::string name) { m_SceneName = name; }
+
+  // Get the root of the scene graph, this is the root node used by the engine to determine what 
+  // to render, and how to render it.
   SceneNode*                GetRoot() { return &m_Root; }
 
   // Get the name of this scene!

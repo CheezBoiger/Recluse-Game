@@ -27,7 +27,7 @@ enum ContactType {
 };
 
 
-// RigidBody object create by Physics interface. Be sue to assign the proper
+// RigidBody object create by Physics interface. Be sure to assign the proper
 // game object id to this body, otherwise nullptr will be returned!
 class RigidBody : public PhysicsObject {
 public:

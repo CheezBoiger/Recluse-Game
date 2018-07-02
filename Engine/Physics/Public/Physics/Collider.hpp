@@ -12,8 +12,6 @@ namespace Recluse {
 
 class Actor;
 
-typedef uuid64 collider_uuid_t;
-
 class Collider : public PhysicsObject {
 public:
   Collider(const Vector3& center = Vector3())
@@ -25,12 +23,5 @@ public:
   void        SetCenter(const Vector3& center) { m_center = center; }
 private:
   Vector3     m_center;
-};
-
-
-
-class CompoundCollider : public Collider {
-public:
-
 };
 } // Recluse

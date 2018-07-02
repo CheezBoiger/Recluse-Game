@@ -18,6 +18,14 @@ public:
   
   virtual void* Allocate(size_t size, size_t align) { return nullptr; }
   virtual void  Deallocate(void* ptr) { }
+  
+  // Calculates address adjustment.
+  virtual ptrdiff_t MaskAdjust(uintptr_t rawAddr, size_t align) {
+    size_t mask = align - 1;
+    uintptr_t misalignment = (rawAddr & mask);
+    ptrdiff_t adjustment = rawAddr - misalignment;
+    return adjustment;
+  }
 
   void*         RawMemory() { return m_Memory; }
 

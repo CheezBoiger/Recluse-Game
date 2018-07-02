@@ -42,6 +42,7 @@ public:
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->SetMass(0.0f);
+    m_pPhysicsComponent->SetFriction(1.0f);
 
     Mesh* mesh = nullptr;
     MeshCache::Get("NativeCube", &mesh);

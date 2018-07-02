@@ -5,11 +5,10 @@
 #include "Core/Math/Vector4.hpp"
 #include "Core/Math/Plane.hpp"
 #include "Core/Math/Matrix4.hpp"
+#include "Core/Math/AABB.hpp"
 
 namespace Recluse {
 
-
-struct AABB;
 
 // View frustum object.
 struct ViewFrustum {
@@ -40,9 +39,9 @@ struct ViewFrustum {
   // the frustum.
   void        Update(Matrix4& vp);
 
-  b32          Intersect(const AABB* aabb);
+  b32          Intersect(const AABB& aabb) { return false; }
 
   // Check if AABB object is inside this frustum.
-  b32          InsideFrustum(const AABB* aabb);
+  b32          InsideFrustum(const AABB& aabb) { return false; }
 };
 } // Recluse

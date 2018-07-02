@@ -45,6 +45,7 @@ public:
   BoxCollider*          CreateBoxCollider(const Vector3& scale) override;
   SphereCollider*       CreateSphereCollider(r32 radius) override;
   CompoundCollider*     CreateCompoundCollider() override;
+  void                  UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) override;
 
   void                  ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
 
@@ -52,6 +53,9 @@ public:
   void                  SetMass(RigidBody* body, r32 mass) override;
   void                  ActivateRigidBody(RigidBody* body) override;
   void                  DeactivateRigidBody(RigidBody* body) override;
+  void                  SetFriction(RigidBody* body, r32 friction) override;
+  void                  SetRollingFriction(RigidBody* body, r32 friction) override;
+  void                  SetSpinningFriction(RigidBody* body, r32 friction) override;
 
   void                  SetWorldGravity(const Vector3& gravity) override;
   void                  ClearForces(RigidBody* body) override;

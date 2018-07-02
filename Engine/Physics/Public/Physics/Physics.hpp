@@ -42,7 +42,7 @@ struct RayTestHitAll {
   std::vector<Vector3>    _normals;
 };
 
-// Our physics engine.
+// Our physics engine interface.
 class Physics : public EngineModule<Physics> {
 public:
   virtual ~Physics() { }
@@ -57,6 +57,7 @@ public:
   virtual BoxCollider*                    CreateBoxCollider(const Vector3& scale) { return nullptr; }
   virtual SphereCollider*                 CreateSphereCollider(r32 radius) { return nullptr; }
   virtual CompoundCollider*               CreateCompoundCollider() { return nullptr; }
+  virtual void                            UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) { }
   virtual void                            FreeRigidBody(RigidBody* body) { }
 
 
@@ -70,6 +71,9 @@ public:
   virtual void                            DeactivateRigidBody(RigidBody* body) { }
   virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
 
+  virtual void                            SetFriction(RigidBody* body, r32 friction) { }
+  virtual void                            SetRollingFriction(RigidBody* body, r32 friction) { }
+  virtual void                            SetSpinningFriction(RigidBody* body, r32 friction) { }
   virtual void                            ClearForces(RigidBody* body) { }
   virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
   virtual void                            AddCollider(RigidBody* body, Collider* collider) { }
