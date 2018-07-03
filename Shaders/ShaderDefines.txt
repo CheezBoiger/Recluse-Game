@@ -9,3 +9,7 @@ ForwardPBR.frag
 PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V ForwardPBR.vert -o ForwardPBR.vert.spv
 ForwardPBR.vert
 PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source>
+
+
+glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR.comp.spv
+glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR.comp.spv

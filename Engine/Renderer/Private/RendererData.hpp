@@ -17,6 +17,8 @@
 #define GBUFFER_WINDING_ORDER             VK_FRONT_FACE_CLOCKWISE
 #define GBUFFER_CULL_MODE                 VK_CULL_MODE_FRONT_BIT
 
+#define COMPUTE_PBR                       1
+
 
 namespace Recluse {
 
@@ -70,10 +72,14 @@ extern RenderPass* gbuffer_renderPass;
 
 extern GraphicsPipeline* pbr_Pipeline_LR;
 extern GraphicsPipeline* pbr_Pipeline_NoLR;
+extern ComputePipeline*  pbr_computePipeline_NoLR;
+extern ComputePipeline*   pbr_computePipeline_LR;
 extern FrameBuffer* pbr_FrameBufferKey;
 extern RenderPass* pbr_renderPass;
 extern DescriptorSetLayout* pbr_DescLayoutKey;
+extern DescriptorSetLayout* pbr_compDescLayout;
 extern DescriptorSet* pbr_DescSetKey;
+extern DescriptorSet* pbr_compSet;
 extern Texture* pbr_FinalTextureKey;
 extern Texture* pbr_BrightTextureKey;
 

@@ -22,6 +22,7 @@
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
+#include "RHI/ComputePipeline.hpp"
 #include "RHI/FrameBuffer.hpp"
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Shader.hpp"
@@ -516,7 +517,8 @@ void Renderer::SetUpDescriptorSetLayouts()
     GlobalBindings[0].binding = 0;
     GlobalBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     GlobalBindings[0].descriptorCount = 1;
-    GlobalBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    GlobalBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+      | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     GlobalBindings[0].pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutCreateInfo GlobalLayout = {};
@@ -591,35 +593,35 @@ void Renderer::SetUpDescriptorSetLayouts()
     bindings[0].descriptorCount = 1;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[0].pImmutableSamplers = nullptr;
-    bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  
+    bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;  
 
     // Normal
     bindings[1].binding = 1;
     bindings[1].descriptorCount = 1;
     bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[1].pImmutableSamplers = nullptr;
-    bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;  
+    bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;  
 
     // Position
     bindings[2].binding = 2;
     bindings[2].descriptorCount = 1;
     bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[2].pImmutableSamplers = nullptr;
-    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
     // Emission-Roughness-Metallic
     bindings[3].binding = 3;
     bindings[3].descriptorCount = 1;
     bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[3].pImmutableSamplers = nullptr;
-    bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
     // Depth
     bindings[4].binding = 4;
     bindings[4].descriptorCount = 1;
     bindings[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     bindings[4].pImmutableSamplers = nullptr;
-    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    bindings[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT; 
 
     VkDescriptorSetLayoutCreateInfo PbrLayout = { };
     PbrLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -716,19 +718,44 @@ void Renderer::SetUpDescriptorSetLayouts()
     globalIllumination_DescNoLR->Initialize(info);
   }
 
+  // Compute PBR textures.
+  {
+    pbr_compDescLayout = m_pRhi->CreateDescriptorSetLayout();
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings;
+    bindings[0] = { };
+    bindings[1] = { };
+
+    bindings[0].binding = 0;
+    bindings[0].descriptorCount = 1;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    
+    bindings[1].binding = 1;
+    bindings[1].descriptorCount = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    bindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+    VkDescriptorSetLayoutCreateInfo info = { };
+    info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    info.bindingCount = static_cast<u32>(bindings.size());
+    info.pBindings = bindings.data();
+
+    pbr_compDescLayout->Initialize(info);
+  }
+
   // Light layout.
   {
     std::array<VkDescriptorSetLayoutBinding, 2> LightBindings;
     LightBindings[0].binding = 0;
     LightBindings[0].descriptorCount = 1;
     LightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    LightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    LightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     LightBindings[0].pImmutableSamplers = nullptr;
 
     LightBindings[1].binding = 1;
     LightBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     LightBindings[1].descriptorCount = 1;
-    LightBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    LightBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     LightBindings[1].pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutCreateInfo LightLayout = { };
@@ -859,6 +886,7 @@ void Renderer::CleanUpDescriptorSetLayouts()
   m_pRhi->FreeDescriptorSetLayout(DownscaleBlurLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(GlowDescriptorSetLayoutKey);
   m_pRhi->FreeDescriptorSetLayout(pbr_DescLayoutKey);
+  m_pRhi->FreeDescriptorSetLayout(pbr_compDescLayout);
   m_pRhi->FreeDescriptorSetLayout(globalIllumination_DescLR);
   m_pRhi->FreeDescriptorSetLayout(globalIllumination_DescNoLR);
 }
@@ -1523,6 +1551,8 @@ void Renderer::CleanUpGraphicsPipelines()
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
 
   m_pRhi->FreeGraphicsPipeline(output_pipelineKey);
+  m_pRhi->FreeComputePipeline(pbr_computePipeline_NoLR);
+  m_pRhi->FreeComputePipeline(pbr_computePipeline_LR);
 
   GraphicsPipeline* HdrPipeline = hdr_gamma_pipelineKey;
   m_pRhi->FreeGraphicsPipeline(HdrPipeline);
@@ -1689,7 +1719,9 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
   cImageInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
   cViewInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
@@ -1718,8 +1750,12 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
   pbr_Bright->Initialize(cImageInfo, cViewInfo);
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
   GlowTarget->Initialize(cImageInfo, cViewInfo);
+
   // Initialize downscaled render textures.
   cImageInfo.extent.width = windowExtent.width    >> 1;
   cImageInfo.extent.height = windowExtent.height  >> 1;
@@ -1886,9 +1922,13 @@ void Renderer::CleanUpRenderTextures(b32 fullCleanup)
 void Renderer::BuildPbrCmdBuffer() 
 {
   GraphicsPipeline* pPipeline = nullptr;
+  ComputePipeline* pCompPipeline = nullptr;
   pPipeline = pbr_Pipeline_NoLR;
+  pCompPipeline = pbr_computePipeline_NoLR;
+
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
     pPipeline = pbr_Pipeline_LR;
+    pCompPipeline = pbr_computePipeline_LR;
   }
   CommandBuffer* cmdBuffer = m_Pbr._CmdBuffer;
   if (cmdBuffer) {
@@ -1927,6 +1967,7 @@ void Renderer::BuildPbrCmdBuffer()
 
   const u32 dSetCount = 5;
   cmdBuffer->Begin(beginInfo);
+#if !COMPUTE_PBR
     cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     GraphicsPipeline* pbr_Pipeline = pPipeline;
     VkDescriptorSet sets[dSetCount] = {
@@ -1946,6 +1987,65 @@ void Renderer::BuildPbrCmdBuffer()
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.Indices()->GetSizeType()));
     cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
+#else
+    std::array<VkImageMemoryBarrier, 2> imageMemBarriers;
+    imageMemBarriers[0] = { };
+    imageMemBarriers[1] = { };
+
+    VkImageSubresourceRange subrange = { };
+    subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subrange.baseArrayLayer = 0;
+    subrange.baseMipLevel = 0;
+    subrange.layerCount = 1;
+    subrange.levelCount = 1;
+
+    imageMemBarriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageMemBarriers[0].subresourceRange = subrange;
+    imageMemBarriers[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageMemBarriers[0].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imageMemBarriers[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    imageMemBarriers[0].dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    imageMemBarriers[0].image = pbr_FinalTextureKey->Image();
+
+    imageMemBarriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imageMemBarriers[1].subresourceRange = subrange;
+    imageMemBarriers[1].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageMemBarriers[1].newLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imageMemBarriers[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    imageMemBarriers[1].dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    imageMemBarriers[1].image = pbr_BrightTextureKey->Image();
+
+    cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
+
+    VkDescriptorSet compSets[] = { 
+      m_pGlobal->Set()->Handle(),
+      pbr_DescSetKey->Handle(),
+      m_pLights->Set()->Handle(),
+      m_pLights->ViewSet()->Handle(),
+      m_pGlobalIllumination->Handle(),
+      pbr_compSet->Handle()
+    };
+
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Pipeline());
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Layout(), 
+      0, 6, compSets, 0, nullptr);
+    cmdBuffer->Dispatch((windowExtent.width / 32) + 1, (windowExtent.height / 32) + 1, 1);
+
+    imageMemBarriers[0].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imageMemBarriers[0].newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    imageMemBarriers[0].srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    imageMemBarriers[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+
+    imageMemBarriers[1].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+    imageMemBarriers[1].newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    imageMemBarriers[1].srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+    imageMemBarriers[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+
+    cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
+#endif
+
   cmdBuffer->End();
 }
 
@@ -3111,85 +3211,121 @@ void Renderer::SetUpPBR()
   DescriptorSetLayout* pbr_Layout = pbr_DescLayoutKey;
   DescriptorSet* pbr_Set = m_pRhi->CreateDescriptorSet();
   pbr_DescSetKey = pbr_Set;
+  {
+    VkDescriptorImageInfo albedo = {};
+    albedo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    albedo.imageView = gbuffer_AlbedoAttachKey->View();
+    albedo.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo albedo = {};
-  albedo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  albedo.imageView = gbuffer_AlbedoAttachKey->View();
-  albedo.sampler = pbr_Sampler->Handle();
+    VkDescriptorImageInfo normal = {};
+    normal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    normal.imageView = gbuffer_NormalAttachKey->View();
+    normal.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo normal = {};
-  normal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  normal.imageView = gbuffer_NormalAttachKey->View();
-  normal.sampler = pbr_Sampler->Handle();
+    VkDescriptorImageInfo position = {};
+    position.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    position.imageView = gbuffer_PositionAttachKey->View();
+    position.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo position = {};
-  position.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  position.imageView = gbuffer_PositionAttachKey->View();
-  position.sampler = pbr_Sampler->Handle();
+    VkDescriptorImageInfo emission = {};
+    emission.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    emission.imageView = gbuffer_EmissionAttachKey->View();
+    emission.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo emission = {};
-  emission.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  emission.imageView = gbuffer_EmissionAttachKey->View();
-  emission.sampler = pbr_Sampler->Handle();
+    VkDescriptorImageInfo depth = { };
+    depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depth.imageView = gbuffer_DepthAttachKey->View();
+    depth.sampler = pbr_Sampler->Handle();
 
-  VkDescriptorImageInfo depth = { };
-  depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-  depth.imageView = gbuffer_DepthAttachKey->View();
-  depth.sampler = pbr_Sampler->Handle();
+    std::array<VkWriteDescriptorSet, 5> writeInfo;
+    writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo[0].descriptorCount = 1;
+    writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo[0].dstBinding = 0;
+    writeInfo[0].dstSet = nullptr;
+    writeInfo[0].pImageInfo = &albedo;
+    writeInfo[0].pBufferInfo = nullptr;
+    writeInfo[0].pTexelBufferView = nullptr;
+    writeInfo[0].dstArrayElement = 0;
+    writeInfo[0].pNext = nullptr;
 
-  std::array<VkWriteDescriptorSet, 5> writeInfo;
-  writeInfo[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[0].descriptorCount = 1;
-  writeInfo[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[0].dstBinding = 0;
-  writeInfo[0].pImageInfo = &albedo;
-  writeInfo[0].pBufferInfo = nullptr;
-  writeInfo[0].pTexelBufferView = nullptr;
-  writeInfo[0].dstArrayElement = 0;
-  writeInfo[0].pNext = nullptr;
+    writeInfo[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo[1].descriptorCount = 1;
+    writeInfo[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo[1].dstBinding = 1;
+    writeInfo[1].dstSet = nullptr;
+    writeInfo[1].pImageInfo = &normal;
+    writeInfo[1].pBufferInfo = nullptr;
+    writeInfo[1].pTexelBufferView = nullptr;
+    writeInfo[1].dstArrayElement = 0;
+    writeInfo[1].pNext = nullptr;
 
-  writeInfo[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[1].descriptorCount = 1;
-  writeInfo[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[1].dstBinding = 1;
-  writeInfo[1].pImageInfo = &normal;
-  writeInfo[1].pBufferInfo = nullptr;
-  writeInfo[1].pTexelBufferView = nullptr;
-  writeInfo[1].dstArrayElement = 0;
-  writeInfo[1].pNext = nullptr;
+    writeInfo[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo[2].descriptorCount = 1;
+    writeInfo[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo[2].dstBinding = 2;
+    writeInfo[2].dstSet = nullptr;
+    writeInfo[2].pImageInfo = &position;
+    writeInfo[2].pBufferInfo = nullptr;
+    writeInfo[2].pTexelBufferView = nullptr;
+    writeInfo[2].dstArrayElement = 0;
+    writeInfo[2].pNext = nullptr;
 
-  writeInfo[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[2].descriptorCount = 1;
-  writeInfo[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[2].dstBinding = 2;
-  writeInfo[2].pImageInfo = &position;
-  writeInfo[2].pBufferInfo = nullptr;
-  writeInfo[2].pTexelBufferView = nullptr;
-  writeInfo[2].dstArrayElement = 0;
-  writeInfo[2].pNext = nullptr;
+    writeInfo[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo[3].descriptorCount = 1;
+    writeInfo[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo[3].dstBinding = 3;
+    writeInfo[3].pImageInfo = &emission;
+    writeInfo[3].pBufferInfo = nullptr;
+    writeInfo[3].pTexelBufferView = nullptr;
+    writeInfo[3].dstArrayElement = 0;
+    writeInfo[3].pNext = nullptr;
 
-  writeInfo[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[3].descriptorCount = 1;
-  writeInfo[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[3].dstBinding = 3;
-  writeInfo[3].pImageInfo = &emission;
-  writeInfo[3].pBufferInfo = nullptr;
-  writeInfo[3].pTexelBufferView = nullptr;
-  writeInfo[3].dstArrayElement = 0;
-  writeInfo[3].pNext = nullptr;
-
-  writeInfo[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeInfo[4].descriptorCount = 1;
-  writeInfo[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeInfo[4].dstBinding = 4;
-  writeInfo[4].pImageInfo = &depth;
-  writeInfo[4].pBufferInfo = nullptr;
-  writeInfo[4].pTexelBufferView = nullptr;
-  writeInfo[4].dstArrayElement = 0;
-  writeInfo[4].pNext = nullptr;
+    writeInfo[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeInfo[4].descriptorCount = 1;
+    writeInfo[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeInfo[4].dstBinding = 4;
+    writeInfo[4].pImageInfo = &depth;
+    writeInfo[4].pBufferInfo = nullptr;
+    writeInfo[4].pTexelBufferView = nullptr;
+    writeInfo[4].dstArrayElement = 0;
+    writeInfo[4].pNext = nullptr;
   
-  pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
-  pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+    pbr_Set->Allocate(m_pRhi->DescriptorPool(), pbr_Layout);
+    pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+  }
+
+  pbr_compSet = m_pRhi->CreateDescriptorSet();
+  {
+    VkDescriptorImageInfo outResult = { };
+    outResult.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    outResult.imageView = pbr_FinalTextureKey->View();
+    outResult.sampler = nullptr;    
+
+    VkDescriptorImageInfo outBright = { };
+    outBright.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+    outBright.imageView = pbr_BrightTextureKey->View();
+    outBright.sampler = nullptr;
+
+    std::array<VkWriteDescriptorSet, 2> writes;
+    writes[0] = { };
+    writes[1] = { };
+
+    writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writes[0].pImageInfo = &outResult;
+    writes[0].dstBinding = 0;
+    writes[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    writes[0].descriptorCount = 1;
+
+    writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writes[1].pImageInfo = &outBright;
+    writes[1].dstBinding = 1;
+    writes[1].descriptorCount = 1;
+    writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+
+    pbr_compSet->Allocate(m_pRhi->DescriptorPool(), pbr_compDescLayout);
+    pbr_compSet->Update(static_cast<u32>(writes.size()), writes.data());
+  }
 
   m_Pbr._CmdBuffer = m_pRhi->CreateCommandBuffer();
   m_Pbr._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -3205,7 +3341,7 @@ void Renderer::CleanUpPBR()
 {
   DescriptorSet* pbr_Set = pbr_DescSetKey;
   m_pRhi->FreeDescriptorSet(pbr_Set);
-
+  m_pRhi->FreeDescriptorSet(pbr_compSet);
   m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffer);
 
   m_pRhi->FreeVkSemaphore(m_Pbr._Sema);

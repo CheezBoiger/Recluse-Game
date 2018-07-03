@@ -38,10 +38,12 @@ void ComputePipeline::CleanUp()
 {
   if (mLayout) {
     vkDestroyPipelineLayout(mOwner, mLayout, nullptr);
+    mLayout = nullptr;
   }
 
   if (mPipeline) {
     vkDestroyPipeline(mOwner, mPipeline, nullptr);
+    mPipeline = nullptr;
   }
 }
 } // Recluse

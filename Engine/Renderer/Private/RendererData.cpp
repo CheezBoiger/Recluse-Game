@@ -10,6 +10,7 @@
 #include "RHI/Shader.hpp"
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/GraphicsPipeline.hpp"
+#include "RHI/ComputePipeline.hpp"
 #include "RHI/Framebuffer.hpp"
 
 #include <array>
@@ -53,11 +54,15 @@ GraphicsPipeline* pbr_forwardPipeline_LR      = nullptr;
 GraphicsPipeline* pbr_forwardPipeline_NoLR = nullptr;
 GraphicsPipeline* pbr_staticForwardPipeline_LR    = nullptr;
 GraphicsPipeline* pbr_staticForwardPipeline_NoLR  = nullptr;
+ComputePipeline* pbr_computePipeline_NoLR         = nullptr;
+ComputePipeline* pbr_computePipeline_LR           = nullptr;
 RenderPass*      pbr_forwardRenderPass            = nullptr;
 FrameBuffer* pbr_FrameBufferKey                   = nullptr;
 RenderPass* pbr_renderPass                        = nullptr;
 DescriptorSetLayout* pbr_DescLayoutKey            = nullptr;
+DescriptorSetLayout* pbr_compDescLayout           = nullptr;
 DescriptorSet* pbr_DescSetKey                     = nullptr;
+DescriptorSet* pbr_compSet                        = nullptr;
 Texture* pbr_FinalTextureKey                      = nullptr;
 Texture* pbr_BrightTextureKey                     = nullptr;
 std::string pbr_VertStr                           = "PBR.vert.spv";
@@ -311,114 +316,167 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
 
 void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
-  VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* pbrPipeline_LR = Rhi->CreateGraphicsPipeline();
-  pbr_Pipeline_LR = pbrPipeline_LR;
-  pbr_Pipeline_NoLR = Rhi->CreateGraphicsPipeline();
+  {
+    VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+    GraphicsPipeline* pbrPipeline_LR = Rhi->CreateGraphicsPipeline();
+    pbr_Pipeline_LR = pbrPipeline_LR;
+    pbr_Pipeline_NoLR = Rhi->CreateGraphicsPipeline();
 
-  FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;  
+    FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;  
 
-  Shader* VertPBR = Rhi->CreateShader();
-  Shader* FragPBR = Rhi->CreateShader();
+    Shader* VertPBR = Rhi->CreateShader();
+    Shader* FragPBR = Rhi->CreateShader();
 
-  LoadShader(pbr_VertStr, VertPBR);
-  LoadShader(pbr_FragStrLR, FragPBR);
+    LoadShader(pbr_VertStr, VertPBR);
+    LoadShader(pbr_FragStrLR, FragPBR);
 
-  VkPipelineShaderStageCreateInfo PbrShaders[2];
-  PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[0].module = VertPBR->Handle();
-  PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  PbrShaders[0].pName = kDefaultShaderEntryPointStr;
-  PbrShaders[0].pNext = nullptr;
-  PbrShaders[0].pSpecializationInfo = nullptr;
-  PbrShaders[0].flags = 0;
+    VkPipelineShaderStageCreateInfo PbrShaders[2];
+    PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    PbrShaders[0].module = VertPBR->Handle();
+    PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    PbrShaders[0].pName = kDefaultShaderEntryPointStr;
+    PbrShaders[0].pNext = nullptr;
+    PbrShaders[0].pSpecializationInfo = nullptr;
+    PbrShaders[0].flags = 0;
 
-  PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[1].module = FragPBR->Handle();
-  PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  PbrShaders[1].pName = kDefaultShaderEntryPointStr;
-  PbrShaders[1].pNext = nullptr;
-  PbrShaders[1].flags = 0;
-  PbrShaders[1].pSpecializationInfo = nullptr;
+    PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    PbrShaders[1].module = FragPBR->Handle();
+    PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    PbrShaders[1].pName = kDefaultShaderEntryPointStr;
+    PbrShaders[1].pNext = nullptr;
+    PbrShaders[1].flags = 0;
+    PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPassRef()->Handle();
-  GraphicsInfo.stageCount = 2;
-  GraphicsInfo.pStages = PbrShaders;
+    GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPassRef()->Handle();
+    GraphicsInfo.stageCount = 2;
+    GraphicsInfo.pStages = PbrShaders;
 
-  std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
-  colorBlendAttachments[0] = CreateColorBlendAttachmentState(
-    VK_FALSE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
+    std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
+    colorBlendAttachments[0] = CreateColorBlendAttachmentState(
+      VK_FALSE,
+      VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+      VK_BLEND_FACTOR_SRC_ALPHA,
+      VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+      VK_BLEND_OP_ADD,
+      VK_BLEND_FACTOR_ONE,
+      VK_BLEND_FACTOR_ZERO,
+      VK_BLEND_OP_ADD
+    );
 
-  colorBlendAttachments[1] = CreateColorBlendAttachmentState(
-    VK_FALSE,
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
-    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-    VK_BLEND_OP_ADD,
-    VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
-    VK_BLEND_OP_ADD
-  );
+    colorBlendAttachments[1] = CreateColorBlendAttachmentState(
+      VK_FALSE,
+      VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+      VK_BLEND_FACTOR_SRC_ALPHA,
+      VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+      VK_BLEND_OP_ADD,
+      VK_BLEND_FACTOR_ONE,
+      VK_BLEND_FACTOR_ZERO,
+      VK_BLEND_OP_ADD
+    );
 
-  VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    static_cast<u32>(colorBlendAttachments.size()),
-    colorBlendAttachments.data(),
-    VK_FALSE,
-    VK_LOGIC_OP_COPY
-  );
+    VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
+      static_cast<u32>(colorBlendAttachments.size()),
+      colorBlendAttachments.data(),
+      VK_FALSE,
+      VK_LOGIC_OP_COPY
+    );
 
-  GraphicsInfo.pColorBlendState = &colorBlendCI;
+    GraphicsInfo.pColorBlendState = &colorBlendCI;
 
-  std::array<VkDescriptorSetLayout, 5> layouts;
-  layouts[0] = GlobalSetLayoutKey->Layout();
-  layouts[1] = pbr_DescLayoutKey->Layout();
-  layouts[2] = LightSetLayoutKey->Layout();
-  layouts[3] = LightViewDescriptorSetLayoutKey->Layout();
-  layouts[4] = globalIllumination_DescLR->Layout();
+    std::array<VkDescriptorSetLayout, 5> layouts;
+    layouts[0] = GlobalSetLayoutKey->Layout();
+    layouts[1] = pbr_DescLayoutKey->Layout();
+    layouts[2] = LightSetLayoutKey->Layout();
+    layouts[3] = LightViewDescriptorSetLayoutKey->Layout();
+    layouts[4] = globalIllumination_DescLR->Layout();
 
-  VkPipelineLayoutCreateInfo PipelineLayout = {};
-  PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
-  PipelineLayout.pSetLayouts = layouts.data();
-  PipelineLayout.pPushConstantRanges = 0;
-  PipelineLayout.pushConstantRangeCount = 0;
+    VkPipelineLayoutCreateInfo PipelineLayout = {};
+    PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+    PipelineLayout.pSetLayouts = layouts.data();
+    PipelineLayout.pPushConstantRanges = 0;
+    PipelineLayout.pushConstantRangeCount = 0;
 
-  pbrPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
+    pbrPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
 
-  Rhi->FreeShader(FragPBR);
+    Rhi->FreeShader(FragPBR);
 
-  FragPBR = Rhi->CreateShader();
-  LoadShader(pbr_FragStrNoLR, FragPBR);
+    FragPBR = Rhi->CreateShader();
+    LoadShader(pbr_FragStrNoLR, FragPBR);
 
-  PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[0].module = VertPBR->Handle();
-  PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  PbrShaders[0].pName = kDefaultShaderEntryPointStr;
-  PbrShaders[0].pNext = nullptr;
-  PbrShaders[0].pSpecializationInfo = nullptr;
-  PbrShaders[0].flags = 0;
+    PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    PbrShaders[0].module = VertPBR->Handle();
+    PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    PbrShaders[0].pName = kDefaultShaderEntryPointStr;
+    PbrShaders[0].pNext = nullptr;
+    PbrShaders[0].pSpecializationInfo = nullptr;
+    PbrShaders[0].flags = 0;
 
-  PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[1].module = FragPBR->Handle();
-  PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  PbrShaders[1].pName = kDefaultShaderEntryPointStr;
-  PbrShaders[1].pNext = nullptr;
-  PbrShaders[1].flags = 0;
-  PbrShaders[1].pSpecializationInfo = nullptr;
+    PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    PbrShaders[1].module = FragPBR->Handle();
+    PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    PbrShaders[1].pName = kDefaultShaderEntryPointStr;
+    PbrShaders[1].pNext = nullptr;
+    PbrShaders[1].flags = 0;
+    PbrShaders[1].pSpecializationInfo = nullptr;
 
-  layouts[4] = globalIllumination_DescNoLR->Layout();
-  pbr_Pipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
+    layouts[4] = globalIllumination_DescNoLR->Layout();
+    pbr_Pipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
 
-  Rhi->FreeShader(VertPBR);
-  Rhi->FreeShader(FragPBR);
+    Rhi->FreeShader(VertPBR);
+    Rhi->FreeShader(FragPBR);
+  }
+
+  // PBR compute bound.
+  {
+    Shader* compShader = Rhi->CreateShader();
+    LoadShader("PBR_NoLR.comp.spv", compShader);
+
+    VkDescriptorSetLayout layouts[6] = { 
+      GlobalSetLayoutKey->Layout(),
+      pbr_DescLayoutKey->Layout(),
+      LightSetLayoutKey->Layout(),
+      LightViewDescriptorSetLayoutKey->Layout(),
+      globalIllumination_DescNoLR->Layout(),
+      pbr_compDescLayout->Layout()
+    };    
+
+    pbr_computePipeline_NoLR = Rhi->CreateComputePipeline();
+    VkComputePipelineCreateInfo computeCi = { };
+    VkPipelineLayoutCreateInfo compLayoutCi = { };
+    compLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    compLayoutCi.setLayoutCount = 6;
+    compLayoutCi.pSetLayouts = layouts;
+
+    VkPipelineShaderStageCreateInfo shaderCi = { };
+    shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderCi.module = compShader->Handle();
+    shaderCi.pName = kDefaultShaderEntryPointStr;
+    shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    computeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computeCi.basePipelineHandle = VK_NULL_HANDLE;
+    computeCi.basePipelineIndex = -1;
+    computeCi.stage = shaderCi;
+    
+    pbr_computePipeline_NoLR->Initialize(computeCi, compLayoutCi);
+    Rhi->FreeShader(compShader);
+    pbr_computePipeline_LR = Rhi->CreateComputePipeline();
+    compShader = Rhi->CreateShader();
+    LoadShader("PBR_LR.comp.spv", compShader);
+
+    layouts[4] = globalIllumination_DescLR->Layout();
+    shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderCi.module = compShader->Handle();
+    shaderCi.pName = kDefaultShaderEntryPointStr;
+    shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    computeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computeCi.basePipelineHandle = VK_NULL_HANDLE;
+    computeCi.basePipelineIndex = -1;
+    computeCi.stage = shaderCi;
+
+    pbr_computePipeline_LR->Initialize(computeCi, compLayoutCi);
+    Rhi->FreeShader(compShader);
+  }
 }
 
 
