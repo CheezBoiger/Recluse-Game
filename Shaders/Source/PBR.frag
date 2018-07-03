@@ -91,11 +91,13 @@ layout (set = 3, binding = 0) uniform LightSpace {
 } lightSpace;
 
 
-layout (set = 4, binding = 0) uniform samplerCube irrMap;
-layout (set = 4, binding = 1) uniform samplerCube envMap;
+layout (set = 4, binding = 0) uniform samplerCube diffMap;
+layout (set = 4, binding = 1) uniform samplerCube specMap;
+layout (set = 4, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 4, binding = 2) uniform samplerCubeArray irrMaps;   // Current set irradiance map.
-layout (set = 4, binding = 3) uniform samplerCubeArray envMaps;   // Current set enviroment map (radiance).
+layout (set = 4, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
+layout (set = 4, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
 struct GBuffer

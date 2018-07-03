@@ -484,7 +484,8 @@ void Renderer::SetUpDescriptorSetLayouts()
     LightViewBindings[0].binding = 0;
     LightViewBindings[0].descriptorCount = 1;
     LightViewBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
+      | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
 
     DescriptorSetLayout* LightViewLayout = m_pRhi->CreateDescriptorSetLayout();
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
@@ -666,32 +667,44 @@ void Renderer::SetUpDescriptorSetLayouts()
     globalIllumination_DescNoLR = m_pRhi->CreateDescriptorSetLayout();
     globalIllumination_DescLR = globalIllumLayout;
     
-    std::array<VkDescriptorSetLayoutBinding, 4> globalIllum;
+    std::array<VkDescriptorSetLayoutBinding, 6> globalIllum;
     // Global IrrMap.
     globalIllum[0].binding = 0;
     globalIllum[0].descriptorCount = 1;
     globalIllum[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     globalIllum[0].pImmutableSamplers = nullptr;
-    globalIllum[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    globalIllum[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     // Global EnvMap.
     globalIllum[1].binding = 1;
     globalIllum[1].descriptorCount = 1;
     globalIllum[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     globalIllum[1].pImmutableSamplers = nullptr;
-    globalIllum[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    // Irradiance Map array.
+    globalIllum[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT; 
+    // Global BRDF lookup table
     globalIllum[2].binding = 2;
     globalIllum[2].descriptorCount = 1;
     globalIllum[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     globalIllum[2].pImmutableSamplers = nullptr;
-    globalIllum[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    // Radiance (Enviroment Map) array.
+    globalIllum[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+    // Irradiance Map array.
     globalIllum[3].binding = 3;
     globalIllum[3].descriptorCount = 1;
     globalIllum[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     globalIllum[3].pImmutableSamplers = nullptr;
-    globalIllum[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-    
+    globalIllum[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+    // Radiance (Enviroment Map) array.
+    globalIllum[4].binding = 4;
+    globalIllum[4].descriptorCount = 1;
+    globalIllum[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[4].pImmutableSamplers = nullptr;
+    globalIllum[4].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+    // BRDF lookup table
+    globalIllum[5].binding = 5;
+    globalIllum[5].descriptorCount = 1;
+    globalIllum[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[5].pImmutableSamplers = nullptr;
+    globalIllum[5].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+
     VkDescriptorSetLayoutCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     info.flags = 0;
@@ -699,10 +712,8 @@ void Renderer::SetUpDescriptorSetLayouts()
     info.pBindings = globalIllum.data();
     info.pNext = nullptr;
     globalIllumLayout->Initialize(info);
-    info.bindingCount = static_cast<u32>(globalIllum.size() - 2);
+    info.bindingCount = static_cast<u32>(globalIllum.size() - 3);
     globalIllumination_DescNoLR->Initialize(info);
-
-    
   }
 
   // Light layout.
@@ -2975,30 +2986,38 @@ void Renderer::SetUpGlobalIlluminationBuffer()
 {
   m_pGlobalIllumination = m_pRhi->CreateDescriptorSet();
   DescriptorSetLayout* layout = nullptr;
-  std::array<VkWriteDescriptorSet, 4> writeSets;
-  u32 count = 2;
+  std::array<VkWriteDescriptorSet, 6> writeSets;
+  u32 count = 3;
 
   VkDescriptorImageInfo globalIrrMap = { };
   VkDescriptorImageInfo globalEnvMap = { };
+  VkDescriptorImageInfo globalBrdfLut = { };
   VkDescriptorImageInfo localIrrMaps = { };
   VkDescriptorImageInfo localEnvMaps = { };
+  VkDescriptorImageInfo localBrdfLuts = { };
 
   globalIrrMap.sampler = DefaultSampler2DKey->Handle();
   globalEnvMap.sampler = DefaultSampler2DKey->Handle();
+  globalBrdfLut.sampler = DefaultSampler2DKey->Handle();
   localIrrMaps.sampler = DefaultSampler2DKey->Handle();
   localEnvMaps.sampler = DefaultSampler2DKey->Handle();
+  localBrdfLuts.sampler = DefaultSampler2DKey->Handle();
 
-  globalIrrMap.imageView = m_pSky->GetCubeMap()->View();
   globalIrrMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalEnvMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalBrdfLut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   localIrrMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   localEnvMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalEnvMap.imageView = m_pSky->GetCubeMap()->View();
+  localBrdfLuts.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
+  globalIrrMap.imageView = m_pSky->GetCubeMap()->View();
+  globalEnvMap.imageView = m_pSky->GetCubeMap()->View();
+  globalBrdfLut.imageView = DefaultTextureKey->View();
   // TODO(): These are place holders, we don't have data for these yet!
   // Obtain env and irr maps from scene when building!
   localIrrMaps.imageView = DefaultTextureKey->View();
   localEnvMaps.imageView = DefaultTextureKey->View();
+  localBrdfLuts.imageView = DefaultTextureKey->View();
 
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[0].descriptorCount = 1;
@@ -3027,7 +3046,7 @@ void Renderer::SetUpGlobalIlluminationBuffer()
   writeSets[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   writeSets[2].dstBinding = 2;
   writeSets[2].dstArrayElement = 0;
-  writeSets[2].pImageInfo = &localIrrMaps;
+  writeSets[2].pImageInfo = &globalBrdfLut;
   writeSets[2].dstSet = nullptr;
   writeSets[2].pBufferInfo = nullptr;
   writeSets[2].pTexelBufferView = nullptr;
@@ -3038,15 +3057,37 @@ void Renderer::SetUpGlobalIlluminationBuffer()
   writeSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   writeSets[3].dstBinding = 3;
   writeSets[3].dstArrayElement = 0;
-  writeSets[3].pImageInfo = &localEnvMaps;
+  writeSets[3].pImageInfo = &localIrrMaps;
   writeSets[3].dstSet = nullptr;
   writeSets[3].pBufferInfo = nullptr;
   writeSets[3].pTexelBufferView = nullptr;
   writeSets[3].pNext = nullptr;
 
+  writeSets[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[4].descriptorCount = 1;
+  writeSets[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[4].dstBinding = 4;
+  writeSets[4].dstArrayElement = 0;
+  writeSets[4].pImageInfo = &localEnvMaps;
+  writeSets[4].dstSet = nullptr;
+  writeSets[4].pBufferInfo = nullptr;
+  writeSets[4].pTexelBufferView = nullptr;
+  writeSets[4].pNext = nullptr;
+
+  writeSets[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writeSets[5].descriptorCount = 1;
+  writeSets[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[5].dstBinding = 2;
+  writeSets[5].dstArrayElement = 0;
+  writeSets[5].pImageInfo = &localBrdfLuts;
+  writeSets[5].dstSet = nullptr;
+  writeSets[5].pBufferInfo = nullptr;
+  writeSets[5].pTexelBufferView = nullptr;
+  writeSets[5].pNext = nullptr;
+
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
     layout = globalIllumination_DescLR;
-    count = 4;
+    count = 6;
   } else {
     layout = globalIllumination_DescNoLR;
   }
