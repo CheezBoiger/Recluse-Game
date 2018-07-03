@@ -2879,7 +2879,6 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     return;
   }
 
-  m_pRhi->DeviceWaitIdle();
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
   GraphicsPipeline* staticPipeline = ShadowMapPipelineKey;
