@@ -77,6 +77,9 @@ public:
   void                EnableBloom(b32 enable) { m_Bloom = enable; }
   void                EnableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
+
+  ViewFrustum        GetViewFrustum() const { return m_viewFrustum; }
+
 protected:
   ViewFrustum         m_viewFrustum;
   Matrix4             m_projectionMatrix;

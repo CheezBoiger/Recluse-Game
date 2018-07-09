@@ -188,4 +188,56 @@ u32 Texture2D::Height() const
   if (!texture) return 0;
   return texture->Height();
 }
+
+
+void TextureCube::Initialize(u32 extentX, u32 extentY, u32 extentZ)
+{
+  if (texture) return;
+
+  VkImageCreateInfo imageCi = { };
+  imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imageCi.extent.width = extentX;
+  imageCi.extent.height = extentY;
+  imageCi.extent.depth = extentZ;
+  imageCi.arrayLayers = 6;
+  imageCi.imageType = extentZ == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+  imageCi.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+  imageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imageCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imageCi.samples = VK_SAMPLE_COUNT_1_BIT;
+  imageCi.mipLevels = 1;
+  imageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imageCi.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  imageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  VkImageViewCreateInfo viewCi = { };
+  viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  viewCi.components = { };
+  viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  viewCi.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+  viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  viewCi.subresourceRange.baseArrayLayer = 0;
+  viewCi.subresourceRange.baseMipLevel = 0;
+  viewCi.subresourceRange.layerCount = 6;
+  viewCi.subresourceRange.levelCount = 1;
+
+  texture = mRhi->CreateTexture();
+  texture->Initialize(imageCi, viewCi);
+}
+
+
+void TextureCube::Update(u32 count, Image const* images)
+{
+  if (count < 1) return;
+
+  // TODO(): 
+  R_ASSERT(false, "Not implemented.");
+}
+
+
+void TextureCube::CleanUp()
+{
+  // TODO(): 
+  R_ASSERT(false, "Not implemented.");
+}
 } // Recluse

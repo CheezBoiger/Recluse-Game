@@ -9,6 +9,10 @@
 
 namespace Recluse {
 
+
+const Vector3 Cube::Min = Vector3(-1.0f, -1.0f, -1.0f);
+const Vector3 Cube::Max = Vector3( 1.0f,  1.0f,  1.0f);
+
 std::array<Vector4, 36> positions = {
   // Front
   Vector4(-1.0f, -1.0f, 1.0f, 1.0f),

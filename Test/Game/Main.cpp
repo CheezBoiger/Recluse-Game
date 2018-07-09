@@ -72,6 +72,7 @@ public:
   void Update(r32 tick) override {
     mainCam->Update(tick);
     lantern->Update(tick);
+    cube->Update(tick);
     for (size_t i = 0; i < kMaxCount; ++i) {
       helmets[i]->Update(tick);
     }
@@ -160,7 +161,7 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
-    mesh->Initialize(boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data());
+    mesh->Initialize(boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data(), Cube::Min, Cube::Max);
     MeshCache::Cache(RTEXT("NativeCube"), mesh);
   }
 

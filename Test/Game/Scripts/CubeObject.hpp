@@ -90,6 +90,11 @@ public:
     //light->_Direction = Vector3(
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
+    AABB aabb = m_pMeshComponent->MeshRef()->Native()->GetAABB();
+    aabb.min = aabb.min * transform->GetLocalToWorldMatrix();
+    aabb.max = aabb.max * transform->GetLocalToWorldMatrix();
+    Log() << Camera::GetMain()->GetViewFrustum().Intersect(aabb) << "\r";
+
   }
 
   void OnCleanUp() override

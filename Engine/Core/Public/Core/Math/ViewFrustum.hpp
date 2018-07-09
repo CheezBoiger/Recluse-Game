@@ -19,6 +19,12 @@ struct ViewFrustum {
   static u32    PNEAR;
   static u32    PFAR;
 
+  enum Result {
+    Result_Outside,
+    Result_Inside,
+    Result_Intersect
+  };
+
   ViewFrustum() { }
 
 
@@ -39,7 +45,7 @@ struct ViewFrustum {
   // the frustum.
   void        Update(Matrix4& vp);
 
-  b32          Intersect(const AABB& aabb) { return false; }
+  Result          Intersect(const AABB& aabb) const;
 
   // Check if AABB object is inside this frustum.
   b32          InsideFrustum(const AABB& aabb) { return false; }

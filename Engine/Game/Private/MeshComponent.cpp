@@ -11,6 +11,14 @@ namespace Recluse {
 DEFINE_COMPONENT_MAP(MeshComponent);
 
 
+MeshComponent::MeshComponent()
+  : m_allowCulling(true)
+  , m_frustumCull(0)
+  , m_pMeshRef(nullptr)
+{
+}
+
+
 void Mesh::Initialize(size_t elementCount, void* data, MeshData::VertexType type,size_t indexCount, 
   void* indices, const Vector3& min, const Vector3& max)
 {
@@ -44,7 +52,9 @@ void MeshComponent::OnCleanUp()
 
 void MeshComponent::Update()
 {
+  if (!AllowCulling()) return;
   if (!m_pMeshRef) return;
+
   size_t viewFrustumCount = gEngine().GetViewFrustumCount();
   if (viewFrustumCount == 0) return;
 
@@ -60,8 +70,8 @@ void MeshComponent::Update()
 
   for (size_t i = 0; i < viewFrustumCount; ++i) {
     ViewFrustum* viewFrustum = viewFrustums[i];
-    b32 intersects = viewFrustum->Intersect(aabb);
-    if (intersects) {
+    ViewFrustum::Result intersects = viewFrustum->Intersect(aabb);
+    if (intersects != ViewFrustum::Result_Outside) {
       m_frustumCull = m_frustumCull | (1 << i);
     }
   }

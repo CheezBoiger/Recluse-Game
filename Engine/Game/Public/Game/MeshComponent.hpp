@@ -49,6 +49,7 @@ protected:
   virtual void OnInitialize(GameObject* owner) override;
   virtual void OnCleanUp() override;
 public:
+  MeshComponent();
 
   void SetMeshRef(Mesh* pData) { m_pMeshRef = pData; }
   
@@ -56,6 +57,10 @@ public:
 
   // updates this mesh component instance frustum bit cull.
   void  Update() override;
+
+  void    EnableCulling(b32 enable) { m_allowCulling = enable; }
+
+  inline b32     AllowCulling() const { return m_allowCulling; }
 
   // Cull bit set map. Each bit represents a frustum, and when flipped, means this mesh is culled
   // for that given frustum. Max 32 frustums can be supported.
@@ -73,6 +78,7 @@ public:
 private:
   Mesh*       m_pMeshRef;
 
-  b32                                 m_frustumCull;
+  b32         m_frustumCull;
+  b32         m_allowCulling;
 };
 } // Recluse

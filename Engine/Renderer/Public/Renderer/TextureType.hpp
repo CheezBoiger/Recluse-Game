@@ -33,6 +33,7 @@ public:
 
   // Stores texture image in a separate file. This varies on what the texture type is.
   virtual void  CacheToFile(std::string path) { }
+  virtual void CleanUp() { }
 
   // Name of Texture.
   std::string   _Name;
@@ -61,7 +62,7 @@ public:
 
   void        Initialize(u32 width);
   u32         Width();
-  void        CleanUp();
+  void        CleanUp() override { }
 private:
   friend class Renderer;
 
@@ -80,7 +81,7 @@ public:
   void        Initialize(u32 width, u32 height, b32 genMips = false);
   // Update texture with a new image to be written over.
   void        Update(Image const& image);
-  void        CleanUp();
+  void        CleanUp() override;
   
   u32         Width() const;
   u32         Height() const;
@@ -106,6 +107,10 @@ public:
 class TextureCube : public TextureBase {
 public:
   TextureCube() : TextureBase(TEXTURE_CUBE) { }
+
+  void Initialize(u32 extentX, u32 extentY, u32 extentZ = 1);
+  void Update(u32 count, Image const* images);
+  void CleanUp() override;
 };
 
 
@@ -146,7 +151,7 @@ public:
     r32                 minLod;
   };
 
-  void          Initialize(SamplerInfo& info);
+  void          Initialize(const SamplerInfo& info);
   void          CleanUp();
 
   Sampler*      Handle() { return mSampler; }

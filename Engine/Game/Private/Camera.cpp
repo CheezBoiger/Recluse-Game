@@ -23,6 +23,9 @@ void Camera::SetMain(Camera* pCam)
 {
   if (!pCam) return;
   s_pMainCamera = pCam;
+
+  // TODO(): Need to remove previous frustum from engine list.
+  gEngine().AddFrustum(&pCam->m_viewFrustum);
 }
 
 

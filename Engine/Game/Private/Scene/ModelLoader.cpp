@@ -237,6 +237,7 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
 
     std::vector<StaticVertex> vertices;
     std::vector<u32>          indices;
+    Vector3                   min, max;
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
@@ -255,6 +256,10 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
         const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
         bufferPositions =
           reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
+        const std::vector<double>& dmin = positionAccessor.minValues;
+        const std::vector<double>& dmax = positionAccessor.maxValues;
+        min = Vector3((r32)dmin[0], (r32)dmin[1], (r32)dmin[2]);
+        max = Vector3((r32)dmax[0], (r32)dmax[1], (r32)dmax[2]);
 
         if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
           const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
@@ -326,7 +331,7 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
       engineModel->primitives.push_back(primData);
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data());
+    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
   }
@@ -345,6 +350,7 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
     std::vector<SkinnedVertex> vertices; 
     std::vector<u32>          indices;
+    Vector3                   min, max;
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
@@ -366,6 +372,10 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
         const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
         bufferPositions =
           reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
+        const std::vector<double>& dmin = positionAccessor.minValues;
+        const std::vector<double>& dmax = positionAccessor.maxValues;
+        min = Vector3((r32)dmin[0], (r32)dmin[1], (r32)dmin[2]);
+        max = Vector3((r32)dmax[0], (r32)dmax[1], (r32)dmax[2]);
 
         if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
           const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
@@ -473,7 +483,7 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
       engineModel->primitives.push_back(std::move(primData));
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data());
+    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data(), min, max);
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
   }

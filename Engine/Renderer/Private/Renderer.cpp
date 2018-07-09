@@ -1546,6 +1546,9 @@ void Renderer::CleanUpGraphicsPipelines()
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipeline_LR);
   m_pRhi->FreeGraphicsPipeline(pbr_forwardPipeline_NoLR);
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipeline_NoLR);
+  m_pRhi->FreeGraphicsPipeline(transparent_staticShadowPipe);
+  m_pRhi->FreeGraphicsPipeline(transparent_dynamicShadowPipe);
+  m_pRhi->FreeGraphicsPipeline(transparent_colorFilterPipe);
 
   GraphicsPipeline* QuadPipeline = final_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);

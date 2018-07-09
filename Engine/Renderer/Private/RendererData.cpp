@@ -33,6 +33,10 @@ DescriptorSetLayout* LightViewDescriptorSetLayoutKey   = nullptr;
 DescriptorSetLayout* globalIllumination_DescLR = nullptr;
 DescriptorSetLayout* globalIllumination_DescNoLR = nullptr;
 
+GraphicsPipeline* transparent_staticShadowPipe = nullptr;
+GraphicsPipeline* transparent_dynamicShadowPipe = nullptr;
+GraphicsPipeline* transparent_colorFilterPipe = nullptr;
+
 GraphicsPipeline* gbuffer_PipelineKey               = nullptr;
 GraphicsPipeline* gbuffer_StaticPipelineKey         = nullptr;
 DescriptorSetLayout* gbuffer_LayoutKey                 = nullptr;
