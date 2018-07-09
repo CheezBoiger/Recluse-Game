@@ -30,6 +30,11 @@ set(RS_TARGET_FIILES
   
   ${RS_WEAPON_DIR}/IWeapon.hpp
   
+  
+  ${RS_PLAYABLE_DIR}/IActor.hpp
+  ${RS_PLAYABLE_DIR}/Player.hpp
+  ${RS_PLAYABLE_DIR}/Player.cpp
+  
   ${RS_SOURCE_DIR}/Main.cpp
 )
 
