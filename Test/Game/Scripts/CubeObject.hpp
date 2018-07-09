@@ -4,6 +4,7 @@
 #include "Game/Scene/Scene.hpp"
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
+#include "UI/UI.hpp"
 
 
 #include "Item.hpp"
@@ -95,6 +96,16 @@ public:
     aabb.max = aabb.max * transform->GetLocalToWorldMatrix();
     Log() << Camera::GetMain()->GetViewFrustum().Intersect(aabb) << "\r";
 
+    // UI Testing.
+    // TODO(): Need to figure out how to to create canvases instead of using one default.
+    std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
+    std::string engine = RTEXT("Recluse Engine v0.0.22");
+    std::string device = gRenderer().GetDeviceName();
+    std::string intro = "WASD to move;Mouse to look; ESC to escape.";
+    gUI().EmitText(str, 100.0f + 30.0f, 100.0f + 75.0f, 150.0f, 20.0f);
+    gUI().EmitText(engine, 100.0f + 30.0f, 100.0f + 30.0f, 350.0f, 20.0f);
+    gUI().EmitText(device, 100.0f + 30.0f, 100.0f + 45.0f, 300.0f, 20.0f);
+    gUI().EmitText(intro, 100.0f + 30.0f, 100.0f + 60.0f, 450.0f, 20.0f);
   }
 
   void OnCleanUp() override

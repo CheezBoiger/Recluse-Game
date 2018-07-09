@@ -204,6 +204,7 @@ public:
 
   // Push mesh to render.
   void              PushMeshRender(MeshRenderCmd& cmd);
+  void              PushUiRender(UiRenderCmd& cmd);
 
   // Set up irradiance maps for this renderer to use for look up.
   void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
@@ -276,7 +277,6 @@ private:
   // Command lists used by the renderer.
   CmdList<MeshRenderCmd>            m_cmdDeferredList;
   CmdList<MeshRenderCmd>            m_forwardCmdList;
-  CmdList<UiRenderCmd>              m_uiCmdList;
 
   // Number of workers in this renderer instance. Used to enable multithreading.
   std::vector<std::thread>          m_workers;

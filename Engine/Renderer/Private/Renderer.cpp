@@ -74,7 +74,6 @@ Renderer::Renderer()
 
   m_cmdDeferredList.Resize(1024);
   m_forwardCmdList.Resize(1024);
-  m_uiCmdList.Resize(1024);
 
   m_cmdDeferredList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
     if (!cmd1._pMeshDesc || !cmd2._pMeshDesc) return false;
@@ -3437,7 +3436,7 @@ void Renderer::CheckCmdUpdate()
     BuildShadowCmdBuffer(idx);
   }
 
-  m_pUI->BuildCmdBuffers(m_uiCmdList, m_pGlobal);
+  m_pUI->BuildCmdBuffers(m_pGlobal);
 
 #if 0
   if (m_NeedsUpdate) {
@@ -3796,6 +3795,7 @@ void Renderer::ClearCmdLists()
   // TODO(): Clear forward command list as well.
   m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();
+  m_pUI->ClearUiCommands();
 }
 
 
@@ -3808,6 +3808,20 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     m_forwardCmdList.PushBack(cmd);
   } else {
     m_cmdDeferredList.PushBack(cmd);
+  }
+}
+
+
+void Renderer::PushUiRender(UiRenderCmd& cmd)
+{
+  switch (cmd._uiType) {
+    case UI_TEXT:
+    {
+      UiText& uiText = static_cast<UiText&>(cmd);
+      m_pUI->PushText(uiText);
+    } break;
+    default:
+    break;
   }
 }
 } // Recluse

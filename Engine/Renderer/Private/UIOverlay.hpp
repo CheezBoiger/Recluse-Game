@@ -35,14 +35,16 @@ public:
     , m_vertBuffer(nullptr)
     , m_indicesBuffer(nullptr)
     , m_vertStagingBuffer(nullptr)
-    , m_indicesStagingBuffer(nullptr) { }
+    , m_indicesStagingBuffer(nullptr) { 
+      m_text.Resize(1024);
+    }
 
   void                        Initialize(VulkanRHI* rhi);
   void                        CleanUp();
   void                        Render();
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(CmdList<UiRenderCmd>& cmdList, GlobalDescriptor* global);
+  void                        BuildCmdBuffers(GlobalDescriptor* global);
 
   Semaphore*                  Signal() { return m_pSemaphore; }
 
@@ -53,6 +55,12 @@ public:
   Semaphore*                  GetSemaphore() { return m_pSemaphore; }
 
   RenderPass*                 GetRenderPass() { return m_renderPass; }
+
+  void                        PushText(UiText& text) { m_text.PushBack(text); }
+
+  void                        ClearUiCommands() {  
+    m_text.Clear();
+  }
 
 private:
   void                        InitializeRenderPass();
@@ -73,6 +81,7 @@ private:
   RenderPass*                 m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
   DescriptorSetLayout*        m_pDescLayout;
+  CmdList<UiText>             m_text;
   friend class Renderer;
 };
 } // Recluse

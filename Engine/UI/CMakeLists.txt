@@ -9,6 +9,10 @@ set(UI_PRIVATE_DIR  Private)
 set(UI_FILES
   ${UI_PUBLIC_DIR}/FontManager.hpp
   ${UI_PUBLIC_DIR}/UI.hpp
+  ${UI_PUBLIC_DIR}/Canvas.hpp
+  ${UI_PUBLIC_DIR}/GUIImage.hpp
+  ${UI_PUBLIC_DIR}/Text.hpp
+  ${UI_PUBLIC_DIR}/UIButton.hpp
 
   ${UI_PRIVATE_DIR}/UI.cpp
   ${UI_PRIVATE_DIR}/FreeType.hpp

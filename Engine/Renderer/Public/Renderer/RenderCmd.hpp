@@ -33,6 +33,11 @@ enum CmdConfig {
   CMD_DECAL_BIT       = (1 << 9)
 };
 
+
+enum UiType {
+  UI_TEXT
+};
+
   
 typedef u32 CmdConfigBits;
 
@@ -55,14 +60,6 @@ struct MeshRenderCmd {
 };
 
 
-struct UiRenderCmd {
-  UiRenderCmd()
-    : _config(false) { }
-
-  CmdConfigBits            _config;
-};
-
-
 struct DecalRenderCmd {
   DecalRenderCmd()
     : _pTexture(nullptr)
@@ -70,5 +67,25 @@ struct DecalRenderCmd {
 
   Texture2D*  _pTexture;
   Matrix4     _transform;
+};
+
+
+struct UiRenderCmd {
+  UiType          _uiType;
+  CmdConfigBits   _config;
+};
+
+
+struct UiText : public UiRenderCmd {
+  UiText() { _uiType = UI_TEXT; }
+
+  r32         _x;
+  r32         _y;
+  r32         _width;
+  r32         _height;
+  char        _str[128];
+  size_t      _sz;
+  i32         _bgColor[4];
+  i32         _fgColor[4];
 };
 } // Recluse
