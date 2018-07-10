@@ -55,6 +55,7 @@ public:
   void            PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values);
   void            Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ);
 
+  void            ClearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges);
   void            Reset(const VkCommandBufferResetFlags flags);
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }

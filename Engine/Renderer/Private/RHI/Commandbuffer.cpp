@@ -193,4 +193,11 @@ void CommandBuffer::Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ)
   ASSERT_RECORDING();
   vkCmdDispatch(mHandle, groupCountX, groupCountY, groupCountZ);
 }
+
+
+void CommandBuffer::ClearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges)
+{
+  ASSERT_RECORDING();
+  vkCmdClearColorImage(mHandle, image, imageLayout, pColor, rangeCount, pRanges);
+}
 } // Recluse

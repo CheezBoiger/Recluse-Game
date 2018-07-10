@@ -2029,6 +2029,17 @@ void Renderer::BuildPbrCmdBuffer()
       pbr_compSet->Handle()
     };
 
+    VkImageSubresourceRange range = { };
+    range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    range.baseArrayLayer = 0;
+    range.baseMipLevel = 0;
+    range.layerCount = 1;
+    range.levelCount = 1;
+    VkClearColorValue clColor = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+    cmdBuffer->ClearColorImage(pbr_FinalTextureKey->Image(), VK_IMAGE_LAYOUT_GENERAL, &clColor, 1, &range);
+    cmdBuffer->ClearColorImage(pbr_BrightTextureKey->Image(), VK_IMAGE_LAYOUT_GENERAL, &clColor, 1, &range);
+
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Layout(), 
       0, 6, compSets, 0, nullptr);
