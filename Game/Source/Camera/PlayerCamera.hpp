@@ -15,14 +15,8 @@ class PlayerActor;
 
 
 // Camera used for player to look.
-class PlayerCamera : public GameObject {
+class PlayerCamera {
 public:
-
-  void OnStart() override;
-
-  void OnCleanUp() override;
-
-  void Update(r32 tick) override;
 
   void SetTargetActor(IActor* actor) { m_actorTarget = actor; }
 
