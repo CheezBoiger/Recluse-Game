@@ -3806,7 +3806,7 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
   u32 config = cmd._config;
   if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
     m_forwardCmdList.PushBack(cmd);
-  } else {
+  } else { 
     m_cmdDeferredList.PushBack(cmd);
   }
 }

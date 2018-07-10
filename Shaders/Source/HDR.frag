@@ -77,7 +77,25 @@ void main()
   //
   vec3 color = texture(sceneSurface, frag_in.uv).rgb;
   vec3 bloom = texture(bloomSurface, frag_in.uv).rgb;
- 
+  
+  // TODO(): These need to be set as a descripter param instead.
+  float k = -0.15;
+  float kcube = 0.15;
+  
+  vec2 uv = frag_in.uv;
+  float r2 = (uv.x - 0.5) * (uv.x - 0.5) + (uv.y - 0.5) * (uv.y - 0.5);
+  float f = 0;
+  if (kcube == 0.0) {
+    f = 1.0 + r2 * k;
+  } else {
+    f = 1.0 + r2 * (k + kcube * sqrt(r2));
+  }
+  
+  float ux = f*(uv.x-0.5)+0.5;
+  float uy = f*(uv.y-0.5)+0.5;
+  vec3 inputDistort = texture(sceneSurface, vec2(ux, uy)).rgb;
+  color = vec3(inputDistort.r, color.g, color.b);
+  
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
   if (gWorldBuffer.bloomEnabled >= 1) { color += bloom * paramConfigs.bloomStrength; }
@@ -93,3 +111,9 @@ void main()
   vec4 post = vec4(tone, 1.0);
   fragColor = post;
 }
+
+
+
+
+
+
