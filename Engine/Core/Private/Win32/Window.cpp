@@ -19,6 +19,7 @@ MousePositionCallback     Window::gMousePositionCallback = nullptr;
 WindowInactiveCallack     Window::gWindowInactiveCallback = nullptr;
 u32                       Window::kFullscreenHeight = 0;
 u32                       Window::kFullscreenWidth = 0;
+BYTE                      lpb[1 << 23];
 
 
 b32 Window::Initialized()
@@ -231,18 +232,15 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
 
       AdjustClientViewRect(window->mHandle);
 
-      GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
-
-      LPBYTE lpb = new BYTE[dwSize];
       if (!lpb) {
         break;
       }
       
-      if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
+      if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) == ((UINT)-1)) {
         Log(rWarning) << "Raw input is not returning correct size.\n";
+        break;
       }
       RAWINPUT* raw = (RAWINPUT*)lpb;
-
       if (raw->header.dwType == RIM_TYPEMOUSE) {
         if (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) {
           dx = raw->data.mouse.lLastX - (i32)Mouse::LastXPos;
@@ -257,7 +255,6 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
 
       Mouse::LastXPos += (r64)dx;
       Mouse::LastYPos += (r64)dy;
-      delete[] lpb;
     }
   } break;
   default: break;
