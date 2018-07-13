@@ -14,13 +14,17 @@ namespace Recluse {
 
 class Texture2D;
 class Renderer;
+class BufferUI;
 
 // User Interface manager.
 class UI : public EngineModule<UI> {
 public:
   UI()
     : m_currForeColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f))
-    , m_currBackColor(Vector4(0.0f, 0.0f, 0.0f, 0.0f)) { }
+    , m_currBackColor(Vector4(0.0f, 0.0f, 0.0f, 0.0f))
+    , m_currUiBuffer(nullptr)
+    , m_currX(0.0f)
+    , m_currY(0.0f) { }
 
   void                      OnStartUp() override;
   void                      OnShutDown() override;
@@ -31,12 +35,16 @@ public:
 
   void                      SetForegroundColor(const Vector4& color) { m_currForeColor = color; }
   void                      SetBackgroundColor(const Vector4& color) { m_currBackColor = color; }
+  void                      BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 height);
   void                      EmitText(const std::string& text, r32 x, r32 y, r32 width, r32 height);
+  void                      EndCanvas();
 
 private:
-  
+  r32                     m_currX;
+  r32                     m_currY;
   Vector4                 m_currForeColor;
   Vector4                 m_currBackColor;
+  BufferUI*               m_currUiBuffer;
 };
 
 

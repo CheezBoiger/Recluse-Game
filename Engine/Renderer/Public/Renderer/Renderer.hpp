@@ -204,7 +204,7 @@ public:
 
   // Push mesh to render.
   void              PushMeshRender(MeshRenderCmd& cmd);
-  void              PushUiRender(UiRenderCmd& cmd);
+  BufferUI*         GetUiBuffer() const;
 
   // Set up irradiance maps for this renderer to use for look up.
   void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }

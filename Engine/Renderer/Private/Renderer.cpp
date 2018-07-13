@@ -3806,7 +3806,6 @@ void Renderer::ClearCmdLists()
   // TODO(): Clear forward command list as well.
   m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();
-  m_pUI->ClearUiCommands();
 }
 
 
@@ -3823,16 +3822,8 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 }
 
 
-void Renderer::PushUiRender(UiRenderCmd& cmd)
+BufferUI* Renderer::GetUiBuffer() const
 {
-  switch (cmd._uiType) {
-    case UI_TEXT:
-    {
-      UiText& uiText = static_cast<UiText&>(cmd);
-      m_pUI->PushText(uiText);
-    } break;
-    default:
-    break;
-  }
+  return m_pUI->GetUIBuffer();
 }
 } // Recluse

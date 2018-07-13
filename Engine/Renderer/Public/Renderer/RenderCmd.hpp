@@ -6,7 +6,7 @@
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Quaternion.hpp"
-
+#include "Core/Math/Color4.hpp"
 #include <vector>
 
 namespace Recluse {
@@ -35,7 +35,9 @@ enum CmdConfig {
 
 
 enum UiType {
-  UI_TEXT
+  UI_TEXT,
+  UI_BEGIN,
+  UI_END
 };
 
   
@@ -85,7 +87,39 @@ struct UiText : public UiRenderCmd {
   r32         _height;
   char        _str[128];
   size_t      _sz;
-  i32         _bgColor[4];
-  i32         _fgColor[4];
+  Color4      _bgColor;
+  Color4      _fgColor;
+};
+
+
+
+struct UiBeginCanvasInfo : public UiRenderCmd {
+  UiBeginCanvasInfo() { _uiType = UI_BEGIN; }
+  Color4        _fixedBackgroundColor;
+  Color4        _backgroundColor;
+  Color4        _canvasBorderColor;
+  Color4        _headerColor;
+  char          _str[128];
+  r32           _x;
+  r32           _y;
+  r32           _width;
+  r32           _height;
+};
+
+
+class BufferUI {
+public:
+  BufferUI(u32 id)
+    : m_id(id) { }
+
+  void Initialize();
+  void BeginCanvas(const UiBeginCanvasInfo& begin);
+  void EndCanvas();
+  void EmitText(const UiText& text);
+
+  u32   GetId() const { return m_id; }
+
+private:
+  u32 m_id;
 };
 } // Recluse

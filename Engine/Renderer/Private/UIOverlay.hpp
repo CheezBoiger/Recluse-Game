@@ -35,9 +35,8 @@ public:
     , m_vertBuffer(nullptr)
     , m_indicesBuffer(nullptr)
     , m_vertStagingBuffer(nullptr)
-    , m_indicesStagingBuffer(nullptr) { 
-      m_text.Resize(1024);
-    }
+    , m_indicesStagingBuffer(nullptr)
+    , m_mainBuffer(0) { }
 
   void                        Initialize(VulkanRHI* rhi);
   void                        CleanUp();
@@ -56,11 +55,7 @@ public:
 
   RenderPass*                 GetRenderPass() { return m_renderPass; }
 
-  void                        PushText(UiText& text) { m_text.PushBack(text); }
-
-  void                        ClearUiCommands() {  
-    m_text.Clear();
-  }
+  BufferUI*                   GetUIBuffer() { return &m_mainBuffer; }
 
 private:
   void                        InitializeRenderPass();
@@ -81,7 +76,7 @@ private:
   RenderPass*                 m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
   DescriptorSetLayout*        m_pDescLayout;
-  CmdList<UiText>             m_text;
+  BufferUI                    m_mainBuffer;
   friend class Renderer;
 };
 } // Recluse

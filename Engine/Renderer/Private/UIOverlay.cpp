@@ -33,8 +33,9 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #include "nuklear.hpp"
 
-#define MAX_VERTEX_MEMORY 512 * 4096
-#define MAX_ELEMENT_MEMORY 128 * 4096
+#define MAX_VERTEX_MEMORY         512 * 4096
+#define MAX_ELEMENT_MEMORY        128 * 4096
+#define DEFAULT_FONT_PIXEL_HEIGHT 13
 
 namespace Recluse {
 
@@ -65,6 +66,7 @@ struct NkObject
   struct nk_font_atlas        _atlas;
   struct nk_font*             _font;
   struct nk_draw_null_texture _null;
+  struct nk_command_buffer*   _cmdBuffer;
   Buffer*                     _cache;
   Texture*                    _texture;
   Sampler*                    _sampler;
@@ -276,7 +278,7 @@ void    InitializeNkObject(NkObject* obj, VulkanRHI* rhi, UIOverlay* overlay)
   nk_buffer_init_default(&obj->_cmds);
   nk_font_atlas_init_default(&obj->_atlas);
   nk_font_atlas_begin(&obj->_atlas);
-  obj->_font = nk_font_atlas_add_default(&obj->_atlas, 13, 0);
+  obj->_font = nk_font_atlas_add_default(&obj->_atlas, DEFAULT_FONT_PIXEL_HEIGHT, 0);
   i32 w, h;
   const void* image = nk_font_atlas_bake(&obj->_atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
   InitImageBuffers(obj, w, h, rhi, overlay);
@@ -600,6 +602,52 @@ void UIOverlay::SetUpGraphicsPipeline()
 }
 
 
+void BufferUI::BeginCanvas(const UiBeginCanvasInfo& begin)
+{
+  NkObject* nk = gNkDevice();
+  nk_color backgroundcolor = nk_color{  begin._backgroundColor.r, 
+                                        begin._backgroundColor.g, 
+                                        begin._backgroundColor.b, 
+                                        begin._backgroundColor.a };
+  nk_color fixedBackGroundColor = nk_color{ begin._fixedBackgroundColor.r,
+                                            begin._fixedBackgroundColor.g,
+                                            begin._fixedBackgroundColor.b,
+                                            begin._fixedBackgroundColor.a };
+  nk_color headerColor = nk_color{  begin._headerColor.r,
+                                    begin._headerColor.g,
+                                    begin._headerColor.b,
+                                    begin._headerColor.a };
+  nk->_ctx.style.window.fixed_background = nk_style_item_color(fixedBackGroundColor);
+  nk->_ctx.style.window.background = backgroundcolor;
+  nk->_ctx.style.window.header.active = nk_style_item_color(headerColor);
+  nk_begin(&nk->_ctx, begin._str, nk_rect(begin._x, begin._y, begin._width, begin._height), NK_WINDOW_TITLE);
+  nk->_cmdBuffer = nk_window_get_canvas(&nk->_ctx);
+}
+
+
+void BufferUI::EmitText(const UiText& text)
+{
+  NkObject* nk = gNkDevice();
+  nk_color fg = nk_color{ text._fgColor.r,
+                          text._fgColor.g,
+                          text._fgColor.b,
+                          text._fgColor.a };
+  nk_color bg = nk_color{ text._bgColor.r,
+                          text._bgColor.g,
+                          text._bgColor.b,
+                          text._bgColor.a };
+  nk_draw_text(nk->_cmdBuffer, nk_rect(text._x, text._y, text._width, text._height), text._str, 
+    static_cast<i32>(text._sz), &nk->_font->handle, bg, fg);
+}
+
+
+void BufferUI::EndCanvas()
+{
+  NkObject* nk = gNkDevice();
+  nk_end(&nk->_ctx);
+}
+
+
 void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global)
 {
   VkViewport viewport = {};
@@ -612,15 +660,6 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global)
 
   // TODO(): This needs to be programmable now. Not hardcoded this way...
   NkObject* nk = gNkDevice();
-  nk_begin(&nk->_ctx, RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved"), nk_rect(100.0f, 100.0f, 500.0f, 100.0f), NK_WINDOW_BORDER | NK_WINDOW_TITLE);
-    struct nk_command_buffer* cmd_buf = nk_window_get_canvas(&nk->_ctx);
-    for (size_t i = 0; i < m_text.Size(); ++i) {
-      UiText& txt = m_text[i];
-      nk_draw_text(cmd_buf, nk_rect(txt._x, txt._y, txt._width, txt._height), txt._str, static_cast<i32>(txt._sz),
-        &nk->_font->handle, nk_rgba(txt._bgColor[0], txt._bgColor[1], txt._bgColor[2], txt._bgColor[3]),
-        nk_rgba(txt._fgColor[0], txt._fgColor[1], txt._fgColor[2], txt._fgColor[3]));
-    }
-  nk_end(&nk->_ctx);
 
   CommandBuffer* cmdBuffer = m_CmdBuffer;
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
