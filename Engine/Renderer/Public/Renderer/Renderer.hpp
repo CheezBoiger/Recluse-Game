@@ -17,6 +17,7 @@
 #include "RenderCmd.hpp"
 #include "HDR.hpp"
 
+
 namespace Recluse {
 
 
@@ -330,6 +331,7 @@ private:
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
   DecalEngine*          m_decalEngine;
+  HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;

@@ -337,6 +337,10 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->DeviceWaitIdle();
 
+  m_pHDR->CleanUp(m_pRhi);
+  delete m_pHDR;
+  m_pHDR = nullptr;
+
   // We probably want to use smart ptrs...
   m_pGlobal->CleanUp();
   delete m_pGlobal;
@@ -414,6 +418,10 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   m_pLights->m_pRhi = m_pRhi;
   m_pLights->Initialize(params->_Shadows);
   m_pLights->Update();
+
+  m_pHDR = new HDR();
+  m_pHDR->Initialize(m_pRhi);
+  m_pHDR->UpdateToGPU(m_pRhi);
 
   SetUpSkybox();
   SetUpGraphicsPipelines();
@@ -1517,7 +1525,7 @@ void Renderer::SetUpGraphicsPipelines()
 
   RendererPass::SetUpDeferredPhysicallyBasedPass(RHI(), GraphicsPipelineInfo);
   RendererPass::SetUpDownScalePass(RHI(), GraphicsPipelineInfo);
-  RendererPass::SetUpHDRGammaPass(RHI(), GraphicsPipelineInfo);
+  RendererPass::SetUpHDRGammaPass(RHI(), GraphicsPipelineInfo, m_pHDR);
 
   if (m_AntiAliasing) {
     RendererPass::SetUpAAPass(RHI(), GraphicsPipelineInfo, m_currentGraphicsConfigs._AA);
@@ -2859,13 +2867,14 @@ void Renderer::BuildHDRCmdBuffer()
       cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->EndRenderPass();
 
-    VkDescriptorSet dSets[1];
+    VkDescriptorSet dSets[2];
     dSets[0] = hdrSet->Handle();
+    dSets[1] = m_pHDR->GetSet()->Handle();
 
     cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 1, dSets, 0, nullptr);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 2, dSets, 0, nullptr);
       cmdBuffer->PushConstants(hdrPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);
       cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
@@ -3544,6 +3553,9 @@ void Renderer::UpdateSceneDescriptors()
       prim._pMat->Update();
     }
   }
+
+  // Update realtime hdr settings.
+  m_pHDR->UpdateToGPU(m_pRhi);
 }
 
 
@@ -3581,6 +3593,8 @@ void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
       m_pGlobal->Data()->_EnableShadows = true;
     } break;
   }
+
+  m_pHDR->GetRealtimeConfiguration()->_allowChromaticAberration = (params->_EnableChromaticAberration ? 1 : 0);
 }
 
 

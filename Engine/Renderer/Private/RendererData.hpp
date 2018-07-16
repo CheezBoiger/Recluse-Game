@@ -32,6 +32,7 @@ class ComputePipeline;
 class DescriptorSetLayout;
 class DescriptorSet;
 class Buffer;
+class HDR;
 
 extern std::string ShadersPath;
 
@@ -181,7 +182,7 @@ void LoadShader(const std::string& Filename, Shader* S);
 void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 // Set up the HDR Gamma pass.
-void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, HDR* pHDR);
 
 void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 

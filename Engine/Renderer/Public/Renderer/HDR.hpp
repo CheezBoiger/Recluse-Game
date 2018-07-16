@@ -8,6 +8,12 @@
 namespace Recluse {
 
 
+
+class DescriptorSet;
+class DescriptorSetLayout;
+class Buffer;
+class VulkanRHI;
+
 // parameters to be pushed to hdr pass. memory size must be kept low!
 struct ParamsHDR {
   ParamsHDR() 
@@ -17,11 +23,34 @@ struct ParamsHDR {
 };
 
 
+// Realtime configurations of hdr settings.
+struct ConfigHDR {
+  Vector4 _allowChromaticAberration;
+  Vector4 _k;
+  Vector4 _kcube;
+};
+
+
 class HDR {
 public:
-  HDR() 
-    { m_params._bloomStrength = 1.0f; }
+  HDR();
 
-  ParamsHDR   m_params;
+  ~HDR();
+
+  void                    Initialize(VulkanRHI* pRhi);
+  void                    CleanUp(VulkanRHI* pRhi);
+
+  void                    UpdateToGPU(VulkanRHI* pRhi);
+
+  ConfigHDR*              GetRealtimeConfiguration() { return &m_config; }
+  DescriptorSet*          GetSet() const { return m_pSet; };
+  DescriptorSetLayout*    GetSetLayout() const { return m_pLayout; }
+
+private:
+
+  ConfigHDR               m_config;
+  DescriptorSet*          m_pSet;
+  DescriptorSetLayout*    m_pLayout;
+  Buffer*                 m_pBuffer;
 };
 } // Recluse

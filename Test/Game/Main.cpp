@@ -132,6 +132,7 @@ int main(int c, char* argv[])
     params._Shadows = SHADOWS_HIGH;
     params._TextureQuality = TEXTURE_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
+    params._EnableChromaticAberration = true;
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);

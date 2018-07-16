@@ -83,7 +83,7 @@ public:
 
   // Enables chromatic aberration. This allows chromatic distortion
   // by which color fringing occurs and the light fails to focus all colors in one convergence point, 
-  // resulting in rgb colors fringing, or offsetting.
+  // resulting in rgb colors offsetting.
   // This also applies to water and certain translucent objects.
   b32             _EnableChromaticAberration;
 
