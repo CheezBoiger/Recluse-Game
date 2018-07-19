@@ -163,9 +163,9 @@ public:
   virtual void Update(r32 tick) override { }
 
 private:
-  std::string     m_name;
   BulletTypeBits  m_bulletType;
-  r32             m_damage;
+  DamageTypeBits  m_damageType;
+  r32             m_damages[32];
   r32             m_critFactor;
   IActor*         m_pOwnerRef;
 };
@@ -184,7 +184,11 @@ public:
 private:  
   std::string           m_name;
   WeaponTypeBits        m_weaponType;
+  BulletTypeBits        m_bulletType;
   DamageTypeBits        m_damageType;
+  r32                   m_minDamage[32];
+  r32                   m_maxDamage[32];
+  r32                   m_critFactor;
   IActor*               m_pOwnerRef;
 }; 
 

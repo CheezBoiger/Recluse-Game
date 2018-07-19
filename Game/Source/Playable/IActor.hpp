@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Game/GameObject.hpp"
+#include "Game/Engine.hpp"
 #include "../Weapon/IWeapon.hpp"
 
 using namespace Recluse;
@@ -45,5 +46,8 @@ private:
   r32         m_currHealth;
   r32         m_maxHealthRegen;
   r32         m_currHealthRegen;
+
+  // Physics component of this actor.
+  PhysicsComponent m_physicsComponent;
 };
 } // rs
