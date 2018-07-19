@@ -13,3 +13,12 @@ PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source>
 
 glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR.comp.spv
 glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR.comp.spv
+
+glslangValidator.exe --aml -DNVIDIA=1 -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR_Nvidia.comp.spv
+glslangValidator.exe --aml -DNVIDIA=1 -V PBR.comp -o PBR_NoLR_Nvidia.comp.spv
+
+glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR_Intel.comp.spv
+glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR_Intel.comp.spv
+
+glslangValidator.exe --aml -DAMD=1 -V PBR.comp -o PBR_NoLR_Amd.comp.spv
+glslangValidator.exe --aml -DAMD=1 -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR_Amd.comp.spv

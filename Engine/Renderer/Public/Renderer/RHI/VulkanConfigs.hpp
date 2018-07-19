@@ -14,6 +14,10 @@
 #define INDEX_SIZE_TYPE_16_BIT      2
 #define INDEX_SIZE_TYPE_32_BIT      4
 
+#define INTEL_WORKGROUP_SIZE       16   // Optimal EU hardware thread workgroup size on Intel chips.
+#define NVIDIA_WARP_SIZE           32   // Optimal CUDA SIMT workgroup size on Nvidia chips.
+#define AMD_WAVEFRONT_SIZE         64   // Optimal AMD workgroup size on Radeon chips.
+
 typedef unsigned long graphics_uuid_t;
 
 class VulkanHandle {

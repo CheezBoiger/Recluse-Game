@@ -19,6 +19,7 @@
 #include "SkyAtmosphere.hpp"
 #include "Decal.hpp"
 #include "HDR.hpp"
+#include "Clusters.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -63,6 +64,8 @@ Renderer::Renderer()
   , m_Minimized(false)
   , m_pGlobalIllumination(nullptr)
   , m_decalEngine(nullptr)
+  , m_workGroupSize(0)
+  , m_pClusterer(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
@@ -431,6 +434,19 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
+
+  {
+    u32 vendorId = m_pRhi->VendorID();
+    switch (vendorId) {
+      case AMD_VENDOR_ID: m_workGroupSize = AMD_WAVEFRONT_SIZE; break;
+      case NVIDIA_VENDOR_ID: m_workGroupSize = NVIDIA_WARP_SIZE; break;
+      case INTEL_VENDOR_ID:
+      default:
+        m_workGroupSize = INTEL_WORKGROUP_SIZE;
+        break;
+    } 
+    R_DEBUG(rDebug, "Workgroup size is " << m_workGroupSize << '\n');
+  }
 
   VkFenceCreateInfo fenceCi = { };
   fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -1729,7 +1745,8 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
+    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -1760,7 +1777,8 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
+    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   pbr_Bright->Initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -2051,7 +2069,7 @@ void Renderer::BuildPbrCmdBuffer()
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Layout(), 
       0, 6, compSets, 0, nullptr);
-    cmdBuffer->Dispatch((windowExtent.width / 32) + 1, (windowExtent.height / 32) + 1, 1);
+    cmdBuffer->Dispatch((windowExtent.width / m_workGroupSize) + 1, (windowExtent.height / m_workGroupSize) + 1, 1);
 
     imageMemBarriers[0].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
     imageMemBarriers[0].newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -3594,7 +3612,8 @@ void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
     } break;
   }
 
-  m_pHDR->GetRealtimeConfiguration()->_allowChromaticAberration = (params->_EnableChromaticAberration ? 1 : 0);
+  m_pHDR->GetRealtimeConfiguration()->_allowChromaticAberration = 
+    (params->_EnableChromaticAberration ? Vector4(1.0f) : Vector4(0.0f));
 }
 
 

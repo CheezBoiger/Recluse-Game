@@ -11,6 +11,8 @@ AudioResult WwiseEngine::Initialize()
   AudioResult result;
   result = InitMemoryManager();
   if (result != Audio_Success) return result;
+  result = InitStreamManager();
+  if (result != Audio_Success) return result;
   result = InitSoundEngine();
   if (result != Audio_Success) return result;
   result = InitMusicEngine();
@@ -39,7 +41,8 @@ AudioResult WwiseEngine::InitSoundEngine()
   AK::SoundEngine::GetDefaultInitSettings(initSettings);
   AK::SoundEngine::GetDefaultPlatformInitSettings(platformInitSettings);
 
-  if (AK::SoundEngine::Init(&initSettings, &platformInitSettings) != AK_Success) {
+  AKRESULT result = AK::SoundEngine::Init(&initSettings, &platformInitSettings);
+  if (result != AK_Success) {
     R_DEBUG(rError, "Failed to initialize wwise sound engine!\n");
     return Audio_Failed_SoundEngine;
   }

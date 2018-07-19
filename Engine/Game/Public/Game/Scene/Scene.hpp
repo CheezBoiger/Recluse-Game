@@ -67,6 +67,7 @@ public:
   // Default set up for scene.
   virtual void              SetUp() { }
 
+  // Start up is optional, since most work may be done in SetUp().
   virtual void              StartUp() { }
 
   // Update the scene. Game logic override goes here.

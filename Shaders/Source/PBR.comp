@@ -6,6 +6,15 @@
 #define MAX_DIRECTION_LIGHTS    4
 #define MAX_POINT_LIGHTS        64
 #define NAN                     0./0.
+#ifndef LOCAL_SIZE
+  #if defined(NVIDIA)
+   #define LOCAL_SIZE           32
+  #elif defined(AMD)
+   #define LOCAL_SIZE           64
+  #else
+   #define LOCAL_SIZE           16
+  #endif
+#endif
 
 struct DirectionLight {
   vec4  direction;
@@ -93,6 +102,8 @@ layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup
 layout (set = 5, binding = 0, rgba8) uniform writeonly image2D outResult;
 layout (set = 5, binding = 1, rgba16) uniform writeonly image2D outBright; 
 
+layout (set = 6, binding = 0, rg32ui) uniform readonly uimage3D lightClusters;
+layout (set = 6, binding = 1, r16ui) uniform readonly uimage1D lightIndices;
 
 struct GBuffer
 {
@@ -363,7 +374,7 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
 }
 
 
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
   ivec2 uv = ivec2(gl_GlobalInvocationID.xy);

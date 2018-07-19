@@ -35,6 +35,7 @@ class SkinnedMeshDescriptor;
 class MaterialDescriptor;
 class LightDescriptor;
 class GlobalDescriptor;
+class UIDescriptor;
 class TextureCube;
 class Semaphore;
 class Texture1D;
@@ -50,6 +51,7 @@ class SkinnedRenderObject;
 class SkyRenderer;
 class DecalEngine;
 class HDR;
+class Clusterer;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -135,6 +137,8 @@ public:
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
 
+  UIDescriptor*     CreateUIDescriptor();
+
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
   LightBuffer*      LightData() { return m_pLights->Data(); }
 
@@ -166,6 +170,8 @@ public:
 
   // Frees up mesh descriptor. Works for skinned mesh descriptor as well.
   void              FreeMeshDescriptor(MeshDescriptor* descriptor);
+
+  void              FreeUIDescriptor(UIDescriptor* descriptor);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
@@ -333,11 +339,13 @@ private:
   DecalEngine*          m_decalEngine;
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
+  Clusterer*            m_pClusterer;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;
   DescriptorSet*        m_pGlobalIllumination;
   u32                   m_CurrCmdBufferIdx;
   u32                   m_TotalCmdBuffers;
+  u32                   m_workGroupSize;
 
   b32                   m_Rendering : 1;
   b32                   m_Initialized : 1;

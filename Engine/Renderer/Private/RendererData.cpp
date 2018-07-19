@@ -432,10 +432,32 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     Rhi->FreeShader(FragPBR);
   }
 
+  u32 vendorId = Rhi->VendorID();
+
   // PBR compute bound.
   {
+    std::string noLr = "";
+    std::string lr = "";
+    switch (vendorId) {
+      case AMD_VENDOR_ID:
+      {
+        noLr = "PBR_NoLR_Amd.comp.spv";
+        lr = "PBR_LR_Amd.comp.spv";
+      }
+      case NVIDIA_VENDOR_ID:
+      {
+        lr = "PBR_NoLR_Nvidia.comp.spv";
+        noLr = "PBR_LR_Nvidia.comp.spv";
+      } break;
+      case INTEL_VENDOR_ID:
+      default:
+      {
+        noLr = "PBR_NoLR_Intel.comp.spv";
+        lr = "PBR_LR_Intel.comp.spv";
+      } break;
+    }
     Shader* compShader = Rhi->CreateShader();
-    LoadShader("PBR_NoLR.comp.spv", compShader);
+    LoadShader(noLr, compShader);
 
     VkDescriptorSetLayout layouts[6] = { 
       GlobalSetLayoutKey->Layout(),
@@ -467,7 +489,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     Rhi->FreeShader(compShader);
     pbr_computePipeline_LR = Rhi->CreateComputePipeline();
     compShader = Rhi->CreateShader();
-    LoadShader("PBR_LR.comp.spv", compShader);
+    LoadShader(lr, compShader);
 
     layouts[4] = globalIllumination_DescLR->Layout();
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

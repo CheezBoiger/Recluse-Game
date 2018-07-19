@@ -154,7 +154,10 @@ void Context::SetUpDebugCallback()
   VkDebugReportCallbackCreateInfoEXT ci = { };
   ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
   ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT 
-    | VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+#if defined(VERBOSE_DEBUG)
+    | VK_DEBUG_REPORT_DEBUG_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT
+#endif
+  ;
   ci.pfnCallback = DebugCallback;
 
   auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT) 
