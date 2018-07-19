@@ -3465,7 +3465,7 @@ void Renderer::CheckCmdUpdate()
   u32 idx = CurrentCmdBufferIdx() + 1;
   if (idx >= m_TotalCmdBuffers) idx = 0;
 
-  std::thread thr1 = std::thread([&]() -> void {
+  m_workers[0] = std::thread([&]() -> void {
     BuildOffScreenBuffer(idx);
     BuildForwardPBRCmdBuffer();
   });
@@ -3485,7 +3485,7 @@ void Renderer::CheckCmdUpdate()
     }
   }
 #endif
-  thr1.join();
+  m_workers[0].join();
   m_CurrCmdBufferIdx = idx;
 }
 
