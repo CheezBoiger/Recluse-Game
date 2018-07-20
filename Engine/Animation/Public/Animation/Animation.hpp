@@ -27,8 +27,7 @@ public:
   AnimObject(uuid64 uuid)
     : m_pSamplerRef(nullptr)
     , m_uuid(uuid)
-    , m_paletteSz(0)
-    , m_finalPalette(nullptr) { }
+    , m_paletteSz(0) { }
 
 
   AnimSampler*      GetSampler() { return m_pSamplerRef; }
@@ -39,16 +38,10 @@ public:
   
   uuid64            GetUUID() const { return m_uuid; }
 
-  void              Update() {
-    // Make sure these are up to date with the sampler.
-    if (!m_pSamplerRef) return;
-
-    m_finalPalette = m_pSamplerRef->GetOutput().data();
-    m_paletteSz = static_cast<u32>(m_pSamplerRef->GetOutput().size());
-  }
+  void              Update();
 
 private:
-  Matrix4*          m_finalPalette;
+  Matrix4           m_finalPalette[64];
   u32               m_paletteSz;
   AnimSampler*      m_pSamplerRef;
   uuid64            m_uuid;

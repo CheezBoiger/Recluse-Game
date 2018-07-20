@@ -4,6 +4,7 @@
 #include "Clip.hpp"
 
 #include "Core/Exception.hpp"
+#include "Core/Logging/Log.hpp"
 #include "Core/Utility/Time.hpp"
 
 namespace Recluse {
@@ -13,6 +14,17 @@ const size_t                        Animation::kMaxAnimationThreadCount   = 2;
 Animation& gAnimation()
 {
   return Animation::Instance();
+}
+
+
+void AnimObject::Update()
+{
+  // Make sure these are up to date with the sampler.
+  if (!m_pSamplerRef) return;
+
+  Matrix4* dat = m_pSamplerRef->GetOutput().data();
+  m_paletteSz = static_cast<u32>(m_pSamplerRef->GetOutput().size());
+  memcpy(m_finalPalette, dat, m_paletteSz * sizeof(Matrix4));
 }
 
 
