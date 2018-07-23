@@ -24,6 +24,28 @@ void Material::CleanUp()
 }
 
 
+void Material::EnableMaps(b32 bits)
+{
+  if (bits & MAT_ALBEDO_BIT) EnableAlbedo(true);
+  if (bits & MAT_NORMAL_BIT) EnableNormal(true);
+  if (bits & MAT_ROUGH_BIT) EnableRoughness(true);
+  if (bits & MAT_METAL_BIT) EnableMetallic(true);
+  if (bits & MAT_EMIT_BIT) EnableEmissive(true);
+  if (bits & MAT_AO_BIT) EnableAo(true);
+}
+
+
+void Material::DisableMaps(b32 bits)
+{
+  if (bits & MAT_ALBEDO_BIT) EnableAlbedo(false);
+  if (bits & MAT_NORMAL_BIT) EnableNormal(false);
+  if (bits & MAT_ROUGH_BIT) EnableRoughness(false);
+  if (bits & MAT_METAL_BIT) EnableMetallic(false);
+  if (bits & MAT_EMIT_BIT) EnableEmissive(false);
+  if (bits & MAT_AO_BIT) EnableAo(false);
+}
+
+
 Material Material::_sDefault;
 
 

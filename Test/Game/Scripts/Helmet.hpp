@@ -225,7 +225,7 @@ public:
     m_meshComponent.Initialize(this);
     m_animationComponent.Initialize(this);
     m_physicsComponent.Initialize(this);
-
+    Transform* transform = GetTransform();
 #if !SPHERE
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);
@@ -248,8 +248,10 @@ public:
     for (size_t i = 0; i < animModel->primitives.size(); ++i) {
       ModelLoader::PrimitiveHandle& primitiveHandle = animModel->primitives[i];
       primitiveHandle.SetMaterial(rusted);
+      rusted->EnableMaps(MAT_ALBEDO_BIT | MAT_NORMAL_BIT | MAT_METAL_BIT | MAT_ROUGH_BIT);
       m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
     }
+    transform->Scale = Vector3(0.02f, 0.02f, 0.02f);
 #else
     Mesh* mesh = nullptr;
     MeshCache::Get("NativeSphere", &mesh);
@@ -263,10 +265,11 @@ public:
     prim._pMesh = mesh->Native();
     m_rendererComponent.SetPrimitive(prim);
     m_rendererComponent.SetMeshComponent(&m_meshComponent);
+    transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
  #endif
 
-    Transform* transform = GetTransform();
-    transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
+
+
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);
 
     m_sphereCollider = gPhysics().CreateSphereCollider(1.0f);

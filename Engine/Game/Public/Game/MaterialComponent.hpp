@@ -10,6 +10,16 @@
 namespace Recluse {
 
 
+enum MaterialMaps {
+  MAT_ALBEDO_BIT = (1 << 0),
+  MAT_NORMAL_BIT = (1 << 1),
+  MAT_ROUGH_BIT = (1 << 2),
+  MAT_METAL_BIT = (1 << 3),
+  MAT_EMIT_BIT = (1 << 4),
+  MAT_AO_BIT = (1 << 5)
+};
+
+
 // A Single instance of a material object stored in gpu memory.
 struct Material {
   // Default used if no material is defined by the game object, for the renderer component.
@@ -38,6 +48,8 @@ struct Material {
   void                      SetEmissiveFactor(r32 emissive) { m_pDesc->Data()->_emissiveFactor = emissive; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
   void                      SetOpacity(r32 opaque) { m_pDesc->Data()->_Opacity = opaque; MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_BUFFER_UPDATE); }
 
+  void                      EnableMaps(b32 mapEnable);
+  void                      DisableMaps(b32 mapsDisable);
   void                      SetAlbedo(Texture2D* texture) { m_pDesc->SetAlbedo(texture); MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
   void                      SetNormal(Texture2D* texture) { m_pDesc->SetNormal(texture); MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
   void                      SetRoughnessMetallic(Texture2D* texture) { m_pDesc->SetRoughnessMetallic(texture); MARK_DIRTY_MATERIAL(MaterialDescriptor::MATERIAL_DESCRIPTOR_UPDATE); }
