@@ -29,7 +29,7 @@ public:
   }
 
 
-  void OnStart() override
+  void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -125,7 +125,7 @@ public:
   }
 
 
-  void OnStart() override
+  void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -214,7 +214,7 @@ public:
   }
 
 
-  void OnStart() override
+  void OnStartUp() override
   {
     SetName("Lantern");
     m_pMeshComponent = new MeshComponent();

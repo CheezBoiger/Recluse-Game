@@ -39,6 +39,9 @@ public:
   // Set an animation sampler used for sampling animation.
   void                      SetSampler(AnimSampler* sampler) { m_object->SetSampler(sampler); }
 
+  // Get the sampler object that may be used by other animation components.
+  AnimSampler*              GetSampler() { return m_object->GetSampler(); }
+
   // TODO():
   virtual void              OnInitialize(GameObject* owner) override;
 

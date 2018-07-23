@@ -36,6 +36,6 @@ void RigidBody::AddCollider(Collider* collider)
 void RigidBody::InvokeCollision(Collision* collision)
 {
   R_ASSERT(m_gameObj, "NULL game object assigned to this rigid body!");
-  m_gameObj->OnCollision(collision);
+  m_gameObj->DispatchCollisionEvent(collision);
 }
 } // Recluse 

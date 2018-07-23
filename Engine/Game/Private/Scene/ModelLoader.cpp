@@ -20,6 +20,12 @@
 #include <stack>
 #include <map>
 
+
+#define SAMPLE_TRANSLATION_STRING   "translation"
+#define SAMPLE_ROTATION_STRING      "rotation"
+#define SAMPLE_SCALE_STRING         "scale"
+#define SAMPLE_WEIGHTS_STRING       "weights"
+
 namespace Recluse {
 namespace ModelLoader {
 
@@ -167,7 +173,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
         clip->_aAnimPoseSamples[inputId]._time = inputValues[inputId];
       }
 
-      if (channel.target_path == "translation") {
+      if (channel.target_path == SAMPLE_TRANSLATION_STRING) {
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
@@ -180,7 +186,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
           DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
         }
       }
-      if (channel.target_path == "rotation") {
+      if (channel.target_path == SAMPLE_ROTATION_STRING) {
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
@@ -194,7 +200,7 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
 
         }
       }
-      if (channel.target_path == "scale") {
+      if (channel.target_path == SAMPLE_SCALE_STRING) {
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
@@ -205,6 +211,13 @@ void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
                                                          outputValues[outputId * 3 + 1],
                                                          outputValues[outputId * 3 + 2]);
           DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
+        }
+      }
+      if (channel.target_path == SAMPLE_WEIGHTS_STRING) {
+        for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
+          AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+          r32 weight = outputValues[outputId + 0];
+          
         }
       }
     }

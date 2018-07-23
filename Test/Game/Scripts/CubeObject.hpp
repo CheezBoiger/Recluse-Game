@@ -31,8 +31,7 @@ public:
   {
   }
 
-
-  void OnStart() override
+  void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
@@ -99,7 +98,7 @@ public:
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
-    std::string engine = RTEXT("Recluse Engine v0.0.23");
+    std::string engine = RTEXT("Recluse Engine v0.0.24");
     std::string device = gRenderer().GetDeviceName();
     Window* window = gEngine().GetWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";

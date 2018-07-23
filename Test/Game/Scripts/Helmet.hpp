@@ -41,7 +41,7 @@ public:
   }
 
 
-  void OnStart() override
+  void OnStartUp() override
   {
     SetName("Mister helmet");
     m_pMeshComponent = new MeshComponent();
@@ -219,7 +219,7 @@ class Monster : public GameObject {
 public:
   Monster() { }
 
-  void OnStart() override 
+  void OnStartUp() override 
   {
     m_rendererComponent.Initialize(this);
     m_meshComponent.Initialize(this);

@@ -41,7 +41,7 @@ public:
   {
   }
 
-  void OnStart() override
+  void OnStartUp() override
   {
     Window* pWindow = gEngine().GetWindow();
     Transform* transform = GetTransform();

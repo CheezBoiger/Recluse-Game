@@ -67,18 +67,24 @@ public:
   // Update the object. Can be overridable from inherited classes.
   virtual void                        Update(r32 tick) { }
 
+  // Dispatch an event for collision.
+  void                                DispatchCollisionEvent(Collision* collision) { OnCollision(collision); }
+
+protected:
   // Wakes up the game object in the scene. First time initialization is done with this call.
-  virtual void                        OnStart() { }
+  virtual void                        OnStartUp() { }
 
   //  Performs necessary clean up if Start() was called.
   virtual void                        OnCleanUp() { }
 
-  // Puts game object to sleep. Called manually, and allows for certain components to be disabled if needed.
-  virtual void                        Sleep() { }
-
   // On collision call. The can be overridden. 
   // other - Information of object colliding with this game object.
   virtual void                        OnCollision(Collision* other) { }
+
+
+public:
+  // Puts game object to sleep. Called manually, and allows for certain components to be disabled if needed.
+  virtual void                        Sleep() { }
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         GetChild(std::string id);
@@ -107,7 +113,7 @@ public:
 
   b32                                 Started() { return m_bStarted; }
   void                                CleanUp() { if (m_bStarted) { OnCleanUp(); m_bStarted = false; } }
-  void                                Start() { if (!m_bStarted) { OnStart(); m_bStarted = true; } }
+  void                                Start() { if (!m_bStarted) { OnStartUp(); m_bStarted = true; } }
 
 private:
 

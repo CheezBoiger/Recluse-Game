@@ -17,7 +17,7 @@ class TestObject : public GameObject
 {
 public:
 
-  virtual void OnStart() override
+  virtual void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pMaterialComponent = new MaterialComponent();
