@@ -5,6 +5,8 @@
 #include "Core/Exception.hpp"
 #include "Core/Math/Common.hpp"
 
+#include "UI/UI.hpp"
+
 #include <assert.h>
 namespace Recluse {
 
@@ -18,6 +20,7 @@ AnimSampler::AnimSampler()
   , _currPoseIdx(0)
   , _nextPoseIdx(1)
   , _samplerId(kSamplerCount++)
+  , _tauS(0.0f)
 {
   _state._bEnabled          = true;
   _state._bLooping          = true;
@@ -30,7 +33,7 @@ AnimSampler::AnimSampler()
 void AnimSampler::Step(r32 gt)
 {
   if (!_state._bEnabled) return;
-
+  R_ASSERT(_tauS >= 0.0f, "tau is negative.");
   R_ASSERT(_pClip, "No clip for this sampler.");
   r32 R = _state._fPlaybackRate;
   r32 t = (gt - _tauS) * R;
@@ -46,7 +49,6 @@ void AnimSampler::Step(r32 gt)
   }
 
   _state._fCurrLocalTime = t;
-
   // TODO(): Now find the local poses of t.
   Skeleton& skeleton = Skeleton::GetSkeleton(_pClip->_skeletonId);
   b32 rootInJoints = skeleton._rootInJoints;

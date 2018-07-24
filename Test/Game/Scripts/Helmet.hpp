@@ -248,10 +248,9 @@ public:
     for (size_t i = 0; i < animModel->primitives.size(); ++i) {
       ModelLoader::PrimitiveHandle& primitiveHandle = animModel->primitives[i];
       primitiveHandle.SetMaterial(rusted);
-      rusted->EnableMaps(MAT_ALBEDO_BIT | MAT_NORMAL_BIT | MAT_METAL_BIT | MAT_ROUGH_BIT);
       m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
     }
-    transform->Scale = Vector3(0.02f, 0.02f, 0.02f);
+    transform->Scale = Vector3(0.002f, 0.002f, 0.002f);
 #else
     Mesh* mesh = nullptr;
     MeshCache::Get("NativeSphere", &mesh);
