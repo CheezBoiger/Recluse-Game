@@ -31,7 +31,7 @@ class GpuParams;
 class GraphicsConfigParams;
 class MeshData;
 class MeshDescriptor;
-class SkinnedMeshDescriptor;
+class JointDescriptor;
 class MaterialDescriptor;
 class LightDescriptor;
 class GlobalDescriptor;
@@ -52,6 +52,9 @@ class SkyRenderer;
 class DecalEngine;
 class HDR;
 class Clusterer;
+
+
+typedef u32 renderer_key_t;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -109,10 +112,10 @@ public:
   MeshData*         CreateMeshData();
 
   // Create a Mesh descriptor.
-  MeshDescriptor*           CreateStaticMeshDescriptor();
+  MeshDescriptor*           CreateMeshDescriptor();
 
-  // Create a skinned mesh descriptor. This is used for skeletal animation.
-  SkinnedMeshDescriptor*    CreateSkinnedMeshDescriptor();
+  // Create a joint descriptor for skinned meshes. This is used for skeletal animation.
+  JointDescriptor*    CreateJointDescriptor();
 
   // Create a 1D texture.
   Texture1D*        CreateTexture1D();
@@ -168,8 +171,11 @@ public:
   // Frees up the material descriptor object.
   void              FreeMaterialDescriptor(MaterialDescriptor* descriptor);
 
-  // Frees up mesh descriptor. Works for skinned mesh descriptor as well.
+  // Frees up mesh descriptor objects.
   void              FreeMeshDescriptor(MeshDescriptor* descriptor);
+
+  // Frees up joint descriptor objects.
+  void              FreeJointDescriptor(JointDescriptor* descriptor);
 
   void              FreeUIDescriptor(UIDescriptor* descriptor);
 
@@ -281,9 +287,14 @@ private:
 
   Window*           m_pWindow;
 
+
   // Command lists used by the renderer.
   CmdList<MeshRenderCmd>            m_cmdDeferredList;
   CmdList<MeshRenderCmd>            m_forwardCmdList;
+
+  CmdList<JointDescriptor*>         m_jointDescriptors;
+  CmdList<MeshDescriptor*>          m_meshDescriptors;
+  CmdList<MaterialDescriptor*>      m_materialDescriptors;
 
   // Number of workers in this renderer instance. Used to enable multithreading.
   std::vector<std::thread>          m_workers;

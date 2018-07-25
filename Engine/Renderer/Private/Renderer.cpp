@@ -77,12 +77,17 @@ Renderer::Renderer()
 
   m_cmdDeferredList.Resize(1024);
   m_forwardCmdList.Resize(1024);
+  m_meshDescriptors.Resize(1024);
+  m_jointDescriptors.Resize(1024);
+  m_materialDescriptors.Resize(1024);
 
   m_cmdDeferredList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
-    if (!cmd1._pMeshDesc || !cmd2._pMeshDesc) return false;
+    
     //if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
+
+    if (!mesh1 || !mesh2) return false;
     Matrix4 m1 = mesh1->ObjectData()->_Model;
     Matrix4 m2 = mesh2->ObjectData()->_Model;
 
@@ -97,10 +102,10 @@ Renderer::Renderer()
   // Use painter's algorithm in this case for forward, simply because of 
   // transparent objects.
   m_forwardCmdList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
-    if (!cmd1._pMeshDesc || !cmd2._pMeshDesc) return false;
     //if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
+    if (!mesh1 || !mesh2) return false;
     Matrix4 m1 = mesh1->ObjectData()->_Model;
     Matrix4 m2 = mesh2->ObjectData()->_Model;
 
@@ -170,6 +175,7 @@ void Renderer::Render()
     // Window was minimized, ignore any cpu draw requests and prevent frame rendering
     // until window is back up.
     ClearCmdLists();
+    m_pUI->ClearUiBuffers();
     //WaitForCpuFence();
     return;
   }
@@ -345,11 +351,11 @@ void Renderer::CleanUp()
   m_pHDR = nullptr;
 
   // We probably want to use smart ptrs...
-  m_pGlobal->CleanUp();
+  m_pGlobal->CleanUp(m_pRhi);
   delete m_pGlobal;
   m_pGlobal = nullptr;
 
-  m_pLights->CleanUp();
+  m_pLights->CleanUp(m_pRhi);
   delete m_pLights;
   m_pLights = nullptr;
   
@@ -408,9 +414,8 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   m_RenderQuad.Initialize(m_pRhi);
 
   GlobalDescriptor* gMat = new GlobalDescriptor();
-  gMat->m_pRhi = m_pRhi;
-  gMat->Initialize();
-  gMat->Update();
+  gMat->Initialize(m_pRhi);
+  gMat->Update(m_pRhi);
   m_pGlobal = gMat;
 
   m_pSky = new SkyRenderer();
@@ -418,9 +423,8 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   m_pSky->MarkDirty();
 
   m_pLights = new LightDescriptor();
-  m_pLights->m_pRhi = m_pRhi;
-  m_pLights->Initialize(params->_Shadows);
-  m_pLights->Update();
+  m_pLights->Initialize(m_pRhi, params->_Shadows);
+  m_pLights->Update(m_pRhi);
 
   m_pHDR = new HDR();
   m_pHDR->Initialize(m_pRhi);
@@ -2559,7 +2563,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       }
 
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      b8 Skinned = pMeshDesc->Skinned();
+      b8 Skinned = renderCmd._hasJoints;
       GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
 
       // Set up the render mesh
@@ -2576,7 +2580,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
       DescriptorSets[0] = m_pGlobal->Set()->Handle();
       DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
-      DescriptorSets[3] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
+      DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
@@ -2956,11 +2960,11 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
     if (!renderCmd._pMeshData) return;
     MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-    b8 skinned = pMeshDesc->Skinned();
+    b32 skinned = renderCmd._hasJoints;
     VkDescriptorSet descriptorSets[3];
     descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
     descriptorSets[1] = lightViewSet->Handle();
-    descriptorSets[2] = skinned ? pMeshDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
+    descriptorSets[2] = skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
     GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
     cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -3069,7 +3073,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
         }
 
         MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-        b8 Skinned = pMeshDesc->Skinned();
+        b32 Skinned = renderCmd._hasJoints;
         GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipeline_LR : pbr_staticForwardPipeline_LR;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -3094,7 +3098,7 @@ void Renderer::BuildForwardPBRCmdBuffer()
         DescriptorSets[3] = m_pLights->Set()->Handle();
         DescriptorSets[4] = m_pLights->ViewSet()->Handle();
         DescriptorSets[5] = m_pGlobalIllumination->Handle(); // Need global illumination data.
-        DescriptorSets[6] = (Skinned ? pMeshDesc->CurrJointSet()->Handle() : nullptr);
+        DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
         // Bind materials.
         for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
@@ -3537,39 +3541,29 @@ void Renderer::UpdateSceneDescriptors()
   }
 
   // Update the global descriptor.
-  m_pGlobal->Update();
+  m_pGlobal->Update(m_pRhi);
 
   // Update lights in scene.
   Vector4 vViewerPos = m_pGlobal->Data()->_CameraPos;
   m_pLights->SetViewerPosition(Vector3(vViewerPos.x, vViewerPos.y, vViewerPos.z));
-  m_pLights->Update();
+  m_pLights->Update(m_pRhi);
 
-  // Update mesh descriptors in cmd list.
-  for (size_t idx = 0; idx < m_cmdDeferredList.Size(); ++idx) {
-    MeshRenderCmd& rnd_cmd = m_cmdDeferredList.Get(idx);
-
-    if (rnd_cmd._pMeshDesc) {
-      rnd_cmd._pMeshDesc->Update();
-    }
-
-    for (size_t i = 0; i < rnd_cmd._primitiveCount; ++i) {
-      Primitive& prim = rnd_cmd._pPrimitives[i];
-      R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
-      prim._pMat->Update();
-    }
+  // Update mesh descriptors.
+  for (size_t i = 0; i < m_meshDescriptors.Size(); ++i) {
+    MeshDescriptor* descriptor = m_meshDescriptors[i];
+    descriptor->Update(m_pRhi);
+  }
+  
+  // Update material descriptors.
+  for (size_t i = 0; i < m_materialDescriptors.Size(); ++i) {
+    MaterialDescriptor* descriptor = m_materialDescriptors[i];
+    descriptor->Update(m_pRhi);
   }
 
-  for (size_t idx = 0; idx < m_forwardCmdList.Size(); ++idx) {
-    MeshRenderCmd& rnd_cmd = m_forwardCmdList.Get(idx);
-    if (rnd_cmd._pMeshDesc) {
-      rnd_cmd._pMeshDesc->Update();
-    }
-
-    for (size_t i = 0; i < rnd_cmd._primitiveCount; ++i) {
-      Primitive& prim = rnd_cmd._pPrimitives[i];
-      R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
-      prim._pMat->Update();
-    }
+  // Update Joint descriptors.
+  for (size_t i = 0; i < m_jointDescriptors.Size(); ++i) {
+    JointDescriptor* descriptor = m_jointDescriptors[i];
+    descriptor->Update(m_pRhi);
   }
 
   // Update realtime hdr settings.
@@ -3774,7 +3768,6 @@ Texture3D* Renderer::CreateTexture3D()
 MaterialDescriptor* Renderer::CreateMaterialDescriptor()
 {
   MaterialDescriptor* descriptor = new MaterialDescriptor();
-  descriptor->m_pRhi = RHI();
   return descriptor;
 }
 
@@ -3782,31 +3775,37 @@ MaterialDescriptor* Renderer::CreateMaterialDescriptor()
 void Renderer::FreeMaterialDescriptor(MaterialDescriptor* descriptor)
 {
   if (!descriptor) return;
-  descriptor->CleanUp();
+  descriptor->CleanUp(m_pRhi);
   delete descriptor;
 }
 
 
-MeshDescriptor* Renderer::CreateStaticMeshDescriptor()
+MeshDescriptor* Renderer::CreateMeshDescriptor()
 {
   MeshDescriptor* descriptor = new MeshDescriptor();
-  descriptor->m_pRhi = RHI();
   return descriptor;
 }
 
 
-SkinnedMeshDescriptor* Renderer::CreateSkinnedMeshDescriptor()
+JointDescriptor* Renderer::CreateJointDescriptor()
 {
-  SkinnedMeshDescriptor* descriptor = new SkinnedMeshDescriptor();
-  descriptor->m_pRhi = RHI();
+  JointDescriptor* descriptor = new JointDescriptor();
   return descriptor;
+}
+
+
+void Renderer::FreeJointDescriptor(JointDescriptor* descriptor)
+{
+  if (!descriptor) return;
+  descriptor->CleanUp(m_pRhi);
+  delete descriptor;
 }
 
 
 void Renderer::FreeMeshDescriptor(MeshDescriptor* descriptor)
 {
   if (!descriptor) return;
-  descriptor->CleanUp();
+  descriptor->CleanUp(m_pRhi);
   delete descriptor; 
 }
 
@@ -3839,15 +3838,31 @@ void Renderer::ClearCmdLists()
   // TODO(): Clear forward command list as well.
   m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();
+  m_meshDescriptors.Clear();
+  m_jointDescriptors.Clear();
+  m_materialDescriptors.Clear();
 }
 
 
 void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 {
   if (m_Minimized) return;
+  if (cmd._hasJoints) {
+    R_ASSERT(cmd._pJointDesc, "No joint descriptoer added to this command.");
+    m_jointDescriptors.PushBack(cmd._pJointDesc);
+  }
+
+  R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
+  m_meshDescriptors.PushBack(cmd._pMeshDesc);
+
+  for (size_t i = 0; i < cmd._primitiveCount; ++i) {
+    Primitive& prim = cmd._pPrimitives[i];
+    R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
+    m_materialDescriptors.PushBack(prim._pMat);  
+  }
 
   u32 config = cmd._config;
-  if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
+  if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {    
     m_forwardCmdList.PushBack(cmd);
   } else { 
     m_cmdDeferredList.PushBack(cmd);

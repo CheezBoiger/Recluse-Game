@@ -54,6 +54,11 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 
+layout (push_constant) uniform Transform {
+  mat4 model;
+} transform;
+
+
 void main()
 {
   vec2 localPos = v2Position / vec2(gWorldBuffer.screenSize);

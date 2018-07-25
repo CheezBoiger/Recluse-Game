@@ -57,6 +57,8 @@ public:
 
   BufferUI*                   GetUIBuffer() { return &m_mainBuffer; }
 
+  void                        ClearUiBuffers();
+
 private:
   void                        InitializeRenderPass();
   void                        CreateBuffers();

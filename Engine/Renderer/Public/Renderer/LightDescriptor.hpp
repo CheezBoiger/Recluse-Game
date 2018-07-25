@@ -95,13 +95,13 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void                Update();
+  void                Update(VulkanRHI* pRhi);
 
   // Initialize. 
-  void                Initialize(ShadowDetail shadowDetail);
+  void                Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
 
   // Cleanup.
-  void                CleanUp();
+  void                CleanUp(VulkanRHI* pRhi);
 
   LightBuffer*        Data() { return &m_Lights; }
 
@@ -120,8 +120,8 @@ public:
   b32                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
 private:
-  void                InitializeNativeLights();
-  void                InitializePrimaryShadow();
+  void                InitializeNativeLights(VulkanRHI* pRhi);
+  void                InitializePrimaryShadow(VulkanRHI* pRhi);
 
   Vector3             m_vViewerPos;
   // Descriptor Set.
@@ -163,8 +163,6 @@ private:
 
   r32                 m_rShadowViewportWidth;
   r32                 m_rShadowViewportHeight;
-  // Vulkan Rhi.
-  VulkanRHI*          m_pRhi;
 
   b32                  m_PrimaryShadowEnable;
 

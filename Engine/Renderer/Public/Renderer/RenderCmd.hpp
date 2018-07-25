@@ -15,6 +15,7 @@ namespace Recluse {
 class MaterialDescriptor;
 class MeshDescriptor;
 class RenderMaterial;
+class JointDescriptor;
 class MeshData;
 class Texture2D;
 
@@ -50,14 +51,17 @@ struct MeshRenderCmd {
     , _pMeshDesc(nullptr)
     , _pPrimitives(nullptr)
     , _pMeshData(nullptr)
+    , _hasJoints(false)
     , _instances(1) { }
 
 
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
+  JointDescriptor*        _pJointDesc;
   Primitive*              _pPrimitives;
   u32                     _primitiveCount;
   u32                     _instances;
+  b32                     _hasJoints;
   CmdConfigBits           _config;
 };
 

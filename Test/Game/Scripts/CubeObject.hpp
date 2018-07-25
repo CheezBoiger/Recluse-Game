@@ -102,11 +102,11 @@ public:
     std::string device = gRenderer().GetDeviceName();
     Window* window = gEngine().GetWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";
-    gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->Height() - 300.0f, 500.0f, 500.0f);
-      gUI().EmitText(str, 30.0f, 75.0f, 150.0f, 20.0f);
-      gUI().EmitText(engine, 30.0f, 30.0f, 350.0f, 20.0f);
-      gUI().EmitText(device, 30.0f, 45.0f, 300.0f, 20.0f);
-      gUI().EmitText(intro, 30.0f, 60.0f, 450.0f, 20.0f);
+    gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->Height() - 300.0f, 800.0f, 500.0f);
+      gUI().EmitText(str, 30.0f, 100.0f, 150.0f, 20.0f);
+      gUI().EmitText(engine, 30.0f, 40.0f, 350.0f, 20.0f);
+      gUI().EmitText(device, 30.0f, 60.0f, 300.0f, 20.0f);
+      gUI().EmitText(intro, 30.0f, 80.0f, 450.0f, 20.0f);
     gUI().EndCanvas();
   }
 

@@ -23,6 +23,11 @@ class Texture2DArray;
 class TextureCube;
 class FrameBuffer;
 
+enum MaterialUpdateBits {
+  MATERIAL_BUFFER_UPDATE = (1 << 0),
+  MATERIAL_DESCRIPTOR_UPDATE = (1 << 1)
+};
+
 
 struct MaterialBuffer {
   Vector4 _Color;          // object base color.
@@ -44,18 +49,14 @@ struct MaterialBuffer {
 // meshes.
 class MaterialDescriptor {
 public:
-  enum UpdateBit {
-    MATERIAL_BUFFER_UPDATE = (1 << 0),
-    MATERIAL_DESCRIPTOR_UPDATE = (1 << 1)
-  };
 
   MaterialDescriptor();
   ~MaterialDescriptor();
 
   // Always initialize the Material.
-  void            Initialize();
-  void            Update();
-  void            CleanUp();
+  void            Initialize(VulkanRHI* pRhi);
+  void            Update(VulkanRHI* pRhi);
+  void            CleanUp(VulkanRHI* pRhi);
 
   void            SetSampler(TextureSampler* sampler) { m_pSampler = sampler; }
   void            SetAlbedo(Texture2D* albedo) { m_pAlbedo = albedo; }
@@ -97,7 +98,6 @@ private:
   TextureSampler* m_pSampler;
   u32             m_bNeedsUpdate;
   DescriptorSet*  m_materialSet;
-  VulkanRHI*      m_pRhi;
   friend class Renderer;
 };
 } // Recluse

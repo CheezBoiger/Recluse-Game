@@ -59,19 +59,12 @@ GlobalDescriptor::~GlobalDescriptor()
 }
 
 
-void GlobalDescriptor::Initialize()
+void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
 {
-  if (!m_pRhi) {
-    R_DEBUG(rError, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
-    return;
-  }
+  R_ASSERT(pRhi, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
+  R_ASSERT(!m_pGlobalBuffer && !m_pDescriptorSet, "This global buffer is already intialized...\n");
 
-  if (m_pGlobalBuffer || m_pDescriptorSet) {
-    R_DEBUG(rNotify, "This global buffer is already intialized! Skipping...\n");
-    return;
-  }
-
-  m_pGlobalBuffer = m_pRhi->CreateBuffer();
+  m_pGlobalBuffer = pRhi->CreateBuffer();
   VkDeviceSize dSize = sizeof(GlobalBuffer);
   VkBufferCreateInfo bufferCI = {};
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -84,8 +77,8 @@ void GlobalDescriptor::Initialize()
 
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;
 
-  m_pDescriptorSet = m_pRhi->CreateDescriptorSet();
-  m_pDescriptorSet->Allocate(m_pRhi->DescriptorPool(), pbrLayout);
+  m_pDescriptorSet = pRhi->CreateDescriptorSet();
+  m_pDescriptorSet->Allocate(pRhi->DescriptorPool(), pbrLayout);
 
   VkDescriptorBufferInfo globalBufferInfo = {};
   globalBufferInfo.buffer = m_pGlobalBuffer->NativeBuffer();
@@ -105,24 +98,24 @@ void GlobalDescriptor::Initialize()
 }
 
 
-void GlobalDescriptor::CleanUp()
+void GlobalDescriptor::CleanUp(VulkanRHI* pRhi)
 {
   // TODO
   if (m_pDescriptorSet) {
 
-    m_pRhi->FreeDescriptorSet(m_pDescriptorSet);
+    pRhi->FreeDescriptorSet(m_pDescriptorSet);
     m_pDescriptorSet = nullptr;
   }
 
   if (m_pGlobalBuffer) {
     m_pGlobalBuffer->UnMap();
-    m_pRhi->FreeBuffer(m_pGlobalBuffer);
+    pRhi->FreeBuffer(m_pGlobalBuffer);
     m_pGlobalBuffer = nullptr;
   }
 }
 
 
-void GlobalDescriptor::Update()
+void GlobalDescriptor::Update(VulkanRHI* pRhi)
 {
   R_ASSERT(m_pGlobalBuffer->Mapped(), "Global data was not mapped!");
   memcpy(m_pGlobalBuffer->Mapped(), &m_Global, sizeof(GlobalBuffer));
@@ -131,6 +124,6 @@ void GlobalDescriptor::Update()
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   range.memory = m_pGlobalBuffer->Memory();
   range.size = m_pGlobalBuffer->MemorySize();
-  m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse

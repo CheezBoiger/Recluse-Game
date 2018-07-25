@@ -69,9 +69,9 @@ public:
   GlobalDescriptor();
   ~GlobalDescriptor();
 
-  void              Update();
-  void              Initialize();
-  void              CleanUp();
+  void              Update(VulkanRHI* pRhi);
+  void              Initialize(VulkanRHI* pRhi);
+  void              CleanUp(VulkanRHI* pRhi);
 
   DescriptorSet*    Set() { return m_pDescriptorSet; }
 
@@ -81,7 +81,6 @@ public:
 private:
   DescriptorSet*    m_pDescriptorSet;
   Buffer*           m_pGlobalBuffer;
-  VulkanRHI*        m_pRhi;
   GlobalBuffer      m_Global;
 
   friend class Renderer;

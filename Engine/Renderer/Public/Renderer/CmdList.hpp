@@ -30,7 +30,9 @@ public:
 
   void                    Resize(size_t newSize) { mCmdList.resize(newSize); }
   void                    SetSortFunc(CmdCompareFunc compare) { mCompare = compare; }
-  void                    PushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { Resize(mCmdList.size() << 1); } mCmdList[m_currIdx++] = cmd; }
+
+  // Push back an object. Returns the index of the object stored in this structure.
+  size_t                  PushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { Resize(mCmdList.size() << 1); } mCmdList[m_currIdx] = cmd; return m_currIdx++; }
   void                    Erase(u32 i) { mCmdList.erase(mRenderList.begin() + i); }
   // Sort using alg.
   void                    Sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx - 1), mCompare); }

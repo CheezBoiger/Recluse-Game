@@ -1,4 +1,5 @@
 // Copyright (c) 2017-2018 Recluse Project. All rights reserved.
+#define _CRT_SECURE_NO_WARNINGS 1 
 #include "UIOverlay.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Math/Common.hpp"
@@ -27,6 +28,7 @@
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_IMPLEMENTATION
 #define NK_PRIVATE
+#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
@@ -35,7 +37,7 @@
 
 #define MAX_VERTEX_MEMORY         512 * 4096
 #define MAX_ELEMENT_MEMORY        128 * 4096
-#define DEFAULT_FONT_PIXEL_HEIGHT 13
+#define DEFAULT_FONT_PIXEL_HEIGHT 18
 
 namespace Recluse {
 
@@ -899,5 +901,12 @@ void UIOverlay::StreamBuffers()
   m_pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
 
   cmdBuffer.Free();
+}
+
+
+void UIOverlay::ClearUiBuffers()
+{
+  NkObject* nk = gNkDevice();
+  nk_clear(&nk->_ctx);
 }
 } // Recluse

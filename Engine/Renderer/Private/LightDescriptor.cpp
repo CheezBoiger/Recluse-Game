@@ -38,7 +38,6 @@ u32 LightBuffer::MaxNumPointLights()
 LightDescriptor::LightDescriptor()
   : m_pOpaqueShadowMap(nullptr)
   , m_pShadowSampler(nullptr)
-  , m_pRhi(nullptr)
   , m_pLightDescriptorSet(nullptr)
   , m_pLightViewDescriptorSet(nullptr)
   , m_pLightBuffer(nullptr)
@@ -107,20 +106,13 @@ LightDescriptor::~LightDescriptor()
 }
 
 
-void LightDescriptor::Initialize(ShadowDetail shadowDetail)
+void LightDescriptor::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
 {
-  if (!m_pRhi) {
-    R_DEBUG(rError, "RHI owner not set for light material upon initialization!\n");
-    return;
-  }
-
+  R_ASSERT(pRhi, "RHI owner not set for light material upon initialization!\n");
   // This class has already been initialized.
-  if (m_pLightBuffer || m_pLightDescriptorSet)  {
-    R_DEBUG(rNotify, "This light buffer is already initialized! Skipping...\n");
-    return;
-  }
+  R_ASSERT(!m_pLightBuffer && !m_pLightDescriptorSet, "This light buffer is already initialized! Skipping...\n");
 
-  m_pLightBuffer = m_pRhi->CreateBuffer();
+  m_pLightBuffer = pRhi->CreateBuffer();
   VkBufferCreateInfo bufferCI = {};
   VkDeviceSize dSize = sizeof(LightBuffer);
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -132,7 +124,7 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
   m_pLightBuffer->Map();
 
   // Light view buffer creation.
-  m_pLightViewBuffer = m_pRhi->CreateBuffer();
+  m_pLightViewBuffer = pRhi->CreateBuffer();
   dSize = sizeof(LightViewSpace);
   bufferCI.size = dSize;
   m_pLightViewBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -140,9 +132,8 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
 
   // Create our shadow map texture.
   if (!m_pOpaqueShadowMap) {
-
     // TODO():
-    m_pOpaqueShadowMap = m_pRhi->CreateTexture();
+    m_pOpaqueShadowMap = pRhi->CreateTexture();
 
     // ShadowMap is a depth image.
     VkImageCreateInfo ImageCi = {};
@@ -177,7 +168,7 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
 
   if (!m_pShadowSampler) {
     // TODO():
-    m_pShadowSampler = m_pRhi->CreateSampler();
+    m_pShadowSampler = pRhi->CreateSampler();
     VkSamplerCreateInfo SamplerCi = { };
     SamplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
@@ -197,59 +188,59 @@ void LightDescriptor::Initialize(ShadowDetail shadowDetail)
     m_pShadowSampler->Initialize(SamplerCi);
   }
 
-  InitializeNativeLights();
-  InitializePrimaryShadow();
+  InitializeNativeLights(pRhi);
+  InitializePrimaryShadow(pRhi);
 }
 
 
-void LightDescriptor::CleanUp()
+void LightDescriptor::CleanUp(VulkanRHI* pRhi)
 {
   if (m_pOpaqueShadowMap) {
-    m_pRhi->FreeTexture(m_pOpaqueShadowMap);
+    pRhi->FreeTexture(m_pOpaqueShadowMap);
     m_pOpaqueShadowMap = nullptr;
   }
 
   if (m_pShadowSampler) {
-    m_pRhi->FreeSampler(m_pShadowSampler);
+    pRhi->FreeSampler(m_pShadowSampler);
     m_pShadowSampler = nullptr;
   }
 
   // TODO
   if (m_pLightDescriptorSet) {
-    m_pRhi->FreeDescriptorSet(m_pLightDescriptorSet);
+    pRhi->FreeDescriptorSet(m_pLightDescriptorSet);
     m_pLightDescriptorSet = nullptr;
   }
 
   if (m_pLightViewDescriptorSet) {
-    m_pRhi->FreeDescriptorSet(m_pLightViewDescriptorSet);
+    pRhi->FreeDescriptorSet(m_pLightViewDescriptorSet);
     m_pLightViewDescriptorSet = nullptr;
   }
 
   if (m_pLightBuffer) {
     m_pLightBuffer->UnMap();
-    m_pRhi->FreeBuffer(m_pLightBuffer);
+    pRhi->FreeBuffer(m_pLightBuffer);
     m_pLightBuffer = nullptr;
   }
 
   if (m_pRenderPass) {
-    m_pRhi->FreeRenderPass(m_pRenderPass);
+    pRhi->FreeRenderPass(m_pRenderPass);
     m_pRenderPass = nullptr;
   }
 
   if (m_pFrameBuffer) {
-    m_pRhi->FreeFrameBuffer(m_pFrameBuffer);
+    pRhi->FreeFrameBuffer(m_pFrameBuffer);
     m_pFrameBuffer = nullptr;
   }
 
   if (m_pLightViewBuffer) {
     m_pLightViewBuffer->UnMap();
-    m_pRhi->FreeBuffer(m_pLightViewBuffer);
+    pRhi->FreeBuffer(m_pLightViewBuffer);
     m_pLightViewBuffer = nullptr;
   }
 }
 
 
-void LightDescriptor::Update()
+void LightDescriptor::Update(VulkanRHI* pRhi)
 {
   // TODO(): The shadow map needs to follow the player...
   Vector3 Eye = Vector3(
@@ -283,22 +274,22 @@ void LightDescriptor::Update()
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pLightViewBuffer->Memory();
     range.size = m_pLightViewBuffer->MemorySize();
-    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+    pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   VkMappedMemoryRange lightRange = { };
   lightRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   lightRange.memory = m_pLightBuffer->Memory();
   lightRange.size = m_pLightBuffer->MemorySize();
-  m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &lightRange);
+  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &lightRange);
 }
 
 
-void LightDescriptor::InitializeNativeLights()
+void LightDescriptor::InitializeNativeLights(VulkanRHI* pRhi)
 {
   DescriptorSetLayout* pbrLayout = LightSetLayoutKey;
-  m_pLightDescriptorSet = m_pRhi->CreateDescriptorSet();
-  m_pLightDescriptorSet->Allocate(m_pRhi->DescriptorPool(), pbrLayout);
+  m_pLightDescriptorSet = pRhi->CreateDescriptorSet();
+  m_pLightDescriptorSet->Allocate(pRhi->DescriptorPool(), pbrLayout);
 
   VkDescriptorBufferInfo lightBufferInfo = {};
   lightBufferInfo.buffer = m_pLightBuffer->NativeBuffer();
@@ -333,14 +324,14 @@ void LightDescriptor::InitializeNativeLights()
 }
 
 
-void LightDescriptor::InitializePrimaryShadow()
+void LightDescriptor::InitializePrimaryShadow(VulkanRHI* pRhi)
 {
   // TODO(): Create DescriptorSet and Framebuffer for shadow pass.
   if (m_pFrameBuffer) return;
 
   DescriptorSetLayout* viewLayout = LightViewDescriptorSetLayoutKey;
-  m_pLightViewDescriptorSet = m_pRhi->CreateDescriptorSet();
-  m_pLightViewDescriptorSet->Allocate(m_pRhi->DescriptorPool(), viewLayout);
+  m_pLightViewDescriptorSet = pRhi->CreateDescriptorSet();
+  m_pLightViewDescriptorSet->Allocate(pRhi->DescriptorPool(), viewLayout);
 
   VkDescriptorBufferInfo viewBuf = { };
   viewBuf.buffer = m_pLightViewBuffer->NativeBuffer();
@@ -359,8 +350,8 @@ void LightDescriptor::InitializePrimaryShadow()
   
   m_pLightViewDescriptorSet->Update(1, &write);
 
-  m_pFrameBuffer = m_pRhi->CreateFrameBuffer();
-  m_pRenderPass = m_pRhi->CreateRenderPass();
+  m_pFrameBuffer = pRhi->CreateFrameBuffer();
+  m_pRenderPass = pRhi->CreateRenderPass();
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
 
   // Actual depth buffer to write onto.

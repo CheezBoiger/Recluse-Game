@@ -117,7 +117,7 @@ void PointLightComponent::Update()
     N[3][2] = 0.0f;
     N[3][3] = 1.0f;
     buffer->_NormalMatrix = N.Inverse().Transpose();
-    m_descriptor->PushUpdate(MeshDescriptor::MESH_BUFFER_UPDATE);
+    m_descriptor->PushUpdate(MESH_BUFFER_UPDATE);
     gRenderer().PushMeshRender(cmd);
   }
 }
@@ -146,9 +146,9 @@ void PointLightComponent::CleanUpMeshDebug()
 void PointLightComponent::OnDebug()
 {
   if (m_debug && !m_descriptor) {
-    m_descriptor = gRenderer().CreateStaticMeshDescriptor();
-    m_descriptor->Initialize();
-    m_descriptor->PushUpdate(MeshDescriptor::MESH_DESCRIPTOR_UPDATE);
+    m_descriptor = gRenderer().CreateMeshDescriptor();
+    m_descriptor->Initialize(gRenderer().RHI());
+    m_descriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE);
   } else if (!m_debug && m_descriptor) {
     gRenderer().FreeMeshDescriptor(m_descriptor);
     m_descriptor = nullptr;

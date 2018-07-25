@@ -53,11 +53,11 @@ MaterialDescriptor::~MaterialDescriptor()
 }
 
 
-void MaterialDescriptor::Initialize()
+void MaterialDescriptor::Initialize(VulkanRHI* pRhi)
 {
   if (m_pBuffer) return;
 
-  m_pBuffer = m_pRhi->CreateBuffer();
+  m_pBuffer = pRhi->CreateBuffer();
   VkDeviceSize memSize = sizeof(MaterialBuffer);
   VkBufferCreateInfo bufferCi = { };
   bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -68,15 +68,15 @@ void MaterialDescriptor::Initialize()
   m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   m_pBuffer->Map();
 
-  m_materialSet = m_pRhi->CreateDescriptorSet();
+  m_materialSet = pRhi->CreateDescriptorSet();
 
   DescriptorSetLayout* MaterialLayout = MaterialSetLayoutKey;
 
-  m_materialSet->Allocate(m_pRhi->DescriptorPool(), MaterialLayout);
+  m_materialSet->Allocate(pRhi->DescriptorPool(), MaterialLayout);
 }
 
 
-void MaterialDescriptor::Update()
+void MaterialDescriptor::Update(VulkanRHI* pRhi)
 {
   if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
@@ -200,23 +200,23 @@ void MaterialDescriptor::Update()
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pBuffer->Memory();
     range.size = m_pBuffer->MemorySize();
-    m_pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+    pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   m_bNeedsUpdate = 0;
 }
 
 
-void MaterialDescriptor::CleanUp()
+void MaterialDescriptor::CleanUp(VulkanRHI* pRhi)
 {
 
   if (m_materialSet) {
-    m_pRhi->FreeDescriptorSet(m_materialSet);
+    pRhi->FreeDescriptorSet(m_materialSet);
     m_materialSet = nullptr;
   }
   if (m_pBuffer)  {
     m_pBuffer->UnMap();
-    m_pRhi->FreeBuffer(m_pBuffer);
+    pRhi->FreeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }
 }
