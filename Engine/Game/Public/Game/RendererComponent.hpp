@@ -23,8 +23,8 @@ class Mesh;
 struct Primitive;
 
 
-// Mesh Component, which holds static mesh object info for rendering
-// data.
+// Renderer Component, which holds static mesh object info for rendering
+// data. Supports multiple meshes within one renderer component.
 class RendererComponent : public Component {
   RCOMPONENT(RendererComponent)
 public:
@@ -73,8 +73,8 @@ protected:
 };
 
 
-// Renderer component that holds a skinned mesh object, for animation and 
-// whatnot.
+// Renderer component that holds skinned mesh objects, for animation and 
+// whatnot. Supports multiple skinned mesh objects that share the same animation.
 class SkinnedRendererComponent : public RendererComponent {
   RCOMPONENT(SkinnedRendererComponent)
 public:
