@@ -98,9 +98,9 @@ void PointLightComponent::Update()
     MeshRenderCmd cmd;
     cmd._config = CMD_RENDERABLE_BIT;
     cmd._pMeshDesc = m_descriptor;
-    cmd._pMeshData = kPointLightMesh->Native();
     cmd._pPrimitives = &pointLightPrim;
     cmd._primitiveCount = 1;
+    cmd._pMeshData = kPointLightMesh->Native();
 
     ObjectBuffer* buffer = m_descriptor->ObjectData();
     buffer->_Model = Matrix4(

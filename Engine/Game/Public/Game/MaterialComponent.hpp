@@ -71,22 +71,4 @@ struct Material {
 private:
   MaterialDescriptor*       m_pDesc;
 };
-
-
-class MaterialComponent : public Component {
-  RCOMPONENT(MaterialComponent);
-public:
-  MaterialComponent() : m_pRef(nullptr) { }
-
-  void          SetMaterialRef(Material* ref) { m_pRef = ref; }
-  Material*     GetMaterial() { return m_pRef; }
-
-
-protected:
-
-  void          Update() override { }
-
-private:
-  Material*     m_pRef;
-};
 } // Recluse

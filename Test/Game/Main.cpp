@@ -183,6 +183,7 @@ int main(int c, char* argv[])
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
+  ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
 
   // Create and set up scene.
 

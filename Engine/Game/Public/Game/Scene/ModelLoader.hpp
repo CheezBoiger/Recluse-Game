@@ -33,7 +33,7 @@ public:
 
   const Primitive&      GetPrimitive() const { return _primitive; }
   void                  SetMaterial(Material* mat) { _pMaterial = mat; _primitive._pMat = _pMaterial->Native(); }
-  void                  SetMesh(Mesh* mesh) { _pMesh = mesh; _primitive._pMesh = mesh->Native(); }
+  void                  SetMesh(Mesh* mesh) { _pMesh = mesh; }
   Material*             GetMaterial() { return _pMaterial; }
   Mesh*                 GetMesh() { return _pMesh; }
 

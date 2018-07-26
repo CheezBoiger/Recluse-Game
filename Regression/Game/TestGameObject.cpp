@@ -20,14 +20,12 @@ public:
   virtual void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     
     m_pMeshComponent->Initialize(this);
-    m_pMaterialComponent->Initialize(this);
 
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->AddMesh(nullptr);
   }
 
 
@@ -43,17 +41,14 @@ public:
   virtual void OnCleanUp() override 
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
   }
 
 private:
   RendererComponent*  m_pRendererComponent;
-  MaterialComponent*  m_pMaterialComponent;
   MeshComponent*      m_pMeshComponent;
 };
 

@@ -45,7 +45,6 @@ public:
   {
     SetName("Mister helmet");
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new SkinnedRendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pAnim = new AnimationComponent();
@@ -77,8 +76,6 @@ public:
 #endif
       , &material);
 #endif
-    m_pMaterialComponent->Initialize(this);
-    m_pMaterialComponent->SetMaterialRef(material);
     //material->SetEmissiveFactor(0.01f);
 
     //material->SetRoughnessFactor(0.3f);
@@ -86,18 +83,24 @@ public:
     //material->SetEmissiveFactor(1.0f);
 
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
-    for (size_t i = 0; i < model->primitives.size(); ++i) {
-      ModelLoader::PrimitiveHandle& primHandle = model->primitives[i];
-      //primHandle.SetMaterial(material);
-      m_pRendererComponent->SetPrimitive(primHandle.GetPrimitive());
+    for (size_t i = 0; i < model->meshes.size(); ++i) {
+      m_pRendererComponent->AddMesh(model->meshes[i]);
     }
+
+#if 0
+    // For busterDrone model work.
+    for (size_t i = 0; i < model->primitives.size(); ++i) {
+      ModelLoader::PrimitiveHandle& handle = model->primitives[i];
+      handle.GetMaterial()->EnableEmissive(true);
+      handle.GetMaterial()->SetEmissiveFactor(1.0f);
+    }
+#endif
    
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
+    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -152,24 +155,15 @@ public:
 
     // Make emission glow.
     m_factor = Absf(sinf(static_cast<r32>(Time::CurrentTime())));
-    m_pMaterialComponent->GetMaterial()->SetEmissiveFactor(m_factor);
 
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
       // NOTE(): If using SkinnedRendererComponent, this will not work for static meshes like
       // this! End up with incorrect reading to the gpu!
       ModelLoader::Model* model = nullptr;  
       ModelCache::Get("BoomBox", &model);
-      m_pMaterialComponent->SetMaterialRef(model->materials[0]);
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
-      m_pMaterialComponent->GetMaterial()->SetOpacity(0.5f);
       transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
       m_pRendererComponent->SetTransparent(true);
-      m_pRendererComponent->ClearPrimitives();
-      Primitive prim;
-      prim._firstIndex = 0;
-      prim._indexCount = m_pMeshComponent->MeshRef()->Native()->IndexData()->IndexCount();
-      prim._pMat = m_pMaterialComponent->GetMaterial()->Native();
-      m_pRendererComponent->SetPrimitive(prim);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
@@ -177,29 +171,20 @@ public:
       // this! End up with incorrect reading to the gpu!
       ModelLoader::Model* model = nullptr;
       ModelCache::Get("DamagedHelmet", &model);
-      m_pMaterialComponent->SetMaterialRef(model->materials[0]);
       m_pMeshComponent->SetMeshRef(model->meshes[0]);
       transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
       m_pRendererComponent->SetTransparent(false);
-      m_pRendererComponent->ClearPrimitives();
-      Primitive prim;
-      prim._firstIndex = 0;
-      prim._indexCount = m_pMeshComponent->MeshRef()->Native()->IndexData()->IndexCount();
-      prim._pMat = m_pMaterialComponent->GetMaterial()->Native();
-      m_pRendererComponent->SetPrimitive(prim);
     }
   }
 
   void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
     m_pAnim->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
@@ -261,9 +246,8 @@ public:
     prim._firstIndex = 0;
     prim._indexCount = mesh->Native()->IndexData()->IndexCount();
     prim._pMat = mat->Native();
-    prim._pMesh = mesh->Native();
-    m_rendererComponent.SetPrimitive(prim);
-    m_rendererComponent.SetMeshComponent(&m_meshComponent);
+    mesh->PushPrimitive(prim);
+    m_rendererComponent.AddMesh(mesh);
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
  #endif
 

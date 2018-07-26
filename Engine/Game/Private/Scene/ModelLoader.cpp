@@ -339,9 +339,8 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
 
       PrimitiveHandle primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
-      // TODO():
-      //    Still need to add start and index count.
       engineModel->primitives.push_back(primData);
+      pMesh->PushPrimitive(primData.GetPrimitive());
     }
 
     pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
@@ -355,6 +354,7 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
 Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
 {
   Mesh* pMesh = nullptr;
+  std::vector<Primitive> primitives;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
@@ -494,6 +494,7 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
       // TODO():
       //    Still need to add start and index count.
       engineModel->primitives.push_back(std::move(primData));
+      pMesh->PushPrimitive(primData.GetPrimitive());
     }
 
     pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data(), min, max);
@@ -771,7 +772,6 @@ ModelResult LoadAnimatedModel(const std::string path)
 void GeneratePrimitive(PrimitiveHandle& handle, Material* mat, Mesh* mesh, u32 firstIndex, u32 indexCount)
 {
   Primitive prim;
-  prim._pMesh = mesh->Native();
   prim._pMat = mat->Native() ? mat->Native() : nullptr;
   prim._firstIndex = firstIndex;
   prim._indexCount = indexCount;

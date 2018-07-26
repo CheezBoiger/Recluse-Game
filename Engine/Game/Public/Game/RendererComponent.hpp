@@ -16,7 +16,6 @@ class MeshDescriptor;
 class Renderer;
 class MaterialDescriptor;
 class MeshComponent;
-class MaterialComponent;
 class JointDescriptor;
 class AnimationComponent;
 class Mesh;
@@ -49,16 +48,17 @@ public:
   b32                       Dirty() const { return m_bDirty; }
   b32                       TransparentEnabled() const;
   b32                       ShadowEnabled() const;
-  virtual b32               HasJoints() const { return false; }
+  virtual b32               Skinned() const { return false; }
   MeshDescriptor*           GetMeshDescriptor() { return m_meshDescriptor; }
   virtual JointDescriptor*  GetJointDescriptor() { return nullptr; }
 
   void                      SignalClean() { m_bDirty = false; }
-  inline void               SetPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
-  void                      SetMeshComponent(MeshComponent* mesh) { m_meshRef = mesh; }
+  void                      AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
+  void                      ClearMeshes() { m_meshes.clear(); }
+  Mesh*                     GetMesh(size_t idx) { return m_meshes[idx]; }
+  u32                       GetMeshCount() const { return static_cast<u32>(m_meshes.size()); }
   virtual void              SetAnimationComponent(AnimationComponent* anim) { }
 
-  inline void                      ClearPrimitives() { m_primitives.clear(); }
 
 protected:
   virtual void              OnInitialize(GameObject* owner) override;
@@ -67,8 +67,7 @@ protected:
 
   void                      TriggerDirty() { m_bDirty = true; }
   MeshDescriptor*           m_meshDescriptor;
-  MeshComponent*            m_meshRef;
-  std::vector<Primitive>    m_primitives;
+  std::vector<Mesh*>        m_meshes;
   b32                       m_bDirty;
   u32                       m_configs;
 };
@@ -80,17 +79,17 @@ class SkinnedRendererComponent : public RendererComponent {
   RCOMPONENT(SkinnedRendererComponent)
 public:
 
-  virtual void OnInitialize(GameObject* owner) override;
-  virtual void OnCleanUp() override;
-  virtual void Update() override;
-  virtual void Serialize(IArchive& a) override { }
-  virtual void Deserialize(IArchive& a) override { }
-  virtual b32   HasJoints() const override { return true; }
-  virtual void SetAnimationComponent(AnimationComponent* anim) { m_pAnimComponent = anim; }
+  virtual void              OnInitialize(GameObject* owner) override;
+  virtual void              OnCleanUp() override;
+  virtual void              Update() override;
+  virtual void              Serialize(IArchive& a) override { }
+  virtual void              Deserialize(IArchive& a) override { }
+  virtual b32               Skinned() const override { return true; }
+  virtual void              SetAnimationComponent(AnimationComponent* anim) { m_pAnimComponent = anim; }
   virtual JointDescriptor*  GetJointDescriptor() override { return m_pJointDescriptor; }
 
 protected:
-  JointDescriptor*        m_pJointDescriptor;
-  AnimationComponent*     m_pAnimComponent;
+  JointDescriptor*          m_pJointDescriptor;
+  AnimationComponent*       m_pAnimComponent;
 };
 } // Recluse

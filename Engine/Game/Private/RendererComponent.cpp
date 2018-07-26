@@ -22,7 +22,6 @@ DEFINE_COMPONENT_MAP(SkinnedRendererComponent);
 
 RendererComponent::RendererComponent()
   : m_meshDescriptor(nullptr)
-  , m_meshRef(nullptr)
   , m_configs(CMD_RENDERABLE_BIT | CMD_SHADOWS_BIT)
 {
 }
@@ -30,27 +29,25 @@ RendererComponent::RendererComponent()
 
 RendererComponent::RendererComponent(const RendererComponent& m)
   : m_meshDescriptor(m.m_meshDescriptor)
-  , m_meshRef(m.m_meshRef)
+  , m_meshes(m.m_meshes)
 {
 }
 
 
 RendererComponent::RendererComponent(RendererComponent&& m)
   : m_meshDescriptor(m.m_meshDescriptor)
-  , m_meshRef(m.m_meshRef)
+  , m_meshes(std::move(m.m_meshes))
 {
   m.m_meshDescriptor = nullptr;
-  m.m_meshRef = nullptr;
 }
 
 
 RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 {
   m_meshDescriptor = obj.m_meshDescriptor;
-  m_meshRef = obj.m_meshRef;
+  m_meshes = std::move(obj.m_meshes);
 
   obj.m_meshDescriptor = nullptr;
-  obj.m_meshRef = nullptr;
   return (*this);
 }
 
@@ -58,7 +55,7 @@ RendererComponent& RendererComponent::operator=(RendererComponent&& obj)
 RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 {
   m_meshDescriptor = obj.m_meshDescriptor;
-  m_meshRef = obj.m_meshRef;
+  m_meshes = obj.m_meshes;
   return (*this);
 }
 
@@ -110,7 +107,7 @@ void RendererComponent::ForceForward(b32 enable)
 
 void RendererComponent::Update()
 {
-  if (!Enabled() || !m_meshRef) return;
+  if (!Enabled() || m_meshes.empty()) return;
   // TODO(): Static objects don't necessarily need to be updated all the time.
   // This is especially true if the object is kinematic
   Transform* transform = GetOwner()->GetTransform();
@@ -118,17 +115,20 @@ void RendererComponent::Update()
   Matrix4 model = transform->GetLocalToWorldMatrix();
 
   // Now push the object into the renderer for updating.
-  MeshRenderCmd cmd;
-  cmd._pMeshDesc = m_meshDescriptor;
-  cmd._pMeshData = m_meshRef->MeshRef() ? m_meshRef->MeshRef()->Native() : nullptr;
-  cmd._hasJoints = HasJoints();
-  cmd._pJointDesc = GetJointDescriptor();
-  cmd._config = m_configs;
+  for (size_t i = 0; i < m_meshes.size(); ++i) {
+    MeshRenderCmd cmd;
+    cmd._pMeshDesc = m_meshDescriptor;
+    cmd._bSkinned = Skinned();
+    cmd._pJointDesc = GetJointDescriptor();
+    cmd._config = m_configs;
 
-  // Push primitives to renderer.
-  cmd._pPrimitives = m_primitives.data();
-  cmd._primitiveCount = static_cast<u32>(m_primitives.size());
-  gRenderer().PushMeshRender(cmd);
+    // Push primitives to renderer.
+    Mesh* pMesh = m_meshes[i];
+    cmd._pPrimitives = pMesh->GetPrimitiveData();
+    cmd._primitiveCount = pMesh->GetPrimitiveCount();
+    cmd._pMeshData = pMesh->Native();
+    gRenderer().PushMeshRender(cmd);
+  }
 
   if (model == renderData->_Model) return;
   Matrix4 N = model;

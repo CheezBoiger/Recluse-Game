@@ -33,7 +33,6 @@ public:
 protected:
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
   PhysicsComponent*   m_pPhysicsComponent;
   Collider*           m_pCollider;
 };

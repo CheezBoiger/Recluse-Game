@@ -21,10 +21,8 @@ struct Primitive {
   Primitive()
     : _firstIndex(0)
     , _indexCount(0)
-    , _pMesh(nullptr)
     , _pMat(nullptr) { }
 
-  MeshData*             _pMesh;
   MaterialDescriptor*   _pMat;
   u32                   _firstIndex;
   u32                   _indexCount;

@@ -32,7 +32,6 @@ public:
   void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pointLight=  new PointLightComponent();
 
@@ -53,17 +52,10 @@ public:
 #endif
       , &material);
 */
-    m_pMaterialComponent->Initialize(this);
-    m_pMaterialComponent->SetMaterialRef(material);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
-    prim._pMat = material->Native();
-    m_pRendererComponent->SetPrimitive(prim);
+    m_pRendererComponent->AddMesh(mesh);
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -94,11 +86,9 @@ public:
   void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
 
     m_pointLight->CleanUp();
@@ -109,7 +99,6 @@ private:
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
   PointLightComponent* m_pointLight;
 };
 
@@ -128,7 +117,6 @@ public:
   void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
 
     ModelLoader::Model* model = nullptr;
@@ -148,17 +136,10 @@ public:
 #endif
       , &material);
 */    
-    m_pMaterialComponent->SetMaterialRef(material);
-    m_pMaterialComponent->Initialize(this);
     //material->SetEmissiveFactor(1.0f);
     //material->SetRoughnessFactor(1.0f);
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
-    prim._pMat = material->Native();
-    m_pRendererComponent->SetPrimitive(prim);
+    m_pRendererComponent->AddMesh(mesh);
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -180,11 +161,9 @@ public:
   void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
 
     m_pHandle->CleanUp();
@@ -195,7 +174,6 @@ private:
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
   LanternHandle*      m_pHandle;
 };
 
@@ -218,7 +196,6 @@ public:
   {
     SetName("Lantern");
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.2f, 2.5f, 0.2f));
@@ -249,16 +226,9 @@ public:
 #endif
       , &material);
 */
-    m_pMaterialComponent->Initialize(this);
-    m_pMaterialComponent->SetMaterialRef(material);
 
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
-    prim._pMat = material->Native();
-    m_pRendererComponent->SetPrimitive(prim);
+    m_pRendererComponent->AddMesh(mesh);
 
     material->SetEmissiveFactor(0.2f);
 
@@ -312,12 +282,10 @@ public:
   void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;

@@ -35,10 +35,16 @@ public:
   void            SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
   skeleton_uuid_t GetSkeletonReference() const { return m_skeleId; }
 
+  Primitive*              GetPrimitiveData() { return m_primitives.data(); }
+  u32                  GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
+  inline void                      ClearPrimitives() { m_primitives.clear(); }
+  inline void               PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
+
 private:
-  MeshData*       m_pData;
-  b32             m_bSkinned;
-  skeleton_uuid_t m_skeleId;
+  MeshData*               m_pData;
+  std::vector<Primitive>  m_primitives;
+  b32                     m_bSkinned;
+  skeleton_uuid_t         m_skeleId;
 };
 
 

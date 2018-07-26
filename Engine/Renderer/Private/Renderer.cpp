@@ -2557,13 +2557,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
       if (!renderCmd._pMeshDesc) continue;
       if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
           (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
-      if (!renderCmd._pMeshData) {
-        R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
-        continue;
-      }
+      R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
 
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      b8 Skinned = renderCmd._hasJoints;
+      b8 Skinned = renderCmd._bSkinned;
       GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
 
       // Set up the render mesh
@@ -2958,9 +2955,9 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
   auto render = [&] (MeshRenderCmd& renderCmd) -> void {
     if (!renderCmd._pMeshDesc) return;
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
-    if (!renderCmd._pMeshData) return;
+    R_ASSERT(renderCmd._pMeshData, "Null data was passed to renderer.");
     MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-    b32 skinned = renderCmd._hasJoints;
+    b32 skinned = renderCmd._bSkinned;
     VkDescriptorSet descriptorSets[3];
     descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
     descriptorSets[1] = lightViewSet->Handle();
@@ -3067,13 +3064,9 @@ void Renderer::BuildForwardPBRCmdBuffer()
       for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
         MeshRenderCmd& renderCmd = m_forwardCmdList[i];
         if (!(renderCmd._config & CMD_FORWARD_BIT) || !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
-        if (!renderCmd._pMeshData) {
-          R_DEBUG(rWarning, "Null data in render mesh!, skipping...\n");
-          continue;
-        }
-
+        R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
         MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-        b32 Skinned = renderCmd._hasJoints;
+        b32 Skinned = renderCmd._bSkinned;
         GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipeline_LR : pbr_staticForwardPipeline_LR;
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
         cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -3847,7 +3840,7 @@ void Renderer::ClearCmdLists()
 void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 {
   if (m_Minimized) return;
-  if (cmd._hasJoints) {
+  if (cmd._bSkinned) {
     R_ASSERT(cmd._pJointDesc, "No joint descriptoer added to this command.");
     m_jointDescriptors.PushBack(cmd._pJointDesc);
   }

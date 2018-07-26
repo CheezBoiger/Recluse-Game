@@ -34,7 +34,6 @@ public:
   void OnStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
-    m_pMaterialComponent = new MaterialComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(5.0f, 5.0f, 5.0f));
@@ -57,16 +56,14 @@ public:
       "Material_MR"
 #endif
       , &material);
-    m_pMaterialComponent->Initialize(this);
-    m_pMaterialComponent->SetMaterialRef(material);
 
     m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->SetMeshComponent(m_pMeshComponent);
+    m_pRendererComponent->AddMesh(mesh);
     Primitive prim;
     prim._firstIndex = 0;
     prim._indexCount = mesh->Native()->IndexData()->IndexCount();
     prim._pMat = material->Native();
-    m_pRendererComponent->SetPrimitive(prim);
+    mesh->PushPrimitive(prim);
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -113,12 +110,10 @@ public:
   void OnCleanUp() override
   {
     m_pMeshComponent->CleanUp();
-    m_pMaterialComponent->CleanUp();
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
 
     delete m_pMeshComponent;
-    delete m_pMaterialComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
@@ -128,7 +123,7 @@ private:
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
-  MaterialComponent*  m_pMaterialComponent;
+  Material*           m_pMaterial;
   PhysicsComponent*   m_pPhysicsComponent;
   Collider*           m_pCollider;
 };

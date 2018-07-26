@@ -49,11 +49,10 @@ struct MeshRenderCmd {
   MeshRenderCmd()
     : _config(false)
     , _pMeshDesc(nullptr)
-    , _pPrimitives(nullptr)
     , _pMeshData(nullptr)
-    , _hasJoints(false)
+    , _pPrimitives(nullptr)
+    , _bSkinned(false)
     , _instances(1) { }
-
 
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
@@ -61,7 +60,7 @@ struct MeshRenderCmd {
   Primitive*              _pPrimitives;
   u32                     _primitiveCount;
   u32                     _instances;
-  b32                     _hasJoints;
+  b32                     _bSkinned;
   CmdConfigBits           _config;
 };
 
