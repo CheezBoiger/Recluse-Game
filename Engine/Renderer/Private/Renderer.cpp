@@ -3550,6 +3550,7 @@ void Renderer::UpdateSceneDescriptors()
   // Update material descriptors.
   for (size_t i = 0; i < m_materialDescriptors.Size(); ++i) {
     MaterialDescriptor* descriptor = m_materialDescriptors[i];
+    R_ASSERT(descriptor, "Null material descriptor.");
     descriptor->Update(m_pRhi);
   }
 
@@ -3852,6 +3853,7 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     Primitive& prim = cmd._pPrimitives[i];
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
     m_materialDescriptors.PushBack(prim._pMat);  
+    R_ASSERT(prim._pMat == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
   }
 
   u32 config = cmd._config;

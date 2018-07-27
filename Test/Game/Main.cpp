@@ -23,6 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
+  static const u32 kNumberOfMonsters = 10;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -39,6 +40,17 @@ public:
       helmets.push_back(new HelmetObject());
       GetRoot()->AddChild(helmets[i]);
       helmets[i]->Start();
+    }
+
+    std::random_device dev;
+    std::mt19937 twist(dev());
+    std::uniform_real_distribution<r32> uni(-10.0f, 10.0f);
+    std::uniform_real_distribution<r32> above(0.0f, 20.0f);
+    for (u32 i = 0; i < kNumberOfMonsters; ++i) {
+      monsters[i] = new Monster();
+      monsters[i]->Start();
+      monsters[i]->SetPosition(Vector3(uni(twist), above(twist), uni(twist)));
+      GetRoot()->AddChild(monsters[i]);
     }
 
     GetRoot()->AddChild(cube);
@@ -87,6 +99,11 @@ public:
       delete helmets[i];
     }
 
+    for (u32 i = 0; i < kNumberOfMonsters; ++i) {
+      monsters[i]->CleanUp();
+      delete monsters[i];
+    }
+
     cube->CleanUp();
     delete cube;
 
@@ -101,11 +118,12 @@ public:
   }
 
 private:
-  std::vector<HelmetObject*> helmets;
-  CubeObject* cube;
-  LanternObject* lantern;
-  Monster* monster;
-  MainCamera* mainCam;
+  std::vector<HelmetObject*>              helmets;
+  std::array<Monster*, kNumberOfMonsters> monsters;
+  CubeObject*                             cube;
+  LanternObject*                          lantern;
+  Monster*                                monster;
+  MainCamera*                             mainCam;
 };
 
 

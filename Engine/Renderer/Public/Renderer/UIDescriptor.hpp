@@ -12,10 +12,18 @@ namespace Recluse {
 
 class DescriptorSet;
 class VulkanRHI;
+class Buffer;
 class Texture2D;
 
 struct UITransform {
   Matrix4 _model;
+};
+
+
+enum UIDescriptorType {
+  UI_DESCRIPTOR_TYPE_SPINNER,
+  UI_DESCRIPTOR_TYPE_IMAGE,
+  UI_DESCRIPTOR_TYPE_TEXT
 };
 
 
@@ -24,6 +32,7 @@ public:
 
 
   void            Initialize(VulkanRHI* pRhi);  
+  void            Update(VulkanRHI* pRhi);
   void            CleanUp(VulkanRHI* pRhi);
 
   // TODO(): For UI Images and textures to be sent to the UI Overlay. May also contain transformation
@@ -32,8 +41,13 @@ public:
 
 private:
 
-  Texture2D*      m_image;
-  UITransform     m_transform;
-  DescriptorSet*  m_pSet;
+  union {
+    Texture2D*        m_image;
+    Buffer*           m_buffer;
+  } m_data;
+
+  UITransform       m_transform;
+  DescriptorSet*    m_pSet;
+  UIDescriptorType  m_type;
 };
 } // Recluse

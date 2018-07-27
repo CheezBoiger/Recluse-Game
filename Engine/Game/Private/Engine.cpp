@@ -235,19 +235,15 @@ void Engine::Update()
     }
     MeshComponent::UpdateComponents();
     RendererComponent::UpdateComponents();
-  });
-
-  m_workers[2] = std::thread([&]() -> void {
     SkinnedRendererComponent::UpdateComponents();
   });
 
-  m_workers[3] = std::thread([&]() -> void {
+  m_workers[2] = std::thread([&]() -> void {
     PointLightComponent::UpdateComponents();
   });
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();
-  m_workers[3].join();
 
   gRenderer().Render();
 }

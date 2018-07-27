@@ -199,6 +199,10 @@ private:
 
 
 #define SPHERE 1
+#define DRONE 2
+#define MONSTER 3
+
+#define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -214,7 +218,7 @@ public:
     m_pPhysicsComponent = &m_physicsComponent;
     m_pMeshComponent = &m_meshComponent;
     m_pRendererComponent = &m_rendererComponent;
-#if !SPHERE
+#if MODEL_TYPE == MONSTER
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);
     ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
@@ -228,18 +232,13 @@ public:
     m_animationComponent.Playback("WalkPose");  
     m_animationComponent.SetSampler(gAnimation().CreateAnimSampler());
 
-    m_rendererComponent.SetMeshComponent(&m_meshComponent);
+    m_rendererComponent.AddMesh(model->meshes[0]);
     m_rendererComponent.SetAnimationComponent(&m_animationComponent);
 
     Material* rusted = nullptr;
     MaterialCache::Get("RustedSample", &rusted);
-    for (size_t i = 0; i < animModel->primitives.size(); ++i) {
-      ModelLoader::PrimitiveHandle& primitiveHandle = animModel->primitives[i];
-      primitiveHandle.SetMaterial(rusted);
-      m_rendererComponent.SetPrimitive(primitiveHandle.GetPrimitive());
-    }
     transform->Scale = Vector3(0.002f, 0.002f, 0.002f);
-#else
+#elif MODEL_TYPE == SPHERE
     Mesh* mesh = nullptr;
     MeshCache::Get("NativeSphere", &mesh);
     m_meshComponent.SetMeshRef(mesh);
@@ -252,6 +251,18 @@ public:
     mesh->PushPrimitive(prim);
     m_rendererComponent.AddMesh(mesh);
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
+#elif MODEL_TYPE == DRONE
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("busterDrone", &model);
+    for (size_t i = 0; i < model->meshes.size(); ++i) {
+      m_rendererComponent.AddMesh(model->meshes[i]);
+    }
+
+    for (size_t i = 0; i < model->materials.size(); ++i) {
+      Material* material = model->materials[i];
+      material->EnableEmissive(true);
+      material->SetEmissiveFactor(1.0f);
+    }
  #endif
 
 
@@ -270,6 +281,11 @@ public:
   { 
   }
 
+  void SetPosition(const Vector3& newPos)
+  {
+    GetTransform()->Position = newPos;
+  }
+
   void OnCleanUp() override 
   {
     m_rendererComponent.CleanUp();
@@ -281,7 +297,7 @@ public:
   }
 
 private:
-#if !SPHERE
+#if MODEL_TYPE == MONSTER
   SkinnedRendererComponent  m_rendererComponent;
 #else
   RendererComponent m_rendererComponent;

@@ -23,22 +23,22 @@ public:
           , m_skeleId(Skeleton::kNoSkeletonId) { }
 
   // Initialize the mesh object.
-  void            Initialize(size_t elementCount, void* data, MeshData::VertexType type, 
-                    size_t indexCount, void* indices, const Vector3& min = Vector3(), const Vector3& max = Vector3());
+  void                    Initialize(size_t elementCount, void* data, MeshData::VertexType type, 
+                            size_t indexCount, void* indices, const Vector3& min = Vector3(), const Vector3& max = Vector3());
 
   // Clean up the mesh object when no longer being used.
-  void            CleanUp();
+  void                    CleanUp();
 
-  MeshData*       Native() { return m_pData; }
-  b32             Skinned() { return m_bSkinned; }
+  MeshData*               Native() { return m_pData; }
+  b32                     Skinned() { return m_bSkinned; }
 
-  void            SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
-  skeleton_uuid_t GetSkeletonReference() const { return m_skeleId; }
+  void                    SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
+  skeleton_uuid_t         GetSkeletonReference() const { return m_skeleId; }
 
   Primitive*              GetPrimitiveData() { return m_primitives.data(); }
-  u32                  GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
-  inline void                      ClearPrimitives() { m_primitives.clear(); }
-  inline void               PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
+  u32                     GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
+  inline void             ClearPrimitives() { m_primitives.clear(); }
+  inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
 
 private:
   MeshData*               m_pData;
@@ -52,39 +52,38 @@ private:
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent);
 protected:
-  virtual void OnInitialize(GameObject* owner) override;
-  virtual void OnCleanUp() override;
+  virtual void    OnInitialize(GameObject* owner) override;
+  virtual void    OnCleanUp() override;
 public:
   MeshComponent();
 
-  void SetMeshRef(Mesh* pData) { m_pMeshRef = pData; }
+  void            SetMeshRef(Mesh* pData) { m_pMeshRef = pData; }
   
-  Mesh* MeshRef() { return m_pMeshRef; }
+  Mesh*           MeshRef() { return m_pMeshRef; }
 
   // updates this mesh component instance frustum bit cull.
-  void  Update() override;
+  void            Update() override;
 
-  void    EnableCulling(b32 enable) { m_allowCulling = enable; }
+  void            EnableCulling(b32 enable) { m_allowCulling = enable; }
 
-  inline b32     AllowCulling() const { return m_allowCulling; }
+  inline b32      AllowCulling() const { return m_allowCulling; }
 
   // Cull bit set map. Each bit represents a frustum, and when flipped, means this mesh is culled
   // for that given frustum. Max 32 frustums can be supported.
-  b32                                 GetFrustumCullMap() const { return m_frustumCull; }
+  b32             GetFrustumCullMap() const { return m_frustumCull; }
 
   // Set a frustum bit to 1.
-  void                                SetFrustumCull(b32 mask) { m_frustumCull |= mask; }
+  void            SetFrustumCull(b32 mask) { m_frustumCull |= mask; }
 
   // Unset a frustum bit to 0.
-  void                                UnsetFrustumCull(b32 mask) { m_frustumCull &= ~mask; }
+  void            UnsetFrustumCull(b32 mask) { m_frustumCull &= ~mask; }
 
   // Clear and reset all frustum bits to 0.
-  void                                ClearFrustumCullBits() { m_frustumCull &= 0; }
+  void            ClearFrustumCullBits() { m_frustumCull &= 0; }
 
 private:
-  Mesh*       m_pMeshRef;
-
-  b32         m_frustumCull;
-  b32         m_allowCulling;
+  Mesh*           m_pMeshRef;
+  b32             m_frustumCull;
+  b32             m_allowCulling;
 };
 } // Recluse
