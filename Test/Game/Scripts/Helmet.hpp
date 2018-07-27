@@ -199,7 +199,7 @@ private:
 
 
 #define SPHERE 1
-class Monster : public GameObject {
+class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
   Monster() { }
@@ -211,6 +211,9 @@ public:
     m_animationComponent.Initialize(this);
     m_physicsComponent.Initialize(this);
     Transform* transform = GetTransform();
+    m_pPhysicsComponent = &m_physicsComponent;
+    m_pMeshComponent = &m_meshComponent;
+    m_pRendererComponent = &m_rendererComponent;
 #if !SPHERE
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);

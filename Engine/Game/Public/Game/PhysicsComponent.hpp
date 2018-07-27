@@ -13,7 +13,7 @@ namespace Recluse {
 
 class GameObject;
 class Collider;
-class RigidBody;
+struct RigidBody;
 
 
 // NOTE(): Be sure to initialize Physics Component first, before calling any other function
@@ -33,17 +33,21 @@ protected:
 public:
 
   void            OnEnable() override;
-  void            AddCollider(Collider* collider) { m_pRigidBody->AddCollider(collider); }
+  void            AddCollider(Collider* collider);
   void            SetMass(r32 mass);
   //void SetRelativeOffset(const Vector3& offset);
   void            ApplyForce(const Vector3& force);
   void            SetGravity(const Vector3& gravity);
   void            ClearForces();
+
+  // Reset this physics body. Clears existing velocity and forces applied to this object.
+  void            Reset();
+
   void            ApplyImpulse(const Vector3& impulse, const Vector3& relPos);
   void            SetCenterOfMass(const Vector3& centerOfMass);
   Vector3         GetCenterOfMassPosition();
 
-  r32             GetMass() const { return m_mass; }
+  r32             GetMass() const { return m_pRigidBody->_mass; }
   void            UpdateFromGameObject();
   void            SetFriction(r32 friction);
   void            SetRollingFriction(r32 friction);
@@ -55,7 +59,7 @@ private:
 
   void            SetTransform(const Vector3& newPos, const Quaternion& newRot);
 
-  RigidBody*      m_pRigidBody;
-  r32             m_mass;
+  RigidBody*              m_pRigidBody;
+  physics_update_bits_t   m_updateBits;
 };
 } // Recluse

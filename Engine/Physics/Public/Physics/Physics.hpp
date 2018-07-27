@@ -42,6 +42,24 @@ struct RayTestHitAll {
   std::vector<Vector3>    _normals;
 };
 
+
+enum PhysicsUpdateBits {
+  PHYSICS_UPDATE_ALL = 0x7fffffff,
+  PHYSICS_UPDATE_CLEAR_ALL = 0xffffffff,
+  PHYSICS_UPDATE_FORCES = (1 << 1),
+  PHYSICS_UPDATE_VELOCITY = (1 << 2),
+  PHYSICS_UPDATE_FRICTION = (1 << 3),
+  PHYSICS_UPDATE_ROLLING_FRICTION = (1 << 4),
+  PHYSICS_UPDATE_SPINNING_FRICTION = (1 << 5),
+  PHYSICS_UPDATE_ACTIVATE = (1 << 6),
+  PHYSICS_UPDATE_DEACTIVATE = (1 << 7),
+  PHYSICS_UPDATE_IMPULSE = (1 << 8),
+  PHYSICS_UPDATE_GRAVITY = (1 << 9),
+};
+
+
+typedef u32 physics_update_bits_t;
+
 // Our physics engine interface.
 class Physics : public EngineModule<Physics> {
 public:
@@ -60,8 +78,9 @@ public:
   virtual void                            UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) { }
   virtual void                            FreeRigidBody(RigidBody* body) { }
 
-
+  virtual void                            Reset(RigidBody* body) { }
   virtual void                            FreeCollider(Collider* collider) { }
+  virtual void                            UpdateRigidBody(RigidBody* body, physics_update_bits_t bits) { }
   virtual void                            SetWorldGravity(const Vector3& gravity) { }
 
   virtual void                            SetMass(RigidBody* body, r32 mass) { }

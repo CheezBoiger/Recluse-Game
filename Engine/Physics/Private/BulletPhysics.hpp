@@ -18,7 +18,7 @@
 namespace Recluse {
 
 
-class RigidBody;
+struct RigidBody;
 class Collider;
 class CollisionShape;
 
@@ -40,6 +40,7 @@ public:
   btDynamicsWorld*      GetCurrentWorld() { return m_pWorld; }
 
   void                  ClearWorld() { }
+  void                  Reset(RigidBody* body) override;
   RigidBody*            CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
   void                  FreeRigidBody(RigidBody* body) override;
   BoxCollider*          CreateBoxCollider(const Vector3& scale) override;

@@ -148,7 +148,7 @@ public:
     if (Mouse::ButtonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
       if (gPhysics().RayTest(transform->Position, transform->Front(), 50.0f, &hitOut)) {
-        GameObject* obj = hitOut._rigidbody->GetGameObject();
+        GameObject* obj = hitOut._rigidbody->_gameObj;
         Item* item = obj->CastTo<Item>();
         if (item) {
           _pHolding = item;
@@ -160,6 +160,7 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
       _pHolding->GetPhysicsComponent()->SetMass(1.0f);
+      _pHolding->GetPhysicsComponent()->Reset();
       _pHolding = nullptr;
     }
 

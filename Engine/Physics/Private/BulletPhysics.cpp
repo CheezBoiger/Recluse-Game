@@ -161,7 +161,7 @@ RigidBody* BulletPhysics::CreateRigidBody(const Vector3& centerOfMassOffset)
   compound->calculateLocalInertia(1.0f, localInertia);
 
   btRigidBody::btRigidBodyConstructionInfo info(
-    btScalar(rigidbody->m_mass),
+    btScalar(rigidbody->_mass),
     pMotionState,
     compound,
     localInertia
@@ -247,10 +247,10 @@ void BulletPhysics::UpdateState(r64 dt, r64 tick)
     RigidBody* bodyA = GetRigidBody(static_cast<RigidBody*>(objA->getUserPointer())->GetUUID());
     RigidBody* bodyB = GetRigidBody(static_cast<RigidBody*>(objB->getUserPointer())->GetUUID());
 
-    collisionOnA._gameObject = bodyB->GetGameObject();
+    collisionOnA._gameObject = bodyB->_gameObj;
     collisionOnA._rigidBody = bodyB;
 
-    collisionOnB._gameObject = bodyA->GetGameObject();
+    collisionOnB._gameObject = bodyA->_gameObj;
     collisionOnB._rigidBody = bodyA;
 
     bodyA->InvokeCollision(&collisionOnA);
@@ -266,8 +266,8 @@ void BulletPhysics::UpdateState(r64 dt, r64 tick)
     btQuaternion q = transform.getRotation();
     btVector3 p = transform.getOrigin();
 
-    bundle.rigidBody->m_qRotation = Quaternion(q.x(), q.y(), q.z(), q.w());
-    bundle.rigidBody->m_vPosition = Vector3(p.x(), p.y(), p.z());
+    bundle.rigidBody->_rotation = Quaternion(q.x(), q.y(), q.z(), q.w());
+    bundle.rigidBody->_position = Vector3(p.x(), p.y(), p.z());
   }
 }
 
@@ -303,7 +303,7 @@ void BulletPhysics::SetTransform(RigidBody* body, const Vector3& newPos, const Q
   // TODO(): We shouldn't always have to update the transforms, should check if object is 
   // static or not moving in physics...
   obj->setWorldTransform(transform);
-  if (body->Activated()) obj->activate();
+  if (body->_activated) obj->activate();
   
 }
 
@@ -313,7 +313,7 @@ void BulletPhysics::ActivateRigidBody(RigidBody* body)
   if (!body) return;
   physics_uuid_t key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
-  body->m_bActivated = true;
+  body->_activated = true;
   rb->activate();
 }
 
@@ -323,7 +323,7 @@ void BulletPhysics::DeactivateRigidBody(RigidBody* body)
   if (!body) return;
   physics_uuid_t key = body->GetUUID();
   btRigidBody* rb = kRigidBodyMap[key].native;
-  body->m_bActivated = false;
+  body->_activated = false;
   rb->setActivationState(WANTS_DEACTIVATION);
 }
 
@@ -367,7 +367,7 @@ b32 BulletPhysics::RayTest(const Vector3& origin, const Vector3& direction, cons
   if (!hit.hasHit()) return false; 
   RigidBody* rbHit = static_cast<RigidBody*>(hit.m_collisionObject->getUserPointer());
   output->_rigidbody = rbHit;
-  output->_collider = rbHit->GetCollider();
+  output->_collider = &rbHit->_compound;
   output->_normal = Vector3(hit.m_hitNormalWorld.x(),
                             hit.m_hitNormalWorld.y(),
                             hit.m_hitNormalWorld.z());
@@ -398,7 +398,7 @@ b32 BulletPhysics::RayTestAll(const Vector3& origin, const Vector3& direction, c
   for (i32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
     const btVector3& n = allHits.m_hitNormalWorld[i];
     output->_rigidBodies[i] = static_cast<RigidBody*>(allHits.m_collisionObjects[i]->getUserPointer());
-    output->_colliders[i] = output->_rigidBodies[i]->GetCollider();
+    output->_colliders[i] = &output->_rigidBodies[i]->_compound;
     output->_normals[i] = Vector3(n.x(), n.y(), n.z());
   }
   return allHits.hasHit();
@@ -452,7 +452,7 @@ void BulletPhysics::AddCollider(RigidBody* body, Collider* collider)
   bundle.compound->addChildShape(localTransform, shape);
 
   btVector3 inertia;
-  r32 mass = bundle.rigidBody->m_mass;
+  r32 mass = bundle.rigidBody->_mass;
   bundle.compound->calculateLocalInertia(btScalar(mass),inertia);
 
   bundle.native->setMassProps(btScalar(mass), inertia);
@@ -541,5 +541,19 @@ void BulletPhysics::UpdateCompoundCollider(RigidBody* body, CompoundCollider* co
     ));
     pCompound->addChildShape(localTransform, shape);
   }
+}
+
+
+void BulletPhysics::Reset(RigidBody* body)
+{
+  RigidBundle* bundle = GetRigidBundle(body->GetUUID());
+  
+  bt_manager._pWorld->removeRigidBody(bundle->native);
+  btVector3 zeroV = btVector3(btScalar(0.0f), btScalar(0.0f), btScalar(0.0f));
+  bundle->native->clearForces();
+  bundle->native->setLinearVelocity(zeroV);
+  bundle->native->setAngularVelocity(zeroV);
+  bt_manager._pWorld->addRigidBody(bundle->native);
+  
 }
 } // Recluse

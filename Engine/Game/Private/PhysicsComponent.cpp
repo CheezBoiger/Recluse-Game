@@ -16,7 +16,7 @@ DEFINE_COMPONENT_MAP(PhysicsComponent);
 void PhysicsComponent::OnInitialize(GameObject* owner)
 {
   if (!m_pRigidBody) m_pRigidBody = gPhysics().CreateRigidBody();
-  m_pRigidBody->m_gameObj = owner;
+  m_pRigidBody->_gameObj = owner;
 
   REGISTER_COMPONENT(PhysicsComponent, this);
 }
@@ -32,22 +32,24 @@ void PhysicsComponent::Update()
 {
   R_ASSERT(m_pRigidBody, "No rigidbody assigned to this physics component.");
   Transform* transform = GetOwner()->GetTransform();
-  transform->Rotation = m_pRigidBody->m_qRotation;
+  transform->Rotation = m_pRigidBody->_rotation;
   //Vector3 finalOffset = transform->Rotation * m_relOffset;
-  transform->Position = m_pRigidBody->m_vPosition; // - finalOffset;
+  transform->Position = m_pRigidBody->_position; // - finalOffset;
 }
 
 
 void PhysicsComponent::SetMass(r32 mass)
 {
-  m_mass = mass;
-  m_pRigidBody->SetMass(mass);
+  m_pRigidBody->_mass = mass;
+  gPhysics().SetMass(m_pRigidBody, mass);
 }
 
 
 void PhysicsComponent::SetTransform(const Vector3& newPos, const Quaternion& newRot)
 {
-  m_pRigidBody->SetTransform(newPos, newRot);
+  m_pRigidBody->_position = newPos;
+  m_pRigidBody->_rotation = newRot;
+  gPhysics().SetTransform(m_pRigidBody, newPos, newRot);
 }
 
 
@@ -60,12 +62,12 @@ void PhysicsComponent::OnEnable()
 void PhysicsComponent::UpdateFromGameObject()
 {
   Transform* transform = GetTransform();
-  m_pRigidBody->m_qRotation = transform->Rotation;
+  m_pRigidBody->_rotation = transform->Rotation;
   //Vector3 finalOffset = transform->Rotation * m_relOffset;
-  m_pRigidBody->m_vPosition = transform->Position; // + finalOffset;
+  m_pRigidBody->_position = transform->Position; // + finalOffset;
   gPhysics().SetTransform(m_pRigidBody, 
-    m_pRigidBody->m_vPosition, 
-    m_pRigidBody->m_qRotation);
+    m_pRigidBody->_position, 
+    m_pRigidBody->_rotation);
 }
 
 
@@ -98,6 +100,12 @@ void PhysicsComponent::ClearForces()
 }
 
 
+void PhysicsComponent::Reset()
+{
+  gPhysics().Reset(m_pRigidBody);
+}
+
+
 void PhysicsComponent::SetFriction(r32 friction)
 {
   gPhysics().SetFriction(m_pRigidBody, friction);
@@ -113,5 +121,12 @@ void PhysicsComponent::SetRollingFriction(r32 friction)
 void PhysicsComponent::SetSpinningFriction(r32 friction)
 {
   gPhysics().SetSpinningFriction(m_pRigidBody, friction);
+}
+
+
+void PhysicsComponent::AddCollider(Collider* coll)
+{
+  R_ASSERT(coll, "Collider was null.");
+  gPhysics().AddCollider(m_pRigidBody, coll);
 }
 } // Recluse

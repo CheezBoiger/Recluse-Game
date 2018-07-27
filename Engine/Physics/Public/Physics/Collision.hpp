@@ -9,7 +9,7 @@
 namespace Recluse {
 
 class GameObject;
-class RigidBody;
+struct RigidBody;
 
 class CollisionShape {
 };

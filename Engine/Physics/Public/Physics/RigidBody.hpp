@@ -29,42 +29,30 @@ enum ContactType {
 
 // RigidBody object create by Physics interface. Be sure to assign the proper
 // game object id to this body, otherwise nullptr will be returned!
-class RigidBody : public PhysicsObject {
-public:
+struct RigidBody : public PhysicsObject {
   RigidBody() 
-    : m_bActivated(true)
-    , m_gameObj(nullptr)
-    , m_mass(1.0f)
-    , m_friction(0.0f) { }
-
-  void                  ObjectCollided();
-  void                  EnableKinematic(b8 enable);
-  void                  SetTransform(const Vector3& newPos, const Quaternion& newRot);
-  void                  SetMass(r32 mass);
-  void                  SetFriction(r32 friction);
-
-  b32                   Kinematic() const { return m_bKinematic; }
-  b32                   Activated() const { return m_bActivated; }
-  GameObject*           GetGameObject() const { return m_gameObj; }
-  CompoundCollider*     GetCollider() { return &m_compound; }
-
-  void                  AddCollider(Collider* collider);
+    : _activated(true)
+    , _gameObj(nullptr)
+    , _mass(1.0f)
+    , _friction(0.0f) { }
   void                  InvokeCollision(Collision* body);
-  void                  RemoveCollider();
-  
-  void                  ClearForces();
 
-  Vector3               m_vPosition;
-  r32                   m_mass;
-  r32                   m_friction;
-  Quaternion            m_qRotation;
-  b32                   m_bKinematic;
-  b32                   m_bActivated;
-  GameObject*           m_gameObj;
+  Vector3               _velocity;
+  Vector3               _force;
+  Vector3               _impulse;
+  Vector3               _position;
+  Vector3               _centerOfMass;
+  r32                   _mass;
+  r32                   _friction;
+  r32                   _rollingFriction;
+  r32                   _spinningFriction;
+  Quaternion            _rotation;
+  b32                   _kinematic;
+  b32                   _activated;
+  GameObject*           _gameObj;
 
-private:
-
-  CompoundCollider     m_compound;
+  // TODO(): Need to separate compound to be optional instead.
+  CompoundCollider      _compound;
   friend class Physics;
 };
 } // Recluse
