@@ -244,12 +244,8 @@ public:
     m_meshComponent.SetMeshRef(mesh);
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
-    prim._pMat = mat->Native();
-    mesh->PushPrimitive(prim);
     m_rendererComponent.AddMesh(mesh);
+    mesh->GetPrimitive(0)->_pMat = mat->Native();
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;

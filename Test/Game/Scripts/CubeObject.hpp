@@ -59,11 +59,7 @@ public:
 
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->AddMesh(mesh);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
-    prim._pMat = material->Native();
-    mesh->PushPrimitive(prim);
+    mesh->GetPrimitive(0)->_pMat = material->Native();
 
     std::random_device r;
     std::mt19937 twist(r());

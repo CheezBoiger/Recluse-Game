@@ -23,7 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 1;
+  static const u32 kNumberOfMonsters = 32;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -181,15 +181,24 @@ int main(int c, char* argv[])
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
     mesh->Initialize(boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data(), Cube::Min, Cube::Max);
-    MeshCache::Cache(RTEXT("NativeCube"), mesh);
+    MeshCache::Cache(RTEXT("NativeCube"), mesh);    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = Material::Default()->Native();
+    mesh->PushPrimitive(prim);
   }
 
   {
     Mesh* mesh = new Mesh();
-    auto sphereVerts = UVSphere::MeshInstance(1.0f, 128, 128);
-    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 128, 128);
+    auto sphereVerts = UVSphere::MeshInstance(1.0f, 32, 32);
+    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 32, 32);
     mesh->Initialize(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._pMat = Material::Default()->Native();
+    mesh->PushPrimitive(prim);
   }
 
   // Model Loading.

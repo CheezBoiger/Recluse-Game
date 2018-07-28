@@ -37,6 +37,7 @@ public:
 
   Primitive*              GetPrimitiveData() { return m_primitives.data(); }
   u32                     GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
+  Primitive*              GetPrimitive(u32 idx) { return &m_primitives[static_cast<u32>(idx)]; }
   inline void             ClearPrimitives() { m_primitives.clear(); }
   inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
 
