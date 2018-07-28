@@ -23,7 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 10;
+  static const u32 kNumberOfMonsters = 1;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -186,8 +186,8 @@ int main(int c, char* argv[])
 
   {
     Mesh* mesh = new Mesh();
-    auto sphereVerts = UVSphere::MeshInstance(1.0f, 32, 32);
-    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 32, 32);
+    auto sphereVerts = UVSphere::MeshInstance(1.0f, 128, 128);
+    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 128, 128);
     mesh->Initialize(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
   }

@@ -309,6 +309,7 @@ private:
     std::vector<CommandBuffer*>   _CmdBuffers;
     std::vector<CommandBuffer*>   _ShadowCmdBuffers;
     Semaphore*                    _Semaphore;
+    Semaphore*                    _shadowSemaphore;
   } m_Offscreen; 
 
   struct {

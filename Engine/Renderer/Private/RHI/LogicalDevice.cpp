@@ -28,15 +28,16 @@ b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCre
   mTransferQueues.resize(mTransferQueueFamily._queueCount);
 
   // TODO(): Read initialize() call from vulkan context, queue index will change in the future.
+  
   for (size_t i = 0; i < mGraphicsQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, 0, &mGraphicsQueues[i]);
+    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, i, &mGraphicsQueues[i]);
   }
   for (size_t i = 0; i < mComputeQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, 0, &mComputeQueues[i]);
+    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, i, &mComputeQueues[i]);
   }
 
   for (size_t i = 0; i < mTransferQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, 0, &mTransferQueues[i]);
+    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, i, &mTransferQueues[i]);
   }
   vkGetDeviceQueue(handle, mPresentationQueueFamily._idx, 0, &mPresentationQueue);
 

@@ -32,9 +32,9 @@ public:
   // should be used if memory written is not coherent between cpu and gpu.
   VkResult              FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges);
 
-  VkMemoryRequirements  GetImageMemoryRequirements(const VkImage& image);
-  VkMemoryRequirements  GetBufferMemoryRequirements(const VkBuffer& buffer);
-  VkDevice              Native() const { return handle; }
+  VkMemoryRequirements          GetImageMemoryRequirements(const VkImage& image);
+  VkMemoryRequirements          GetBufferMemoryRequirements(const VkBuffer& buffer);
+  VkDevice                      Native() const { return handle; }
 
   void                          WaitOnQueues();
 
@@ -51,6 +51,10 @@ public:
   VkSemaphore                   ImageAvailableSemaphore() { return mImageAvailableSemaphore; }
   VkSemaphore                   GraphicsFinishedSemaphore() { return mGraphicsFinishedSemaphore; }
   VkFence                       DefaultComputeFence() { return mDefaultComputeFence; }
+
+  u32                           GraphicsQueueCount() const { return static_cast<u32>(mGraphicsQueues.size()); }
+  u32                           TransferQueueCount() const { return static_cast<u32>(mTransferQueues.size()); }
+  u32                           ComputeQueueCount() const { return static_cast<u32>(mComputeQueues.size()); }
 
 private:
   VkDevice              handle;

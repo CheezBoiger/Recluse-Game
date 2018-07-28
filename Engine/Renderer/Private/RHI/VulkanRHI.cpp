@@ -186,8 +186,12 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
   // Expected 32 queues may be created.
   std::array<r32, 32> priorities = { 1.0f };
+  r32 priority = 1.0f;
+  r32 priorityFalloff = 1.0f / (priorities.size() / 2);
   for (size_t i = 0; i < priorities.size(); ++i) {
-    priorities[i] = 1.0f;
+    priorities[i] = priority;
+    priority = priority - priorityFalloff;
+    priority = priority < 0.0f ? 0.0f : priority;
   }
 
   for (const QueueFamily& queueFamily : queueFamilies) {
@@ -220,7 +224,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
     R_DEBUG(rError, "Vulkan logical device failed to create.\n");
     return;
   }
-  
+
   VkPresentModeKHR presentMode = GetPresentMode(params);
   mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode);
 

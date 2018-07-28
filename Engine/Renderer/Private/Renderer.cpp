@@ -200,6 +200,8 @@ void Renderer::Render()
 
   VkSemaphore offscreen_WaitSemas[] = { m_pRhi->LogicDevice()->ImageAvailableSemaphore() };
   VkSemaphore offscreen_SignalSemas[] = { m_Offscreen._Semaphore->Handle() };
+  VkSemaphore shadow_Signals[] = { m_Offscreen._shadowSemaphore->Handle() };
+  VkSemaphore shadow_Waits[] = { m_Offscreen._shadowSemaphore->Handle(), m_Offscreen._Semaphore->Handle() };
 
   VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffer->Handle() };
   VkSemaphore pbr_SignalSemas[] = { m_Pbr._Sema->Handle() };
@@ -288,8 +290,27 @@ void Renderer::Render()
 
     // Render shadow map here. Primary shadow map is our concern.
     if (m_pLights->PrimaryShadowEnabled()) {
-      offscreen_CmdBuffers[offscreenSI.commandBufferCount] = m_Offscreen._ShadowCmdBuffers[CurrentCmdBufferIdx()]->Handle();
-      offscreenSI.commandBufferCount += 1; // Add shadow buffer to render.
+      u32 graphicsQueueCount = m_pRhi->GraphicsQueueCount();
+      if (graphicsQueueCount > 1) {
+
+        VkSubmitInfo shadowSI = {};
+        shadowSI.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        shadowSI.commandBufferCount = 1;
+        VkCommandBuffer shadowCmdBuffer = m_Offscreen._ShadowCmdBuffers[CurrentCmdBufferIdx()]->Handle();
+        shadowSI.pCommandBuffers = &shadowCmdBuffer;
+        shadowSI.pSignalSemaphores = shadow_Signals;
+        shadowSI.pWaitDstStageMask = waitFlags;
+        shadowSI.pWaitSemaphores = VK_NULL_HANDLE;
+        shadowSI.signalSemaphoreCount = 1;
+        shadowSI.waitSemaphoreCount = 0;
+        
+        pbrSi.waitSemaphoreCount = 2;
+        pbrSi.pWaitSemaphores = shadow_Waits;
+        m_pRhi->GraphicsSubmit(1, 1, &shadowSI);
+      } else {
+        offscreen_CmdBuffers[offscreenSI.commandBufferCount] = m_Offscreen._ShadowCmdBuffers[CurrentCmdBufferIdx()]->Handle();
+        offscreenSI.commandBufferCount += 1; // Add shadow buffer to render.
+      }
     }
 
     // Check if sky needs to update it's cubemap.
@@ -2097,9 +2118,11 @@ void Renderer::SetUpOffscreen(b32 fullSetup)
 {
   if (fullSetup) {
     m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
+    m_Offscreen._shadowSemaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCI = { };
     semaCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     m_Offscreen._Semaphore->Initialize(semaCI);
+    m_Offscreen._shadowSemaphore->Initialize(semaCI);
 
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_Offscreen._CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
@@ -2115,6 +2138,7 @@ void Renderer::CleanUpOffscreen(b32 fullCleanup)
 {
   if (fullCleanup) {
     m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
+    m_pRhi->FreeVkSemaphore(m_Offscreen._shadowSemaphore);
     for (size_t i = 0; i < m_Offscreen._CmdBuffers.size(); ++i) {
       m_pRhi->FreeCommandBuffer(m_Offscreen._CmdBuffers[i]);
       m_pRhi->FreeCommandBuffer(m_Offscreen._ShadowCmdBuffers[i]);

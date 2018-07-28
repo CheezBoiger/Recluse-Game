@@ -245,6 +245,9 @@ public:
   VkImageAspectFlags            DepthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
   VkImageUsageFlags             DepthUsageFlags() const { return mSwapchainInfo.mDepthUsageFlags; }
   b32                           CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
+  u32                           GraphicsQueueCount() const { return mLogicalDevice.GraphicsQueueCount(); }
+  u32                           TransferQueueCount() const { return mLogicalDevice.TransferQueueCount(); }
+  u32                           ComputeQueueCount() const { return mLogicalDevice.ComputeQueueCount(); }
   const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
 
 private:
