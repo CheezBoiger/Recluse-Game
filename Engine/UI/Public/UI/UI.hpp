@@ -33,6 +33,7 @@ public:
   void                      UpdateState(r64 dt);
 
 
+  // TODO(): Needs to be more object oriented in the API level, instead of this way.
   void                      SetForegroundColor(const Vector4& color) { m_currForeColor = color; }
   void                      SetBackgroundColor(const Vector4& color) { m_currBackColor = color; }
   void                      BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 height);

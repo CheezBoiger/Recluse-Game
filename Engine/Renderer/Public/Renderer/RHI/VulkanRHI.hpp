@@ -78,7 +78,7 @@ public:
   static PhysicalDevice       gPhysicalDevice;
 
   // Context and physical device set up.
-  static b32                  CreateContext();
+  static b32                  CreateContext(const char* appName);
   static b32                  FindPhysicalDevice();
 
 private:

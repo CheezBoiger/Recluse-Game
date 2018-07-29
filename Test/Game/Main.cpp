@@ -23,7 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 32;
+  static const u32 kNumberOfMonsters = 10;
 public:
 
   // Used to set up the scene. Call before updating.

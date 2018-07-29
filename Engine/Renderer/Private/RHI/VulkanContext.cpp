@@ -26,18 +26,19 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
   void* usrData)
 {
   printf("Validation layer: %s\n", msg);
+  R_ASSERT(!(flags & VK_DEBUG_REPORT_ERROR_BIT_EXT), "");
   return VK_FALSE;
 }
 
 
-b32 Context::CreateInstance()
+b32 Context::CreateInstance(const char* appName)
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.pApplicationName = "Recluse";
+  appInfo.pApplicationName = appName;
   appInfo.pEngineName = ENGINE_NAME;
 
   VkInstanceCreateInfo instCreateInfo = {};

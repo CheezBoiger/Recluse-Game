@@ -63,6 +63,7 @@ typedef u32 renderer_key_t;
 class Renderer : public EngineModule<Renderer> {
   // Maximum number of workers allowed in renderer for multithreaded rendering.
   static const u32  kMaxRendererThreadWorkerCount = 3;
+  static const char* appName;
 public:
 
   Renderer();
@@ -70,6 +71,8 @@ public:
 
   b32                Initialize(Window* window, const GraphicsConfigParams* params = nullptr);
   b32                Rendering() const { return m_Rendering; }
+
+  void              SetAppName(const char* name) { appName = name; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 

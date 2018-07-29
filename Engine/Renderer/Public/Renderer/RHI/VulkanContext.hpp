@@ -19,7 +19,7 @@ public:
     , mDebugEnabled(false) { }
 
 
-  b32                              CreateInstance();
+  b32                              CreateInstance(const char* appName);
   VkInstance                      CurrentInstance() { return mInstance; }
   VkSurfaceKHR                    CreateSurface(HWND handle);
 

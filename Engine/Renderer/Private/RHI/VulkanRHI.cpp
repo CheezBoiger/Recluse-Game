@@ -111,13 +111,13 @@ VulkanRHI::~VulkanRHI()
 }
 
 
-b32 VulkanRHI::CreateContext()
+b32 VulkanRHI::CreateContext(const char* appName)
 {
 // Enable debug mode, should we decide to enable validation layers.
 #if defined(_DEBUG) || defined(_NDEBUG)
   gContext.EnableDebugMode();
 #endif
-  return gContext.CreateInstance();
+  return gContext.CreateInstance(appName);
 }
 
 
@@ -348,6 +348,7 @@ void VulkanRHI::QueryFromSwapchain()
     framebufferCI.pAttachments = attachments.data();
     framebufferCI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
     framebufferCI.layers = 1;
+    framebufferCI.flags = 0;
     
     if (vkCreateFramebuffer(mLogicalDevice.Native(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
@@ -502,13 +503,15 @@ void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitI
   VkResult result = vkQueueSubmit(mLogicalDevice.GraphicsQueue(queueIdx), 
     count, submitInfo, fence);
 
-  if (result != VK_SUCCESS) {
-    if (result == VK_ERROR_DEVICE_LOST)  {
-      R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?\n");
-      return;
-    }
-    R_DEBUG(rError, "Unsuccessful graphics queue submit!\n");
-  }
+  DEBUG_OP(
+    if (result != VK_SUCCESS) {
+      if (result == VK_ERROR_DEVICE_LOST)  {
+        R_DEBUG(rWarning, "Vulkan ignoring queue submission! Window possibly minimized?\n");
+        return;
+      }
+      R_DEBUG(rError, "Unsuccessful graphics queue submit!\n");
+   }
+  );
 }
 
 

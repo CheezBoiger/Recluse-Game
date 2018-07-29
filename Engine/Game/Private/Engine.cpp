@@ -117,15 +117,17 @@ void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   gCore().StartUp();
   gCore().ThrPool().RunAll();
   gFilesystem().StartUp();
-  gRenderer().StartUp();
   gAnimation().StartUp();
-
 #if !defined FORCE_PHYSICS_OFF
-  gPhysics().StartUp();  
+  gPhysics().StartUp();
 #endif
 #if !defined FORCE_AUDIO_OFF
   gAudio().StartUp();
 #endif
+  // For renderer, you want to send the name to the device that will be used for debugging and
+  // information for vendors.
+  gRenderer().SetAppName(appName.c_str());
+  gRenderer().StartUp();
 
   gUI().StartUp();
 
@@ -161,6 +163,7 @@ void Engine::CleanUp()
   Material::CleanUpDefault();
 
   gUI().ShutDown();
+  gRenderer().ShutDown();
 #if !defined FORCE_AUDIO_OFF
   gAudio().ShutDown();
 #endif
@@ -168,7 +171,6 @@ void Engine::CleanUp()
   gPhysics().ShutDown();
 #endif
   gAnimation().ShutDown();
-  gRenderer().ShutDown();
   gFilesystem().ShutDown();
   gCore().ShutDown();
   m_running = false;

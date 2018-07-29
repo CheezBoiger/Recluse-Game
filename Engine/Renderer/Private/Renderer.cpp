@@ -41,6 +41,7 @@
 
 namespace Recluse {
 
+const char* Renderer::appName = "No name";
 
 Renderer& gRenderer() { 
   return Renderer::Instance();
@@ -129,7 +130,7 @@ void Renderer::OnStartUp()
     R_DEBUG(rError, "Core is not active! Start up the core first!\n");
     return;
   }
-  VulkanRHI::CreateContext();
+  VulkanRHI::CreateContext(Renderer::appName);
   VulkanRHI::FindPhysicalDevice();
   if (!m_pRhi) m_pRhi = new VulkanRHI();
 }
