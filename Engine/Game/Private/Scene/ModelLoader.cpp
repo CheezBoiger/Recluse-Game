@@ -244,6 +244,7 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
   Mesh* pMesh = nullptr;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+    std::vector<Primitive> primitives;
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
     pMesh = new Mesh();
@@ -340,12 +341,15 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
       PrimitiveHandle primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
       engineModel->primitives.push_back(primData);
-      pMesh->PushPrimitive(primData.GetPrimitive());
+      primitives.push_back(primData.GetPrimitive());
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
+    pMesh->Initialize(MESH_LOD_0, vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
+    for (auto& prim : primitives) {
+      pMesh->PushPrimitive(MESH_LOD_0, prim);
+    }
   }
   return pMesh;
 }
@@ -354,9 +358,9 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
 Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
 {
   Mesh* pMesh = nullptr;
-  std::vector<Primitive> primitives;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+    std::vector<Primitive> primitives;
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
     pMesh = new Mesh();
@@ -493,13 +497,16 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
       // TODO():
       //    Still need to add start and index count.
-      engineModel->primitives.push_back(std::move(primData));
-      pMesh->PushPrimitive(primData.GetPrimitive());
+      engineModel->primitives.push_back(primData);
+      primitives.push_back(primData.GetPrimitive());
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data(), min, max);
+    pMesh->Initialize(MESH_LOD_0, vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data(), min, max);
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
+    for (auto& primData : primitives) {
+      pMesh->PushPrimitive(MESH_LOD_0, primData);
+    }
   }
 
   return pMesh;

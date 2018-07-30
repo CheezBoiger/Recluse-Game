@@ -1440,7 +1440,10 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.minDepthBounds = 0.0f;
   depthStencilCI.maxDepthBounds = 1.0f;
   depthStencilCI.stencilTestEnable = VK_FALSE;
-  depthStencilCI.back = { };
+  depthStencilCI.back.compareMask = 0xff;
+  depthStencilCI.back.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+  depthStencilCI.back.passOp = VK_STENCIL_OP_REPLACE;
+  depthStencilCI.back.failOp = VK_STENCIL_OP_ZERO;
   depthStencilCI.front = { };
 
   std::array<VkPipelineColorBlendAttachmentState, 4> colorBlendAttachments;
@@ -2598,9 +2601,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
+      MeshLod lod = renderCmd._lod;
       // TODO(): Do culling if needed here.
-      VertexBuffer* vertexBuffer = data->VertexData();
-      IndexBuffer* indexBuffer = data->IndexData();
+      VertexBuffer* vertexBuffer = data->VertexData(lod);
+      IndexBuffer* indexBuffer = data->IndexData(lod);
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
 
       VkDeviceSize offsets[] = { 0 };
@@ -2617,8 +2621,10 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
-      for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
-        Primitive& primitive = renderCmd._pPrimitives[i];
+      Primitive* primitives = data->GetPrimitiveData(lod);
+      u32 count = data->GetPrimitiveCount(lod);
+      for (u32 i = 0; i < count; ++i) {
+        Primitive& primitive = primitives[i];
         MaterialDescriptor* pMatDesc = primitive._pMat;
         DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
         // Bind materials.
@@ -3002,8 +3008,9 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
     MeshData* mesh = renderCmd._pMeshData;
-    VertexBuffer* vertex = mesh->VertexData();
-    IndexBuffer* index = mesh->IndexData();
+    MeshLod lod = renderCmd._lod;
+    VertexBuffer* vertex = mesh->VertexData(lod);
+    IndexBuffer* index = mesh->IndexData(lod);
     VkBuffer buf = vertex->Handle()->NativeBuffer();
     VkDeviceSize offset[] = { 0 };
     cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
@@ -3012,8 +3019,10 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
-      Primitive& primitive = renderCmd._pPrimitives[i];
+    Primitive* primitives = mesh->GetPrimitiveData(lod);
+    u32 count = mesh->GetPrimitiveCount(lod);
+    for (u32 i = 0; i < count; ++i) {
+      Primitive& primitive = primitives[i];
       if (index) {
         cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
       } else {
@@ -3109,9 +3118,9 @@ void Renderer::BuildForwardPBRCmdBuffer()
         // Set up the render mesh
         MeshData* data = renderCmd._pMeshData;
         // TODO(): Do culling if needed here.
-
-        VertexBuffer* vertexBuffer = data->VertexData();
-        IndexBuffer* indexBuffer = data->IndexData();
+        MeshLod lod = renderCmd._lod;
+        VertexBuffer* vertexBuffer = data->VertexData(lod);
+        IndexBuffer* indexBuffer = data->IndexData(lod);
         VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
         VkDeviceSize offsets[] = { 0 };
         cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
@@ -3129,8 +3138,10 @@ void Renderer::BuildForwardPBRCmdBuffer()
         DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
         // Bind materials.
-        for (size_t i = 0; i < renderCmd._primitiveCount; ++i) {
-          Primitive& primitive = renderCmd._pPrimitives[i];
+        Primitive* primitives = data->GetPrimitiveData(lod);
+        u32 count = data->GetPrimitiveCount(lod);
+        for (u32 i = 0; i < count; ++i) {
+          Primitive& primitive = primitives[i];
           DescriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
           cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
             Pipe->Layout(),
@@ -3884,8 +3895,10 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
   R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
   m_meshDescriptors.PushBack(cmd._pMeshDesc);
 
-  for (size_t i = 0; i < cmd._primitiveCount; ++i) {
-    Primitive& prim = cmd._pPrimitives[i];
+  Primitive* primitives = cmd._pMeshData->GetPrimitiveData(cmd._lod);
+  u32 count = cmd._pMeshData->GetPrimitiveCount(cmd._lod);
+  for (u32 i = 0; i < count; ++i) {
+    Primitive& prim = primitives[i];
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
     m_materialDescriptors.PushBack(prim._pMat);  
     R_ASSERT(prim._pMat == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");

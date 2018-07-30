@@ -272,12 +272,15 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     return;
   }
   // Traversing the scene graph using DFS.
-  static GameObject* nodes[1024];
+  // TODO(Mario): This is too primitive (what if there are more than this many game objects
+  // in the scene?) Need a stack that can be resized.
+  static std::vector<GameObject*> nodes(1024);
   i32 top = -1;
   m_sceneObjectCount = 0;
   SceneNode* root = m_pPushedScene->GetRoot();
   for (size_t i = 0; i < root->GetChildCount(); ++i) {
     nodes[++top] = root->GetChild(i);
+    if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
   }
   
   while (top != -1) {
@@ -291,6 +294,7 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     for (size_t i = 0; i < child_count; ++i) {
       GameObject* child = object->GetChild(i);
       nodes[++top] = child;
+      if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
     }
   }
 }

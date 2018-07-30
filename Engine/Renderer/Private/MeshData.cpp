@@ -17,7 +17,7 @@ MeshData::~MeshData()
 }
 
 
-void MeshData::Initialize(size_t elementCount, void* data, MeshData::VertexType sizeType, size_t indexCount, void* indices)
+void MeshData::Initialize(MeshLod lod, size_t elementCount, void* data, MeshData::VertexType sizeType, size_t indexCount, void* indices)
 {
   size_t size = 0;
   switch (sizeType) {
@@ -31,17 +31,19 @@ void MeshData::Initialize(size_t elementCount, void* data, MeshData::VertexType 
       size = 0; break;
   }
 
-  mVertexBuffer.Initialize(mRhi, elementCount, size, data);
+  m_vertexBuffersLod[lod].Initialize(mRhi, elementCount, size, data);
 
   if (indexCount) {
-    mIndexBuffer.Initialize(mRhi, indexCount, sizeof(u32), indices);
+    m_indexBuffersLod[lod].Initialize(mRhi, indexCount, sizeof(u32), indices);
   }
 }
 
 
 void MeshData::CleanUp()
 {
-  mVertexBuffer.CleanUp();
-  mIndexBuffer.CleanUp();
+  for (size_t i = 0; i < kMaxLodMeshCount; ++i) {
+    m_vertexBuffersLod[i].CleanUp();
+    m_indexBuffersLod[i].CleanUp();
+  }
 }
 } // Recluse

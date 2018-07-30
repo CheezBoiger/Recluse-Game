@@ -9,6 +9,8 @@
 #include "Core/Math/Color4.hpp"
 #include <vector>
 
+#include "MeshData.hpp"
+
 namespace Recluse {
 
 
@@ -50,16 +52,15 @@ struct MeshRenderCmd {
     : _config(false)
     , _pMeshDesc(nullptr)
     , _pMeshData(nullptr)
-    , _pPrimitives(nullptr)
     , _bSkinned(false)
+    , _lod(MESH_LOD_0)
     , _instances(1) { }
 
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
-  Primitive*              _pPrimitives;
-  u32                     _primitiveCount;
   u32                     _instances;
+  MeshLod                 _lod;
   b32                     _bSkinned;
   CmdConfigBits           _config;
 };

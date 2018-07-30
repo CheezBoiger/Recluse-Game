@@ -122,11 +122,11 @@ void RendererComponent::Update()
     cmd._pJointDesc = GetJointDescriptor();
     cmd._config = m_configs;
 
-    // Push primitives to renderer.
+    // Push mesh data to renderer.
     Mesh* pMesh = m_meshes[i];
-    cmd._pPrimitives = pMesh->GetPrimitiveData();
-    cmd._primitiveCount = pMesh->GetPrimitiveCount();
+    MeshLod lod = pMesh->GetCurrentLod();
     cmd._pMeshData = pMesh->Native();
+ 
     gRenderer().PushMeshRender(cmd);
   }
 

@@ -245,7 +245,7 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-    mesh->GetPrimitive(0)->_pMat = mat->Native();
+    mesh->GetPrimitive(mesh->GetCurrentLod(), 0)->_pMat = mat->Native();
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;

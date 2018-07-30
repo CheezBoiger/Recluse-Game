@@ -23,7 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 1000;
+  static const u32 kNumberOfMonsters = 100;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -180,25 +180,26 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
-    mesh->Initialize(boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data(), Cube::Min, Cube::Max);
+    mesh->Initialize(MESH_LOD_0, boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data(), Cube::Min, Cube::Max);
     MeshCache::Cache(RTEXT("NativeCube"), mesh);    Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._indexCount = mesh->Native()->IndexData(MESH_LOD_0)->IndexCount();
     prim._pMat = Material::Default()->Native();
-    mesh->PushPrimitive(prim);
+    mesh->PushPrimitive(MESH_LOD_0, prim);
   }
 
   {
     Mesh* mesh = new Mesh();
-    auto sphereVerts = UVSphere::MeshInstance(1.0f, 32, 32);
-    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), 32, 32);
-    mesh->Initialize(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
+    const u32 stckCnt = 32;
+    auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
+    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
+    mesh->Initialize(MESH_LOD_0, sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
     Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData()->IndexCount();
+    prim._indexCount = mesh->Native()->IndexData(MESH_LOD_0)->IndexCount();
     prim._pMat = Material::Default()->Native();
-    mesh->PushPrimitive(prim);
+    mesh->PushPrimitive(MESH_LOD_0, prim);
   }
 
   // Model Loading.
@@ -238,8 +239,10 @@ int main(int c, char* argv[])
   // Once done using the scene, clean it up.
   scene.CleanUp();
 
+  Log() << "Cleaning assets.\n";
   // Finish.
   AssetManager::CleanUpAssets();
+  Log() << "Cleaning engine.\n";
   // Clean up engine
   gEngine().CleanUp();
 #if (_DEBUG)

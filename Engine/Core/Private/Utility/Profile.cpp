@@ -15,6 +15,8 @@ namespace Recluse {
 // Determined by profile type.
 std::unordered_map<ProfileTypes, 
   std::unordered_map<std::string, ProfileData > > kProfileDataMap;
+std::thread     kProfileThreadHandle;
+std::mutex      kProfileMapMutex;
 
 
 
