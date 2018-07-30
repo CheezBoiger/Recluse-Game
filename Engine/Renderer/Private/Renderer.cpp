@@ -31,6 +31,7 @@
 #include "RHI/Buffer.hpp"
 
 #include "Core/Core.hpp"
+#include "Core/Utility/Profile.hpp"
 #include "Filesystem/Filesystem.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
@@ -172,6 +173,9 @@ void Renderer::WaitForCpuFence()
 
 void Renderer::Render()
 {
+
+  R_TIMED_PROFILE_RENDERER();
+
   if (m_Minimized) {
     // Window was minimized, ignore any cpu draw requests and prevent frame rendering
     // until window is back up.
@@ -2462,6 +2466,8 @@ void Renderer::CleanUpSkybox()
 
 void Renderer::BuildSkyboxCmdBuffer()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   if (m_pSkyboxCmdBuffer) {
     m_pSkyboxCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   }
@@ -2525,6 +2531,8 @@ void Renderer::BuildSkyboxCmdBuffer()
 
 void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   if (cmdBufferIndex >= m_Offscreen._CmdBuffers.size()) { 
     R_DEBUG(rError, "Attempted to build offscreen cmd buffer. Index out of bounds!\n");
     return; 
@@ -2634,6 +2642,7 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
 void Renderer::BuildFinalCmdBuffer()
 {
+  R_TIMED_PROFILE_RENDERER()
   if (!m_pFinalCommandBuffer) return;
 
   CommandBuffer* cmdBuffer = m_pFinalCommandBuffer;
@@ -2937,6 +2946,7 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 
 void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
 {
+  R_TIMED_PROFILE_RENDERER();
   if (!m_pLights) return;
   if (!m_pLights->m_pFrameBuffer) return;
   CommandBuffer* cmdBuffer = m_Offscreen._ShadowCmdBuffers[cmdBufferIndex];
