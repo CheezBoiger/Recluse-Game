@@ -24,6 +24,7 @@ HDR::HDR()
   m_config._kcube.x = 0.15f;
   m_config._interleavedVideo.x = 1.0f;
   m_config._interleavedVideo.y = 0.0f;
+  m_config._interleavedVideoShakeInterval = 0.0f; // Every x seconds by default. This disables shaking.
 }
 
 

@@ -62,6 +62,7 @@ layout (set = 1, binding = 0) uniform HDRConfig {
   vec4 k;
   vec4 kcube;
   vec4 bInterleaveVideo;
+  vec4 interleaveShakeInterval;
 } hdr;
 
 
@@ -70,7 +71,6 @@ layout (push_constant) uniform ParamsHDR {
   float bloomStrength;
 } paramConfigs;
 
-const float interval = 3.0;
 
 vec3 Uncharted2Tonemap(vec3 x)
 {
@@ -220,6 +220,7 @@ void main()
   if (hdr.bInterleaveVideo.x >= 1.0) {
     float time = gWorldBuffer.fEngineTime;
     vec2 resolution = vec2(gWorldBuffer.screenSize.xy);
+    float interval = hdr.interleaveShakeInterval.x;
     float strength = smoothstep(interval * 0.5, interval, interval - mod(time, interval));
     vec2 shake = vec2(strength * 8.0 + 0.5) * vec2(
       random(vec2(time)) * 2.0 - 1.0,
