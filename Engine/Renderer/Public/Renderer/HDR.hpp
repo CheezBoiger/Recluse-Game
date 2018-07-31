@@ -28,6 +28,7 @@ struct ConfigHDR {
   Vector4 _allowChromaticAberration;
   Vector4 _k;
   Vector4 _kcube;
+  Vector4 _interleavedVideo;
 };
 
 

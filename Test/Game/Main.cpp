@@ -88,6 +88,13 @@ public:
     for (size_t i = 0; i < kMaxCount; ++i) {
       helmets[i]->Update(tick);
     }
+
+    if (Keyboard::KeyPressed(KEY_CODE_J)) {
+      Camera::GetMain()->EnableInterleavedVideo(true);
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_K)) {
+      Camera::GetMain()->EnableInterleavedVideo(false);
+    }
   }
 
 

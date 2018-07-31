@@ -222,6 +222,8 @@ public:
   void              PushMeshRender(MeshRenderCmd& cmd);
   BufferUI*         GetUiBuffer() const;
 
+  HDR*              GetHDR() { return m_pHDR; }
+
   // Set up irradiance maps for this renderer to use for look up.
   void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
 

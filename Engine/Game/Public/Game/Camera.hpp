@@ -70,11 +70,13 @@ public:
   r32                 Gamma() const { return m_Gamma; }
   b32                 Bloom() const { return m_Bloom; }
   b32                 Culling() const { return m_FrustumCull; }
+  b32                 InterleavedVideo() const { return m_interleaveVideo; }
 
   void                ResetAspect();
   void                SetExposure(r32 exposure) { m_Exposure = exposure; }
   void                SetGamma(r32 gamma) { m_Gamma = gamma; }
   void                EnableBloom(b32 enable) { m_Bloom = enable; }
+  void                EnableInterleavedVideo(b32 enable) { m_interleaveVideo = enable; }
   void                EnableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 
@@ -97,5 +99,6 @@ protected:
   r32                 m_Exposure;
   b32                 m_Bloom;
   b32                 m_FrustumCull;
+  b32                 m_interleaveVideo;
 };
 } // Recluse

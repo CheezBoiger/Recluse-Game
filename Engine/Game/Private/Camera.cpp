@@ -42,6 +42,7 @@ Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
   , m_Gamma(2.2f)
   , m_Exposure(4.5f)
   , m_FrustumCull(false)
+  , m_interleaveVideo(false)
 {
 }
 
@@ -64,6 +65,7 @@ void Camera::Update()
 
   // Update camera and screen info.
   GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
+  ConfigHDR* hdr = gRenderer().GetHDR()->GetRealtimeConfiguration();
   Window* pWindow = gEngine().GetWindow();
 
   m_viewMatrix = Matrix4(
@@ -115,6 +117,9 @@ void Camera::Update()
   gGlobalBuffer->_TPlane = m_viewFrustum[ViewFrustum::PTOP];
   gGlobalBuffer->_NPlane = m_viewFrustum[ViewFrustum::PNEAR];
   gGlobalBuffer->_FPlane = m_viewFrustum[ViewFrustum::PFAR];
+
+  // HDR settings.
+  hdr->_interleavedVideo.x = r32(InterleavedVideo());
 }
 
 #if 0

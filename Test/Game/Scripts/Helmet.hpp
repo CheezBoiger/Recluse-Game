@@ -155,26 +155,6 @@ public:
 
     // Make emission glow.
     m_factor = Absf(sinf(static_cast<r32>(Time::CurrentTime())));
-
-    if (Keyboard::KeyPressed(KEY_CODE_K)) {
-      // NOTE(): If using SkinnedRendererComponent, this will not work for static meshes like
-      // this! End up with incorrect reading to the gpu!
-      ModelLoader::Model* model = nullptr;  
-      ModelCache::Get("BoomBox", &model);
-      m_pMeshComponent->SetMeshRef(model->meshes[0]);
-      transform->Scale = Vector3(50.0f, 50.0f, 50.0f);
-      m_pRendererComponent->SetTransparent(true);
-    }
-
-    if (Keyboard::KeyPressed(KEY_CODE_J)) {
-      // NOTE(): If using SkinnedRendererComponent, this will not work for static meshes like
-      // this! End up with incorrect reading to the gpu!
-      ModelLoader::Model* model = nullptr;
-      ModelCache::Get("DamagedHelmet", &model);
-      m_pMeshComponent->SetMeshRef(model->meshes[0]);
-      transform->Scale = Vector3(0.5f, 0.5f, 0.5f);
-      m_pRendererComponent->SetTransparent(false);
-    }
   }
 
   void OnCleanUp() override
