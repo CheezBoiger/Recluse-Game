@@ -127,13 +127,6 @@ private:
 };
 
 
-/*
-  Requirements for rendering something on screen:
-    Material -> MaterialComponent.
-    Mesh -> MeshComponent
-    RendererComponent
-  Updating materials or meshes are done through these components.
-*/
 int main(int c, char* argv[])
 {
   Log::DisplayToConsole(true);
@@ -239,10 +232,8 @@ int main(int c, char* argv[])
   // Once done using the scene, clean it up.
   scene.CleanUp();
 
-  Log() << "Cleaning assets.\n";
   // Finish.
   AssetManager::CleanUpAssets();
-  Log() << "Cleaning engine.\n";
   // Clean up engine
   gEngine().CleanUp();
 #if (_DEBUG)

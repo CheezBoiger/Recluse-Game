@@ -84,9 +84,30 @@ public:
     //  sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
     //  cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
     AABB aabb = m_pMeshComponent->MeshRef()->Native()->GetAABB();
-    aabb.min = aabb.min * transform->GetLocalToWorldMatrix();
-    aabb.max = aabb.max * transform->GetLocalToWorldMatrix();
-    //Log() << Camera::GetMain()->GetViewFrustum().Intersect(aabb) << "\r";
+    aabb.min = (aabb.min * transform->Scale) + transform->Position;
+    aabb.max = (aabb.max * transform->Scale) + transform->Position;
+    ViewFrustum::Result result = Camera::GetMain()->GetViewFrustum().Intersect(aabb);
+
+    std::string frustumResult = "Frustum result: ";
+    ViewFrustum frustum = Camera::GetMain()->GetViewFrustum();
+    Plane farPlane = frustum[ViewFrustum::PFAR];
+    Plane nearPlane = frustum[ViewFrustum::PNEAR];
+    Plane topPlane = frustum[ViewFrustum::PTOP];
+    Plane bottomPlane = frustum[ViewFrustum::PBOTTOM];
+    Plane leftPlane = frustum[ViewFrustum::PLEFT];
+    Plane rightPlane = frustum[ViewFrustum::PRIGHT];
+    std::string farS = "Far Plane:" + std::string(farPlane); 
+    std::string nearS = "Near Plane: " + std::string(nearPlane);
+    std::string topS = "Top Plane: " + std::string(topPlane);
+    std::string bottomS = "Bottom Plane: " + std::string(bottomPlane);
+    std::string leftS = "Left Plane: " + std::string(leftPlane);
+
+    switch (result) {
+      case ViewFrustum::Result_Inside: frustumResult += "Inside"; break;
+      case ViewFrustum::Result_Intersect: frustumResult += "Intersect"; break;
+      case ViewFrustum::Result_Outside: frustumResult += "Outside"; break;
+      default: frustumResult += "None";
+    }
 
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
@@ -100,6 +121,13 @@ public:
       gUI().EmitText(engine, 30.0f, 40.0f, 350.0f, 20.0f);
       gUI().EmitText(device, 30.0f, 60.0f, 300.0f, 20.0f);
       gUI().EmitText(intro, 30.0f, 80.0f, 450.0f, 20.0f);
+    gUI().EndCanvas();
+    gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 1000.0f, 300.0f);
+      gUI().EmitText(frustumResult, 40.0f, 40.0f, 500.0f, 200.0f);
+      gUI().EmitText(farS, 30.0f, 60.0f, 800.0f, 20.0f);
+      gUI().EmitText(nearS, 30.0f, 80.0f, 800.0f, 20.0f);
+      gUI().EmitText(topS, 30.0f, 100.0f, 800.0f, 20.0f);
+      gUI().EmitText(bottomS, 30.0f, 120.0f, 1000.0f, 20.0f);
     gUI().EndCanvas();
   }
 

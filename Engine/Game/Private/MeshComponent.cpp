@@ -60,10 +60,10 @@ void MeshComponent::Update()
 
   ViewFrustum** viewFrustums = gEngine().GetViewFrustums();
   AABB aabb = m_pMeshRef->Native()->GetAABB();
-  Matrix4 model = GetOwner()->GetTransform()->GetLocalToWorldMatrix();
+  Transform* transform = GetOwner()->GetTransform();
 
-  aabb.max = aabb.max * model;
-  aabb.min = aabb.min * model;
+  aabb.max = (aabb.max * transform->Scale) + transform->Position;
+  aabb.min = (aabb.min * transform->Scale) + transform->Position;
   aabb.ComputeCentroid();
 
   ClearFrustumCullBits();

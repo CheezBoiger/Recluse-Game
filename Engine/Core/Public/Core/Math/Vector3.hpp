@@ -42,6 +42,7 @@ struct Vector3 {
   Vector3         operator-() const;
 
   Vector3         operator*(const r32 scaler) const;
+  Vector3         operator*(const Vector3& scale) const; // Component-wise scaling.
   Vector3         operator/(const r32 scaler) const;
 
   // Vector3 to matrix3 multiplication in row major order.
@@ -51,6 +52,7 @@ struct Vector3 {
   void            operator-=(const Vector3& other);
 
   void            operator*=(const r32 scaler);
+  void            operator*=(const Vector3& scaler);  // Component-wise scaling.
   void            operator/=(const r32 scaler);
 
   // Cross product expressed as the exterior product of this vector and other.

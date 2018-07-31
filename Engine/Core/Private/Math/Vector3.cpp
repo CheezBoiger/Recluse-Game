@@ -167,6 +167,20 @@ Vector3 Vector3::operator*(const Matrix3& other) const
 }
 
 
+Vector3 Vector3::operator*(const Vector3& scaler) const 
+{
+  return Vector3(x * scaler.x, y * scaler.y, z * scaler.z);
+}
+
+
+void Vector3::operator*=(const Vector3& scaler)
+{
+  x *= scaler.x;
+  y *= scaler.y;
+  z *= scaler.z;
+}
+
+
 Log& operator<<(Log& log, const Vector3& vec3)
 {
   log << "(" << vec3.x << ", " << vec3.y << ", " << vec3.z << ")";

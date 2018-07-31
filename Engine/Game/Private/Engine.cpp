@@ -222,6 +222,7 @@ void Engine::Update()
   gAnimation().UpdateState(dt);
   gUI().UpdateState(dt);
 
+  
   PhysicsComponent::UpdateFromPreviousGameLogic();
   TraverseScene(UpdateTransform);
   UpdateSunLight();
