@@ -67,7 +67,12 @@ void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
     
     if (bHeapAlloc) { delete pImgBuffer; }
 
-    pTex->_Name = image.uri;
+    pTex->_Name = engineModel->name + "_tex_";
+    if (image.uri.empty()) {
+      pTex->_Name += image.name;
+    } else {
+      pTex->_Name += image.uri;
+    }
 
     TextureCache::Cache(pTex);
     engineModel->textures.push_back(pTex);
@@ -124,8 +129,10 @@ void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
                                       static_cast<r32>(value[3])));
     }
 
+    std::string name = engineModel->name + "_mat_";
+    name += mat.name;
 
-    MaterialCache::Cache(mat.name, engineMat);
+    MaterialCache::Cache(name, engineMat);
     engineModel->materials.push_back(engineMat);
   }
 }
@@ -345,7 +352,8 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
     }
 
     pMesh->Initialize(MESH_LOD_0, vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
-    MeshCache::Cache(mesh.name, pMesh);
+    std::string name = engineModel->name + "_mesh_" + mesh.name;
+    MeshCache::Cache(name, pMesh);
     engineModel->meshes.push_back(pMesh);
     for (auto& prim : primitives) {
       pMesh->PushPrimitive(MESH_LOD_0, prim);
@@ -684,14 +692,39 @@ void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* e
 }
 
 
+void GetFilenameAndType(const std::string& path, std::string& filenameOut, u32& typeOut)
+{
+  size_t cutoff = path.find_last_of('/');
+  if (cutoff != std::string::npos) {
+    size_t removeExtId = path.find_last_of('.');
+    if (removeExtId != std::string::npos) {
+      filenameOut = std::move(path.substr(cutoff + 1, removeExtId - (cutoff + 1)));
+      std::string ext = path.substr(removeExtId, path.size());
+      if (ext.compare(".glb") == 0) {
+        typeOut = 1;
+      }
+      else {
+        typeOut = 0;
+      }
+    }
+  }
+}
+
+
 ModelResult Load(const std::string path)
 {
   Model*           model = nullptr;
+  static u64 copy = 0;
   tinygltf::Model gltfModel;
   tinygltf::TinyGLTF loader;
   std::string err;
+  std::string modelName = "Unknown" + std::to_string(copy++);
+  u32 type = 0;
+  GetFilenameAndType(path, modelName, type);
 
-  bool success = loader.LoadASCIIFromFile(&gltfModel, &err, path);
+  bool success = type == 1 ? loader.LoadBinaryFromFile(&gltfModel, &err, path) 
+    : loader.LoadASCIIFromFile(&gltfModel, &err, path);
+
   if (!err.empty()) {
     Log() << err << "\n";
   }
@@ -703,6 +736,7 @@ ModelResult Load(const std::string path)
 
   // Successful loading from tinygltf.
   model = new Model();
+  model->name = std::move(modelName);
 
   LoadTextures(&gltfModel, model);
   LoadMaterials(&gltfModel, model);
@@ -714,16 +748,6 @@ ModelResult Load(const std::string path)
     LoadNode(node, gltfModel, model, mat, 1.0);
   }
 
-  static u64 copy = 0;
-  model->name = "Unknown" + std::to_string(copy++);
-  size_t cutoff = path.find_last_of('/');
-  if (cutoff != std::string::npos) {
-    size_t removeExtId = path.find_last_of('.');
-    if (removeExtId != std::string::npos) {
-      std::string fileName = path.substr(cutoff + 1, removeExtId - (cutoff + 1));
-      model->name = fileName;
-    }
-  }
   ModelCache::Cache(model->name, model);
   return Model_Success;
 }
@@ -731,12 +755,18 @@ ModelResult Load(const std::string path)
 
 ModelResult LoadAnimatedModel(const std::string path)
 {
-  AnimModel*      model = nullptr;
+  AnimModel* model = nullptr;
+  static u64 copy = 0;
   tinygltf::Model gltfModel;
   tinygltf::TinyGLTF loader;
   std::string err;
+  std::string modelName = "Unknown" + std::to_string(copy++);
+  u32 type = 0;
+  GetFilenameAndType(path, modelName, type);
+  
 
-  bool success = loader.LoadASCIIFromFile(&gltfModel, &err, path);
+  bool success = type == 1 ? loader.LoadBinaryFromFile(&gltfModel, &err, path) 
+    : loader.LoadASCIIFromFile(&gltfModel, &err, path);
   if (!err.empty()) {
     Log() << err << "\n";
   }
@@ -748,6 +778,7 @@ ModelResult LoadAnimatedModel(const std::string path)
 
   // Successful loading from tinygltf.
   model = new AnimModel();
+  model->name = modelName; 
 
   LoadTextures(&gltfModel, model);
   LoadMaterials(&gltfModel, model);
@@ -760,17 +791,6 @@ ModelResult LoadAnimatedModel(const std::string path)
   }
 
   LoadAnimations(&gltfModel, model);
-
-  static u64 copy = 0;
-  model->name = "Unknown" + std::to_string(copy++);
-  size_t cutoff = path.find_last_of('/');
-  if (cutoff != std::string::npos) {
-    size_t removeExtId = path.find_last_of('.');
-    if (removeExtId != std::string::npos) {
-      std::string fileName = path.substr(cutoff + 1, removeExtId - (cutoff + 1));
-      model->name = fileName;
-    }
-  }
   ModelCache::Cache(model->name, model);
   return Model_Success;
 }
