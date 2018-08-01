@@ -17,7 +17,7 @@ Animation& gAnimation()
 }
 
 
-void AnimObject::Update()
+void AnimHandle::Update()
 {
   // Make sure these are up to date with the sampler.
   if (!m_pSamplerRef) return;
@@ -59,18 +59,18 @@ void Animation::UpdateState(r64 dt)
 }
 
 
-AnimObject* Animation::CreateAnimObject(uuid64 id)
+AnimHandle* Animation::CreateAnimObject(uuid64 id)
 {
   auto it = m_animObjects.find(id);
   if (it != m_animObjects.end()) return nullptr;
   
-  AnimObject* pObj = new AnimObject(id);
+  AnimHandle* pObj = new AnimHandle(id);
   m_animObjects[id] = pObj;
   return pObj;
 }
 
 
-void Animation::FreeAnimObject(AnimObject* pObj)
+void Animation::FreeAnimObject(AnimHandle* pObj)
 {
   if (!pObj) return;
 

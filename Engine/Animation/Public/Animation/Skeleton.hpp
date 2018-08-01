@@ -35,7 +35,7 @@ public:
 
   static const skeleton_uuid_t      kNoSkeletonId = -1;
 
-  static Skeleton&            GetSkeleton(skeleton_uuid_t id) { return kSkeletons[id]; }
+  static Skeleton*            GetSkeleton(skeleton_uuid_t id) { return &kSkeletons[id]; }
   static void                 PushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
   static void                 RemoveSkeleton(skeleton_uuid_t id) { 
     auto it = kSkeletons.find(id);

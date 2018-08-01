@@ -94,7 +94,7 @@ private:
 
   void                      ResetLocal() { _state._fCurrLocalTime = 0.0f; }
   Matrix4                   LinearInterpolate(r32 t, size_t i);
-  void                      ApplyCurrentPose(Skeleton& skeleton);
+  void                      ApplyCurrentPose(Skeleton* skeleton);
   
   void                      ReadClip();
 

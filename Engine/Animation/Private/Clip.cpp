@@ -50,8 +50,8 @@ void AnimSampler::Step(r32 gt)
 
   _state._fCurrLocalTime = t;
   // TODO(): Now find the local poses of t.
-  Skeleton& skeleton = Skeleton::GetSkeleton(_pClip->_skeletonId);
-  b32 rootInJoints = skeleton._rootInJoints;
+  Skeleton* skeleton = Skeleton::GetSkeleton(_pClip->_skeletonId);
+  b32 rootInJoints = skeleton->_rootInJoints;
 
   // We don't have to clean out all C matrices, just the root. All others will be 
   // flushed out from here.
@@ -67,11 +67,11 @@ void AnimSampler::Step(r32 gt)
     size_t idx = (rootInJoints ? i : i - 1);
     Matrix4 localTransform = LinearInterpolate(t, i);
     Matrix4 parentTransform;
-    u8 parentId = skeleton._joints[idx]._iParent;
+    u8 parentId = skeleton->_joints[idx]._iParent;
     if (parentId == 0xff) {
       parentTransform = _globalTransform;
     } else {
-      parentTransform = _output[skeleton._joints[idx]._iParent];
+      parentTransform = _output[skeleton->_joints[idx]._iParent];
     }
     // Combine result and parent matrices to produce the current C pose. This is in world joint space.
     _output[idx] = localTransform * parentTransform;
@@ -88,11 +88,11 @@ u32 AnimSampler::GetPaletteSz()
 }
 
 
-void AnimSampler::ApplyCurrentPose(Skeleton& skeleton)
+void AnimSampler::ApplyCurrentPose(Skeleton* skeleton)
 {
   // Multiplay matrices by their inverse bind to transform our vertices to local joint space.
-  for (size_t i = 0; i < skeleton._joints.size(); ++i) {
-    _output[i] = skeleton._joints[i]._InvBindPose * _output[i] * skeleton._rootInvTransform;
+  for (size_t i = 0; i < skeleton->_joints.size(); ++i) {
+    _output[i] = skeleton->_joints[i]._InvBindPose * _output[i] * skeleton->_rootInvTransform;
   }
 }
 

@@ -3654,13 +3654,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
     @brief constructor for a given JSON instance
     @param[in] object  pointer to a JSON object for this iterator
     @pre object != nullptr
-    @post The iterator is initialized; i.e. `m_object != nullptr`.
+    @post The iterator is initialized; i.e. `m_handle != nullptr`.
     */
-    explicit iter_impl(pointer object) noexcept : m_object(object)
+    explicit iter_impl(pointer object) noexcept : m_handle(object)
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
@@ -3697,7 +3697,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
     @note It is not checked whether @a other is initialized.
     */
     iter_impl(const iter_impl<typename std::remove_const<BasicJsonType>::type>& other) noexcept
-        : m_object(other.m_object), m_it(other.m_it) {}
+        : m_handle(other.m_handle), m_it(other.m_it) {}
 
     /*!
     @brief converting assignment
@@ -3707,7 +3707,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
     */
     iter_impl& operator=(const iter_impl<typename std::remove_const<BasicJsonType>::type>& other) noexcept
     {
-        m_object = other.m_object;
+        m_handle = other.m_handle;
         m_it = other.m_it;
         return *this;
     }
@@ -3715,23 +3715,23 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
   private:
     /*!
     @brief set the iterator to the first value
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     void set_begin() noexcept
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
-                m_it.object_iterator = m_object->m_value.object->begin();
+                m_it.object_iterator = m_handle->m_value.object->begin();
                 break;
             }
 
             case value_t::array:
             {
-                m_it.array_iterator = m_object->m_value.array->begin();
+                m_it.array_iterator = m_handle->m_value.array->begin();
                 break;
             }
 
@@ -3752,23 +3752,23 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief set the iterator past the last value
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     void set_end() noexcept
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
-                m_it.object_iterator = m_object->m_value.object->end();
+                m_it.object_iterator = m_handle->m_value.object->end();
                 break;
             }
 
             case value_t::array:
             {
-                m_it.array_iterator = m_object->m_value.array->end();
+                m_it.array_iterator = m_handle->m_value.array->end();
                 break;
             }
 
@@ -3783,23 +3783,23 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
   public:
     /*!
     @brief return a reference to the value pointed to by the iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     reference operator*() const
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
-                assert(m_it.object_iterator != m_object->m_value.object->end());
+                assert(m_it.object_iterator != m_handle->m_value.object->end());
                 return m_it.object_iterator->second;
             }
 
             case value_t::array:
             {
-                assert(m_it.array_iterator != m_object->m_value.array->end());
+                assert(m_it.array_iterator != m_handle->m_value.array->end());
                 return *m_it.array_iterator;
             }
 
@@ -3810,7 +3810,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
             {
                 if (JSON_LIKELY(m_it.primitive_iterator.is_begin()))
                 {
-                    return *m_object;
+                    return *m_handle;
                 }
 
                 JSON_THROW(invalid_iterator::create(214, "cannot get value"));
@@ -3820,23 +3820,23 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief dereference the iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     pointer operator->() const
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
-                assert(m_it.object_iterator != m_object->m_value.object->end());
+                assert(m_it.object_iterator != m_handle->m_value.object->end());
                 return &(m_it.object_iterator->second);
             }
 
             case value_t::array:
             {
-                assert(m_it.array_iterator != m_object->m_value.array->end());
+                assert(m_it.array_iterator != m_handle->m_value.array->end());
                 return &*m_it.array_iterator;
             }
 
@@ -3844,7 +3844,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
             {
                 if (JSON_LIKELY(m_it.primitive_iterator.is_begin()))
                 {
-                    return m_object;
+                    return m_handle;
                 }
 
                 JSON_THROW(invalid_iterator::create(214, "cannot get value"));
@@ -3854,7 +3854,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief post-increment (it++)
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl operator++(int)
     {
@@ -3865,13 +3865,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief pre-increment (++it)
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl& operator++()
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
@@ -3897,7 +3897,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief post-decrement (it--)
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl operator--(int)
     {
@@ -3908,13 +3908,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief pre-decrement (--it)
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl& operator--()
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
             {
@@ -3940,19 +3940,19 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: equal
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator==(const iter_impl& other) const
     {
         // if objects are not the same, the comparison is undefined
-        if (JSON_UNLIKELY(m_object != other.m_object))
+        if (JSON_UNLIKELY(m_handle != other.m_handle))
         {
             JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers"));
         }
 
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
                 return (m_it.object_iterator == other.m_it.object_iterator);
@@ -3967,7 +3967,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: not equal
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator!=(const iter_impl& other) const
     {
@@ -3976,19 +3976,19 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: smaller
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator<(const iter_impl& other) const
     {
         // if objects are not the same, the comparison is undefined
-        if (JSON_UNLIKELY(m_object != other.m_object))
+        if (JSON_UNLIKELY(m_handle != other.m_handle))
         {
             JSON_THROW(invalid_iterator::create(212, "cannot compare iterators of different containers"));
         }
 
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
                 JSON_THROW(invalid_iterator::create(213, "cannot compare order of object iterators"));
@@ -4003,7 +4003,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: less than or equal
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator<=(const iter_impl& other) const
     {
@@ -4012,7 +4012,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: greater than
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator>(const iter_impl& other) const
     {
@@ -4021,7 +4021,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  comparison: greater than or equal
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     bool operator>=(const iter_impl& other) const
     {
@@ -4030,13 +4030,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  add to iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl& operator+=(difference_type i)
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
                 JSON_THROW(invalid_iterator::create(209, "cannot use offsets with object iterators"));
@@ -4059,7 +4059,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  subtract from iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl& operator-=(difference_type i)
     {
@@ -4068,7 +4068,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  add to iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl operator+(difference_type i) const
     {
@@ -4079,7 +4079,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  addition of distance and iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     friend iter_impl operator+(difference_type i, const iter_impl& it)
     {
@@ -4090,7 +4090,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  subtract from iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     iter_impl operator-(difference_type i) const
     {
@@ -4101,13 +4101,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  return difference
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     difference_type operator-(const iter_impl& other) const
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
                 JSON_THROW(invalid_iterator::create(209, "cannot use offsets with object iterators"));
@@ -4122,13 +4122,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  access to successor
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     reference operator[](difference_type n) const
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        switch (m_object->m_type)
+        switch (m_handle->m_type)
         {
             case value_t::object:
                 JSON_THROW(invalid_iterator::create(208, "cannot use operator[] for object iterators"));
@@ -4143,7 +4143,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
             {
                 if (JSON_LIKELY(m_it.primitive_iterator.get_value() == -n))
                 {
-                    return *m_object;
+                    return *m_handle;
                 }
 
                 JSON_THROW(invalid_iterator::create(214, "cannot get value"));
@@ -4153,13 +4153,13 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  return the key of an object iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     typename object_t::key_type key() const
     {
-        assert(m_object != nullptr);
+        assert(m_handle != nullptr);
 
-        if (JSON_LIKELY(m_object->is_object()))
+        if (JSON_LIKELY(m_handle->is_object()))
         {
             return m_it.object_iterator->first;
         }
@@ -4169,7 +4169,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
     /*!
     @brief  return the value of an iterator
-    @pre The iterator is initialized; i.e. `m_object != nullptr`.
+    @pre The iterator is initialized; i.e. `m_handle != nullptr`.
     */
     reference value() const
     {
@@ -4178,7 +4178,7 @@ class iter_impl : public std::iterator<std::bidirectional_iterator_tag, BasicJso
 
   private:
     /// associated JSON instance
-    pointer m_object = nullptr;
+    pointer m_handle = nullptr;
     /// the actual iterator of the associated instance
     internal_iterator<typename std::remove_const<BasicJsonType>::type> m_it = {};
 };
@@ -4223,9 +4223,9 @@ template<typename IteratorType> class iteration_proxy
         /// return key of the iterator
         std::string key() const
         {
-            assert(anchor.m_object != nullptr);
+            assert(anchor.m_handle != nullptr);
 
-            switch (anchor.m_object->type())
+            switch (anchor.m_handle->type())
             {
                 // use integer array index as key
                 case value_t::array:
@@ -8645,17 +8645,17 @@ class basic_json
                  std::is_same<InputIT, typename basic_json_t::const_iterator>::value, int>::type = 0>
     basic_json(InputIT first, InputIT last)
     {
-        assert(first.m_object != nullptr);
-        assert(last.m_object != nullptr);
+        assert(first.m_handle != nullptr);
+        assert(last.m_handle != nullptr);
 
         // make sure iterator fits the current value
-        if (JSON_UNLIKELY(first.m_object != last.m_object))
+        if (JSON_UNLIKELY(first.m_handle != last.m_handle))
         {
             JSON_THROW(invalid_iterator::create(201, "iterators are not compatible"));
         }
 
         // copy type from first iterator
-        m_type = first.m_object->m_type;
+        m_type = first.m_handle->m_type;
 
         // check if iterator range is complete for primitive values
         switch (m_type)
@@ -8682,31 +8682,31 @@ class basic_json
         {
             case value_t::number_integer:
             {
-                m_value.number_integer = first.m_object->m_value.number_integer;
+                m_value.number_integer = first.m_handle->m_value.number_integer;
                 break;
             }
 
             case value_t::number_unsigned:
             {
-                m_value.number_unsigned = first.m_object->m_value.number_unsigned;
+                m_value.number_unsigned = first.m_handle->m_value.number_unsigned;
                 break;
             }
 
             case value_t::number_float:
             {
-                m_value.number_float = first.m_object->m_value.number_float;
+                m_value.number_float = first.m_handle->m_value.number_float;
                 break;
             }
 
             case value_t::boolean:
             {
-                m_value.boolean = first.m_object->m_value.boolean;
+                m_value.boolean = first.m_handle->m_value.boolean;
                 break;
             }
 
             case value_t::string:
             {
-                m_value = *first.m_object->m_value.string;
+                m_value = *first.m_handle->m_value.string;
                 break;
             }
 
@@ -8726,7 +8726,7 @@ class basic_json
 
             default:
                 JSON_THROW(invalid_iterator::create(206, "cannot construct with iterators from " +
-                                                    std::string(first.m_object->type_name())));
+                                                    std::string(first.m_handle->type_name())));
         }
 
         assert_invariant();
@@ -10595,7 +10595,7 @@ class basic_json
     IteratorType erase(IteratorType pos)
     {
         // make sure iterator fits the current value
-        if (JSON_UNLIKELY(this != pos.m_object))
+        if (JSON_UNLIKELY(this != pos.m_handle))
         {
             JSON_THROW(invalid_iterator::create(202, "iterator does not fit current value"));
         }
@@ -10700,7 +10700,7 @@ class basic_json
     IteratorType erase(IteratorType first, IteratorType last)
     {
         // make sure iterator fits the current value
-        if (JSON_UNLIKELY(this != first.m_object or this != last.m_object))
+        if (JSON_UNLIKELY(this != first.m_handle or this != last.m_handle))
         {
             JSON_THROW(invalid_iterator::create(203, "iterators do not fit current value"));
         }
@@ -11860,7 +11860,7 @@ class basic_json
         if (JSON_LIKELY(is_array()))
         {
             // check if iterator pos fits to this JSON value
-            if (JSON_UNLIKELY(pos.m_object != this))
+            if (JSON_UNLIKELY(pos.m_handle != this))
             {
                 JSON_THROW(invalid_iterator::create(202, "iterator does not fit current value"));
             }
@@ -11913,7 +11913,7 @@ class basic_json
         if (JSON_LIKELY(is_array()))
         {
             // check if iterator pos fits to this JSON value
-            if (JSON_UNLIKELY(pos.m_object != this))
+            if (JSON_UNLIKELY(pos.m_handle != this))
             {
                 JSON_THROW(invalid_iterator::create(202, "iterator does not fit current value"));
             }
@@ -11966,18 +11966,18 @@ class basic_json
         }
 
         // check if iterator pos fits to this JSON value
-        if (JSON_UNLIKELY(pos.m_object != this))
+        if (JSON_UNLIKELY(pos.m_handle != this))
         {
             JSON_THROW(invalid_iterator::create(202, "iterator does not fit current value"));
         }
 
         // check if range iterators belong to the same JSON object
-        if (JSON_UNLIKELY(first.m_object != last.m_object))
+        if (JSON_UNLIKELY(first.m_handle != last.m_handle))
         {
             JSON_THROW(invalid_iterator::create(210, "iterators do not fit"));
         }
 
-        if (JSON_UNLIKELY(first.m_object == this))
+        if (JSON_UNLIKELY(first.m_handle == this))
         {
             JSON_THROW(invalid_iterator::create(211, "passed iterators may not belong to container"));
         }
@@ -12024,7 +12024,7 @@ class basic_json
         }
 
         // check if iterator pos fits to this JSON value
-        if (JSON_UNLIKELY(pos.m_object != this))
+        if (JSON_UNLIKELY(pos.m_handle != this))
         {
             JSON_THROW(invalid_iterator::create(202, "iterator does not fit current value"));
         }
@@ -12067,13 +12067,13 @@ class basic_json
         }
 
         // check if range iterators belong to the same JSON object
-        if (JSON_UNLIKELY(first.m_object != last.m_object))
+        if (JSON_UNLIKELY(first.m_handle != last.m_handle))
         {
             JSON_THROW(invalid_iterator::create(210, "iterators do not fit"));
         }
 
         // passed iterators must belong to objects
-        if (JSON_UNLIKELY(not first.m_object->is_object()))
+        if (JSON_UNLIKELY(not first.m_handle->is_object()))
         {
             JSON_THROW(invalid_iterator::create(202, "iterators first and last must point to objects"));
         }
@@ -12167,14 +12167,14 @@ class basic_json
         }
 
         // check if range iterators belong to the same JSON object
-        if (JSON_UNLIKELY(first.m_object != last.m_object))
+        if (JSON_UNLIKELY(first.m_handle != last.m_handle))
         {
             JSON_THROW(invalid_iterator::create(210, "iterators do not fit"));
         }
 
         // passed iterators must belong to objects
-        if (JSON_UNLIKELY(not first.m_object->is_object()
-                          or not first.m_object->is_object()))
+        if (JSON_UNLIKELY(not first.m_handle->is_object()
+                          or not first.m_handle->is_object()))
         {
             JSON_THROW(invalid_iterator::create(202, "iterators first and last must point to objects"));
         }

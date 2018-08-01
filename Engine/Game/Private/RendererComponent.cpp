@@ -23,6 +23,7 @@ DEFINE_COMPONENT_MAP(SkinnedRendererComponent);
 RendererComponent::RendererComponent()
   : m_meshDescriptor(nullptr)
   , m_configs(CMD_RENDERABLE_BIT | CMD_SHADOWS_BIT)
+  , m_bDirty(true)
 {
 }
 
@@ -166,12 +167,9 @@ void SkinnedRendererComponent::Update()
 
   const Matrix4* palette = nullptr;
   u32 paletteSz = 0;
-  if (m_pAnimComponent) {
-    AnimObject* obj = m_pAnimComponent->GetAnimObject();
-    if (obj) {
-      palette = obj->GetPalette();
-      paletteSz = obj->GetPaletteSz();
-    }
+  if (m_pAnimHandle) {
+    palette = m_pAnimHandle->GetPalette();
+    paletteSz = m_pAnimHandle->GetPaletteSz();
   }
   // Update descriptor joints.
   // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
@@ -214,5 +212,12 @@ void SkinnedRendererComponent::OnCleanUp()
   m_pJointDescriptor = nullptr;
 
   UNREGISTER_COMPONENT(SkinnedRendererComponent);
+}
+
+
+SkinnedRendererComponent::SkinnedRendererComponent()
+  : m_pAnimHandle(nullptr)
+  , m_pJointDescriptor(nullptr)
+{
 }
 } // Recluse

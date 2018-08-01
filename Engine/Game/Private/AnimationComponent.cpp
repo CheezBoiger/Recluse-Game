@@ -16,15 +16,15 @@ DEFINE_COMPONENT_MAP(AnimationComponent);
 
 void AnimationComponent::OnCleanUp()
 {
-  gAnimation().FreeAnimObject(m_object);
-  m_object = nullptr;
+  gAnimation().FreeAnimObject(m_handle);
+  m_handle = nullptr;
   UNREGISTER_COMPONENT(AnimationComponent);
 }
 
 
 void AnimationComponent::OnInitialize(GameObject* owner)
 {
-  m_object = gAnimation().CreateAnimObject(owner->GetId());
+  m_handle = gAnimation().CreateAnimObject(owner->GetId());
   REGISTER_COMPONENT(AnimationComponent, this);
 }
 
@@ -41,5 +41,18 @@ void AnimationComponent::Playback(const std::string& name)
   if (it == m_clips.end()) return;
   AnimClip* clip = it->second;
   m_currPlaybackClip = clip;
+}
+
+
+void AnimationComponent::Update()
+{
+  AnimSampler* pSampler = m_handle->GetSampler();
+  if (pSampler) {
+    AnimClipState* state = pSampler->GetClipState();
+    state->_fPlaybackRate = m_playbackRate;
+    if (m_currPlaybackClip != pSampler->GetClip()) {
+      pSampler->SetClip(m_currPlaybackClip);
+    }
+  }
 }
 } // Recluse

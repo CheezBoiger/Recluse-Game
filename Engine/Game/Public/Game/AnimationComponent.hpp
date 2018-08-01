@@ -20,7 +20,7 @@ class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
   AnimationComponent()
-    : m_object(nullptr)
+    : m_handle(nullptr)
     , m_playbackRate(1.0f)
     , m_currPlaybackClip(nullptr) { }
 
@@ -37,10 +37,10 @@ public:
   b32    PlayingBack(const std::string& name);
 
   // Set an animation sampler used for sampling animation.
-  void                      SetSampler(AnimSampler* sampler) { m_object->SetSampler(sampler); }
+  void                      SetSampler(AnimSampler* sampler) { m_handle->SetSampler(sampler); }
 
   // Get the sampler object that may be used by other animation components.
-  AnimSampler*              GetSampler() { return m_object->GetSampler(); }
+  AnimSampler*              GetSampler() { return m_handle->GetSampler(); }
 
   // TODO():
   virtual void              OnInitialize(GameObject* owner) override;
@@ -55,19 +55,10 @@ public:
   virtual void              Deserialize(IArchive& archive) override { }
 
   // TODO():
-  virtual void              Update() override {
-    AnimSampler* pSampler = m_object->GetSampler();
-    if (pSampler) {
-      AnimClipState* state = pSampler->GetClipState();
-      state->_fPlaybackRate = m_playbackRate;
-      if (m_currPlaybackClip != pSampler->GetClip()) {
-        pSampler->SetClip(m_currPlaybackClip);
-      }
-    }
-  }
+  virtual void              Update() override;
 
 
-  AnimObject*               GetAnimObject() { return m_object; }
+  AnimHandle*               GetAnimHandle() { return m_handle; }
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
@@ -79,7 +70,7 @@ public:
 private:
   std::map<std::string, AnimClip*>    m_clips;
   AnimClip*                           m_currPlaybackClip;
-  AnimObject*                         m_object;
+  AnimHandle*                         m_handle;
   r32                                 m_playbackRate;
 };
 } // Recluse

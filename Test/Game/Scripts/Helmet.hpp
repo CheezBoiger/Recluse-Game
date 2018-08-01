@@ -108,7 +108,7 @@ public:
 
     m_pAnim->Initialize(this);
     m_pAnim->SetSampler(gAnimation().CreateAnimSampler());
-    m_pRendererComponent->SetAnimationComponent(m_pAnim);
+    m_pRendererComponent->SetAnimationHandler(m_pAnim->GetAnimHandle());
     AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
     clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
     
@@ -182,7 +182,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE MONSTER
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -213,7 +213,7 @@ public:
     m_animationComponent.SetSampler(gAnimation().CreateAnimSampler());
 
     m_rendererComponent.AddMesh(model->meshes[0]);
-    m_rendererComponent.SetAnimationComponent(&m_animationComponent);
+    m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
 
     Material* rusted = nullptr;
     MaterialCache::Get("RustedSample", &rusted);
@@ -230,6 +230,7 @@ public:
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("busterDrone", &model);
+    ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
     }

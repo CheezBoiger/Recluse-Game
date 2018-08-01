@@ -641,7 +641,7 @@ skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Model& mode
   
   Skeleton::PushSkeleton(skeleton);
   
-  engineModel->skeletons.push_back(&Skeleton::GetSkeleton(skeleton._uuid));
+  engineModel->skeletons.push_back(Skeleton::GetSkeleton(skeleton._uuid));
   return skeleton._uuid;
 }
 

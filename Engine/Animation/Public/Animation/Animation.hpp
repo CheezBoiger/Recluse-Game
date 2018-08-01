@@ -13,18 +13,18 @@
 namespace Recluse {
 
 
-class AnimObject;
+class AnimHandle;
 class AnimSampler;
 struct AnimClip;
 struct AnimClipState;
 
 
-// AnimObject holds information about the sampler responsible for generating the matrix palette,
+// AnimHandle holds information about the sampler responsible for generating the matrix palette,
 // any blend jobs that may need to be incorporated to the animation poses, and handle to the game
 // object that is associated with it.
-class AnimObject {
+class AnimHandle {
 public:
-  AnimObject(uuid64 uuid)
+  AnimHandle(uuid64 uuid)
     : m_pSamplerRef(nullptr)
     , m_uuid(uuid)
     , m_paletteSz(0) { }
@@ -50,8 +50,8 @@ private:
 
 // Generalized blend job. Grabs two inputs to produce the final output.
 struct BlendJob {
-  Matrix4*        _pBasePalette;
-  Matrix4*        _pBlendPalette;
+  AnimSampler*    _pBaseSampler;
+  AnimSampler*    _pBlendSampler;
   Matrix4*        _pOutputPalette;
   u32             _blendSz;
   u32             _baseSz;
@@ -62,8 +62,8 @@ struct BlendJob {
 // A more fine grained blend job used to determine which joints are 
 // going to blend within two animations.
 struct LayeredBlendJob {
-  Matrix4*          _pBasePose;
-  Matrix4*          _pBlendPose;
+  AnimSampler*      _pBaseSampler;
+  AnimSampler*      _pBlendSampler;
   Matrix4*          _finalPose;
   r32               _blendWeight;
   r32               _blendDepth;
@@ -88,10 +88,10 @@ public:
   void          UpdateState(r64 dt);
 
   // Create an animation object with specified gameobject id.
-  AnimObject*   CreateAnimObject(uuid64 id);
+  AnimHandle*   CreateAnimObject(uuid64 id);
 
   // Free an animation object from the animation engine.
-  void          FreeAnimObject(AnimObject* pObj);
+  void          FreeAnimObject(AnimHandle* pObj);
 
   AnimSampler*  CreateAnimSampler();
 
@@ -101,7 +101,7 @@ private:
   // Samplers to sample current animations during game runtime.
   std::unordered_map<sampler_id_t, AnimSampler> m_samplers;
   // Handler to the animation objects generated currently in use.
-  std::unordered_map<uuid64, AnimObject*>       m_animObjects;
+  std::unordered_map<uuid64, AnimHandle*>       m_animObjects;
 
   // Number of blend jobs to be executed after animation stepping.
   std::vector<BlendJob>                         m_blendJobs;

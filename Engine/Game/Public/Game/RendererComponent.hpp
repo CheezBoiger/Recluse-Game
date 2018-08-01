@@ -17,7 +17,7 @@ class Renderer;
 class MaterialDescriptor;
 class MeshComponent;
 class JointDescriptor;
-class AnimationComponent;
+class AnimHandle;
 class Mesh;
 
 struct Primitive;
@@ -57,8 +57,8 @@ public:
   void                      ClearMeshes() { m_meshes.clear(); }
   Mesh*                     GetMesh(size_t idx) { return m_meshes[idx]; }
   u32                       GetMeshCount() const { return static_cast<u32>(m_meshes.size()); }
-  virtual void              SetAnimationComponent(AnimationComponent* anim) { }
-
+  virtual void              SetAnimationHandler(AnimHandle* anim) { }  
+  virtual AnimHandle*       GetAnimHandle() { return nullptr; }
 
 protected:
   virtual void              OnInitialize(GameObject* owner) override;
@@ -66,6 +66,7 @@ protected:
   virtual void              Update() override;
 
   void                      TriggerDirty() { m_bDirty = true; }
+
   MeshDescriptor*           m_meshDescriptor;
   std::vector<Mesh*>        m_meshes;
   b32                       m_bDirty;
@@ -78,6 +79,7 @@ protected:
 class SkinnedRendererComponent : public RendererComponent {
   RCOMPONENT(SkinnedRendererComponent)
 public:
+  SkinnedRendererComponent();
 
   virtual void              OnInitialize(GameObject* owner) override;
   virtual void              OnCleanUp() override;
@@ -85,11 +87,13 @@ public:
   virtual void              Serialize(IArchive& a) override { }
   virtual void              Deserialize(IArchive& a) override { }
   virtual b32               Skinned() const override { return true; }
-  virtual void              SetAnimationComponent(AnimationComponent* anim) { m_pAnimComponent = anim; }
   virtual JointDescriptor*  GetJointDescriptor() override { return m_pJointDescriptor; }
 
+  virtual void              SetAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
+  virtual AnimHandle*       GetAnimHandle() { return m_pAnimHandle; }
+
 protected:
-  JointDescriptor*          m_pJointDescriptor;
-  AnimationComponent*       m_pAnimComponent;
+  JointDescriptor*          m_pJointDescriptor;  
+  AnimHandle*               m_pAnimHandle;
 };
 } // Recluse
