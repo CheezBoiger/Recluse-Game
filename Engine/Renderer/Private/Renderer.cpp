@@ -68,6 +68,10 @@ Renderer::Renderer()
   , m_decalEngine(nullptr)
   , m_workGroupSize(0)
   , m_pClusterer(nullptr)
+  , m_usePreRenderSkybox(true)
+  , m_pEnvMaps(nullptr)
+  , m_pIrrMaps(nullptr)
+  , m_pBrdfLUTs(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
@@ -2419,19 +2423,16 @@ void Renderer::Build()
 }
 
 
-void Renderer::SetUpSkybox()
+void Renderer::UpdateSkyboxCubeMap()
 {
-  DescriptorSet* skyboxSet = m_pRhi->CreateDescriptorSet();
-  skybox_descriptorSetKey = skyboxSet;
-  DescriptorSetLayout* layout = skybox_setLayoutKey;
-
+  DescriptorSet* skyboxSet = skybox_descriptorSetKey;
   Texture* cubemap = m_pSky->GetCubeMap();
-  VkDescriptorImageInfo image = { };
+  VkDescriptorImageInfo image = {};
   image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   image.imageView = cubemap->View();
   image.sampler = m_pSky->GetSampler()->Handle();
 
-  VkWriteDescriptorSet write = { };
+  VkWriteDescriptorSet write = {};
   write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   write.descriptorCount = 1;
   write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -2439,8 +2440,19 @@ void Renderer::SetUpSkybox()
   write.dstBinding = 0;
   write.pImageInfo = &image;
 
-  skyboxSet->Allocate(m_pRhi->DescriptorPool(), layout);
   skyboxSet->Update(1, &write);
+}
+
+
+void Renderer::SetUpSkybox()
+{
+  DescriptorSet* skyboxSet = m_pRhi->CreateDescriptorSet();
+  skybox_descriptorSetKey = skyboxSet;
+  DescriptorSetLayout* layout = skybox_setLayoutKey;
+
+  skyboxSet->Allocate(m_pRhi->DescriptorPool(), layout);
+
+  UpdateSkyboxCubeMap();
 
   // Create skybox Commandbuffer.
   m_pSkyboxCmdBuffer = m_pRhi->CreateCommandBuffer();

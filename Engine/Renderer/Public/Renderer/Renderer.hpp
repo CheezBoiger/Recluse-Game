@@ -94,19 +94,6 @@ public:
   // Callback used for EngineModule<> set up.
   void              OnShutDown() override;
 
-  // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
-  // a full update on the scene as a result of an application change, such as a window change. 
-  // This will effectively stall the gpu if called too often. If you are adding/removing objects 
-  // into a scene, use BuildAsync() instead.
-  void              Build();
-  
-  // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process
-  // by using temporary commandbuffers and building them instead. When done, they will replace old 
-  // commandbuffers. Use only if you need to update the scene as a result of dynamic objects/materials being
-  // added/removed to/from the scene. Do not use this call if there is a window change or 
-  // application change, as it will result warnings from the renderer!
-  void              BuildAsync();
-
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
 
@@ -143,6 +130,7 @@ public:
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
 
+  // Create a UI descriptor.
   UIDescriptor*     CreateUIDescriptor();
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
@@ -180,11 +168,15 @@ public:
   // Frees up joint descriptor objects.
   void              FreeJointDescriptor(JointDescriptor* descriptor);
 
+  // Frees up the UI descriptor object.
   void              FreeUIDescriptor(UIDescriptor* descriptor);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
-  TextureCube*      BakeEnvironmentMap(const Vector3& position);
+  // Takes the position of where to bake the cubemap in, along with the size x,y of the cubemap
+  // dimensions for each texture surface. When Calling this function, will render all objects currently
+  // in the render queue.
+  TextureCube*      BakeEnvironmentMap(const Vector3& position, u32 x = 512u, u32 y = 512u);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
   // to render our mesh object with fast global illumination. This generates an irradiance
@@ -194,6 +186,9 @@ public:
   // Offline reflections probe baking. We can effectively use this probe in the scene to render 
   // our mesh object. Generates a specular image based prefilter map.
   ReflectionProbe*  BakeReflectionProbe(const TextureCube* envmap);
+
+  // Generate a BRDF LUT with given lookup size. Defaults to 512x512.
+  Texture2D*        GenerateBRDFLUT(u32 x = 512u, u32 y = 512u);
 
   // Window reference.
   Window*           WindowRef() { return m_pWindow; }
@@ -230,10 +225,27 @@ public:
   // Set up enviroment maps for this renderer to use for look up.
   void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
 
+  // Get the name of the device used for rendering graphics and compute.
   const char*       GetDeviceName();
 
   // Adjusts bloom strength of the renderer.
   void              AdjustHDRSettings(const ParamsHDR& hdrSettings);
+
+  // Set up and override Skybox cubemap for the renderer.
+  void              SetSkyboxCubeMap(TextureCube* cubemap);
+
+  // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
+  // a full update on the scene as a result of an application change, such as a window change. 
+  // This will effectively stall the gpu if called too often. If you are adding/removing objects 
+  // into a scene, use BuildAsync() instead.
+  void              Build();
+
+  // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process
+  // by using temporary commandbuffers and building them instead. When done, they will replace old 
+  // commandbuffers. Use only if you need to update the scene as a result of dynamic objects/materials being
+  // added/removed to/from the scene. Do not use this call if there is a window change or 
+  // application change, as it will result warnings from the renderer!
+  void              BuildAsync();
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
@@ -245,6 +257,7 @@ protected:
   void              EndFrame();
 
 private:
+
   void              SetUpFrameBuffers();
   void              SetUpGraphicsPipelines();
   void              SetUpDescriptorSetLayouts();
@@ -277,6 +290,7 @@ private:
   void              CleanUpForwardPBR();
   void              CleanUpHDR(b32 fullCleanup);
   void              CleanUpPBR();
+  void              UpdateSkyboxCubeMap();
   void              CleanUpSkybox();
   void              UpdateSceneDescriptors();
   void              RenderOverlay();
@@ -345,6 +359,13 @@ private:
     Semaphore*                  _semaphore;
   };
 
+  struct {
+    Texture2D*                    _envmap;
+    Texture2D*                    _irradiance;
+    Texture2D*                    _specular;
+    Texture2D*                    _brdfLUT;
+  } m_skybox;
+
   CommandBuffer*        m_pSkyboxCmdBuffer;
   CommandBuffer*        m_pFinalCommandBuffer;
   Fence*                m_cpuFence;
@@ -359,16 +380,18 @@ private:
   Clusterer*            m_pClusterer;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;
+  Texture2DArray*       m_pBrdfLUTs;
   DescriptorSet*        m_pGlobalIllumination;
   u32                   m_CurrCmdBufferIdx;
   u32                   m_TotalCmdBuffers;
   u32                   m_workGroupSize;
 
-  b32                   m_Rendering : 1;
-  b32                   m_Initialized : 1;
-  b32                   m_AntiAliasing : 1; 
-  b32                   m_Minimized : 1;
-  b32                   m_multithreaded : 1;
+  b32                   m_Rendering           : 1;
+  b32                   m_Initialized         : 1;
+  b32                   m_AntiAliasing        : 1; 
+  b32                   m_Minimized           : 1;
+  b32                   m_multithreaded       : 1;
+  b32                   m_usePreRenderSkybox  : 1;
 };
 
 Renderer&           gRenderer();
