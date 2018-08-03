@@ -24,8 +24,8 @@ class TextureCube;
 class FrameBuffer;
 
 enum MaterialUpdateBits {
-  MATERIAL_BUFFER_UPDATE = (1 << 0),
-  MATERIAL_DESCRIPTOR_UPDATE = (1 << 1)
+  MATERIAL_BUFFER_UPDATE_BIT = (1 << 0),
+  MATERIAL_DESCRIPTOR_UPDATE_BIT = (1 << 1)
 };
 
 
@@ -66,7 +66,7 @@ public:
   void            SetEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
   void            SetTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
 
-  void            PushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE) { m_bNeedsUpdate |= updateBits; }
+  void            PushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE_BIT) { m_bNeedsUpdate |= updateBits; }
   DescriptorSet*          CurrMaterialSet() { return m_materialSet; }
 
   MaterialBuffer* Data() { return &m_MaterialData; }

@@ -78,7 +78,7 @@ void MaterialDescriptor::Initialize(VulkanRHI* pRhi)
 
 void MaterialDescriptor::Update(VulkanRHI* pRhi)
 {
-  if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE)) {
+  if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
     Sampler* sampler = DefaultSampler2DKey;
     if (m_pSampler) sampler = m_pSampler->Handle();
@@ -192,7 +192,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     //SwapDescriptorSet();
   }
   
-  if ((m_bNeedsUpdate & MATERIAL_BUFFER_UPDATE)) {
+  if ((m_bNeedsUpdate & MATERIAL_BUFFER_UPDATE_BIT)) {
     R_ASSERT(m_pBuffer->Mapped(), "Material buffer was not mapped!");
     memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
 

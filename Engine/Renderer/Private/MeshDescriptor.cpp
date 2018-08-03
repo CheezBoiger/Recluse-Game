@@ -58,7 +58,7 @@ void MeshDescriptor::Initialize(VulkanRHI* pRhi)
 void MeshDescriptor::Update(VulkanRHI* pRhi)
 {
   // Mesh
-  if ((m_bNeedsUpdate & MESH_DESCRIPTOR_UPDATE)) {
+  if ((m_bNeedsUpdate & MESH_DESCRIPTOR_UPDATE_BIT)) {
     VkDescriptorBufferInfo objBufferInfo = {};
     objBufferInfo.buffer = m_pObjectBuffer->NativeBuffer();
     objBufferInfo.offset = 0;
@@ -75,7 +75,7 @@ void MeshDescriptor::Update(VulkanRHI* pRhi)
     //SwapDescriptorSet();
   }
 
-  if ((m_bNeedsUpdate & MESH_BUFFER_UPDATE)) {
+  if ((m_bNeedsUpdate & MESH_BUFFER_UPDATE_BIT)) {
     R_ASSERT(m_pObjectBuffer->Mapped(), "Object buffer was not mapped.");
     memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
 
@@ -147,12 +147,12 @@ void JointDescriptor::Initialize(VulkanRHI* pRhi)
 
 void JointDescriptor::Update(VulkanRHI* pRhi)
 {
-  if ((m_bNeedsUpdate & JOINT_DESCRIPTOR_UPDATE)) {
+  if ((m_bNeedsUpdate & JOINT_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rDebug, "Updating Joint Sets.\n");
     UpdateJointSets();
   }
 
-  if ((m_bNeedsUpdate & JOINT_BUFFER_UPDATE)) {
+  if ((m_bNeedsUpdate & JOINT_BUFFER_UPDATE_BIT)) {
     R_ASSERT(m_pJointsBuffer->Mapped(), "Joint buffer was not mapped.!");
     memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointBuffer));
 

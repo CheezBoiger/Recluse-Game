@@ -77,7 +77,7 @@ void RendererComponent::OnInitialize(GameObject* owner)
 { 
   m_meshDescriptor = gRenderer().CreateMeshDescriptor();
   m_meshDescriptor->Initialize(gRenderer().RHI());
-  m_meshDescriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE);
+  m_meshDescriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
 
   REGISTER_COMPONENT(RendererComponent, this);
 }
@@ -139,7 +139,7 @@ void RendererComponent::Update()
   N[3][3] = 1.0f;
   renderData->_Model = model;
   renderData->_NormalMatrix = N.Inverse().Transpose();
-  m_meshDescriptor->PushUpdate(MESH_BUFFER_UPDATE);
+  m_meshDescriptor->PushUpdate(MESH_BUFFER_UPDATE_BIT);
 }
 
 
@@ -174,7 +174,7 @@ void SkinnedRendererComponent::Update()
   // Update descriptor joints.
   // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
   memcpy(pJointBuffer->_mJoints, palette, paletteSz * sizeof(Matrix4));
-  m_pJointDescriptor->PushUpdate(JOINT_BUFFER_UPDATE);
+  m_pJointDescriptor->PushUpdate(JOINT_BUFFER_UPDATE_BIT);
   RendererComponent::Update();
 }
 
@@ -194,8 +194,8 @@ void SkinnedRendererComponent::OnInitialize(GameObject* owner)
   m_meshDescriptor->Initialize(gRenderer().RHI());
   m_pJointDescriptor->Initialize(gRenderer().RHI());
 
-  m_meshDescriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE);
-  m_pJointDescriptor->PushUpdate(JOINT_DESCRIPTOR_UPDATE);
+  m_meshDescriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
+  m_pJointDescriptor->PushUpdate(JOINT_DESCRIPTOR_UPDATE_BIT);
 
   // Set joints to true, since this renderer component is skinned.
   m_meshDescriptor->ObjectData()->_HasJoints = true;

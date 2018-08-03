@@ -17,10 +17,10 @@ class DescriptorSet;
 
 
 enum MeshUpdatBits { 
-  MESH_BUFFER_UPDATE = (1 << 0),
-  JOINT_BUFFER_UPDATE = (1 << 1),
-  MESH_DESCRIPTOR_UPDATE = (1 << 2),   
-  JOINT_DESCRIPTOR_UPDATE = (1 << 3),
+  MESH_BUFFER_UPDATE_BIT = (1 << 0),
+  JOINT_BUFFER_UPDATE_BIT = (1 << 1),
+  MESH_DESCRIPTOR_UPDATE_BIT = (1 << 2),   
+  JOINT_DESCRIPTOR_UPDATE_BIT = (1 << 3),
 };
 
 
@@ -54,7 +54,7 @@ public:
   void  Update(VulkanRHI* pRhi);
 
   void          SetVisible(b32 enable) { m_Visible = enable; }
-  void          PushUpdate(b32 updateBits = MESH_BUFFER_UPDATE) 
+  void          PushUpdate(b32 updateBits = MESH_BUFFER_UPDATE_BIT) 
                   { m_bNeedsUpdate |= updateBits; }
 
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
@@ -94,7 +94,7 @@ public:
   JointBuffer*  JointData() { return &m_jointsData; }
   Buffer*       NativeJointBuffer() { return m_pJointsBuffer; }
   DescriptorSet*  CurrJointSet() { return m_jointSet; }
-  void          PushUpdate(b32 bits = JOINT_BUFFER_UPDATE) 
+  void          PushUpdate(b32 bits = JOINT_BUFFER_UPDATE_BIT) 
     { m_bNeedsUpdate |= bits; }
 
   void          UpdateJointSets();
