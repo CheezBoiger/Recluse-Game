@@ -13,7 +13,7 @@ void Material::Initialize()
 {
   m_pDesc = gRenderer().CreateMaterialDescriptor();
   m_pDesc->Initialize(gRenderer().RHI());
-  m_pDesc->PushUpdate(MATERIAL_BUFFER_UPDATE | MATERIAL_BUFFER_UPDATE);
+  m_pDesc->PushUpdate(MATERIAL_BUFFER_UPDATE | MATERIAL_DESCRIPTOR_UPDATE);
 }
 
 
