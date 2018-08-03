@@ -20,9 +20,7 @@ class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
   AnimationComponent()
-    : m_handle(nullptr)
-    , m_playbackRate(1.0f)
-    , m_currPlaybackClip(nullptr) { }
+    : m_handle(nullptr) { } 
 
   // Add an animation clip to the component to playback in the future.
   void AddClip(AnimClip* clip, const std::string& name);
@@ -35,12 +33,6 @@ public:
   
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
-
-  // Set an animation sampler used for sampling animation.
-  void                      SetSampler(AnimSampler* sampler) { m_handle->SetSampler(sampler); }
-
-  // Get the sampler object that may be used by other animation components.
-  AnimSampler*              GetSampler() { return m_handle->GetSampler(); }
 
   // TODO():
   virtual void              OnInitialize(GameObject* owner) override;
@@ -62,15 +54,13 @@ public:
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      SetPlaybackRate(r32 rate) { m_playbackRate = rate; }
+  void                      SetPlaybackRate(r32 rate) { m_handle->_playbackRate = rate; }
 
   // Get the current playback rate.
-  r32                       GetPlaybackRate() const { return m_playbackRate; }
+  r32                       GetPlaybackRate() const { return m_handle->_playbackRate; }
 
 private:
   std::map<std::string, AnimClip*>    m_clips;
-  AnimClip*                           m_currPlaybackClip;
   AnimHandle*                         m_handle;
-  r32                                 m_playbackRate;
 };
 } // Recluse

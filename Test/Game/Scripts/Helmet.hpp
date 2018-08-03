@@ -107,14 +107,13 @@ public:
     m_factor = 0.01f;
 
     m_pAnim->Initialize(this);
-    m_pAnim->SetSampler(gAnimation().CreateAnimSampler());
     m_pRendererComponent->SetAnimationHandler(m_pAnim->GetAnimHandle());
     AnimClip* clip = static_cast<ModelLoader::AnimModel*>(model)->animations[0];
     clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
     
     m_pAnim->AddClip(clip, "InitialPose");
     m_pAnim->Playback("InitialPose");
-    m_pAnim->SetPlaybackRate(0.6f);
+    m_pAnim->SetPlaybackRate(-1.0f);
   }
 
   // Updating game logic...
@@ -150,7 +149,11 @@ public:
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_3)) {
-      ;
+      m_pAnim->SetPlaybackRate(m_pAnim->GetPlaybackRate() - tick * 0.3f);
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_4)) {
+      m_pAnim->SetPlaybackRate(m_pAnim->GetPlaybackRate() + tick * 0.3f);
     }
 
     // Make emission glow.
@@ -182,7 +185,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE MONSTER
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -210,7 +213,6 @@ public:
     clip->_skeletonId = m_meshComponent.MeshRef()->GetSkeletonReference();
     m_animationComponent.AddClip(clip, "WalkPose");
     m_animationComponent.Playback("WalkPose");  
-    m_animationComponent.SetSampler(gAnimation().CreateAnimSampler());
 
     m_rendererComponent.AddMesh(model->meshes[0]);
     m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());

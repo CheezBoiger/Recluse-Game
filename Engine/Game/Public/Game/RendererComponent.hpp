@@ -17,11 +17,10 @@ class Renderer;
 class MaterialDescriptor;
 class MeshComponent;
 class JointDescriptor;
-class AnimHandle;
 class Mesh;
 
 struct Primitive;
-
+struct AnimHandle;
 
 // Renderer Component, which holds static mesh object info for rendering
 // data. Supports multiple meshes within one renderer component.

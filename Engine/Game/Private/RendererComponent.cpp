@@ -168,8 +168,8 @@ void SkinnedRendererComponent::Update()
   const Matrix4* palette = nullptr;
   u32 paletteSz = 0;
   if (m_pAnimHandle) {
-    palette = m_pAnimHandle->GetPalette();
-    paletteSz = m_pAnimHandle->GetPaletteSz();
+    palette = m_pAnimHandle->_finalPalette;
+    paletteSz = m_pAnimHandle->_paletteSz;
   }
   // Update descriptor joints.
   // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.

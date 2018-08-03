@@ -13,7 +13,7 @@
 namespace Recluse {
 
 
-class AnimHandle;
+struct AnimHandle;
 class AnimSampler;
 struct AnimClip;
 struct AnimClipState;
@@ -22,51 +22,62 @@ struct AnimClipState;
 // AnimHandle holds information about the sampler responsible for generating the matrix palette,
 // any blend jobs that may need to be incorporated to the animation poses, and handle to the game
 // object that is associated with it.
-class AnimHandle {
-public:
+struct AnimHandle {
   AnimHandle(uuid64 uuid)
-    : m_pSamplerRef(nullptr)
-    , m_uuid(uuid)
-    , m_paletteSz(0) { }
+    : _uuid(uuid)
+    , _paletteSz(64)
+    , _playbackRate(1.0f) { }
+
+  Matrix4           _finalPalette[64];
+  u32               _paletteSz;
+  r32               _playbackRate;
+  uuid64            _uuid;
+};
 
 
-  AnimSampler*      GetSampler() { return m_pSamplerRef; }
-  void              SetSampler(AnimSampler* sampler) { if (sampler) m_pSamplerRef = sampler; }
+enum AnimJobType {
+  ANIM_JOB_TYPE_SAMPLE,
+  ANIM_JOB_TYPE_BLEND,
+  ANIM_JOB_TYPE_LAYERED_BLEND
+};
 
-  Matrix4*          GetPalette() { return m_finalPalette; }
-  u32               GetPaletteSz() { return m_paletteSz; }
-  
-  uuid64            GetUUID() const { return m_uuid; }
 
-  void              Update();
+struct AnimJobSubmitInfo {
+  AnimJobType _type;
+  AnimHandle* _pHandle;
+  AnimClip*   _pBaseClip;
+  AnimClip*   _pBlendClip;
+  r32         _blendWeight;
+  r32         _blendDepth;
+};
 
-private:
-  Matrix4           m_finalPalette[64];
-  u32               m_paletteSz;
-  AnimSampler*      m_pSamplerRef;
-  uuid64            m_uuid;
+
+struct AnimJob {
+  AnimHandle*   _pHandle;
+  AnimClip*     _pClip;
+  AnimClipState _clipState;
 };
 
 
 // Generalized blend job. Grabs two inputs to produce the final output.
-struct BlendJob {
-  AnimSampler*    _pBaseSampler;
-  AnimSampler*    _pBlendSampler;
-  Matrix4*        _pOutputPalette;
-  u32             _blendSz;
-  u32             _baseSz;
+struct BlendJob : public AnimJob {
+  AnimClip*       _pBlendClip;
+  AnimClipState   _blendClipState;
   r32             _dt;              // dT mix for the base and blending palettes.
 };
 
 
 // A more fine grained blend job used to determine which joints are 
 // going to blend within two animations.
-struct LayeredBlendJob {
-  AnimSampler*      _pBaseSampler;
-  AnimSampler*      _pBlendSampler;
-  Matrix4*          _finalPose;
+struct LayeredBlendJob : public AnimJob {
+  AnimClip*         _pBlendClip;
+  AnimClipState     _blendClipState;
   r32               _blendWeight;
   r32               _blendDepth;
+};
+
+
+struct ClipState {
 };
 
 
@@ -76,7 +87,8 @@ class Animation : public EngineModule<Animation> {
   static const size_t     kMaxAnimationThreadCount;
 public:
   Animation() 
-    : m_workers(kMaxAnimationThreadCount) { }
+    : m_workers(kMaxAnimationThreadCount)
+    , m_currSampleJobCount(0) { }
 
   // On startup event.
   void          OnStartUp() override;
@@ -88,20 +100,42 @@ public:
   void          UpdateState(r64 dt);
 
   // Create an animation object with specified gameobject id.
-  AnimHandle*   CreateAnimObject(uuid64 id);
+  AnimHandle*   CreateAnimHandle(uuid64 id);
 
   // Free an animation object from the animation engine.
-  void          FreeAnimObject(AnimHandle* pObj);
+  void          FreeAnimHandle(AnimHandle* pObj);
 
-  AnimSampler*  CreateAnimSampler();
+  void          SubmitJob(const AnimJobSubmitInfo& info);
 
-  void          FreeAnimSampler(AnimSampler* sampler);
+protected:
+  
+  void          DoSampleJob(AnimJob& job, r32 gt);
+  void          DoBlendJob(BlendJob& job, r32 gt);
+  void          DoLayeredBlendJob(LayeredBlendJob& job, r32 gt);
+
+  void          PushSampleJob(AnimJob& animJob) { m_sampleJobs.push_back(animJob); }
+  void          PushBlendJob(BlendJob& blendJob) { m_blendJobs.push_back(blendJob); }
+
+
+  void          ApplySkeletonPose(AnimHandle* pHandle, Skeleton* pSkeleton);
 
 private:
-  // Samplers to sample current animations during game runtime.
-  std::unordered_map<sampler_id_t, AnimSampler> m_samplers;
+
+  Matrix4          LinearInterpolate(JointPose* currPose, JointPose* nextPose, r32 currTime, r32 nextTime, r32 t);
+
   // Handler to the animation objects generated currently in use.
   std::unordered_map<uuid64, AnimHandle*>       m_animObjects;
+
+  // Handles to final palattes, added when a job is pushed to this animation engine.
+  std::vector<AnimHandle*>                      m_currHandles;
+
+  std::mutex                                    m_sampleJobMutex;
+  std::mutex                                    m_blendJobMutex;
+  std::mutex                                    m_layeredJobMutex;
+
+  // Sample jobs currently in place.
+  std::vector<AnimJob>                          m_sampleJobs;
+  u32                                           m_currSampleJobCount;
 
   // Number of blend jobs to be executed after animation stepping.
   std::vector<BlendJob>                         m_blendJobs;

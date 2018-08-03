@@ -15,10 +15,12 @@ typedef i32      skeleton_uuid_t;
 // Joint represents the overall skeleton pose of our model. 
 // this information defines how the rig of an animation is posed at rest.
 struct Joint {
+  static const u8 kNoParentId = 0xff;
+
   Matrix4       _InvBindPose;     // Bind pose transform of this joint.
   std::string   _name;            // name of the joint.
   u8            _iParent;         // Joint parent, represented as an id in byte form.
-  DEBUG_OP(u8            _id);              // node id test.
+  DEBUG_OP(u8   _id);             // node id test.
 };
 
 
