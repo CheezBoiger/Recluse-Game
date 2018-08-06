@@ -68,6 +68,13 @@ out FRAG_IN {
 } frag_in;
 
 
+#if defined(RENDER_ENV_MAP)
+layout (push_constant) uniform Camera {
+  mat4 viewProj;
+} viewer;
+#endif
+
+
 void main()
 {
   vec4 worldPosition = position;
@@ -78,6 +85,9 @@ void main()
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;
   frag_in.normal = normalize(objBuffer.normalMatrix * normal).xyz;
-  
+#if !defined(RENDER_ENV_MAP)
   gl_Position = gWorldBuffer.viewProj * worldPosition;
+#else
+  gl_Position = viewer.viewProj * worldPosition;
+#endif
 }

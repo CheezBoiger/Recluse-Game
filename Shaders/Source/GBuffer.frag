@@ -61,6 +61,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
+  vec4  anisoSpec;
   float opaque;
   float metal;
   float rough;
@@ -133,15 +134,16 @@ struct GBuffer
   float roughness;
   float metallic;
   float ao;
+  vec4 anisoSpec;
 };
 
 
 void WriteGBuffer(GBuffer gbuffer)
 {
   rt0 = vec4(gbuffer.albedo, gbuffer.ao);
-  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, 0.0);
-  rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, 0.0);
-  rt3 = vec4(gbuffer.emission, 1.0);
+  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, gbuffer.anisoSpec.x);
+  rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, gbuffer.anisoSpec.y);
+  rt3 = vec4(gbuffer.emission, 0.0);
 }
 #else
 //
@@ -204,6 +206,7 @@ void main()
   gbuffer.metallic = fragMetallic;
   gbuffer.roughness = fragRoughness;
   gbuffer.ao = fragAO;
+  gbuffer.anisoSpec = matBuffer.anisoSpec;
   
   WriteGBuffer(gbuffer);
 #else

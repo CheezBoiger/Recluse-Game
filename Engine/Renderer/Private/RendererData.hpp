@@ -2,9 +2,12 @@
 #pragma once 
 
 #include "Core/Types.hpp"
+#include "Core/Math/Matrix4.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "UserParams.hpp"
 
+
+#include <array>
 
 #define GBUFFER_ALBEDO_FORMAT             VK_FORMAT_R8G8B8A8_UNORM
 #define GBUFFER_NORMAL_FORMAT             VK_FORMAT_R8G8B8A8_UNORM
@@ -33,6 +36,16 @@ class DescriptorSetLayout;
 class DescriptorSet;
 class Buffer;
 class HDR;
+
+// Get our view matrices.
+// Index                Face
+// 0                    POSITIVE_X
+// 1                    NEGATIVE_X
+// 2                    POSITIVE_Y
+// 3                    NEGATIVE_Y
+// 4                    POSITIVE_Z
+// 5                    NEGATIVE_Z
+extern std::array<Matrix4, 6> kViewMatrices;
 
 extern std::string ShadersPath;
 
@@ -90,8 +103,7 @@ extern GraphicsPipeline* pbr_staticForwardPipeline_LR;
 extern GraphicsPipeline* pbr_staticForwardPipeline_NoLR;
 extern RenderPass*      pbr_forwardRenderPass;
 
-extern GraphicsPipeline* aa_PipelineKey;
-extern FrameBuffer* aa_FrameBufferKey;
+extern ComputePipeline* aa_PipelineKey;
 extern DescriptorSetLayout* aa_DescLayoutKey;   // Depends on the aliasing technique.
 extern Texture* aa_outputTextureKey;
 
@@ -173,8 +185,15 @@ extern GraphicsPipeline* output_pipelineKey;
 
 extern char const* kDefaultShaderEntryPointStr;
 
-namespace RendererPass {
+extern GraphicsPipeline*  envMap_pbrPipeline;
+extern FrameBuffer*       envMap_frameBuffer;
+extern RenderPass*        envMap_renderPass;
+extern Texture*           envMap_texture;
 
+void SetUpRenderData();
+void CleanUpRenderData();
+
+namespace RendererPass {
 
 void LoadShader(const std::string& Filename, Shader* S);
 

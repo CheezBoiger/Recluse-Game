@@ -52,6 +52,7 @@ class SkyRenderer;
 class DecalEngine;
 class HDR;
 class Clusterer;
+class BakeIBL;
 
 
 typedef u32 renderer_key_t;
@@ -377,6 +378,7 @@ private:
   DecalEngine*          m_decalEngine;
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
+  BakeIBL*              m_pBakeIbl;
   Clusterer*            m_pClusterer;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;

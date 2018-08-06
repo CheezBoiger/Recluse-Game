@@ -34,13 +34,13 @@ MaterialDescriptor::MaterialDescriptor()
   m_MaterialData._HasEmissive = false;
   m_MaterialData._HasMetallic = false;
   m_MaterialData._HasNormal = false;
+  m_MaterialData._AnisoSpec = Vector4(0.01f, 0.01f, 0.0f, 0.0f); 
   m_MaterialData._emissiveFactor = 0.0f;
   m_MaterialData._HasRoughness = false;
   m_MaterialData._IsTransparent = false;
   m_MaterialData._metalFactor = 0.0f;
   m_MaterialData._roughFactor = 1.0f;
   m_MaterialData._Pad = 0;
-
   m_materialSet = nullptr;
 }
 

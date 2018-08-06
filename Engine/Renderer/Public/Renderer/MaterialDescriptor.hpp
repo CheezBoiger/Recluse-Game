@@ -31,6 +31,7 @@ enum MaterialUpdateBits {
 
 struct MaterialBuffer {
   Vector4 _Color;          // object base color.
+  Vector4 _AnisoSpec;       // Anisotropy control.
   r32     _Opacity;         // opacity [0.0, 1.0]
   r32     _metalFactor;      // object base metalness [0.0, 1.0]
   r32     _roughFactor;      // object base roughness [0.0, 1.0]

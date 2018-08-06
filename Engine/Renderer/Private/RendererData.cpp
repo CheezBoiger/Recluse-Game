@@ -21,6 +21,9 @@ namespace Recluse {
 
 std::string ShadersPath             = "Shaders";
 
+
+std::array<Matrix4, 6> kViewMatrices;
+
 Texture* DefaultTextureKey          = nullptr;
 Sampler* DefaultSampler2DKey        = nullptr;
 
@@ -87,10 +90,10 @@ GraphicsPipeline* skybox_pipelineKey           = nullptr;
 DescriptorSet* skybox_descriptorSetKey      = nullptr;
 DescriptorSetLayout* skybox_setLayoutKey          = nullptr;
 
-GraphicsPipeline* aa_PipelineKey                = nullptr;
-FrameBuffer* aa_FrameBufferKey             = nullptr;
+ComputePipeline* aa_PipelineKey                = nullptr;
 DescriptorSetLayout* aa_DescLayoutKey              = nullptr;
-Texture* aa_outputTextureKey           = nullptr;
+DescriptorSet* aa_descSet                     = nullptr;
+Texture* aa_outTexture                        = nullptr;
 
 std::string renderquad_vertStr            = "RenderQuad.vert.spv";
 std::string pbr_forwardVertStrLR            = "ForwardPBR.vert.spv";
@@ -98,7 +101,7 @@ std::string pbr_forwardVertStrLR            = "ForwardPBR.vert.spv";
 // Must check with the renderer specs.
 std::string aa_fragStr                    = "";
 
-std::string fxaa_fragStr                  = "FXAA.frag.spv";
+std::string fxaa_fragStr                  = "FXAA.comp.spv";
 std::string smaa_fragStr                  = "SMAA.frag.spv";
 
 Sampler* ScaledSamplerKey            = nullptr;
@@ -163,8 +166,32 @@ RenderPass* final_renderPass = nullptr;
 DescriptorSet*  output_descSetKey = nullptr;
 GraphicsPipeline* output_pipelineKey = nullptr;
 
+GraphicsPipeline* envMap_pbrPipeline = nullptr;
+FrameBuffer*       envMap_frameBuffer = nullptr;
+RenderPass*        envMap_renderPass = nullptr;
+Texture*           envMap_texture = nullptr;
+
 // Default entry point on shaders.
 char const* kDefaultShaderEntryPointStr = "main";
+
+
+void SetUpRenderData()
+{
+  kViewMatrices = {
+    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
+    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
+    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
+    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
+    Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::BACK),
+    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::UP), Radians(180.0f), Vector3::FRONT)
+  };
+}
+
+
+void CleanUpRenderData()
+{
+
+}
 
 
 namespace RendererPass {
@@ -1032,8 +1059,28 @@ void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
   std::string aaFrag = "";
   switch (aa) {
     case AA_FXAA_2x: aaFrag = fxaa_fragStr; break;
-    default: aaFrag = ""; break;
+    default: return;
   };
+
+  VkPipelineLayoutCreateInfo layoutCi{};
+  layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  
+  Shader* shader = Rhi->CreateShader();
+  LoadShader(aaFrag, shader);
+
+  VkPipelineShaderStageCreateInfo shaderStageCi{};
+  shaderStageCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStageCi.module = shader->Handle();
+  shaderStageCi.pName = kDefaultShaderEntryPointStr;
+  shaderStageCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+  shaderStageCi.flags = 0;
+
+  VkComputePipelineCreateInfo compCi{};
+  compCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  compCi.stage = shaderStageCi;
+  compCi.basePipelineHandle = VK_NULL_HANDLE;
+
+  Rhi->FreeShader(shader);
 }
 
 } // RendererPass

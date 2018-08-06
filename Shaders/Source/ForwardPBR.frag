@@ -86,6 +86,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
+  vec4  anisoSpec;
   float opaque;
   float metal;
   float rough;

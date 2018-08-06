@@ -20,6 +20,7 @@
 #include "Decal.hpp"
 #include "HDR.hpp"
 #include "Clusters.hpp"
+#include "BakeIBL.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -72,6 +73,7 @@ Renderer::Renderer()
   , m_pEnvMaps(nullptr)
   , m_pIrrMaps(nullptr)
   , m_pBrdfLUTs(nullptr)
+  , m_pBakeIbl(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
@@ -135,14 +137,17 @@ void Renderer::OnStartUp()
     R_DEBUG(rError, "Core is not active! Start up the core first!\n");
     return;
   }
+
   VulkanRHI::CreateContext(Renderer::appName);
   VulkanRHI::FindPhysicalDevice();
   if (!m_pRhi) m_pRhi = new VulkanRHI();
+  SetUpRenderData();
 }
 
 
 void Renderer::OnShutDown()
 {
+  CleanUpRenderData();
   CleanUp();
 
   // Shutdown globals.
@@ -376,6 +381,10 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->DeviceWaitIdle();
 
+  m_pBakeIbl->CleanUp(m_pRhi);
+  delete m_pBakeIbl;
+  m_pBakeIbl = nullptr;
+
   m_pHDR->CleanUp(m_pRhi);
   delete m_pHDR;
   m_pHDR = nullptr;
@@ -468,6 +477,9 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
+
+  m_pBakeIbl = new BakeIBL();
+  m_pBakeIbl->Initialize(m_pRhi);
 
   {
     u32 vendorId = m_pRhi->VendorID();
@@ -3806,7 +3818,9 @@ void Renderer::FreeTexture2DArray(Texture2DArray* texture)
 
 void Renderer::FreeTextureCube(TextureCube* texture)
 {
-  // TODO():
+  if (!texture) return;
+  texture->CleanUp();
+  delete texture;
 }
 
 
@@ -3928,5 +3942,205 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 BufferUI* Renderer::GetUiBuffer() const
 {
   return m_pUI->GetUIBuffer();
+}
+
+
+TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 x, u32 y)
+{
+  TextureCube* pTexCube = nullptr;
+  if (x == 0 || y == 0) return pTexCube;
+
+  pTexCube = new TextureCube();
+  Texture* cubeTexture = m_pRhi->CreateTexture();
+  Texture* faceTexture = m_pRhi->CreateTexture();
+
+  {
+    VkImageCreateInfo imageCi{};
+    VkImageViewCreateInfo viewCi{};
+
+    imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    imageCi.imageType = VK_IMAGE_TYPE_2D;
+    imageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageCi.arrayLayers = 6;
+    imageCi.extent.depth = 1;
+    imageCi.extent.width = x;
+    imageCi.extent.height = y;
+    imageCi.mipLevels = 1;
+    imageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    imageCi.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT; 
+    imageCi.samples = VK_SAMPLE_COUNT_1_BIT;
+
+    viewCi.components = {};
+    viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewCi.subresourceRange.baseArrayLayer = 0;
+    viewCi.subresourceRange.baseMipLevel = 0;
+    viewCi.subresourceRange.layerCount = 6;
+    viewCi.subresourceRange.levelCount = 1;
+    viewCi.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+    // Create the cube texture to be written onto.
+    cubeTexture->Initialize(imageCi, viewCi, false);
+  
+    // Create the face texture to be rendered onto.
+    imageCi.flags = 0;
+    imageCi.arrayLayers = 1;
+    viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewCi.subresourceRange.layerCount = 1;
+    faceTexture->Initialize(imageCi, viewCi);
+  }
+
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  VkCommandBufferBeginInfo begin{};
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  
+  cmdBuffer.Begin(begin);
+
+    VkDeviceSize offsets = { 0 };
+
+    VkImageSubresourceRange subRange = {};
+    subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    VkImageMemoryBarrier imgMemBarrier = {};
+    imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgMemBarrier.subresourceRange = subRange;
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgMemBarrier.srcAccessMask = 0;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.image = cubeTexture->Image();
+
+    // set the cubemap image layout for transfer from our framebuffer.
+    cmdBuffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+
+    VkRenderPassBeginInfo renderPassBegin{};
+    renderPassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    // TODO():
+
+    // For each cube face.
+    for (size_t i = 0; i < 6; ++i) {
+      // All meshes must be rendered forward in order to produce the proper lighting in the situation.
+      cmdBuffer.BeginRenderPass(renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
+        // TODO(): Render forward here.
+        for (size_t cmdIdx = 0; cmdIdx < m_cmdDeferredList.Size(); ++cmdIdx) {
+        }
+
+        for (size_t cmdIdx = 0; cmdIdx < m_forwardCmdList.Size(); ++cmdIdx) {
+        }
+      cmdBuffer.EndRenderPass();
+
+      subRange.baseArrayLayer = 0;
+      subRange.baseMipLevel = 0;
+      subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      subRange.layerCount = 1;
+      subRange.levelCount = 1;
+
+      imgMemBarrier.image = faceTexture->Image();
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      imgMemBarrier.subresourceRange = subRange;
+
+      // transfer color attachment to transfer.
+      cmdBuffer.PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
+
+      VkImageCopy imgCopy = {};
+      imgCopy.srcOffset = { 0, 0, 0 };
+      imgCopy.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imgCopy.srcSubresource.baseArrayLayer = 0;
+      imgCopy.srcSubresource.mipLevel = 0;
+      imgCopy.srcSubresource.layerCount = 1;
+
+      imgCopy.dstOffset = { 0, 0, 0 };
+      imgCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imgCopy.dstSubresource.baseArrayLayer = static_cast<u32>(i);
+      imgCopy.dstSubresource.layerCount = 1;
+      imgCopy.dstSubresource.mipLevel = 0;
+
+      imgCopy.extent.width = x;
+      imgCopy.extent.height = y;
+      imgCopy.extent.depth = 1;
+
+      cmdBuffer.CopyImage(
+        faceTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        cubeTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1, &imgCopy
+      );
+
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+      cmdBuffer.PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
+    }
+
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    imgMemBarrier.image = cubeTexture->Image();
+    imgMemBarrier.subresourceRange = subRange;
+
+    cmdBuffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+  cmdBuffer.End();
+
+
+  VkSubmitInfo submit{};
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  VkCommandBuffer cmdBufs[] = { cmdBuffer.Handle() };
+  submit.pCommandBuffers = cmdBufs;
+
+  m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit, VK_NULL_HANDLE);
+  m_pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
+
+  pTexCube->SetTextureHandle(cubeTexture);
+  m_pRhi->FreeTexture(faceTexture);
+  return pTexCube;
 }
 } // Recluse

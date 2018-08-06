@@ -35,6 +35,11 @@ public:
   virtual void  CacheToFile(std::string path) { }
   virtual void CleanUp() { }
 
+  // Save this texture into a file for use in another life.
+  virtual void Save(const std::string& pathName) { }
+
+  void          SetTextureHandle(Texture* newTex) { texture = newTex; }
+
   // Name of Texture.
   std::string   _Name;
 

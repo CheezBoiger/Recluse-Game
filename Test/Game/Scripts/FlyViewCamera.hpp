@@ -168,6 +168,16 @@ public:
       Transform* t = _pHolding->GetTransform();
       t->Position = transform->Position + transform->Front() * 3.0f;
     }
+
+#define CAMERA_REVOLVE 1
+#if CAMERA_REVOLVE > 0
+    t += tick * 0.2f;
+    Vector3 xPos = Vector3(cosf(t) * 10.0f, 0.0f, 0.0f);
+    Vector3 yPos = Vector3(0.0f, 0.0f, sinf(t) * 10.0f);
+    transform->Position = xPos + yPos + Vector3::UP * 10.0f;
+    Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
+    transform->Rotation = Quaternion::LookRotation(dir.Normalize(), Vector3::UP);
+#endif
   }
 
   void OnCleanUp() override 
@@ -190,6 +200,9 @@ private:
   r32     m_roll;
   r32     m_constrainPitch;
   r32     m_speed;
+#if CAMERA_REVOLVE > 0
+  r32     t = 0.0f;
+#endif
   PhysicsComponent* m_pPhysicsComponent;
   Collider*         m_pCollider;
   b32               bFollow;

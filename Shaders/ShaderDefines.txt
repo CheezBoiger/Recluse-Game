@@ -1,15 +1,9 @@
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V PBR.frag -o PBR_NoLR.frag.spv
-PBR.frag
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.frag -o PBR_LR.frag.spv
-PBR.frag
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V ForwardPBR.frag -o ForwardPBR_NoLR.frag.spv
-ForwardPBR.frag
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V ForwardPBR.frag -o ForwardPBR_LR.frag.spv
-ForwardPBR.frag
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source> glslangValidator.exe --aml -V ForwardPBR.vert -o ForwardPBR.vert.spv
-ForwardPBR.vert
-PS D:\Users\Magarcia\Github\Recluse-Game\Shaders\Source>
+glslangValidator.exe --aml -V PBR.frag -o PBR_NoLR.frag.spv
+glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.frag -o PBR_LR.frag.spv
 
+glslangValidator.exe --aml -V ForwardPBR.frag -o ForwardPBR_NoLR.frag.spv
+glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V ForwardPBR.frag -o ForwardPBR_LR.frag.spv
+glslangValidator.exe --aml -V ForwardPBR.vert -o ForwardPBR.vert.spv
 
 glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR.comp.spv
 glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR.comp.spv
@@ -22,3 +16,6 @@ glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR_Intel.comp.spv
 
 glslangValidator.exe --aml -DAMD=1 -V PBR.comp -o PBR_NoLR_Amd.comp.spv
 glslangValidator.exe --aml -DAMD=1 -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR_Amd.comp.spv
+
+glslangValidator.exe --aml -V .\StaticGBuffer.vert -DRENDER_ENV_MAP=1 -o Static_EnvMap.vert.spv
+glslangValidator.exe --aml -V .\ForwardPBR.vert -DRENDER_ENV_MAP=1 -o Skinned_EnvMap.vert.spv

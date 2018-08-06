@@ -17,6 +17,7 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 layout (set = 1, binding = 0) uniform MaterialBuffer {
   vec4  color;
+  vec4  anisoSpec;
   float opaque;
   float metal;
   float rough;
@@ -47,5 +48,6 @@ out FragIn {
 
 void main()
 {
-  outColor = vec4(1.0, 0.0, 0.0, 1.0);
+  vec4 alb = texture(albedo, uv0);
+  outColor = vec4(alb.rgb, 1.0);
 }

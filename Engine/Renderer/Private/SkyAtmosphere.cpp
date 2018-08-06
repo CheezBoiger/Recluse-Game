@@ -546,23 +546,6 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
     renderpassBegin.clearValueCount = 1;
     renderpassBegin.pClearValues = &colorClear;
 
-    // Get our view matrices.
-    // Index                Face
-    // 0                    POSITIVE_X
-    // 1                    NEGATIVE_X
-    // 2                    POSITIVE_Y
-    // 3                    NEGATIVE_Y
-    // 4                    POSITIVE_Z
-    // 5                    NEGATIVE_Z
-    std::array<Matrix4, 6> viewMatrices = {
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
-      Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::BACK),
-      Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::UP), Radians(180.0f), Vector3::FRONT)
-    };
-
     struct ViewerBlock {
       Matrix4             _InvView;
       Matrix4             _InvProj;
@@ -615,7 +598,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
     for (size_t face = 0; face < 6; ++face) {
       cmdBuffer->BeginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
         cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
-        viewerConsts._InvView = viewMatrices[face].Transpose();
+        viewerConsts._InvView = kViewMatrices[face].Transpose();
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Layout(), 0, 1, &globalDesc, 0, nullptr);
         cmdBuffer->PushConstants(m_pPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
         

@@ -3,14 +3,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
-
-in FRAG_IN {
-  vec2 texcoord;
-} frag_in;
-
-layout (location = 0) out vec4 fragColor;
-
 layout (set = 1, binding = 0) uniform sampler2D finalTexture;
+layout (set = 1, binding = 1, rgba8) uniform writeonly image2D resultImage;
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -1080,13 +1074,13 @@ FxaaFloat4 FxaaPixelShader(
 
 void main()
 {
-  vec3 final = texture(finalTexture, frag_in.texcoord).rgb;
-  
+  vec2 uv = vec2(gl_GlobalInvocationID.xy);
+  vec4 final = vec4(0.0, 0.0, 0.0, 1.0);
   if (gWorldBuffer.enableAA >= 1) {
     //vec2 aaCoord = frag_in.texcoord * vec2(gWorldBuffer.screenSize);
     //final = AntiAliasingFXAA(finalTexture, aaCoord, gWorldBuffer.screenSize).rgb;
     vec2 rcpFrame = vec2(1.0 / float(gWorldBuffer.screenSize.x), 1.0 / float(gWorldBuffer.screenSize.y));
-    final = FxaaPixelShader(frag_in.texcoord,
+    final = FxaaPixelShader(uv,
       FxaaFloat4(0.0, 0.0, 0.0, 0.0),
       finalTexture,
       finalTexture,
@@ -1102,9 +1096,7 @@ void main()
       0.0,
       0.0,
       FxaaFloat4(0.0, 0.0, 0.0, 0.0)
-    ).rgb;
+    );
   }
-
-  vec4 color = vec4(final, 1.0);
-  fragColor = color;
+  imageStore(resultImage, ivec2(uv), final);
 }

@@ -115,6 +115,7 @@ struct GBuffer
   float roughness;
   float metallic;
   float ao;
+  vec4 anisoSpec;
 };
 
 
@@ -133,8 +134,9 @@ GBuffer ReadGBuffer(ivec2 uv)
   gbuffer.roughness         = erm.g;
   gbuffer.metallic          = erm.b;
   gbuffer.ao                = albedo.a;
+  gbuffer.anisoSpec         = vec4(normal.a, erm.a, 0.0, 0.0);
   
-  if (erm.a > 0.0) {
+  if (emit.a > 0.0) {
     gbuffer.pos = vec3(NAN, NAN, NAN);
   } else {
     vec2 resolution = vec2(gWorldBuffer.screenSize);
@@ -256,9 +258,9 @@ vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 
 
 // TODO():
-vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPoint(PointLight light, inout GBuffer gbuffer, vec3 V, vec3 N)
 {
-  vec3 L = light.position.xyz - vPosition;
+  vec3 L = light.position.xyz - gbuffer.pos;
   float distance = length(L);
   // Return if range is less than the distance between light and fragment.
   if (light.range < distance) { return vec3(0.0); }
@@ -278,26 +280,26 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, ve
   float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
-  F0 = mix(F0, Albedo, metallic);
+  F0 = mix(F0, gbuffer.albedo, gbuffer.metallic);
   vec3 radiance = light.color.xyz * attenuation;
   
   if (NoL > 0.0) {
-    float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    float D = DGGX(NoH, gbuffer.roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, gbuffer.roughness);  
     vec3 F = FSchlick(VoH, F0);
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - gbuffer.metallic;
   
-    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+    color += (LambertDiffuse(kD, gbuffer.albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
   }
   return color * radiance;
 }
 
 
 // TODO():
-vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFDirectional(DirectionLight light, inout GBuffer gbuffer, vec3 V, vec3 N)
 {
   vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
@@ -314,17 +316,16 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
   float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
-  F0 = mix(F0, Albedo, metallic);
+  F0 = mix(F0, gbuffer.albedo, gbuffer.metallic);
   
   if (NoL > 0.0) {
-    float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    float D = DGGX(NoH, gbuffer.roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, gbuffer.roughness);  
     vec3 F = FSchlick(VoH, F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-    
-    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+    kD *= 1.0 - gbuffer.metallic;
+    color += (LambertDiffuse(kD, gbuffer.albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
   }
   return color * radiance;
 }
@@ -332,7 +333,7 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
 
 // TODO(): This will eventually be integrated into Directional, as we will need to 
 // support more shadow maps (using a Sampler2DArray.)
-vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPrimary(DirectionLight light, inout GBuffer gbuffer, vec3 V, vec3 N)
 {
   vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
@@ -349,21 +350,19 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
   float VoH = clamp(dot(nV, H), 0.0, 1.0);
   vec3 F0 = vec3(0.04);
   
-  F0 = mix(F0, Albedo, metallic);
+  F0 = mix(F0, gbuffer.albedo, gbuffer.metallic);
   
   if (NoL > 0.0) {
-    float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
+    float D = DGGX(NoH, gbuffer.roughness);
+    float G = GSchlickSmithGGX(NoL, NoV, gbuffer.roughness);  
     vec3 F = FSchlick(VoH, F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-    
-    
-    color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV);
+    kD *= 1.0 - gbuffer.metallic;
+    color += LambertDiffuse(kD, gbuffer.albedo) + BRDF(D, F, G, NoL, NoV);
     
     if (gWorldBuffer.enableShadows >= 1) {
-      vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
+      vec4 shadowClip = lightSpace.viewProj * vec4(gbuffer.pos, 1.0);
       float shadowFactor = FilterPCF(shadowClip);
       color *= shadowFactor;
     }
@@ -394,7 +393,7 @@ void main()
     DirectionLight light = gLightBuffer.primaryLight;
     vec3 ambient = light.ambient.rgb * gbuffer.albedo;
     outColor += ambient;
-    outColor += CookTorrBRDFPrimary(light, gbuffer.pos, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic); 
+    outColor += CookTorrBRDFPrimary(light, gbuffer, V, N); 
     outColor = max(outColor, ambient);
   }
   
@@ -402,13 +401,13 @@ void main()
     DirectionLight light = gLightBuffer.directionLights[i];
     if (light.enable <= 0) { continue; }
     outColor += light.ambient.rgb * gbuffer.albedo;
-    outColor += CookTorrBRDFDirectional(light, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic);
+    outColor += CookTorrBRDFDirectional(light, gbuffer, V, N);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
-    outColor += CookTorrBRDFPoint(light, gbuffer.pos, gbuffer.albedo, V, N, gbuffer.roughness, gbuffer.metallic);
+    outColor += CookTorrBRDFPoint(light, gbuffer, V, N);
     
   }
   
