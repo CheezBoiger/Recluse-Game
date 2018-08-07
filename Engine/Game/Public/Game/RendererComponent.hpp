@@ -58,6 +58,10 @@ public:
   u32                       GetMeshCount() const { return static_cast<u32>(m_meshes.size()); }
   virtual void              SetAnimationHandler(AnimHandle* anim) { }  
   virtual AnimHandle*       GetAnimHandle() { return nullptr; }
+  inline b32                AllowLod() const { return m_allowLod; }
+  void                      EnableLod(b32 enable) { m_allowLod = enable; }
+
+  u32                       GetCurrentLod() const { return m_currLod; }
 
 protected:
   virtual void              OnInitialize(GameObject* owner) override;
@@ -66,10 +70,16 @@ protected:
 
   void                      TriggerDirty() { m_bDirty = true; }
 
+private:
+  void                      UpdateLod(Transform* meshTransform);
+
+protected:
   MeshDescriptor*           m_meshDescriptor;
   std::vector<Mesh*>        m_meshes;
   b32                       m_bDirty;
   u32                       m_configs;
+  b32                       m_allowLod;
+  u32                       m_currLod;
 };
 
 

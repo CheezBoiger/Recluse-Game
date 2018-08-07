@@ -9,6 +9,12 @@
 #include <algorithm>
 #include <unordered_map>
 
+#if defined(_DEBUG) || defined(_NDEBUG)
+  #include "Core/Utility/Profile.hpp"
+#else
+  #define R_TIMED_PROFILE_GAME()
+#endif
+
 namespace Recluse {
 
 typedef u64 component_t;
@@ -19,6 +25,7 @@ class Transform;
     static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
     static const tchar* GetName() { return #cls; } \
     public: static void UpdateComponents() { \
+              R_TIMED_PROFILE_GAME(); \
               for (auto& it : _k##cls##s) { \
                 cls* comp = it.second; \
                 if (!comp->Enabled()) continue; \

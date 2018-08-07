@@ -17,14 +17,6 @@ class MaterialDescriptor;
 class MeshData;
 
 
-enum MeshLod {
-  MESH_LOD_0 = 0,
-  MESH_LOD_1 = 1,
-  MESH_LOD_2 = 2,
-  MESH_LOD_3 = 3
-};
-
-
 struct Primitive {
   Primitive()
     : _firstIndex(0)
@@ -50,29 +42,22 @@ public:
   MeshData();
   ~MeshData();
 
-  void            Initialize(MeshLod lod, size_t elementCount, void* data, VertexType type = STATIC,
+  void            Initialize(size_t elementCount, void* data, VertexType type = STATIC,
     size_t indexCount = 0, void* indices = nullptr);
-  void            SetMin(const Vector3& min) { m_aabb.min = min; }
-  void            SetMax(const Vector3& max) { m_aabb.max = max; }
-
   void            CleanUp();
 
-  VertexBuffer*   VertexData(MeshLod lod) { return &m_vertexBuffersLod[lod]; }
+  VertexBuffer*   VertexData() { return &m_vertexBuffer; }
   
-  IndexBuffer*    IndexData(MeshLod lod) { 
-    if (m_indexBuffersLod[lod].IndexCount() > 0) return &m_indexBuffersLod[lod]; 
+  IndexBuffer*    IndexData() { 
+    if (m_indexBuffer.IndexCount() > 0) return &m_indexBuffer; 
     else return nullptr; 
   }
 
-  void            UpdateAABB() { m_aabb.ComputeCentroid(); m_aabb.ComputeSurfaceArea(); }
-
-  const AABB&     GetAABB() const { return m_aabb; }
-
-  Primitive*              GetPrimitiveData(MeshLod lod) { return m_primitivesLod[lod].data(); }
-  u32                     GetPrimitiveCount(MeshLod lod) const { return static_cast<u32>(m_primitivesLod[lod].size()); }
-  Primitive*              GetPrimitive(MeshLod lod, u32 idx) { return &m_primitivesLod[lod][static_cast<u32>(idx)]; }
-  inline void             ClearPrimitives(MeshLod lod) { m_primitivesLod[lod].clear(); }
-  inline void             PushPrimitive(MeshLod lod, const Primitive& primitive) { m_primitivesLod[lod].push_back(primitive); }
+  Primitive*              GetPrimitiveData() { return m_primitives.data(); }
+  u32                     GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
+  Primitive*              GetPrimitive(u32 idx) { return &m_primitives[static_cast<size_t>(idx)]; }
+  inline void             ClearPrimitives() { m_primitives.clear(); }
+  inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
 
   // Optimize the mesh to a certain specification.
   void                    Optimize();
@@ -81,11 +66,11 @@ public:
   void                    CompressByLod(u32 lod);
 
 private:
-  VertexBuffer                        m_vertexBuffersLod[kMaxLodMeshCount];
-  IndexBuffer                         m_indexBuffersLod[kMaxLodMeshCount];
-  std::vector<Primitive>              m_primitivesLod[kMaxLodMeshCount];
+  VertexBuffer                        m_vertexBuffer;
+  IndexBuffer                         m_indexBuffer;
+  std::vector<Primitive>              m_primitives;
   VulkanRHI*                          mRhi;
-  AABB                                m_aabb;
+
   friend class Renderer;
 };
 } // Recluse

@@ -59,7 +59,8 @@ public:
 
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->AddMesh(mesh);
-    mesh->GetPrimitive(MESH_LOD_0, 0)->_pMat = material->Native();
+    m_pRendererComponent->EnableLod(false);
+    mesh->GetPrimitive(0, 0)->_pMat = material->Native();
 
     std::random_device r;
     std::mt19937 twist(r());
@@ -85,7 +86,7 @@ public:
       sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
       cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
 #endif
-    AABB aabb = m_pMeshComponent->MeshRef()->Native()->GetAABB();
+    AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
     aabb.min = (aabb.min * transform->Scale) + transform->Position;
     aabb.max = (aabb.max * transform->Scale) + transform->Position;
     ViewFrustum::Result result = Camera::GetMain()->GetViewFrustum().Intersect(aabb);
@@ -114,7 +115,7 @@ public:
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
-    std::string engine = RTEXT("Recluse Engine v0.0.24");
+    std::string engine = RTEXT("Recluse Engine v0.0.25");
     std::string device = gRenderer().GetDeviceName();
     Window* window = gEngine().GetWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";

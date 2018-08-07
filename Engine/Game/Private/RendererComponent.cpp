@@ -4,12 +4,14 @@
 #include "MaterialComponent.hpp"
 #include "AnimationComponent.hpp"
 #include "GameObject.hpp"
+#include "Camera.hpp"
 
 #include "Renderer/MaterialDescriptor.hpp"
 #include "Renderer/MeshDescriptor.hpp"
 #include "Renderer/Renderer.hpp"
 
 #include "Core/Logging/Log.hpp"
+#include "Core/Utility/Profile.hpp"
 #include "Core/Exception.hpp"
 
 
@@ -24,6 +26,8 @@ RendererComponent::RendererComponent()
   : m_meshDescriptor(nullptr)
   , m_configs(CMD_RENDERABLE_BIT | CMD_SHADOWS_BIT)
   , m_bDirty(true)
+  , m_currLod(Mesh::kMeshLodZero)
+  , m_allowLod(true)
 {
 }
 
@@ -115,6 +119,8 @@ void RendererComponent::Update()
   ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
   Matrix4 model = transform->GetLocalToWorldMatrix();
 
+  UpdateLod(transform);
+
   // Now push the object into the renderer for updating.
   for (size_t i = 0; i < m_meshes.size(); ++i) {
     MeshRenderCmd cmd;
@@ -125,8 +131,9 @@ void RendererComponent::Update()
 
     // Push mesh data to renderer.
     Mesh* pMesh = m_meshes[i];
-    MeshLod lod = pMesh->GetCurrentLod();
-    cmd._pMeshData = pMesh->Native();
+    MeshData* data = pMesh->GetMeshDataLod(m_currLod);
+    cmd._pMeshData = (!data ? pMesh->GetMeshDataLod() : data);
+    R_ASSERT(cmd._pMeshData, "Mesh data was nullptr!");
  
     gRenderer().PushMeshRender(cmd);
   }
@@ -219,5 +226,32 @@ SkinnedRendererComponent::SkinnedRendererComponent()
   : m_pAnimHandle(nullptr)
   , m_pJointDescriptor(nullptr)
 {
+}
+
+
+void RendererComponent::UpdateLod(Transform* meshTransform)
+{
+  if (!AllowLod()) return;
+  Camera* currCamera = Camera::GetMain();
+  if (!currCamera) return;
+  Transform* camTransform = currCamera->GetTransform();
+  Vector3 camPos = camTransform->Position;
+  Vector3 meshPos = meshTransform->Position;
+
+  // Length of vector between mesh and camera.
+  r32 len = (meshPos - camPos).Magnitude();
+  m_currLod = 0;
+  if (len > 10.0f) {
+    m_currLod = 1;
+  }
+  if (len > 15.0f) {
+    m_currLod = 2;  
+  }
+  if (len > 20.0f) {
+    m_currLod = 3;
+  }
+  if (len > 25.0f) {
+    m_currLod = 4;
+  }
 }
 } // Recluse

@@ -54,14 +54,12 @@ struct MeshRenderCmd {
     , _pMeshDesc(nullptr)
     , _pMeshData(nullptr)
     , _bSkinned(false)
-    , _lod(MESH_LOD_0)
     , _instances(1) { }
 
   MeshData*               _pMeshData;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
   u32                     _instances;
-  MeshLod                 _lod;
   b32                     _bSkinned;
   CmdConfigBits           _config;
 };

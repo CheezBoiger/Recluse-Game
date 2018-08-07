@@ -56,7 +56,7 @@ public:
     //material->SetRoughnessFactor(1.0f);
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->AddMesh(mesh);
-
+    m_pRendererComponent->EnableLod(false);
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
@@ -140,7 +140,7 @@ public:
     //material->SetRoughnessFactor(1.0f);
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->AddMesh(mesh);
-
+    m_pRendererComponent->EnableLod(false);
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
@@ -216,7 +216,7 @@ public:
     m_pMeshComponent->Initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
-    Material* material = model->materials[0];;//nullptr;
+    Material* material = model->materials[0];//nullptr;
 /*
     MaterialCache::Get(
 #if 1
@@ -229,7 +229,7 @@ public:
 
     m_pRendererComponent->Initialize(this);
     m_pRendererComponent->AddMesh(mesh);
-
+    m_pRendererComponent->EnableLod(false);
     material->SetEmissiveFactor(0.2f);
 
     std::random_device r;

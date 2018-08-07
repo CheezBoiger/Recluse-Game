@@ -169,7 +169,7 @@ public:
       t->Position = transform->Position + transform->Front() * 3.0f;
     }
 
-#define CAMERA_REVOLVE 1
+#define CAMERA_REVOLVE 0
 #if CAMERA_REVOLVE > 0
     t += tick * 0.2f;
     Vector3 xPos = Vector3(cosf(t) * 10.0f, 0.0f, 0.0f);

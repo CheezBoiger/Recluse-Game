@@ -180,26 +180,33 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
-    mesh->Initialize(MESH_LOD_0, boxVerts.size(), boxVerts.data(), MeshData::STATIC, boxIndic.size(), boxIndic.data(), Cube::Min, Cube::Max);
+    mesh->InitializeLod(boxVerts.size(), boxVerts.data(), MeshData::STATIC, 0, boxIndic.size(), boxIndic.data());
+    mesh->SetMin(Cube::Min);
+    mesh->SetMax(Cube::Max);
+    mesh->UpdateAABB();
     MeshCache::Cache(RTEXT("NativeCube"), mesh);    Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData(MESH_LOD_0)->IndexCount();
+    prim._indexCount = mesh->GetMeshDataLod()->IndexData()->IndexCount();
     prim._pMat = Material::Default()->Native();
-    mesh->PushPrimitive(MESH_LOD_0, prim);
+    mesh->PushPrimitive(prim);
   }
 
   {
     Mesh* mesh = new Mesh();
-    const u32 stckCnt = 32;
-    auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
-    auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
-    mesh->Initialize(MESH_LOD_0, sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, sphereInd.size(), sphereInd.data());
+    i32 stckCnt = 32;
+    i32 minus = 32 / 5;
+    for (i32 lod = 0; lod < 5; ++lod) {
+      auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
+      auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
+      mesh->InitializeLod(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, lod, sphereInd.size(), sphereInd.data());
+      Primitive prim;
+      prim._firstIndex = 0;
+      prim._indexCount = mesh->GetMeshDataLod(lod)->IndexData()->IndexCount();
+      prim._pMat = Material::Default()->Native();
+      mesh->PushPrimitive(prim, lod);
+      stckCnt -= minus;
+    }
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
-    Primitive prim;
-    prim._firstIndex = 0;
-    prim._indexCount = mesh->Native()->IndexData(MESH_LOD_0)->IndexCount();
-    prim._pMat = Material::Default()->Native();
-    mesh->PushPrimitive(MESH_LOD_0, prim);
   }
 
   // Model Loading.

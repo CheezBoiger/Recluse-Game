@@ -1,9 +1,13 @@
 // Copyright (c) 2017-2018 Recluse Project. All rights reserved.
 #include "MeshComponent.hpp"
 #include "GameObject.hpp"
+#include "Engine.hpp"
+#include "Camera.hpp"
+
 #include "Renderer/MeshData.hpp"
 #include "Renderer/Renderer.hpp"
-#include "Engine.hpp"
+
+#include "Core/Utility/Profile.hpp"
 
 namespace Recluse {
 
@@ -19,22 +23,24 @@ MeshComponent::MeshComponent()
 }
 
 
-void Mesh::Initialize(MeshLod lod, size_t elementCount, void* data, MeshData::VertexType type,size_t indexCount, 
-  void* indices, const Vector3& min, const Vector3& max)
+void Mesh::InitializeLod(size_t elementCount, void* data, MeshData::VertexType type, u32 lod, 
+  size_t indexCount, void* indices)
 {
-  m_pMeshData = gRenderer().CreateMeshData();
-  m_pMeshData->Initialize(lod, elementCount, data, type, indexCount, indices);
-  m_pMeshData->SetMin(min);
-  m_pMeshData->SetMax(max);
-  m_pMeshData->UpdateAABB();
+  R_ASSERT(!m_pMeshDataLod[lod], "Mesh data at specified lod is already initialized.");
+  m_pMeshDataLod[lod] = gRenderer().CreateMeshData();
+  m_pMeshDataLod[lod]->Initialize(elementCount, data, type, indexCount, indices);
   if (type == MeshData::VertexType::SKINNED) m_bSkinned = true;
 }
 
 
 void Mesh::CleanUp()
 {
-  gRenderer().FreeMeshData(m_pMeshData);
-  m_pMeshData = nullptr;
+  for (size_t i = 0; i < kMaxMeshLodWidth; ++i) {
+    if (m_pMeshDataLod[i]) {
+      gRenderer().FreeMeshData(m_pMeshDataLod[i]);
+      m_pMeshDataLod[i] = nullptr;
+    }
+  }
 }
 
 
@@ -52,14 +58,22 @@ void MeshComponent::OnCleanUp()
 
 void MeshComponent::Update()
 {
-  if (!AllowCulling()) return;
+  R_TIMED_PROFILE_GAME();
+
   if (!m_pMeshRef) return;
+  UpdateFrustumCullBits();
+}
+
+
+void MeshComponent::UpdateFrustumCullBits()
+{
+  if (!AllowCulling()) return;
 
   size_t viewFrustumCount = gEngine().GetViewFrustumCount();
   if (viewFrustumCount == 0) return;
 
   ViewFrustum** viewFrustums = gEngine().GetViewFrustums();
-  AABB aabb = m_pMeshRef->Native()->GetAABB();
+  AABB aabb = m_pMeshRef->GetAABB();
   Transform* transform = GetOwner()->GetTransform();
 
   aabb.max = (aabb.max * transform->Scale) + transform->Position;

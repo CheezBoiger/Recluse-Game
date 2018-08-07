@@ -82,6 +82,7 @@ public:
     //material->SetMetallicFactor(1.0f);
     //material->SetEmissiveFactor(1.0f);
 
+    m_pRendererComponent->EnableLod(false);
     m_pRendererComponent->Initialize(this);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->AddMesh(model->meshes[i]);
@@ -227,7 +228,9 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-    mesh->GetPrimitive(mesh->GetCurrentLod(), 0)->_pMat = mat->Native();
+    for (i32 lod = 0; lod < 5; ++lod) {
+      mesh->GetPrimitive(0, lod)->_pMat = mat->Native();
+    }
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;

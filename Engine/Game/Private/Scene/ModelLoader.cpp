@@ -351,12 +351,15 @@ Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* 
       primitives.push_back(primData.GetPrimitive());
     }
 
-    pMesh->Initialize(MESH_LOD_0, vertices.size(), vertices.data(), MeshData::STATIC, indices.size(), indices.data(), min, max);
+    pMesh->InitializeLod(vertices.size(), vertices.data(), MeshData::STATIC, 0, indices.size(), indices.data());
+    pMesh->SetMin(min);
+    pMesh->SetMax(max);
+    pMesh->UpdateAABB();
     std::string name = engineModel->name + "_mesh_" + mesh.name;
     MeshCache::Cache(name, pMesh);
     engineModel->meshes.push_back(pMesh);
     for (auto& prim : primitives) {
-      pMesh->PushPrimitive(MESH_LOD_0, prim);
+      pMesh->PushPrimitive(prim);
     }
   }
   return pMesh;
@@ -509,11 +512,14 @@ Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
       primitives.push_back(primData.GetPrimitive());
     }
 
-    pMesh->Initialize(MESH_LOD_0, vertices.size(), vertices.data(), MeshData::SKINNED, indices.size(), indices.data(), min, max);
+    pMesh->InitializeLod(vertices.size(), vertices.data(), MeshData::SKINNED, 0, indices.size(), indices.data());
+    pMesh->SetMin(min);
+    pMesh->SetMax(max);
+    pMesh->UpdateAABB();
     MeshCache::Cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
     for (auto& primData : primitives) {
-      pMesh->PushPrimitive(MESH_LOD_0, primData);
+      pMesh->PushPrimitive(primData);
     }
   }
 

@@ -2625,10 +2625,9 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
 
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
-      MeshLod lod = renderCmd._lod;
       // TODO(): Do culling if needed here.
-      VertexBuffer* vertexBuffer = data->VertexData(lod);
-      IndexBuffer* indexBuffer = data->IndexData(lod);
+      VertexBuffer* vertexBuffer = data->VertexData();
+      IndexBuffer* indexBuffer = data->IndexData();
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
 
       VkDeviceSize offsets[] = { 0 };
@@ -2645,8 +2644,8 @@ void Renderer::BuildOffScreenBuffer(u32 cmdBufferIndex)
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
-      Primitive* primitives = data->GetPrimitiveData(lod);
-      u32 count = data->GetPrimitiveCount(lod);
+      Primitive* primitives = data->GetPrimitiveData();
+      u32 count = data->GetPrimitiveCount();
       for (u32 i = 0; i < count; ++i) {
         Primitive& primitive = primitives[i];
         MaterialDescriptor* pMatDesc = primitive._pMat;
@@ -3032,9 +3031,8 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
     MeshData* mesh = renderCmd._pMeshData;
-    MeshLod lod = renderCmd._lod;
-    VertexBuffer* vertex = mesh->VertexData(lod);
-    IndexBuffer* index = mesh->IndexData(lod);
+    VertexBuffer* vertex = mesh->VertexData();
+    IndexBuffer* index = mesh->IndexData();
     VkBuffer buf = vertex->Handle()->NativeBuffer();
     VkDeviceSize offset[] = { 0 };
     cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
@@ -3043,8 +3041,8 @@ void Renderer::BuildShadowCmdBuffer(u32 cmdBufferIndex)
       cmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    Primitive* primitives = mesh->GetPrimitiveData(lod);
-    u32 count = mesh->GetPrimitiveCount(lod);
+    Primitive* primitives = mesh->GetPrimitiveData();
+    u32 count = mesh->GetPrimitiveCount();
     for (u32 i = 0; i < count; ++i) {
       Primitive& primitive = primitives[i];
       if (index) {
@@ -3141,10 +3139,9 @@ void Renderer::BuildForwardPBRCmdBuffer()
 
         // Set up the render mesh
         MeshData* data = renderCmd._pMeshData;
-        // TODO(): Do culling if needed here.
-        MeshLod lod = renderCmd._lod;
-        VertexBuffer* vertexBuffer = data->VertexData(lod);
-        IndexBuffer* indexBuffer = data->IndexData(lod);
+
+        VertexBuffer* vertexBuffer = data->VertexData();
+        IndexBuffer* indexBuffer = data->IndexData();
         VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
         VkDeviceSize offsets[] = { 0 };
         cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
@@ -3162,8 +3159,8 @@ void Renderer::BuildForwardPBRCmdBuffer()
         DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
         // Bind materials.
-        Primitive* primitives = data->GetPrimitiveData(lod);
-        u32 count = data->GetPrimitiveCount(lod);
+        Primitive* primitives = data->GetPrimitiveData();
+        u32 count = data->GetPrimitiveCount();
         for (u32 i = 0; i < count; ++i) {
           Primitive& primitive = primitives[i];
           DescriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
@@ -3921,8 +3918,8 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
   R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
   m_meshDescriptors.PushBack(cmd._pMeshDesc);
 
-  Primitive* primitives = cmd._pMeshData->GetPrimitiveData(cmd._lod);
-  u32 count = cmd._pMeshData->GetPrimitiveCount(cmd._lod);
+  Primitive* primitives = cmd._pMeshData->GetPrimitiveData();
+  u32 count = cmd._pMeshData->GetPrimitiveCount();
   for (u32 i = 0; i < count; ++i) {
     Primitive& prim = primitives[i];
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");

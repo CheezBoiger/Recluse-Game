@@ -14,40 +14,51 @@ namespace Recluse {
 
 class MeshData;
 
-
 // A Single instance of a mesh stored in gpu memory.
 class Mesh {
 public:
+  static const u32 kMaxMeshLodWidth = 5u;
+  static const u32 kMeshLodZero = 0u;
+
   Mesh() :  m_bSkinned(false)
-          , m_currLod(MESH_LOD_0)
-          , m_skeleId(Skeleton::kNoSkeletonId) { }
+         ,  m_skeleId(Skeleton::kNoSkeletonId) 
+         ,  m_pMeshDataLod{nullptr}
+  {
+  }
 
   // Initialize the mesh object.
-  void                    Initialize(MeshLod lod, size_t elementCount, void* data, MeshData::VertexType type, 
-                            size_t indexCount, void* indices, const Vector3& min = Vector3(), const Vector3& max = Vector3());
+  // Element count is the number of vertices in data. numOfVertices objects in data.
+  // VertexType determines what type of vertex data is, and lod is the level of detail mapped to be mapped
+  // to this initialized data.
+  void                    InitializeLod(size_t elementCount, void* data, MeshData::VertexType type, u32 lod = kMeshLodZero,
+                            size_t indexCount = 0, void* indices = nullptr);
 
   // Clean up the mesh object when no longer being used.
   void                    CleanUp();
 
-  MeshData*               Native() { return m_pMeshData; }
+  MeshData*               GetMeshDataLod(u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]; }
   b32                     Skinned() { return m_bSkinned; }
 
   void                    SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
   skeleton_uuid_t         GetSkeletonReference() const { return m_skeleId; }
 
-  Primitive*              GetPrimitiveData(MeshLod lod = MESH_LOD_0) { return m_pMeshData->GetPrimitiveData(lod); }
-  u32                     GetPrimitiveCount(MeshLod lod = MESH_LOD_0) const { return m_pMeshData->GetPrimitiveCount(lod); }
-  Primitive*              GetPrimitive(MeshLod lod, u32 idx) { return m_pMeshData->GetPrimitive(lod, idx); }
-  inline void             ClearPrimitives(MeshLod lod) { m_pMeshData->ClearPrimitives(lod); }
-  inline void             PushPrimitive(MeshLod lod, const Primitive& primitive) { m_pMeshData->PushPrimitive(lod, primitive); }
+  Primitive*              GetPrimitiveData(u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]->GetPrimitiveData(); }
+  u32                     GetPrimitiveCount(u32 lod = kMeshLodZero) const { return m_pMeshDataLod[lod]->GetPrimitiveCount(); }
+  Primitive*              GetPrimitive(u32 idx, u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]->GetPrimitive(idx); }
+  inline void             ClearPrimitives(u32 lod = kMeshLodZero) { m_pMeshDataLod[lod]->ClearPrimitives(); }
+  inline void             PushPrimitive(const Primitive& primitive, u32 lod = kMeshLodZero) { m_pMeshDataLod[lod]->PushPrimitive(primitive); }
 
-  MeshLod                 GetCurrentLod() const { return m_currLod; }
+  void                    SetMin(const Vector3& min) { m_aabb.min = min; }
+  void                    SetMax(const Vector3& max) { m_aabb.max = max; }
+
+  void                    UpdateAABB() { m_aabb.ComputeCentroid(); m_aabb.ComputeSurfaceArea(); }
+  const AABB&             GetAABB() const { return m_aabb; }
 
 private:
-  MeshData*               m_pMeshData;
+  MeshData*               m_pMeshDataLod[5];
   b32                     m_bSkinned;
-  MeshLod                 m_currLod;
   skeleton_uuid_t         m_skeleId;
+  AABB                    m_aabb;
 };
 
 
@@ -85,8 +96,12 @@ public:
   void            ClearFrustumCullBits() { m_frustumCull &= 0; }
 
 private:
+
+  void            UpdateFrustumCullBits();
+
   Mesh*           m_pMeshRef;
   b32             m_frustumCull;
   b32             m_allowCulling;
+
 };
 } // Recluse
