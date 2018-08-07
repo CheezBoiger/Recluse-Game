@@ -37,7 +37,7 @@ void Animation::UpdateState(r64 dt)
   
   // animate jobs.
   for (auto& job : m_sampleJobs) {
-    DoSampleJob(job, dt);
+    DoSampleJob(job, static_cast<r32>(dt));
   }
 }
 

@@ -44,14 +44,20 @@ Vector3 Vector3::Cross(const Vector3& other) const
 
 Vector3 Vector3::Normalize() const
 {
-  r32 magnitude = Magnitude();
+  r32 magnitude = Length();
   return (*this) / magnitude;
 }
 
 
-r32 Vector3::Magnitude() const
+r32 Vector3::Length() const
 {
   return sqrtf(x * x + y * y + z * z);
+}
+
+
+r32 Vector3::LengthSqr() const
+{
+  return (x * x) + (y * y) + (z * z);
 }
 
 

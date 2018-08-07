@@ -32,7 +32,8 @@ struct Vector2 {
   void    operator*=(const r32 scaler);
   void    operator/=(const r32 scaler);
 
-  r32     Magnitude() const;
+  r32     Length() const;
+  r32     LengthSqr() const;
   r32     Dot(const Vector2& other) const;
   r32&    operator [] (const size_t idx) { return (&x)[ idx ]; }
 

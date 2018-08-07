@@ -8,7 +8,7 @@ namespace Recluse {
 
 Vector2 Vector2::Normalize() const
 {
-  return (*this / Magnitude());
+  return (*this / Length());
 }
 
 
@@ -86,9 +86,15 @@ void Vector2::operator/=(const r32 scaler)
 }
 
 
-r32 Vector2::Magnitude() const
+r32 Vector2::Length() const
 {
   return sqrtf((x*x) + (y*y));
+}
+
+
+r32 Vector2::LengthSqr() const
+{
+  return (x * x) + (y * y);
 }
 
 

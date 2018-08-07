@@ -104,7 +104,7 @@ Renderer::Renderer()
     Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
     Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
 
-    return v1.Magnitude() < v2.Magnitude();
+    return v1.Length() < v2.Length();
   });
 
   // Use painter's algorithm in this case for forward, simply because of 
@@ -122,7 +122,7 @@ Renderer::Renderer()
     Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
     Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
 
-    return v1.Magnitude() > v2.Magnitude();
+    return v1.Length() > v2.Length();
   });
 }
 

@@ -59,8 +59,11 @@ struct Vector3 {
   // This can also be denoted as a wedge product in exterior algebra.
   Vector3         operator^(const Vector3& other) const { return Cross(other); }
 
+  // Dot producted denoted as bitwise OR.
   r32             operator|(const Vector3& other) const { return Dot(other); }
-  r32             Magnitude() const;
+
+  r32             Length() const;
+  r32             LengthSqr() const;
   r32&            operator [] (const size_t idx) { return (&x)[ idx ]; }
 
   b8              operator==(const Vector3& other) const;

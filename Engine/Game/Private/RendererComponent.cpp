@@ -239,7 +239,7 @@ void RendererComponent::UpdateLod(Transform* meshTransform)
   Vector3 meshPos = meshTransform->Position;
 
   // Length of vector between mesh and camera.
-  r32 len = (meshPos - camPos).Magnitude();
+  r32 len = (meshPos - camPos).Length();
   m_currLod = 0;
   if (len > 10.0f) {
     m_currLod = 1;

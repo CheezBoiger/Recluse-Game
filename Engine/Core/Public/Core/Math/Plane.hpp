@@ -27,7 +27,7 @@ struct Plane : public Vector4 {
   // Define a plane with 4 coefficients.
   Plane(const r32 a, const r32 b, const r32 c, const r32 d) {
     Vector3 normal = Vector3(a, b, c);
-    r32 l = normal.Magnitude();
+    r32 l = normal.Length();
     normal = normal.Normalize();
     x = normal.x;
     y = normal.y;

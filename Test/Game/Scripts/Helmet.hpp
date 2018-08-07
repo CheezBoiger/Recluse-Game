@@ -228,7 +228,7 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-    for (i32 lod = 0; lod < 5; ++lod) {
+    for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->GetPrimitive(0, lod)->_pMat = mat->Native();
     }
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);

@@ -92,9 +92,15 @@ void Vector4::operator/=(const r32 scaler)
 }
 
 
-r32 Vector4::Magnitude() const
+r32 Vector4::Length() const
 {
   return sqrtf( (x * x) + (y * y) + (z * z) + (w * w) );
+}
+
+
+r32 Vector4::LengthSqr() const
+{
+  return (x * x) + (y * y) + (z * z) + (w * w);
 }
 
 
@@ -106,7 +112,7 @@ r32 Vector4::Dot(const Vector4& other) const
 
 Vector4 Vector4::Normalize() const
 {
-  r32 magnitude = Magnitude();
+  r32 magnitude = Length();
   return (*this) / magnitude;
 }
 
