@@ -35,7 +35,7 @@ void AnimationComponent::AddClip(AnimClip* clip, const std::string& name)
 }
 
 
-void AnimationComponent::Playback(const std::string& name)
+void AnimationComponent::Playback(const std::string& name, r32 atTime)
 {
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
@@ -43,6 +43,7 @@ void AnimationComponent::Playback(const std::string& name)
   AnimJobSubmitInfo submit = { };
   submit._type = ANIM_JOB_TYPE_SAMPLE;
   submit._pBaseClip = clip;
+  submit._timeRatio = atTime;
   submit._pHandle = m_handle;
   gAnimation().SubmitJob(submit);
 }

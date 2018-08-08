@@ -71,13 +71,14 @@ void Animation::SubmitJob(const AnimJobSubmitInfo& info)
   switch (info._type) {
     case ANIM_JOB_TYPE_SAMPLE:
     {
-      AnimJob job = { };
+      AnimSampleJob job = { };
       job._pClip = info._pBaseClip;
       job._pHandle = info._pHandle;
       job._clipState = { };
       job._clipState._bLooping = info._pBaseClip->_bLooping;
       job._clipState._fCurrLocalTime = 0.0f;
       job._clipState._bEnabled = true;
+      job._clipState._fCurrLocalTime = info._timeRatio * info._pBaseClip->_fDuration;
       job._clipState._fPlaybackRate = job._pHandle->_playbackRate;
       m_sampleJobs.push_back(job);
     } break;
@@ -114,7 +115,7 @@ Matrix4 Animation::LinearInterpolate(JointPose* currPose, JointPose* nextPose, r
 }
 
 
-void Animation::DoSampleJob(AnimJob& job, r32 gt)
+void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
 {
   if (!job._clipState._bEnabled) { return; }
   r32 tau = job._clipState._tau;

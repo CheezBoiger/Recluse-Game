@@ -14,6 +14,10 @@ class VulkanRHI;
 class CommandBuffer;
 class DescriptorSet;
 class DescriptorSetLayout;
+class Texture;
+class FrameBuffer;
+class RenderPass;
+class GraphicsPipeline;
 
 class BakeIBL {
 public:
@@ -45,5 +49,24 @@ private:
   DescriptorSet*        m_pSpecSet;
   DescriptorSet*        m_pDiffSet;
   DescriptorSet*        m_pBRDFSet;
+};
+
+
+class EnvMapBaker {
+public:
+
+  EnvMapBaker();
+  ~EnvMapBaker();
+
+  void      Initialize(VulkanRHI* pRhi, u32 texSize);
+  void      CleanUp(VulkanRHI* pRhi);
+
+  Texture*  GenerateEnvMap(const Vector3& position, CmdList<MeshRenderCmd>& scene);
+
+private:
+  GraphicsPipeline*     m_pipeline;
+  FrameBuffer*          m_framebuffer;
+  RenderPass*           m_renderpass;
+  Texture*              m_texture;
 };
 } // Recluse

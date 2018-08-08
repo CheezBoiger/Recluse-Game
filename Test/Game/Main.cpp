@@ -184,7 +184,8 @@ int main(int c, char* argv[])
     mesh->SetMin(Cube::Min);
     mesh->SetMax(Cube::Max);
     mesh->UpdateAABB();
-    MeshCache::Cache(RTEXT("NativeCube"), mesh);    Primitive prim;
+    MeshCache::Cache(RTEXT("NativeCube"), mesh);    
+    Primitive prim;
     prim._firstIndex = 0;
     prim._indexCount = mesh->GetMeshDataLod()->IndexData()->IndexCount();
     prim._pMat = Material::Default()->Native();

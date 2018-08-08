@@ -48,32 +48,33 @@ struct AnimJobSubmitInfo {
   AnimClip*   _pBaseClip;
   AnimClip*   _pBlendClip;
   r32         _blendWeight;
-  r32         _blendDepth;
+  r32         _timeRatio;     // [0,1] time ratio interval.
 };
 
 
-struct AnimJob {
+struct AnimSampleJob {
   AnimHandle*   _pHandle;
   AnimClip*     _pClip;
   AnimClipState _clipState;
+  
+};
+
+
+struct AnimBlendLayer {
+  // Local transforms that are outputted by the AnimSample job.
+  Matrix4     _transforms[64];
+  // Individual joint weight for per joint blending.
+  r32         _jointWeights[64];
+  r32         _weight;
 };
 
 
 // Generalized blend job. Grabs two inputs to produce the final output.
-struct BlendJob : public AnimJob {
-  AnimClip*       _pBlendClip;
-  AnimClipState   _blendClipState;
-  r32             _dt;              // dT mix for the base and blending palettes.
-};
-
-
-// A more fine grained blend job used to determine which joints are 
-// going to blend within two animations.
-struct LayeredBlendJob : public AnimJob {
-  AnimClip*         _pBlendClip;
-  AnimClipState     _blendClipState;
-  r32               _blendWeight;
-  r32               _blendDepth;
+struct AnimBlendJob {
+  std::vector<AnimBlendLayer> _layers;
+  std::vector<AnimBlendLayer> _additiveLayers;
+  skeleton_uuid_t                   _skeletonId;
+  Matrix4                           _output[64];
 };
 
 
@@ -109,12 +110,11 @@ public:
 
 protected:
   
-  void          DoSampleJob(AnimJob& job, r32 gt);
-  void          DoBlendJob(BlendJob& job, r32 gt);
-  void          DoLayeredBlendJob(LayeredBlendJob& job, r32 gt);
+  void          DoSampleJob(AnimSampleJob& job, r32 gt);
+  void          DoBlendJob(AnimBlendJob& job, r32 gt);
 
-  void          PushSampleJob(AnimJob& animJob) { m_sampleJobs.push_back(animJob); }
-  void          PushBlendJob(BlendJob& blendJob) { m_blendJobs.push_back(blendJob); }
+  void          PushSampleJob(AnimSampleJob& animJob) { m_sampleJobs.push_back(animJob); }
+  void          PushBlendJob(AnimBlendJob& blendJob) { m_blendJobs.push_back(blendJob); }
 
 
   void          ApplySkeletonPose(AnimHandle* pHandle, Skeleton* pSkeleton);
@@ -134,14 +134,11 @@ private:
   std::mutex                                    m_layeredJobMutex;
 
   // Sample jobs currently in place.
-  std::vector<AnimJob>                          m_sampleJobs;
+  std::vector<AnimSampleJob>                          m_sampleJobs;
   u32                                           m_currSampleJobCount;
 
   // Number of blend jobs to be executed after animation stepping.
-  std::vector<BlendJob>                         m_blendJobs;
-
-  // Number of layered blend jobs to be executred after animation stepping.
-  std::vector<LayeredBlendJob>                  m_layeredBlendJobs;
+  std::vector<AnimBlendJob>                         m_blendJobs;
 
   // Thread workers for this animation submodule.
   std::vector<std::thread>                      m_workers;

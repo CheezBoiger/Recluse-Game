@@ -185,11 +185,6 @@ extern GraphicsPipeline* output_pipelineKey;
 
 extern char const* kDefaultShaderEntryPointStr;
 
-extern GraphicsPipeline*  envMap_pbrPipeline;
-extern FrameBuffer*       envMap_frameBuffer;
-extern RenderPass*        envMap_renderPass;
-extern Texture*           envMap_texture;
-
 void SetUpRenderData();
 void CleanUpRenderData();
 

@@ -174,10 +174,10 @@ public:
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
-  // Takes the position of where to bake the cubemap in, along with the size x,y of the cubemap
+  // Takes the position of where to bake the cubemap in, along with the texSize of the cubemap
   // dimensions for each texture surface. When Calling this function, will render all objects currently
   // in the render queue.
-  TextureCube*      BakeEnvironmentMap(const Vector3& position, u32 x = 512u, u32 y = 512u);
+  TextureCube*      BakeEnvironmentMap(const Vector3& position, u32 texSize = 512u);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
   // to render our mesh object with fast global illumination. This generates an irradiance
@@ -257,6 +257,9 @@ protected:
   // for presenting to the window.
   void              EndFrame();
 
+  // Wipes out all currently pushed in meshes in this renderer.
+  void              ClearCmdLists();
+
 private:
 
   void              SetUpFrameBuffers();
@@ -270,20 +273,29 @@ private:
   void              CleanUpFinalOutputs();
   void              SetUpFinalOutputs();
   void              SetUpForwardPBR();
-  void              BuildForwardPBRCmdBuffer();
   void              SetUpRenderTextures(b32 fullSetup);
   void              SetUpOffscreen(b32 fullSetup);
   void              SetUpDebugPass();
   void              CleanUpDebugPass();
-  void              BuildDebugCmdBuffer();
+  void              GenerateDebugCmds();
   void              SetUpPBR();
   void              SetUpSkybox();
-  void              BuildOffScreenBuffer(u32 cmdBufferIndex);
-  void              BuildPbrCmdBuffer();
-  void              BuildShadowCmdBuffer(u32 cmdBufferIndex);
-  void              BuildHDRCmdBuffer();
-  void              BuildSkyboxCmdBuffer();
-  void              BuildFinalCmdBuffer();
+  void              GenerateOffScreenCmds(CommandBuffer* buf);
+  void              GeneratePbrCmds(CommandBuffer* buf);
+  void              GenerateShadowCmds(CommandBuffer* buf);
+  void              GenerateHDRCmds(CommandBuffer* buf);
+  void              GenerateSkyboxCmds(CommandBuffer* buf);
+  void              GenerateFinalCmds(CommandBuffer* buf);
+  void              GenerateForwardPBRCmds(CommandBuffer* buf);
+
+  void              BuildOffScreenCmdList();
+  void              BuildPbrCmdList();
+  void              BuildShadowCmdList();
+  void              BuildHDRCmdList();
+  void              BuildSkyboxCmdList();
+  void              BuildForwardPBRCmdList();
+  void              BuildFinalCmdList();
+
   void              SetUpDownscale(b32 FullSetUp);
   void              CleanUpDownscale(b32 FullCleanUp);
   void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
@@ -301,7 +313,6 @@ private:
   void              CleanUpGlobalIlluminationBuffer();
   inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
 
-  void              ClearCmdLists();
   void              SortCmdLists();
   void              WaitForCpuFence();
 

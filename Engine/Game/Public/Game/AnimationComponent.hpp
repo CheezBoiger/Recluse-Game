@@ -29,7 +29,8 @@ public:
   void BlendPlayback(const std::string& name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
   
   // Signal to play back an animation clip with given name.
-  void Playback(const std::string& name);
+  // May also optionally specify at what time to play the animation [0,1] as the normalized time.
+  void Playback(const std::string& name, r32 atTime = 0.0f);
   
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
