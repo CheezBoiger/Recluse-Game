@@ -35,8 +35,9 @@ void AnimationComponent::AddClip(AnimClip* clip, const std::string& name)
 }
 
 
-void AnimationComponent::Playback(const std::string& name, r32 atTime)
+void AnimationComponent::Playback(const std::string& name,  r32 rate, r32 atTime)
 {
+  m_rate = rate;
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
   AnimClip* clip = it->second;
@@ -44,12 +45,24 @@ void AnimationComponent::Playback(const std::string& name, r32 atTime)
   submit._type = ANIM_JOB_TYPE_SAMPLE;
   submit._pBaseClip = clip;
   submit._timeRatio = atTime;
-  submit._pHandle = m_handle;
+  submit._playbackRate = rate;
+  submit._uuid = m_handle->_uuid;
   gAnimation().SubmitJob(submit);
 }
 
 
 void AnimationComponent::Update()
 {
+  AnimSampleJob* job = gAnimation().GetCurrentSampleJob(m_handle->_uuid);
+  if (!job) return;
+  job->_clipState._fPlaybackRate = m_rate;
+  memcpy(m_handle->_finalPalette, job->_output, sizeof(Matrix4) * job->_sz);
+}
+
+
+void AnimationComponent::BlendPlayback(const std::string& name, r32 targetWeight, r32 fadeLen)
+{
+  AnimJobSubmitInfo info{};
+  
 }
 } // Recluse

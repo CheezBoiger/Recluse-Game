@@ -20,7 +20,8 @@ class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
   AnimationComponent()
-    : m_handle(nullptr) { } 
+    : m_handle(nullptr)
+    , m_rate(1.0) { } 
 
   // Add an animation clip to the component to playback in the future.
   void AddClip(AnimClip* clip, const std::string& name);
@@ -30,7 +31,7 @@ public:
   
   // Signal to play back an animation clip with given name.
   // May also optionally specify at what time to play the animation [0,1] as the normalized time.
-  void Playback(const std::string& name, r32 atTime = 0.0f);
+  void Playback(const std::string& name, r32 rate = 1.0f, r32 atTime = 0.0f);
   
   // Check if component is playing back a clip.
   b32    PlayingBack(const std::string& name);
@@ -55,13 +56,14 @@ public:
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      SetPlaybackRate(r32 rate) { m_handle->_playbackRate = rate; }
+  void                      SetPlaybackRate(r32 rate) { m_rate = rate; }
 
   // Get the current playback rate.
-  r32                       GetPlaybackRate() const { return m_handle->_playbackRate; }
+  r32                       GetPlaybackRate() const { return m_rate; }
 
 private:
   std::map<std::string, AnimClip*>    m_clips;
   AnimHandle*                         m_handle;
+  r32                                 m_rate;
 };
 } // Recluse

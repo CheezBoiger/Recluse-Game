@@ -218,8 +218,8 @@ void Engine::Update()
 #endif
 
   // Update using next frame input.
-  AnimationComponent::UpdateComponents();
   gAnimation().UpdateState(dt);
+  AnimationComponent::UpdateComponents();
   gUI().UpdateState(dt);
 
   

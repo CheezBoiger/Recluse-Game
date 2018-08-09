@@ -39,6 +39,10 @@ void Animation::UpdateState(r64 dt)
   for (auto& job : m_sampleJobs) {
     DoSampleJob(job, static_cast<r32>(dt));
   }
+
+  for (auto& job : m_blendJobs) {
+    DoBlendJob(job, static_cast<r32>(dt));
+  }
 }
 
 
@@ -73,14 +77,15 @@ void Animation::SubmitJob(const AnimJobSubmitInfo& info)
     {
       AnimSampleJob job = { };
       job._pClip = info._pBaseClip;
-      job._pHandle = info._pHandle;
       job._clipState = { };
       job._clipState._bLooping = info._pBaseClip->_bLooping;
       job._clipState._fCurrLocalTime = 0.0f;
       job._clipState._bEnabled = true;
       job._clipState._fCurrLocalTime = info._timeRatio * info._pBaseClip->_fDuration;
-      job._clipState._fPlaybackRate = job._pHandle->_playbackRate;
+      job._clipState._fPlaybackRate = info._playbackRate;
+      job._sz = 64;
       m_sampleJobs.push_back(job);
+      m_sampleJobMaps[info._uuid] = &m_sampleJobs.back();
     } break;
     case ANIM_JOB_TYPE_BLEND:
     {
@@ -119,7 +124,7 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
 {
   if (!job._clipState._bEnabled) { return; }
   r32 tau = job._clipState._tau;
-  r32 rate = job._pHandle->_playbackRate;
+  r32 rate = job._clipState._fPlaybackRate;
   r32 lt = job._clipState._fCurrLocalTime + gt * rate;
   if (lt > job._pClip->_fDuration) {
     lt -= job._pClip->_fDuration;
@@ -134,8 +139,8 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
   }
   job._clipState._fCurrLocalTime = lt;
   Skeleton * pSkeleton = Skeleton::GetSkeleton(job._pClip->_skeletonId);
-  Matrix4* palette = job._pHandle->_finalPalette;
-  u32 paletteSz = job._pHandle->_paletteSz;
+  Matrix4* palette = job._output;
+  u32 paletteSz = job._sz;
 
   u32 currPoseIdx = 0;
   u32 nextPoseIdx = 0;
@@ -160,7 +165,7 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
         job._pClip->_aAnimPoseSamples[nextPoseIdx]._time,
         lt);
       if (rootInJoints) {
-        job._pHandle->_finalPalette[0] = localTransform;
+        job._output[0] = localTransform;
       }
       globalTransform = localTransform;
     }
@@ -179,12 +184,12 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
         parentTransform = globalTransform;
       }
       else {
-        parentTransform = job._pHandle->_finalPalette[pSkeleton->_joints[idx]._iParent];
+        parentTransform = job._output[pSkeleton->_joints[idx]._iParent];
       }
-      job._pHandle->_finalPalette[idx] = localTransform * parentTransform;
+      job._output[idx] = localTransform * parentTransform;
     }
 
-    ApplySkeletonPose(job._pHandle, pSkeleton);
+    ApplySkeletonPose(job._output, pSkeleton);
   }
   else {
     // No skeleton found for this clip, assume heirachy none. Renderer should take care of parent child heirarchy.
@@ -192,12 +197,29 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
 }
 
 
-void Animation::ApplySkeletonPose(AnimHandle* pHandle, Skeleton* pSkeleton)
+void Animation::ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton)
 {
   if (!pSkeleton) return;
 
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
-    pHandle->_finalPalette[i] = pSkeleton->_joints[i]._InvBindPose * pHandle->_finalPalette[i] * pSkeleton->_rootInvTransform;
+    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pOutput[i] * pSkeleton->_rootInvTransform;
   }
+}
+
+
+void Animation::DoBlendJob(AnimBlendJob& job, r32 gt)
+{
+  for (auto& layer : job._layers) {
+    
+  }
+}
+
+
+AnimSampleJob* Animation::GetCurrentSampleJob(uuid64 uuid)
+{
+  AnimSampleJob* sample = nullptr;
+  auto it = m_sampleJobMaps.find(uuid);
+  if (it != m_sampleJobMaps.end()) sample = it->second;
+  return sample;
 }
 } // Recluse

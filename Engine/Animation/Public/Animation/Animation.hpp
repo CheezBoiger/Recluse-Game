@@ -25,12 +25,10 @@ struct AnimClipState;
 struct AnimHandle {
   AnimHandle(uuid64 uuid)
     : _uuid(uuid)
-    , _paletteSz(64)
-    , _playbackRate(1.0f) { }
+    , _paletteSz(64) { }
 
   Matrix4           _finalPalette[64];
   u32               _paletteSz;
-  r32               _playbackRate;
   uuid64            _uuid;
 };
 
@@ -39,24 +37,6 @@ enum AnimJobType {
   ANIM_JOB_TYPE_SAMPLE,
   ANIM_JOB_TYPE_BLEND,
   ANIM_JOB_TYPE_LAYERED_BLEND
-};
-
-
-struct AnimJobSubmitInfo {
-  AnimJobType _type;
-  AnimHandle* _pHandle;
-  AnimClip*   _pBaseClip;
-  AnimClip*   _pBlendClip;
-  r32         _blendWeight;
-  r32         _timeRatio;     // [0,1] time ratio interval.
-};
-
-
-struct AnimSampleJob {
-  AnimHandle*   _pHandle;
-  AnimClip*     _pClip;
-  AnimClipState _clipState;
-  
 };
 
 
@@ -69,10 +49,31 @@ struct AnimBlendLayer {
 };
 
 
-// Generalized blend job. Grabs two inputs to produce the final output.
-struct AnimBlendJob {
+struct AnimJobSubmitInfo {
+  AnimJobType                 _type;
+  uuid64                      _uuid;            // uuid belonging to this anim submittal.
+  AnimClip*                   _pBaseClip;       // base clip to use during sampling.
+  r32                         _blendWeight;     // global blend weight.
+  r32                         _timeRatio;       // [0,1] time ratio interval.
+  r32                         _playbackRate;    // Initial playback rate.
+  b32                         _looping;         // is this job going to loop?
   std::vector<AnimBlendLayer> _layers;
   std::vector<AnimBlendLayer> _additiveLayers;
+};
+
+
+struct AnimSampleJob {
+  Matrix4       _output[64];
+  u32           _sz;
+  AnimClip*     _pClip;
+  AnimClipState _clipState;
+};
+
+
+// Generalized blend job. Grabs two inputs to produce the final output.
+struct AnimBlendJob {
+  std::vector<AnimBlendLayer>       _layers;
+  std::vector<AnimBlendLayer>       _additiveLayers;
   skeleton_uuid_t                   _skeletonId;
   Matrix4                           _output[64];
 };
@@ -108,6 +109,9 @@ public:
 
   void          SubmitJob(const AnimJobSubmitInfo& info);
 
+  AnimSampleJob*  GetCurrentSampleJob(uuid64 uuid);
+  AnimBlendJob*   GetCurrentBlendJob(uuid64 uuid);
+
 protected:
   
   void          DoSampleJob(AnimSampleJob& job, r32 gt);
@@ -117,7 +121,7 @@ protected:
   void          PushBlendJob(AnimBlendJob& blendJob) { m_blendJobs.push_back(blendJob); }
 
 
-  void          ApplySkeletonPose(AnimHandle* pHandle, Skeleton* pSkeleton);
+  void          ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton);
 
 private:
 
@@ -127,7 +131,8 @@ private:
   std::unordered_map<uuid64, AnimHandle*>       m_animObjects;
 
   // Handles to final palattes, added when a job is pushed to this animation engine.
-  std::vector<AnimHandle*>                      m_currHandles;
+  std::map<uuid64, AnimSampleJob*>         m_sampleJobMaps;
+  std::map<uuid64, AnimBlendJob*>          m_blendJobMaps;
 
   std::mutex                                    m_sampleJobMutex;
   std::mutex                                    m_blendJobMutex;
