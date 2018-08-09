@@ -50,7 +50,7 @@ layout (set = 1, binding = 1) uniform imageCube irrMapOut;
 layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main()
 {
-  vec2 uv = vec2(gl_GlobalInvocationID.xy);
+  vec2 uv = vec2(gl_GlobalInvocationID.xy) + 0.5; // half-pixel offset.
   for (int i = 0; i < 6; ++i) {
     
   }

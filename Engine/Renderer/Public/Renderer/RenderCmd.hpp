@@ -20,6 +20,7 @@ class RenderMaterial;
 class JointDescriptor;
 class MeshData;
 class Texture2D;
+class UIDescriptor;
 
 struct Primitive;
 
@@ -40,6 +41,7 @@ enum CmdConfig {
 
 enum UiType {
   UI_TEXT,
+  UI_IMAGE,
   UI_BEGIN,
   UI_END
 };
@@ -110,6 +112,18 @@ struct UiBeginCanvasInfo : public UiRenderCmd {
 };
 
 
+struct UiImageInfo : public UiRenderCmd {
+  UiImageInfo() { _uiType = UI_IMAGE; }
+
+  r32             _x;
+  r32             _y;
+  r32             _width;
+  r32             _height;
+  u16             _region[4];
+  UIDescriptor*   _descriptor;
+};
+
+
 class BufferUI {
 public:
   BufferUI(u32 id)
@@ -119,6 +133,7 @@ public:
   void BeginCanvas(const UiBeginCanvasInfo& begin);
   void EndCanvas();
   void EmitText(const UiText& text);
+  void EmitImage(const UiImageInfo& imgInfo);
 
   u32   GetId() const { return m_id; }
 

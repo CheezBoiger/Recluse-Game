@@ -6,6 +6,7 @@
 #include "Renderer.hpp"
 #include "Resources.hpp"
 #include "RendererData.hpp"
+#include "UIDescriptor.hpp"
 #include "GlobalDescriptor.hpp"
 #include "Filesystem/Filesystem.hpp"
 
@@ -622,6 +623,10 @@ void BufferUI::BeginCanvas(const UiBeginCanvasInfo& begin)
   nk->_ctx.style.window.fixed_background = nk_style_item_color(fixedBackGroundColor);
   nk->_ctx.style.window.background = backgroundcolor;
   nk->_ctx.style.window.header.active = nk_style_item_color(headerColor);
+  nk->_ctx.style.window.header.normal = nk_style_item_color(headerColor);
+  nk->_ctx.style.window.header.hover = nk_style_item_color(headerColor);
+  nk->_ctx.style.window.header.label_active = nk_color{ 255, 255, 255, 255 }; // Active ? Seems like a one time only color.
+  nk->_ctx.style.window.header.label_normal = nk_color{ 255, 255, 255, 255 }; // normal ? seems like color carries on to this canvas.
   nk_begin(&nk->_ctx, begin._str, nk_rect(begin._x, begin._y, begin._width, begin._height), NK_WINDOW_TITLE);
   nk->_cmdBuffer = nk_window_get_canvas(&nk->_ctx);
 }
@@ -640,6 +645,24 @@ void BufferUI::EmitText(const UiText& text)
                           text._bgColor.a };
   nk_draw_text(nk->_cmdBuffer, nk_rect(text._x, text._y, text._width, text._height), text._str, 
     static_cast<i32>(text._sz), &nk->_font->handle, bg, fg);
+}
+
+
+void BufferUI::EmitImage(const UiImageInfo& imgInfo)
+{
+  NkObject* nk = gNkDevice();
+  struct nk_image img;
+  
+  Texture2D* pTex = imgInfo._descriptor->GetImage();
+  img.handle = nk_handle_ptr(imgInfo._descriptor);
+  img.region[0] = imgInfo._region[0];
+  img.region[1] = imgInfo._region[1];
+  img.region[2] = imgInfo._region[2];
+  img.region[3] = imgInfo._region[3];
+  img.w = static_cast<u16>(pTex->Width());
+  img.h = static_cast<u16>(pTex->Height());
+  nk_draw_image(nk->_cmdBuffer, nk_rect(imgInfo._x, imgInfo._y, imgInfo._width, imgInfo._height),
+    &img, nk_color{0, 0, 0, 0});
 }
 
 

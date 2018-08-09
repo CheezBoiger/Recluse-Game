@@ -35,18 +35,11 @@ public:
   void            Update(VulkanRHI* pRhi);
   void            CleanUp(VulkanRHI* pRhi);
 
-  // TODO(): For UI Images and textures to be sent to the UI Overlay. May also contain transformation
-  // details for it as well..
-  UITransform*    GetUIData() { return &m_transform; }
+  Texture2D*        GetImage() { return m_image; }
 
 private:
 
-  union {
-    Texture2D*        m_image;
-    Buffer*           m_buffer;
-  } m_data;
-
-  UITransform       m_transform;
+  Texture2D*        m_image;
   DescriptorSet*    m_pSet;
   UIDescriptorType  m_type;
 };

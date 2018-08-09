@@ -117,20 +117,23 @@ public:
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
     std::string engine = RTEXT("Recluse Engine v0.0.25");
     std::string device = gRenderer().GetDeviceName();
+    std::string globalTime = "time: " + std::to_string(Time::CurrentTime()) + " s";
     Window* window = gEngine().GetWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";
     gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->Height() - 300.0f, 800.0f, 500.0f);
-      gUI().EmitText(str, 30.0f, 100.0f, 150.0f, 20.0f);
-      gUI().EmitText(engine, 30.0f, 40.0f, 350.0f, 20.0f);
-      gUI().EmitText(device, 30.0f, 60.0f, 300.0f, 20.0f);
-      gUI().EmitText(intro, 30.0f, 80.0f, 450.0f, 20.0f);
+      gUI().EmitText(str, 6.0f, 100.0f, 150.0f, 20.0f);
+      gUI().EmitText(engine, 6.0f, 40.0f, 350.0f, 20.0f);
+      gUI().EmitText(device, 6.0f, 60.0f, 300.0f, 20.0f);
+      gUI().EmitText(intro, 6.0f, 80.0f, 450.0f, 20.0f);
+      gUI().EmitText(globalTime, 6.0f, 120.0f, 500.0f, 20.0f); 
     gUI().EndCanvas();
+
     gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 1000.0f, 300.0f);
-      gUI().EmitText(frustumResult, 40.0f, 40.0f, 500.0f, 200.0f);
-      gUI().EmitText(farS, 30.0f, 60.0f, 800.0f, 20.0f);
-      gUI().EmitText(nearS, 30.0f, 80.0f, 800.0f, 20.0f);
-      gUI().EmitText(topS, 30.0f, 100.0f, 800.0f, 20.0f);
-      gUI().EmitText(bottomS, 30.0f, 120.0f, 1000.0f, 20.0f);
+      gUI().EmitText(frustumResult, 6.0f, 40.0f, 500.0f, 200.0f);
+      gUI().EmitText(farS, 6.0f, 60.0f, 800.0f, 20.0f);
+      gUI().EmitText(nearS, 6.0f, 80.0f, 800.0f, 20.0f);
+      gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
+      gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
     gUI().EndCanvas();
   }
 
