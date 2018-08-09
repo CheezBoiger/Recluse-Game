@@ -29,6 +29,7 @@ public:
 
     CubeObject()
   {
+    SetName("CubeObject :3");
   }
 
   void OnStartUp() override
@@ -112,6 +113,9 @@ public:
       default: frustumResult += "None";
     }
 
+    Vector3 spos = Camera::GetMain()->GetWorldToScreenProjection(transform->Position);
+
+    std::string lol = GetName();
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
@@ -128,12 +132,13 @@ public:
       gUI().EmitText(globalTime, 6.0f, 120.0f, 500.0f, 20.0f); 
     gUI().EndCanvas();
 
-    gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 1000.0f, 300.0f);
+    gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 10000.0f, 1000.0f);
       gUI().EmitText(frustumResult, 6.0f, 40.0f, 500.0f, 200.0f);
       gUI().EmitText(farS, 6.0f, 60.0f, 800.0f, 20.0f);
       gUI().EmitText(nearS, 6.0f, 80.0f, 800.0f, 20.0f);
       gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
       gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
+      gUI().EmitText(lol, spos.x, spos.y, 300.0f, 30.0f);
     gUI().EndCanvas();
   }
 

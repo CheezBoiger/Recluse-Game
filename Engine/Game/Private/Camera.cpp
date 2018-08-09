@@ -122,6 +122,21 @@ void Camera::Update()
   hdr->_interleavedVideo.x = r32(InterleavedVideo());
 }
 
+
+Vector3 Camera::GetWorldToScreenProjection(const Vector3& position)
+{
+  Vector4 sPos = Vector4(position, 1.0f) * m_viewMatrix;
+  if (sPos.z < 0.0f) return Vector3(-1.0f, -1.0f, 0.0f);
+  sPos = sPos * m_projectionMatrix;
+  // Perspective divide to get clip space coordinates.
+  sPos /= sPos.z;
+  
+  // Multiply by screen size to get screen position.
+  sPos.x = (sPos.x + 1.0f) * m_PixelWidth / 2.0f;
+  sPos.y = (sPos.y + 1.0f) * m_PixelHeight / 2.0f;
+  return Vector3(sPos.x, sPos.y, 0.0f);
+}
+
 #if 0
 FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
   r32 zNear, r32 zFar, Vector3 pos, Vector3 dir)

@@ -80,7 +80,9 @@ public:
   void                EnableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                SetOrthoScale(r32 scale) { m_OrthoScale = scale; }
 
-  ViewFrustum        GetViewFrustum() const { return m_viewFrustum; }
+  Vector3             GetWorldToScreenProjection(const Vector3& position);
+
+  ViewFrustum         GetViewFrustum() const { return m_viewFrustum; }
 
 protected:
   ViewFrustum         m_viewFrustum;
