@@ -18,7 +18,9 @@ namespace Recluse {
 class GameObject;
 
 
-// Virtual camera, which implements the pinhole theory.
+// Virtual camera, which implements the pinhole theory. Camera's allow for user's to view a scene from 
+// a standpoint, while also being the bridge between gpu and application data exchange. Cameras are a 
+// way to simply visualize to the game programmer, how to view and determine the art of the scene.
 class Camera : public Component {
   static Camera* s_pMainCamera;
   RCOMPONENT(Camera)
@@ -50,7 +52,8 @@ public:
   Matrix4     View() { return m_viewMatrix; }
   Matrix4     Projection() { return m_projectionMatrix; }
 
-  // Update camera's coordinate view space.
+  // Update camera's coordinate view space. Must be called manually by the 
+  // scene, because of game logic specific work.
   void        Update();
 
   void                SetFoV(r32 fov) { m_Fov = fov; }
@@ -102,5 +105,10 @@ protected:
   b32                 m_Bloom;
   b32                 m_FrustumCull;
   b32                 m_interleaveVideo;
+
+  // Gpu component update by the engine.
+  void                FlushToGpuBus();
+
+  friend class Engine;
 };
 } // Recluse

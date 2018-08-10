@@ -119,6 +119,9 @@ layout (set = 3, binding = 1) uniform sampler2D globalShadow;
 
 layout (set = 4, binding = 0) uniform LightSpace {
   mat4 viewProj;
+  vec4 near;
+  vec4 lightSz;       // world light size / frustum width.
+  vec4 shadowTechnique; // 0 for pcf, 1 for pcss
 } lightSpace;
 
 

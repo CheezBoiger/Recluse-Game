@@ -5,9 +5,6 @@ glslangValidator.exe --aml -V ForwardPBR.frag -o ForwardPBR_NoLR.frag.spv
 glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V ForwardPBR.frag -o ForwardPBR_LR.frag.spv
 glslangValidator.exe --aml -V ForwardPBR.vert -o ForwardPBR.vert.spv
 
-glslangValidator.exe --aml -V PBR.comp -o PBR_NoLR.comp.spv
-glslangValidator.exe --aml -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR.comp.spv
-
 glslangValidator.exe --aml -DNVIDIA=1 -DLOCAL_REFLECTIONS=1 -V PBR.comp -o PBR_LR_Nvidia.comp.spv
 glslangValidator.exe --aml -DNVIDIA=1 -V PBR.comp -o PBR_NoLR_Nvidia.comp.spv
 

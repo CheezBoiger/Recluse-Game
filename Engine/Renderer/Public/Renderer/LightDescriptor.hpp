@@ -63,6 +63,9 @@ struct SpotLight {
 
 struct LightViewSpace {
   Matrix4           _ViewProj;
+  Vector4           _near;
+  Vector4           _lightSz;   // worldlightsz / frustum width.
+  Vector4           _shadowTechnique; // 0 for pcf, 1 for pcss.
 };
 
 

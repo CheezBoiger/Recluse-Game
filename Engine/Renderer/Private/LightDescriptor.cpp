@@ -69,6 +69,10 @@ LightDescriptor::LightDescriptor()
     m_Lights._DirectionalLights[i]._Color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
     m_Lights._DirectionalLights[i]._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   }
+
+  m_PrimaryLightSpace._lightSz = Vector4();
+  m_PrimaryLightSpace._near = Vector4();
+  m_PrimaryLightSpace._shadowTechnique = Vector4();
 }
 
 
@@ -252,7 +256,6 @@ void LightDescriptor::Update(VulkanRHI* pRhi)
   Eye -= m_vViewerPos;
   // Pass as one matrix.
   Matrix4 view = Matrix4::LookAt(-Eye, m_vViewerPos, Vector3::UP);
-
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
     m_rShadowViewportWidth, 
@@ -260,8 +263,11 @@ void LightDescriptor::Update(VulkanRHI* pRhi)
     1.0f, 
     8000.0f
   );
-
   m_PrimaryLightSpace._ViewProj = view * proj;
+  r32 lightSz = 10.0f / m_rShadowViewportWidth;
+  m_PrimaryLightSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
+  m_PrimaryLightSpace._near = Vector4(0.1f, 0.0f, 0.1f, 0.1f);
+  m_PrimaryLightSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
   R_ASSERT(m_pLightBuffer->Mapped(), "Light buffer was not mapped!");
   memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));

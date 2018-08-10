@@ -64,8 +64,6 @@ void Camera::Update()
   Vector3 front = transform->Front();
 
   // Update camera and screen info.
-  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
-  ConfigHDR* hdr = gRenderer().GetHDR()->GetRealtimeConfiguration();
   Window* pWindow = gEngine().GetWindow();
 
   m_viewMatrix = Matrix4(
@@ -92,6 +90,20 @@ void Camera::Update()
     m_PixelHeight = winPixHeight;
     m_Aspect = (m_PixelWidth / m_PixelHeight);
   }
+}
+
+
+void Camera::FlushToGpuBus()
+{
+  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
+  ConfigHDR* hdr = gRenderer().GetHDR()->GetRealtimeConfiguration();
+  Window* pWindow = gEngine().GetWindow();
+
+  Transform* transform = GetOwner()->GetTransform();
+  Vector3 pos = transform->Position;
+  Vector3 right = transform->Right();
+  Vector3 up = transform->Up();
+  Vector3 front = transform->Front();
 
   gGlobalBuffer->_CameraPos = Vector4(pos, 1.0f);
   gGlobalBuffer->_Proj = m_projectionMatrix;

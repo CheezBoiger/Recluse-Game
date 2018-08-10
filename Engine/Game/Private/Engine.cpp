@@ -233,8 +233,11 @@ void Engine::Update()
   });
 
   m_workers[1] = std::thread([&]() -> void {
-    if (Camera::GetMain()) { 
-      if (Camera::GetMain()->Enabled()) Camera::GetMain()->Update(); 
+    {
+      Camera* pMain = Camera::GetMain();
+      if (pMain) {
+        pMain->FlushToGpuBus();
+      }
     }
     MeshComponent::UpdateComponents();
     RendererComponent::UpdateComponents();

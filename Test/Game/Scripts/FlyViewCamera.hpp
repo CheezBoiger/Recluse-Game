@@ -76,11 +76,11 @@ public:
     Transform* transform = GetTransform();
 
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
-      bFollow = true;
+      pCam->SetFoV(pCam->FoV() + Radians(1.0f));
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
-      bFollow = false;
+      pCam->SetFoV(pCam->FoV() - Radians(1.0f));
     }
 
     if (!bFollow) {
@@ -178,6 +178,9 @@ public:
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir.Normalize(), Vector3::UP);
 #endif
+
+    // Must update the camera manually, as it may need to be updated before other game logic.
+    pCam->Update();
   }
 
   void OnCleanUp() override 
