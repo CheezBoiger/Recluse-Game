@@ -264,10 +264,10 @@ void LightDescriptor::Update(VulkanRHI* pRhi)
     8000.0f
   );
   m_PrimaryLightSpace._ViewProj = view * proj;
-  r32 lightSz = 10.0f / m_rShadowViewportWidth;
+  r32 lightSz = 10.0f / 40.0f;
   m_PrimaryLightSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
-  m_PrimaryLightSpace._near = Vector4(0.1f, 0.0f, 0.1f, 0.1f);
-  m_PrimaryLightSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+  m_PrimaryLightSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
+  m_PrimaryLightSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
 
   R_ASSERT(m_pLightBuffer->Mapped(), "Light buffer was not mapped!");
   memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
