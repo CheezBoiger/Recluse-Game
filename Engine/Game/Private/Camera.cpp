@@ -58,6 +58,7 @@ void Camera::Update()
   if (!GetOwner()) return;
 
   Transform* transform = GetOwner()->GetTransform();
+ 
   Vector3 pos = transform->Position;
   Vector3 right = transform->Right();
   Vector3 up = transform->Up();

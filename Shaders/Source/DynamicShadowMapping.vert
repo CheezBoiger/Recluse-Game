@@ -26,17 +26,15 @@ layout (set = 1, binding = 0) uniform LightSpace {
 } light_space;
 
 
-layout (set = 2, binding = 0) uniform JointsBuffer {
+layout (set = 3, binding = 0) uniform JointsBuffer {
   mat4 joints[MAX_JOINTS];
 } joints_buffer;
 
 
-#if defined(TRANSPARENT_SHADOW_MAP)
 out FragIn {
   vec2 uv0;
   vec2 uv1;
 } fragIn;
-#endif
 
 
 void main()
@@ -56,8 +54,6 @@ void main()
   worldPosition = obj_buffer.model * worldPosition;
   gl_Position = light_space.viewProj * worldPosition;
   
-#if defined(TRANSPARENT_SHADOW_MAP)
   fragIn.uv0 = texcoord0;
   fragIn.uv1 = texcoord1;
-#endif
 }

@@ -473,8 +473,8 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
       }
       case NVIDIA_VENDOR_ID:
       {
-        lr = "PBR_NoLR_Nvidia.comp.spv";
-        noLr = "PBR_LR_Nvidia.comp.spv";
+        lr = "PBR_LR_Nvidia.comp.spv";
+        noLr = "PBR_NoLR_Nvidia.comp.spv";
       } break;
       case INTEL_VENDOR_ID:
       default:
@@ -524,6 +524,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     shaderCi.pName = kDefaultShaderEntryPointStr;
     shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     computeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    computeCi.stage = shaderCi;
     computeCi.basePipelineHandle = VK_NULL_HANDLE;
     computeCi.basePipelineIndex = -1;
     computeCi.stage = shaderCi;
@@ -648,7 +649,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   Input.pVertexAttributeDescriptions = StaticVertexAttribs.data();
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
-
+  layouts[5] = globalIllumination_DescLR->Layout();
   pbr_staticForwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
 
 
@@ -835,10 +836,11 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
 
   // TODO(): Initialize shadow map pipeline.
   VkPipelineLayoutCreateInfo PipeLayout = {};
-  std::array<VkDescriptorSetLayout, 3> DescLayouts;
+  std::array<VkDescriptorSetLayout, 4> DescLayouts;
   DescLayouts[0] = MeshSetLayoutKey->Layout();
   DescLayouts[1] = LightViewDescriptorSetLayoutKey->Layout();
-  DescLayouts[2] = BonesSetLayoutKey->Layout();
+  DescLayouts[2] = MaterialSetLayoutKey->Layout();
+  DescLayouts[3] = BonesSetLayoutKey->Layout();
 
   auto Bindings = StaticVertexDescription::GetBindingDescription();
   auto Attribs = StaticVertexDescription::GetVertexAttributes();

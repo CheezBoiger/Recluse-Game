@@ -22,22 +22,16 @@ layout (set = 1, binding = 0) uniform LightSpace {
   mat4  viewProj;
 } light_space;
 
-
-#if defined(TRANSPARENT_SHADOW_MAP)
 out FragIn {
   vec2 uv0;
   vec2 uv1;
 } fragIn;
-#endif
-
 
 void main()
 {
   mat4 mvp = light_space.viewProj * obj_buffer.model;
   gl_Position = mvp * vec4(position.xyz, 1.0);
   
-#if defined(TRANSPARENT_SHADOW_MAP)
   fragIn.uv0 = texcoord0;
   fragIn.uv1 = texcoord1;
-#endif
 }

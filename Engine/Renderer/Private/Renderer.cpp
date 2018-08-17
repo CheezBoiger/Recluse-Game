@@ -734,9 +734,8 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   // Global Illumination reflection probe layout.
   {
-    DescriptorSetLayout* globalIllumLayout = m_pRhi->CreateDescriptorSetLayout();
     globalIllumination_DescNoLR = m_pRhi->CreateDescriptorSetLayout();
-    globalIllumination_DescLR = globalIllumLayout;
+    globalIllumination_DescLR = m_pRhi->CreateDescriptorSetLayout();
     
     std::array<VkDescriptorSetLayoutBinding, 6> globalIllum;
     // Global IrrMap.
@@ -782,7 +781,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     info.bindingCount = static_cast<u32>(globalIllum.size());
     info.pBindings = globalIllum.data();
     info.pNext = nullptr;
-    globalIllumLayout->Initialize(info);
+    globalIllumination_DescLR->Initialize(info);
     info.bindingCount = static_cast<u32>(globalIllum.size() - 3);
     globalIllumination_DescNoLR->Initialize(info);
   }
@@ -3040,15 +3039,15 @@ void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
     R_ASSERT(renderCmd._pMeshData, "Null data was passed to renderer.");
     MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
     b32 skinned = renderCmd._bSkinned;
-    VkDescriptorSet descriptorSets[3];
+    VkDescriptorSet descriptorSets[4];
     descriptorSets[0] = pMeshDesc->CurrMeshSet()->Handle();
     descriptorSets[1] = lightViewSet->Handle();
-    descriptorSets[2] = skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
+    descriptorSets[3] = skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
+
     GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
     cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 3 : 2, descriptorSets, 0, nullptr);
-    MeshData* mesh = renderCmd._pMeshData;
+   MeshData* mesh = renderCmd._pMeshData;
     VertexBuffer* vertex = mesh->VertexData();
     IndexBuffer* index = mesh->IndexData();
     VkBuffer buf = vertex->Handle()->NativeBuffer();
@@ -3063,6 +3062,8 @@ void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
     u32 count = mesh->GetPrimitiveCount();
     for (u32 i = 0; i < count; ++i) {
       Primitive& primitive = primitives[i];
+      descriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
       if (index) {
         cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
       } else {
@@ -3108,6 +3109,12 @@ void Renderer::CleanUpForwardPBR()
 
 void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
 {
+  GraphicsPipeline* staticPipeline = pbr_staticForwardPipeline_NoLR;
+  GraphicsPipeline* skinPipeline = pbr_forwardPipeline_NoLR;
+  if (m_currentGraphicsConfigs._EnableLocalReflections) {
+    staticPipeline = pbr_staticForwardPipeline_LR;
+    skinPipeline = pbr_forwardPipeline_LR;
+  }
   std::array<VkClearValue, 5> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -3142,7 +3149,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
       b32 Skinned = renderCmd._bSkinned;
-      GraphicsPipeline* Pipe = Skinned ? pbr_forwardPipeline_LR : pbr_staticForwardPipeline_LR;
+      GraphicsPipeline* Pipe = Skinned ? skinPipeline : staticPipeline;
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
       cmdBuffer->SetViewPorts(0, 1, &viewport);
 

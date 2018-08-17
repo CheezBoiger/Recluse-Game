@@ -118,7 +118,7 @@ void RendererComponent::Update()
   Transform* transform = GetOwner()->GetTransform();
   ObjectBuffer* renderData = m_meshDescriptor->ObjectData();
   Matrix4 model = transform->GetLocalToWorldMatrix();
-
+  
   UpdateLod(transform);
 
   // Now push the object into the renderer for updating.

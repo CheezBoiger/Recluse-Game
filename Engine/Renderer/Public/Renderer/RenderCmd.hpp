@@ -26,16 +26,16 @@ struct Primitive;
 
 
 enum CmdConfig {
-  CMD_RENDERABLE_BIT    = (1 << 0),
-  CMD_DEBUG_BIT         = (1 << 2),
-  CMD_SHADOWS_BIT       = (1 << 3),
-  CMD_INSTANCING_BIT    = (1 << 4),
-  CMD_TRANSLUCENT_BIT   = (1 << 5),
-  CMD_TRANSPARENT_BIT   = (1 << 6),
-  CMD_FORWARD_BIT       = (1 << 7),
-  CMD_ALLOW_CULL_BIT    = (1 << 8),
-  CMD_DECAL_BIT         = (1 << 9),
-  CMD_WATER_REFLECT_BIT = (1 << 10)
+  CMD_RENDERABLE_BIT    = (1 << 0),   // Allows the mesh to be renderable.
+  CMD_DEBUG_BIT         = (1 << 2),   // Allows mesh to be debuggable.
+  CMD_SHADOWS_BIT       = (1 << 3),   // Mesh allowed to cast shadows.
+  CMD_INSTANCING_BIT    = (1 << 4),   // Mesh is instanced.
+  CMD_TRANSLUCENT_BIT   = (1 << 5),   // Mesh is translucent.
+  CMD_TRANSPARENT_BIT   = (1 << 6),   // Mesh is transparent.
+  CMD_FORWARD_BIT       = (1 << 7),   // Mesh will be pushed to the forward render pipeline.
+  CMD_ALLOW_CULL_BIT    = (1 << 8),   // Mesh can be culled.
+  CMD_DECAL_BIT         = (1 << 9),   // Mesh is a decal.
+  CMD_WATER_REFLECT_BIT = (1 << 10)   // Allow mesh to be reflected by water.
 };
 
 
