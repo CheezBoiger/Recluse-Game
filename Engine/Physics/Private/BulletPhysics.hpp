@@ -47,6 +47,7 @@ public:
   SphereCollider*       CreateSphereCollider(r32 radius) override;
   CompoundCollider*     CreateCompoundCollider() override;
   void                  UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) override;
+  void                  UpdateRigidBody(RigidBody* body, physics_update_bits_t bits) override;
 
   void                  ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
 

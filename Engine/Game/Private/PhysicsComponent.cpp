@@ -41,7 +41,7 @@ void PhysicsComponent::Update()
 void PhysicsComponent::SetMass(r32 mass)
 {
   m_pRigidBody->_mass = mass;
-  gPhysics().SetMass(m_pRigidBody, mass);
+  m_updateBits |= PHYSICS_UPDATE_MASS;
 }
 
 
@@ -68,6 +68,9 @@ void PhysicsComponent::UpdateFromGameObject()
   gPhysics().SetTransform(m_pRigidBody, 
     m_pRigidBody->_position, 
     m_pRigidBody->_rotation);
+  if (m_updateBits & PHYSICS_UPDATE_ALL) 
+    gPhysics().UpdateRigidBody(m_pRigidBody, m_updateBits);
+  m_updateBits = PHYSICS_UPDATE_NONE;
 }
 
 
@@ -82,7 +85,9 @@ void PhysicsComponent::SetRelativeOffset(const Vector3& offset)
 
 void PhysicsComponent::ApplyImpulse(const Vector3& impulse, const Vector3& relPos)
 {
-  gPhysics().ApplyImpulse(m_pRigidBody, impulse, relPos);
+  m_pRigidBody->_impulses.push_back(impulse);
+  m_pRigidBody->_impulseRelativePositions.push_back(relPos);
+  m_updateBits |= PHYSICS_UPDATE_IMPULSE;
 }
 
 
@@ -96,31 +101,37 @@ void PhysicsComponent::UpdateFromPreviousGameLogic()
 
 void PhysicsComponent::ClearForces()
 {
-  gPhysics().ClearForces(m_pRigidBody);
+  m_updateBits |= PHYSICS_UPDATE_CLEAR_FORCES;
 }
 
 
 void PhysicsComponent::Reset()
 {
-  gPhysics().Reset(m_pRigidBody);
+  m_updateBits |= PHYSICS_UPDATE_RESET;
 }
 
 
 void PhysicsComponent::SetFriction(r32 friction)
 {
-  gPhysics().SetFriction(m_pRigidBody, friction);
+  // gPhysics().SetFriction(m_pRigidBody, friction);
+  m_pRigidBody->_friction = friction;
+  m_updateBits |= PHYSICS_UPDATE_FRICTION;
 }
 
 
 void PhysicsComponent::SetRollingFriction(r32 friction)
 {
-  gPhysics().SetRollingFriction(m_pRigidBody, friction);
+  // gPhysics().SetRollingFriction(m_pRigidBody, friction);
+  m_pRigidBody->_rollingFriction = friction;
+  m_updateBits |= PHYSICS_UPDATE_ROLLING_FRICTION;
 }
 
 
 void PhysicsComponent::SetSpinningFriction(r32 friction)
 {
-  gPhysics().SetSpinningFriction(m_pRigidBody, friction);
+  // gPhysics().SetSpinningFriction(m_pRigidBody, friction);
+  m_pRigidBody->_spinningFriction = friction;
+  m_updateBits |= PHYSICS_UPDATE_SPINNING_FRICTION;
 }
 
 

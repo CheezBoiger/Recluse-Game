@@ -26,6 +26,11 @@ struct RigidBundle {
 std::unordered_map<physics_uuid_t, RigidBundle> kRigidBodyMap;
 std::unordered_map<physics_uuid_t, btCollisionShape*> kCollisionShapes;
 
+std::vector<btRigidBody*>               kRigidBodies;
+std::vector<RigidBody*>                 kEngineRigidBodies;
+std::vector<Collider*>                  kEngineColliders;
+//std::vector<btCollisionShape*>          kCollisionShapes;
+
 // Global physics manager that holds physics contraint solvers, dispatchers, configuration
 // and management.
 struct bt_physics_manager 
@@ -554,6 +559,79 @@ void BulletPhysics::Reset(RigidBody* body)
   bundle->native->setLinearVelocity(zeroV);
   bundle->native->setAngularVelocity(zeroV);
   bt_manager._pWorld->addRigidBody(bundle->native);
-  
+}
+
+
+void BulletPhysics::UpdateRigidBody(RigidBody* body, physics_update_bits_t bits)
+{
+  R_ASSERT(body, "Null rigid body sent to physics update.");
+  R_DEBUG(rNotify, "Bullet physics rigid body update called by id: " + std::to_string(body->GetUUID()) + "\n");
+  RigidBundle* bundle = GetRigidBundle(body->GetUUID());
+  if (!bundle) return;
+  btRigidBody* rigidBody = bundle->native;
+  bt_manager._pWorld->removeRigidBody(rigidBody);
+
+  if (bits & PHYSICS_UPDATE_RESET) {
+
+    btVector3 zeroV = btVector3(btScalar(0.0f), btScalar(0.0f), btScalar(0.0f));
+    rigidBody->clearForces();
+    rigidBody->setLinearVelocity(zeroV);
+    rigidBody->setAngularVelocity(zeroV);
+  }
+
+  if (bits & PHYSICS_UPDATE_CLEAR_FORCES) {
+    rigidBody->clearForces();
+  }
+
+  if (bits & PHYSICS_UPDATE_MASS) {
+    btVector3 inertia;
+    btCollisionShape* shape = rigidBody->getCollisionShape();
+    shape->calculateLocalInertia(btScalar(body->_mass), inertia);
+    rigidBody->setMassProps(btScalar(body->_mass), inertia);
+  }
+
+  if (bits & PHYSICS_UPDATE_FRICTION) {
+    rigidBody->setFriction(btScalar(body->_friction));
+  }
+
+  if (bits & PHYSICS_UPDATE_ROLLING_FRICTION) { 
+    rigidBody->setRollingFriction(btScalar(body->_rollingFriction));
+  }
+
+  if (bits & PHYSICS_UPDATE_SPINNING_FRICTION) {
+    rigidBody->setSpinningFriction(btScalar(body->_spinningFriction));
+  }
+
+  if (bits & PHYSICS_UPDATE_LINEAR_VELOCITY) {
+    
+  }
+
+  if (bits & PHYSICS_UPDATE_ANGULAR_VELOCITY) {
+    
+  }
+
+  if (bits & PHYSICS_UPDATE_FORCES) {
+    for (size_t i = 0; i < body->_forces.size(); ++i) {
+      Vector3 force = body->_forces[i];
+      Vector3 relPos = body->_forceRelativePositions[i];
+      rigidBody->applyForce(btVector3(btScalar(force.x), btScalar(force.y), btScalar(force.z)),
+        btVector3(btScalar(relPos.x), btScalar(relPos.y), btScalar(relPos.z)));
+    }
+    body->_forces.clear();
+    body->_forceRelativePositions.clear();
+  }
+
+  if (bits & PHYSICS_UPDATE_IMPULSE) {
+    for (size_t i = 0; i < body->_impulses.size(); ++i) {
+      Vector3 impulse = body->_impulses[i];
+      Vector3 relPos = body->_impulseRelativePositions[i];
+      rigidBody->applyImpulse(btVector3(btScalar(impulse.x), btScalar(impulse.y), btScalar(impulse.z)),
+        btVector3(btScalar(relPos.x), btScalar(relPos.y), btScalar(relPos.z)));
+    }
+    body->_impulses.clear();
+    body->_impulseRelativePositions.clear();
+  }
+
+  bt_manager._pWorld->addRigidBody(rigidBody);
 }
 } // Recluse

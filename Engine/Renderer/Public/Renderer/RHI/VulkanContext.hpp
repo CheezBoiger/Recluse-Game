@@ -21,7 +21,7 @@ public:
 
   b32                              CreateInstance(const char* appName);
   VkInstance                      CurrentInstance() { return mInstance; }
-  VkSurfaceKHR                    CreateSurface(HWND handle);
+  VkSurfaceKHR                    CreateSurface(void* handle);
 
   void                            DestroySurface(VkSurfaceKHR surface);
   void                            EnableDebugMode();

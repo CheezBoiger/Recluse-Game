@@ -25,6 +25,10 @@ class CubeObject : public GameObject
 {
   R_GAME_OBJECT(CubeObject)
 
+  r32     m_health;
+  r32     m_maxHealth;
+  r32     m_healthRegen;
+
 public:
 
     CubeObject()
@@ -34,6 +38,9 @@ public:
 
   void OnStartUp() override
   {
+    m_health = 0.f;
+    m_healthRegen = 1.0f;
+    m_maxHealth = 100.0f;
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
@@ -86,6 +93,7 @@ public:
     DirectionalLight* light = scene->GetSky()->GetSunLight();
     light->_Direction = Vector3(
       sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
+      -0.5f,
       cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
 #endif
     AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
@@ -114,9 +122,12 @@ public:
       default: frustumResult += "None";
     }
 
+    m_health += m_healthRegen * tick;
+    if (m_health > m_maxHealth) m_health = m_maxHealth;
+ 
     Vector3 spos = Camera::GetMain()->GetWorldToScreenProjection(transform->Position);
 
-    std::string lol = GetName();
+    std::string lol = GetName() + " " + std::to_string(static_cast<u32>(m_health)) + " hp";
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";

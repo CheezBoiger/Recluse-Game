@@ -33,13 +33,13 @@ struct RigidBody : public PhysicsObject {
   RigidBody() 
     : _activated(true)
     , _gameObj(nullptr)
+    , _kinematic(false)
+    , _collider(nullptr)
     , _mass(1.0f)
     , _friction(0.0f) { }
   void                  InvokeCollision(Collision* body);
 
   Vector3               _velocity;
-  Vector3               _force;
-  Vector3               _impulse;
   Vector3               _position;
   Vector3               _centerOfMass;
   r32                   _mass;
@@ -53,6 +53,15 @@ struct RigidBody : public PhysicsObject {
 
   // TODO(): Need to separate compound to be optional instead.
   CompoundCollider      _compound;
+  
+  // The collider associated with this rigid body.
+  Collider*               _collider;
+
+  // forces that are cleared every update.
+  std::vector<Vector3>    _forces;
+  std::vector<Vector3>    _impulses;
+  std::vector<Vector3>    _forceRelativePositions;
+  std::vector<Vector3>    _impulseRelativePositions;
   friend class Physics;
 };
 } // Recluse

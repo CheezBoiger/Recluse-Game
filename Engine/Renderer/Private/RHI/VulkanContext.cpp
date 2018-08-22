@@ -3,7 +3,13 @@
 #include "Core/Exception.hpp"
 
 // This is win32 specific.
-std::vector<const char*> extensions = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+std::vector<const char*> extensions = { VK_KHR_SURFACE_EXTENSION_NAME 
+#if _WIN32
+ , VK_KHR_WIN32_SURFACE_EXTENSION_NAME 
+#elif __linux__
+ , VK_KHR_XLIB_SURFACE_EXTENSION_NAME
+#endif
+};
 
 
 const std::vector<const char*> validationLayers = {
@@ -92,14 +98,16 @@ std::vector<VkPhysicalDevice>& Context::EnumerateGpus()
 }
 
 
-VkSurfaceKHR Context::CreateSurface(HWND handle)
+VkSurfaceKHR Context::CreateSurface(void* handle)
 {
   VkSurfaceKHR surface;
   // Windows specific.
+#if _WIN32
+  HWND win32Handle = (HWND) handle;
   VkWin32SurfaceCreateInfoKHR cInfo;
   cInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
   cInfo.hinstance = GetModuleHandle(NULL);
-  cInfo.hwnd = handle;
+  cInfo.hwnd = win32Handle;
   cInfo.flags = 0;
   cInfo.pNext = nullptr;
 
@@ -114,9 +122,11 @@ VkSurfaceKHR Context::CreateSurface(HWND handle)
   if (vkCreateWin32SurfaceKHR(mInstance, &cInfo, nullptr, &surface) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create win32 surface...\n");
     return VK_NULL_HANDLE;
-  } 
-
+  }
   R_DEBUG(rNotify, "Win32 surface successfully created and attached...\n");
+#else
+  R_DEBUG(rFatal, "No compatible os used for vulkan window surface creation!");
+#endif
   return surface;
 }
 

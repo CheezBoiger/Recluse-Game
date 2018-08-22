@@ -220,8 +220,6 @@ void Engine::Update()
   // Update using next frame input.
   gAnimation().UpdateState(dt);
   AnimationComponent::UpdateComponents();
-  gUI().UpdateState(dt);
-
   
   PhysicsComponent::UpdateFromPreviousGameLogic();
   TraverseScene(UpdateTransform);
@@ -247,6 +245,9 @@ void Engine::Update()
   m_workers[2] = std::thread([&]() -> void {
     PointLightComponent::UpdateComponents();
   });
+
+  gUI().UpdateState(dt);
+
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();

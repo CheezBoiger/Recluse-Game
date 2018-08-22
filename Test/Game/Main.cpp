@@ -66,7 +66,7 @@ public:
       DirectionalLight* pPrimary = pSky->GetSunLight();
       pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-      pPrimary->_Direction = Vector3(1.0f, -0.5f, 0.0f).Normalize();
+      pPrimary->_Direction = Vector3(1.0f, -0.5f, 1.0f).Normalize();
       pPrimary->_Enable = true;
       pPrimary->_Intensity = 5.0f;
     }
