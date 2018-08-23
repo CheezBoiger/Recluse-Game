@@ -23,8 +23,16 @@ struct PointLight {
 };
 
 
+struct DecalInfo {
+  vec4  min;      // 3d min bounds size.
+  vec4  max;      // 3d max bounds size.
+  vec4  scale;
+};
+
+
 #define WORKGROUP_SIZE        16
 #define MAX_LIGHTS            64
+#define MAX_DECALS_SIZE       64
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
@@ -72,8 +80,14 @@ layout (set = 1, binding = 3) uniform sampler2D inRt3;
 layout (set = 1, binding = 4) uniform sampler2D inDepth;
 
 // 3D texture containing the light index offset, and a list of light data indices that correspond to that cluster.
-layout (set = 2, binding = 0, rg32ui) uniform writeonly uimage3D clusters;
-layout (set = 2, binding = 1, r16ui) uniform writeonly uimage1D indices;
+// clusters contain [ offset | light count | decal count | probe count ].
+// offset determines the offset when reading the indices buffer, where as the counts determine the overall size of the 
+// sublist after offsetting the indices list, to read off of.
+layout (set = 2, binding = 0, rg32ui) uniform writeonly uimage3D clusters; 
+
+// indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
+// to that source.
+layout (set = 2, binding = 1, r32ui) uniform writeonly uimage1D indices;  
 
 // Light data.
 layout (set = 3, binding = 0) uniform LightBuffer {
@@ -81,6 +95,10 @@ layout (set = 3, binding = 0) uniform LightBuffer {
   DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
   PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
+
+layout (set = 3, binding = 0) uniform DecalBuffer {
+  DecalInfo       decals[MAX_DECALS_SIZE];
+} gDecalBuffer;
 
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 1) in;
 void main()

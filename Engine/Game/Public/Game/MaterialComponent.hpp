@@ -51,6 +51,7 @@ struct Material {
 
   void                      EnableMaps(b32 mapEnable);
   void                      DisableMaps(b32 mapsDisable);
+  void                      SetSampler(TextureSampler* sampler) { m_pDesc->SetSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetAlbedo(Texture2D* texture) { m_pDesc->SetAlbedo(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetNormal(Texture2D* texture) { m_pDesc->SetNormal(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetRoughnessMetallic(Texture2D* texture) { m_pDesc->SetRoughnessMetallic(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
@@ -64,7 +65,7 @@ struct Material {
   void                      EnableMetallic(b32 enable) { m_pDesc->Data()->_HasMetallic = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
   void                      EnableEmissive(b32 enable) { m_pDesc->Data()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
   void                      EnableAo(b32 enable) { m_pDesc->Data()->_HasAO = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-
+  void                      SetUvOffsets(Vector4 offsets) { m_pDesc->Data()->_offsetUV = offsets; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
   // Returns the native descriptor.
   MaterialDescriptor*       Native() { return m_pDesc; }
 

@@ -54,6 +54,8 @@ class HDR;
 class Clusterer;
 class BakeIBL;
 
+struct SamplerInfo;
+
 
 typedef u32 renderer_key_t;
 
@@ -126,7 +128,7 @@ public:
   TextureCube*      CreateTextureCube();
 
   // Create a Sampler.
-  TextureSampler*   CreateTextureSampler();
+  TextureSampler*   CreateTextureSampler(const SamplerInfo& info);
 
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();

@@ -228,6 +228,25 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
+
+    SamplerInfo samplerInfo = { };
+    samplerInfo._addrU = SAMPLER_ADDRESS_REPEAT;
+    samplerInfo._addrV = SAMPLER_ADDRESS_REPEAT;
+    samplerInfo._addrW = SAMPLER_ADDRESS_REPEAT;
+    samplerInfo._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_WHITE;
+    samplerInfo._enableAnisotropy = false;
+    samplerInfo._maxAniso = 16.0f;
+    samplerInfo._maxFilter = SAMPLER_FILTER_LINEAR;
+    samplerInfo._maxLod = 1.0f;
+    samplerInfo._minFilter = SAMPLER_FILTER_LINEAR;
+    samplerInfo._minLod = 0.0f;
+    samplerInfo._mipLodBias = 0.0f;
+    samplerInfo._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo._unnnormalizedCoordinates = false;
+
+    m_pSampler = gRenderer().CreateTextureSampler(samplerInfo);
+    m_pMaterialRef = mat;
+    m_pMaterialRef->SetSampler(m_pSampler);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->GetPrimitive(0, lod)->_pMat = mat->Native();
     }
@@ -263,6 +282,10 @@ public:
 
   void Update(r32 tick) override
   { 
+    r32 offsetUvX = static_cast<r32>(Time::CurrentTime()) * tick;
+    r32 offsetUvY = static_cast<r32>(Time::CurrentTime()) * tick;
+    Vector4 offset = Vector4(offsetUvX, offsetUvY);
+    m_pMaterialRef->SetUvOffsets(offset);
   }
 
   void SetPosition(const Vector3& newPos)
@@ -277,6 +300,7 @@ public:
     m_animationComponent.CleanUp();
     m_physicsComponent.CleanUp();
 
+    gRenderer().FreeTextureSampler(m_pSampler);
     gPhysics().FreeCollider(m_sphereCollider);
   }
 
@@ -290,4 +314,6 @@ private:
   AnimationComponent        m_animationComponent;
   PhysicsComponent          m_physicsComponent;
   SphereCollider*           m_sphereCollider;
+  TextureSampler*           m_pSampler;
+  Material*                 m_pMaterialRef;
 };

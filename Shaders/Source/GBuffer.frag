@@ -62,6 +62,7 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
   vec4  anisoSpec;
+  vec4  offsetUV;
   float opaque;
   float metal;
   float rough;
@@ -159,6 +160,8 @@ layout (location = 0) out vec4 debugColor;
 
 void main()
 { 
+  vec2 offsetUV0 = matBuffer.offsetUV.xy;
+  vec2 uv0 = frag_in.texcoord0 + offsetUV0;
   vec3 fragAlbedo = matBuffer.color.rgb;
   vec3 fragNormal = frag_in.normal;
   vec3 fragEmissive = vec3(0.0);
@@ -168,11 +171,11 @@ void main()
   float fragAO = 1.0;  // still WIP
   
   if (matBuffer.hasAlbedo >= 1) {
-    fragAlbedo = pow(texture(albedo, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
+    fragAlbedo = pow(texture(albedo, uv0, objBuffer.lod).rgb, vec3(2.2));
   }
   
   if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
-    vec4 roughMetal = texture(roughnessMetallic, frag_in.texcoord0, objBuffer.lod);
+    vec4 roughMetal = texture(roughnessMetallic, uv0, objBuffer.lod);
     if (matBuffer.hasMetallic >= 1) {
       fragMetallic *= roughMetal.b;
     }
@@ -183,15 +186,15 @@ void main()
   }
   
   if (matBuffer.hasNormal >= 1) {
-    fragNormal = GetNormal(frag_in.normal, frag_in.position, frag_in.texcoord0);
+    fragNormal = GetNormal(frag_in.normal, frag_in.position, uv0);
   }
   
   if (matBuffer.hasAO >= 1) {
-    fragAO = texture(ao, frag_in.texcoord0, objBuffer.lod).r;
+    fragAO = texture(ao, uv0, objBuffer.lod).r;
   }
   
   if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = pow(texture(emissive, frag_in.texcoord0, objBuffer.lod).rgb, vec3(2.2));
+    fragEmissive = pow(texture(emissive, uv0, objBuffer.lod).rgb, vec3(2.2));
   }   
   
   vec3 N = normalize(fragNormal);

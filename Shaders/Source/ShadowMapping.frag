@@ -7,6 +7,7 @@
 layout (set = 2, binding = 0) uniform MaterialBuffer {
   vec4  color;
   vec4  anisoSpec;
+  vec4  offsetUV;
   float opaque;
   float metal;
   float rough;
@@ -38,7 +39,8 @@ void main()
   
   vec4 alb = matBuffer.color;
   if (matBuffer.hasAlbedo >= 1) {
-    alb = texture(albedo, fragIn.uv0);
+    vec2 uv0 = fragIn.uv0 + matBuffer.offsetUV.xy;
+    alb = texture(albedo, uv0);
   }
   
   if (alb.a < 0.5) {

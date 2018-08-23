@@ -3890,11 +3890,27 @@ JointDescriptor* Renderer::CreateJointDescriptor()
 }
 
 
+TextureSampler* Renderer::CreateTextureSampler(const SamplerInfo& info)
+{
+  TextureSampler* pSampler = new TextureSampler();
+  pSampler->Initialize(m_pRhi, info);
+  return pSampler;
+}
+
+
 void Renderer::FreeJointDescriptor(JointDescriptor* descriptor)
 {
   if (!descriptor) return;
   descriptor->CleanUp(m_pRhi);
   delete descriptor;
+}
+
+
+void Renderer::FreeTextureSampler(TextureSampler* pSampler)
+{
+  if (!pSampler) return; 
+  pSampler->CleanUp(m_pRhi);
+  delete pSampler;
 }
 
 

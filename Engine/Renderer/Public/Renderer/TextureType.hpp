@@ -141,23 +141,42 @@ enum SamplerFilterMode {
 };
 
 
-// Texture Smpler object, for sampling textures to/from the renderer.
+enum SamplerMipMapMode {
+  SAMPLER_MIPMAP_MODE_LINEAR,
+  SAMPLER_MIPMAP_MODE_NEAREST
+};
+
+
+enum SamplerBorderColor {
+  SAMPLER_BORDER_COLOR_OPAQUE_WHITE,
+  SAMPLER_BORDER_COLOR_OPAQUE_BLACK
+};
+
+
+struct SamplerInfo {
+  SamplerAddressMode  _addrU;
+  SamplerAddressMode  _addrV;
+  SamplerAddressMode  _addrW;
+  SamplerFilterMode   _minFilter;
+  SamplerFilterMode   _maxFilter;
+  SamplerMipMapMode   _mipmapMode;
+  SamplerBorderColor  _borderColor;
+  r32                 _mipLodBias;
+  b32                 _enableAnisotropy;
+  r32                 _maxAniso;
+  r32                 _maxLod;
+  r32                 _minLod;
+  b32                 _unnnormalizedCoordinates;
+};
+
+
+// Texture Sampler object, for sampling textures to/from the renderer.
 class TextureSampler {
 public:
-  struct SamplerInfo {
-    SamplerAddressMode  addrU;
-    SamplerAddressMode  addrV;
-    SamplerAddressMode  addrW;
-    SamplerFilterMode   minFilter;
-    SamplerFilterMode   maxFilter;
-    r32                 mipLodBias;
-    r32                 maxAniso;
-    r32                 maxLod;
-    r32                 minLod;
-  };
+  TextureSampler() : mSampler(nullptr) { }
 
-  void          Initialize(const SamplerInfo& info);
-  void          CleanUp();
+  void          Initialize(VulkanRHI* pRhi, const SamplerInfo& info);
+  void          CleanUp(VulkanRHI* pRhi);
 
   Sampler*      Handle() { return mSampler; }
 

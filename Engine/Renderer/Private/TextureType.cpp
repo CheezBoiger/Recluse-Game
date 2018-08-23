@@ -240,4 +240,83 @@ void TextureCube::CleanUp()
   // TODO(): 
   R_ASSERT(false, "Not implemented.");
 }
+
+
+VkSamplerAddressMode GetNativeSamplerAddressMode(SamplerAddressMode mode)
+{
+  switch (mode) {
+    case SAMPLER_ADDRESS_CLAMP_TO_BORDER:       return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+    case SAMPLER_ADDRESS_CLAMP_TO_EDGE:         return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case SAMPLER_ADDRESS_MIRRORED_REPEAT:       return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+    case SAMPLER_ADDRESS_MIRROR_CLAMP_TO_EDGE:  return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+    case SAMPLER_ADDRESS_REPEAT:                return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    default:                                    return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  }
+  return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+}
+
+
+VkFilter GetNativeFilterMode(SamplerFilterMode mode)
+{
+  switch (mode) {
+    case SAMPLER_FILTER_NEAREST:  return VK_FILTER_NEAREST;
+    case SAMPLER_FILTER_LINEAR:
+    default:                      return VK_FILTER_LINEAR;
+  }
+}
+
+
+VkSamplerMipmapMode GetNativeMipmapMode(SamplerMipMapMode mode)
+{
+  switch (mode) {
+    case SAMPLER_MIPMAP_MODE_NEAREST: return VK_SAMPLER_MIPMAP_MODE_NEAREST;
+    case SAMPLER_MIPMAP_MODE_LINEAR:  
+    default:                          return VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  }
+}
+
+
+VkBorderColor GetNativeSamplerBorderColor(SamplerBorderColor color)
+{
+  switch (color) {
+    case SAMPLER_BORDER_COLOR_OPAQUE_BLACK:   return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    case SAMPLER_BORDER_COLOR_OPAQUE_WHITE:
+    default:                                  return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  }
+}
+
+
+void TextureSampler::Initialize(VulkanRHI* pRhi, const SamplerInfo& info)
+{
+  mInfo = info;
+  VkSamplerCreateInfo samplerCi = { };
+  samplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;  
+  samplerCi.addressModeU = GetNativeSamplerAddressMode(info._addrU);
+  samplerCi.addressModeV = GetNativeSamplerAddressMode(info._addrV);
+  samplerCi.addressModeW = GetNativeSamplerAddressMode(info._addrW);
+  samplerCi.borderColor = GetNativeSamplerBorderColor(info._borderColor);
+  samplerCi.mipmapMode = GetNativeMipmapMode(info._mipmapMode);
+  samplerCi.unnormalizedCoordinates = info._unnnormalizedCoordinates;
+  samplerCi.anisotropyEnable = info._enableAnisotropy;
+  samplerCi.compareEnable = VK_FALSE;
+  samplerCi.compareOp = VK_COMPARE_OP_ALWAYS;
+  samplerCi.magFilter = GetNativeFilterMode(info._maxFilter);
+  samplerCi.minFilter = GetNativeFilterMode(info._minFilter);
+  samplerCi.mipLodBias = info._mipLodBias;
+  samplerCi.minLod = info._minLod;
+  samplerCi.maxLod = info._maxLod;
+  samplerCi.maxAnisotropy = info._maxAniso;
+
+  mSampler = pRhi->CreateSampler();
+  mSampler->Initialize(samplerCi);
+}
+
+
+void TextureSampler::CleanUp(VulkanRHI* pRhi)
+{
+  if (mSampler) {
+    pRhi->FreeSampler(mSampler);
+    mSampler = nullptr;
+  }
+}
 } // Recluse

@@ -30,19 +30,20 @@ enum MaterialUpdateBits {
 
 
 struct MaterialBuffer {
-  Vector4 _Color;          // object base color.
-  Vector4 _AnisoSpec;       // Anisotropy control.
-  r32     _Opacity;         // opacity [0.0, 1.0]
-  r32     _metalFactor;      // object base metalness [0.0, 1.0]
-  r32     _roughFactor;      // object base roughness [0.0, 1.0]
-  r32     _emissiveFactor;   // emissive base [0.0, inf]
-  u32     _HasAlbedo;      // does object have albedo map?
-  u32     _HasMetallic;    // does object have metalness map?
-  u32     _HasRoughness;   // does object have roughness map?
-  u32     _HasNormal;      // does object have normal map?
-  u32     _HasEmissive;    // does object have emissive map?
-  u32     _HasAO;          // does object have ambient occlusion map?
-  u32     _IsTransparent;  // is object transparent?
+  Vector4 _Color;             // object base color.
+  Vector4 _AnisoSpec;         // Anisotropy control.
+  Vector4 _offsetUV;          // offset values for texture coordinates of uv 0 (xy) and 1 (zw).
+  r32     _Opacity;           // opacity [0.0, 1.0]
+  r32     _metalFactor;       // object base metalness [0.0, 1.0]
+  r32     _roughFactor;       // object base roughness [0.0, 1.0]
+  r32     _emissiveFactor;    // emissive base [0.0, inf]
+  u32     _HasAlbedo;         // does object have albedo map?
+  u32     _HasMetallic;       // does object have metalness map?
+  u32     _HasRoughness;      // does object have roughness map?
+  u32     _HasNormal;         // does object have normal map?
+  u32     _HasEmissive;       // does object have emissive map?
+  u32     _HasAO;             // does object have ambient occlusion map?
+  u32     _IsTransparent;     // is object transparent?
   u32     _Pad;
 };
 
