@@ -63,8 +63,6 @@ struct AnimModel : public Model {
   std::vector<AnimClip*>    animations;
 };
 
-
-
 // Load a model Mesh and Material, as well as a Skinned mesh if applicable.
 // This will also store the model data in ModelCache, under the name of the file.
 // ex. path/to/Apple.gltf 
@@ -73,5 +71,8 @@ ModelResult Load(const std::string filename);
 ModelResult LoadAnimatedModel(const std::string filename);
 ModelResult FreeModel(Model** model);
  
+// Create a new model from an existing one, with it's own resources.
+// Performs a deep copy of the original model object.
+ModelResult InstantiateModel(Model* dst, Model* src);
 } // ModelLoader
 } // Recluse

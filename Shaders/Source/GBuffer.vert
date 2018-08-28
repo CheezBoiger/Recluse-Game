@@ -5,10 +5,17 @@
 
 layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
-layout (location = 2) in vec2   texcoord0;
-layout (location = 3) in vec2   texcoord1;
+layout (location = 2) in vec2   uv0;
+layout (location = 3) in vec2   uv1;
 layout (location = 4) in vec4   jointWeights;
 layout (location = 5) in ivec4  jointIDs;
+
+#if defined(INCLUDE_MORPH_TARGET_ANIMATION)
+layout (location = 6) in vec4   morphPosition;
+layout (location = 7) in vec4   morphNormal;
+layout (location = 8) in vec2   morphUV0;
+layout (location = 9) in vec2   morphUV1;
+#endif
 
 
 #define MAX_JOINTS     64
@@ -70,8 +77,8 @@ out FRAG_IN {
   float lodBias;
   vec3  normal;
   float pad1;
-  vec2  texcoord0;
-  vec2  texcoord1;
+  vec2  uv0;
+  vec2  uv1;
 } frag_in;
 
 
@@ -93,8 +100,8 @@ void main()
   vec4 worldPosition = objBuffer.model * skinPosition;
   
   frag_in.position = worldPosition.xyz;
-  frag_in.texcoord0 = texcoord0;
-  frag_in.texcoord1 = texcoord1;
+  frag_in.uv0 = uv0;
+  frag_in.uv1 = uv1;
   frag_in.normal = normalize(objBuffer.normalMatrix * skinNormal).xyz;
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;

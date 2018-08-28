@@ -35,7 +35,8 @@ enum CmdConfig {
   CMD_FORWARD_BIT       = (1 << 7),   // Mesh will be pushed to the forward render pipeline.
   CMD_ALLOW_CULL_BIT    = (1 << 8),   // Mesh can be culled.
   CMD_DECAL_BIT         = (1 << 9),   // Mesh is a decal.
-  CMD_WATER_REFLECT_BIT = (1 << 10)   // Allow mesh to be reflected by water.
+  CMD_WATER_REFLECT_BIT = (1 << 10),  // Allow mesh to be reflected by water.
+  CMD_STATIC_BIT        = (1 << 11)   // Mesh is static, or is not changing. Useful for shadow maps.
 };
 
 

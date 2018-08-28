@@ -70,6 +70,7 @@ set(GAME_FILES
   ${SCENE_PUBLIC_DIR}/AssetManager.hpp
   ${SCENE_PRIVATE_DIR}/Scene.cpp
   ${SCENE_PRIVATE_DIR}/ModelLoader.cpp
+  ${SCENE_PRIVATE_DIR}/ModelLoaderGLTF.cpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.hpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.cpp
   ${SCENE_PRIVATE_DIR}/json.hpp
@@ -93,11 +94,22 @@ set(GAME_FILES
 
 )
 
+if (USE_FBX)
+set(GAME_FILES ${GAME_FILES}
+  ${SCENE_PRIVATE_DIR}/ModelLoaderFBX.cpp
+)
+endif()
+
 
 add_library(${RECLUSE_GAME} STATIC
   ${GAME_FILES}
 )
 
+if (USE_FBX)
+target_link_libraries(${RECLUSE_GAME}
+  ${RECLUSE_FBX_DIR}/lib/vs2015/x64/release/libfbxsdk.lib
+)
+endif()
 
 # Doing some stuff for organization.
 if (MSVC)

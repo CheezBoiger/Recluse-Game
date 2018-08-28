@@ -10,7 +10,6 @@
 #include "Core/Utility/CharHash.hpp"
 
 #include "Component.hpp"
-#include "Scene/Scene.hpp"
 #include "Scripts/Behavior.hpp"
 
 #include <unordered_map>
@@ -59,9 +58,9 @@ public:
   void                                SetTag(std::string tag) { m_tag = tag; }
 
   void AddChild(GameObject* child) { 
-    child->SetParent(this); 
-    m_children.push_back(child); 
+    child->SetParent(this);
     child->SetSceneOwner(m_pScene);
+    m_children.push_back(child);
   }
   
   // Update the object. Can be overridable from inherited classes.

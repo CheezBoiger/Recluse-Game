@@ -10,6 +10,7 @@
 #include "Renderer/HDR.hpp"
 
 #include "Game/Rendering/Sky.hpp"
+#include "Game/GameObject.hpp"
 
 #include <set>
 
@@ -28,7 +29,7 @@ public:
   // Adds a child game object to the scene graph root.
   void                      AddChild(GameObject* child);
 
-  size_t                    GetChildCount() const { return m_GameObjects.size(); }
+  size_t                    GetChildrenCount() const { return m_GameObjects.size(); }
 
   GameObject*               GetChild(size_t idx) { return m_GameObjects[idx]; }
 
@@ -40,17 +41,18 @@ private:
   Scene*                    m_pScene;
 };
 
-
 // Scene, used for storing, keeping track off, and maintaining, the current state of the game world. 
 // The world game logic is set up by the user, however, scene graph management is handled by the renderer.
 // Be sure to add render objects to the scene graph root, in order to see anything on the screen!
 class Scene : public ISerializable {
   static std::string        default_name;
 public:
-  Scene(std::string name = default_name)
-    : m_SceneName(name) { 
-    m_Root.SetSceneOwner(this);
-  }
+
+  // Load a scene from file. Will generate full scene graph for this object. Callers will still need to figure out which 
+  // nodes to add scripts for. May be formatted in GLTF or FBX.
+  static b32                LoadFromFile(Scene* pOut, const std::string& filename);
+
+  Scene(std::string name = default_name);
 
   ~Scene() { }
 

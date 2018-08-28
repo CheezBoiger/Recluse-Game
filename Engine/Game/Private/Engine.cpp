@@ -283,7 +283,7 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   i32 top = -1;
   m_sceneObjectCount = 0;
   SceneNode* root = m_pPushedScene->GetRoot();
-  for (size_t i = 0; i < root->GetChildCount(); ++i) {
+  for (size_t i = 0; i < root->GetChildrenCount(); ++i) {
     nodes[++top] = root->GetChild(i);
     if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
   }
