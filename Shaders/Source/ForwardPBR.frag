@@ -81,6 +81,8 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  normalMatrix;
   float lod;          // Level of Detail
   int   hasBones; 
+  float w0;
+  float w1;
 } objBuffer;
 
 

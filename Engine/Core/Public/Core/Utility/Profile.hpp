@@ -24,6 +24,7 @@ enum ProfileTypes {
 
 
 struct ProfileData {
+  std::string   _tag;
   ProfileTypes  _type;
   // start time in milliseconds.
   r32           _start;
@@ -59,6 +60,7 @@ public:
     data._end = _end;
     data._total = _end - m_time;
     data._type = m_type;
+    data._tag = m_tag;
     Profiler::StoreTimed(data, m_tag);
   }
 

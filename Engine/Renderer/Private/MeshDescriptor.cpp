@@ -19,6 +19,8 @@ MeshDescriptor::MeshDescriptor()
 {
   m_ObjectData._HasJoints = false;
   m_ObjectData._LoD = 0.0f;
+  m_ObjectData._w0 = 0.0f;
+  m_ObjectData._w1 = 0.0f;
   m_meshSet = nullptr;
 
 }

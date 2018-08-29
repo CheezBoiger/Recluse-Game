@@ -29,14 +29,14 @@ struct ObjectBuffer {
   Matrix4 _NormalMatrix;   // Normal matrix.
   r32     _LoD;            // Level of Detail.
   u32     _HasJoints;      // does object have joints?
-  u32     _Pad[2];
+  r32     _w0;              // Morph Target 0 weight.
+  r32     _w1;              // Morph Target 1 weight.
 };
 
 
 struct JointBuffer {
   Matrix4 _mJoints[64];
 };
-
 
 // MeshDesciptor is a descriptor that defines how to render an object. This is needed in order
 // to show something on display, as the renderer relies heavily on this object for

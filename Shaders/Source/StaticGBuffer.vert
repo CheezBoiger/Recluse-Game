@@ -54,7 +54,9 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
   float lod;
-  int   hasBones; 
+  int   hasBones;
+  float w0;
+  float w1;
 } objBuffer;
 
 

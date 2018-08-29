@@ -36,4 +36,15 @@ ProfileData* GetProfileData(ProfileTypes type, const std::string& tag)
   profile = &it2->second;
   return profile;
 }
+
+
+std::vector<ProfileData> Profiler::GetAll(ProfileTypes type)
+{
+  std::vector<ProfileData> data;
+  auto& map = kProfileDataMap[type];
+  for (auto d : map) {
+    data.push_back(d.second);
+  }
+  return data;
+}
 } // Recluse

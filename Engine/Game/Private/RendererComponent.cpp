@@ -125,7 +125,6 @@ void RendererComponent::Update()
   for (size_t i = 0; i < m_meshes.size(); ++i) {
     MeshRenderCmd cmd;
     cmd._pMeshDesc = m_meshDescriptor;
-    cmd._bSkinned = Skinned();
     cmd._pJointDesc = GetJointDescriptor();
     cmd._config = m_configs;
 
@@ -206,6 +205,8 @@ void SkinnedRendererComponent::OnInitialize(GameObject* owner)
 
   // Set joints to true, since this renderer component is skinned.
   m_meshDescriptor->ObjectData()->_HasJoints = true;
+  // Set the command to be skinned, since this mesh object is skinned.
+  m_configs |= CMD_SKINNED_BIT;
 
   REGISTER_COMPONENT(SkinnedRendererComponent, this);
 }

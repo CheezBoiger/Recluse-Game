@@ -36,7 +36,9 @@ enum CmdConfig {
   CMD_ALLOW_CULL_BIT    = (1 << 8),   // Mesh can be culled.
   CMD_DECAL_BIT         = (1 << 9),   // Mesh is a decal.
   CMD_WATER_REFLECT_BIT = (1 << 10),  // Allow mesh to be reflected by water.
-  CMD_STATIC_BIT        = (1 << 11)   // Mesh is static, or is not changing. Useful for shadow maps.
+  CMD_STATIC_BIT        = (1 << 11),  // Mesh is static, or is not changing. Useful for shadow maps.
+  CMD_SKINNED_BIT       = (1 << 12),  // command is skinned, contains joint buffer.
+  CMD_MORPH_BIT         = (1 << 13)   // command contains morph targets.
 };
 
 
@@ -56,14 +58,16 @@ struct MeshRenderCmd {
     : _config(false)
     , _pMeshDesc(nullptr)
     , _pMeshData(nullptr)
-    , _bSkinned(false)
+    , _pMorph0(nullptr)
+    , _pMorph1(nullptr)
     , _instances(1) { }
 
   MeshData*               _pMeshData;
+  MeshData*               _pMorph0;
+  MeshData*               _pMorph1;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
   u32                     _instances;
-  b32                     _bSkinned;
   CmdConfigBits           _config;
 };
 
