@@ -6,7 +6,7 @@
 #include "Renderer/UserParams.hpp"
 #include "UI/UI.hpp"
 
-
+#include "Core/Utility/Profile.hpp"
 #include "Item.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
@@ -151,6 +151,13 @@ public:
       gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
       gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
       gUI().EmitText(lol, spos.x, spos.y, 300.0f, 30.0f);
+      auto data = Profiler::GetAll(PROFILE_TYPES_RENDERER);
+      float offset = 120.0f;
+      for (auto it : data) {
+        offset += 20.0f;
+        std::string tss = it._tag + ": " + std::to_string(it._total * 1000.0f) + " ms";
+        gUI().EmitText(tss, 6.0f, offset, 800.0f, 20.0f); 
+      }
     gUI().EndCanvas();
   }
 

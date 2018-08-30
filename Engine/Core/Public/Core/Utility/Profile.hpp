@@ -74,7 +74,7 @@ private:
   // tag used for meta data.
   std::string   m_tag;
 };
-
+#define R_ENABLE_PROFILE_FLAG  0
 #if R_ENABLE_PROFILE_FLAG >= 1
   #define R_TIMED_PROFILE(type, tag) ProfileObject __profile__obj(type, tag)
   #define R_TIMED_PROFILE_RENDERER() R_TIMED_PROFILE(PROFILE_TYPES_RENDERER, __FUNCTION__)

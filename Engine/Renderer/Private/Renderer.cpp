@@ -2714,7 +2714,7 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
 
 void Renderer::GenerateFinalCmds(CommandBuffer* cmdBuffer)
 {
-  R_TIMED_PROFILE_RENDERER()
+  R_TIMED_PROFILE_RENDERER();
 
   VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   // Do stuff with the buffer.
