@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/LogicalDevice.hpp"
+#include "LogicalDevice.hpp"
 #include "Core/Exception.hpp"
 
 
@@ -30,16 +30,16 @@ b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCre
   // TODO(): Read initialize() call from vulkan context, queue index will change in the future.
   
   for (size_t i = 0; i < mGraphicsQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, i, &mGraphicsQueues[i]);
+    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, (u32)i, &mGraphicsQueues[i]);
   }
   for (size_t i = 0; i < mComputeQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, i, &mComputeQueues[i]);
+    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, (u32)i, &mComputeQueues[i]);
   }
 
   for (size_t i = 0; i < mTransferQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, i, &mTransferQueues[i]);
+    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, (u32)i, &mTransferQueues[i]);
   }
-  vkGetDeviceQueue(handle, mPresentationQueueFamily._idx, 0, &mPresentationQueue);
+  vkGetDeviceQueue(handle, mPresentationQueueFamily._idx, 0u, &mPresentationQueue);
 
   R_DEBUG(rNotify, "Queues created.\n");
   CreateSemaphores(swapchainImageCount);

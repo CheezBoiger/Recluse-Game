@@ -3,8 +3,12 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 
+
 layout (location = 0) out vec4 vFragColor;
+
+#if !defined(ENABLE_WATER_RENDERING)
 layout (location = 1) out vec4 vBrightColor;
+#endif
 
 #define MAX_DIRECTION_LIGHTS    4
 #define MAX_POINT_LIGHTS        64
@@ -54,6 +58,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec4  clipPlane0;
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.

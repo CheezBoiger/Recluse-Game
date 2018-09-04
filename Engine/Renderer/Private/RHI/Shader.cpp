@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/Shader.hpp"
+#include "Shader.hpp"
 
 #include "Core/Exception.hpp"
 #include <fstream>

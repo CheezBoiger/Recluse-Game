@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/VulkanContext.hpp"
+#include "VulkanContext.hpp"
 #include "Core/Exception.hpp"
 
 // This is win32 specific.

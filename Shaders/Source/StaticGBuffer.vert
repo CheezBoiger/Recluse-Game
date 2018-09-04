@@ -28,6 +28,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec4  clipPlane0;
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.
@@ -76,13 +77,16 @@ layout (push_constant) uniform Camera {
 } viewer;
 #endif
 
-
 void main()
 {
   vec4 worldPosition = position;
  
   worldPosition = objBuffer.model * worldPosition;
   
+#if defined(ENABLE_WATER_RENDERING)
+  gl_ClipDistance[0] = dot(worldPosition, gWorldBuffer.clipPlane0);  
+#endif
+
   frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = texcoord0;
   frag_in.texcoord1 = texcoord1;

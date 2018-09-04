@@ -20,7 +20,6 @@ Transform* Component::GetTransform()
 void Transform::Update()
 {
   GameObject* parent = GetOwner()->GetParent();
-
   if (parent) {
     Transform* parentTransform = parent->GetTransform();
     Matrix4 _T = Matrix4::Translate(Matrix4::Identity(), LocalPosition);

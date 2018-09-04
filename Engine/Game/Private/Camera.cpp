@@ -60,6 +60,18 @@ void Camera::Update()
   Transform* transform = GetOwner()->GetTransform();
  
   Vector3 pos = transform->Position;
+
+// Testing how to go about water rendering.
+/*
+  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
+  float dist = 2.0f * pos.y;
+  pos.y = pos.y - dist;
+  Vector3 euler = transform->Rotation.ToEulerAngles();
+  euler.x *= -1.0f;
+  transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
+  transform->Update();
+  }
+*/
   Vector3 right = transform->Right();
   Vector3 up = transform->Up();
   Vector3 front = transform->Front();

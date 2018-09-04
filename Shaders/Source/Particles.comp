@@ -48,7 +48,6 @@ struct Particle {
   vec4    position;
   vec4    velocity;
   vec4    color;
-  vec4    distFromCamera;
   float   size;
   float   angle;
   float   weight;
@@ -65,15 +64,15 @@ layout (set = 1, binding = 0) buffer ParticleBuffer {
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
+  float bufferSz = particleBuffer.bufferSz.x;
   for (int i = 0; (gl_GlobalInvocationID.x + i) < bufferSz; i += 256) {
-    int idx = gl_GlobalInvocationID.x + i;
-    Particle p = particleBuffer[idx];
+    uint idx = gl_GlobalInvocationID.x + i;
+    Particle p = particleBuffer.particles[idx];
     if (p.life > 0.0) {
-      p.life -= gWorldBuffer.fDeltaTime;
+      p.life.x -= gWorldBuffer.fDeltaTime;
       if (p.life > 0.0) {
         // Update the particle as it is still alive.
         p.position += p.velocity * gWorldBuffer.fDeltaTime;
-        p.distFromCamera = length(p.position - gWorldBuffer.camPos;
       }
     }
   }

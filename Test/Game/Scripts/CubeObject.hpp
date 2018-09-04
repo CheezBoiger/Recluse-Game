@@ -44,7 +44,7 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(5.0f, 5.0f, 5.0f));
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
 
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
@@ -75,8 +75,8 @@ public:
     std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
     Transform* trans = GetTransform();
     trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
-    trans->Scale = Vector3(5.0f, 5.0f, 5.0f);
-    trans->Position = Vector3(0.0f, -5.0f, 0.0f);
+    trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
+    trans->Position = Vector3(0.0f, -15.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
 
@@ -92,9 +92,9 @@ public:
     Scene* scene = gEngine().GetScene();
     DirectionalLight* light = scene->GetSky()->GetSunLight();
     light->_Direction = Vector3(
-      sinf(static_cast<r32>(Time::CurrentTime() * 0.1)), 
+      sinf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f, 
       -0.5f,
-      cosf(static_cast<r32>(Time::CurrentTime() * 0.1))).Normalize();
+      cosf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f).Normalize();
 #endif
     AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
     aabb.min = (aabb.min * transform->Scale) + transform->Position;

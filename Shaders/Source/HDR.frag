@@ -35,6 +35,7 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec4  clipPlane0;
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.

@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/FrameBuffer.hpp"
+#include "FrameBuffer.hpp"
 #include "Core/Exception.hpp"
 
 

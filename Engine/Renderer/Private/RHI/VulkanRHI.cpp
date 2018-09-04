@@ -1,13 +1,13 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/VulkanRHI.hpp"
-#include "RHI/Buffer.hpp"
-#include "RHI/CommandBuffer.hpp"
-#include "RHI/ComputePipeline.hpp"
-#include "RHI/GraphicsPipeline.hpp"
-#include "RHI/FrameBuffer.hpp"
-#include "RHI/Texture.hpp"
-#include "RHI/Shader.hpp"
-#include "RHI//DescriptorSet.hpp"
+#include "VulkanRHI.hpp"
+#include "Buffer.hpp"
+#include "CommandBuffer.hpp"
+#include "ComputePipeline.hpp"
+#include "GraphicsPipeline.hpp"
+#include "FrameBuffer.hpp"
+#include "Texture.hpp"
+#include "Shader.hpp"
+#include "DescriptorSet.hpp"
 
 #include "Core/Utility/Vector.hpp"
 

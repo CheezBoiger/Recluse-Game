@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/ComputePipeline.hpp"
+#include "ComputePipeline.hpp"
 #include "Core/Exception.hpp"
 
 

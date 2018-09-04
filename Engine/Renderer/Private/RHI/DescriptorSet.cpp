@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/DescriptorSet.hpp"
+#include "DescriptorSet.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
 

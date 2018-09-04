@@ -1,10 +1,10 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/Texture.hpp"
+#include "Texture.hpp"
 
-#include "RHI/VulkanRHI.hpp"
-#include "RHI/Buffer.hpp"
-#include "RHI/Commandbuffer.hpp"
-#include "RHI/VulkanRHI.hpp"
+#include "VulkanRHI.hpp"
+#include "Buffer.hpp"
+#include "Commandbuffer.hpp"
+#include "VulkanRHI.hpp"
 #include "Core/Exception.hpp"
 #include "Core/Logging/Log.hpp"
 #include <stdlib.h>

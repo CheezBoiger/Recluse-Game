@@ -1,5 +1,5 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
-#include "RHI/CommandBuffer.hpp"
+#include "CommandBuffer.hpp"
 #include "Core/Exception.hpp"
 
 #define ASSERT_RECORDING() R_ASSERT(mRecording, "Command buffer not in record state prior to issued command!");

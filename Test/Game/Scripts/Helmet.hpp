@@ -251,7 +251,7 @@ public:
       mesh->GetPrimitive(0, lod)->_pMat = mat->Native();
     }
     
-    m_rendererComponent.ForceForward(true);
+    m_rendererComponent.ForceForward(false);
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
