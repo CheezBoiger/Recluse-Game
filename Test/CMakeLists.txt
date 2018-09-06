@@ -27,6 +27,7 @@ add_executable(${RECLUSE_TEST}
 
 add_executable(${RECLUSE_GAME_TEST}
   ${RECLUSE_GAME_TEST_FILES}
+  ${RECLUSE_WIN32_RC_FILE}
 )
 
 include_directories(

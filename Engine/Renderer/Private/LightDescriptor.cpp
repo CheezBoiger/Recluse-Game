@@ -45,8 +45,8 @@ LightDescriptor::LightDescriptor()
   , m_pFrameBuffer(nullptr)
   , m_pRenderPass(nullptr)
   , m_PrimaryShadowEnable(true)
-  , m_rShadowViewportHeight(40.0f)
-  , m_rShadowViewportWidth(40.0f)
+  , m_rShadowViewportHeight(20.0f)
+  , m_rShadowViewportWidth(20.0f)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -175,11 +175,11 @@ void LightDescriptor::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
     m_pShadowSampler = pRhi->CreateSampler();
     VkSamplerCreateInfo SamplerCi = { };
     SamplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    SamplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
     SamplerCi.addressModeV = SamplerCi.addressModeU;
     SamplerCi.addressModeW = SamplerCi.addressModeV;
     SamplerCi.anisotropyEnable = VK_FALSE;
-    SamplerCi.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+    SamplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     SamplerCi.compareEnable = VK_FALSE;
     SamplerCi.magFilter = VK_FILTER_LINEAR;
     SamplerCi.minFilter = VK_FILTER_LINEAR;
@@ -264,7 +264,7 @@ void LightDescriptor::Update(VulkanRHI* pRhi)
     8000.0f
   );
   m_PrimaryLightSpace._ViewProj = view * proj;
-  r32 lightSz = 10.0f / 40.0f;
+  r32 lightSz = 5.0f / m_rShadowViewportHeight;
   m_PrimaryLightSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
   m_PrimaryLightSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
   m_PrimaryLightSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);

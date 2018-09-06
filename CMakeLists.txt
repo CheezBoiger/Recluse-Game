@@ -19,6 +19,12 @@ set(RECLUSE_TINYOBJ__DIR    ${RECLUSE_LIB_DIR}/TinyObjLoader)
 set(RECLUSE_OZZ_DIR         ${RECLUSE_LIB_DIR}/Ozz)
 set(RECLUSE_FREETYPE_DIR    ${RECLUSE_LIB_DIR}/FreeType)
 
+if (WIN32)
+ set(RECLUSE_WIN32_RC_FILE ${CMAKE_SOURCE_DIR}/Assets/App/Win32/win32.rc)
+else()
+ set(RECLUSE_WIN32_RC_FILE "")
+endif()
+
 # Libraries that REQUIRE enviroment variables set up.
 if (PHYSICS)
   set(RECLUSE_BULLET_DIR       $ENV{BULLETSDK})

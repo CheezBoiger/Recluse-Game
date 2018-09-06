@@ -2,9 +2,10 @@
 #pragma once
 
 
-#include "RHI/Buffer.hpp"
-#include "RHI/PhysicalDevice.hpp"
-#include "RHI/VulkanRHI.hpp"
+#include "Buffer.hpp"
+#include "PhysicalDevice.hpp"
+#include "VulkanRHI.hpp"
+
 #include "Core/Exception.hpp"
 
 

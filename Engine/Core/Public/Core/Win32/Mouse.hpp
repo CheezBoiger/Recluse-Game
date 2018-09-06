@@ -36,6 +36,7 @@ public:
   static b32 Tracking() { return mouseTrack; }
   static b32 Clamped() { return mouseClamped; }
   static void SetPosition(r64 x, r64 y);
+  static void SetCursorImage(const std::string& imgPath);
 
   static r64 X() { return XPos; }
   static r64 Y() { return YPos; }
