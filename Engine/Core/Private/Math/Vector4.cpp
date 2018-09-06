@@ -14,6 +14,28 @@ Vector4 Vector4::Lerp(const Vector4& A, const Vector4& B, const r32 T)
 }
 
 
+Vector4 Vector4::Min(const Vector4& a, const Vector4& b)
+{
+  return Vector4(
+    b.x < a.x ? b.x : a.y,
+    b.y < a.y ? b.y : a.y,
+    b.z < a.z ? b.z : a.z,
+    b.w < a.w ? b.w : a.w
+  );
+}
+
+
+Vector4 Vector4::Max(const Vector4& a, const Vector4& b)
+{
+  return Vector4(
+    a.x < b.x ? b.x : a.x,
+    a.y < b.y ? b.y : a.y,
+    a.z < b.z ? b.z : a.z,
+    a.w < b.w ? b.w : a.w
+  );
+}
+
+
 Vector4 Vector4::operator+(const Vector4& other) const
 {
   return Vector4(

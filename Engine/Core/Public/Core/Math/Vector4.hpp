@@ -25,6 +25,8 @@ struct Vector4 {
   { }
 
   static Vector4  Lerp(const Vector4& p0, const Vector4& p1, const r32 t);
+  static Vector4 Min(const Vector4& a, const Vector4& b);
+  static Vector4 Max(const Vector4& a, const Vector4& b);
 
   Vector4         Normalize() const;
 

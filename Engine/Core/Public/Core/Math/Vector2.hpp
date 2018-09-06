@@ -17,6 +17,10 @@ struct Vector2 {
   Vector2(const r32* rawDat)
     : Vector2(rawDat[0], rawDat[1]) { }
 
+  static Vector2 Lerp(const Vector2& a, const Vector2& b, r32 t);
+  static Vector2 Min(const Vector2& a, const Vector2& b);
+  static Vector2 Max(const Vector2& a, const Vector2& b);
+
   Vector2 Normalize() const;
 
   Vector2 operator+(const Vector2& other) const;

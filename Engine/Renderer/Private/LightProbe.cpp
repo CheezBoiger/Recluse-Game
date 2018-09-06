@@ -28,10 +28,10 @@ Vector3 GetWorldNormalFromCubeFace(u32 idx)
 }
 
 
-void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* texCube)
+void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 {
-  u32 width = texCube->WidthPerFace();
-  u32 height = texCube->HeightPerFace();
+  u32 width = envMap->WidthPerFace();
+  u32 height = envMap->HeightPerFace();
   r32 pixelA = (1.0f / static_cast<r32>(width)) * (1.0f / static_cast<r32>(height));
   u8* data = new u8[width * height * 4];
 

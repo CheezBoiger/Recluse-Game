@@ -11,7 +11,9 @@ struct Matrix3;
 
 // Math vector object of 3 components <x, y, z>.
 struct Vector3 {
-  struct { r32 x, y, z; };
+  union { struct { r32 x, y, z; };
+          struct { r32 r, g, b; };
+          struct { r32 s, t, p; }; };
 
   static Vector3  UP;
   static Vector3  DOWN;
@@ -32,6 +34,8 @@ struct Vector3 {
   { }
 
   static Vector3  Lerp(const Vector3& a, const Vector3& b, const r32 t);
+  static Vector3  Min(const Vector3& a, const Vector3& b);
+  static Vector3  Max(const Vector3& a, const Vector3& b);
   
   Vector3         Normalize() const;
   r32             Dot(const Vector3& other) const;

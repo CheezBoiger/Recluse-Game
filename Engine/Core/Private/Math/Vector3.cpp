@@ -23,6 +23,22 @@ Vector3 Vector3::Lerp(const Vector3& a, const Vector3& b, const r32 t)
 }
 
 
+Vector3 Vector3::Min(const Vector3& a, const Vector3& b)
+{
+  return Vector3( b.x < a.x ? b.x : a.y,
+                  b.y < a.y ? b.y : a.y,
+                  b.z < a.z ? b.z : a.z); 
+}
+
+
+Vector3 Vector3::Max(const Vector3& a, const Vector3& b)
+{
+  return Vector3( a.x < b.x ? b.x : a.x,
+                  a.y < b.y ? b.y : a.y,
+                  a.z < b.z ? b.z : a.z);
+}
+
+
 r32 Vector3::Dot(const Vector3& other) const
 {
   return (x * other.x + y * other.y + z * other.z);

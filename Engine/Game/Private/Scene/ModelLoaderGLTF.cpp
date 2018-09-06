@@ -277,10 +277,6 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
         const tinygltf::BufferView& bufViewPos = model.bufferViews[positionAccessor.bufferView];
         bufferPositions =
           reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
-        const std::vector<double>& dmin = positionAccessor.minValues;
-        const std::vector<double>& dmax = positionAccessor.maxValues;
-        min = Vector3((r32)dmin[0], (r32)dmin[1], (r32)dmin[2]);
-        max = Vector3((r32)dmax[0], (r32)dmax[1], (r32)dmax[2]);
 
         if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
           const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
@@ -308,6 +304,8 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
+          min = Vector3::Min(min, p);
+          max = Vector3::Max(max, p);
         }
       }
 
@@ -402,8 +400,6 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           reinterpret_cast<const r32*>(&model.buffers[bufViewPos.buffer].data[positionAccessor.byteOffset + bufViewPos.byteOffset]);
         const std::vector<double>& dmin = positionAccessor.minValues;
         const std::vector<double>& dmax = positionAccessor.maxValues;
-        min = Vector3((r32)dmin[0], (r32)dmin[1], (r32)dmin[2]);
-        max = Vector3((r32)dmax[0], (r32)dmax[1], (r32)dmax[2]);
 
         if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
           const tinygltf::Accessor& normalAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
@@ -467,6 +463,8 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
+          min = Vector3::Min(min, p);
+          max = Vector3::Max(max, p);
         }
       }
 

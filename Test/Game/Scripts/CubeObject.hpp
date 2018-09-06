@@ -58,10 +58,10 @@ public:
 
     Material* material = nullptr;
     MaterialCache::Get(
-#if 1
+#if 0
       "GrassySample"
 #else
-      "Material_MR"
+      "RustedSample"
 #endif
       , &material);
 

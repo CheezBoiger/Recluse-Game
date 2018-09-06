@@ -19,8 +19,8 @@ struct LightProbe {
   Vector3 _position;  // Position of where the this probe is, in 3D space.
   r32     _r;         // radius of effect, that this light probe will influence.
 
-  // Generate SH coefficients from texture cube data.
-  void    GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* texCube);
+  // Generate SH coefficients from texture enviroment cube data.
+  void    GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap);
 
   // Generate coefficients through image data that is not stored in gpu memory.
   void    GenerateSHCoefficients(const Image* img);

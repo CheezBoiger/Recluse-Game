@@ -6,6 +6,30 @@
 namespace Recluse {
 
 
+Vector2 Vector2::Lerp(const Vector2& a, const Vector2& b, r32 t)
+{
+  return a * (1.0f - t) + b * t;
+}
+
+
+Vector2 Vector2::Min(const Vector2& a, const Vector2& b)
+{
+  return Vector2(
+    b.x < a.x ? b.x : a.y,
+    b.y < a.y ? b.y : a.y
+  );
+}
+
+
+Vector2 Vector2::Max(const Vector2& a, const Vector2& b)
+{
+  return Vector2(
+    a.x < b.x ? b.x : a.x,
+    a.y < b.y ? b.y : a.y
+  );
+}
+
+
 Vector2 Vector2::Normalize() const
 {
   return (*this / Length());

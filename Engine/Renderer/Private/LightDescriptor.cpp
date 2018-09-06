@@ -45,8 +45,8 @@ LightDescriptor::LightDescriptor()
   , m_pFrameBuffer(nullptr)
   , m_pRenderPass(nullptr)
   , m_PrimaryShadowEnable(true)
-  , m_rShadowViewportHeight(20.0f)
-  , m_rShadowViewportWidth(20.0f)
+  , m_rShadowViewportHeight(40.0f)
+  , m_rShadowViewportWidth(40.0f)
 {
   m_Lights._PrimaryLight._Enable = false;
   m_Lights._PrimaryLight._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -194,6 +194,12 @@ void LightDescriptor::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
 
   InitializeNativeLights(pRhi);
   InitializePrimaryShadow(pRhi);
+
+  if (shadowDetail < SHADOWS_MEDIUM) {
+    m_PrimaryLightSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+  } else {
+    m_PrimaryLightSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+  }
 }
 
 
@@ -267,7 +273,6 @@ void LightDescriptor::Update(VulkanRHI* pRhi)
   r32 lightSz = 5.0f / m_rShadowViewportHeight;
   m_PrimaryLightSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
   m_PrimaryLightSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
-  m_PrimaryLightSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
 
   R_ASSERT(m_pLightBuffer->Mapped(), "Light buffer was not mapped!");
   memcpy(m_pLightBuffer->Mapped(), &m_Lights, sizeof(LightBuffer));
