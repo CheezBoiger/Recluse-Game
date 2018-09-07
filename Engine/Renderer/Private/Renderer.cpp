@@ -21,6 +21,7 @@
 #include "HDR.hpp"
 #include "Clusters.hpp"
 #include "BakeIBL.hpp"
+#include "Particles.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -69,6 +70,7 @@ Renderer::Renderer()
   , m_decalEngine(nullptr)
   , m_workGroupSize(0)
   , m_pClusterer(nullptr)
+  , m_particleEngine(nullptr)
   , m_usePreRenderSkybox(true)
   , m_pEnvMaps(nullptr)
   , m_pIrrMaps(nullptr)
@@ -409,6 +411,12 @@ void Renderer::CleanUp()
     m_pUI = nullptr;
   }
 
+  if (m_particleEngine) {
+    m_particleEngine->CleanUp(m_pRhi);
+    delete m_particleEngine;
+    m_particleEngine = nullptr;
+  }
+
   CleanUpGlobalIlluminationBuffer();
 
   m_RenderQuad.CleanUp();
@@ -480,6 +488,9 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pBakeIbl = new BakeIBL();
   m_pBakeIbl->Initialize(m_pRhi);
+
+  m_particleEngine = new ParticleEngine();
+  m_particleEngine->Initialize(m_pRhi);
 
   {
     u32 vendorId = m_pRhi->VendorID();

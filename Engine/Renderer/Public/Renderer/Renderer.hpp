@@ -50,6 +50,7 @@ class RenderObject;
 class SkinnedRenderObject;
 class SkyRenderer;
 class DecalEngine;
+class ParticleEngine;
 class HDR;
 class Clusterer;
 class BakeIBL;
@@ -389,6 +390,7 @@ private:
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
   DecalEngine*          m_decalEngine;
+  ParticleEngine*       m_particleEngine;
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
   BakeIBL*              m_pBakeIbl;

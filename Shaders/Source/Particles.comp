@@ -57,6 +57,7 @@ struct Particle {
 
 layout (set = 1, binding = 0) buffer ParticleBuffer {
   vec4      bufferSz;
+  vec4      lifeTimeScale;
   Particle  particles[ ];
 } particleBuffer;
 
@@ -69,7 +70,7 @@ void main()
     uint idx = gl_GlobalInvocationID.x + i;
     Particle p = particleBuffer.particles[idx];
     if (p.life > 0.0) {
-      p.life.x -= gWorldBuffer.fDeltaTime;
+      p.life.x -= gWorldBuffer.fDeltaTime * particleBuffer.lifeTimeScale;
       if (p.life > 0.0) {
         // Update the particle as it is still alive.
         p.position += p.velocity * gWorldBuffer.fDeltaTime;
