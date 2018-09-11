@@ -66,7 +66,7 @@ public:
       DirectionalLight* pPrimary = pSky->GetSunLight();
       pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-      pPrimary->_Direction = Vector3(0.5f, -0.5f, 0.5f).Normalize();
+      pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
       pPrimary->_Enable = true;
       pPrimary->_Intensity = 5.0f;
     }
@@ -221,6 +221,7 @@ int main(int c, char* argv[])
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
 
   // Create and set up scene.
 

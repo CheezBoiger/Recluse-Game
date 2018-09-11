@@ -36,7 +36,7 @@ public:
     GameObject* other = collision->_gameObject;
     CubeObject* cube = other->CastTo<CubeObject>();
     if (cube) {
-      m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3());  
+      //m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3());  
     }
   }
 
@@ -52,9 +52,9 @@ public:
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
     m_pPhysicsComponent->Initialize(this);
+    m_pCollider->SetCenter(Vector3(0.0f, 0.5f, 0.0f));
     m_pPhysicsComponent->AddCollider(m_pCollider);
-     m_pPhysicsComponent->Enable(false);
-
+    m_pPhysicsComponent->Enable(false);
     ModelLoader::Model* model;
     ModelCache::Get("BrainStem", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
@@ -101,7 +101,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
+    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();

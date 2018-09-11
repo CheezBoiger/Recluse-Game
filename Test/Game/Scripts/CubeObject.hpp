@@ -45,6 +45,7 @@ public:
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
+    //m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
 
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
@@ -66,15 +67,44 @@ public:
       , &material);
 
     m_pRendererComponent->Initialize(this);
+#if 1
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
     mesh->GetPrimitive(0, 0)->_pMat = material->Native();
-
+#else
+    m_pRendererComponent->ForceForward(true);
+    SamplerInfo info = {};
+    info._addrU = SAMPLER_ADDRESS_REPEAT;
+    info._addrV = SAMPLER_ADDRESS_REPEAT;
+    info._addrW = SAMPLER_ADDRESS_REPEAT;
+    info._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_BLACK;
+    info._enableAnisotropy = false;
+    info._maxAniso = 1.0f;
+    info._maxFilter = SAMPLER_FILTER_LINEAR;
+    info._maxLod = 1.0f;
+    info._minFilter = SAMPLER_FILTER_LINEAR;
+    info._minLod = 0.0f;
+    info._mipLodBias = 0.0f;
+    info._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
+    info._unnnormalizedCoordinates = false;
+    m_pSampler = gRenderer().CreateTextureSampler(info);
+    ModelLoader::Model* model = nullptr;
+    ModelCache::Get("Sponza", &model);
+    for (size_t i = 0; i < model->meshes.size(); ++i) {
+      m_pRendererComponent->AddMesh(model->meshes[i]);
+      u32 primCount = model->meshes[i]->GetPrimitiveCount();
+      for (u32 p = 0; p < primCount; ++p) {
+        MaterialDescriptor* mat = m_pRendererComponent->GetMesh(i)->GetPrimitive(p)->_pMat;
+        mat->SetSampler(m_pSampler);
+        mat->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT);
+      }
+    }
+#endif
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
     Transform* trans = GetTransform();
-    trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    //trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
     trans->Position = Vector3(0.0f, -15.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -92,8 +122,8 @@ public:
     Scene* scene = gEngine().GetScene();
     DirectionalLight* light = scene->GetSky()->GetSunLight();
     light->_Direction = Vector3(
-      sinf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f, 
-      -0.5f,
+      0.0f, 
+      sinf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f,
       cosf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f).Normalize();
 #endif
     AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
@@ -171,9 +201,11 @@ public:
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
+    //gRenderer().FreeTextureSampler(m_pSampler);
   }
 
 private:
+  //TextureSampler*     m_pSampler;
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
