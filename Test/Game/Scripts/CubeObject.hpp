@@ -45,8 +45,9 @@ public:
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
-    //m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
-
+#if 0
+    m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
+#endif
     m_pPhysicsComponent->Initialize(this);
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->SetMass(0.0f);
@@ -65,12 +66,13 @@ public:
       "RustedSample"
 #endif
       , &material);
-
+    Transform* trans = GetTransform();
     m_pRendererComponent->Initialize(this);
 #if 1
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
     mesh->GetPrimitive(0, 0)->_pMat = material->Native();
+    trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
     m_pRendererComponent->ForceForward(true);
     SamplerInfo info = {};
@@ -99,13 +101,12 @@ public:
         mat->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT);
       }
     }
+    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #endif
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
-    Transform* trans = GetTransform();
     //trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
-    trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
     trans->Position = Vector3(0.0f, -15.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
   }
@@ -205,7 +206,9 @@ public:
   }
 
 private:
-  //TextureSampler*     m_pSampler;
+#if 1
+  TextureSampler*     m_pSampler;
+#endif
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;

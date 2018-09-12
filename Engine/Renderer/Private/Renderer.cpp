@@ -471,7 +471,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pLights = new LightDescriptor();
   m_pLights->Initialize(m_pRhi, params->_Shadows);
-  m_pLights->Update(m_pRhi);
+  m_pLights->Update(m_pRhi, m_pGlobal->Data());
 
   m_pHDR = new HDR();
   m_pHDR->Initialize(m_pRhi);
@@ -1556,22 +1556,6 @@ void Renderer::SetUpGraphicsPipelines()
   GraphicsPipelineInfo.pDynamicState = &dynamicCI;
   GraphicsPipelineInfo.subpass = 0;
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-
-  // Create the pipeline for the graphics pipeline.
-  if (m_pLights && m_pLights->m_pFrameBuffer) {
-    colorBlendCI.attachmentCount = 0;
-    VkRect2D shadowScissor;
-    shadowScissor.extent = { m_pLights->m_pFrameBuffer->Width(), m_pLights->m_pFrameBuffer->Height() };
-    shadowScissor.offset = { 0, 0 };
-    viewportCI.pScissors = &shadowScissor;
-    GraphicsPipelineInfo.renderPass = m_pLights->m_pRenderPass->Handle();
-    RendererPass::SetUpDirectionalShadowPass(RHI(), GraphicsPipelineInfo);
-    GraphicsPipelineInfo.renderPass = nullptr;
-    viewportCI.pScissors = &scissor;
-    colorBlendCI.attachmentCount = static_cast<u32>(static_cast<u32>(colorBlendAttachments.size()));
-  } else {
-    R_DEBUG(rVerbose, "No framebuffer initialized in light data. Skipping shadow map pass...\n");
-  }
     
   RendererPass::SetUpForwardPhysicallyBasedPass(RHI(), GraphicsPipelineInfo);
 
@@ -2095,12 +2079,12 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
 
     cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
-
+    ShadowMapSystem& shadow = m_pLights->PrimaryShadowMapSystem(); 
     VkDescriptorSet compSets[] = { 
       m_pGlobal->Set()->Handle(),
       pbr_DescSetKey->Handle(),
       m_pLights->Set()->Handle(),
-      m_pLights->ViewSet()->Handle(),
+      shadow.ShadowMapViewDescriptor()->Handle(),
       m_pGlobalIllumination->Handle(),
       pbr_compSet->Handle()
     };
@@ -3017,6 +3001,10 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 
 void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
 {
+  ShadowMapSystem& system = m_pLights->PrimaryShadowMapSystem();
+  system.GenerateShadowCmds(cmdBuffer, m_forwardCmdList, m_cmdDeferredList);
+
+#if 0 
   R_TIMED_PROFILE_RENDERER();
   if (!m_pLights) return;
   if (!m_pLights->m_pFrameBuffer) return;
@@ -3095,6 +3083,7 @@ void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
       render(renderCmd);
     }
   cmdBuffer->EndRenderPass();    
+#endif 
 }
 
 
@@ -3177,11 +3166,11 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
-
+      ShadowMapSystem& shadow = m_pLights->PrimaryShadowMapSystem();
       DescriptorSets[0] = m_pGlobal->Set()->Handle();
       DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
       DescriptorSets[3] = m_pLights->Set()->Handle();
-      DescriptorSets[4] = m_pLights->ViewSet()->Handle();
+      DescriptorSets[4] = shadow.ShadowMapViewDescriptor()->Handle();
       DescriptorSets[5] = m_pGlobalIllumination->Handle(); // Need global illumination data.
       DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
@@ -3648,9 +3637,11 @@ void Renderer::UpdateSceneDescriptors()
   m_pGlobal->Update(m_pRhi);
 
   // Update lights in scene.
+#if 0
   Vector4 vViewerPos = m_pGlobal->Data()->_CameraPos;
   m_pLights->SetViewerPosition(Vector3(vViewerPos.x, vViewerPos.y, vViewerPos.z));
-  m_pLights->Update(m_pRhi);
+#endif
+  m_pLights->Update(m_pRhi, m_pGlobal->Data());
 
   // Update mesh descriptors.
   for (size_t i = 0; i < m_meshDescriptors.Size(); ++i) {

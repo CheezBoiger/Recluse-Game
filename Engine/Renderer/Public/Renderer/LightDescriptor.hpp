@@ -9,6 +9,9 @@
 
 #include "Renderer/UserParams.hpp"
 
+#include "CmdList.hpp"
+#include "RenderCmd.hpp"
+
 namespace Recluse {
 
 class VulkanRHI;
@@ -17,13 +20,17 @@ class Buffer;
 class Texture;
 class Sampler;
 class Texture2D;
+class CommandBuffer;
 class TextureSampler;
 class Texture3D;
+class GraphicsPipeline;
 class Texture1D;
 class Texture2DArray;
 class TextureCube;
 class FrameBuffer;
 class RenderPass;
+
+struct GlobalBuffer;
 
 
 struct DirectionalLight {
@@ -74,34 +81,6 @@ struct LightGridBuffer {
 };
 
 
-class ShadowMapSystem {
-public:
-  ShadowMapSystem()
-    : m_pStaticMap(nullptr) 
-    , m_pDynamicMap(nullptr) { }
-
-  void            Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
-  void            CleanUp(VulkanRHI* pRhi);
-
-  Texture*        StaticMap() { return m_pStaticMap; }
-  Texture*        DynamicMap() { return m_pDynamicMap; }
-
-  LightViewSpace& ViewSpace() { return m_viewSpace; }
-
-  void            Update(const Matrix4& viewProj);
-
-private:
-
-  void            InitializeShadowMap(VulkanRHI* pRhi);
-
-  Texture*        m_pStaticMap;
-  Texture*        m_pDynamicMap;
-  FrameBuffer*    m_pStaticFrameBuffer;
-  FrameBuffer*    m_pDynamicFrameBuffer;
-  LightViewSpace  m_viewSpace;
-
-};
-
 #define MAX_DIRECTIONAL_LIGHTS  4
 #define MAX_POINT_LIGHTS        64
 
@@ -116,6 +95,68 @@ struct LightBuffer {
 };
 
 
+// Shadow System, that takes care of shadow rendering. Reponsible for one particular light source,
+// depending on whether it is a Directional, or Point, light source.
+class ShadowMapSystem {
+public:
+  ShadowMapSystem()
+    : m_pStaticMap(nullptr)
+    , m_pDynamicMap(nullptr)
+    , m_pStaticFrameBuffer(nullptr)
+    , m_pDynamicFrameBuffer(nullptr)
+    , m_pLightViewDescriptorSet(nullptr)
+    , m_pLightViewBuffer(nullptr)
+    , m_pDynamicRenderPass(nullptr)
+    , m_pSkinnedPipeline(nullptr)
+    , m_pStaticPipeline(nullptr)
+    , m_pStaticRenderPass(nullptr)
+    , m_rShadowViewportWidth(40.0f)
+    , m_rShadowViewportHeight(40.0f) { }
+
+  ~ShadowMapSystem();
+
+  void            Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
+  void            CleanUp(VulkanRHI* pRhi);
+
+  Texture*        StaticMap() { return m_pStaticMap; }
+  Texture*        DynamicMap() { return m_pDynamicMap; }
+
+  LightViewSpace& ViewSpace() { return m_viewSpace; }
+
+  // Update based on a particular light source in the buffer. -1 defaults to primary light source.
+  void            Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1);
+
+  void            SetViewportWidth(r32 width) { m_rShadowViewportWidth = width; }
+  void            SetViewportHeight(r32 height) { m_rShadowViewportHeight = height; }
+
+  void            GenerateShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& cmds, CmdList<MeshRenderCmd>& deferredCmds);
+
+  DescriptorSet*  ShadowMapViewDescriptor() { return m_pLightViewDescriptorSet; }
+
+  Sampler*        _pSampler;
+
+private:
+
+  void            InitializeShadowMap(VulkanRHI* pRhi);
+
+  Texture*        m_pStaticMap;
+  Texture*        m_pDynamicMap;
+  // common used pipelines.
+  // TODO(): Need to create a static shadow map pipeline to combine dynamic objects to.
+  GraphicsPipeline* m_pSkinnedPipeline;
+  GraphicsPipeline* m_pStaticPipeline;
+  FrameBuffer*    m_pStaticFrameBuffer;
+  FrameBuffer*    m_pDynamicFrameBuffer;
+  RenderPass*     m_pDynamicRenderPass;
+  RenderPass*     m_pStaticRenderPass;
+  Buffer*         m_pLightViewBuffer;
+  DescriptorSet*  m_pLightViewDescriptorSet;
+  LightViewSpace  m_viewSpace;
+  r32             m_rShadowViewportWidth;
+  r32             m_rShadowViewportHeight;
+};
+
+
 // Light material.
 // TODO(): Shadow mapping might require us to create a separate buffer that holds
 // shadow maps for each point light, however we should limit the number of shadow maps
@@ -127,7 +168,7 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void                Update(VulkanRHI* pRhi);
+  void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer);
 
   // Initialize. 
   void                Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
@@ -138,9 +179,11 @@ public:
   LightBuffer*        Data() { return &m_Lights; }
 
   DescriptorSet*      Set() { return m_pLightDescriptorSet; }
+#if 0
   DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
 
   Texture*            PrimaryShadowMap() { return m_pOpaqueShadowMap; }
+#endif
   Sampler*            ShadowSampler() { return m_pShadowSampler; }
   void                SetViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
   Vector3             ViewerPos() const { return m_vViewerPos; }
@@ -151,17 +194,25 @@ public:
 
   b32                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
+  ShadowMapSystem&    PrimaryShadowMapSystem() { return m_primaryMapSystem; }
+
 private:
   void                InitializeNativeLights(VulkanRHI* pRhi);
-  void                InitializePrimaryShadow(VulkanRHI* pRhi);
 
+#if 0
+  void                InitializePrimaryShadow(VulkanRHI* pRhi);
+#endif
   Vector3             m_vViewerPos;
   // Descriptor Set.
   DescriptorSet*      m_pLightDescriptorSet;
-  DescriptorSet*      m_pLightViewDescriptorSet;
+
+  ShadowMapSystem     m_primaryMapSystem;
 
   // Light list is this!
   Buffer*             m_pLightBuffer;
+
+#if 0
+  DescriptorSet*      m_pLightViewDescriptorSet;
 
   // After computing the clusters to shade our lights, we store them in here!
   Buffer*             m_pLightGrid;
@@ -178,9 +229,6 @@ private:
   // Color filter map for transparent objects.
   Texture*            m_pTransparentColorFilter;
 
-  // Shadow map sampler.
-  Sampler*            m_pShadowSampler;
-
   // Framebuffer object used for command buffer pass through. Shadow mapping can't be
   // statically stored into the renderer pipeline. Only possibility is to create this 
   // outside.
@@ -191,6 +239,9 @@ private:
 
   // Information of our lights, to which we use this to modify light sources.
   LightViewSpace      m_PrimaryLightSpace;
+#endif
+  // Shadow map sampler.
+  Sampler*            m_pShadowSampler;
   LightBuffer         m_Lights;
 
   r32                 m_rShadowViewportWidth;

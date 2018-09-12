@@ -63,6 +63,7 @@ extern GraphicsPipeline* ShadowMapPipelineKey;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
+extern std::string DynamicShadowMapVertFileStr;
 extern DescriptorSetLayout* LightViewDescriptorSetLayoutKey;
 extern DescriptorSetLayout* globalIllumination_DescLR;
 extern DescriptorSetLayout* globalIllumination_DescNoLR;
