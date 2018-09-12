@@ -123,8 +123,6 @@ layout (set = 3, binding = 0) uniform LightBuffer {
   PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
 
-layout (set = 3, binding = 1) uniform sampler2D globalShadow;
-
 layout (set = 4, binding = 0) uniform LightSpace {
   mat4 viewProj;
   vec4 near;
@@ -132,6 +130,7 @@ layout (set = 4, binding = 0) uniform LightSpace {
   vec4 shadowTechnique; // 0 for pcf, 1 for pcss
 } lightSpace;
 
+layout (set = 4, binding = 1) uniform sampler2D globalShadow;
 
 layout (set = 5, binding = 0) uniform samplerCube diffMap;
 layout (set = 5, binding = 1) uniform samplerCube specMap;

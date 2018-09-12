@@ -560,13 +560,19 @@ void Renderer::SetUpDescriptorSetLayouts()
 {
   // Light space.
   {
-    std::array<VkDescriptorSetLayoutBinding, 1> LightViewBindings;
+    std::array<VkDescriptorSetLayoutBinding, 2> LightViewBindings;
     LightViewBindings[0].pImmutableSamplers = nullptr;
     LightViewBindings[0].binding = 0;
     LightViewBindings[0].descriptorCount = 1;
     LightViewBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     LightViewBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
       | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+
+    LightViewBindings[1].binding = 1;
+    LightViewBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    LightViewBindings[1].descriptorCount = 1;
+    LightViewBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+    LightViewBindings[1].pImmutableSamplers = nullptr;
 
     DescriptorSetLayout* LightViewLayout = m_pRhi->CreateDescriptorSetLayout();
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
@@ -824,18 +830,12 @@ void Renderer::SetUpDescriptorSetLayouts()
 
   // Light layout.
   {
-    std::array<VkDescriptorSetLayoutBinding, 2> LightBindings;
+    std::array<VkDescriptorSetLayoutBinding, 1> LightBindings;
     LightBindings[0].binding = 0;
     LightBindings[0].descriptorCount = 1;
     LightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     LightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     LightBindings[0].pImmutableSamplers = nullptr;
-
-    LightBindings[1].binding = 1;
-    LightBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    LightBindings[1].descriptorCount = 1;
-    LightBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
-    LightBindings[1].pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutCreateInfo LightLayout = { };
     LightLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

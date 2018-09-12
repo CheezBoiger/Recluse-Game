@@ -35,6 +35,61 @@ u32 LightBuffer::MaxNumPointLights()
 }
 
 
+void ShadowMapSystem::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
+{
+  // ShadowMap is a depth image.
+  VkImageCreateInfo ImageCi = {};
+  ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  ImageCi.arrayLayers = 1;
+  ImageCi.extent.width = 512 << shadowDetail;
+  ImageCi.extent.height = 512 << shadowDetail;
+  ImageCi.extent.depth = 1;
+  ImageCi.format = VK_FORMAT_D32_SFLOAT;
+  ImageCi.imageType = VK_IMAGE_TYPE_2D;
+  ImageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  ImageCi.mipLevels = 1;
+  ImageCi.samples = VK_SAMPLE_COUNT_1_BIT;
+  ImageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+  ImageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  ImageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  VkImageViewCreateInfo ViewCi = {};
+  ViewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  ViewCi.components = {};
+  ViewCi.format = ImageCi.format;
+  ViewCi.subresourceRange = {};
+  ViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+  ViewCi.subresourceRange.baseArrayLayer = 0;
+  ViewCi.subresourceRange.baseMipLevel = 0;
+  ViewCi.subresourceRange.layerCount = 1;
+  ViewCi.subresourceRange.levelCount = 1;
+  ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+  if (m_pDynamicMap) {
+    m_pDynamicMap = pRhi->CreateTexture();
+    m_pDynamicMap->Initialize(ImageCi, ViewCi);
+  }
+  if (m_pStaticMap) {
+    m_pStaticMap = pRhi->CreateTexture();
+    m_pStaticMap->Initialize(ImageCi, ViewCi);
+  }
+}
+
+
+void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
+{
+  if (m_pDynamicMap) {
+    pRhi->FreeTexture(m_pDynamicMap);
+    m_pDynamicMap = nullptr;
+  }
+
+  if (m_pStaticMap) {
+    pRhi->FreeTexture(m_pStaticMap);
+    m_pStaticMap = nullptr;
+  }
+}
+
+
 LightDescriptor::LightDescriptor()
   : m_pOpaqueShadowMap(nullptr)
   , m_pShadowSampler(nullptr)
@@ -307,14 +362,7 @@ void LightDescriptor::InitializeNativeLights(VulkanRHI* pRhi)
   lightBufferInfo.offset = 0;
   lightBufferInfo.range = sizeof(LightBuffer);
 
-  // TODO(): Once we create our shadow map, we will add it here.
-  // This will pass the rendered shadow map to the pbr pipeline.
-  VkDescriptorImageInfo globalShadowInfo = {};
-  globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalShadowInfo.imageView = m_pOpaqueShadowMap->View();
-  globalShadowInfo.sampler = m_pShadowSampler->Handle();
-
-  std::array<VkWriteDescriptorSet, 2> writeSets;
+  std::array<VkWriteDescriptorSet, 1> writeSets;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[0].descriptorCount = 1;
   writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -322,14 +370,6 @@ void LightDescriptor::InitializeNativeLights(VulkanRHI* pRhi)
   writeSets[0].pBufferInfo = &lightBufferInfo;
   writeSets[0].pNext = nullptr;
   writeSets[0].dstBinding = 0;
-
-  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[1].descriptorCount = 1;
-  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[1].dstArrayElement = 0;
-  writeSets[1].pNext = nullptr;
-  writeSets[1].pImageInfo = &globalShadowInfo;
-  writeSets[1].dstBinding = 1;
 
   m_pLightDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
 }
@@ -349,17 +389,34 @@ void LightDescriptor::InitializePrimaryShadow(VulkanRHI* pRhi)
   viewBuf.offset = 0;
   viewBuf.range = sizeof(LightViewSpace);
 
-  VkWriteDescriptorSet write = { };
-  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  write.descriptorCount = 1;
-  write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  write.dstArrayElement = 0;
-  write.dstBinding = 0;
-  write.dstSet = nullptr;
-  write.pImageInfo = nullptr;
-  write.pBufferInfo = &viewBuf;  
+  // TODO(): Once we create our shadow map, we will add it here.
+  // This will pass the rendered shadow map to the pbr pipeline.
+  VkDescriptorImageInfo globalShadowInfo = {};
+  globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalShadowInfo.imageView = m_pOpaqueShadowMap->View();
+  globalShadowInfo.sampler = m_pShadowSampler->Handle();
+
+  std::array<VkWriteDescriptorSet, 2> writes;
+  writes[0] = {};
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].descriptorCount = 1;
+  writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  writes[0].dstArrayElement = 0;
+  writes[0].dstBinding = 0;
+  writes[0].dstSet = nullptr;
+  writes[0].pImageInfo = nullptr;
+  writes[0].pBufferInfo = &viewBuf;
+
+  writes[1] = {};
+  writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[1].descriptorCount = 1;
+  writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writes[1].dstArrayElement = 0;
+  writes[1].pNext = nullptr;
+  writes[1].pImageInfo = &globalShadowInfo;
+  writes[1].dstBinding = 1;
   
-  m_pLightViewDescriptorSet->Update(1, &write);
+  m_pLightViewDescriptorSet->Update(writes.size(), writes.data());
 
   m_pFrameBuffer = pRhi->CreateFrameBuffer();
   m_pRenderPass = pRhi->CreateRenderPass();

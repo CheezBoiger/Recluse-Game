@@ -85,11 +85,11 @@ layout (set = 2, binding = 0) uniform LightBuffer {
   PointLight      pointLights[MAX_POINT_LIGHTS];
 } gLightBuffer;
 
-layout (set = 2, binding = 1) uniform sampler2D globalShadow;
-
 layout (set = 3, binding = 0) uniform LightSpace {
   mat4 viewProj;
 } lightSpace;
+
+layout (set = 3, binding = 1) uniform sampler2D globalShadow;
 
 
 layout (set = 4, binding = 0) uniform samplerCube diffMap;

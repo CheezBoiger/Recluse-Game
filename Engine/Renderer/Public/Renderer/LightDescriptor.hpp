@@ -73,6 +73,35 @@ struct LightGridBuffer {
   
 };
 
+
+class ShadowMapSystem {
+public:
+  ShadowMapSystem()
+    : m_pStaticMap(nullptr) 
+    , m_pDynamicMap(nullptr) { }
+
+  void            Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
+  void            CleanUp(VulkanRHI* pRhi);
+
+  Texture*        StaticMap() { return m_pStaticMap; }
+  Texture*        DynamicMap() { return m_pDynamicMap; }
+
+  LightViewSpace& ViewSpace() { return m_viewSpace; }
+
+  void            Update(const Matrix4& viewProj);
+
+private:
+
+  void            InitializeShadowMap(VulkanRHI* pRhi);
+
+  Texture*        m_pStaticMap;
+  Texture*        m_pDynamicMap;
+  FrameBuffer*    m_pStaticFrameBuffer;
+  FrameBuffer*    m_pDynamicFrameBuffer;
+  LightViewSpace  m_viewSpace;
+
+};
+
 #define MAX_DIRECTIONAL_LIGHTS  4
 #define MAX_POINT_LIGHTS        64
 
