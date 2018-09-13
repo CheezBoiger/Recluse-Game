@@ -72,7 +72,7 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
   float lifeTimeScale;
   float particleMaxAlive;
   float maxParticles;
-  float flag;
+  float isWorldSpace;
 } particleConfig;
 
 

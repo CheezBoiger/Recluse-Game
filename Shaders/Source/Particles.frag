@@ -55,7 +55,7 @@ layout (set = 1, binding = 1) uniform ParticleBuffer {
   float lifeTimeScale;
   float particleMaxAlive;
   float maxParticles;
-  float flag;
+  float isWorldSpace;
 } particleBuffer;
 
 layout (set = 1, binding = 1) uniform sampler2DArray particleAtlas;

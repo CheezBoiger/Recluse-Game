@@ -54,7 +54,7 @@ struct ParticleSystemConfig {
   r32             _lifeTimeScale;
   r32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
   r32             _maxParticles;          // Maximum number of particles within this buffer.
-  r32             _worldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
+  r32             _isWorldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
 };
 
 

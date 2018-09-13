@@ -56,7 +56,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   float lifeTimeScale;
   float particleMaxAlive;
   float maxParticles;
-  float flag;
+  float isWorldSpace;
 } particleBuffer;
 
 in VertOut {
