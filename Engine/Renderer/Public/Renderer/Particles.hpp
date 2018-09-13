@@ -54,7 +54,7 @@ struct ParticleSystemConfig {
   r32             _lifeTimeScale;
   r32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
   r32             _maxParticles;          // Maximum number of particles within this buffer.
-  r32             _flag;                // Flag, reserved for future use.
+  r32             _worldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
 };
 
 
@@ -101,8 +101,7 @@ public:
     , m_pParticleRender(nullptr)
     , m_pParticleDescriptorSetLayout(nullptr) { }
 
-  ~ParticleEngine()
-    { }
+  ~ParticleEngine();
 
   void                Initialize(VulkanRHI* pRhi);
   void                CleanUp(VulkanRHI* pRhi);
@@ -114,9 +113,21 @@ public:
   // computation commands for the given particle system.
   void                GenerateParticleComputeCommands(CommandBuffer* cmdBuffer, ParticleSystem* descriptor);
 
+  DescriptorSetLayout* GetParticleSystemDescriptorLayout() { m_pParticleDescriptorSetLayout; }
 private:
+  // Compute pipeline for particle calculations.
   ComputePipeline*      m_pParticleCompute;
+
+  // Particle Renderer pipeline. This pipeline is instanced.
   GraphicsPipeline*     m_pParticleRender;
+
+  // 
   DescriptorSetLayout*  m_pParticleDescriptorSetLayout;
+
+  // Framebuffer to the particle renderer.
+  FrameBuffer*          m_pFrameBuffer;
+
+  // Render pass for the particle renderer.
+  RenderPass*           m_pRenderPass;
 };
 } // Recluse

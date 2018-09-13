@@ -72,6 +72,10 @@ struct SkinnedVertex {
 };
 
 
+// Morph vertices are the same as static vertices.
+using MorphVertex = StaticVertex;
+
+
 // For Meshes with no normal data needed.
 struct VertexNoNormal {
   Vector4 position;
