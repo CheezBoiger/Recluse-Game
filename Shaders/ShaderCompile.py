@@ -47,11 +47,10 @@ class Shader():
     print(cmd)
     subprocess.call(cmd)
 
-
+'''
+  Include all shaders to be compiled, here.
+'''
 recluse_shaders = [
-  '''
-    Include all shaders to be compiled, here.
-  '''
   Shader('ForwardPBR_NoLR', 'ForwardPBR.frag'),
   Shader('ForwardPBR_LR', 'ForwardPBR.frag', params='-DLOCAL_REFLECTIONS=1'),
   Shader('ForwardPBR', 'ForwardPBR.vert'),
