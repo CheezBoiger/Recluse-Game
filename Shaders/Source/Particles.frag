@@ -2,8 +2,9 @@
 #version 430
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_ARB_compute_shader : enable
 
+layout (location = 0) out vec4 outputColor;
+layout (location = 1) out vec4 brightColor;
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -43,25 +44,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   ivec2 pad;
 } gWorldBuffer;
 
-
-// The particle and it's information.
-struct Particle {
-  vec4    position;
-  vec4    velocity;
-  vec4    color;
-  float   size;
-  float   angle;
-  float   weight;
-  float   life;
-};
-
-
-layout (set = 1, binding = 0) buffer ParticleBuffer {
-  Particle  particles[ ];
-} particleBuffer;
-
-
-layout (set = 1, binding = 0) uniform ParticleConfig {
+layout (set = 1, binding = 1) uniform ParticleBuffer {
   float level[16];
   mat4  model;
   mat4  modelView;
@@ -73,25 +56,23 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
   float particleMaxAlive;
   float maxParticles;
   float flag;
-} particleConfig;
+} particleBuffer;
+
+layout (set = 1, binding = 1) uniform sampler2DArray particleAtlas;
+
+in FragIn {
+  vec4  color;
+  vec4  worldPos;
+  vec2  uv;
+  float angle;
+  float life;
+} frag_in;
 
 
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-  float bufferSz = particleConfig.maxParticles;
-  for (int i = 0; (gl_GlobalInvocationID.x + i) < bufferSz; i += 256) {
-    uint idx = gl_GlobalInvocationID.x + i;
-    Particle p = particleBuffer.particles[idx];
-    if (p.life > 0.0) {
-      p.life.x -= gWorldBuffer.fDeltaTime * particleConfig.lifeTimeScale;
-      if (p.life > 0.0) {
-        // Update the particle as it is still alive.
-        p.position += p.velocity * gWorldBuffer.fDeltaTime;
-      }
-    }
-  }
+  // for test.
+  // TODO(): 
+  vec4 color = frag_in.color;
+  outputColor = color;
 }
-
-
-

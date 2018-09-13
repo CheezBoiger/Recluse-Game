@@ -83,7 +83,11 @@ recluse_shaders = [
   Shader('GlowPass', 'GlowPass.frag'),
   Shader('PBR_NoLR', 'PBR.frag'),
   Shader('PBR_LR', 'PBR.frag', params='-DLOCAL_REFLECTIONS=1'),
-  Shader('PBR', 'PBR.vert')
+  Shader('PBR', 'PBR.vert'),
+  Shader('Particles', 'Particles.frag'),
+  Shader('Particles', 'Particles.vert'),
+  Shader('Particles', 'Particles.geom'),
+  Shader('Particles', 'Particles.comp')
 ]
   
 def get_shader_ext(filename):

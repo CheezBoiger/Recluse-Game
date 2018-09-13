@@ -2,7 +2,14 @@
 #version 430
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
-#extension GL_ARB_compute_shader : enable
+
+layout (location = 0) in vec4   position;
+layout (location = 1) in vec4   velocity;
+layout (location = 2) in vec4   color;
+layout (location = 3) in float  angle;
+layout (location = 4) in float  size;
+layout (location = 5) in float  weight;
+layout (location = 6) in float  life;
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
@@ -43,25 +50,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   ivec2 pad;
 } gWorldBuffer;
 
-
-// The particle and it's information.
-struct Particle {
-  vec4    position;
-  vec4    velocity;
-  vec4    color;
-  float   size;
-  float   angle;
-  float   weight;
-  float   life;
-};
-
-
-layout (set = 1, binding = 0) buffer ParticleBuffer {
-  Particle  particles[ ];
-} particleBuffer;
-
-
-layout (set = 1, binding = 0) uniform ParticleConfig {
+layout (set = 1, binding = 0) uniform ParticleBuffer {
   float level[16];
   mat4  model;
   mat4  modelView;
@@ -73,25 +62,26 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
   float particleMaxAlive;
   float maxParticles;
   float flag;
-} particleConfig;
+} particleBuffer;
 
+out VertOut {
+  vec4 color;
+  vec4 worldPos;
+  float angle;
+  float size;
+  float weight;
+  float life;
+} vert_out;
 
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-  float bufferSz = particleConfig.maxParticles;
-  for (int i = 0; (gl_GlobalInvocationID.x + i) < bufferSz; i += 256) {
-    uint idx = gl_GlobalInvocationID.x + i;
-    Particle p = particleBuffer.particles[idx];
-    if (p.life > 0.0) {
-      p.life.x -= gWorldBuffer.fDeltaTime * particleConfig.lifeTimeScale;
-      if (p.life > 0.0) {
-        // Update the particle as it is still alive.
-        p.position += p.velocity * gWorldBuffer.fDeltaTime;
-      }
-    }
-  }
+  vec4 worldPos = particleBuffer.model * vec4(position.xyz, 1.0);
+  gl_Position = worldPos;
+  
+  vert_out.worldPos = worldPos;
+  vert_out.color = color;
+  vert_out.angle = angle;
+  vert_out.size = size;
+  vert_out.weight = weight;
+  vert_out.life = life;
 }
-
-
-

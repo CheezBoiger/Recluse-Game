@@ -46,6 +46,7 @@ struct ParticleSystemConfig {
   // a max of 16 levels allowed in a particle texture array.
   r32             _level[16];
   Matrix4         _model;           // Model of the particle system source.
+  Matrix4         _modelView;       // ModelView matrix.
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 
