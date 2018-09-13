@@ -39,13 +39,21 @@ struct Particle {
 };
 
 
-struct ParticleLevel {
+struct ParticleSystemConfig {
   // level determines at which point in a particle's life, will it 
   // trigger the specific texture index to be displayed, and for how long
   // until the next level of its life is reached. Max of 16 levels, which also means
   // a max of 16 levels allowed in a particle texture array.
   r32             _level[16];
-  Texture2DArray* _texture;
+  Matrix4         _model;           // Model of the particle system source.
+  r32             _fadeAt;
+  r32             _fadeThreshold;
+  r32             _angleThreshold; 
+  r32             _rate;            // rate at which these particles are produced.
+  r32             _lifeTimeScale;
+  r32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
+  r32             _maxParticles;          // Maximum number of particles within this buffer.
+  r32             _flag;                // Flag, reserved for future use.
 };
 
 
@@ -66,7 +74,7 @@ struct ParticleSystem {
   void                  Initialize(VulkanRHI* pRhi);
   void                  CleanUp(VulkanRHI* pRhi);
   void                  PushUpdate(particle_update_bits updateBits);
-  void                  Update();
+  void                  Update(VulkanRHI* pRhi);
 
 private:
 
@@ -75,8 +83,8 @@ private:
 
   // GPU based particle buffer. 
   Buffer*               m_particleBuffer;
-  r32                   _lifeTimeScale;
-  ParticleLevel         _particleLevel;
+  ParticleSystemConfig _particleLevel;
+  Texture2DArray*       _texture;
   particle_update_bits  m_updateBits;
 };
 

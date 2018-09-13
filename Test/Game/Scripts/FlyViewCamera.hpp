@@ -84,10 +84,12 @@ public:
     }
 
     if (!bFollow) {
-      if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->Position -= transform->Right() * m_speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * m_speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Front() * m_speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Front() * m_speed * tick; }
+      r32 speed = m_speed;
+      if (Keyboard::KeyPressed(KEY_CODE_LSHIFT)) { speed *= 5.0f; }
+      if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->Position -= transform->Right() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Front() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Front() * speed * tick; }
     }
 
     // Test window resizing.

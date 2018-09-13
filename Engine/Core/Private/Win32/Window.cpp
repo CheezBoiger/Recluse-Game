@@ -125,12 +125,40 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   case WM_SYSKEYDOWN:
   case WM_KEYDOWN:
   {
-    if (gKeyboardCallback) gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0);
+
+#define CHECK_KEY_STATE_DOWN(keyCode) { \
+    SHORT s = GetKeyState(keyCode); \
+    if (s & 0x8000) gKeyboardCallback(window, i32(keyCode), MapVirtualKey(u32(keyCode), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); \
+  }
+#define CHECK_KEY_STATE_UP(keyCode) { \
+    SHORT s = GetKeyState(keyCode); \
+    if (~(s & 0x8000)) gKeyboardCallback(window, i32(keyCode), MapVirtualKey(u32(keyCode), MAPVK_VK_TO_VSC), WM_KEYUP, 0); \
+  }
+
+    if (gKeyboardCallback) { 
+      gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); 
+      if (wParam == KEY_CODE_SHIFT) {
+        CHECK_KEY_STATE_DOWN(VK_LSHIFT);
+        CHECK_KEY_STATE_DOWN(VK_RSHIFT);
+      } else if (wParam == KEY_CODE_CONTROL) {
+        CHECK_KEY_STATE_DOWN(VK_LCONTROL);
+        CHECK_KEY_STATE_DOWN(VK_RCONTROL);
+      }
+    }
   } break;
   case WM_SYSKEYUP:
   case WM_KEYUP:
   {
-    if (gKeyboardCallback) gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYUP, 0);
+    if (gKeyboardCallback) {
+      gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYUP, 0);
+      if (wParam == KEY_CODE_SHIFT) {
+        CHECK_KEY_STATE_UP(VK_LSHIFT);
+        CHECK_KEY_STATE_UP(VK_RSHIFT);
+      }else if (wParam == KEY_CODE_CONTROL) {
+        CHECK_KEY_STATE_UP(VK_LCONTROL);
+        CHECK_KEY_STATE_UP(VK_RCONTROL);
+      }
+    }
   } break;
   case WM_MOVE:
   {
