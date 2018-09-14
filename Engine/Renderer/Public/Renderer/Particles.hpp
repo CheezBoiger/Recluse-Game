@@ -23,6 +23,7 @@ class FrameBuffer;
 class VulkanRHI;
 class CommandBuffer;
 class Texture2DArray;
+class TextureSampler;
 
 
 // Particle marks the current information used to process the position of the 
@@ -70,22 +71,37 @@ using particle_update_bits = u32;
 // Descriptor that defines a particle system, which allows cpu side interactions with
 // how the system should calculate its particles.
 struct ParticleSystem { 
+  ParticleSystem() 
+    : m_particleConfigBuffer(nullptr)
+    , m_particleBuffer(nullptr)
+    , m_pDescriptorSet(nullptr)
+    , m_updateBits(0)
+    , _texture(nullptr)
+    , _sampler(nullptr) { }
 
   // Must initialize for compute pipeline as well!
-  void                  Initialize(VulkanRHI* pRhi);
+  void                  Initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
   void                  CleanUp(VulkanRHI* pRhi);
-  void                  PushUpdate(particle_update_bits updateBits);
+  void                  PushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
   void                  Update(VulkanRHI* pRhi);
 
+  Texture2DArray*       _texture;
+  TextureSampler*       _sampler;
+
 private:
+
+  void                  UpdateDescriptor();
 
   void                  ClearUpdateBits() { m_updateBits = 0x0; }
   DescriptorSet*        m_pDescriptorSet;
 
   // GPU based particle buffer. 
   Buffer*               m_particleBuffer;
-  ParticleSystemConfig _particleLevel;
-  Texture2DArray*       _texture;
+
+  // Particle Configuration buffer.
+  Buffer*               m_particleConfigBuffer;
+
+  ParticleSystemConfig _particleConfig;
   particle_update_bits  m_updateBits;
 };
 

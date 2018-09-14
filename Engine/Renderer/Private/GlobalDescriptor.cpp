@@ -73,7 +73,7 @@ void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  m_pGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
   m_pGlobalBuffer->Map();
 
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;

@@ -33,6 +33,7 @@ public:
 
     CubeObject()
   {
+    m_pSampler = nullptr;
     SetName("CubeObject :3");
   }
 

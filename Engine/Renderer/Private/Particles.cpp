@@ -1,11 +1,15 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
 #include "Particles.hpp"
 #include "RendererData.hpp"
+#include "TextureType.hpp"
 #include "Core/Logging/Log.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/DescriptorSet.hpp"
+#include "RHI/Commandbuffer.hpp"
 #include "RHI/Shader.hpp"
+#include "RHI/Buffer.hpp"
+#include "RHI/Texture.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -80,6 +84,95 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
   description[6].offset = offset;
   
   return description;
+}
+
+
+void ParticleSystem::Initialize(VulkanRHI* pRhi, 
+  DescriptorSetLayout* particleLayout, u32 initialParticleCount)
+{
+  _particleConfig._maxParticles = initialParticleCount;
+
+  m_particleBuffer = pRhi->CreateBuffer();
+  m_particleConfigBuffer = pRhi->CreateBuffer();
+
+  {
+    VkBufferCreateInfo gpuBufferCi = { };
+    gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    gpuBufferCi.size = sizeof(Particle) * _particleConfig._maxParticles;
+    gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT 
+      | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
+      | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    m_particleBuffer->Initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  }
+
+  {
+    VkBufferCreateInfo bufferCi = { };
+    bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
+    bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    m_particleConfigBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  );
+  }
+
+  m_pDescriptorSet = pRhi->CreateDescriptorSet();
+  m_pDescriptorSet->Allocate(pRhi->DescriptorPool(), particleLayout);
+}
+
+
+void ParticleSystem::UpdateDescriptor()
+{
+  VkDescriptorBufferInfo bufferInfo = {};
+  bufferInfo.buffer = m_particleBuffer->NativeBuffer();
+  bufferInfo.offset = 0;
+  bufferInfo.range = sizeof(ParticleSystemConfig);
+
+  VkDescriptorImageInfo imgInfo = {};
+  imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imgInfo.imageView = _texture->Handle()->View();
+  imgInfo.sampler = _sampler->Handle()->Handle();
+
+  // TODO():
+  std::array<VkWriteDescriptorSet, 2> writes;
+  writes[0] = {};
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+
+  writes[1] = {};
+  writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+
+  m_pDescriptorSet->Update(static_cast<u32>(writes.size()), writes.data());
+}
+
+
+void ParticleSystem::Update(VulkanRHI* pRhi)
+{
+  if (m_updateBits & PARTICLE_DESCRIPTOR_UPDATE_BIT) {
+    UpdateDescriptor();
+  }
+
+  if (m_updateBits & PARTICLE_BUFFER_UPDATE_BIT) {
+    
+  }
+  m_updateBits = 0;
+}
+
+
+void ParticleSystem::CleanUp(VulkanRHI* pRhi)
+{
+  if ( m_particleBuffer ) {
+    pRhi->FreeBuffer( m_particleBuffer );
+    m_particleBuffer = nullptr;
+  }
+
+  if ( m_particleConfigBuffer ) {
+    pRhi->FreeBuffer( m_particleConfigBuffer );
+    m_particleConfigBuffer = nullptr;
+  }
+
+  if ( m_pDescriptorSet ) {
+    pRhi->FreeDescriptorSet( m_pDescriptorSet );
+    m_pDescriptorSet = nullptr;
+  }
 }
 
 
