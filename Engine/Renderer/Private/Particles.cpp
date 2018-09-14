@@ -112,7 +112,8 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
     bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    m_particleConfigBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT  );
+    m_particleConfigBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_particleConfigBuffer->Map();
   }
 
   m_pDescriptorSet = pRhi->CreateDescriptorSet();
@@ -151,8 +152,16 @@ void ParticleSystem::Update(VulkanRHI* pRhi)
   }
 
   if (m_updateBits & PARTICLE_BUFFER_UPDATE_BIT) {
-    
+    R_ASSERT(m_particleConfigBuffer, "Particle config not mapped.");
+    memcpy(m_particleConfigBuffer->Mapped(), &_particleConfig, sizeof(ParticleSystemConfig));
+    VkMappedMemoryRange range = { };
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.offset = 0;
+    range.memory = m_particleConfigBuffer->Memory();
+    range.size = m_particleConfigBuffer->MemorySize();
+    pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
+
   m_updateBits = 0;
 }
 

@@ -87,6 +87,7 @@ struct ParticleSystem {
 
   Texture2DArray*       _texture;
   TextureSampler*       _sampler;
+  ParticleSystemConfig  _particleConfig;
 
 private:
 
@@ -100,8 +101,6 @@ private:
 
   // Particle Configuration buffer.
   Buffer*               m_particleConfigBuffer;
-
-  ParticleSystemConfig _particleConfig;
   particle_update_bits  m_updateBits;
 };
 
