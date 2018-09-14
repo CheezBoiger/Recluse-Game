@@ -79,35 +79,32 @@ out FragIn {
 void main()
 {
   float size = vert_out[0].size;
-  mat4 mv = particleBuffer.modelView;
-  vec3 right = vec3(mv[0][0], mv[1][0], mv[2][0]);
-  vec3 up = vec3(mv[0][1], mv[1][1], mv[2][1]);
-  vec3 P = gl_in[0].gl_Position.xyz;
-  mat4 vp = gWorldBuffer.viewProj;
+  vec4 P = gl_in[0].gl_Position;
+  mat4 p = gWorldBuffer.proj;
   
-  vec3 va = P - (right * up) * size;
-  gl_Position = vp * vec4(va, 1.0);
+  vec2 va = P.xy + vec2(-0.5, -0.5) * size;
+  gl_Position = p * vec4(va, P.zw);
   frag_in.uv = vec2(0.0, 0.0);
   frag_in.color = vert_out[0].color;
   frag_in.life = vert_out[0].life;
   EmitVertex();
   
-  vec3 vb = P - (right - up) * size;
-  gl_Position = vp * vec4(vb, 1.0);
+  vec2 vb = P.xy + vec2(-0.5, 0.5) * size;
+  gl_Position = p * vec4(vb, P.zw);
   frag_in.uv = vec2(0.0, 1.0);
   frag_in.color = vert_out[0].color;
   frag_in.life = vert_out[0].life;
   EmitVertex();
   
-  vec3 vd = P + (right - up) * size;
-  gl_Position = vp * vec4(vd, 1.0);
+  vec2 vd = P.xy + vec2(0.5, -0.5) * size;
+  gl_Position = p * vec4(vd, P.zw);
   frag_in.uv = vec2(1.0, 0.0);
   frag_in.color = vert_out[0].color;
   frag_in.life = vert_out[0].life;
   EmitVertex();
   
-  vec3 vc = P + (right + up) * size;
-  gl_Position = vp * vec4(vc, 1.0);
+  vec2 vc = P.xy + vec2(0.5, 0.5) * size;
+  gl_Position = p * vec4(vc, P.zw);
   frag_in.uv = vec2(1.0, 1.0);
   frag_in.color = vert_out[0].color;
   frag_in.life = vert_out[0].life;

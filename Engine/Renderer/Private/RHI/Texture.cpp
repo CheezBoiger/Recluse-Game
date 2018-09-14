@@ -70,9 +70,9 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   mArrayLayers = imageInfo.arrayLayers;
 
   R_DEBUG(rNotify, "Texture Image created.\n");
-  R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
-  R_DEBUG(rNotify, "Texture View: " << View() << "\n");
-  R_DEBUG(rNotify, "Texture Memory: " << Memory() << "\n");
+  //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
+  //R_DEBUG(rNotify, "Texture View: " << View() << "\n");
+  //R_DEBUG(rNotify, "Texture Memory: " << Memory() << "\n");
 }
 
 
@@ -80,19 +80,19 @@ void Texture::CleanUp()
 {
   R_DEBUG(rNotify, "Freeing Texture:\n");
   if (mImage) {
-    R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
+    //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
     vkDestroyImage(mOwner, mImage, nullptr);
     mImage = VK_NULL_HANDLE;
   }
 
   if (mView) {
-    R_DEBUG(rNotify, "Image View: " << View() << "\n");
+    //R_DEBUG(rNotify, "Image View: " << View() << "\n");
     vkDestroyImageView(mOwner, mView, nullptr);
     mView = VK_NULL_HANDLE;
   }
 
   if (mMemory) {
-    R_DEBUG(rNotify, "Image Memory: " << Memory() << "\n");
+    //R_DEBUG(rNotify, "Image Memory: " << Memory() << "\n");
     vkFreeMemory(mOwner, mMemory, nullptr);
     mMemory = VK_NULL_HANDLE;
   }

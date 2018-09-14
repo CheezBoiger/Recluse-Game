@@ -75,8 +75,13 @@ out VertOut {
 
 void main()
 {
-  vec4 worldPos = particleBuffer.model * vec4(position.xyz, 1.0);
-  gl_Position = worldPos;
+  vec4 worldPos = vec4(position.xyz, 1.0);
+  
+  if (particleBuffer.isWorldSpace <= 0.0) {
+    worldPos = particleBuffer.model * worldPos;
+  }
+  
+  gl_Position = gWorldBuffer.view * worldPos;
   
   vert_out.worldPos = worldPos;
   vert_out.color = color;

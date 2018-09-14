@@ -5,6 +5,7 @@
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/DescriptorSet.hpp"
+#include "RHI/Shader.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -111,15 +112,18 @@ void ParticleEngine::Initialize(VulkanRHI* pRhi)
 
   // Particle Renderer Pipeline.
   {
-    Shader* vertShader = pRhi->CreateShader();
-    Shader* fragShader = pRhi->CreateShader();
-    RendererPass::LoadShader("Particles.vert.spv", vertShader);
-    RendererPass::LoadShader("Particles.frag.spv", fragShader);
+    Shader vertShader; vertShader.SetOwner(pRhi->LogicDevice()->Native());
+    Shader fragShader; fragShader.SetOwner(pRhi->LogicDevice()->Native());
+    Shader geomShader; geomShader.SetOwner(pRhi->LogicDevice()->Native());
+    RendererPass::LoadShader("Particles.vert.spv", &vertShader);
+    RendererPass::LoadShader("Particles.frag.spv", &fragShader);
+    RendererPass::LoadShader("Particles.geom.spv", &geomShader);
 
     // TODO():
 
-    pRhi->FreeShader(vertShader);
-    pRhi->FreeShader(fragShader);
+    vertShader.CleanUp();
+    fragShader.CleanUp();
+    geomShader.CleanUp();
   }
 
   // Particle Compute Pipeline.
