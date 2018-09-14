@@ -10,7 +10,7 @@
 #include "DescriptorSet.hpp"
 
 #include "Core/Utility/Vector.hpp"
-
+#include "Core/Utility/Profile.hpp"
 #include "Core/Exception.hpp"
 
 #include <set>
@@ -500,6 +500,8 @@ void VulkanRHI::SetUpSwapchainRenderPass()
 
 void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   VkResult result = vkQueueSubmit(mLogicalDevice.GraphicsQueue(queueIdx), 
     count, submitInfo, fence);
 
@@ -545,6 +547,8 @@ void VulkanRHI::FreeVkFence(Fence* fence)
 
 void VulkanRHI::AcquireNextImage()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   VkResult result = vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
     mLogicalDevice.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {

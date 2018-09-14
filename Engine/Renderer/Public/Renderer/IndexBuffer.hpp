@@ -19,6 +19,8 @@ public:
     , mIndexCount(0)
     , m_sizeType(0) { }
 
+  ~IndexBuffer();
+
   void        Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType, void* data);
   void        CleanUp();
 

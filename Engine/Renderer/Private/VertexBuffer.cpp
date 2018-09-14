@@ -9,6 +9,16 @@
 namespace Recluse {
 
 
+VertexBuffer::~VertexBuffer()
+{
+  DEBUG_OP(
+    if ( mBuffer ) {
+      R_DEBUG(rWarning, "Vertex Buffer not cleaned up prior to descruction!\n");
+    }
+  );
+}
+
+
 void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeType, void* data, Type type)
 {
   if (mBuffer) {

@@ -83,6 +83,27 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 }
 
 
+GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi, 
+  DescriptorSetLayout* pParticleConfigSetLayout, RenderPass* pEenderPass)
+{
+  GraphicsPipeline* pipeline = pRhi->CreateGraphicsPipeline();
+  Shader vertShader; vertShader.SetOwner(pRhi->LogicDevice()->Native());
+  Shader fragShader; fragShader.SetOwner(pRhi->LogicDevice()->Native());
+  Shader geomShader; geomShader.SetOwner(pRhi->LogicDevice()->Native());
+  RendererPass::LoadShader("Particles.vert.spv", &vertShader);
+  RendererPass::LoadShader("Particles.frag.spv", &fragShader);
+  RendererPass::LoadShader("Particles.geom.spv", &geomShader);
+
+  // TODO():
+  VkGraphicsPipelineCreateInfo graphicsCi = {};
+
+  vertShader.CleanUp();
+  fragShader.CleanUp();
+  geomShader.CleanUp();
+  return pipeline;
+}
+
+
 void ParticleEngine::Initialize(VulkanRHI* pRhi)
 { 
   {
@@ -111,20 +132,7 @@ void ParticleEngine::Initialize(VulkanRHI* pRhi)
   }
 
   // Particle Renderer Pipeline.
-  {
-    Shader vertShader; vertShader.SetOwner(pRhi->LogicDevice()->Native());
-    Shader fragShader; fragShader.SetOwner(pRhi->LogicDevice()->Native());
-    Shader geomShader; geomShader.SetOwner(pRhi->LogicDevice()->Native());
-    RendererPass::LoadShader("Particles.vert.spv", &vertShader);
-    RendererPass::LoadShader("Particles.frag.spv", &fragShader);
-    RendererPass::LoadShader("Particles.geom.spv", &geomShader);
-
-    // TODO():
-
-    vertShader.CleanUp();
-    fragShader.CleanUp();
-    geomShader.CleanUp();
-  }
+  m_pParticleRender = GenerateParticleRendererPipeline(pRhi, m_pParticleDescriptorSetLayout, m_pRenderPass);
 
   // Particle Compute Pipeline.
   {
@@ -146,14 +154,20 @@ void ParticleEngine::CleanUp(VulkanRHI* pRhi)
     m_pParticleDescriptorSetLayout = nullptr;
   }
 
+  if ( m_pParticleRender ) {
+    pRhi->FreeGraphicsPipeline( m_pParticleRender );
+    m_pParticleRender = nullptr;
+  }
+
   R_DEBUG(rNotify, "Particle engine cleaned up.\n");
 }
 
 
 ParticleEngine::~ParticleEngine()
 {
+  DEBUG_OP(
   if ( m_pParticleDescriptorSetLayout ) {
     R_DEBUG(rError, "Particle descriptor set layout not properly cleaned up!\n");
-  }
+  });
 }
 } // Recluse

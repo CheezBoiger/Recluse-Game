@@ -45,30 +45,32 @@ u32 LightBuffer::MaxNumPointLights()
 
 ShadowMapSystem::~ShadowMapSystem()
 {
-  if (m_pDynamicFrameBuffer) {
-    R_DEBUG(rWarning, "Dynamic Frame Buffer not destroyed prior to destruct call.");
-  }
-  if (m_pStaticFrameBuffer) {
-    R_DEBUG(rWarning, "Static frame buffer not destroyed prior to destruct call.");
-  }
-  if (m_pStaticMap) {
-    R_DEBUG(rWarning, "Static map not destroyed prior to destruct call.");
-  }
-  if (m_pDynamicMap) {
-    R_DEBUG(rWarning, "Dynamic map not destroyed prior to destruct call.");
-  }
-  if (m_pDynamicRenderPass) {
-    R_DEBUG(rWarning, "Dynamic render pass not destroyed prior to destruct call.");
-  }
-  if (m_pStaticRenderPass) {
-    R_DEBUG(rWarning, "Static render pass not destroyed prior to destruct call.");
-  }
-  if (m_pLightViewDescriptorSet) {
-    R_DEBUG(rWarning, "Light view descriptor set not destroyed prior to destruct call.");
-  }
-  if (m_pLightViewBuffer) {
-    R_DEBUG(rWarning, "Light view buffer not destroyed prior to destruct call.");
-  }
+  DEBUG_OP(
+    if (m_pDynamicFrameBuffer) {
+      R_DEBUG(rWarning, "Dynamic Frame Buffer not destroyed prior to destruct call.");
+    }
+    if (m_pStaticFrameBuffer) {
+      R_DEBUG(rWarning, "Static frame buffer not destroyed prior to destruct call.");
+    }
+    if (m_pStaticMap) {
+      R_DEBUG(rWarning, "Static map not destroyed prior to destruct call.");
+    }
+    if (m_pDynamicMap) {
+      R_DEBUG(rWarning, "Dynamic map not destroyed prior to destruct call.");
+    }
+    if (m_pDynamicRenderPass) {
+      R_DEBUG(rWarning, "Dynamic render pass not destroyed prior to destruct call.");
+    }
+    if (m_pStaticRenderPass) {
+      R_DEBUG(rWarning, "Static render pass not destroyed prior to destruct call.");
+    }
+    if (m_pLightViewDescriptorSet) {
+      R_DEBUG(rWarning, "Light view descriptor set not destroyed prior to destruct call.");
+    }
+    if (m_pLightViewBuffer) {
+      R_DEBUG(rWarning, "Light view buffer not destroyed prior to destruct call.");
+    }
+  );
 }
 
 
@@ -715,22 +717,25 @@ LightDescriptor::LightDescriptor()
 
 LightDescriptor::~LightDescriptor()
 {
-  if (m_pLightBuffer) {
-    R_DEBUG(rWarning, "Light buffer was not cleaned up!\n");
-  }
+  DEBUG_OP(
+    if (m_pLightBuffer) {
+      R_DEBUG(rWarning, "Light buffer was not cleaned up!\n");
+    }
 
-  if (m_pLightDescriptorSet) {
-    R_DEBUG(rWarning, "Light MaterialDescriptor descriptor set was not properly cleaned up!\n");
-  }
+    if (m_pLightDescriptorSet) {
+      R_DEBUG(rWarning, "Light MaterialDescriptor descriptor set was not properly cleaned up!\n");
+    }
+    );
 #if 0
   if (m_pOpaqueShadowMap) {
     R_DEBUG(rWarning, "Light Shadow Map texture was not properly cleaned up!\n");
   }
 #endif
-  if (m_pShadowSampler) {
-    R_DEBUG(rWarning, "Light Shadow Map sampler was not properly cleaned up!\n");
-  }
-
+  DEBUG_OP(
+    if (m_pShadowSampler) {
+      R_DEBUG(rWarning, "Light Shadow Map sampler was not properly cleaned up!\n");
+    }
+  );
 #if 0
   R_ASSERT(!m_pRenderPass, "Render pass was not properly discarded from light descriptor!");
 

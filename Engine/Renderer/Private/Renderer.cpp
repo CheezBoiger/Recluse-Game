@@ -176,6 +176,8 @@ void Renderer::EndFrame()
 
 void Renderer::WaitForCpuFence()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   VkFence fence[] = { m_cpuFence->Handle() };
   m_pRhi->WaitForFences(1, fence, VK_TRUE, UINT64_MAX);
   m_pRhi->ResetFences(1, fence);
@@ -184,7 +186,6 @@ void Renderer::WaitForCpuFence()
 
 void Renderer::Render()
 {
-
   R_TIMED_PROFILE_RENDERER();
 
   if (m_Minimized) {
@@ -3541,6 +3542,8 @@ void Renderer::SetUpFinalOutputs()
 
 void Renderer::CheckCmdUpdate()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   u32 idx = CurrentCmdBufferIdx() + 1;
   if (idx >= m_TotalCmdBuffers) idx = 0;
 
@@ -3941,6 +3944,8 @@ const char* Renderer::GetDeviceName()
 
 void Renderer::SortCmdLists()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   m_cmdDeferredList.Sort();
   m_forwardCmdList.Sort();
   // TODO(): Also sort forward list too.
@@ -3949,6 +3954,8 @@ void Renderer::SortCmdLists()
 
 void Renderer::ClearCmdLists()
 {
+  R_TIMED_PROFILE_RENDERER();
+
   // TODO(): Clear forward command list as well.
   m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();

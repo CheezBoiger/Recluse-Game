@@ -10,6 +10,16 @@
 namespace Recluse {
 
 
+IndexBuffer::~IndexBuffer()
+{
+  DEBUG_OP(
+    if ( mBuffer ) {
+      R_DEBUG(rWarning, "Index buffer not properly cleaned up prior to descrution!\n");
+    }  
+  );
+}
+
+
 void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType, void* data)
 {
   if (mBuffer) {

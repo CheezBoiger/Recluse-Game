@@ -22,6 +22,8 @@ public:
     , mRhi(nullptr)
     , mVertexCount(0) { }
 
+  ~VertexBuffer();
+
   void          Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeType, void* data, Type type = STATIC_BUFFER);
   void          CleanUp();
 

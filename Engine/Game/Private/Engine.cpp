@@ -33,6 +33,7 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
   if (Keyboard::KeyPressed(KEY_CODE_2)) {
     Mouse::Show(!Mouse::Showing());
     Mouse::Enable(!Mouse::Enabled());
+    Mouse::Track(!Mouse::Tracking());
     if (Mouse::Enabled()) {
       Mouse::SetPosition( window->Width() * 0.5 + window->X(), 
                           window->Height() * 0.5 + window->Y()

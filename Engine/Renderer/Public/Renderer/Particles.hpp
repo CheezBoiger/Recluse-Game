@@ -99,7 +99,9 @@ public:
   ParticleEngine() 
     : m_pParticleCompute(nullptr)
     , m_pParticleRender(nullptr)
-    , m_pParticleDescriptorSetLayout(nullptr) { }
+    , m_pParticleDescriptorSetLayout(nullptr)
+    , m_pRenderPass(nullptr)
+    , m_pFrameBuffer(nullptr) { }
 
   ~ParticleEngine();
 

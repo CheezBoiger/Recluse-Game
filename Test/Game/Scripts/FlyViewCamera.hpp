@@ -130,17 +130,18 @@ public:
       bFirstLook = false;
     }
 
-    r32 xoffset = m_lastX - (r32)Mouse::X();
-    r32 yoffset = (r32)Mouse::Y() - m_lastY;
-    m_lastX = (r32)Mouse::X();
-    m_lastY = (r32)Mouse::Y();
+    if (Mouse::Tracking()) {
+      r32 xoffset = m_lastX - (r32)Mouse::X();
+      r32 yoffset = (r32)Mouse::Y() - m_lastY;
+      m_lastX = (r32)Mouse::X();
+      m_lastY = (r32)Mouse::Y();
 
-    xoffset *= m_xSensitivity;
-    yoffset *= m_ySensitivity;
+      xoffset *= m_xSensitivity;
+      yoffset *= m_ySensitivity;
 
-    m_yaw += xoffset;
-    m_pitch += yoffset;
-
+      m_yaw += xoffset;
+      m_pitch += yoffset;
+    }
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     if (!bFollow) {
       transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);

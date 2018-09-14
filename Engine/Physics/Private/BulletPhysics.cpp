@@ -564,6 +564,7 @@ void BulletPhysics::Reset(RigidBody* body)
 
 void BulletPhysics::UpdateRigidBody(RigidBody* body, physics_update_bits_t bits)
 {
+  if (bits == 0) { return; }
   R_ASSERT(body, "Null rigid body sent to physics update.");
   R_DEBUG(rNotify, "Bullet physics rigid body update called by id: " + std::to_string(body->GetUUID()) + "\n");
   RigidBundle* bundle = GetRigidBundle(body->GetUUID());

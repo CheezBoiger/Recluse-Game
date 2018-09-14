@@ -49,13 +49,14 @@ GlobalDescriptor::GlobalDescriptor()
 
 GlobalDescriptor::~GlobalDescriptor()
 {
+  DEBUG_OP(
   if (m_pGlobalBuffer) {
     R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
   }
-
   if (m_pDescriptorSet) {
     R_DEBUG(rWarning, "Global material was not properly cleaned up!\n");
   }
+  );
 }
 
 

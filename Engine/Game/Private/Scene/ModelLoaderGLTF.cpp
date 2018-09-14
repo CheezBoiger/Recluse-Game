@@ -82,6 +82,7 @@ static void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
 
 static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 {
+  u32 count = 0;
   for (tinygltf::Material& mat : gltfModel->materials) {
     Material* engineMat = new Material();
     engineMat->Initialize();
@@ -130,8 +131,13 @@ static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
     }
 
     std::string name = engineModel->name + "_mat_";
-    name += mat.name;
-
+    // Some materials may not have a name, so will need to give them a unique name.
+    if (mat.name.empty()) {
+      name += std::to_string(count++);
+    } else {
+      name += mat.name;
+    }
+  
     MaterialCache::Cache(name, engineMat);
     engineModel->materials.push_back(engineMat);
   }

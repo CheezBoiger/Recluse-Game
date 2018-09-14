@@ -202,7 +202,7 @@ public:
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
-    //gRenderer().FreeTextureSampler(m_pSampler);
+    gRenderer().FreeTextureSampler(m_pSampler);
   }
 
 private:
