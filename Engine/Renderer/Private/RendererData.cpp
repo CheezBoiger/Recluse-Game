@@ -415,12 +415,13 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 
     GraphicsInfo.pColorBlendState = &colorBlendCI;
 
-    std::array<VkDescriptorSetLayout, 5> layouts;
+    std::array<VkDescriptorSetLayout, 6> layouts;
     layouts[0] = GlobalSetLayoutKey->Layout();
     layouts[1] = pbr_DescLayoutKey->Layout();
     layouts[2] = LightSetLayoutKey->Layout();
     layouts[3] = LightViewDescriptorSetLayoutKey->Layout();
-    layouts[4] = globalIllumination_DescLR->Layout();
+    layouts[4] = LightViewDescriptorSetLayoutKey->Layout();
+    layouts[5] = globalIllumination_DescLR->Layout();
 
     VkPipelineLayoutCreateInfo PipelineLayout = {};
     PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -452,7 +453,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PbrShaders[1].flags = 0;
     PbrShaders[1].pSpecializationInfo = nullptr;
 
-    layouts[4] = globalIllumination_DescNoLR->Layout();
+    layouts[5] = globalIllumination_DescNoLR->Layout();
     pbr_Pipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
 
     Rhi->FreeShader(VertPBR);
@@ -486,10 +487,11 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     Shader* compShader = Rhi->CreateShader();
     LoadShader(noLr, compShader);
 
-    VkDescriptorSetLayout layouts[6] = { 
+    VkDescriptorSetLayout layouts[7] = { 
       GlobalSetLayoutKey->Layout(),
       pbr_DescLayoutKey->Layout(),
       LightSetLayoutKey->Layout(),
+      LightViewDescriptorSetLayoutKey->Layout(),
       LightViewDescriptorSetLayoutKey->Layout(),
       globalIllumination_DescNoLR->Layout(),
       pbr_compDescLayout->Layout()
@@ -499,7 +501,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     VkComputePipelineCreateInfo computeCi = { };
     VkPipelineLayoutCreateInfo compLayoutCi = { };
     compLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    compLayoutCi.setLayoutCount = 6;
+    compLayoutCi.setLayoutCount = 7;
     compLayoutCi.pSetLayouts = layouts;
 
     VkPipelineShaderStageCreateInfo shaderCi = { };
@@ -518,7 +520,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     compShader = Rhi->CreateShader();
     LoadShader(lr, compShader);
 
-    layouts[4] = globalIllumination_DescLR->Layout();
+    layouts[5] = globalIllumination_DescLR->Layout();
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderCi.module = compShader->Handle();
     shaderCi.pName = kDefaultShaderEntryPointStr;
@@ -609,14 +611,15 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   GraphicsInfo.pColorBlendState = &colorBlendCI;
 
-  std::array<VkDescriptorSetLayout, 7> layouts;
+  std::array<VkDescriptorSetLayout, 8> layouts;
   layouts[0] = GlobalSetLayoutKey->Layout();
   layouts[1] = MeshSetLayoutKey->Layout();
   layouts[2] = MaterialSetLayoutKey->Layout();
   layouts[3] = LightSetLayoutKey->Layout();
   layouts[4] = LightViewDescriptorSetLayoutKey->Layout();
-  layouts[5] = globalIllumination_DescLR->Layout();
-  layouts[6] = BonesSetLayoutKey->Layout();
+  layouts[5] = LightViewDescriptorSetLayoutKey->Layout();
+  layouts[6] = globalIllumination_DescLR->Layout();
+  layouts[7] = BonesSetLayoutKey->Layout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -629,7 +632,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   PbrShaders[0].module = VertPBRLR->Handle();
   PbrShaders[1].module = FragPBRNoLR->Handle();
-  layouts[5] = globalIllumination_DescNoLR->Layout();
+  layouts[6] = globalIllumination_DescNoLR->Layout();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
   pbr_forwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
 
@@ -649,14 +652,14 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   Input.pVertexAttributeDescriptions = StaticVertexAttribs.data();
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
-  layouts[5] = globalIllumination_DescLR->Layout();
+  layouts[6] = globalIllumination_DescLR->Layout();
   pbr_staticForwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
 
 
   // No Local Reflections pipelines.
   PbrShaders[0].module = VertPBRStatic->Handle();
   PbrShaders[1].module = FragPBRNoLR->Handle();
-  layouts[5] = globalIllumination_DescNoLR->Layout();
+  layouts[6] = globalIllumination_DescNoLR->Layout();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
   pbr_staticForwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
 

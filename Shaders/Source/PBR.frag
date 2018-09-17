@@ -87,19 +87,106 @@ layout (set = 2, binding = 0) uniform LightBuffer {
 
 layout (set = 3, binding = 0) uniform LightSpace {
   mat4 viewProj;
+  vec4 near;
+  vec4 lightSz;       // world light size / frustum width.
+  vec4 shadowTechnique; // 0 for pcf, 1 for pcss
 } lightSpace;
 
-layout (set = 3, binding = 1) uniform sampler2D globalShadow;
+layout (set = 3, binding = 1) uniform sampler2D dynamicShadowMap;
+
+layout (set = 4, binding = 0) uniform StaticLightSpace {
+  mat4 viewProj;
+  vec4 near;
+  vec4 lightSz;       // world light size / frustum width.
+  vec4 shadowTechnique; // 0 for pcf, 1 for pcss
+} staticLightSpace;
+
+layout (set = 4, binding = 1) uniform sampler2D staticShadowMap;
 
 
-layout (set = 4, binding = 0) uniform samplerCube diffMap;
-layout (set = 4, binding = 1) uniform samplerCube specMap;
-layout (set = 4, binding = 2) uniform sampler2D brdfLut;
+layout (set = 5, binding = 0) uniform samplerCube diffMap;
+layout (set = 5, binding = 1) uniform samplerCube specMap;
+layout (set = 5, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 4, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
-layout (set = 4, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
-layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
+layout (set = 5, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
+layout (set = 5, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 5, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
+
+#define BLOCKER_SEARCH_NUM_SAMPLES 16
+#define PCF_NUM_SAMPLES 64
+#define NEAR_PLANE 0.1
+#define LIGHT_WORLD_SIZE 10.0
+#define LIGHT_FRUSTUM_WIDTH 40.0
+
+#define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
+
+vec2 poissonDisk[64] = {
+  vec2( -0.613392,  0.617481),
+  vec2(  0.170019, -0.040254),
+  vec2( -0.299417,  0.791925),
+  vec2(  0.645680,  0.493210),
+  vec2( -0.651784,  0.717887),
+  vec2(  0.421003,  0.027070),
+  vec2( -0.817194, -0.271096),
+  vec2( -0.705374, -0.668203),
+  vec2(  0.977050, -0.108615),
+  vec2(  0.063326,  0.142369),
+  vec2(  0.203528,  0.214331),
+  vec2( -0.667531,  0.326090),
+  vec2( -0.098422, -0.295755),
+  vec2( -0.885922,  0.215369),
+  vec2(  0.566637,  0.605213),
+  vec2(  0.039766, -0.396100),
+  vec2(  0.751946,  0.453352),
+  vec2(  0.078707, -0.715323),
+  vec2( -0.075838, -0.529344),
+  vec2(  0.724479, -0.580798),
+  vec2(  0.222999, -0.215125),
+  vec2( -0.467574, -0.405438),
+  vec2( -0.248268, -0.814753),
+  vec2(  0.354411, -0.887570),
+  vec2(  0.175817,  0.382366),
+  vec2(  0.487472, -0.063082),
+  vec2( -0.084078,  0.898312),
+  vec2(  0.488876, -0.783441),
+  vec2(  0.470016,  0.217933),
+  vec2( -0.696890, -0.549791),
+  vec2( -0.149693,  0.605762),
+  vec2(  0.034211,  0.979980),
+  vec2(  0.503098, -0.308878),
+  vec2( -0.016205, -0.872921),
+  vec2(  0.385784, -0.393902),
+  vec2( -0.146886, -0.859249),
+  vec2(  0.643361,  0.164098),
+  vec2(  0.634388, -0.049471),
+  vec2( -0.688894,  0.007843),
+  vec2(  0.464034, -0.188818),
+  vec2( -0.440840,  0.137486),
+  vec2(  0.364483,  0.511704),
+  vec2(  0.034028,  0.325968),
+  vec2(  0.099094, -0.308023),
+  vec2(  0.693960, -0.366253),
+  vec2(  0.678884, -0.204688),
+  vec2(  0.001801,  0.780328),
+  vec2(  0.145177, -0.898984),
+  vec2(  0.062655, -0.611866),
+  vec2(  0.315226, -0.604297),
+  vec2( -0.780145,  0.486251),
+  vec2( -0.371868,  0.882138),
+  vec2(  0.200476,  0.494430),
+  vec2( -0.494552, -0.711051),
+  vec2(  0.612476,  0.705252),
+  vec2( -0.578845, -0.768792),
+  vec2( -0.772454, -0.090976),
+  vec2(  0.504440,  0.372295),
+  vec2(  0.155736,  0.065157),
+  vec2(  0.391522,  0.849605),
+  vec2( -0.620106, -0.328104),
+  vec2(  0.789239, -0.419965),
+  vec2( -0.545396,  0.538133),
+  vec2( -0.178564, -0.596057),
+};
 
 struct GBuffer
 {
@@ -166,14 +253,15 @@ GBuffer ReadGBuffer(vec2 uv)
 #define SHADOW_FACTOR 0.0
 #define SHADOW_BIAS   0.0000000000
 
-float textureProj(vec4 P, vec2 offset)
+float textureProj(in sampler2D shadowMap, vec4 P, vec2 offset)
 {
   float shadow = 1.0;
   vec4 shadowCoord = P / P.w;
   shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
   
   if (shadowCoord.z <= 1.0) {
-    float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
+    vec2 shadowUV = vec2(shadowCoord.st + offset);
+    float dist = texture(shadowMap, shadowUV).r;
     if (dist < shadowCoord.z - SHADOW_BIAS) {
       shadow = SHADOW_FACTOR;
     }
@@ -182,9 +270,9 @@ float textureProj(vec4 P, vec2 offset)
 }
 
 
-float FilterPCF(vec4 sc)
+float FilterPCF(in sampler2D shadowMap, vec4 sc)
 {
-  ivec2 texDim = textureSize(globalShadow, 0);
+  ivec2 texDim = textureSize(shadowMap, 0);
   float scale = 0.5;
   float dx = scale * 1.0 / float(texDim.x);
   float dy = scale * 1.0 / float(texDim.y);
@@ -195,11 +283,79 @@ float FilterPCF(vec4 sc)
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {
-      shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
+      shadowFactor += textureProj(shadowMap, sc, vec2(dx*x, dy*y));
       count += 1.0;
     }
   }
   return shadowFactor / count;
+}
+
+
+float PenumbraSize(float zReceiver, float zBlocker)
+{
+  return (zReceiver - zBlocker) / zBlocker;
+}
+
+
+void FindBlocker(in sampler2D shadowMap, inout float avgBlockerDepth, inout float numBlockers, vec2 uv, float zReceiver)
+{
+  float lightSz = lightSpace.lightSz.x;
+  float nearPlane = lightSpace.near.x;
+  float searchWidth = lightSz * (zReceiver - nearPlane) / (zReceiver * 0.5 + 0.5);
+  
+  float blockerSum = 0;
+  numBlockers = 0;
+  
+  for (int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; ++i) {
+    vec2 suv = uv + poissonDisk[i] * searchWidth;
+    float shadowMapDepth = texture(shadowMap, suv).r;
+    if (shadowMapDepth < zReceiver) {
+      blockerSum += shadowMapDepth;
+      numBlockers++;
+    }
+  }
+  avgBlockerDepth = blockerSum / numBlockers;
+}
+
+
+float PCF_Filter(in sampler2D shadowMap, vec2 uv, float zReceiver, float filterRadiusUV)
+{
+  float sum = 0.0;
+  for (int i = 0; i < PCF_NUM_SAMPLES; ++i) {
+    float shadow = 1.0;
+    if (zReceiver <= 1.0) {
+      vec2 offset = poissonDisk[i] * filterRadiusUV;
+      float factor = texture(shadowMap, uv + offset).r;
+      if (factor < zReceiver) {
+        shadow = SHADOW_FACTOR;
+      }
+    }
+    sum += shadow;
+  }
+  return sum / PCF_NUM_SAMPLES;
+}
+
+
+float PCSS(in sampler2D shadowMap, vec4 sc)
+{
+  vec4 coords = sc / sc.w;
+  vec2 uv = coords.st * 0.5 + 0.5;
+  float zReceiver = coords.p;
+  
+  float avgBlockerDepth = 0;
+  float numBlockers = 0;
+  FindBlocker(shadowMap, avgBlockerDepth, numBlockers, uv, zReceiver);
+  
+  if (numBlockers < 1) {
+    return 1.0;
+  }
+  
+  float penumbraRatio = PenumbraSize(zReceiver, avgBlockerDepth);
+  float lightSz = lightSpace.lightSz.x;
+  float near = lightSpace.near.x;
+  float filterRadiusUV = penumbraRatio * lightSz * near / coords.p;
+  
+  return PCF_Filter(shadowMap, uv, zReceiver, filterRadiusUV);
 }
 
 
@@ -372,12 +528,16 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
     
     color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV);
     
+    vec4 staticShadowClip = staticLightSpace.viewProj * vec4(vPosition, 1.0);
+    float staticShadowFactor = ((staticLightSpace.shadowTechnique.x < 1) ? FilterPCF(staticShadowMap, staticShadowClip) : PCSS(staticShadowMap, staticShadowClip));
+    float shadowFactor = staticShadowFactor;
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
-      float shadowFactor = FilterPCF(shadowClip);
-      color *= shadowFactor;
+      float dynamicShadowFactor = ((lightSpace.shadowTechnique.x < 1) ? FilterPCF(dynamicShadowMap, shadowClip) : PCSS(dynamicShadowMap, shadowClip));
+      shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
     }
-
+    
+    color *= shadowFactor;
     color *= NoL;
   }
   return color * radiance;

@@ -228,7 +228,6 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-
     SamplerInfo samplerInfo = { };
     samplerInfo._addrU = SAMPLER_ADDRESS_REPEAT;
     samplerInfo._addrV = SAMPLER_ADDRESS_REPEAT;

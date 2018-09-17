@@ -108,52 +108,74 @@ public:
     , m_pLightViewBuffer(nullptr)
     , m_pDynamicRenderPass(nullptr)
     , m_pSkinnedPipeline(nullptr)
+    , m_pStaticSkinnedPipeline(nullptr)
+    , m_pStaticStaticPipeline(nullptr)
     , m_pStaticPipeline(nullptr)
     , m_pStaticRenderPass(nullptr)
+    , m_staticMapNeedsUpdate(true)
+    , m_pStaticLightViewDescriptorSet(nullptr)
     , m_rShadowViewportWidth(40.0f)
     , m_rShadowViewportHeight(40.0f) { }
 
   ~ShadowMapSystem();
 
-  void            Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
-  void            CleanUp(VulkanRHI* pRhi);
+  void              Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
+  void              CleanUp(VulkanRHI* pRhi);
 
-  Texture*        StaticMap() { return m_pStaticMap; }
-  Texture*        DynamicMap() { return m_pDynamicMap; }
+  Texture*          StaticMap() { return m_pStaticMap; }
+  Texture*          DynamicMap() { return m_pDynamicMap; }
 
-  LightViewSpace& ViewSpace() { return m_viewSpace; }
+  LightViewSpace&   ViewSpace() { return m_viewSpace; }
+  LightViewSpace&   StaticViewSpace() { return m_staticViewSpace; }
 
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
-  void            Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1);
+  void              Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1);
 
-  void            SetViewportWidth(r32 width) { m_rShadowViewportWidth = width; }
-  void            SetViewportHeight(r32 height) { m_rShadowViewportHeight = height; }
+  void              SetViewportWidth(r32 width) { m_rShadowViewportWidth = width; }
+  void              SetViewportHeight(r32 height) { m_rShadowViewportHeight = height; }
 
-  void            GenerateShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& cmds, CmdList<MeshRenderCmd>& deferredCmds);
+  void              GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& dynamicCmds);
+  void              GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& staticCmds);
 
-  DescriptorSet*  ShadowMapViewDescriptor() { return m_pLightViewDescriptorSet; }
+  void              SignalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
-  Sampler*        _pSampler;
+  DescriptorSet*    ShadowMapViewDescriptor() { return m_pLightViewDescriptorSet; }
+  DescriptorSet*    StaticShadowMapViewDescriptor() { return m_pStaticLightViewDescriptorSet; }
+
+  Sampler*          _pSampler;
+  b32               StaticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
+
+  void              SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
+  void              SetStaticLightDir(const Vector3& dir) { m_staticSunlightDir = dir; }
 
 private:
 
-  void            InitializeShadowMap(VulkanRHI* pRhi);
+  void              InitializeShadowMap(VulkanRHI* pRhi);
 
-  Texture*        m_pStaticMap;
-  Texture*        m_pDynamicMap;
+  Vector3           m_staticSunlightDir;
+  Vector3           m_staticViewerPos;
+
+  Texture*          m_pStaticMap;
+  Texture*          m_pDynamicMap;
   // common used pipelines.
   // TODO(): Need to create a static shadow map pipeline to combine dynamic objects to.
   GraphicsPipeline* m_pSkinnedPipeline;
   GraphicsPipeline* m_pStaticPipeline;
-  FrameBuffer*    m_pStaticFrameBuffer;
-  FrameBuffer*    m_pDynamicFrameBuffer;
-  RenderPass*     m_pDynamicRenderPass;
-  RenderPass*     m_pStaticRenderPass;
-  Buffer*         m_pLightViewBuffer;
-  DescriptorSet*  m_pLightViewDescriptorSet;
-  LightViewSpace  m_viewSpace;
-  r32             m_rShadowViewportWidth;
-  r32             m_rShadowViewportHeight;
+  GraphicsPipeline* m_pStaticSkinnedPipeline;
+  GraphicsPipeline* m_pStaticStaticPipeline;
+  FrameBuffer*      m_pStaticFrameBuffer;
+  FrameBuffer*      m_pDynamicFrameBuffer;
+  RenderPass*       m_pDynamicRenderPass;
+  RenderPass*       m_pStaticRenderPass;
+  Buffer*           m_pLightViewBuffer;
+  Buffer*           m_pStaticLightViewBuffer;
+  DescriptorSet*    m_pLightViewDescriptorSet;
+  DescriptorSet*    m_pStaticLightViewDescriptorSet;
+  LightViewSpace    m_viewSpace;
+  LightViewSpace    m_staticViewSpace;
+  r32               m_rShadowViewportWidth;
+  r32               m_rShadowViewportHeight;
+  b32               m_staticMapNeedsUpdate;
 };
 
 

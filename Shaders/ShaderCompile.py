@@ -51,8 +51,8 @@ class Shader():
   Include all shaders to be compiled, here.
 '''
 recluse_shaders = [
-  Shader('ForwardPBR_NoLR', 'ForwardPBR.frag'),
-  Shader('ForwardPBR_LR', 'ForwardPBR.frag', params='-DLOCAL_REFLECTIONS=1'),
+  Shader('ForwardPBR_NoLR', 'ForwardPBR.frag', params='-Od'),
+  Shader('ForwardPBR_LR', 'ForwardPBR.frag', params='-Od -DLOCAL_REFLECTIONS=1'),
   Shader('ForwardPBR', 'ForwardPBR.vert'),
   Shader('PBR_LR_Nvidia', 'PBR.comp', params='-DNVIDIA=1 -DLOCAL_REFLECTIONS=1'),
   Shader('PBR_NoLR_Nvidia', 'PBR.comp', params='-DNVIDIA=1'),

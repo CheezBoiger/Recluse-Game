@@ -70,12 +70,14 @@ public:
     Transform* trans = GetTransform();
     m_pRendererComponent->Initialize(this);
 #if 1
+    m_pRendererComponent->EnableStatic(true);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
     mesh->GetPrimitive(0, 0)->_pMat = material->Native();
     trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
     m_pRendererComponent->ForceForward(true);
+    m_pRendererComponent->EnableStatic(true);
     SamplerInfo info = {};
     info._addrU = SAMPLER_ADDRESS_REPEAT;
     info._addrV = SAMPLER_ADDRESS_REPEAT;

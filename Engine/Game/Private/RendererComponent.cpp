@@ -77,6 +77,13 @@ b32 RendererComponent::ShadowEnabled() const
   return (m_configs & CMD_SHADOWS_BIT);
 }
 
+
+void RendererComponent::EnableStatic(b32 enable)
+{
+  if (enable) { m_configs |= CMD_STATIC_BIT; }
+  else { m_configs &= ~CMD_STATIC_BIT; }
+}
+
 void RendererComponent::OnInitialize(GameObject* owner)
 { 
   m_meshDescriptor = gRenderer().CreateMeshDescriptor();

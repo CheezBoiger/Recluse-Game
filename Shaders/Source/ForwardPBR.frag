@@ -130,15 +130,24 @@ layout (set = 4, binding = 0) uniform LightSpace {
   vec4 shadowTechnique; // 0 for pcf, 1 for pcss
 } lightSpace;
 
-layout (set = 4, binding = 1) uniform sampler2D globalShadow;
+layout (set = 4, binding = 1) uniform sampler2D dynamicShadowMap;
 
-layout (set = 5, binding = 0) uniform samplerCube diffMap;
-layout (set = 5, binding = 1) uniform samplerCube specMap;
-layout (set = 5, binding = 2) uniform sampler2D brdfLut;
+layout (set = 5, binding = 0) uniform StaticLightSpace {
+  mat4 viewProj;
+  vec4 near;
+  vec4 lightSz;       // world light size / frustum width.
+  vec4 shadowTechnique; // 0 for pcf, 1 for pcss
+} staticLightSpace;
+
+layout (set = 5, binding = 1) uniform sampler2D staticShadowMap;
+
+layout (set = 6, binding = 0) uniform samplerCube diffMap;
+layout (set = 6, binding = 1) uniform samplerCube specMap;
+layout (set = 6, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 5, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
-layout (set = 5, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
-layout (set = 5, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
+layout (set = 6, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
+layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,14 +230,15 @@ vec2 poissonDisk[64] = {
   vec2( -0.178564, -0.596057),
 };
 
-float textureProj(vec4 P, vec2 offset)
+float textureProj(in sampler2D shadowMap, vec4 P, vec2 offset)
 {
   float shadow = 1.0;
   vec4 shadowCoord = P / P.w;
   shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
   
   if (shadowCoord.z <= 1.0) {
-    float dist = texture(globalShadow, vec2(shadowCoord.st + offset)).r;
+    vec2 shadowUV = vec2(shadowCoord.st + offset);
+    float dist = texture(shadowMap, shadowUV).r;
     if (dist < shadowCoord.z - SHADOW_BIAS) {
       shadow = SHADOW_FACTOR;
     }
@@ -237,9 +247,9 @@ float textureProj(vec4 P, vec2 offset)
 }
 
 
-float FilterPCF(vec4 sc)
+float FilterPCF(in sampler2D shadowMap, vec4 sc)
 {
-  ivec2 texDim = textureSize(globalShadow, 0);
+  ivec2 texDim = textureSize(shadowMap, 0);
   float scale = 0.5;
   float dx = scale * 1.0 / float(texDim.x);
   float dy = scale * 1.0 / float(texDim.y);
@@ -250,7 +260,7 @@ float FilterPCF(vec4 sc)
 	
   for (float x = -range; x <= range; x++) {
     for (float y = -range; y <= range; y++) {
-      shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
+      shadowFactor += textureProj(shadowMap, sc, vec2(dx*x, dy*y));
       count += 1.0;
     }
   }
@@ -264,7 +274,7 @@ float PenumbraSize(float zReceiver, float zBlocker)
 }
 
 
-void FindBlocker(inout float avgBlockerDepth, inout float numBlockers, vec2 uv, float zReceiver)
+void FindBlocker(in sampler2D shadowMap, inout float avgBlockerDepth, inout float numBlockers, vec2 uv, float zReceiver)
 {
   float lightSz = lightSpace.lightSz.x;
   float nearPlane = lightSpace.near.x;
@@ -274,7 +284,8 @@ void FindBlocker(inout float avgBlockerDepth, inout float numBlockers, vec2 uv, 
   numBlockers = 0;
   
   for (int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; ++i) {
-    float shadowMapDepth = texture(globalShadow, uv + poissonDisk[i] * searchWidth).r;
+    vec2 suv = uv + poissonDisk[i] * searchWidth;
+    float shadowMapDepth = texture(shadowMap, suv).r;
     if (shadowMapDepth < zReceiver) {
       blockerSum += shadowMapDepth;
       numBlockers++;
@@ -284,14 +295,14 @@ void FindBlocker(inout float avgBlockerDepth, inout float numBlockers, vec2 uv, 
 }
 
 
-float PCF_Filter(vec2 uv, float zReceiver, float filterRadiusUV)
+float PCF_Filter(in sampler2D shadowMap, vec2 uv, float zReceiver, float filterRadiusUV)
 {
   float sum = 0.0;
   for (int i = 0; i < PCF_NUM_SAMPLES; ++i) {
     float shadow = 1.0;
     if (zReceiver <= 1.0) {
       vec2 offset = poissonDisk[i] * filterRadiusUV;
-      float factor = texture(globalShadow, uv + offset).r;
+      float factor = texture(shadowMap, uv + offset).r;
       if (factor < zReceiver) {
         shadow = SHADOW_FACTOR;
       }
@@ -302,7 +313,7 @@ float PCF_Filter(vec2 uv, float zReceiver, float filterRadiusUV)
 }
 
 
-float PCSS(vec4 sc)
+float PCSS(in sampler2D shadowMap, vec4 sc)
 {
   vec4 coords = sc / sc.w;
   vec2 uv = coords.st * 0.5 + 0.5;
@@ -310,7 +321,7 @@ float PCSS(vec4 sc)
   
   float avgBlockerDepth = 0;
   float numBlockers = 0;
-  FindBlocker(avgBlockerDepth, numBlockers, uv, zReceiver);
+  FindBlocker(shadowMap, avgBlockerDepth, numBlockers, uv, zReceiver);
   
   if (numBlockers < 1) {
     return 1.0;
@@ -321,7 +332,7 @@ float PCSS(vec4 sc)
   float near = lightSpace.near.x;
   float filterRadiusUV = penumbraRatio * lightSz * near / coords.p;
   
-  return PCF_Filter(uv, zReceiver, filterRadiusUV);
+  return PCF_Filter(shadowMap, uv, zReceiver, filterRadiusUV);
 }
 
 
@@ -494,12 +505,16 @@ vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3
     
     color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV);
     
+    vec4 staticShadowClip = staticLightSpace.viewProj * vec4(vPosition, 1.0);
+    float staticShadowFactor = ((staticLightSpace.shadowTechnique.x < 1) ? FilterPCF(staticShadowMap, staticShadowClip) : PCSS(staticShadowMap, staticShadowClip));
+    float shadowFactor = staticShadowFactor;
     if (gWorldBuffer.enableShadows >= 1) {
       vec4 shadowClip = lightSpace.viewProj * vec4(vPosition, 1.0);
-      float shadowFactor = ((lightSpace.shadowTechnique.x < 1) ? FilterPCF(shadowClip) : PCSS(shadowClip));
-      color *= shadowFactor;
+      float dynamicShadowFactor = ((lightSpace.shadowTechnique.x < 1) ? FilterPCF(dynamicShadowMap, shadowClip) : PCSS(dynamicShadowMap, shadowClip));
+      shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
     }
-
+    
+    color *= shadowFactor;
     color *= NoL;
   }
   return color * radiance;

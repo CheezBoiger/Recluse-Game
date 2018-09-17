@@ -325,6 +325,8 @@ private:
   // Command lists used by the renderer.
   CmdList<MeshRenderCmd>            m_cmdDeferredList;
   CmdList<MeshRenderCmd>            m_forwardCmdList;
+  CmdList<MeshRenderCmd>            m_staticCmdList;
+  CmdList<MeshRenderCmd>            m_dynamicCmdList;
 
   CmdList<JointDescriptor*>         m_jointDescriptors;
   CmdList<MeshDescriptor*>          m_meshDescriptors;

@@ -87,6 +87,8 @@ Renderer::Renderer()
 
   m_cmdDeferredList.Resize(1024);
   m_forwardCmdList.Resize(1024);
+  m_staticCmdList.Resize(1024);
+  m_dynamicCmdList.Resize(1024);
   m_meshDescriptors.Resize(1024);
   m_jointDescriptors.Resize(1024);
   m_materialDescriptors.Resize(1024);
@@ -576,6 +578,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     LightViewBindings[1].pImmutableSamplers = nullptr;
 
     DescriptorSetLayout* LightViewLayout = m_pRhi->CreateDescriptorSetLayout();
+  
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
     LightViewInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     LightViewInfo.bindingCount = static_cast<u32>(LightViewBindings.size());
@@ -1463,7 +1466,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.depthTestEnable = VK_TRUE;
   depthStencilCI.depthWriteEnable = VK_TRUE;
   depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
-  depthStencilCI.depthBoundsTestEnable = VK_FALSE;
+  depthStencilCI.depthBoundsTestEnable = VK_TRUE;
   depthStencilCI.minDepthBounds = 0.0f;
   depthStencilCI.maxDepthBounds = 1.0f;
   depthStencilCI.stencilTestEnable = VK_FALSE;
@@ -1566,6 +1569,7 @@ void Renderer::SetUpGraphicsPipelines()
   // Set to quad rendering format.
   colorBlendCI.logicOpEnable = VK_FALSE;
   depthStencilCI.depthTestEnable = VK_FALSE;
+  depthStencilCI.depthBoundsTestEnable = VK_FALSE;
   depthStencilCI.depthWriteEnable = VK_FALSE;
   depthStencilCI.stencilTestEnable = VK_FALSE;
   colorBlendCI.attachmentCount = 1; 
@@ -2086,6 +2090,7 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
       pbr_DescSetKey->Handle(),
       m_pLights->Set()->Handle(),
       shadow.ShadowMapViewDescriptor()->Handle(),
+      shadow.StaticShadowMapViewDescriptor()->Handle(),
       m_pGlobalIllumination->Handle(),
       pbr_compSet->Handle()
     };
@@ -2103,7 +2108,7 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
 
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Layout(), 
-      0, 6, compSets, 0, nullptr);
+      0, 7, compSets, 0, nullptr);
     cmdBuffer->Dispatch((windowExtent.width / m_workGroupSize) + 1, (windowExtent.height / m_workGroupSize) + 1, 1);
 
     imageMemBarriers[0].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -3003,7 +3008,8 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
 {
   ShadowMapSystem& system = m_pLights->PrimaryShadowMapSystem();
-  system.GenerateShadowCmds(cmdBuffer, m_forwardCmdList, m_cmdDeferredList);
+  system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList);
+  system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList);
 
 #if 0 
   R_TIMED_PROFILE_RENDERER();
@@ -3141,7 +3147,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
   
-  VkDescriptorSet DescriptorSets[7];
+  VkDescriptorSet DescriptorSets[8];
 
   cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
     for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
@@ -3172,8 +3178,9 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       DescriptorSets[1] = pMeshDesc->CurrMeshSet()->Handle();
       DescriptorSets[3] = m_pLights->Set()->Handle();
       DescriptorSets[4] = shadow.ShadowMapViewDescriptor()->Handle();
-      DescriptorSets[5] = m_pGlobalIllumination->Handle(); // Need global illumination data.
-      DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
+      DescriptorSets[5] = shadow.StaticShadowMapViewDescriptor()->Handle();
+      DescriptorSets[6] = m_pGlobalIllumination->Handle(); // Need global illumination data.
+      DescriptorSets[7] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
       // Bind materials.
       Primitive* primitives = data->GetPrimitiveData();
@@ -3184,7 +3191,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
           Pipe->Layout(),
           0,
-          (Skinned ? 7 : 6),
+          (Skinned ? 8 : 7),
           DescriptorSets,
           0,
           nullptr
@@ -3783,6 +3790,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   SetUpGlobalIlluminationBuffer();
 
   Build();
+  m_pLights->PrimaryShadowMapSystem().SignalStaticMapUpdate();
 }
 
 
@@ -3959,6 +3967,8 @@ void Renderer::ClearCmdLists()
   // TODO(): Clear forward command list as well.
   m_cmdDeferredList.Clear();
   m_forwardCmdList.Clear();
+  m_staticCmdList.Clear();
+  m_dynamicCmdList.Clear();
   m_meshDescriptors.Clear();
   m_jointDescriptors.Clear();
   m_materialDescriptors.Clear();
@@ -3990,6 +4000,12 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     m_forwardCmdList.PushBack(cmd);
   } else { 
     m_cmdDeferredList.PushBack(cmd);
+  }
+
+  if ((config & CMD_STATIC_BIT)) {
+    m_staticCmdList.PushBack(cmd);
+  } else {
+    m_dynamicCmdList.PushBack(cmd);
   }
 }
 

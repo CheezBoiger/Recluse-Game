@@ -10,6 +10,7 @@
 #include "RHI/Shader.hpp"
 #include "RHI/Buffer.hpp"
 #include "RHI/Texture.hpp"
+#include "RHI/Framebuffer.hpp"
 
 #include "Core/Exception.hpp"
 
@@ -186,7 +187,7 @@ void ParticleSystem::CleanUp(VulkanRHI* pRhi)
 
 
 GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi, 
-  DescriptorSetLayout* pParticleConfigSetLayout, RenderPass* pEenderPass)
+  DescriptorSetLayout* pParticleConfigSetLayout, RenderPass* pRenderPass)
 {
   GraphicsPipeline* pipeline = pRhi->CreateGraphicsPipeline();
   Shader vertShader; vertShader.SetOwner(pRhi->LogicDevice()->Native());
@@ -198,7 +199,97 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
 
   // TODO():
   VkGraphicsPipelineCreateInfo graphicsCi = {};
+  VkPipelineInputAssemblyStateCreateInfo assemblyCi = { };
+  assemblyCi.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  assemblyCi.primitiveRestartEnable = VK_FALSE;
+  assemblyCi.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  
+  VkPipelineVertexInputStateCreateInfo vertexCi = { };
+  vertexCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  auto attribs = GetParticleAttributeDescription();
+  auto binding = GetParticleBindingDescription();
+  vertexCi.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+  vertexCi.vertexBindingDescriptionCount = 1;
+  vertexCi.pVertexBindingDescriptions = &binding;
+  vertexCi.pVertexAttributeDescriptions = attribs.data();
 
+  VkPipelineDepthStencilStateCreateInfo depthStencilCi = { };
+  depthStencilCi.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencilCi.depthBoundsTestEnable = VK_FALSE;
+  depthStencilCi.depthTestEnable = VK_TRUE;
+  
+  VkPipelineColorBlendStateCreateInfo colorBlendCi = { };
+  colorBlendCi.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+
+  VkPipelineRasterizationStateCreateInfo rasterCi = { };
+  rasterCi.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO; 
+
+  VkPipelineDynamicStateCreateInfo dynamicCi = { };
+  dynamicCi.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+
+  VkPipelineMultisampleStateCreateInfo multisampleCi = { };
+  multisampleCi.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+
+  VkPipelineTessellationStateCreateInfo tessStateCi = { }; 
+  tessStateCi.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+  
+  VkPipelineViewportStateCreateInfo viewportCi = { };
+  viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO; 
+  VkViewport viewport = { };
+  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  viewport.width = static_cast<r32>(extent.width);
+  viewport.height = static_cast<r32>(extent.height);
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;  
+
+  VkRect2D scissor = { };
+  scissor.extent = extent;
+  scissor.offset = { 0, 0 };
+  viewportCi.pScissors = &scissor;
+  viewportCi.pViewports = &viewport;
+  viewportCi.scissorCount = 1;
+  viewportCi.viewportCount = 1;
+
+  std::array<VkPipelineShaderStageCreateInfo, 3> shaderStages;
+  shaderStages[0] = { };
+  shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStages[0].module = vertShader.Handle();
+  shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  shaderStages[0].pName = kDefaultShaderEntryPointStr;
+  
+  shaderStages[1] = { };
+  shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStages[1].module = geomShader.Handle();
+  shaderStages[1].pName = kDefaultShaderEntryPointStr;
+  shaderStages[1].stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+
+  shaderStages[2] = { };
+  shaderStages[2].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  shaderStages[2].module = fragShader.Handle();
+  shaderStages[2].pName = kDefaultShaderEntryPointStr;
+  shaderStages[2].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+
+  graphicsCi.pColorBlendState = &colorBlendCi;
+  graphicsCi.pDepthStencilState = &depthStencilCi;
+  graphicsCi.pInputAssemblyState = &assemblyCi;
+  graphicsCi.pRasterizationState = &rasterCi;
+  graphicsCi.pDynamicState = &dynamicCi;
+  graphicsCi.pMultisampleState = &multisampleCi;
+  graphicsCi.pVertexInputState = &vertexCi;
+  graphicsCi.pTessellationState = &tessStateCi;
+  graphicsCi.pViewportState = &viewportCi;
+  graphicsCi.renderPass = pRenderPass->Handle();
+  graphicsCi.basePipelineHandle = VK_NULL_HANDLE;
+  graphicsCi.basePipelineIndex = -1;
+  graphicsCi.stageCount = shaderStages.size();
+  graphicsCi.pStages = shaderStages.data();
+
+  VkPipelineLayoutCreateInfo pipelineLayoutCi = { };
+  pipelineLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  
   vertShader.CleanUp();
   fragShader.CleanUp();
   geomShader.CleanUp();
@@ -231,6 +322,95 @@ void ParticleEngine::Initialize(VulkanRHI* pRhi)
     dsLayoutCi.pBindings = bindings.data();
 
     m_pParticleDescriptorSetLayout->Initialize( dsLayoutCi );
+
+    {   
+      std::array<VkAttachmentDescription, 3> attachmentDescriptions;
+      // final color.
+      attachmentDescriptions[0] = { };
+      attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+      attachmentDescriptions[0].format = VK_FORMAT_R8G8B8A8_UNORM;
+      attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
+      // brightness output.
+      attachmentDescriptions[1] = { };
+      attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[1].format = VK_FORMAT_R8G8B8A8_UNORM;
+      attachmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
+      attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      attachmentDescriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
+      // depth load, from total scene. This is after deferred and forward pipeline.
+      attachmentDescriptions[2] = { };
+      attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      attachmentDescriptions[2].format = VK_FORMAT_D32_SFLOAT;
+      attachmentDescriptions[2].samples = VK_SAMPLE_COUNT_1_BIT;
+      attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      attachmentDescriptions[2].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      attachmentDescriptions[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
+      std::array<VkSubpassDependency, 2> dependencies;
+      dependencies[0] = { };
+      dependencies[0]  = CreateSubPassDependency(
+        VK_SUBPASS_EXTERNAL,
+        VK_ACCESS_MEMORY_READ_BIT,
+        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        0,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
+      dependencies[1] = { };
+      dependencies[1] = CreateSubPassDependency(
+        0,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_SUBPASS_EXTERNAL,
+        VK_ACCESS_MEMORY_READ_BIT,
+        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        VK_DEPENDENCY_BY_REGION_BIT);
+
+      VkSubpassDescription subpassDescription = { };
+      std::array<VkAttachmentReference, 2> colorReferences;
+      VkAttachmentReference depthStencilReference;
+
+      colorReferences[0] = { };
+      colorReferences[0].attachment = 0;
+      colorReferences[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      colorReferences[1] = { };
+      colorReferences[1].attachment = 1;
+      colorReferences[1].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+      depthStencilReference.attachment = static_cast<u32>(colorReferences.size());
+      depthStencilReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+      subpassDescription.colorAttachmentCount = static_cast<u32>(colorReferences.size());
+      subpassDescription.inputAttachmentCount = 0;
+      subpassDescription.pColorAttachments = colorReferences.data();
+      subpassDescription.pDepthStencilAttachment = &depthStencilReference;
+      subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+      subpassDescription.preserveAttachmentCount = 0;
+      
+      VkRenderPassCreateInfo renderPassCi = {};
+      renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+      renderPassCi.attachmentCount = static_cast<u32>(attachmentDescriptions.size());
+      renderPassCi.pAttachments = attachmentDescriptions.data();
+      renderPassCi.dependencyCount = static_cast<u32>(dependencies.size());
+      renderPassCi.pDependencies = dependencies.data();
+      renderPassCi.pSubpasses = &subpassDescription;
+      renderPassCi.subpassCount = 1u;
+
+      m_pRenderPass = pRhi->CreateRenderPass();
+      m_pRenderPass->Initialize(renderPassCi);
+    }
   }
 
   // Particle Renderer Pipeline.
@@ -259,6 +439,21 @@ void ParticleEngine::CleanUp(VulkanRHI* pRhi)
   if ( m_pParticleRender ) {
     pRhi->FreeGraphicsPipeline( m_pParticleRender );
     m_pParticleRender = nullptr;
+  }
+
+  if ( m_pParticleCompute ) {
+    pRhi->FreeComputePipeline( m_pParticleCompute );
+    m_pParticleCompute = nullptr;
+  }
+
+  if ( m_pRenderPass ) {
+    pRhi->FreeRenderPass( m_pRenderPass );
+    m_pRenderPass = nullptr;
+  }
+
+  if ( m_pFrameBuffer ) {
+    pRhi->FreeFrameBuffer( m_pFrameBuffer );
+    m_pFrameBuffer = nullptr;
   }
 
   R_DEBUG(rNotify, "Particle engine cleaned up.\n");

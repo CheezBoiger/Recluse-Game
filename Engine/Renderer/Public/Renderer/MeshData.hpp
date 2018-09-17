@@ -70,7 +70,6 @@ private:
   IndexBuffer                         m_indexBuffer;
   std::vector<Primitive>              m_primitives;
   VulkanRHI*                          mRhi;
-
   friend class Renderer;
 };
 } // Recluse

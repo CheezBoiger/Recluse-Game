@@ -74,5 +74,9 @@ void main()
   // for test.
   // TODO(): 
   vec4 color = frag_in.color;
+  
+  if (color.a < 0.5) {
+    discard;
+  }
   outputColor = color;
 }
