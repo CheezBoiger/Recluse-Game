@@ -65,7 +65,7 @@ int main(int c, char* argv[])
     params._Buffering = DOUBLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_None;
-    params._Shadows = SHADOWS_NONE;
+    params._Shadows = GRAPHICS_QUALITY_NONE;
     gRenderer().UpdateRendererConfigs(&params);
   }
 

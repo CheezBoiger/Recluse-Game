@@ -119,7 +119,7 @@ public:
 
   ~ShadowMapSystem();
 
-  void              Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
+  void              Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail);
   void              CleanUp(VulkanRHI* pRhi);
 
   Texture*          StaticMap() { return m_pStaticMap; }
@@ -193,7 +193,7 @@ public:
   void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer);
 
   // Initialize. 
-  void                Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail);
+  void                Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail);
 
   // Cleanup.
   void                CleanUp(VulkanRHI* pRhi);

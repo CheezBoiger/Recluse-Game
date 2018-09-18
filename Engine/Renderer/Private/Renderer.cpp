@@ -64,6 +64,7 @@ Renderer::Renderer()
   , m_SkyboxFinished(nullptr)
   , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
+  , m_staticUpdate(false)
   , m_workers(kMaxRendererThreadWorkerCount)
   , m_Minimized(false)
   , m_pGlobalIllumination(nullptr)
@@ -172,6 +173,7 @@ void Renderer::BeginFrame()
 void Renderer::EndFrame()
 {
   m_Rendering = false;
+  CleanStaticUpdate();
   m_pRhi->Present();
 }
 
@@ -308,7 +310,8 @@ void Renderer::Render()
     while (m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
 
     // Render shadow map here. Primary shadow map is our concern.
-    if (m_pLights->PrimaryShadowEnabled()) {
+    if (m_pLights->PrimaryShadowEnabled() || StaticNeedsUpdate()) {
+      R_DEBUG(rNotify, "Shadow.\n");
       u32 graphicsQueueCount = m_pRhi->GraphicsQueueCount();
       if (graphicsQueueCount > 1) {
 
@@ -3008,9 +3011,13 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
 {
   ShadowMapSystem& system = m_pLights->PrimaryShadowMapSystem();
-  system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList);
-  system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList);
-
+  if (m_pLights->PrimaryShadowEnabled()) {
+    system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList);
+  }
+  if (system.StaticMapNeedsUpdate()) {
+    system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList);
+    SignalStaticUpdate();
+  }
 #if 0 
   R_TIMED_PROFILE_RENDERER();
   if (!m_pLights) return;
@@ -3572,7 +3579,7 @@ void Renderer::CheckCmdUpdate()
     m_Forward._CmdBuffer->End();
   });
 
-  if (m_pLights->PrimaryShadowEnabled()) {
+  if (m_pLights->PrimaryShadowEnabled() || m_pLights->PrimaryShadowMapSystem().StaticMapNeedsUpdate()) {
     CommandBuffer* shadowBuf = m_Offscreen._ShadowCmdBuffers[idx];
     R_ASSERT(shadowBuf, "Shadow Buffer is null.");
     shadowBuf->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -3695,16 +3702,16 @@ void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
     }
 
     switch (params->_Shadows) {
-    case SHADOWS_NONE:
+    case GRAPHICS_QUALITY_NONE:
     {
       m_pLights->EnablePrimaryShadow(false);
       m_pGlobal->Data()->_EnableShadows = false;
     } break;
-    case SHADOWS_POTATO:
-    case SHADOWS_LOW:
-    case SHADOWS_MEDIUM:
-    case SHADOWS_HIGH:
-    case SHADOWS_ULTRA:
+    case GRAPHICS_QUALITY_POTATO:
+    case GRAPHICS_QUALITY_LOW:
+    case GRAPHICS_QUALITY_MEDIUM:
+    case GRAPHICS_QUALITY_HIGH:
+    case GRAPHICS_QUALITY_ULTRA:
     default:
     {
       m_pLights->EnablePrimaryShadow(true);

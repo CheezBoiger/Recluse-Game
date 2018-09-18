@@ -29,22 +29,13 @@ enum AntiAliasing {
 };
 
 
-enum ShadowDetail {
-  SHADOWS_NONE = 0,
-  SHADOWS_POTATO = 1,
-  SHADOWS_LOW = 2,
-  SHADOWS_MEDIUM = 3,
-  SHADOWS_HIGH = 4,
-  SHADOWS_ULTRA = 5
-};
-
-
-// TODO(): No effect yet, until we at least make our textures in the future.
-enum TextureQuality {
-  TEXTURE_QUALITY_LOW,
-  TEXTURE_QUALITY_MEDIUM,
-  TEXTURE_QUALITY_HIGH,
-  TEXTURE_QUALITY_ULTRA
+enum GraphicsQuality {
+  GRAPHICS_QUALITY_NONE = 0,
+  GRAPHICS_QUALITY_POTATO = 1,
+  GRAPHICS_QUALITY_LOW = 2,
+  GRAPHICS_QUALITY_MEDIUM = 3,
+  GRAPHICS_QUALITY_HIGH = 4,
+  GRAPHICS_QUALITY_ULTRA = 5
 };
 
 
@@ -63,14 +54,18 @@ public:
 
   // Quality of textures ingame. The higher the quality, the more work the renderer needs to sample
   // from texture images.
-  TextureQuality  _TextureQuality;
+  GraphicsQuality  _TextureQuality;
 
   // Determines the quality and details of shadows in the game world.
   // This will have a performance impact the better the quality. Recommended to
   // Stay at HIGH, since ULTRA is pretty hefty.
   // NOTE(): You must restart the game in order for qualities to take effect!
   //          Otherwise, disabling and enabling shadows can be done in runtime.
-  ShadowDetail    _Shadows;
+  GraphicsQuality    _Shadows;
+  
+  // Lighting quality affects how well light contributes to the scene. The higher the quality,
+  // the better the looks, but will impact performance. 
+  GraphicsQuality     _LightQuality;
 
   // Level of detail, by distance. The higher, the better the models in the world.
   r32             _Lod;
@@ -106,8 +101,9 @@ public:
 const GraphicsConfigParams kDefaultGpuConfigs = {
   DOUBLE_BUFFER,
   AA_None,
-  TEXTURE_QUALITY_ULTRA,
-  SHADOWS_NONE,
+  GRAPHICS_QUALITY_ULTRA,
+  GRAPHICS_QUALITY_NONE,
+  GRAPHICS_QUALITY_HIGH,
   1.0f,
   true,
   true,

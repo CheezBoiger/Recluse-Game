@@ -315,6 +315,12 @@ private:
   void              SetUpGlobalIlluminationBuffer();
   void              CleanUpGlobalIlluminationBuffer();
   inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
+  
+  // Signals that tell if renderer needs to update any static data. Is cleaned out every 
+  // frame!
+  b32               StaticNeedsUpdate() { return m_staticUpdate; }
+  void              SignalStaticUpdate() { m_staticUpdate = true; }
+  void              CleanStaticUpdate() { m_staticUpdate = false; }
 
   void              SortCmdLists();
   void              WaitForCpuFence();
@@ -405,6 +411,7 @@ private:
   u32                   m_TotalCmdBuffers;
   u32                   m_workGroupSize;
 
+  b32                   m_staticUpdate;
   b32                   m_Rendering           : 1;
   b32                   m_Initialized         : 1;
   b32                   m_AntiAliasing        : 1; 

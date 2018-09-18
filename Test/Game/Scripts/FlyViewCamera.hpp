@@ -109,8 +109,8 @@ public:
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
       params._AA = AA_FXAA_2x;
-      params._Shadows = SHADOWS_NONE;
-      params._TextureQuality = TEXTURE_QUALITY_ULTRA;
+      params._Shadows = GRAPHICS_QUALITY_NONE;
+      params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().UpdateRendererConfigs(&params);
     }
 
@@ -119,8 +119,8 @@ public:
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
       params._AA = AA_FXAA_2x;
-      params._Shadows = SHADOWS_ULTRA;
-      params._TextureQuality = TEXTURE_QUALITY_ULTRA;
+      params._Shadows = GRAPHICS_QUALITY_ULTRA;
+      params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().UpdateRendererConfigs(&params);
     }
 

@@ -78,7 +78,7 @@ ShadowMapSystem::~ShadowMapSystem()
 }
 
 
-void ShadowMapSystem::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
+void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 {
   // ShadowMap is a depth image.
   VkImageCreateInfo ImageCi = {};
@@ -134,7 +134,7 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
 
   InitializeShadowMap(pRhi);
 
-  if (shadowDetail < SHADOWS_MEDIUM) {
+  if (shadowDetail < GRAPHICS_QUALITY_MEDIUM) {
     m_viewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     m_staticViewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
   } else {
@@ -607,6 +607,8 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
 
 void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdList<MeshRenderCmd>& staticCmds)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   if ( !m_staticMapNeedsUpdate ) { return; }
   
   GraphicsPipeline* staticPipeline = m_pStaticStaticPipeline;
@@ -678,9 +680,11 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
     render(renderCmd);
   }
   pCmdBuffer->EndRenderPass();
-  if (staticCmds.Size() == 0) { 
+  if (staticCmds.Size() == 0) {
+    R_DEBUG(rNotify, "Empty static map cmd buffer updated.\n");
     return;
   }
+  R_DEBUG(rNotify, "Static map command buffer updated with meshes.\n")
   m_staticMapNeedsUpdate = false;
 }
 
@@ -911,7 +915,7 @@ LightDescriptor::~LightDescriptor()
 }
 
 
-void LightDescriptor::Initialize(VulkanRHI* pRhi, ShadowDetail shadowDetail)
+void LightDescriptor::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 {
   R_ASSERT(pRhi, "RHI owner not set for light material upon initialization!\n");
   // This class has already been initialized.
@@ -1091,7 +1095,7 @@ void LightDescriptor::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer)
 #if 0
   if (PrimaryShadowEnabled() && m_pLightViewBuffer) {
 #else
-  if (PrimaryShadowEnabled() && m_primaryMapSystem.ShadowMapViewDescriptor()) {
+  if ((PrimaryShadowEnabled() || m_primaryMapSystem.StaticMapNeedsUpdate()) && m_primaryMapSystem.ShadowMapViewDescriptor()) {
 #endif
     if ( m_primaryMapSystem.StaticMapNeedsUpdate() ) {
       Vector3 dir = Vector3(m_Lights._PrimaryLight._Direction.x,
