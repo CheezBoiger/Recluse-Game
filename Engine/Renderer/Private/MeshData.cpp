@@ -2,6 +2,10 @@
 #include "MeshData.hpp"
 #include "Vertex.hpp"
 
+#include "MaterialDescriptor.hpp"
+
+#include <algorithm>
+
 namespace Recluse {
 
 
@@ -43,5 +47,52 @@ void MeshData::CleanUp()
 {
   m_vertexBuffer.CleanUp();
   m_indexBuffer.CleanUp();
+}
+
+
+void MeshData::SortPrimitives(MeshData::SortType type)
+{
+  switch (type) {
+    case SortType::TRANSPARENCY_LAST:
+    {
+      std::vector<Primitive> transparencies;
+      std::vector<Primitive> opaques;
+      for ( Primitive& primitive : m_primitives ) { 
+        if ( primitive._pMat->Transparent() ) {
+          transparencies.push_back(primitive);
+        } else {
+          opaques.push_back(primitive);
+        }
+      }
+      size_t idx = 0;
+      for ( Primitive& primitive : opaques ) {
+        m_primitives[idx++] = primitive;
+      }
+      for ( Primitive& primitive : transparencies ) {
+        m_primitives[idx++] = primitive;
+      }
+    } break;
+    case SortType::TRANSPARENCY_FIRST:
+    {
+      std::vector<Primitive> transparencies;
+      std::vector<Primitive> opaques;
+      for (Primitive& primitive : m_primitives) {
+        if (primitive._pMat->Transparent()) {
+          transparencies.push_back(primitive);
+        }
+        else {
+          opaques.push_back(primitive);
+        }
+      }
+      size_t idx = 0;
+      for (Primitive& primitive : transparencies) {
+        m_primitives[idx++] = primitive;
+      }
+      for (Primitive& primitive : opaques) {
+        m_primitives[idx++] = primitive;
+      }
+    } break;
+    default: break;
+  }
 }
 } // Recluse

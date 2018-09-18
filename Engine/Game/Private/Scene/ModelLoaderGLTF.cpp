@@ -130,6 +130,21 @@ static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
                                       static_cast<r32>(value[3])));
     }
 
+    if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
+      tinygltf::Parameter parameter = mat.additionalValues["alphaMode"];
+      if (parameter.string_value == "BLEND") {
+        engineMat->SetTransparent(true);
+      }
+      if (parameter.string_value == "MASK") {
+        engineMat->SetTransparent(true);
+      }
+    }
+
+    if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) {
+      r32 factor = static_cast<r32>(mat.additionalValues["alphaCutoff"].Factor());
+      engineMat->SetOpacity(factor);
+    }
+
     std::string name = engineModel->name + "_mat_";
     // Some materials may not have a name, so will need to give them a unique name.
     if (mat.name.empty()) {
@@ -365,6 +380,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
     for (auto& prim : primitives) {
       pMesh->PushPrimitive(prim);
     }
+    pMesh->GetMeshDataLod()->SortPrimitives(MeshData::TRANSPARENCY_LAST);
   }
   return pMesh;
 }
@@ -525,6 +541,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
     for (auto& primData : primitives) {
       pMesh->PushPrimitive(primData);
     }
+    pMesh->GetMeshDataLod()->SortPrimitives(MeshData::TRANSPARENCY_LAST);
   }
 
   return pMesh;

@@ -39,6 +39,13 @@ public:
     SKINNED
   };
 
+  enum SortType {
+    TRANSPARENCY_LAST,
+    TRANSPARENCY_FIRST,
+    START_INDEX_GREATEST,
+    START_INDEX_LEAST
+  };
+
   MeshData();
   ~MeshData();
 
@@ -58,6 +65,10 @@ public:
   Primitive*              GetPrimitive(u32 idx) { return &m_primitives[static_cast<size_t>(idx)]; }
   inline void             ClearPrimitives() { m_primitives.clear(); }
   inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
+
+  // Sort primitives based on the given types, determining that algorithm to use for the primitive list of 
+  // this mesh object.
+  void                    SortPrimitives(SortType type);
 
   // Optimize the mesh to a certain specification.
   void                    Optimize();
