@@ -87,7 +87,12 @@ recluse_shaders = [
   Shader('Particles', 'Particles.frag'),
   Shader('Particles', 'Particles.vert'),
   Shader('Particles', 'Particles.geom'),
-  Shader('Particles', 'Particles.comp')
+  Shader('Particles', 'Particles.comp'),
+  Shader('ForwardPBR_MorphTargets', 'ForwardPBR.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
+  Shader('DynamicShadowMapping_MorphTargets', 'DynamicShadowMapping.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
+  Shader('GBuffer_MorphTargets', 'GBuffer.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
+  Shader('StaticGBuffer_MorphTargets', 'StaticGBuffer.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
+  Shader('ShadowMapping_MorphTargets', 'ShadowMapping.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1')
 ]
   
 def get_shader_ext(filename):

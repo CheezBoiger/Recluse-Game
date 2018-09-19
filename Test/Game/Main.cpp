@@ -150,6 +150,7 @@ int main(int c, char* argv[])
     params._AA = AA_FXAA_2x;
     params._Shadows = GRAPHICS_QUALITY_NONE;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
+    params._LightQuality = GRAPHICS_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
     params._EnableChromaticAberration = true;
 
@@ -181,7 +182,7 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
-    mesh->Initialize(boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
+    mesh->Initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
     mesh->SetMin(Cube::Min);
     mesh->SetMax(Cube::Max);
     mesh->UpdateAABB();
@@ -200,7 +201,7 @@ int main(int c, char* argv[])
     //for (i32 lod = 0; lod < 5; ++lod) {
       auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
       auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
-      mesh->Initialize(sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
+      mesh->Initialize(&gRenderer(), sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
     //  stckCnt -= minus;
     //}
     Primitive prim;
@@ -220,7 +221,7 @@ int main(int c, char* argv[])
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   //ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
   //ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
-  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+  ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
 

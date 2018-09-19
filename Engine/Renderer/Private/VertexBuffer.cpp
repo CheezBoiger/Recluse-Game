@@ -26,7 +26,6 @@ void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
     return;
   }
 
-  mRhi = rhi;
   mBuffer = rhi->CreateBuffer();
   mVertexCount = static_cast<u32>(vertexCount);
   Buffer* stagingBuffer = rhi->CreateBuffer();
@@ -83,10 +82,10 @@ void VertexBuffer::Initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
 }
 
 
-void VertexBuffer::CleanUp()
+void VertexBuffer::CleanUp(VulkanRHI* pRhi)
 {
-  if (mBuffer) {
-    mRhi->FreeBuffer(mBuffer);
+  if ( mBuffer ) {
+    pRhi->FreeBuffer( mBuffer );
     mBuffer = nullptr;
   }
 }

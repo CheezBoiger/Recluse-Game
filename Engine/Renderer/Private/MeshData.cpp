@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "MeshData.hpp"
 #include "Vertex.hpp"
-
+#include "Renderer.hpp"
 #include "MaterialDescriptor.hpp"
 
 #include <algorithm>
@@ -10,7 +10,6 @@ namespace Recluse {
 
 
 MeshData::MeshData()
- : mRhi(nullptr)
 {
 
 }
@@ -21,19 +20,42 @@ MeshData::~MeshData()
 }
 
 
-void MeshData::Initialize(size_t elementCount, void* data, size_t vertexSize, size_t indexCount, void* indices)
+void MeshData::Initialize(Renderer* pRenderer, 
+  size_t elementCount, void* data, size_t vertexSize, size_t indexCount, void* indices)
 {
-  m_vertexBuffer.Initialize(mRhi, elementCount, vertexSize, data);
+  
+  m_vertexBuffer.Initialize(pRenderer->RHI(), elementCount, vertexSize, data);
 
   if (indexCount) {
-    m_indexBuffer.Initialize(mRhi, indexCount, sizeof(u32), indices);
+    m_indexBuffer.Initialize(pRenderer->RHI(), indexCount, sizeof(u32), indices);
   }
 }
 
 
-void MeshData::CleanUp()
+void MeshData::CleanUp(Renderer* pRenderer)
 {
-  m_vertexBuffer.CleanUp();
-  m_indexBuffer.CleanUp();
+  m_vertexBuffer.CleanUp(pRenderer->RHI());
+  m_indexBuffer.CleanUp(pRenderer->RHI());
+}
+
+
+MorphTarget::MorphTarget()
+{
+}
+
+
+MorphTarget::~MorphTarget()
+{
+}
+
+
+void MorphTarget::Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize)
+{
+  m_vertexBuffer.Initialize(pRenderer->RHI(), elementCount, vertexSize, data);
+}
+
+void MorphTarget::CleanUp(Renderer* pRenderer)
+{
+  m_vertexBuffer.CleanUp(pRenderer->RHI());
 }
 } // Recluse

@@ -11,6 +11,7 @@
 #include "Physics/BoxCollider.hpp"
 #include "Physics/SphereCollider.hpp"
 #include "../DemoTextureLoad.hpp"
+#include "Renderer/MeshDescriptor.hpp"
 
 // Scripts.
 #include <array>
@@ -186,7 +187,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -202,6 +203,7 @@ public:
     m_pPhysicsComponent = &m_physicsComponent;
     m_pMeshComponent = &m_meshComponent;
     m_pRendererComponent = &m_rendererComponent;
+    m_pSampler = nullptr;
 #if MODEL_TYPE == MONSTER
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);
@@ -254,12 +256,12 @@ public:
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("busterDrone", &model);
+    ModelCache::Get("AnimatedMorphCube", &model);
     ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
     }
-
+    m_rendererComponent.EnableMorphTargets(false);
     for (size_t i = 0; i < model->materials.size(); ++i) {
       Material* material = model->materials[i];
       material->EnableEmissive(true);
@@ -284,7 +286,11 @@ public:
     r32 offsetUvX = static_cast<r32>(Time::CurrentTime()) * tick;
     r32 offsetUvY = static_cast<r32>(Time::CurrentTime()) * tick;
     Vector4 offset = Vector4(offsetUvX, offsetUvY);
-    m_pMaterialRef->SetUvOffsets(offset);
+   // m_pMaterialRef->SetUvOffsets(offset);
+    if (Keyboard::KeyPressed(KEY_CODE_B)) {
+      m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w1 += 0.1f * tick;
+      //m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w0 += 0.1f * tick;
+    }
   }
 
   void SetPosition(const Vector3& newPos)

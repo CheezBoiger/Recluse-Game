@@ -20,7 +20,7 @@ public:
 
 
   void            Initialize(VulkanRHI* rhi);
-  void            CleanUp();
+  void            CleanUp(VulkanRHI* pRhi);
 
 
   VertexBuffer*   Quad() { return &quad; }

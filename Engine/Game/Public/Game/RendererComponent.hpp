@@ -42,6 +42,7 @@ public:
   void                      EnableShadow(b32 enable);
   void                      EnableStatic(b32 enable);
   void                      ForceForward(b32 enable);
+  void                      EnableMorphTargets(b32 enable);
   void                      SetTransparent(b32 enable);
   void                      EnableSkin(b32 enable);
 

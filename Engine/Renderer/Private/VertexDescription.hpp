@@ -32,4 +32,10 @@ struct UIVertexDescription {
   static VkVertexInputBindingDescription                GetBindingDescription();
   static std::vector<VkVertexInputAttributeDescription> GetVertexAttributes();
 };
+
+
+struct MorphTargetVertexDescription {
+  static std::vector<VkVertexInputBindingDescription>   GetBindingDescriptions(VkVertexInputBindingDescription& input);
+  static std::vector<VkVertexInputAttributeDescription> GetVertexAttributes(std::vector<VkVertexInputAttributeDescription>& attribs);
+};
 } // Recluse

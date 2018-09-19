@@ -11,6 +11,8 @@ namespace Recluse {
 
 
 class MeshData;
+class MorphTarget;
+class Renderer;
 
 struct Primitive {
   Primitive()
@@ -52,11 +54,11 @@ public:
   // Element count is the number of vertices in data. numOfVertices objects in data.
   // VertexType determines what type of vertex data is, and lod is the level of detail mapped to be mapped
   // to this initialized data.
-  void                    Initialize(size_t elementCount, void* data, VertexType  type,
+  void                    Initialize(Renderer* pRenderer, size_t elementCount, void* data, VertexType  type,
                             size_t indexCount = 0, void* indices = nullptr);
 
-  // Clean up the mesh object when no longer being used.
-  void                    CleanUp();
+  // Clean up the mesh object when no longer being used.size
+  void                    CleanUp(Renderer* pRenderer);
 
   MeshData*               GetMeshData() { return m_pMeshData; }
   b32                     Skinned() { return m_bSkinned; }
@@ -65,10 +67,15 @@ public:
   skeleton_uuid_t         GetSkeletonReference() const { return m_skeleId; }
 
   Primitive*              GetPrimitiveData() { return m_primitives.data(); }
-  u32                     GetPrimitiveCount() const { return m_primitives.size(); }
+  u32                     GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
   Primitive*              GetPrimitive(u32 idx) { return &m_primitives[idx]; }
   inline void             ClearPrimitives(u32 lod = kMeshLodZero) { m_primitives.clear(); }
   inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
+
+  void                    AllocateMorphTargetBuffer(size_t newsize);
+  MorphTarget*            GetMorphTarget(size_t idx) { return m_morphTargets[idx]; }
+  u32                     GetMorphTargetCount() const { return static_cast<u32>(m_morphTargets.size()); }
+  void                    InitializeMorphTarget(Renderer* pRenderer ,size_t idx, size_t elementCount, void* data, size_t vertexSize);
 
   void                    SetMin(const Vector3& min) { m_aabb.min = min; }
   void                    SetMax(const Vector3& max) { m_aabb.max = max; }
@@ -81,10 +88,25 @@ public:
   void                    SortPrimitives(SortType type);
 
 private:
+
+  void                    ClearMorphTargets(Renderer* pRenderer);
+
+  // The actual mesh data used to bound and render.
   MeshData*               m_pMeshData;
+
+  // Primitives that correspond to this mesh.
   std::vector<Primitive>  m_primitives;
+
+  // Morph Targets that correspond to this mesh.
+  std::vector<MorphTarget*> m_morphTargets;
+
+  // skinned boolean.
   b32                     m_bSkinned;
+
+  // skeleton id reference.
   skeleton_uuid_t         m_skeleId;
+
+  // Bounding shape of this mesh.
   AABB                    m_aabb;
 };
 } // Recluse 

@@ -117,6 +117,13 @@ void RendererComponent::ForceForward(b32 enable)
 }
 
 
+void RendererComponent::EnableMorphTargets(b32 enable)
+{
+  if (enable) { m_configs |= CMD_MORPH_BIT; }
+  else { m_configs &= ~CMD_MORPH_BIT; }
+}
+
+
 void RendererComponent::Update()
 {
   if (!Enabled() || m_meshes.empty()) return;
@@ -142,7 +149,12 @@ void RendererComponent::Update()
     cmd._pPrimitives = pMesh->GetPrimitiveData();
     cmd._primitiveCount = pMesh->GetPrimitiveCount();
     R_ASSERT(cmd._pMeshData, "Mesh data was nullptr!");
-    
+#if 0
+    if (m_configs & CMD_MORPH_BIT) {
+      cmd._pMorph0 = m_meshes[i]->GetMorphTarget(0);
+      cmd._pMorph1 = m_meshes[i]->GetMorphTarget(1);
+    }
+#endif 
     gRenderer().PushMeshRender(cmd);
   }
 

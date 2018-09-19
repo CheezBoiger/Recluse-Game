@@ -27,7 +27,6 @@ void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
     return;
   }
 
-  mRhi = rhi;
   mBuffer = rhi->CreateBuffer();
   mIndexCount = static_cast<u32>(indexCount);
   m_sizeType = static_cast<u32>(sizeType);
@@ -82,10 +81,10 @@ void IndexBuffer::Initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
 }
 
 
-void IndexBuffer::CleanUp()
+void IndexBuffer::CleanUp(VulkanRHI* pRhi)
 {
-  if (mBuffer) {
-    mRhi->FreeBuffer(mBuffer);
+  if ( mBuffer ) {
+    pRhi->FreeBuffer( mBuffer );
     mBuffer = nullptr;
   }
 }

@@ -31,9 +31,9 @@ void RenderQuad::Initialize(VulkanRHI* rhi)
 }
 
 
-void RenderQuad::CleanUp()
+void RenderQuad::CleanUp(VulkanRHI* pRhi)
 {
-  quad.CleanUp();
-  index.CleanUp();
+  quad.CleanUp(pRhi);
+  index.CleanUp(pRhi);
 }
 } // Recluse

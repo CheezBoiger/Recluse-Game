@@ -8,6 +8,7 @@
 #include "MeshComponent.hpp"
 #include "RendererComponent.hpp"
 #include "TextureCache.hpp"
+#include "Renderer/Renderer.hpp"
 
 #include "Scene/ModelLoader.hpp"
 
@@ -22,7 +23,7 @@ public:
     // TODO(): Automate cleaning up all materials within this cache.
     for (auto& it : m_Cache) {
       Mesh* mesh = it.second;
-      mesh->CleanUp();
+      mesh->CleanUp(&gRenderer());
       delete mesh;
     }
     m_Cache.clear();
@@ -69,7 +70,7 @@ public:
     // TODO(): Automate cleaning up all materials within this cache.
     for (auto& it : m_Cache) {
       Material* material = it.second;
-      material->CleanUp();
+      material->CleanUp(&gRenderer());
       delete material;
     }
     m_Cache.clear();

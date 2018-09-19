@@ -91,7 +91,7 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 void ParticleSystem::Initialize(VulkanRHI* pRhi, 
   DescriptorSetLayout* particleLayout, u32 initialParticleCount)
 {
-  _particleConfig._maxParticles = initialParticleCount;
+  _particleConfig._maxParticles = static_cast<r32>(initialParticleCount);
 
   m_particleBuffer = pRhi->CreateBuffer();
   m_particleConfigBuffer = pRhi->CreateBuffer();
@@ -100,7 +100,7 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
     VkBufferCreateInfo gpuBufferCi = { };
     gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    gpuBufferCi.size = sizeof(Particle) * _particleConfig._maxParticles;
+    gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<u32>(_particleConfig._maxParticles));
     gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT 
       | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
       | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
@@ -284,7 +284,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   graphicsCi.renderPass = pRenderPass->Handle();
   graphicsCi.basePipelineHandle = VK_NULL_HANDLE;
   graphicsCi.basePipelineIndex = -1;
-  graphicsCi.stageCount = shaderStages.size();
+  graphicsCi.stageCount = static_cast<u32>(shaderStages.size());
   graphicsCi.pStages = shaderStages.data();
 
   VkPipelineLayoutCreateInfo pipelineLayoutCi = { };

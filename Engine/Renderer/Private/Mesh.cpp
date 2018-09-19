@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-void Mesh::Initialize(size_t elementCount, void* data, VertexType type, 
+void Mesh::Initialize(Renderer* pRenderer ,size_t elementCount, void* data, VertexType type, 
   size_t indexCount, void* indices)
 {
   R_ASSERT(!m_pMeshData, "Mesh data at specified lod is already initialized.");
@@ -19,16 +19,18 @@ void Mesh::Initialize(size_t elementCount, void* data, VertexType type,
     case QUAD: size = sizeof(QuadVertex); break;
     default: size = sizeof(StaticVertex); break;
   }
-  m_pMeshData = gRenderer().CreateMeshData();
-  m_pMeshData->Initialize(elementCount, data, size, indexCount, indices);
+  m_pMeshData = new MeshData();
+  m_pMeshData->Initialize(pRenderer, elementCount, data, size, indexCount, indices);
   if (type == VertexType::SKINNED) m_bSkinned = true;
 }
 
 
-void Mesh::CleanUp()
+void Mesh::CleanUp(Renderer* pRenderer)
 {
-  gRenderer().FreeMeshData( m_pMeshData );
-  m_pMeshData = nullptr;
+  m_pMeshData->CleanUp(pRenderer);
+  delete m_pMeshData;
+
+  ClearMorphTargets(pRenderer);
 }
 
 void Mesh::SortPrimitives(Mesh::SortType type)
@@ -74,6 +76,35 @@ void Mesh::SortPrimitives(Mesh::SortType type)
       }
     } break;
     default: break;
+  }
+}
+
+
+void Mesh::AllocateMorphTargetBuffer(size_t newSize)
+{
+  m_morphTargets.resize(newSize);
+  for (size_t i = 0; i < m_morphTargets.size(); ++i) {
+    m_morphTargets[i] = nullptr;
+  }
+}
+
+
+void Mesh::InitializeMorphTarget(Renderer* pRenderer ,size_t idx, size_t elementCount, void* data, size_t vertexSize)
+{
+  m_morphTargets[idx] = new MorphTarget();
+  m_morphTargets[idx]->Initialize(pRenderer, elementCount, data, vertexSize);
+}
+
+
+void Mesh::ClearMorphTargets(Renderer* pRenderer)
+{
+  for (size_t i = 0; i < m_morphTargets.size(); ++i) {
+    MorphTarget* target = m_morphTargets[i];
+    if ( target ) {
+      target->CleanUp(pRenderer);
+      delete target;
+      m_morphTargets[i] = nullptr;
+    }
   }
 }
 } // Recluse 

@@ -109,7 +109,7 @@ void LoadMaterials()
 {
   {
     Material* material = new Material();
-    material->Initialize();
+    material->Initialize(&gRenderer());
     Texture2D* tex;
     TextureCache::Get(RTEXT("GrassyAlbedo"), &tex);
 
@@ -130,7 +130,7 @@ void LoadMaterials()
 
   {
     Material* material = new Material();
-    material->Initialize();
+    material->Initialize(&gRenderer());
     Texture2D* tex;
     TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
 

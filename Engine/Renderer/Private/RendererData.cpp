@@ -29,6 +29,8 @@ Sampler* DefaultSampler2DKey        = nullptr;
 
 GraphicsPipeline* ShadowMapPipelineKey              = nullptr;
 GraphicsPipeline* DynamicShadowMapPipelineKey       = nullptr;
+GraphicsPipeline* shadowMap_dynamicMorphTargetPipeline = nullptr;
+GraphicsPipeline* shadowMap_staticMorphTargetPipeline = nullptr;
 std::string DynamicShadowMapVertFileStr       = "DynamicShadowMapping.vert.spv";
 std::string ShadowMapVertFileStr              = "ShadowMapping.vert.spv";
 std::string ShadowMapFragFileStr              = "ShadowMapping.frag.spv";
@@ -41,7 +43,9 @@ GraphicsPipeline* transparent_dynamicShadowPipe = nullptr;
 GraphicsPipeline* transparent_colorFilterPipe = nullptr;
 
 GraphicsPipeline* gbuffer_PipelineKey               = nullptr;
+GraphicsPipeline* gbuffer_morphTargetPipeline     = nullptr;
 GraphicsPipeline* gbuffer_StaticPipelineKey         = nullptr;
+GraphicsPipeline* gbuffer_staticMorphTargetPipeline = nullptr;
 DescriptorSetLayout* gbuffer_LayoutKey                 = nullptr;
 Texture* gbuffer_AlbedoAttachKey           = nullptr;
 Texture* gbuffer_NormalAttachKey           = nullptr;
@@ -61,6 +65,8 @@ GraphicsPipeline* pbr_forwardPipeline_LR      = nullptr;
 GraphicsPipeline* pbr_forwardPipeline_NoLR = nullptr;
 GraphicsPipeline* pbr_staticForwardPipeline_LR    = nullptr;
 GraphicsPipeline* pbr_staticForwardPipeline_NoLR  = nullptr;
+GraphicsPipeline* pbr_forwardPipelineMorphTargets_LR = nullptr;
+GraphicsPipeline* pbr_forwardPipelineMorphTargets_NoLR = nullptr;
 ComputePipeline* pbr_computePipeline_NoLR         = nullptr;
 ComputePipeline* pbr_computePipeline_LR           = nullptr;
 RenderPass*      pbr_forwardRenderPass            = nullptr;
@@ -220,6 +226,8 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 
   gbuffer_PipelineKey = GBufferPipeline;
   gbuffer_StaticPipelineKey = GBufferStaticPipeline;
+  gbuffer_morphTargetPipeline = Rhi->CreateGraphicsPipeline();
+  gbuffer_staticMorphTargetPipeline = Rhi->CreateGraphicsPipeline();
 
   LoadShader(gbuffer_VertFileStr, VertGBuffer);
   LoadShader(gbuffer_FragFileStr, FragGBuffer);
@@ -261,6 +269,27 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   // Initialize pbr forward pipeline.
   GBufferPipeline->Initialize(GraphicsInfo, PipelineLayout);
 
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = { };
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(SkinnedVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(SkinnedVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    // Initialize pbr forward morph target pipeline.
+    Rhi->FreeShader(VertGBuffer);
+    VertGBuffer = Rhi->CreateShader();
+    LoadShader("GBuffer_MorphTargets.vert.spv", VertGBuffer);
+    PbrShaders[0].module = VertGBuffer->Handle();
+    gbuffer_morphTargetPipeline->Initialize(ginfo, PipelineLayout);
+    Rhi->FreeShader(VertGBuffer);
+    VertGBuffer = nullptr;
+  }
   // Static pipeline creation.
   auto Bindings = StaticVertexDescription::GetBindingDescription();
   auto VertexAttribs = StaticVertexDescription::GetVertexAttributes();
@@ -283,6 +312,29 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   GBufferStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
   
   Rhi->FreeShader(VertGBuffer);
+  VertGBuffer = nullptr;
+  // Static Morph Target gbuffer pipeline.
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = {};
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(StaticVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(StaticVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    // Initialize pbr forward morph target pipeline.
+    Rhi->FreeShader(VertGBuffer);
+    VertGBuffer = Rhi->CreateShader();
+    LoadShader("StaticGBuffer_MorphTargets.vert.spv", VertGBuffer);
+    PbrShaders[0].module = VertGBuffer->Handle();
+    gbuffer_staticMorphTargetPipeline->Initialize(ginfo, PipelineLayout);
+    Rhi->FreeShader(VertGBuffer);
+    VertGBuffer = nullptr;
+  }
   Rhi->FreeShader(FragGBuffer);
 }
 

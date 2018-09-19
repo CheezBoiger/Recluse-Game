@@ -61,18 +61,20 @@ void main()
   vec2 temp_uv1 = uv1;
   
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
-  float w0 = objBuffer.w0;
-  float w1 = objBuffer.w1;
-  float wC = 1.0 - w0 - w1;
-  clamp(wC, 0.0, 1.0);
-  float wS = w0 + w1 + wC;
-  float mtf0 = w0 / wS;
-  float mtf1 = w1 / wS;
-  float mtfC = wC / wS;
-  // Interpolate between two target animations, using weights to define the current extremes.
-  worldPosition = mtf0 * position0 + mtf1 * position1 + mtfC * position; 
-  temp_uv0 = mtf0 * uv00 + mtf1 * uv01 + mtfC * uv0;
-  temp_uv1 = mtf0 * uv10 + mtf1 * uv11 + mtfC * uv1;
+  float w0 = obj_buffer.w0;
+  float w1 = obj_buffer.w1;
+  vec4  morphPositionDiff0 = position0 - worldPosition;
+  vec4  morphPositionDiff1 = position1 - worldPosition;
+  vec2  morphUV00 = uv00 - temp_uv0;
+  vec2  morphUV01 = uv01 - temp_uv0;
+  vec2  morphUV10 = uv10 - temp_uv1;
+  vec2  morphUV11 = uv11 - temp_uv1;
+  worldPosition += morphPositionDiff0 * w0;
+  worldPosition += morphPositionDiff1 * w1;
+  temp_uv0 += morphUV00 * w0;
+  temp_uv0 += morphUV01 * w1;
+  temp_uv1 += morphUV10 * w0;
+  temp_uv1 += morphUV11 * w1;
 #endif
  
   // Compute the skin matrix.

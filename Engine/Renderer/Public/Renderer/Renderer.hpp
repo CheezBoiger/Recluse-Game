@@ -101,10 +101,6 @@ public:
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
   void              WaitIdle();
 
-  // Creates a mesh object of which to submit to render.
-  // Be sure to call FreeMeshData() if done with this mesh object.
-  MeshData*         CreateMeshData();
-
   // Create a Mesh descriptor.
   MeshDescriptor*           CreateMeshDescriptor();
 
@@ -139,9 +135,6 @@ public:
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
   LightBuffer*      LightData() { return m_pLights->Data(); }
-
-  // Frees up the allocated mesh data object.
-  void              FreeMeshData(MeshData* mesh);
 
   //  Frees up the allocated texture1d object.
   void              FreeTexture1D(Texture1D* texture);

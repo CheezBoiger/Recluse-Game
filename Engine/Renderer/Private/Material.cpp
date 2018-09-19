@@ -7,17 +7,26 @@
 namespace Recluse {
 
 
-void Material::Initialize()
+void  Material::InitializeDefault(Renderer* pRenderer) 
 {
-  m_pDesc = gRenderer().CreateMaterialDescriptor();
+  _sDefault.Initialize(pRenderer);
+  _sDefault.Native()->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT | MATERIAL_BUFFER_UPDATE_BIT);
+  _sDefault.SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+  _sDefault.Native()->Update(gRenderer().RHI());
+}
+
+
+void Material::Initialize(Renderer* pRenderer)
+{
+  m_pDesc = pRenderer->CreateMaterialDescriptor();
   m_pDesc->Initialize(gRenderer().RHI());
   m_pDesc->PushUpdate(MATERIAL_BUFFER_UPDATE_BIT | MATERIAL_DESCRIPTOR_UPDATE_BIT);
 }
 
 
-void Material::CleanUp()
+void Material::CleanUp(Renderer* pRenderer)
 {
-  gRenderer().FreeMaterialDescriptor(m_pDesc);
+  pRenderer->FreeMaterialDescriptor(m_pDesc);
   m_pDesc = nullptr;
 }
 

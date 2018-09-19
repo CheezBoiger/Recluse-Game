@@ -4,11 +4,10 @@
 #include "Core/Types.hpp"
 
 #include "MaterialDescriptor.hpp"
-#include "Renderer.hpp"
-
 
 namespace Recluse {
 
+class Renderer;
 
 enum MaterialMaps {
   MAT_ALBEDO_BIT = (1 << 0),
@@ -25,20 +24,15 @@ class Material {
 public:
   // Default used if no material is defined by the game object, for the renderer component.
   static Material           _sDefault;
-  static void               InitializeDefault() {
-     _sDefault.Initialize(); 
-    _sDefault.Native()->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT | MATERIAL_BUFFER_UPDATE_BIT);
-    _sDefault.SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-    _sDefault.Native()->Update(gRenderer().RHI()); 
-  }
+  static void               InitializeDefault(Renderer* pRenderer);
 
-  static void               CleanUpDefault() { _sDefault.CleanUp(); }
+  static void               CleanUpDefault(Renderer* pRenderer) { _sDefault.CleanUp(pRenderer); }
   static Material*          Default() { return &_sDefault; }
 #define MARK_DIRTY_MATERIAL(b) m_pDesc->PushUpdate(b);
   Material() : m_pDesc(nullptr) { }
 
-  void                      Initialize();
-  void                      CleanUp();
+  void                      Initialize(Renderer* pRenderer);
+  void                      CleanUp(Renderer* pRenderer);
 
   r32                       EmissiveFactor() const { return m_pDesc->Data()->_emissiveFactor; }
   r32                       MetallicFactor() const { return m_pDesc->Data()->_metalFactor; }

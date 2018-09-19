@@ -60,7 +60,9 @@ extern GraphicsPipeline*  debug_wireframePipeline;
 extern RenderPass*        debug_renderPass;
 
 extern GraphicsPipeline* ShadowMapPipelineKey;
+extern GraphicsPipeline* shadowMap_staticMorphTargetsPipeline;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;
+extern GraphicsPipeline*  shadowMap_dynamicMorphTargetPipeline;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
 extern std::string DynamicShadowMapVertFileStr;
@@ -74,6 +76,8 @@ extern GraphicsPipeline*    transparent_dynamicShadowPipe;
 extern GraphicsPipeline*    transparent_colorFilterPipe;
 
 extern GraphicsPipeline* gbuffer_PipelineKey;
+extern GraphicsPipeline* gbuffer_morphTargetPipeline;
+extern GraphicsPipeline* gbuffer_staticMorphTargetPipeline;
 extern GraphicsPipeline* gbuffer_StaticPipelineKey;
 extern DescriptorSetLayout* gbuffer_LayoutKey;
 extern Texture* gbuffer_AlbedoAttachKey;
@@ -98,11 +102,14 @@ extern DescriptorSet* pbr_compSet;
 extern Texture* pbr_FinalTextureKey;
 extern Texture* pbr_BrightTextureKey;
 
-extern GraphicsPipeline* pbr_forwardPipeline_LR;
-extern GraphicsPipeline* pbr_forwardPipeline_NoLR;
-extern GraphicsPipeline* pbr_staticForwardPipeline_LR;
-extern GraphicsPipeline* pbr_staticForwardPipeline_NoLR;
-extern RenderPass*      pbr_forwardRenderPass;
+// Forward Pipelines
+extern GraphicsPipeline*  pbr_forwardPipeline_LR;
+extern GraphicsPipeline*  pbr_forwardPipeline_NoLR;
+extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_LR;
+extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_NoLR;
+extern GraphicsPipeline*  pbr_staticForwardPipeline_LR;
+extern GraphicsPipeline*  pbr_staticForwardPipeline_NoLR;
+extern RenderPass*        pbr_forwardRenderPass;
 
 extern ComputePipeline* aa_PipelineKey;
 extern DescriptorSetLayout* aa_DescLayoutKey;   // Depends on the aliasing technique.

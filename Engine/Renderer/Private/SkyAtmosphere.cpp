@@ -741,7 +741,7 @@ void SkyRenderer::CleanUp()
   }
 
 
-  m_SkyboxIndBuf.CleanUp();
-  m_SkyboxVertBuf.CleanUp();
+  m_SkyboxIndBuf.CleanUp(rhi);
+  m_SkyboxVertBuf.CleanUp(rhi);
 }
 } // Recluse 

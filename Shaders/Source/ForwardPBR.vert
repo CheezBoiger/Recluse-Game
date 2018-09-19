@@ -109,17 +109,22 @@ void main()
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
   float w0 = objBuffer.w0;
   float w1 = objBuffer.w1;
-  float wC = 1.0 - w0 - w1;
-  clamp(wC, 0.0, 1.0);
-  float wS = w0 + w1 + wC;
-  float mtf0 = w0 / wS;
-  float mtf1 = w1 / wS;
-  float mtfC = wC / wS;
-  // Interpolate between two target animations, using weights to define the current extremes.
-  skinPosition = mtf0 * position0 + mtf1 * position1 + mtfC * position; 
-  skinNormal = mtf0 * normal0 + mtf1 * normal1 + mtfC * normal;
-  temp_uv0 = mtf0 * uv00 + mtf1 * uv01 + mtfC * uv0;
-  temp_uv1 = mtf0 * uv10 + mtf1 * uv11 + mtfC * uv1;
+  vec4  morphPositionDiff0 = position0 - skinPosition;
+  vec4  morphPositionDiff1 = position1 - skinPosition;
+  vec4  morphNormalDiff0 = normal0 - skinNormal;
+  vec4  morphNormalDiff1 = normal1 - skinNormal;
+  vec2  morphUV00 = uv00 - temp_uv0;
+  vec2  morphUV01 = uv01 - temp_uv0;
+  vec2  morphUV10 = uv10 - temp_uv1;
+  vec2  morphUV11 = uv11 - temp_uv1;
+  skinPosition += morphPositionDiff0 * w0;
+  skinPosition += morphPositionDiff1 * w1;
+  skinNormal += morphNormalDiff0 * w0;
+  skinNormal += morphNormalDiff1 * w1;
+  temp_uv0 += morphUV00 * w0;
+  temp_uv0 += morphUV01 * w1;
+  temp_uv1 += morphUV10 * w0;
+  temp_uv1 += morphUV11 * w1;
 #endif
   
   // Compute the skin matrix transform.

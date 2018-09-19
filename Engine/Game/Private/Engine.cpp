@@ -140,7 +140,7 @@ void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   m_window.Create(appName, width, height);
   gRenderer().Initialize(&m_window, params);
 
-  Material::InitializeDefault();
+  Material::InitializeDefault(&gRenderer());
   LightComponent::GlobalInitialize();
 
   if (fullscreen) {
@@ -161,7 +161,7 @@ void Engine::CleanUp()
   }
 
   LightComponent::GlobalCleanUp();
-  Material::CleanUpDefault();
+  Material::CleanUpDefault(&gRenderer());
 
   gUI().ShutDown();
   gRenderer().ShutDown();

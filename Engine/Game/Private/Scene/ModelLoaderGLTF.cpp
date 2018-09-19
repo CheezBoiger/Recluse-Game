@@ -98,7 +98,7 @@ static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
   u32 count = 0;
   for (tinygltf::Material& mat : gltfModel->materials) {
     Material* engineMat = new Material();
-    engineMat->Initialize();
+    engineMat->Initialize(&gRenderer());
     engineMat->SetMetallicFactor(1.0f);
     engineMat->SetRoughnessFactor(1.0f);
     if (mat.values.find("baseColorTexture") != mat.values.end()) {
@@ -289,10 +289,15 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
     pMesh = new Mesh();
-
+    
+    std::vector<std::vector<MorphVertex> > morphVertices;
     std::vector<StaticVertex> vertices;
     std::vector<u32>          indices;
     Vector3                   min, max;
+
+    if (!mesh.weights.empty()) {
+      morphVertices.resize(mesh.weights.size());
+    }
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
@@ -332,7 +337,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 0.0f);
+          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).Normalize(), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
@@ -379,11 +384,13 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
       // Check for each for morph target. For each target, we push to their corresponding maps.
       if (!primitive.targets.empty()) {
-        for (auto target : primitive.targets) {
+        for (size_t mi = 0; mi < primitive.targets.size(); ++mi) {
+          std::map<std::string, int>& target = 
+            const_cast<std::map<std::string, int>&>(primitive.targets[mi]);
           const r32*  morphPositions = nullptr;
           const r32* morphNormals = nullptr;
           const r32* morphTexCoords = nullptr;            
-
+  
           const tinygltf::Accessor& morphPositionAccessor = model.accessors[target["POSITION"]];
           const tinygltf::BufferView& morphPositionView = model.bufferViews[morphPositionAccessor.bufferView];
           morphPositions = reinterpret_cast<const r32*>(&model.buffers[morphPositionView.buffer].data[morphPositionView.byteOffset + morphPositionAccessor.byteOffset]);
@@ -403,10 +410,11 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           for (size_t i = 0; i < morphPositionAccessor.count; ++i) {
             MorphVertex vertex;
             Vector3 p(&morphPositions[i * 3]);
-            vertex.position = Vector4(p, 1.0f) * localMatrix;
-            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]) * Matrix3(localMatrix), 0.0f);
+            vertex.position = Vector4(p, 1.0f);
+            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]), 0.0f);
             vertex.texcoord0 = morphTexCoords ? Vector2(&morphTexCoords[i * 2]) : Vector2(0.0f, 0.0f);
             vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
+            morphVertices[mi].push_back(vertex);
           }
         }
       }
@@ -417,7 +425,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
       primitives.push_back(primData);
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
+    pMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
     pMesh->SetMin(min);
     pMesh->SetMax(max);
     pMesh->UpdateAABB();
@@ -428,6 +436,14 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
       pMesh->PushPrimitive(prim);
     }
     pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
+
+    if (!morphVertices.empty()) {
+      pMesh->AllocateMorphTargetBuffer(morphVertices.size());
+      for ( size_t i = 0; i < morphVertices.size(); ++i ) {
+        auto& verts = morphVertices[i];
+        pMesh->InitializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex)); 
+      } 
+    }
   }
   return pMesh;
 }
@@ -443,9 +459,14 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
     // defines some submesh in the full mesh object.
     pMesh = new Mesh();
 
+    std::vector<std::vector<MorphVertex> > morphVertices;
     std::vector<SkinnedVertex> vertices; 
     std::vector<u32>          indices;
     Vector3                   min, max;
+
+    if (!mesh.weights.empty()) {
+      morphVertices.resize(mesh.weights.size());
+    }
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
@@ -570,6 +591,43 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
         };
       }
 
+      // Check for each for morph target. For each target, we push to their corresponding maps.
+      if (!primitive.targets.empty()) {
+        for (size_t mi = 0; mi < primitive.targets.size(); ++mi) {
+          std::map<std::string, int>& target =
+            const_cast<std::map<std::string, int>&>(primitive.targets[mi]);
+          const r32*  morphPositions = nullptr;
+          const r32* morphNormals = nullptr;
+          const r32* morphTexCoords = nullptr;
+
+          const tinygltf::Accessor& morphPositionAccessor = model.accessors[target["POSITION"]];
+          const tinygltf::BufferView& morphPositionView = model.bufferViews[morphPositionAccessor.bufferView];
+          morphPositions = reinterpret_cast<const r32*>(&model.buffers[morphPositionView.buffer].data[morphPositionView.byteOffset + morphPositionAccessor.byteOffset]);
+
+          if (target.find("NORMAL") != target.end()) {
+            const tinygltf::Accessor& morphNormalAccessor = model.accessors[target["NORMAL"]];
+            const tinygltf::BufferView& morphNormalView = model.bufferViews[morphNormalAccessor.bufferView];
+            morphNormals = reinterpret_cast<const r32*>(&model.buffers[morphNormalView.buffer].data[morphNormalAccessor.byteOffset + morphNormalView.byteOffset]);
+          }
+
+          if (target.find("TEXCOORD_0") != target.end()) {
+            const tinygltf::Accessor& morphTexCoordAccessor = model.accessors[target["TEXCOORD_0"]];
+            const tinygltf::BufferView& morphTexCoordView = model.bufferViews[morphTexCoordAccessor.bufferView];
+            morphTexCoords = reinterpret_cast<const r32*>(&model.buffers[morphTexCoordView.buffer].data[morphTexCoordAccessor.byteOffset + morphTexCoordView.byteOffset]);
+          }
+
+          for (size_t i = 0; i < morphPositionAccessor.count; ++i) {
+            MorphVertex vertex;
+            Vector3 p(&morphPositions[i * 3]);
+            vertex.position = Vector4(p, 1.0f) * localMatrix;
+            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]) * Matrix3(localMatrix), 0.0f);
+            vertex.texcoord0 = morphTexCoords ? Vector2(&morphTexCoords[i * 2]) : Vector2(0.0f, 0.0f);
+            vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
+            morphVertices[mi].push_back(vertex);
+          }
+        }
+      }
+
       Primitive primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
 
@@ -582,7 +640,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
       auto target = mesh.targets[i];
     }
 
-    pMesh->Initialize(vertices.size(), vertices.data(), Mesh::SKINNED, indices.size(), indices.data());
+    pMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::SKINNED, indices.size(), indices.data());
     pMesh->SetMin(min);
     pMesh->SetMax(max);
     pMesh->UpdateAABB();
@@ -592,6 +650,14 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
       pMesh->PushPrimitive(primData);
     }
     pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
+
+    if (!morphVertices.empty()) {
+      pMesh->AllocateMorphTargetBuffer(morphVertices.size());
+      for (size_t i = 0; i < morphVertices.size(); ++i) {
+        auto& verts = morphVertices[i];
+        pMesh->InitializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex));
+      }
+    }
   }
 
   return pMesh;

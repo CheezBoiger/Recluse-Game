@@ -129,7 +129,7 @@ void PointLightComponent::InitializeMeshDebug()
   u32 g = 48;
   auto vertices = UVSphere::MeshInstance(1.0f, g, g);
   auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), g, g);
-  kPointLightMesh->Initialize(vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
+  kPointLightMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
   pointLightPrim._firstIndex = 0;
   pointLightPrim._indexCount = 
     kPointLightMesh->GetMeshData()->IndexData()->IndexCount();
@@ -139,7 +139,7 @@ void PointLightComponent::InitializeMeshDebug()
 
 void PointLightComponent::CleanUpMeshDebug()
 {
-  kPointLightMesh->CleanUp();
+  kPointLightMesh->CleanUp(&gRenderer());
   delete kPointLightMesh;
 }
 

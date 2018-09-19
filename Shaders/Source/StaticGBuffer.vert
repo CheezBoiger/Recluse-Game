@@ -9,6 +9,22 @@ layout (location = 2) in vec2   texcoord0;
 layout (location = 3) in vec2   texcoord1;
 
 
+#if defined(INCLUDE_MORPH_TARGET_ANIMATION)
+// For morph target animation, we must define our position layout, above, as the 
+// default pose (or the bind pose.) Source pose is defined by this layout.
+layout (location = 4) in vec4   position0;
+layout (location = 5) in vec4   normal0;
+layout (location = 6) in vec2   uv00;
+layout (location = 7) in vec2   uv10;
+
+// Destination pose is defined here.
+layout (location = 8) in vec4  position1;
+layout (location = 9) in vec4  normal1;
+layout (location = 10) in vec2  uv01;
+layout (location = 11) in vec2  uv11;
+#endif
+
+
 #define MAX_BONES     64
 
 
@@ -80,6 +96,30 @@ layout (push_constant) uniform Camera {
 void main()
 {
   vec4 worldPosition = position;
+  vec4 worldNormal = normal;
+  vec2 temp_uv0 = texcoord0;
+  vec2 temp_uv1 = texcoord1;
+  
+#if defined(INCLUDE_MORPH_TARGET_ANIMATION)
+  float w0 = objBuffer.w0;
+  float w1 = objBuffer.w1;
+  vec4  morphPositionDiff0 = position0;
+  vec4  morphPositionDiff1 = position1;
+  vec4  morphNormalDiff0 = normal0;
+  vec4  morphNormalDiff1 = normal1;
+  vec2  morphUV00 = uv00;
+  vec2  morphUV01 = uv01;
+  vec2  morphUV10 = uv10;
+  vec2  morphUV11 = uv11;
+  worldPosition += morphPositionDiff0 * w0;
+  worldPosition += morphPositionDiff1 * w1;
+  worldNormal += morphNormalDiff0 * w0;
+  worldNormal += morphNormalDiff1 * w1;
+  temp_uv0 += morphUV00 * w0;
+  temp_uv0 += morphUV01 * w1;
+  temp_uv1 += morphUV10 * w0;
+  temp_uv1 += morphUV11 * w1;
+#endif
  
   worldPosition = objBuffer.model * worldPosition;
   
@@ -88,9 +128,9 @@ void main()
 #endif
 
   frag_in.position = worldPosition.xyz;
-  frag_in.texcoord0 = texcoord0;
-  frag_in.texcoord1 = texcoord1;
-  frag_in.normal = normalize(objBuffer.normalMatrix * normal).xyz;
+  frag_in.texcoord0 = temp_uv0;
+  frag_in.texcoord1 = temp_uv1;
+  frag_in.normal = normalize(objBuffer.normalMatrix * worldNormal).xyz;
 #if !defined(RENDER_ENV_MAP)
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 #else

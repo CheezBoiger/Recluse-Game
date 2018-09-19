@@ -19,6 +19,7 @@ class MeshDescriptor;
 class RenderMaterial;
 class JointDescriptor;
 class MeshData;
+class MorphTarget;
 class Texture2D;
 class UIDescriptor;
 
@@ -64,8 +65,8 @@ struct MeshRenderCmd {
 
   MeshData*               _pMeshData;
   Primitive*              _pPrimitives;
-  MeshData*               _pMorph0;
-  MeshData*               _pMorph1;
+  MorphTarget*            _pMorph0;
+  MorphTarget*            _pMorph1;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
   u32                     _instances;

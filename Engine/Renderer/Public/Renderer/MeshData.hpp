@@ -15,6 +15,7 @@ namespace Recluse {
 class VulkanRHI;
 class MaterialDescriptor;
 class MeshData;
+class Renderer;
 
 // Mesh data represents data, in the form of gpu friendly buffers, to which we draw onto the 
 // frame. We use mesh data to represent the model we are drawing.
@@ -24,9 +25,9 @@ public:
   MeshData();
   ~MeshData();
 
-  void            Initialize(size_t elementCount, void* data, size_t vertexSize,
+  void            Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize,
     size_t indexCount = 0, void* indices = nullptr);
-  void            CleanUp();
+  void            CleanUp(Renderer* pRenderer);
 
   VertexBuffer*   VertexData() { return &m_vertexBuffer; }
   
@@ -44,7 +45,22 @@ public:
 private:
   VertexBuffer                        m_vertexBuffer;
   IndexBuffer                         m_indexBuffer;
-  VulkanRHI*                          mRhi;
   friend class Renderer;
+};
+
+
+// Morph Target buffer that holds morph data for a mesh object.
+class MorphTarget {
+public:
+  MorphTarget();
+  ~MorphTarget();
+
+  void Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize);
+  void CleanUp(Renderer* pRenderer);
+
+  VertexBuffer* VertexData() { return &m_vertexBuffer; }
+
+private:
+  VertexBuffer m_vertexBuffer;
 };
 } // Recluse

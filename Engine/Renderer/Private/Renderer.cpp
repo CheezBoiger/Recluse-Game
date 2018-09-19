@@ -427,7 +427,7 @@ void Renderer::CleanUp()
 
   CleanUpGlobalIlluminationBuffer();
 
-  m_RenderQuad.CleanUp();
+  m_RenderQuad.CleanUp(m_pRhi);
   CleanUpForwardPBR();
   CleanUpPBR();
   CleanUpHDR(true);
@@ -1617,7 +1617,8 @@ void Renderer::CleanUpGraphicsPipelines()
 
   GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
   m_pRhi->FreeGraphicsPipeline(gbuffer_StaticPipeline);
-
+  m_pRhi->FreeGraphicsPipeline(gbuffer_staticMorphTargetPipeline);
+  m_pRhi->FreeGraphicsPipeline(gbuffer_morphTargetPipeline);
   m_pRhi->FreeGraphicsPipeline(pbr_forwardPipeline_LR);
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipeline_LR);
   m_pRhi->FreeGraphicsPipeline(pbr_forwardPipeline_NoLR);
@@ -2671,18 +2672,26 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
       R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
 
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
-
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
-      // TODO(): Do culling if needed here.
+
+      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
+      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
       VertexBuffer* vertexBuffer = data->VertexData();
       IndexBuffer* indexBuffer = data->IndexData();
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
-
       VkDeviceSize offsets[] = { 0 };
       cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+      if (renderCmd._config & CMD_MORPH_BIT) {
+        Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
+        R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+        R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+        VkBuffer morph0 = renderCmd._pMorph0->VertexData()->Handle()->NativeBuffer();
+        VkBuffer morph1 = renderCmd._pMorph1->VertexData()->Handle()->NativeBuffer();
+        cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
+        cmdBuffer->BindVertexBuffers(2, 1,  &morph1, offsets);
+      } 
+
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
       cmdBuffer->SetViewPorts(0, 1, &viewport);
 
@@ -3618,21 +3627,6 @@ void Renderer::CleanUpFinalOutputs()
   m_pRhi->FreeDescriptorSet(offscreenDescriptorSet);
   m_pRhi->FreeCommandBuffer(m_pFinalCommandBuffer);
   m_pRhi->FreeVkSemaphore(m_pFinalFinished);
-}
-
-
-MeshData* Renderer::CreateMeshData()
-{
-  MeshData* mesh = new MeshData();
-  mesh->mRhi = m_pRhi;
-  return mesh;
-}
-
-
-void Renderer::FreeMeshData(MeshData* mesh)
-{
-  mesh->CleanUp();
-  delete mesh;
 }
 
 

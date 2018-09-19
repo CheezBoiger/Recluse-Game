@@ -83,7 +83,7 @@ int main(int c, char* argv[])
   {
     auto boxVerts = Cube::MeshInstance();
     auto boxIndic = Cube::IndicesInstance();
-    mesh.Initialize(boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
+    mesh.Initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
   }
 
   gEngine().Run();
@@ -95,7 +95,7 @@ int main(int c, char* argv[])
     gEngine().ProcessInput();
   }
 
-  mesh.CleanUp();
+  mesh.CleanUp(&gRenderer());
   gEngine().CleanUp();
 #if (_DEBUG)
   Log() << RTEXT("Engine modules cleaned up, press enter to continue...\n");
