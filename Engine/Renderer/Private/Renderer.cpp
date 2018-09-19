@@ -22,6 +22,8 @@
 #include "Clusters.hpp"
 #include "BakeIBL.hpp"
 #include "Particles.hpp"
+#include "Mesh.hpp"
+#include "Material.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -1469,7 +1471,7 @@ void Renderer::SetUpGraphicsPipelines()
   depthStencilCI.depthTestEnable = VK_TRUE;
   depthStencilCI.depthWriteEnable = VK_TRUE;
   depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
-  depthStencilCI.depthBoundsTestEnable = VK_TRUE;
+  depthStencilCI.depthBoundsTestEnable = m_pRhi->DepthBoundsAllowed();
   depthStencilCI.minDepthBounds = 0.0f;
   depthStencilCI.maxDepthBounds = 1.0f;
   depthStencilCI.stencilTestEnable = VK_FALSE;
@@ -2693,11 +2695,11 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
-      Primitive* primitives = data->GetPrimitiveData();
-      u32 count = data->GetPrimitiveCount();
+      Primitive* primitives = renderCmd._pPrimitives;
+      u32 count = renderCmd._primitiveCount;
       for (u32 i = 0; i < count; ++i) {
         Primitive& primitive = primitives[i];
-        MaterialDescriptor* pMatDesc = primitive._pMat;
+        MaterialDescriptor* pMatDesc = primitive._pMat->Native();
         DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
         // Bind materials.
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
@@ -3190,11 +3192,11 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       DescriptorSets[7] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
       // Bind materials.
-      Primitive* primitives = data->GetPrimitiveData();
-      u32 count = data->GetPrimitiveCount();
+      Primitive* primitives = renderCmd._pPrimitives;
+      u32 count = renderCmd._primitiveCount;
       for (u32 i = 0; i < count; ++i) {
         Primitive& primitive = primitives[i];
-        DescriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
+        DescriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
         cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
           Pipe->Layout(),
           0,
@@ -3993,13 +3995,13 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
   R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
   m_meshDescriptors.PushBack(cmd._pMeshDesc);
 
-  Primitive* primitives = cmd._pMeshData->GetPrimitiveData();
-  u32 count = cmd._pMeshData->GetPrimitiveCount();
+  Primitive* primitives = cmd._pPrimitives;
+  u32 count = cmd._primitiveCount;
   for (u32 i = 0; i < count; ++i) {
     Primitive& prim = primitives[i];
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
-    m_materialDescriptors.PushBack(prim._pMat);  
-    R_ASSERT(prim._pMat == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
+    m_materialDescriptors.PushBack(prim._pMat->Native());  
+    R_ASSERT(prim._pMat->Native() == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
   }
 
   u32 config = cmd._config;

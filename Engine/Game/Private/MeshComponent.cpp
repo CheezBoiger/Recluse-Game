@@ -22,28 +22,6 @@ MeshComponent::MeshComponent()
 {
 }
 
-
-void Mesh::InitializeLod(size_t elementCount, void* data, MeshData::VertexType type, u32 lod, 
-  size_t indexCount, void* indices)
-{
-  R_ASSERT(!m_pMeshDataLod[lod], "Mesh data at specified lod is already initialized.");
-  m_pMeshDataLod[lod] = gRenderer().CreateMeshData();
-  m_pMeshDataLod[lod]->Initialize(elementCount, data, type, indexCount, indices);
-  if (type == MeshData::VertexType::SKINNED) m_bSkinned = true;
-}
-
-
-void Mesh::CleanUp()
-{
-  for (size_t i = 0; i < kMaxMeshLodWidth; ++i) {
-    if (m_pMeshDataLod[i]) {
-      gRenderer().FreeMeshData(m_pMeshDataLod[i]);
-      m_pMeshDataLod[i] = nullptr;
-    }
-  }
-}
-
-
 void MeshComponent::OnInitialize(GameObject* owner)
 {
   REGISTER_COMPONENT(MeshComponent, this);

@@ -247,7 +247,7 @@ public:
     m_pMaterialRef = mat;
     m_pMaterialRef->SetSampler(m_pSampler);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
-      mesh->GetPrimitive(0, lod)->_pMat = mat->Native();
+      mesh->GetPrimitive(0)->_pMat = mat;
     }
     
     m_rendererComponent.ForceForward(false);

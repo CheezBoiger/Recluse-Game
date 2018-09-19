@@ -13,37 +13,17 @@
 
 
 namespace Recluse {
-namespace ModelLoader {
 
+class Material;
+class Mesh;
+
+namespace ModelLoader {
 
 enum ModelResult {
   Model_Success,
   Model_Fail
 };
 
-
-// Primitive handle to the native primitive gpu friendly data. Handle holds material and mesh
-// handles that update when configured.
-class PrimitiveHandle {
-public:
-  PrimitiveHandle()
-    : _pMesh(nullptr)
-    , _pMaterial(nullptr)
-  { }
-
-  const Primitive&      GetPrimitive() const { return _primitive; }
-  void                  SetMaterial(Material* mat) { _pMaterial = mat; _primitive._pMat = _pMaterial->Native(); }
-  void                  SetMesh(Mesh* mesh) { _pMesh = mesh; }
-  Material*             GetMaterial() { return _pMaterial; }
-  Mesh*                 GetMesh() { return _pMesh; }
-
-private:
-  Mesh*                 _pMesh;       // Better handle to the mesh data held by this primitive.
-  Material*             _pMaterial;   // Better Handle to the material descriptor held by this primitive.
-  Primitive             _primitive;   // native primitive data to be sent to a renderer component.
-
-  friend void           GeneratePrimitive(PrimitiveHandle& handle, Material* mat, Mesh* mesh, u32 firstIndex, u32 indexCount);
-};
 
 
 // Model is a container of meshes that correspond to materials.
@@ -53,7 +33,6 @@ struct Model {
   std::vector<Mesh*>            meshes;
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;
-  std::vector<PrimitiveHandle>  primitives;
 };
 
 

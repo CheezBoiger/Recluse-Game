@@ -12,12 +12,15 @@
 
 #include "Renderer/Vertex.hpp"
 #include "Renderer/MeshData.hpp"
+#include "Renderer/Mesh.hpp"
+#include "Renderer/Material.hpp"
 #include "Renderer/Renderer.hpp"
 
 #include "tiny_gltf.hpp"
 #include <queue>
 #include <vector>
 #include <stack>
+#include <string>
 #include <map>
 
 
@@ -28,6 +31,16 @@
 
 namespace Recluse {
 namespace ModelLoader {
+
+
+void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 indexCount)
+{
+  Primitive prim;
+  prim._pMat = mat;
+  prim._firstIndex = firstIndex;
+  prim._indexCount = indexCount;
+  handle = std::move(prim);
+}
 
 
 static void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
@@ -304,6 +317,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           const tinygltf::BufferView& bufViewNorm = model.bufferViews[normalAccessor.bufferView];
           bufferNormals =
             reinterpret_cast<const r32*>(&model.buffers[bufViewNorm.buffer].data[normalAccessor.byteOffset + bufViewNorm.byteOffset]);
+          
         }
 
         if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end()) {
@@ -363,14 +377,47 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
         };
       }
 
+      // Check for each for morph target. For each target, we push to their corresponding maps.
+      if (!primitive.targets.empty()) {
+        for (auto target : primitive.targets) {
+          const r32*  morphPositions = nullptr;
+          const r32* morphNormals = nullptr;
+          const r32* morphTexCoords = nullptr;            
 
-      PrimitiveHandle primData;
-      GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
-      engineModel->primitives.push_back(primData);
-      primitives.push_back(primData.GetPrimitive());
+          const tinygltf::Accessor& morphPositionAccessor = model.accessors[target["POSITION"]];
+          const tinygltf::BufferView& morphPositionView = model.bufferViews[morphPositionAccessor.bufferView];
+          morphPositions = reinterpret_cast<const r32*>(&model.buffers[morphPositionView.buffer].data[morphPositionView.byteOffset + morphPositionAccessor.byteOffset]);
+         
+          if (target.find("NORMAL") != target.end()) {
+            const tinygltf::Accessor& morphNormalAccessor = model.accessors[target["NORMAL"]];
+            const tinygltf::BufferView& morphNormalView = model.bufferViews[morphNormalAccessor.bufferView];
+            morphNormals = reinterpret_cast<const r32*>(&model.buffers[morphNormalView.buffer].data[morphNormalAccessor.byteOffset + morphNormalView.byteOffset]);
+          }
+        
+          if (target.find("TEXCOORD_0") != target.end()) {
+            const tinygltf::Accessor& morphTexCoordAccessor = model.accessors[target["TEXCOORD_0"]];
+            const tinygltf::BufferView& morphTexCoordView = model.bufferViews[morphTexCoordAccessor.bufferView];
+            morphTexCoords = reinterpret_cast<const r32*>(&model.buffers[morphTexCoordView.buffer].data[morphTexCoordAccessor.byteOffset + morphTexCoordView.byteOffset]);
+          }
+
+          for (size_t i = 0; i < morphPositionAccessor.count; ++i) {
+            MorphVertex vertex;
+            Vector3 p(&morphPositions[i * 3]);
+            vertex.position = Vector4(p, 1.0f) * localMatrix;
+            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]) * Matrix3(localMatrix), 0.0f);
+            vertex.texcoord0 = morphTexCoords ? Vector2(&morphTexCoords[i * 2]) : Vector2(0.0f, 0.0f);
+            vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
+          }
+        }
+      }
+
+
+      Primitive primData;
+      GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
+      primitives.push_back(primData);
     }
 
-    pMesh->InitializeLod(vertices.size(), vertices.data(), MeshData::STATIC, 0, indices.size(), indices.data());
+    pMesh->Initialize(vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
     pMesh->SetMin(min);
     pMesh->SetMax(max);
     pMesh->UpdateAABB();
@@ -380,7 +427,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
     for (auto& prim : primitives) {
       pMesh->PushPrimitive(prim);
     }
-    pMesh->GetMeshDataLod()->SortPrimitives(MeshData::TRANSPARENCY_LAST);
+    pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
   }
   return pMesh;
 }
@@ -523,16 +570,19 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
         };
       }
 
-      PrimitiveHandle primData;
-      GeneratePrimitive(primData, engineModel->materials[primitive.material], pMesh, indexStart, indexCount);
+      Primitive primData;
+      GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
 
       // TODO():
       //    Still need to add start and index count.
-      engineModel->primitives.push_back(primData);
-      primitives.push_back(primData.GetPrimitive());
+      primitives.push_back(primData);
     }
 
-    pMesh->InitializeLod(vertices.size(), vertices.data(), MeshData::SKINNED, 0, indices.size(), indices.data());
+    for (size_t i = 0; i < mesh.targets.size(); ++i) {
+      auto target = mesh.targets[i];
+    }
+
+    pMesh->Initialize(vertices.size(), vertices.data(), Mesh::SKINNED, indices.size(), indices.data());
     pMesh->SetMin(min);
     pMesh->SetMax(max);
     pMesh->UpdateAABB();
@@ -541,7 +591,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
     for (auto& primData : primitives) {
       pMesh->PushPrimitive(primData);
     }
-    pMesh->GetMeshDataLod()->SortPrimitives(MeshData::TRANSPARENCY_LAST);
+    pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
   }
 
   return pMesh;
@@ -820,19 +870,6 @@ ModelResult LoadAnimatedModel(const std::string path)
   LoadAnimations(&gltfModel, model);
   ModelCache::Cache(model->name, model);
   return Model_Success;
-}
-
-
-void GeneratePrimitive(PrimitiveHandle& handle, Material* mat, Mesh* mesh, u32 firstIndex, u32 indexCount)
-{
-  Primitive prim;
-  prim._pMat = mat->Native() ? mat->Native() : nullptr;
-  prim._firstIndex = firstIndex;
-  prim._indexCount = indexCount;
-
-  handle._pMaterial = mat;
-  handle._pMesh = mesh;
-  handle._primitive = prim;
 }
 } // ModelLoader
 } // Recluse

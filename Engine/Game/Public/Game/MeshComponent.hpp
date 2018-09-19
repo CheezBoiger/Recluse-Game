@@ -4,62 +4,12 @@
 #include "Core/Types.hpp"
 #include "Game/Component.hpp"
 #include "Core/Math/AABB.hpp"
-#include "Renderer/MeshData.hpp"
+#include "Renderer/Mesh.hpp"
 
 #include "Animation/Skeleton.hpp"
 
 
 namespace Recluse {
-
-
-class MeshData;
-
-// A Single instance of a mesh stored in gpu memory.
-class Mesh {
-public:
-  static const u32 kMaxMeshLodWidth = 5u;
-  static const u32 kMeshLodZero = 0u;
-
-  Mesh() :  m_bSkinned(false)
-         ,  m_skeleId(Skeleton::kNoSkeletonId) 
-         ,  m_pMeshDataLod{nullptr}
-  {
-  }
-
-  // Initialize the mesh object.
-  // Element count is the number of vertices in data. numOfVertices objects in data.
-  // VertexType determines what type of vertex data is, and lod is the level of detail mapped to be mapped
-  // to this initialized data.
-  void                    InitializeLod(size_t elementCount, void* data, MeshData::VertexType type, u32 lod = kMeshLodZero,
-                            size_t indexCount = 0, void* indices = nullptr);
-
-  // Clean up the mesh object when no longer being used.
-  void                    CleanUp();
-
-  MeshData*               GetMeshDataLod(u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]; }
-  b32                     Skinned() { return m_bSkinned; }
-
-  void                    SetSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
-  skeleton_uuid_t         GetSkeletonReference() const { return m_skeleId; }
-
-  Primitive*              GetPrimitiveData(u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]->GetPrimitiveData(); }
-  u32                     GetPrimitiveCount(u32 lod = kMeshLodZero) const { return m_pMeshDataLod[lod]->GetPrimitiveCount(); }
-  Primitive*              GetPrimitive(u32 idx, u32 lod = kMeshLodZero) { return m_pMeshDataLod[lod]->GetPrimitive(idx); }
-  inline void             ClearPrimitives(u32 lod = kMeshLodZero) { m_pMeshDataLod[lod]->ClearPrimitives(); }
-  inline void             PushPrimitive(const Primitive& primitive, u32 lod = kMeshLodZero) { m_pMeshDataLod[lod]->PushPrimitive(primitive); }
-
-  void                    SetMin(const Vector3& min) { m_aabb.min = min; }
-  void                    SetMax(const Vector3& max) { m_aabb.max = max; }
-
-  void                    UpdateAABB() { m_aabb.ComputeCentroid(); m_aabb.ComputeSurfaceArea(); }
-  const AABB&             GetAABB() const { return m_aabb; }
-
-private:
-  MeshData*               m_pMeshDataLod[5];
-  b32                     m_bSkinned;
-  skeleton_uuid_t         m_skeleId;
-  AABB                    m_aabb;
-};
 
 
 // Mesh Component holds a reference to mesh objects that are loaded.

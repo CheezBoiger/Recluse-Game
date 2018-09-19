@@ -137,10 +137,12 @@ void RendererComponent::Update()
 
     // Push mesh data to renderer.
     Mesh* pMesh = m_meshes[i];
-    MeshData* data = pMesh->GetMeshDataLod(m_currLod);
-    cmd._pMeshData = (!data ? pMesh->GetMeshDataLod() : data);
+    MeshData* data = pMesh->GetMeshData();
+    cmd._pMeshData = data;
+    cmd._pPrimitives = pMesh->GetPrimitiveData();
+    cmd._primitiveCount = pMesh->GetPrimitiveCount();
     R_ASSERT(cmd._pMeshData, "Mesh data was nullptr!");
- 
+    
     gRenderer().PushMeshRender(cmd);
   }
 

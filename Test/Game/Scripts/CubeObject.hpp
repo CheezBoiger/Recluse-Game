@@ -73,10 +73,10 @@ public:
     m_pRendererComponent->EnableStatic(true);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
-    mesh->GetPrimitive(0, 0)->_pMat = material->Native();
+    mesh->GetPrimitive(0)->_pMat = material;
     trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
-    m_pRendererComponent->ForceForward(true);
+    m_pRendererComponent->ForceForward(false);
     m_pRendererComponent->EnableStatic(true);
     SamplerInfo info = {};
     info._addrU = SAMPLER_ADDRESS_REPEAT;
@@ -99,9 +99,8 @@ public:
       m_pRendererComponent->AddMesh(model->meshes[i]);
       u32 primCount = model->meshes[i]->GetPrimitiveCount();
       for (u32 p = 0; p < primCount; ++p) {
-        MaterialDescriptor* mat = m_pRendererComponent->GetMesh(i)->GetPrimitive(p)->_pMat;
+        Material* mat = m_pRendererComponent->GetMesh(i)->GetPrimitive(p)->_pMat;
         mat->SetSampler(m_pSampler);
-        mat->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT);
       }
     }
     trans->Scale = Vector3(1.0f, 1.0f, 1.0f);

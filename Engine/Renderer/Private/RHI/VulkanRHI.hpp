@@ -240,6 +240,7 @@ public:
   VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
   VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
   u32                           VendorID() { return mPhysicalDeviceProperties.vendorID; }
+  b32                           DepthBoundsAllowed() const { return m_depthBoundsAllowed; }
   
   VkFormat                      DepthFormat() const { return mSwapchainInfo.mDepthFormat; }
   VkImageAspectFlags            DepthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
@@ -264,6 +265,7 @@ private:
 
   HWND                          mWindow;
   Swapchain                     mSwapchain;
+  b32                           m_depthBoundsAllowed;
   LogicalDevice                 mLogicalDevice;
   VkSurfaceKHR                  mSurface;
   std::vector<VkCommandPool>    mGraphicsCmdPools;

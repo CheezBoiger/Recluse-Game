@@ -18,7 +18,6 @@
 #include "Component.hpp"
 #include "LightComponent.hpp"
 #include "PointLightComponent.hpp"
-#include "MaterialComponent.hpp"
 #include "AnimationComponent.hpp"
 #include "PhysicsComponent.hpp"
 #include "MeshComponent.hpp"
@@ -34,6 +33,8 @@
 #include "Renderer/RenderCmd.hpp"
 #include "Renderer/CmdList.hpp"
 #include "Renderer/UserParams.hpp"
+#include "Renderer/Material.hpp"
+#include "Renderer/Mesh.hpp"
 
 #include "Physics/Physics.hpp"
 #include "Audio/Audio.hpp"

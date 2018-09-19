@@ -83,7 +83,7 @@ int main(int c, char* argv[])
   {
     auto boxVerts = Cube::MeshInstance();
     auto boxIndic = Cube::IndicesInstance();
-    mesh.InitializeLod(boxVerts.size(), boxVerts.data(), MeshData::STATIC, 0, boxIndic.size(), boxIndic.data());
+    mesh.Initialize(boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
   }
 
   gEngine().Run();

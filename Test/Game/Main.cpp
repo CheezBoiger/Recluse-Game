@@ -148,7 +148,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = GRAPHICS_QUALITY_HIGH;
+    params._Shadows = GRAPHICS_QUALITY_NONE;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
     params._EnableChromaticAberration = true;
@@ -181,15 +181,15 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     auto boxVerts = Cube::MeshInstance(); 
     auto boxIndic = Cube::IndicesInstance();
-    mesh->InitializeLod(boxVerts.size(), boxVerts.data(), MeshData::STATIC, 0, boxIndic.size(), boxIndic.data());
+    mesh->Initialize(boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
     mesh->SetMin(Cube::Min);
     mesh->SetMax(Cube::Max);
     mesh->UpdateAABB();
     MeshCache::Cache(RTEXT("NativeCube"), mesh);    
     Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->GetMeshDataLod()->IndexData()->IndexCount();
-    prim._pMat = Material::Default()->Native();
+    prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
+    prim._pMat = Material::Default();
     mesh->PushPrimitive(prim);
   }
 
@@ -197,31 +197,32 @@ int main(int c, char* argv[])
     Mesh* mesh = new Mesh();
     i32 stckCnt = 32;
     i32 minus = 32 / 5;
-    for (i32 lod = 0; lod < 5; ++lod) {
+    //for (i32 lod = 0; lod < 5; ++lod) {
       auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
       auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
-      mesh->InitializeLod(sphereVerts.size(), sphereVerts.data(), MeshData::STATIC, lod, sphereInd.size(), sphereInd.data());
-      Primitive prim;
-      prim._firstIndex = 0;
-      prim._indexCount = mesh->GetMeshDataLod(lod)->IndexData()->IndexCount();
-      prim._pMat = Material::Default()->Native();
-      mesh->PushPrimitive(prim, lod);
-      stckCnt -= minus;
-    }
+      mesh->Initialize(sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
+    //  stckCnt -= minus;
+    //}
+    Primitive prim;
+    prim._firstIndex = 0;
+    prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
+    prim._pMat = Material::Default();
+    mesh->PushPrimitive(prim);
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
   }
 
   // Model Loading.
-  ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
-  ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
-  ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
-  ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
-  ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
-  ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
-  ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
+  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
+  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
+  ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
 
   // Create and set up scene.
 

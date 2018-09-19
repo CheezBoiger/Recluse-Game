@@ -6,6 +6,8 @@
 #include "GlobalDescriptor.hpp"
 #include "MeshDescriptor.hpp"
 #include "MaterialDescriptor.hpp"
+#include "Mesh.hpp"
+#include "Material.hpp"
 #include "MeshData.hpp"
 #include "Vertex.hpp"
 #include "VertexDescription.hpp"
@@ -198,7 +200,7 @@ void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
   depthStencilCI.depthTestEnable = VK_TRUE;
   depthStencilCI.depthWriteEnable = VK_TRUE;
   depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
-  depthStencilCI.depthBoundsTestEnable = VK_TRUE;
+  depthStencilCI.depthBoundsTestEnable = pRhi->DepthBoundsAllowed();
   depthStencilCI.minDepthBounds = 0.0f;
   depthStencilCI.maxDepthBounds = 1.0f;
   depthStencilCI.stencilTestEnable = VK_FALSE;
@@ -581,11 +583,11 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    Primitive* primitives = mesh->GetPrimitiveData();
-    u32 count = mesh->GetPrimitiveCount();
+    Primitive* primitives = renderCmd._pPrimitives;
+    u32 count = renderCmd._primitiveCount;
     for (u32 i = 0; i < count; ++i) {
       Primitive& primitive = primitives[i];
-      descriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
+      descriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
       pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
       if (index) {
         pCmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
@@ -659,11 +661,11 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    Primitive* primitives = mesh->GetPrimitiveData();
-    u32 count = mesh->GetPrimitiveCount();
+    Primitive* primitives = renderCmd._pPrimitives;
+    u32 count = renderCmd._primitiveCount;
     for (u32 i = 0; i < count; ++i) {
       Primitive& primitive = primitives[i];
-      descriptorSets[2] = primitive._pMat->CurrMaterialSet()->Handle();
+      descriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
       pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
       if (index) {
         pCmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);

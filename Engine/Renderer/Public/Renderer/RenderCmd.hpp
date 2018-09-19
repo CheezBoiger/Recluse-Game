@@ -63,11 +63,13 @@ struct MeshRenderCmd {
     , _instances(1) { }
 
   MeshData*               _pMeshData;
+  Primitive*              _pPrimitives;
   MeshData*               _pMorph0;
   MeshData*               _pMorph1;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
   u32                     _instances;
+  u32                     _primitiveCount;
   CmdConfigBits           _config;
 };
 

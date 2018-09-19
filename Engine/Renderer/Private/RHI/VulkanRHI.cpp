@@ -97,6 +97,7 @@ VulkanRHI::VulkanRHI()
   , mOccQueryPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
   , mCurrDescSets(0)
+  , m_depthBoundsAllowed(VK_FALSE)
 {
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
@@ -209,7 +210,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   features.geometryShader = VK_TRUE;
   features.logicOp = VK_TRUE;
   features.alphaToOne = VK_TRUE;
-
+  m_depthBoundsAllowed = features.depthBounds;
   VkDeviceCreateInfo deviceCreate = {};
   deviceCreate.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   deviceCreate.queueCreateInfoCount = static_cast<u32>(deviceQueueCreateInfos.size());

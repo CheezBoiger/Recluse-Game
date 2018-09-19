@@ -16,40 +16,15 @@ class VulkanRHI;
 class MaterialDescriptor;
 class MeshData;
 
-
-struct Primitive {
-  Primitive()
-    : _firstIndex(0)
-    , _indexCount(0)
-    , _pMat(nullptr) { }
-
-  MaterialDescriptor*   _pMat;
-  u32                   _firstIndex;
-  u32                   _indexCount;
-};
-
 // Mesh data represents data, in the form of gpu friendly buffers, to which we draw onto the 
 // frame. We use mesh data to represent the model we are drawing.
 class MeshData {
   static const size_t kMaxLodMeshCount = 4;
 public:
-  enum VertexType {
-    QUAD,
-    STATIC,
-    SKINNED
-  };
-
-  enum SortType {
-    TRANSPARENCY_LAST,
-    TRANSPARENCY_FIRST,
-    START_INDEX_GREATEST,
-    START_INDEX_LEAST
-  };
-
   MeshData();
   ~MeshData();
 
-  void            Initialize(size_t elementCount, void* data, VertexType type = STATIC,
+  void            Initialize(size_t elementCount, void* data, size_t vertexSize,
     size_t indexCount = 0, void* indices = nullptr);
   void            CleanUp();
 
@@ -60,16 +35,6 @@ public:
     else return nullptr; 
   }
 
-  Primitive*              GetPrimitiveData() { return m_primitives.data(); }
-  u32                     GetPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
-  Primitive*              GetPrimitive(u32 idx) { return &m_primitives[static_cast<size_t>(idx)]; }
-  inline void             ClearPrimitives() { m_primitives.clear(); }
-  inline void             PushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
-
-  // Sort primitives based on the given types, determining that algorithm to use for the primitive list of 
-  // this mesh object.
-  void                    SortPrimitives(SortType type);
-
   // Optimize the mesh to a certain specification.
   void                    Optimize();
 
@@ -79,7 +44,6 @@ public:
 private:
   VertexBuffer                        m_vertexBuffer;
   IndexBuffer                         m_indexBuffer;
-  std::vector<Primitive>              m_primitives;
   VulkanRHI*                          mRhi;
   friend class Renderer;
 };

@@ -38,7 +38,6 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/AudioComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/AnimationComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
-  ${RECLUSE_GAME_PUBLIC_DIR}/MaterialComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/PhysicsComponent.hpp
 
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
@@ -50,7 +49,6 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/CameraComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/MeshComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Component.cpp
-  ${RECLUSE_GAME_PRIVATE_DIR}/MaterialComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/PointLightComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/PhysicsComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/AudioComponent.cpp

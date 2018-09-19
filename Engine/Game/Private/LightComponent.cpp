@@ -98,7 +98,9 @@ void PointLightComponent::Update()
     MeshRenderCmd cmd;
     cmd._config = CMD_RENDERABLE_BIT;
     cmd._pMeshDesc = m_descriptor;
-    cmd._pMeshData = kPointLightMesh->GetMeshDataLod();
+    cmd._pMeshData = kPointLightMesh->GetMeshData();
+    cmd._pPrimitives = kPointLightMesh->GetPrimitiveData();
+    cmd._primitiveCount = kPointLightMesh->GetPrimitiveCount();
 
     ObjectBuffer* buffer = m_descriptor->ObjectData();
     buffer->_Model = Matrix4(
@@ -127,11 +129,11 @@ void PointLightComponent::InitializeMeshDebug()
   u32 g = 48;
   auto vertices = UVSphere::MeshInstance(1.0f, g, g);
   auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), g, g);
-  kPointLightMesh->InitializeLod(vertices.size(), vertices.data(), MeshData::STATIC, 0, indices.size(), indices.data());
+  kPointLightMesh->Initialize(vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
   pointLightPrim._firstIndex = 0;
   pointLightPrim._indexCount = 
-    kPointLightMesh->GetMeshDataLod()->IndexData()->IndexCount();
-  pointLightPrim._pMat = Material::Default()->Native();
+    kPointLightMesh->GetMeshData()->IndexData()->IndexCount();
+  pointLightPrim._pMat = Material::Default();
 }
 
 
