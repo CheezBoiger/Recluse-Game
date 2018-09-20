@@ -28,6 +28,8 @@ RendererComponent::RendererComponent()
   , m_bDirty(true)
   , m_currLod(Mesh::kMeshLodZero)
   , m_allowLod(true)
+  , m_morphIndex0(kNoMorphIndex)
+  , m_morphIndex1(kNoMorphIndex)
 {
 }
 
@@ -148,13 +150,14 @@ void RendererComponent::Update()
     cmd._pMeshData = data;
     cmd._pPrimitives = pMesh->GetPrimitiveData();
     cmd._primitiveCount = pMesh->GetPrimitiveCount();
+
     R_ASSERT(cmd._pMeshData, "Mesh data was nullptr!");
-#if 0
-    if (m_configs & CMD_MORPH_BIT) {
-      cmd._pMorph0 = m_meshes[i]->GetMorphTarget(0);
-      cmd._pMorph1 = m_meshes[i]->GetMorphTarget(1);
+    if ( m_configs & CMD_MORPH_BIT ) {
+      R_ASSERT(m_meshes[i]->GetMorphTargetCount() > 0, "Renderer Config set with CMD_MORPH_BIT, but no morph targets!");
+      cmd._pMorph0 = m_meshes[i]->GetMorphTarget(m_morphIndex0);
+      cmd._pMorph1 = m_meshes[i]->GetMorphTarget(m_morphIndex1);
     }
-#endif 
+
     gRenderer().PushMeshRender(cmd);
   }
 

@@ -261,7 +261,9 @@ public:
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
     }
-    m_rendererComponent.EnableMorphTargets(false);
+    m_rendererComponent.EnableMorphTargets(true);
+    m_rendererComponent.SetMorphIndex0(0);
+    m_rendererComponent.SetMorphIndex1(0);
     for (size_t i = 0; i < model->materials.size(); ++i) {
       Material* material = model->materials[i];
       material->EnableEmissive(true);

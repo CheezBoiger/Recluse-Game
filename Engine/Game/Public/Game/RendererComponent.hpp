@@ -27,6 +27,7 @@ struct AnimHandle;
 class RendererComponent : public Component {
   RCOMPONENT(RendererComponent)
 public:
+  static const i32 kNoMorphIndex = -1;
 
   virtual ~RendererComponent() { }
   RendererComponent();
@@ -64,6 +65,11 @@ public:
   void                      EnableLod(b32 enable) { m_allowLod = enable; }
 
   u32                       GetCurrentLod() const { return m_currLod; }
+  u32                       GetMorphIndex0() const { return m_morphIndex0; }
+  u32                       GetMorphIndex1() const { return m_morphIndex1; }
+
+  void                      SetMorphIndex0(u32 idx) { m_morphIndex0 = idx; }
+  void                      SetMorphIndex1(u32 idx) { m_morphIndex1 = idx; }
 
 protected:
   virtual void              OnInitialize(GameObject* owner) override;
@@ -82,6 +88,8 @@ protected:
   u32                       m_configs;
   b32                       m_allowLod;
   u32                       m_currLod;
+  i32                       m_morphIndex0; // Morph index for binding.
+  i32                       m_morphIndex1; // Morph index for binding.
 };
 
 
