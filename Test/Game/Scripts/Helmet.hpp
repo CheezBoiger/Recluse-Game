@@ -263,15 +263,13 @@ public:
     }
     m_rendererComponent.EnableMorphTargets(true);
     m_rendererComponent.SetMorphIndex0(0);
-    m_rendererComponent.SetMorphIndex1(0);
+    m_rendererComponent.SetMorphIndex1(1);
     for (size_t i = 0; i < model->materials.size(); ++i) {
       Material* material = model->materials[i];
       material->EnableEmissive(true);
       material->SetEmissiveFactor(1.0f);
     }
  #endif
-
-
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);
 
@@ -290,8 +288,8 @@ public:
     Vector4 offset = Vector4(offsetUvX, offsetUvY);
    // m_pMaterialRef->SetUvOffsets(offset);
     if (Keyboard::KeyPressed(KEY_CODE_B)) {
-      m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w1 += 0.1f * tick;
       //m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w0 += 0.1f * tick;
+      m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w1 += 0.1f * tick;
     }
   }
 

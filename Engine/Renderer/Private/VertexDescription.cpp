@@ -214,6 +214,9 @@ std::vector<VkVertexInputAttributeDescription> MorphTargetVertexDescription::Get
     location = attribs[i].location;
   }
   
+  // If more vertex buffers need to be bound, be sure to reset the offset
+  // when each vertex input.
+  offset = 0;
   attributes[i + 0].binding = binding + 1;
   attributes[i + 0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 0].location = location + 1;
@@ -238,6 +241,7 @@ std::vector<VkVertexInputAttributeDescription> MorphTargetVertexDescription::Get
   attributes[i + 3].offset = offset;
   offset += sizeof(r32) * 2;
 
+  offset = 0;
   attributes[i + 4].binding = binding + 2;
   attributes[i + 4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 4].location = location + 5;

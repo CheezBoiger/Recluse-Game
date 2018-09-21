@@ -410,8 +410,8 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           for (size_t i = 0; i < morphPositionAccessor.count; ++i) {
             MorphVertex vertex;
             Vector3 p(&morphPositions[i * 3]);
-            vertex.position = Vector4(p, 1.0f);
-            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]), 0.0f);
+            vertex.position = Vector4(p, 1.0f) * localMatrix;
+            vertex.normal = Vector4(Vector3(&morphNormals[i * 3]) * Matrix3(localMatrix), 0.0f);
             vertex.texcoord0 = morphTexCoords ? Vector2(&morphTexCoords[i * 2]) : Vector2(0.0f, 0.0f);
             vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
             morphVertices[mi].push_back(vertex);
