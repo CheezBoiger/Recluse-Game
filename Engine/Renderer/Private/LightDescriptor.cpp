@@ -148,9 +148,10 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 
 void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline, 
   FrameBuffer* framebuffer, 
-  VkVertexInputBindingDescription& binding, 
+  std::vector<VkVertexInputBindingDescription>& bindings, 
   std::vector<VkVertexInputAttributeDescription>& attributes,
-  b32 skinned)
+  b32 skinned,
+  b32 morphTargets = false)
 {
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = {};
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -273,8 +274,8 @@ void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
 
   VkPipelineVertexInputStateCreateInfo vertexCI = {};
   vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexCI.vertexBindingDescriptionCount = 1;
-  vertexCI.pVertexBindingDescriptions = &binding;
+  vertexCI.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+  vertexCI.pVertexBindingDescriptions = bindings.data();
   vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(attributes.size());
   vertexCI.pVertexAttributeDescriptions = attributes.data();
 
@@ -312,7 +313,9 @@ void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
   Shader* SmVert = pRhi->CreateShader();
   Shader* SmFrag = pRhi->CreateShader();
 
-  RendererPass::LoadShader((skinned ? DynamicShadowMapVertFileStr :  ShadowMapVertFileStr), SmVert);
+  RendererPass::LoadShader((skinned ? 
+    (morphTargets ? "DynamicShadowMapping_MorphTargets.vert.spv" : DynamicShadowMapVertFileStr) :  
+    (morphTargets ? "ShadowMapping_MorphTargets.vert.spv" : ShadowMapVertFileStr)), SmVert);
   RendererPass::LoadShader(ShadowMapFragFileStr, SmFrag);
 
   std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;
@@ -504,27 +507,62 @@ void ShadowMapSystem::InitializeShadowMap(VulkanRHI* pRhi)
   }
 
   if (!m_pSkinnedPipeline) {
+    std::vector<VkVertexInputBindingDescription> bindings = { SkinnedVertexDescription::GetBindingDescription() };
     m_pSkinnedPipeline = pRhi->CreateGraphicsPipeline();
     InitializeShadowPipeline(pRhi, m_pSkinnedPipeline, m_pDynamicFrameBuffer,
-      SkinnedVertexDescription::GetBindingDescription(), SkinnedVertexDescription::GetVertexAttributes(), true);
+      bindings, SkinnedVertexDescription::GetVertexAttributes(), true);
+  }
+
+  if (!m_pSkinnedMorphPipeline) {
+    m_pSkinnedMorphPipeline = pRhi->CreateGraphicsPipeline();
+    InitializeShadowPipeline(pRhi, m_pSkinnedMorphPipeline, m_pDynamicFrameBuffer,
+      MorphTargetVertexDescription::GetBindingDescriptions(SkinnedVertexDescription::GetBindingDescription()),
+      MorphTargetVertexDescription::GetVertexAttributes(SkinnedVertexDescription::GetVertexAttributes()),
+      true, true);
   }
 
   if ( !m_pStaticSkinnedPipeline ) {
+    std::vector<VkVertexInputBindingDescription> bindings = { SkinnedVertexDescription::GetBindingDescription() };
     m_pStaticSkinnedPipeline = pRhi->CreateGraphicsPipeline();
     InitializeShadowPipeline(pRhi, m_pStaticSkinnedPipeline, m_pStaticFrameBuffer,
-      SkinnedVertexDescription::GetBindingDescription(), SkinnedVertexDescription::GetVertexAttributes(), true);
+      bindings, SkinnedVertexDescription::GetVertexAttributes(), true);
+  }
+
+  if ( !m_pStaticSkinnedMorphPipeline ) {
+    m_pStaticSkinnedMorphPipeline = pRhi->CreateGraphicsPipeline();
+    InitializeShadowPipeline(pRhi, m_pStaticSkinnedMorphPipeline, m_pStaticFrameBuffer,
+      MorphTargetVertexDescription::GetBindingDescriptions(SkinnedVertexDescription::GetBindingDescription()),
+      MorphTargetVertexDescription::GetVertexAttributes(SkinnedVertexDescription::GetVertexAttributes()), true, true);
   }
 
   if (!m_pStaticPipeline) {
+    std::vector<VkVertexInputBindingDescription> bindings = { StaticVertexDescription::GetBindingDescription() };
     m_pStaticPipeline = pRhi->CreateGraphicsPipeline();
     InitializeShadowPipeline(pRhi, m_pStaticPipeline, m_pDynamicFrameBuffer,
-      StaticVertexDescription::GetBindingDescription(), StaticVertexDescription::GetVertexAttributes(), false);
+      bindings, StaticVertexDescription::GetVertexAttributes(), false);
+  }
+
+  if ( !m_pStaticMorphPipeline ) {
+    m_pStaticMorphPipeline = pRhi->CreateGraphicsPipeline();
+    InitializeShadowPipeline(pRhi, m_pStaticMorphPipeline, m_pDynamicFrameBuffer,
+    MorphTargetVertexDescription::GetBindingDescriptions(StaticVertexDescription::GetBindingDescription()),
+    MorphTargetVertexDescription::GetVertexAttributes(StaticVertexDescription::GetVertexAttributes()),
+    false, true);
   }
 
   if ( !m_pStaticStaticPipeline ) {
+    std::vector<VkVertexInputBindingDescription> bindings = { StaticVertexDescription::GetBindingDescription() };
     m_pStaticStaticPipeline = pRhi->CreateGraphicsPipeline();
     InitializeShadowPipeline(pRhi, m_pStaticStaticPipeline, m_pStaticFrameBuffer,
-      StaticVertexDescription::GetBindingDescription(), StaticVertexDescription::GetVertexAttributes(), false);
+      bindings, StaticVertexDescription::GetVertexAttributes(), false);
+  }
+
+  if ( !m_pStaticStaticMorphPipeline ) {
+    m_pStaticStaticMorphPipeline = pRhi->CreateGraphicsPipeline();
+    InitializeShadowPipeline(pRhi, m_pStaticStaticMorphPipeline, m_pStaticFrameBuffer,
+      MorphTargetVertexDescription::GetBindingDescriptions(StaticVertexDescription::GetBindingDescription()),
+      MorphTargetVertexDescription::GetVertexAttributes(StaticVertexDescription::GetVertexAttributes()),
+      false, true);
   }
   
   m_staticMapNeedsUpdate = true;
@@ -537,6 +575,8 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
 
   GraphicsPipeline* staticPipeline = m_pStaticPipeline;
   GraphicsPipeline* dynamicPipeline = m_pSkinnedPipeline;
+  GraphicsPipeline* staticMorphPipeline = m_pStaticMorphPipeline;
+  GraphicsPipeline* dynamicMorphPipeline = m_pSkinnedMorphPipeline;
   DescriptorSet*    lightViewSet = m_pLightViewDescriptorSet;
 
   VkRenderPassBeginInfo renderPass = {};
@@ -570,14 +610,25 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
     descriptorSets[3] = skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
 
     GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
-    pCmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
-    pCmdBuffer->SetViewPorts(0, 1, &viewport);
     MeshData* mesh = renderCmd._pMeshData;
     VertexBuffer* vertex = mesh->VertexData();
     IndexBuffer* index = mesh->IndexData();
     VkBuffer buf = vertex->Handle()->NativeBuffer();
     VkDeviceSize offset[] = { 0 };
     pCmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
+    if ( renderCmd._config & CMD_MORPH_BIT ) {
+      pipeline = skinned ? dynamicMorphPipeline : staticMorphPipeline;
+      R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+      R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+      VkBuffer morph0 = renderCmd._pMorph0->VertexData()->Handle()->NativeBuffer();
+      VkBuffer morph1 = renderCmd._pMorph1->VertexData()->Handle()->NativeBuffer();
+      pCmdBuffer->BindVertexBuffers(1, 1, &morph0, offset);
+      pCmdBuffer->BindVertexBuffers(2, 1, &morph1, offset);
+    }
+
+    pCmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+    pCmdBuffer->SetViewPorts(0, 1, &viewport);
+
     if (index) {
       VkBuffer ind = index->Handle()->NativeBuffer();
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
@@ -615,6 +666,8 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
   
   GraphicsPipeline* staticPipeline = m_pStaticStaticPipeline;
   GraphicsPipeline* dynamicPipeline = m_pStaticSkinnedPipeline;
+  GraphicsPipeline* staticMorphPipeline = m_pStaticStaticMorphPipeline;
+  GraphicsPipeline* dynamicMorphPipeline = m_pStaticSkinnedMorphPipeline;
   DescriptorSet*    lightViewSet = m_pStaticLightViewDescriptorSet;
 
   VkRenderPassBeginInfo renderPass = {};
@@ -648,14 +701,25 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
     descriptorSets[3] = skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : VK_NULL_HANDLE;
 
     GraphicsPipeline* pipeline = skinned ? dynamicPipeline : staticPipeline;
-    pCmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
-    pCmdBuffer->SetViewPorts(0, 1, &viewport);
     MeshData* mesh = renderCmd._pMeshData;
     VertexBuffer* vertex = mesh->VertexData();
     IndexBuffer* index = mesh->IndexData();
     VkBuffer buf = vertex->Handle()->NativeBuffer();
     VkDeviceSize offset[] = { 0 };
     pCmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
+    if (renderCmd._config & CMD_MORPH_BIT) {
+      pipeline = skinned ? dynamicMorphPipeline : staticMorphPipeline;
+      R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+      R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+      VkBuffer morph0 = renderCmd._pMorph0->VertexData()->Handle()->NativeBuffer();
+      VkBuffer morph1 = renderCmd._pMorph1->VertexData()->Handle()->NativeBuffer();
+      pCmdBuffer->BindVertexBuffers(1, 1, &morph0, offset);
+      pCmdBuffer->BindVertexBuffers(2, 1, &morph1, offset);
+    }
+
+    pCmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+    pCmdBuffer->SetViewPorts(0, 1, &viewport);
+
     if (index) {
       VkBuffer ind = index->Handle()->NativeBuffer();
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
@@ -817,9 +881,19 @@ void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
     m_pSkinnedPipeline = nullptr;
   }
 
+  if (m_pSkinnedMorphPipeline) {
+    pRhi->FreeGraphicsPipeline(m_pSkinnedMorphPipeline);
+    m_pSkinnedMorphPipeline = nullptr;
+  }
+
   if ( m_pStaticSkinnedPipeline ) {
     pRhi->FreeGraphicsPipeline( m_pStaticSkinnedPipeline );
     m_pStaticSkinnedPipeline = nullptr;
+  }
+
+  if ( m_pStaticSkinnedMorphPipeline ) {
+    pRhi->FreeGraphicsPipeline( m_pStaticSkinnedMorphPipeline );
+    m_pStaticSkinnedMorphPipeline = nullptr;
   }
 
   if ( m_pStaticStaticPipeline ) {
@@ -827,9 +901,19 @@ void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
     m_pStaticStaticPipeline = nullptr;
   }
 
+  if ( m_pStaticStaticMorphPipeline ) {
+    pRhi->FreeGraphicsPipeline ( m_pStaticStaticMorphPipeline );
+    m_pStaticStaticMorphPipeline = nullptr;
+  }
+
   if (m_pStaticPipeline) {
     pRhi->FreeGraphicsPipeline(m_pStaticPipeline);
     m_pStaticPipeline = nullptr;
+  }
+
+  if ( m_pStaticMorphPipeline ) {
+    pRhi->FreeGraphicsPipeline( m_pStaticMorphPipeline );
+    m_pStaticMorphPipeline = nullptr;
   }
 }
 

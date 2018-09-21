@@ -20,6 +20,7 @@ struct JointPose {
   Quaternion  _rot;   // rotation.
   Vector3     _trans; // translation.
   Vector3     _scale; // scale.
+  Vector2     _weight;  // Morph target weights.
   DEBUG_OP(u8          _id);     // node id sample.
 };
 

@@ -95,6 +95,13 @@ struct LightBuffer {
 };
 
 
+
+class ShadowEngine {
+public:
+  
+};
+
+
 // Shadow System, that takes care of shadow rendering. Reponsible for one particular light source,
 // depending on whether it is a Directional, or Point, light source.
 class ShadowMapSystem {
@@ -109,7 +116,11 @@ public:
     , m_pDynamicRenderPass(nullptr)
     , m_pSkinnedPipeline(nullptr)
     , m_pStaticSkinnedPipeline(nullptr)
+    , m_pStaticSkinnedMorphPipeline(nullptr)
     , m_pStaticStaticPipeline(nullptr)
+    , m_pStaticStaticMorphPipeline(nullptr)
+    , m_pSkinnedMorphPipeline(nullptr)
+    , m_pStaticMorphPipeline(nullptr)
     , m_pStaticPipeline(nullptr)
     , m_pStaticRenderPass(nullptr)
     , m_staticMapNeedsUpdate(true)
@@ -158,11 +169,18 @@ private:
   Texture*          m_pStaticMap;
   Texture*          m_pDynamicMap;
   // common used pipelines.
-  // TODO(): Need to create a static shadow map pipeline to combine dynamic objects to.
+  // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
+  // a static object.
   GraphicsPipeline* m_pSkinnedPipeline;
+  GraphicsPipeline* m_pSkinnedMorphPipeline;
   GraphicsPipeline* m_pStaticPipeline;
+  GraphicsPipeline* m_pStaticMorphPipeline;
   GraphicsPipeline* m_pStaticSkinnedPipeline;
+  GraphicsPipeline* m_pStaticSkinnedMorphPipeline;
   GraphicsPipeline* m_pStaticStaticPipeline;
+  GraphicsPipeline* m_pStaticStaticMorphPipeline;
+
+  // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*      m_pStaticFrameBuffer;
   FrameBuffer*      m_pDynamicFrameBuffer;
   RenderPass*       m_pDynamicRenderPass;

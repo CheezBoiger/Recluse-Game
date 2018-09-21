@@ -53,14 +53,14 @@ void main()
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
   float w0 = obj_buffer.w0;
   float w1 = obj_buffer.w1;
-  vec4  morphPositionDiff0 = position0 - worldPosition;
-  vec4  morphPositionDiff1 = position1 - worldPosition;
-  vec2  morphUV00 = uv00 - temp_uv0;
-  vec2  morphUV01 = uv01 - temp_uv0;
-  vec2  morphUV10 = uv10 - temp_uv1;
-  vec2  morphUV11 = uv11 - temp_uv1;
-  worldPosition += morphPositionDiff0 * w0;
-  worldPosition += morphPositionDiff1 * w1;
+  vec3  morphPositionDiff0 = position0.xyz;
+  vec3  morphPositionDiff1 = position1.xyz;
+  vec2  morphUV00 = uv00;
+  vec2  morphUV01 = uv01;
+  vec2  morphUV10 = uv10;
+  vec2  morphUV11 = uv11;
+  worldPosition += vec4(morphPositionDiff0 * w0, 0.0);
+  worldPosition += vec4(morphPositionDiff1 * w1, 0.0);
   temp_uv0 += morphUV00 * w0;
   temp_uv0 += morphUV01 * w1;
   temp_uv1 += morphUV10 * w0;

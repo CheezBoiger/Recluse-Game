@@ -21,6 +21,7 @@
 #include <vector>
 #include <stack>
 #include <string>
+#include <set>
 #include <map>
 
 
@@ -206,20 +207,28 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
       const r32* outputValues = reinterpret_cast<const r32*>(&gltfModel->buffers[outputBufView.buffer].data[outputAccessor.byteOffset + outputBufView.byteOffset]);
       // Read output data.
       // TODO():
-      if (clip->_aAnimPoseSamples.empty()) { 
+      if (clip->_aAnimPoseSamples.size() < inputAccessor.count) {
+        std::map<r32, AnimPose> poses;
+        for (auto& pose : clip->_aAnimPoseSamples) {
+          poses[pose._time] = std::move(pose);
+        } 
         clip->_aAnimPoseSamples.resize(inputAccessor.count); 
-      }
-      
-      for (size_t inputId = 0; inputId < inputAccessor.count; ++inputId) {
-        clip->_aAnimPoseSamples[inputId]._time = inputValues[inputId];
+        for (size_t inputId = 0; inputId < inputAccessor.count; ++inputId) {
+            r32 kt = inputValues[inputId];
+            if (poses.find(kt) == poses.end()) {
+              clip->_aAnimPoseSamples[inputId]._time = kt;
+            } else {
+              clip->_aAnimPoseSamples[inputId] = poses[kt];
+            }
+        }
       }
 
       if (channel.target_path == SAMPLE_TRANSLATION_STRING) {
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
-            pose._aLocalPoses.push_back(JointPose());
-            pose._aGlobalPoses.push_back(Matrix4());
+            pose._aGlobalPoses.resize(jointIndex + 1);
+            pose._aLocalPoses.resize(jointIndex + 1);
           }
           pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
@@ -231,8 +240,8 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
-            pose._aLocalPoses.push_back(JointPose());
-            pose._aGlobalPoses.push_back(Matrix4());
+            pose._aLocalPoses.resize(jointIndex + 1);
+            pose._aGlobalPoses.resize(jointIndex + 1);
           }
           pose._aLocalPoses[jointIndex]._rot = Quaternion(outputValues[outputId * 4 + 0],
                                                           outputValues[outputId * 4 + 1],
@@ -245,8 +254,8 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
           if (jointIndex >= pose._aLocalPoses.size()) {
-            pose._aLocalPoses.push_back(JointPose());
-            pose._aGlobalPoses.push_back(Matrix4());
+            pose._aLocalPoses.resize(jointIndex + 1);
+            pose._aGlobalPoses.resize(jointIndex + 1);
           }
           pose._aLocalPoses[jointIndex]._scale = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
@@ -257,8 +266,13 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
       if (channel.target_path == SAMPLE_WEIGHTS_STRING) {
         for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
           AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+          if (jointIndex >= pose._aLocalPoses.size()) {
+            pose._aLocalPoses.resize(jointIndex + 1);
+            pose._aGlobalPoses.resize(jointIndex + 1);
+          }
           r32 weight = outputValues[outputId + 0];
-          
+          // TODO(): Figure out how many morph targets in the animated mesh, in order to 
+          // determine how to read this!
         }
       }
     }

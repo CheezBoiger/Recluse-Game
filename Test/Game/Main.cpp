@@ -148,7 +148,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = GRAPHICS_QUALITY_NONE;
+    params._Shadows = GRAPHICS_QUALITY_MEDIUM;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
@@ -221,7 +221,8 @@ int main(int c, char* argv[])
   ModelLoader::LoadAnimatedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   //ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
   //ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
-  ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+ // ModelLoader::LoadAnimatedModel(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
 
