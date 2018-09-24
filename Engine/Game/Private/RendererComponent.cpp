@@ -30,6 +30,7 @@ RendererComponent::RendererComponent()
   , m_allowLod(true)
   , m_morphIndex0(kNoMorphIndex)
   , m_morphIndex1(kNoMorphIndex)
+  , m_pAnimHandle(nullptr)
 {
 }
 
@@ -161,6 +162,17 @@ void RendererComponent::Update()
     gRenderer().PushMeshRender(cmd);
   }
 
+  if ( m_pAnimHandle ) {
+    const r32* weights = nullptr;
+    u32 weightSz = 0;
+    weights = m_pAnimHandle->_finalMorphs.data();
+    weightSz = m_pAnimHandle->_finalMorphs.size();
+    if (weightSz > 0) {
+      renderData->_w0 = weights[0];
+      renderData->_w1 = weights[1];
+    }
+  }
+
   if (model == renderData->_Model) return;
   Matrix4 N = model;
   N[3][0] = 0.0f;
@@ -205,6 +217,7 @@ void SkinnedRendererComponent::Update()
   // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
   memcpy(pJointBuffer->_mJoints, palette, paletteSz * sizeof(Matrix4));
   m_pJointDescriptor->PushUpdate(JOINT_BUFFER_UPDATE_BIT);
+  
   RendererComponent::Update();
 }
 
@@ -248,8 +261,7 @@ void SkinnedRendererComponent::OnCleanUp()
 
 
 SkinnedRendererComponent::SkinnedRendererComponent()
-  : m_pAnimHandle(nullptr)
-  , m_pJointDescriptor(nullptr)
+  : m_pJointDescriptor(nullptr)
 {
 }
 

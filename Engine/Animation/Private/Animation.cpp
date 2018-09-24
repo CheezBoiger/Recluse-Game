@@ -43,6 +43,8 @@ void Animation::UpdateState(r64 dt)
   for (auto& job : m_blendJobs) {
     DoBlendJob(job, static_cast<r32>(dt));
   }
+
+  m_sampleJobs.clear();
 }
 
 
@@ -75,17 +77,7 @@ void Animation::SubmitJob(const AnimJobSubmitInfo& info)
   switch (info._type) {
     case ANIM_JOB_TYPE_SAMPLE:
     {
-      AnimSampleJob job = { };
-      job._pClip = info._pBaseClip;
-      job._clipState = { };
-      job._clipState._bLooping = info._pBaseClip->_bLooping;
-      job._clipState._fCurrLocalTime = 0.0f;
-      job._clipState._bEnabled = true;
-      job._clipState._fCurrLocalTime = info._timeRatio * info._pBaseClip->_fDuration;
-      job._clipState._fPlaybackRate = info._playbackRate;
-      job._sz = 64;
-      m_sampleJobs.push_back(job);
-      m_sampleJobMaps[info._uuid] = &m_sampleJobs.back();
+      m_sampleJobs.push_back(info);
     } break;
     case ANIM_JOB_TYPE_BLEND:
     {
@@ -120,33 +112,33 @@ Matrix4 Animation::LinearInterpolate(JointPose* currPose, JointPose* nextPose, r
 }
 
 
-void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
+void Animation::DoSampleJob(AnimJobSubmitInfo& job, r32 gt)
 {
-  if (!job._clipState._bEnabled) { return; }
-  r32 tau = job._clipState._tau;
-  r32 rate = job._clipState._fPlaybackRate;
-  r32 lt = job._clipState._fCurrLocalTime + gt * rate;
-  if (lt > job._pClip->_fDuration) {
-    lt -= job._pClip->_fDuration;
-    job._clipState._tau = gt;
+  if (!job._output->_currState._bEnabled) { return; }
+  r32 tau = job._output->_currState._tau;
+  r32 rate = job._output->_currState._fPlaybackRate;
+  r32 lt = job._output->_currState._fCurrLocalTime + gt * rate;
+  if (lt > job._pBaseClip->_fDuration) {
+    lt -= job._pBaseClip->_fDuration;
+    job._output->_currState._tau = gt;
   }
   if (lt < 0.0f) {
-    lt = job._pClip->_fDuration + lt;
+    lt = job._pBaseClip->_fDuration + lt;
     if (lt < 0.0f) {
-      lt += job._pClip->_fDuration;
-      job._clipState._tau = gt;
+      lt += job._pBaseClip->_fDuration;
+      job._output->_currState._tau = gt;
     }
   }
-  job._clipState._fCurrLocalTime = lt;
-  Skeleton * pSkeleton = Skeleton::GetSkeleton(job._pClip->_skeletonId);
-  Matrix4* palette = job._output;
-  u32 paletteSz = job._sz;
+  job._output->_currState._fCurrLocalTime = lt;
+  Skeleton* pSkeleton = Skeleton::GetSkeleton(job._pBaseClip->_skeletonId);
+  Matrix4* palette = job._output->_finalPalette;
+  u32 paletteSz = job._output->_paletteSz;
 
   u32 currPoseIdx = 0;
   u32 nextPoseIdx = 0;
 
-  for (size_t i = 0; i < job._pClip->_aAnimPoseSamples.size(); ++i) {
-    AnimPose& pose = job._pClip->_aAnimPoseSamples[i];
+  for (size_t i = 0; i < job._pBaseClip->_aAnimPoseSamples.size(); ++i) {
+    AnimPose& pose = job._pBaseClip->_aAnimPoseSamples[i];
     if (pose._time > lt) {
       currPoseIdx = static_cast<u32>(i) - 1u;
       nextPoseIdx = static_cast<u32>(i);
@@ -154,46 +146,56 @@ void Animation::DoSampleJob(AnimSampleJob& job, r32 gt)
     }
   }
 
-  if (pSkeleton) {
-    Matrix4 globalTransform;
-    b32 rootInJoints = pSkeleton->_rootInJoints;
-    {
-      Matrix4 localTransform = LinearInterpolate(
-        &job._pClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses[0],
-        &job._pClip->_aAnimPoseSamples[nextPoseIdx]._aLocalPoses[0],
-        job._pClip->_aAnimPoseSamples[currPoseIdx]._time,
-        job._pClip->_aAnimPoseSamples[nextPoseIdx]._time,
-        lt);
-      if (rootInJoints) {
-        job._output[0] = localTransform;
-      }
-      globalTransform = localTransform;
+  if (!job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._morphs.empty() &&
+      !job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._morphs.empty() ) {
+    auto& currMorphs = job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._morphs;
+    auto& nextMorphs = job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._morphs;
+    job._output->_finalMorphs.resize(currMorphs.size());
+    for (size_t i = 0; i < currMorphs.size(); ++i) {
+      job._output->_finalMorphs[i] = Lerpf(currMorphs[i], nextMorphs[i], lt);
     }
+  }
 
-    AnimPose* currAnimPose = &job._pClip->_aAnimPoseSamples[currPoseIdx];
-    AnimPose* nextAnimPose = &job._pClip->_aAnimPoseSamples[nextPoseIdx];
+  if ( job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.empty() 
+      || job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._aLocalPoses.empty() ) {
+    return;
+  }
 
-    for (size_t i = 1; i < job._pClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.size(); ++i) {
-      size_t idx = (rootInJoints ? i : i - 1);
-      JointPose* currJoint = &currAnimPose->_aLocalPoses[i];
-      JointPose* nextJoint = &nextAnimPose->_aLocalPoses[i];
-      Matrix4 localTransform = LinearInterpolate(currJoint, nextJoint, currAnimPose->_time, nextAnimPose->_time, lt);
-      Matrix4 parentTransform;
+  Matrix4 globalTransform;
+  b32 rootInJoints = pSkeleton ? pSkeleton->_rootInJoints : false;
+  {
+    Matrix4 localTransform = LinearInterpolate(
+      &job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses[0],
+      &job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._aLocalPoses[0],
+      job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._time,
+      job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._time,
+      lt);
+    if (rootInJoints) {
+      job._output->_finalPalette[0] = localTransform;
+    }
+    globalTransform = localTransform;
+  }
+
+  AnimPose* currAnimPose = &job._pBaseClip->_aAnimPoseSamples[currPoseIdx];
+  AnimPose* nextAnimPose = &job._pBaseClip->_aAnimPoseSamples[nextPoseIdx];
+
+  for (size_t i = 1; i < job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.size(); ++i) {
+    size_t idx = (rootInJoints ? i : i - 1);
+    JointPose* currJoint = &currAnimPose->_aLocalPoses[i];
+    JointPose* nextJoint = &nextAnimPose->_aLocalPoses[i];
+    Matrix4 localTransform = LinearInterpolate(currJoint, nextJoint, currAnimPose->_time, nextAnimPose->_time, lt);
+    Matrix4 parentTransform;
+    if (pSkeleton) {
       u8 parentId = pSkeleton->_joints[idx]._iParent;
       if (parentId == Joint::kNoParentId) {
         parentTransform = globalTransform;
+      } else {
+        parentTransform = job._output->_finalPalette[pSkeleton->_joints[idx]._iParent];
       }
-      else {
-        parentTransform = job._output[pSkeleton->_joints[idx]._iParent];
-      }
-      job._output[idx] = localTransform * parentTransform;
     }
-
-    ApplySkeletonPose(job._output, pSkeleton);
+    job._output->_finalPalette[idx] = localTransform * parentTransform;
   }
-  else {
-    // No skeleton found for this clip, assume heirachy none. Renderer should take care of parent child heirarchy.
-  }
+  ApplySkeletonPose(job._output->_finalPalette, pSkeleton);
 }
 
 
@@ -207,19 +209,10 @@ void Animation::ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton)
 }
 
 
-void Animation::DoBlendJob(AnimBlendJob& job, r32 gt)
+void Animation::DoBlendJob(AnimJobSubmitInfo& job, r32 gt)
 {
   for (auto& layer : job._layers) {
     
   }
-}
-
-
-AnimSampleJob* Animation::GetCurrentSampleJob(uuid64 uuid)
-{
-  AnimSampleJob* sample = nullptr;
-  auto it = m_sampleJobMaps.find(uuid);
-  if (it != m_sampleJobMaps.end()) sample = it->second;
-  return sample;
 }
 } // Recluse

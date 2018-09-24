@@ -109,6 +109,8 @@ extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_LR;
 extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_NoLR;
 extern GraphicsPipeline*  pbr_staticForwardPipeline_LR;
 extern GraphicsPipeline*  pbr_staticForwardPipeline_NoLR;
+extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_LR;
+extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_NoLR;
 extern RenderPass*        pbr_forwardRenderPass;
 
 extern ComputePipeline* aa_PipelineKey;

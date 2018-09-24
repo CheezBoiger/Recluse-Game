@@ -253,7 +253,7 @@ public:
 
     if (!bFollow && Keyboard::KeyPressed(KEY_CODE_0)) {
       oldTransform = *camTransform;
-      bFollow = true;
+      bFollow = false;
     }
 
     if (bFollow && Keyboard::KeyPressed(KEY_CODE_1)) {

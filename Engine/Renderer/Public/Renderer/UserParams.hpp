@@ -70,6 +70,9 @@ public:
   // Level of detail, by distance. The higher, the better the models in the world.
   r32             _Lod;
 
+  // Render scale determines the viewport surface to render onto.
+  r32             _renderScale;
+
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
   // refresh at max 60 Hz. If this monitor can achieve higher refresh rates, this feature may only
   // have negative impacts, and is best to leave off. This may have a slight impact
@@ -104,6 +107,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   GRAPHICS_QUALITY_ULTRA,
   GRAPHICS_QUALITY_NONE,
   GRAPHICS_QUALITY_HIGH,
+  1.0f,
   1.0f,
   true,
   true,

@@ -25,11 +25,19 @@ struct AnimClipState;
 struct AnimHandle {
   AnimHandle(uuid64 uuid)
     : _uuid(uuid)
-    , _paletteSz(64) { }
+    , _paletteSz(64) { 
+    _currState._bEnabled = true;
+    _currState._bLooping = true;
+    _currState._fCurrLocalTime = 0;
+    _currState._fPlaybackRate = 1.0f;
+    _currState._tau = 0;
+  }
 
   Matrix4           _finalPalette[64];
+  std::vector<r32>  _finalMorphs;
   u32               _paletteSz;
   uuid64            _uuid;
+  AnimClipState     _currState;
 };
 
 
@@ -51,35 +59,10 @@ struct AnimBlendLayer {
 
 struct AnimJobSubmitInfo {
   AnimJobType                 _type;
-  uuid64                      _uuid;            // uuid belonging to this anim submittal.
+  AnimHandle*                 _output;            // uuid belonging to this anim submittal.
   AnimClip*                   _pBaseClip;       // base clip to use during sampling.
-  r32                         _blendWeight;     // global blend weight.
-  r32                         _timeRatio;       // [0,1] time ratio interval.
-  r32                         _playbackRate;    // Initial playback rate.
-  b32                         _looping;         // is this job going to loop?
   std::vector<AnimBlendLayer> _layers;
   std::vector<AnimBlendLayer> _additiveLayers;
-};
-
-
-struct AnimSampleJob {
-  Matrix4       _output[64];
-  u32           _sz;
-  AnimClip*     _pClip;
-  AnimClipState _clipState;
-};
-
-
-// Generalized blend job. Grabs two inputs to produce the final output.
-struct AnimBlendJob {
-  std::vector<AnimBlendLayer>       _layers;
-  std::vector<AnimBlendLayer>       _additiveLayers;
-  skeleton_uuid_t                   _skeletonId;
-  Matrix4                           _output[64];
-};
-
-
-struct ClipState {
 };
 
 
@@ -89,8 +72,7 @@ class Animation : public EngineModule<Animation> {
   static const size_t     kMaxAnimationThreadCount;
 public:
   Animation() 
-    : m_workers(kMaxAnimationThreadCount)
-    , m_currSampleJobCount(0) { }
+    : m_workers(kMaxAnimationThreadCount) { }
 
   // On startup event.
   void          OnStartUp() override;
@@ -109,17 +91,10 @@ public:
 
   void          SubmitJob(const AnimJobSubmitInfo& info);
 
-  AnimSampleJob*  GetCurrentSampleJob(uuid64 uuid);
-  AnimBlendJob*   GetCurrentBlendJob(uuid64 uuid);
-
 protected:
   
-  void          DoSampleJob(AnimSampleJob& job, r32 gt);
-  void          DoBlendJob(AnimBlendJob& job, r32 gt);
-
-  void          PushSampleJob(AnimSampleJob& animJob) { m_sampleJobs.push_back(animJob); }
-  void          PushBlendJob(AnimBlendJob& blendJob) { m_blendJobs.push_back(blendJob); }
-
+  void          DoSampleJob(AnimJobSubmitInfo& job, r32 gt);
+  void          DoBlendJob(AnimJobSubmitInfo& job, r32 gt);
 
   void          ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton);
 
@@ -130,20 +105,16 @@ private:
   // Handler to the animation objects generated currently in use.
   std::unordered_map<uuid64, AnimHandle*>       m_animObjects;
 
-  // Handles to final palattes, added when a job is pushed to this animation engine.
-  std::map<uuid64, AnimSampleJob*>         m_sampleJobMaps;
-  std::map<uuid64, AnimBlendJob*>          m_blendJobMaps;
-
   std::mutex                                    m_sampleJobMutex;
   std::mutex                                    m_blendJobMutex;
   std::mutex                                    m_layeredJobMutex;
 
   // Sample jobs currently in place.
-  std::vector<AnimSampleJob>                          m_sampleJobs;
-  u32                                           m_currSampleJobCount;
+  std::vector<AnimJobSubmitInfo>                    m_sampleJobs;
+  //u32                                           m_currSampleJobCount;
 
   // Number of blend jobs to be executed after animation stepping.
-  std::vector<AnimBlendJob>                         m_blendJobs;
+  std::vector<AnimJobSubmitInfo>                     m_blendJobs;
 
   // Thread workers for this animation submodule.
   std::vector<std::thread>                      m_workers;

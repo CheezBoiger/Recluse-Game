@@ -257,11 +257,11 @@ public:
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("AnimatedMorphCube", &model);
-    ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
     }
     m_rendererComponent.EnableMorphTargets(true);
+    m_rendererComponent.ForceForward(false);
     m_rendererComponent.SetMorphIndex0(0);
     m_rendererComponent.SetMorphIndex1(1);
     for (size_t i = 0; i < model->materials.size(); ++i) {
@@ -269,6 +269,10 @@ public:
       material->EnableEmissive(true);
       material->SetEmissiveFactor(1.0f);
     }
+    m_animationComponent.AddClip(model->animations[0], "Dance");
+    m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
+    m_animationComponent.Playback("Dance");
+    m_animationComponent.SetPlaybackRate(1.0f);
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);

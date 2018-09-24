@@ -125,8 +125,10 @@ public:
     , m_pStaticRenderPass(nullptr)
     , m_staticMapNeedsUpdate(true)
     , m_pStaticLightViewDescriptorSet(nullptr)
-    , m_rShadowViewportWidth(40.0f)
-    , m_rShadowViewportHeight(40.0f) { }
+    , m_rShadowViewportWidth(20.0f)
+    , m_rShadowViewportHeight(20.0f)
+    , m_staticShadowViewportWidth(40.0f)
+    , m_staticShadowViewportHeight(40.0f) { }
 
   ~ShadowMapSystem();
 
@@ -158,6 +160,11 @@ public:
 
   void              SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
   void              SetStaticLightDir(const Vector3& dir) { m_staticSunlightDir = dir; }
+  void              SetStaticShadowMapWidth(r32 width) { m_staticShadowViewportWidth = width; }
+  void              SetStaticShadowMapHeight(r32 height) { m_staticShadowViewportHeight = height; }
+
+  r32               GetStaticShadowMapWidth() const { return m_staticShadowViewportWidth; }
+  r32               GetStaticShadowMapHeight() const { return m_staticShadowViewportHeight; }
 
 private:
 
@@ -165,6 +172,8 @@ private:
 
   Vector3           m_staticSunlightDir;
   Vector3           m_staticViewerPos;
+  r32               m_staticShadowViewportWidth;
+  r32               m_staticShadowViewportHeight;
 
   Texture*          m_pStaticMap;
   Texture*          m_pDynamicMap;

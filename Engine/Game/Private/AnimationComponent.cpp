@@ -37,32 +37,43 @@ void AnimationComponent::AddClip(AnimClip* clip, const std::string& name)
 
 void AnimationComponent::Playback(const std::string& name,  r32 rate, r32 atTime)
 {
-  m_rate = rate;
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
-  AnimClip* clip = it->second;
-  AnimJobSubmitInfo submit = { };
-  submit._type = ANIM_JOB_TYPE_SAMPLE;
-  submit._pBaseClip = clip;
-  submit._timeRatio = atTime;
-  submit._playbackRate = rate;
-  submit._uuid = m_handle->_uuid;
-  gAnimation().SubmitJob(submit);
+  m_currClip = it->second;
+  m_handle->_currState._tau = 0;
+  m_handle->_currState._next = 0;
+  m_handle->_currState._fCurrLocalTime = atTime * m_currClip->_fDuration;
+  m_handle->_currState._fPlaybackRate = rate;
 }
 
 
 void AnimationComponent::Update()
 {
-  AnimSampleJob* job = gAnimation().GetCurrentSampleJob(m_handle->_uuid);
-  if (!job) return;
-  job->_clipState._fPlaybackRate = m_rate;
-  memcpy(m_handle->_finalPalette, job->_output, sizeof(Matrix4) * job->_sz);
+  if ( m_currClip ) {
+    AnimClip* clip = m_currClip;
+    AnimJobSubmitInfo submit = {};
+    submit._type = ANIM_JOB_TYPE_SAMPLE;
+    submit._pBaseClip = clip;
+    submit._output = m_handle;
+    gAnimation().SubmitJob(submit);
+  }
 }
 
 
 void AnimationComponent::BlendPlayback(const std::string& name, r32 targetWeight, r32 fadeLen)
 {
-  AnimJobSubmitInfo info{};
-  
+  AnimJobSubmitInfo info{}; 
+}
+
+
+void AnimationComponent::SetPlaybackRate(r32 rate)
+{
+  m_handle->_currState._fPlaybackRate = rate;
+}
+
+
+r32 AnimationComponent::GetPlaybackRate() const
+{
+  return m_handle->_currState._fPlaybackRate;
 }
 } // Recluse

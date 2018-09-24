@@ -219,8 +219,8 @@ void Engine::Update()
 #endif
 
   // Update using next frame input.
-  gAnimation().UpdateState(dt);
   AnimationComponent::UpdateComponents();
+  gAnimation().UpdateState(dt);
   
   PhysicsComponent::UpdateFromPreviousGameLogic();
   TraverseScene(UpdateTransform);

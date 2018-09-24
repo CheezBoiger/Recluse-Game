@@ -58,9 +58,7 @@ public:
   void                      AddMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
   void                      ClearMeshes() { m_meshes.clear(); }
   Mesh*                     GetMesh(size_t idx) { return m_meshes[idx]; }
-  u32                       GetMeshCount() const { return static_cast<u32>(m_meshes.size()); }
-  virtual void              SetAnimationHandler(AnimHandle* anim) { }  
-  virtual AnimHandle*       GetAnimHandle() { return nullptr; }
+  u32                       GetMeshCount() const { return static_cast<u32>(m_meshes.size()); } 
   inline b32                AllowLod() const { return m_allowLod; }
   void                      EnableLod(b32 enable) { m_allowLod = enable; }
 
@@ -70,6 +68,9 @@ public:
 
   void                      SetMorphIndex0(u32 idx) { m_morphIndex0 = idx; }
   void                      SetMorphIndex1(u32 idx) { m_morphIndex1 = idx; }
+
+  virtual void              SetAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
+  virtual AnimHandle*       GetAnimHandle() { return m_pAnimHandle; }
 
 protected:
   virtual void              OnInitialize(GameObject* owner) override;
@@ -82,6 +83,7 @@ private:
   void                      UpdateLod(Transform* meshTransform);
 
 protected:
+  AnimHandle*               m_pAnimHandle;
   MeshDescriptor*           m_meshDescriptor;
   std::vector<Mesh*>        m_meshes;
   b32                       m_bDirty;
@@ -108,11 +110,7 @@ public:
   virtual b32               Skinned() const override { return true; }
   virtual JointDescriptor*  GetJointDescriptor() override { return m_pJointDescriptor; }
 
-  virtual void              SetAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
-  virtual AnimHandle*       GetAnimHandle() { return m_pAnimHandle; }
-
 protected:
   JointDescriptor*          m_pJointDescriptor;  
-  AnimHandle*               m_pAnimHandle;
 };
 } // Recluse

@@ -44,7 +44,7 @@ void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 ind
 }
 
 
-static void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
+static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
 {
   for (tinygltf::Image& image : gltfModel->images) {
     Texture2D* pTex = gRenderer().CreateTexture2D();
@@ -91,10 +91,15 @@ static void LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
     TextureCache::Cache(pTex);
     engineModel->textures.push_back(pTex);
   }
+
+  if ( gltfModel->textures.empty() ) {
+    return Model_Textured;
+  }
+  return Model_None;
 }
 
 
-static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
+static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 {
   u32 count = 0;
   for (tinygltf::Material& mat : gltfModel->materials) {
@@ -170,12 +175,17 @@ static void LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
     MaterialCache::Cache(name, engineMat);
     engineModel->materials.push_back(engineMat);
   }
+
+  if ( gltfModel->materials.empty() ) {
+    return Model_Materials;
+  }
+  return Model_None;
 }
 
 
-static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
+static ModelResultBits LoadAnimations(tinygltf::Model* gltfModel, Model* engineModel)
 {
-  if (gltfModel->animations.empty()) return;
+  if (gltfModel->animations.empty()) return Model_None;
   
   for (size_t i = 0; i < gltfModel->animations.size(); ++i) {
     const tinygltf::Animation& animation = gltfModel->animations[i];
@@ -194,6 +204,8 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
         prevTarget = node;
         ++jointIndex;
       }
+      tinygltf::Node& tnode = gltfModel->nodes[node];
+
       const tinygltf::AnimationSampler& sampler = animation.samplers[channel.sampler];
       
       const tinygltf::Accessor& inputAccessor = gltfModel->accessors[sampler.input];
@@ -264,15 +276,29 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
         }
       }
       if (channel.target_path == SAMPLE_WEIGHTS_STRING) {
-        for (size_t outputId = 0; outputId < outputAccessor.count; ++outputId) {
-          AnimPose& pose = clip->_aAnimPoseSamples[outputId];
+        tinygltf::Mesh& tmesh = gltfModel->meshes[tnode.mesh];
+        R_ASSERT(tnode.mesh != -1, "No target mesh.");
+        size_t offset = tmesh.weights.size();
+        size_t v = 0;
+        for (size_t outputId = offset; outputId < outputAccessor.count; outputId += offset) {
+          AnimPose& pose = clip->_aAnimPoseSamples[v];
+
           if (jointIndex >= pose._aLocalPoses.size()) {
             pose._aLocalPoses.resize(jointIndex + 1);
             pose._aGlobalPoses.resize(jointIndex + 1);
           }
-          r32 weight = outputValues[outputId + 0];
-          // TODO(): Figure out how many morph targets in the animated mesh, in order to 
-          // determine how to read this!
+          
+          if (pose._morphs.size() < offset) {
+            pose._morphs.resize(offset);
+          }
+        
+          for (size_t n = 0; n < offset; ++n) {
+            r32 weight = outputValues[outputId + n];
+            // TODO(): Figure out how many morph targets in the animated mesh, in order to 
+            // determine how to read this!
+            pose._morphs[n] = weight;
+          }
+          ++v;
         }
       }
     }
@@ -284,6 +310,8 @@ static void LoadAnimations(tinygltf::Model* gltfModel, AnimModel* engineModel)
     engineModel->animations.push_back(clip);
     AnimAssetManager::Cache(clip->_name, clip);
   }
+
+  return Model_Animated;
 }
 
 
@@ -868,8 +896,9 @@ void GetFilenameAndType(const std::string& path, std::string& filenameOut, u32& 
 }
 
 
-ModelResult Load(const std::string path)
+ModelResultBits Load(const std::string path)
 {
+  ModelResultBits result = Model_Static;
   Model*           model = nullptr;
   static u64 copy = 0;
   tinygltf::Model gltfModel;
@@ -895,8 +924,8 @@ ModelResult Load(const std::string path)
   model = new Model();
   model->name = std::move(modelName);
 
-  LoadTextures(&gltfModel, model);
-  LoadMaterials(&gltfModel, model);
+  result |= LoadTextures(&gltfModel, model);
+  result |= LoadMaterials(&gltfModel, model);
 
   tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
@@ -905,13 +934,19 @@ ModelResult Load(const std::string path)
     LoadNode(node, gltfModel, model, mat, 1.0);
   }
 
+  result |= LoadAnimations(&gltfModel, model);
+
   ModelCache::Cache(model->name, model);
-  return Model_Success;
+  result |= Model_Cached;
+
+  result |= Model_Success;
+  return result;
 }
 
 
-ModelResult LoadAnimatedModel(const std::string path)
+ModelResultBits LoadSkinnedModel(const std::string path)
 {
+  ModelResultBits result = Model_Skinned;
   AnimModel* model = nullptr;
   static u64 copy = 0;
   tinygltf::Model gltfModel;
@@ -937,8 +972,8 @@ ModelResult LoadAnimatedModel(const std::string path)
   model = new AnimModel();
   model->name = modelName; 
 
-  LoadTextures(&gltfModel, model);
-  LoadMaterials(&gltfModel, model);
+  result |= LoadTextures(&gltfModel, model);
+  result |= LoadMaterials(&gltfModel, model);
 
   tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
@@ -947,9 +982,12 @@ ModelResult LoadAnimatedModel(const std::string path)
     LoadSkinnedNode(node, gltfModel, model, mat, 1.0);
   }
 
-  LoadAnimations(&gltfModel, model);
+  result |= LoadAnimations(&gltfModel, model);
   ModelCache::Cache(model->name, model);
-  return Model_Success;
+  result |= Model_Cached;
+
+  result |= Model_Success;
+  return result;
 }
 } // ModelLoader
 } // Recluse

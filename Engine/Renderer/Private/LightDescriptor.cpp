@@ -812,6 +812,13 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
       m_staticSunlightDir.z
     );
 
+    proj = Matrix4::Ortho(
+      m_staticShadowViewportWidth,
+      m_staticShadowViewportHeight,
+      1.0f,
+      8000.0f
+    );
+
     Eye *= 1024.0f;
     Eye -= viewerPos;
     // Pass as one matrix.

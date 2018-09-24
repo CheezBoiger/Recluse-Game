@@ -1626,6 +1626,10 @@ void Renderer::CleanUpGraphicsPipelines()
   m_pRhi->FreeGraphicsPipeline(transparent_staticShadowPipe);
   m_pRhi->FreeGraphicsPipeline(transparent_dynamicShadowPipe);
   m_pRhi->FreeGraphicsPipeline(transparent_colorFilterPipe);
+  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineMorphTargets_LR);
+  m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineMorphTargets_NoLR);
+  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineMorphTargets_LR);
+  m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineMorphTargets_NoLR);
 
   GraphicsPipeline* QuadPipeline = final_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
@@ -3136,9 +3140,13 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
 {
   GraphicsPipeline* staticPipeline = pbr_staticForwardPipeline_NoLR;
   GraphicsPipeline* skinPipeline = pbr_forwardPipeline_NoLR;
+  GraphicsPipeline* skinMorphPipeline = pbr_forwardPipelineMorphTargets_NoLR;
+  GraphicsPipeline* staticMorphPipeline = pbr_staticForwardPipelineMorphTargets_NoLR;
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
     staticPipeline = pbr_staticForwardPipeline_LR;
     skinPipeline = pbr_forwardPipeline_LR;
+    skinMorphPipeline = pbr_forwardPipelineMorphTargets_LR;
+    staticMorphPipeline = pbr_staticForwardPipelineMorphTargets_LR;
   }
   std::array<VkClearValue, 5> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -3174,9 +3182,6 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
       b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-      GraphicsPipeline* Pipe = Skinned ? skinPipeline : staticPipeline;
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
 
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
@@ -3185,7 +3190,21 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       IndexBuffer* indexBuffer = data->IndexData();
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
+
+      GraphicsPipeline* Pipe = Skinned ? skinPipeline : staticPipeline;
       cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+      if (renderCmd._config & CMD_MORPH_BIT) {
+        Pipe = Skinned ? skinMorphPipeline : staticMorphPipeline;
+        R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+        R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+        VkBuffer morph0 = renderCmd._pMorph0->VertexData()->Handle()->NativeBuffer();
+        VkBuffer morph1 = renderCmd._pMorph1->VertexData()->Handle()->NativeBuffer();
+        cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
+        cmdBuffer->BindVertexBuffers(2, 1, &morph1, offsets);
+      }
+  
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();

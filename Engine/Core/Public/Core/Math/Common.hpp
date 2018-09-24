@@ -22,3 +22,4 @@
 #define Floorf(a)               floorf((a))
 #define Log2f(a)                log2f((a))
 #define Ceilf(a)                ceilf((a))
+#define Lerpf(a, b, t)          ((a) * (1.0f - (t)) + (b) * (t))

@@ -67,6 +67,8 @@ GraphicsPipeline* pbr_staticForwardPipeline_LR    = nullptr;
 GraphicsPipeline* pbr_staticForwardPipeline_NoLR  = nullptr;
 GraphicsPipeline* pbr_forwardPipelineMorphTargets_LR = nullptr;
 GraphicsPipeline* pbr_forwardPipelineMorphTargets_NoLR = nullptr;
+GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_LR = nullptr;
+GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_NoLR = nullptr;
 ComputePipeline* pbr_computePipeline_NoLR         = nullptr;
 ComputePipeline* pbr_computePipeline_LR           = nullptr;
 RenderPass*      pbr_forwardRenderPass            = nullptr;
@@ -597,6 +599,10 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   pbr_forwardPipeline_LR = pbr_Pipeline;
   pbr_forwardPipeline_NoLR = Rhi->CreateGraphicsPipeline();
   pbr_staticForwardPipeline_NoLR = Rhi->CreateGraphicsPipeline();
+  pbr_staticForwardPipelineMorphTargets_LR = Rhi->CreateGraphicsPipeline();
+  pbr_staticForwardPipelineMorphTargets_NoLR = Rhi->CreateGraphicsPipeline();
+  pbr_forwardPipelineMorphTargets_LR =  Rhi->CreateGraphicsPipeline();
+  pbr_forwardPipelineMorphTargets_NoLR = Rhi->CreateGraphicsPipeline();
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
@@ -604,12 +610,16 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   Shader* VertPBRLR = Rhi->CreateShader();
   Shader* FragPBRLR = Rhi->CreateShader();
   Shader* FragPBRNoLR = Rhi->CreateShader();
+  Shader* VertMorphSkin = Rhi->CreateShader();
+  Shader* VertMorphStatic = Rhi->CreateShader();
 
   LoadShader(pbr_forwardVertStrLR, VertPBRLR);
   LoadShader(gbuffer_StaticVertFileStr, VertPBRStatic);
   LoadShader(pbr_forwardFragStrLR, FragPBRLR);
   LoadShader(pbr_forwardFragStrNoLR, FragPBRNoLR);
-
+  LoadShader("ForwardPBR_MorphTargets.vert.spv", VertMorphSkin);
+  LoadShader("StaticGBuffer_MorphTargets.vert.spv", VertMorphStatic);
+  
   VkPipelineShaderStageCreateInfo PbrShaders[2];
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   PbrShaders[0].module = VertPBRLR->Handle();
@@ -682,11 +692,43 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   pbr_forwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
 
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = {};
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(SkinnedVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(SkinnedVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    PbrShaders[0].module = VertMorphSkin->Handle();
+    pbr_forwardPipelineMorphTargets_LR->Initialize(ginfo, PipelineLayout);
+  }
+
   PbrShaders[0].module = VertPBRLR->Handle();
   PbrShaders[1].module = FragPBRNoLR->Handle();
   layouts[6] = globalIllumination_DescNoLR->Layout();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
   pbr_forwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
+
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = {};
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(SkinnedVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(SkinnedVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    PbrShaders[0].module = VertMorphSkin->Handle();
+    pbr_forwardPipelineMorphTargets_NoLR->Initialize(ginfo, PipelineLayout);
+  }
 
   PbrShaders[0].module = VertPBRStatic->Handle();
   PbrShaders[1].module = FragPBRLR->Handle();
@@ -707,6 +749,22 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   layouts[6] = globalIllumination_DescLR->Layout();
   pbr_staticForwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
 
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = {};
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(StaticVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(StaticVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    PbrShaders[0].module = VertMorphStatic->Handle();
+    pbr_staticForwardPipelineMorphTargets_LR->Initialize(ginfo, PipelineLayout);
+  }
+
 
   // No Local Reflections pipelines.
   PbrShaders[0].module = VertPBRStatic->Handle();
@@ -715,10 +773,28 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
   pbr_staticForwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
 
+  {
+    VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
+    VkPipelineVertexInputStateCreateInfo input = {};
+    ginfo.pVertexInputState = &input;
+    auto bindings = MorphTargetVertexDescription::GetBindingDescriptions(StaticVertexDescription::GetBindingDescription());
+    auto attribs = MorphTargetVertexDescription::GetVertexAttributes(StaticVertexDescription::GetVertexAttributes());
+    input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    input.pVertexAttributeDescriptions = attribs.data();
+    input.pVertexBindingDescriptions = bindings.data();
+    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+
+    PbrShaders[0].module = VertMorphStatic->Handle();
+    pbr_staticForwardPipelineMorphTargets_NoLR->Initialize(ginfo, PipelineLayout);
+  }
+
   Rhi->FreeShader(VertPBRStatic);
   Rhi->FreeShader(VertPBRLR);
   Rhi->FreeShader(FragPBRLR);
   Rhi->FreeShader(FragPBRNoLR);
+  Rhi->FreeShader(VertMorphSkin);
+  Rhi->FreeShader(VertMorphStatic);
 }
 
 

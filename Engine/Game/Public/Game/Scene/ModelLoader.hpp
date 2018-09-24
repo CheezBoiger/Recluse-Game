@@ -20,9 +20,20 @@ class Mesh;
 namespace ModelLoader {
 
 enum ModelResult {
-  Model_Success,
-  Model_Fail
+  Model_None = 0,
+  Model_Success = (1 << 0),
+  Model_Fail = (1 << 1),
+  Model_Animated = (1 << 2),
+  Model_Textured = (1 << 3),
+  Model_Static = (1 << 4),
+  Model_Skinned = (1 << 5),
+  Model_Unknown = (1 << 6),
+  Model_Cached = (1 << 7),
+  Model_Materials = (1 << 8)
 };
+
+
+using ModelResultBits = u32;
 
 
 
@@ -33,25 +44,25 @@ struct Model {
   std::vector<Mesh*>            meshes;
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;
+  std::vector<AnimClip*>        animations;
 };
 
 
 // Animation model.
 struct AnimModel : public Model {
   std::vector<Skeleton*>    skeletons;
-  std::vector<AnimClip*>    animations;
 };
 
 // Load a model Mesh and Material, as well as a Skinned mesh if applicable.
 // This will also store the model data in ModelCache, under the name of the file.
 // ex. path/to/Apple.gltf 
 // name = Apple
-ModelResult Load(const std::string filename);
-ModelResult LoadAnimatedModel(const std::string filename);
-ModelResult FreeModel(Model** model);
+ModelResultBits Load(const std::string filename);
+ModelResultBits LoadSkinnedModel(const std::string filename);
+ModelResultBits FreeModel(Model** model);
  
 // Create a new model from an existing one, with it's own resources.
 // Performs a deep copy of the original model object.
-ModelResult InstantiateModel(Model* dst, Model* src);
+ModelResultBits InstantiateModel(Model* dst, Model* src);
 } // ModelLoader
 } // Recluse

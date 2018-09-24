@@ -19,9 +19,12 @@ namespace Recluse {
 class AnimationComponent : public Component {
   RCOMPONENT(AnimationComponent)
 public:
+
   AnimationComponent()
     : m_handle(nullptr)
-    , m_rate(1.0) { } 
+    , m_currClip(nullptr) 
+  {
+  } 
 
   // Add an animation clip to the component to playback in the future.
   void AddClip(AnimClip* clip, const std::string& name);
@@ -56,14 +59,14 @@ public:
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      SetPlaybackRate(r32 rate) { m_rate = rate; }
+  void                      SetPlaybackRate(r32 rate);
 
   // Get the current playback rate.
-  r32                       GetPlaybackRate() const { return m_rate; }
+  r32                       GetPlaybackRate() const;
 
 private:
   std::map<std::string, AnimClip*>    m_clips;
   AnimHandle*                         m_handle;
-  r32                                 m_rate;
+  AnimClip*                           m_currClip;
 };
 } // Recluse

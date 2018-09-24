@@ -20,7 +20,6 @@ struct JointPose {
   Quaternion  _rot;   // rotation.
   Vector3     _trans; // translation.
   Vector3     _scale; // scale.
-  Vector2     _weight;  // Morph target weights.
   DEBUG_OP(u8          _id);     // node id sample.
 };
 
@@ -28,8 +27,9 @@ struct JointPose {
 // A Sample of an animation at some certain key frame. This corresponds to 
 // the AnimClip states.
 struct AnimPose {
-  std::vector<JointPose>  _aLocalPoses;       // local pose matrices.
-  std::vector<Matrix4>    _aGlobalPoses;      // global pose matrices.
+  std::vector<JointPose>  _aLocalPoses;       // local pose matrices at time t.
+  std::vector<Matrix4>    _aGlobalPoses;      // global pose matrices at time t.
+  std::vector<r32>        _morphs;            // Morph weights at key time t.
   r32                     _time;              // key frame time within the animation.
 };
 
