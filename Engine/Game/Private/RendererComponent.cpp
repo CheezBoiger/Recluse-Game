@@ -14,7 +14,6 @@
 #include "Core/Utility/Profile.hpp"
 #include "Core/Exception.hpp"
 
-
 namespace Recluse {
 
 
@@ -215,7 +214,12 @@ void SkinnedRendererComponent::Update()
   }
   // Update descriptor joints.
   // use matrix palette K and sent to gpu for skinning. This is the bind pose model space.
-  memcpy(pJointBuffer->_mJoints, palette, paletteSz * sizeof(Matrix4));
+  if ( palette ) {
+    memcpy(pJointBuffer->_mJoints, palette, paletteSz * sizeof(Matrix4));
+  } else {
+    memcpy(pJointBuffer->_mJoints, JointBuffer::defaultMatrices, sizeof(Matrix4) * JointBuffer::kMaxNumberOfJointMatrices);
+  }
+
   m_pJointDescriptor->PushUpdate(JOINT_BUFFER_UPDATE_BIT);
   
   RendererComponent::Update();

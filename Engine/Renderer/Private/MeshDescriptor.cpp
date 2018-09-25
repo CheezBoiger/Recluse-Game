@@ -12,6 +12,26 @@
 
 namespace Recluse {
 
+
+Matrix4 JointBuffer::defaultMatrices[64] = { 
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(), 
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4(),
+  Matrix4(), Matrix4(), Matrix4(), Matrix4()
+};
+
 MeshDescriptor::MeshDescriptor()
   : m_Visible(true)
   , m_Static(true) 

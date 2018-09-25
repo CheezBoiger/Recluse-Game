@@ -35,7 +35,10 @@ struct ObjectBuffer {
 
 
 struct JointBuffer {
-  Matrix4 _mJoints[64];
+  static const u32 kMaxNumberOfJointMatrices = 64;
+  static Matrix4 defaultMatrices[kMaxNumberOfJointMatrices];
+
+  Matrix4 _mJoints[kMaxNumberOfJointMatrices];
 };
 
 // MeshDesciptor is a descriptor that defines how to render an object. This is needed in order
@@ -99,7 +102,7 @@ public:
 
   void          UpdateJointSets();
 
-  u32   NumJoints() { return 64; }
+  u32   NumJoints() { return JointBuffer::kMaxNumberOfJointMatrices; }
 
 private:
   b32           m_bNeedsUpdate;

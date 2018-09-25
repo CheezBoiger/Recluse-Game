@@ -23,7 +23,7 @@ using namespace Recluse;
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 10;
+  static const u32 kNumberOfMonsters = 0;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -218,13 +218,17 @@ int main(int c, char* argv[])
   //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
   //ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
-  ModelLoader::LoadSkinnedModel(RTEXT("Assets/BrainStem/BrainStem.gltf"));
-  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/Monster/Monster.gltf"));
-  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/RiggedSimple.gltf"));
-  //ModelLoader::LoadAnimatedModel(RTEXT("Assets/busterDrone/busterDrone.gltf"));
- // ModelLoader::LoadAnimatedModel(RTEXT("Assets/BoxAnimated.glb"));
+  ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/Monster/Monster.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/CesiumMan.glb"));
+  //ModelLoader::Load(RTEXT("Assets/RiggedFigure.glb"));
+  //ModelLoader::Load(RTEXT("Assets/RiggedSimple.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+ // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
+  ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
+  //ModelLoader::Load(RTEXT("Assets/Tree/tree.gltf"));
 
   // Create and set up scene.
 

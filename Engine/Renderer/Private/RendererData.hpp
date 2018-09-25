@@ -225,15 +225,47 @@ void SetUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultI
 void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
 
+enum AntiAliasingType {
+  FXAA,
+  SMAA
+};
+
+
+// Antialiasing engine, which must be done before HDR pass!
 class AntiAliasingPipe {
 public:
-  enum AliasingType {
+  enum AntiAliasingType {
     FXAA,
     SMAA
   };
 
-  static DescriptorSetLayout* CreateDescriptorSetLayout(AliasingType type);
-  static GraphicsPipeline*    CreateGraphicsPipeline(AliasingType type); 
+  static DescriptorSetLayout* CreateDescriptorSetLayout(AntiAliasingType type);
+  static GraphicsPipeline*    CreateGraphicsPipeline(AntiAliasingType type); 
+};
+
+
+class AntiAliasingEngine { 
+public:
+  Texture*          _outputImage;
+  Sampler*          _sampler;
+  AntiAliasingType  _type;
+};
+
+
+class AntiAliasingSMAA : public AntiAliasingEngine {
+public:
+
+  GraphicsPipeline* m;
+  Texture* _edgesTex;
+  Texture* _blendTex;
+  Sampler* _sampler;
+
+};
+
+
+class AntiAliasingFXAA : public AntiAliasingEngine {
+public:
+  GraphicsPipeline* m_piplineFXAA;
 };
 } // RendererPass
 } // Recluse

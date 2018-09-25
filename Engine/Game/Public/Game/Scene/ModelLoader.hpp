@@ -34,6 +34,7 @@ enum ModelResult {
 
 
 using ModelResultBits = u32;
+using ModelConfigBits = u32;
 
 
 
@@ -45,20 +46,15 @@ struct Model {
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;
   std::vector<AnimClip*>        animations;
-};
-
-
-// Animation model.
-struct AnimModel : public Model {
   std::vector<Skeleton*>    skeletons;
 };
+
 
 // Load a model Mesh and Material, as well as a Skinned mesh if applicable.
 // This will also store the model data in ModelCache, under the name of the file.
 // ex. path/to/Apple.gltf 
 // name = Apple
 ModelResultBits Load(const std::string filename);
-ModelResultBits LoadSkinnedModel(const std::string filename);
 ModelResultBits FreeModel(Model** model);
  
 // Create a new model from an existing one, with it's own resources.

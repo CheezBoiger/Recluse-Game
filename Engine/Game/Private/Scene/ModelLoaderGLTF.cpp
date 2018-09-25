@@ -759,7 +759,7 @@ static NodeTransform CalculateGlobalTransform(const tinygltf::Node& node, Matrix
   return transform;
 }
 
-static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix)
+static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix)
 {
   // TODO(): JointPoses are in the wrong order as invBinding matrices, need to sort them in the
   // order of joint array in GLTF file!!
@@ -820,8 +820,7 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     auto it = nodeMap.find(skinJointIdx);
     if (it != nodeMap.end()) {
       NodeTag& tag = it->second;
-      localTransform = CalculateGlobalTransform(node, tag._parentTransform);
-    
+      localTransform = CalculateGlobalTransform(node, tag._parentTransform);    
       joint._iParent = tag._parent;
     }
 
@@ -839,31 +838,6 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
 }
 
 
-static void LoadSkinnedNode(const tinygltf::Node& node, const tinygltf::Model& model, AnimModel* engineModel, const Matrix4& parentMatrix, const r32 scale)
-{
-  NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
-
-  // if skin, this must be the root.
-  if (!node.children.empty()) {
-    for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadSkinnedNode(model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
-    }
-  }
-
-  // TODO(): Need to avoid re importing the same mesh or skin from gltf files!
-  // Get the skeleton from this node to apply to the corresponding mesh. 
-  skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
-
-  if (node.skin != -1) {
-    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
-    pMesh->SetSkeletonReference(skeleId);
-  } else {
-    LoadMesh(node, model, engineModel, transform._globalMatrix);
-  }
-  // TODO(): Load animations from gltf.
-}
-
-
 static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
@@ -873,7 +847,14 @@ static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, M
     }
   }
 
-  LoadMesh(node, model, engineModel, transform._globalMatrix);
+  if (node.skin != -1) {
+    skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
+    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+    pMesh->SetSkeletonReference(skeleId);
+  }
+  else {
+    LoadMesh(node, model, engineModel, transform._globalMatrix);
+  }
 }
 
 
@@ -898,7 +879,7 @@ void GetFilenameAndType(const std::string& path, std::string& filenameOut, u32& 
 
 ModelResultBits Load(const std::string path)
 {
-  ModelResultBits result = Model_Static;
+  ModelResultBits result = 0;
   Model*           model = nullptr;
   static u64 copy = 0;
   tinygltf::Model gltfModel;
@@ -936,53 +917,6 @@ ModelResultBits Load(const std::string path)
 
   result |= LoadAnimations(&gltfModel, model);
 
-  ModelCache::Cache(model->name, model);
-  result |= Model_Cached;
-
-  result |= Model_Success;
-  return result;
-}
-
-
-ModelResultBits LoadSkinnedModel(const std::string path)
-{
-  ModelResultBits result = Model_Skinned;
-  AnimModel* model = nullptr;
-  static u64 copy = 0;
-  tinygltf::Model gltfModel;
-  tinygltf::TinyGLTF loader;
-  std::string err;
-  std::string modelName = "Unknown" + std::to_string(copy++);
-  u32 type = 0;
-  GetFilenameAndType(path, modelName, type);
-  
-
-  bool success = type == 1 ? loader.LoadBinaryFromFile(&gltfModel, &err, path) 
-    : loader.LoadASCIIFromFile(&gltfModel, &err, path);
-  if (!err.empty()) {
-    Log() << err << "\n";
-  }
-
-  if (!success) {
-    Log() << "Failed to parse glTF\n";
-    return Model_Fail;
-  }
-
-  // Successful loading from tinygltf.
-  model = new AnimModel();
-  model->name = modelName; 
-
-  result |= LoadTextures(&gltfModel, model);
-  result |= LoadMaterials(&gltfModel, model);
-
-  tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
-  for (size_t i = 0; i < scene.nodes.size(); ++i) {
-    tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
-    Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
-    LoadSkinnedNode(node, gltfModel, model, mat, 1.0);
-  }
-
-  result |= LoadAnimations(&gltfModel, model);
   ModelCache::Cache(model->name, model);
   result |= Model_Cached;
 
