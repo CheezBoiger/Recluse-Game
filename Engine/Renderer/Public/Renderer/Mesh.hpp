@@ -5,7 +5,7 @@
 #include "Core/Math/AABB.hpp"
 #include "Material.hpp"
 #include "Animation/Skeleton.hpp"
-
+#include "RenderCmd.hpp"
 
 namespace Recluse {
 
@@ -23,6 +23,7 @@ struct Primitive {
   Material*             _pMat;
   u32                   _firstIndex;
   u32                   _indexCount;
+  CmdConfigBits         _localConfigs;
 };
 
 // A Single instance of a mesh stored in gpu memory.

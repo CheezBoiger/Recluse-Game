@@ -40,6 +40,7 @@ void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 ind
   prim._pMat = mat;
   prim._firstIndex = firstIndex;
   prim._indexCount = indexCount;
+  prim._localConfigs = 0;
   handle = std::move(prim);
 }
 
@@ -336,8 +337,10 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
     std::vector<StaticVertex> vertices;
     std::vector<u32>          indices;
     Vector3                   min, max;
+    CmdConfigBits             globalConfig = 0;
 
     if (!mesh.weights.empty()) {
+      globalConfig |= CMD_MORPH_BIT;
       morphVertices.resize(mesh.weights.size());
     }
 
@@ -464,6 +467,10 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
       Primitive primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
+      primData._localConfigs |= globalConfig;
+      if (engineModel->materials[primitive.material]->Native()->Transparent()) {
+        primData._localConfigs |= CMD_TRANSPARENT_BIT;  
+      }
       primitives.push_back(primData);
     }
 
@@ -505,8 +512,10 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
     std::vector<SkinnedVertex> vertices; 
     std::vector<u32>          indices;
     Vector3                   min, max;
+    CmdConfigBits             globalConfig = CMD_SKINNED_BIT;
 
     if (!mesh.weights.empty()) {
+      globalConfig |= CMD_MORPH_BIT;
       morphVertices.resize(mesh.weights.size());
     }
 
@@ -672,7 +681,10 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
 
       Primitive primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
-
+      primData._localConfigs |= globalConfig;
+      if (engineModel->materials[primitive.material]->Native()->Transparent()) {
+        primData._localConfigs |= CMD_TRANSPARENT_BIT;  
+      }
       // TODO():
       //    Still need to add start and index count.
       primitives.push_back(primData);

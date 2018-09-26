@@ -85,6 +85,7 @@ public:
 
     m_pRendererComponent->EnableLod(false);
     m_pRendererComponent->Initialize(this);
+    m_pRendererComponent->ForceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->AddMesh(model->meshes[i]);
     }

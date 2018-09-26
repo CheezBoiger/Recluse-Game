@@ -569,7 +569,7 @@ void ShadowMapSystem::InitializeShadowMap(VulkanRHI* pRhi)
 }
 
 
-void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdList<MeshRenderCmd>& dynamicCmds)
+void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -598,7 +598,7 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
-  auto render = [&](MeshRenderCmd& renderCmd) -> void {
+  auto render = [&](PrimitiveRenderCmd& renderCmd) -> void {
     if (!renderCmd._pMeshDesc) return;
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
     R_ASSERT(renderCmd._pMeshData, "Null data was passed to renderer.");
@@ -634,31 +634,27 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    Primitive* primitives = renderCmd._pPrimitives;
-    u32 count = renderCmd._primitiveCount;
-    for (u32 i = 0; i < count; ++i) {
-      Primitive& primitive = primitives[i];
-      descriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
-      pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
-      if (index) {
-        pCmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
-      }
-      else {
-        pCmdBuffer->Draw(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0);
-      }
+    Primitive* primitive = renderCmd._pPrimitive;
+    descriptorSets[2] = primitive->_pMat->Native()->CurrMaterialSet()->Handle();
+    pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
+    if (index) {
+      pCmdBuffer->DrawIndexed(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0, 0);
+    }
+    else {
+      pCmdBuffer->Draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
     }
   };
 
   pCmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
   for (size_t i = 0; i < dynamicCmds.Size(); ++i) {
-    MeshRenderCmd& renderCmd = dynamicCmds[i];
+    PrimitiveRenderCmd& renderCmd = dynamicCmds[i];
     render(renderCmd);
   }
   pCmdBuffer->EndRenderPass();
 }
 
 
-void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdList<MeshRenderCmd>& staticCmds)
+void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -689,7 +685,7 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
-  auto render = [&](MeshRenderCmd& renderCmd) -> void {
+  auto render = [&](PrimitiveRenderCmd& renderCmd) -> void {
     if (!renderCmd._pMeshDesc) return;
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
     R_ASSERT(renderCmd._pMeshData, "Null data was passed to renderer.");
@@ -725,24 +721,20 @@ void ShadowMapSystem::GenerateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
-    Primitive* primitives = renderCmd._pPrimitives;
-    u32 count = renderCmd._primitiveCount;
-    for (u32 i = 0; i < count; ++i) {
-      Primitive& primitive = primitives[i];
-      descriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
-      pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
-      if (index) {
-        pCmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
-      }
-      else {
-        pCmdBuffer->Draw(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0);
-      }
+    Primitive* primitive = renderCmd._pPrimitive;
+    descriptorSets[2] = primitive->_pMat->Native()->CurrMaterialSet()->Handle();
+    pCmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Layout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
+    if (index) {
+      pCmdBuffer->DrawIndexed(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0, 0);
+    }
+    else {
+      pCmdBuffer->Draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
     }
   };
 
   pCmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
   for (size_t i = 0; i < staticCmds.Size(); ++i) {
-    MeshRenderCmd& renderCmd = staticCmds[i];
+    PrimitiveRenderCmd& renderCmd = staticCmds[i];
     render(renderCmd);
   }
   pCmdBuffer->EndRenderPass();

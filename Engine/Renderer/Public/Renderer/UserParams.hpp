@@ -67,6 +67,9 @@ public:
   // the better the looks, but will impact performance. 
   GraphicsQuality     _LightQuality;
 
+  // Model quality. 
+  GraphicsQuality     _modelQuality;
+
   // Level of detail, by distance. The higher, the better the models in the world.
   r32             _Lod;
 
@@ -106,6 +109,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   AA_None,
   GRAPHICS_QUALITY_ULTRA,
   GRAPHICS_QUALITY_NONE,
+  GRAPHICS_QUALITY_HIGH,
   GRAPHICS_QUALITY_HIGH,
   1.0f,
   1.0f,

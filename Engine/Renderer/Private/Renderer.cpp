@@ -96,7 +96,7 @@ Renderer::Renderer()
   m_jointDescriptors.Resize(1024);
   m_materialDescriptors.Resize(1024);
 
-  m_cmdDeferredList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
+  m_cmdDeferredList.SetSortFunc([&](PrimitiveRenderCmd& cmd1, PrimitiveRenderCmd& cmd2) -> bool {
     
     //if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
@@ -116,7 +116,7 @@ Renderer::Renderer()
 
   // Use painter's algorithm in this case for forward, simply because of 
   // transparent objects.
-  m_forwardCmdList.SetSortFunc([&](MeshRenderCmd& cmd1, MeshRenderCmd& cmd2) -> bool {
+  m_forwardCmdList.SetSortFunc([&](PrimitiveRenderCmd& cmd1, PrimitiveRenderCmd& cmd2) -> bool {
     //if (!cmd1._pTarget->_bRenderable || !cmd2._pTarget->_bRenderable) return false;
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
@@ -2668,7 +2668,7 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
   
   cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
-      MeshRenderCmd& renderCmd = m_cmdDeferredList.Get(i);
+      PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.Get(i);
       // Need to notify that this render command does not have a render object.
       if (!renderCmd._pMeshDesc) continue;
       if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
@@ -2708,20 +2708,16 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
-      Primitive* primitives = renderCmd._pPrimitives;
-      u32 count = renderCmd._primitiveCount;
-      for (u32 i = 0; i < count; ++i) {
-        Primitive& primitive = primitives[i];
-        MaterialDescriptor* pMatDesc = primitive._pMat->Native();
-        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
-        // Bind materials.
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-          Pipe->Layout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
-        if (indexBuffer) {
-          cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
-        } else {
-          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
-        }
+      MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->Native();
+      DescriptorSets[2] = pMatDesc->CurrMaterialSet()->Handle();
+      // Bind materials.
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        Pipe->Layout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
+      if (indexBuffer) {
+        cmdBuffer->DrawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
+          renderCmd._pPrimitive->_firstIndex, 0, 0);
+      } else {
+        cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
       }
     }
   cmdBuffer->EndRenderPass();
@@ -3177,8 +3173,8 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
 
   cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
     for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
-      MeshRenderCmd& renderCmd = m_forwardCmdList[i];
-      if (!(renderCmd._config & CMD_FORWARD_BIT) || !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
+      PrimitiveRenderCmd& renderCmd = m_forwardCmdList[i];
+      if (!(renderCmd._config & CMD_FORWARD_BIT) && !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
       R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
       b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
@@ -3220,25 +3216,21 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       DescriptorSets[7] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
       // Bind materials.
-      Primitive* primitives = renderCmd._pPrimitives;
-      u32 count = renderCmd._primitiveCount;
-      for (u32 i = 0; i < count; ++i) {
-        Primitive& primitive = primitives[i];
-        DescriptorSets[2] = primitive._pMat->Native()->CurrMaterialSet()->Handle();
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
-          Pipe->Layout(),
-          0,
-          (Skinned ? 8 : 7),
-          DescriptorSets,
-          0,
-          nullptr
-        );
+      Primitive* primitive = renderCmd._pPrimitive;
+      DescriptorSets[2] = primitive->_pMat->Native()->CurrMaterialSet()->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
+        Pipe->Layout(),
+        0,
+        (Skinned ? 8 : 7),
+        DescriptorSets,
+        0,
+        nullptr
+      );
 
-        if (indexBuffer) {
-          cmdBuffer->DrawIndexed(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0, 0);
-        } else {
-          cmdBuffer->Draw(primitive._indexCount, renderCmd._instances, primitive._firstIndex, 0);
-        }
+      if (indexBuffer) {
+        cmdBuffer->DrawIndexed(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0, 0);
+      } else {
+        cmdBuffer->Draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
       }
     }
   cmdBuffer->EndRenderPass();
@@ -4000,34 +3992,47 @@ void Renderer::ClearCmdLists()
 void Renderer::PushMeshRender(MeshRenderCmd& cmd)
 {
   if (m_Minimized) return;
-  if (cmd._config & CMD_SKINNED_BIT) {
-    R_ASSERT(cmd._pJointDesc, "No joint descriptoer added to this command.");
-    m_jointDescriptors.PushBack(cmd._pJointDesc);
-  }
-
-  R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
-  m_meshDescriptors.PushBack(cmd._pMeshDesc);
 
   Primitive* primitives = cmd._pPrimitives;
   u32 count = cmd._primitiveCount;
   for (u32 i = 0; i < count; ++i) {
     Primitive& prim = primitives[i];
+    PrimitiveRenderCmd primCmd = {};
+    primCmd._config = cmd._config | prim._localConfigs;
+    primCmd._pJointDesc = cmd._pJointDesc;
+    primCmd._pMeshData = cmd._pMeshData;
+    primCmd._pMeshDesc = cmd._pMeshDesc;
+    primCmd._pMorph0 = cmd._pMorph0;
+    primCmd._pMorph1 = cmd._pMorph1;
+    primCmd._pPrimitive = &prim;
+    primCmd._instances = 1;
+
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
-    m_materialDescriptors.PushBack(prim._pMat->Native());  
+    m_materialDescriptors.PushBack(prim._pMat->Native());
     R_ASSERT(prim._pMat->Native() == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
-  }
 
-  u32 config = cmd._config;
-  if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {    
-    m_forwardCmdList.PushBack(cmd);
-  } else { 
-    m_cmdDeferredList.PushBack(cmd);
-  }
+    if (primCmd._config & CMD_SKINNED_BIT) {
+      R_ASSERT(cmd._pJointDesc, "No joint descriptoer added to this command.");
+      m_jointDescriptors.PushBack(cmd._pJointDesc);
+    }
 
-  if ((config & CMD_STATIC_BIT)) {
-    m_staticCmdList.PushBack(cmd);
-  } else {
-    m_dynamicCmdList.PushBack(cmd);
+    R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
+    m_meshDescriptors.PushBack(cmd._pMeshDesc);
+
+    u32 config = primCmd._config;
+    if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
+      m_forwardCmdList.PushBack(primCmd);
+    }
+    else {
+      m_cmdDeferredList.PushBack(primCmd);
+    }
+
+    if ((config & CMD_STATIC_BIT)) {
+      m_staticCmdList.PushBack(primCmd);
+    }
+    else {
+      m_dynamicCmdList.PushBack(primCmd);
+    }
   }
 }
 

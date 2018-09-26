@@ -150,6 +150,7 @@ int main(int c, char* argv[])
     params._AA = AA_FXAA_2x;
     params._Shadows = GRAPHICS_QUALITY_HIGH;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
+    params._renderScale = 1.0;
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
     params._EnableChromaticAberration = true;
@@ -191,6 +192,7 @@ int main(int c, char* argv[])
     prim._firstIndex = 0;
     prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
     prim._pMat = Material::Default();
+    prim._localConfigs = 0;
     mesh->PushPrimitive(prim);
   }
 
@@ -208,6 +210,7 @@ int main(int c, char* argv[])
     prim._firstIndex = 0;
     prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
     prim._pMat = Material::Default();
+    prim._localConfigs = 0;
     mesh->PushPrimitive(prim);
     MeshCache::Cache(RTEXT("NativeSphere"), mesh);
   }

@@ -320,12 +320,11 @@ private:
 
   Window*           m_pWindow;
 
-
   // Command lists used by the renderer.
-  CmdList<MeshRenderCmd>            m_cmdDeferredList;
-  CmdList<MeshRenderCmd>            m_forwardCmdList;
-  CmdList<MeshRenderCmd>            m_staticCmdList;
-  CmdList<MeshRenderCmd>            m_dynamicCmdList;
+  CmdList<PrimitiveRenderCmd>            m_cmdDeferredList;
+  CmdList<PrimitiveRenderCmd>            m_forwardCmdList;
+  CmdList<PrimitiveRenderCmd>            m_staticCmdList;
+  CmdList<PrimitiveRenderCmd>            m_dynamicCmdList;
 
   CmdList<JointDescriptor*>         m_jointDescriptors;
   CmdList<MeshDescriptor*>          m_meshDescriptors;

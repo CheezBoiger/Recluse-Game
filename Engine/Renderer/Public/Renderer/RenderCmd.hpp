@@ -56,8 +56,7 @@ typedef u32 CmdConfigBits;
 
 struct MeshRenderCmd {
   MeshRenderCmd()
-    : _config(false)
-    , _pMeshDesc(nullptr)
+    : _pMeshDesc(nullptr)
     , _pMeshData(nullptr)
     , _pMorph0(nullptr)
     , _pMorph1(nullptr)
@@ -71,6 +70,18 @@ struct MeshRenderCmd {
   JointDescriptor*        _pJointDesc;
   u32                     _instances;
   u32                     _primitiveCount;
+  CmdConfigBits           _config;
+};
+
+
+struct PrimitiveRenderCmd {
+  MeshData*               _pMeshData;
+  Primitive*              _pPrimitive;
+  MorphTarget*            _pMorph0;
+  MorphTarget*            _pMorph1;
+  MeshDescriptor*         _pMeshDesc;
+  JointDescriptor*        _pJointDesc;
+  u32                     _instances;
   CmdConfigBits           _config;
 };
 

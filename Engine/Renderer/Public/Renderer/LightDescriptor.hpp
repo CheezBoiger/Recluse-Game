@@ -147,8 +147,8 @@ public:
   void              SetViewportWidth(r32 width) { m_rShadowViewportWidth = width; }
   void              SetViewportHeight(r32 height) { m_rShadowViewportHeight = height; }
 
-  void              GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& dynamicCmds);
-  void              GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<MeshRenderCmd>& staticCmds);
+  void              GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds);
+  void              GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds);
 
   void              SignalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
