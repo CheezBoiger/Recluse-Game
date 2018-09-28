@@ -11,6 +11,7 @@ namespace Recluse {
 
 
 std::unordered_map<tcache_t, Texture2D*> TextureCache::sCache;
+std::unordered_map<std::string, TextureSampler*> SamplerCache::sCache;
 
 
 TextureCache::TextureCache()
@@ -92,6 +93,45 @@ void TextureCache::CleanUpAll()
     }
   }
 
+  sCache.clear();
+}
+
+
+void SamplerCache::Cache(std::string& name, TextureSampler* pSampler)
+{
+  auto& it = sCache.find(name);
+  if (it != sCache.end()) {
+    return;
+  }
+
+  sCache[name] = pSampler;
+}
+
+
+void SamplerCache::Get(std::string& name, TextureSampler** out)
+{
+  auto& it = sCache.find(name);
+  if (it != sCache.end()) {
+    *out = it->second;
+  }
+}
+
+
+void SamplerCache::UnCache(std::string& name, TextureSampler** out)
+{
+  auto& it = sCache.find(name);
+  if (it != sCache.end()) {
+    *out = it->second;
+    sCache.erase(it);
+  }
+}
+
+
+void SamplerCache::CleanUpAll()
+{
+  for (auto& sampler : sCache) {
+    gRenderer().FreeTextureSampler(sampler.second);
+  }
   sCache.clear();
 }
 } // Recluse

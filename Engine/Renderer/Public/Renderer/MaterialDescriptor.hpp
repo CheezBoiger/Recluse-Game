@@ -60,7 +60,11 @@ public:
   void            Update(VulkanRHI* pRhi);
   void            CleanUp(VulkanRHI* pRhi);
 
-  void            SetSampler(TextureSampler* sampler) { m_pSampler = sampler; }
+  void            SetAlbedoSampler(TextureSampler* sampler) { m_pAlbedoSampler = sampler; }
+  void            SetNormalSampler(TextureSampler* sampler) { m_pNormalSampler = sampler; }
+  void            SetRoughMetalSampler(TextureSampler* sampler) { m_pRoughMetalSampler = sampler; }
+  void            SetAoSampler(TextureSampler* sampler) { m_pAoSampler = sampler; }
+  void            SetEmissiveSampler(TextureSampler* sampler) { m_pEmissiveSampler = sampler; }
   void            SetAlbedo(Texture2D* albedo) { m_pAlbedo = albedo; }
   void            SetRoughnessMetallic(Texture2D* roughMetal) { m_pRoughnessMetallic = roughMetal; }
   void            SetNormal(Texture2D* normal) { m_pNormal = normal; }
@@ -82,7 +86,11 @@ public:
   Texture2D*      Ao() { return m_pAo; }
   Texture2D*      Emissive() { return m_pEmissive; }
 
-  TextureSampler* GetSampler() { return m_pSampler; }
+  TextureSampler* GetAlbedoSampler() { return m_pAlbedoSampler; }
+  TextureSampler* GetNormalSampler() { return m_pNormalSampler; }
+  TextureSampler* GetRoughMetalSampler() { return m_pRoughMetalSampler; }
+  TextureSampler* GetAoSampler() { return m_pAoSampler; }
+  TextureSampler* GetEmissiveSampler() { return m_pEmissiveSampler; }
 
 private:
 
@@ -97,7 +105,11 @@ private:
   Texture2D*      m_pAo;
   Texture2D*      m_pEmissive;
 
-  TextureSampler* m_pSampler;
+  TextureSampler* m_pAlbedoSampler;
+  TextureSampler* m_pNormalSampler;
+  TextureSampler* m_pRoughMetalSampler;
+  TextureSampler* m_pAoSampler;
+  TextureSampler* m_pEmissiveSampler;
   u32             m_bNeedsUpdate;
   DescriptorSet*  m_materialSet;
   friend class Renderer;

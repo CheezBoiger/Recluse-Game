@@ -59,6 +59,7 @@ public:
     MaterialCache::CleanUpAll();
     MeshCache::CleanUpAll();
     TextureCache::CleanUpAll();
+    SamplerCache::CleanUpAll();
   }
 };
 } // Recluse

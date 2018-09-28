@@ -256,7 +256,11 @@ public:
 
     m_pSampler = gRenderer().CreateTextureSampler(samplerInfo);
     m_pMaterialRef = mat;
-    m_pMaterialRef->SetSampler(m_pSampler);
+    m_pMaterialRef->SetAlbedoSampler(m_pSampler);
+    m_pMaterialRef->SetNormalSampler(m_pSampler);
+    m_pMaterialRef->SetRoughMetalSampler(m_pSampler);
+    m_pMaterialRef->SetAoSampler(m_pSampler);
+    m_pMaterialRef->SetEmissiveSampler(m_pSampler);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->GetPrimitive(0)->_pMat = mat;
     }

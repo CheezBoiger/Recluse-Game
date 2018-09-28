@@ -45,7 +45,11 @@ public:
 
   void                      EnableMaps(b32 mapEnable);
   void                      DisableMaps(b32 mapsDisable);
-  void                      SetSampler(TextureSampler* sampler) { m_pDesc->SetSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
+  void                      SetAlbedoSampler(TextureSampler* sampler) { m_pDesc->SetAlbedoSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
+  void                      SetNormalSampler(TextureSampler* sampler) { m_pDesc->SetNormalSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
+  void                      SetRoughMetalSampler(TextureSampler* sampler) { m_pDesc->SetRoughMetalSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
+  void                      SetAoSampler(TextureSampler* sampler) { m_pDesc->SetAoSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
+  void                      SetEmissiveSampler(TextureSampler* sampler) { m_pDesc->SetEmissiveSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetAlbedo(Texture2D* texture) { m_pDesc->SetAlbedo(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetNormal(Texture2D* texture) { m_pDesc->SetNormal(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      SetRoughnessMetallic(Texture2D* texture) { m_pDesc->SetRoughnessMetallic(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }

@@ -23,7 +23,11 @@ MaterialDescriptor::MaterialDescriptor()
   , m_pNormal(nullptr)
   , m_pAo(nullptr)
   , m_pEmissive(nullptr)
-  , m_pSampler(nullptr)
+  , m_pAlbedoSampler(nullptr)
+  , m_pNormalSampler(nullptr)
+  , m_pAoSampler(nullptr)
+  , m_pRoughMetalSampler(nullptr)
+  , m_pEmissiveSampler(nullptr)
   , m_pBuffer(nullptr)
   , m_bNeedsUpdate(true)
 { 
@@ -81,10 +85,9 @@ void MaterialDescriptor::Initialize(VulkanRHI* pRhi)
 
 void MaterialDescriptor::Update(VulkanRHI* pRhi)
 {
+#define CHECK_SAMPLER(pSampler) (pSampler) ? pSampler->Handle()->Handle() : DefaultSampler2DKey->Handle()
   if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
-    Sampler* sampler = DefaultSampler2DKey;
-    if (m_pSampler) sampler = m_pSampler->Handle();
 
     Texture* defaultTexture = DefaultTextureKey;
     std::array<VkWriteDescriptorSet, 6> MaterialWriteSets;
@@ -96,7 +99,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     else {
       albedoInfo.imageView = defaultTexture->View();
     }
-    albedoInfo.sampler = sampler->Handle();
+    albedoInfo.sampler = CHECK_SAMPLER(m_pAlbedoSampler);
 
     VkDescriptorImageInfo roughMetalInfo = {};
     roughMetalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -106,7 +109,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     else {
       roughMetalInfo.imageView = defaultTexture->View();
     }
-    roughMetalInfo.sampler = sampler->Handle();
+    roughMetalInfo.sampler = CHECK_SAMPLER(m_pRoughMetalSampler);
 
     VkDescriptorImageInfo normalInfo = {};
     normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -116,7 +119,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     else {
       normalInfo.imageView = defaultTexture->View();
     }
-    normalInfo.sampler = sampler->Handle();
+    normalInfo.sampler = CHECK_SAMPLER(m_pNormalSampler);
 
     VkDescriptorImageInfo aoInfo = {};
     aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -126,7 +129,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     else {
       aoInfo.imageView = defaultTexture->View();
     }
-    aoInfo.sampler = sampler->Handle();
+    aoInfo.sampler = CHECK_SAMPLER(m_pAoSampler);
 
     VkDescriptorImageInfo emissiveInfo = {};
     emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -136,7 +139,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     else {
       emissiveInfo.imageView = defaultTexture->View();
     }
-    emissiveInfo.sampler = sampler->Handle();
+    emissiveInfo.sampler = CHECK_SAMPLER(m_pEmissiveSampler);
 
     VkDescriptorBufferInfo matBufferInfo = { };
     matBufferInfo.buffer = m_pBuffer->NativeBuffer();

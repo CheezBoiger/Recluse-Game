@@ -100,6 +100,88 @@ static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineMod
 }
 
 
+static SamplerAddressMode GetSamplerAddressMode(i32 wrap)
+{
+    switch (wrap) {
+      case TINYGLTF_TEXTURE_WRAP_REPEAT: return SAMPLER_ADDRESS_REPEAT;
+      case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return SAMPLER_ADDRESS_CLAMP_TO_EDGE;
+      case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return SAMPLER_ADDRESS_MIRRORED_REPEAT;
+      default: return SAMPLER_ADDRESS_CLAMP_TO_EDGE;
+    }
+}
+
+
+static void InitSamplerFilterMode(SamplerInfo& info, i32 minFilter, i32 magFilter)
+{
+  switch (minFilter) {
+    case TINYGLTF_TEXTURE_FILTER_NEAREST:
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
+    {
+      info._minFilter = SAMPLER_FILTER_NEAREST;
+    } break;
+    case TINYGLTF_TEXTURE_FILTER_LINEAR:
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
+    default:
+    {
+      info._minFilter = SAMPLER_FILTER_LINEAR;
+    }
+  }
+
+  switch (magFilter) {
+    case TINYGLTF_TEXTURE_FILTER_NEAREST:
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
+    {
+      info._maxFilter = SAMPLER_FILTER_NEAREST;
+    } break;
+    case TINYGLTF_TEXTURE_FILTER_LINEAR:
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
+    default:
+    {
+      info._maxFilter = SAMPLER_FILTER_LINEAR;
+    }
+  }
+
+  if (minFilter == TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR
+    || minFilter == TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR
+    || minFilter == TINYGLTF_TEXTURE_FILTER_LINEAR) {
+    info._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
+  }
+
+  if (minFilter == TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST
+    || minFilter == TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST
+    || minFilter == TINYGLTF_TEXTURE_FILTER_NEAREST) {
+    info._mipmapMode = SAMPLER_MIPMAP_MODE_NEAREST;
+  }
+}
+
+
+static ModelResultBits LoadSamplers(tinygltf::Model* gltfModel, Model* engineModel)
+{
+  
+  for (auto& sampler : gltfModel->samplers) {
+    SamplerInfo samplerInfo = { };
+    samplerInfo._addrU = GetSamplerAddressMode(sampler.wrapS);
+    samplerInfo._addrV = GetSamplerAddressMode(sampler.wrapT);
+    samplerInfo._addrW = GetSamplerAddressMode(sampler.wrapR);
+    InitSamplerFilterMode(samplerInfo, sampler.minFilter, sampler.magFilter);
+    samplerInfo._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_WHITE;
+    samplerInfo._enableAnisotropy = false;
+    samplerInfo._maxAniso = 16.0f;
+    samplerInfo._maxLod = 1.0f;
+    samplerInfo._minLod = 0.0f;
+    samplerInfo._unnnormalizedCoordinates = false;
+    TextureSampler* pSampler = gRenderer().CreateTextureSampler(samplerInfo);
+    SamplerCache::Cache(sampler.name, pSampler);
+    engineModel->samplers.push_back(pSampler);
+  }
+  return Model_None;
+}
+
+
 static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineModel)
 {
   u32 count = 0;
@@ -108,24 +190,32 @@ static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineMo
     engineMat->Initialize(&gRenderer());
     engineMat->SetMetallicFactor(1.0f);
     engineMat->SetRoughnessFactor(1.0f);
-    if (mat.values.find("baseColorTexture") != mat.values.end()) {
+    if (mat.values.find("baseColorTexture") != mat.values.end()) { 
+      tinygltf::Texture& texture = gltfModel->textures[mat.values["baseColorTexture"].TextureIndex()]; 
       engineMat->SetAlbedo(engineModel->textures[mat.values["baseColorTexture"].TextureIndex()]);
+      if (texture.sampler != -1) engineMat->SetAlbedoSampler(engineModel->samplers[texture.sampler]);
       engineMat->EnableAlbedo(true);
     }
 
     if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
       engineMat->SetNormal(engineModel->textures[mat.additionalValues["normalTexture"].TextureIndex()]);
+      tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["normalTexture"].TextureIndex()];
+      if (texture.sampler != -1) engineMat->SetNormalSampler(engineModel->samplers[texture.sampler]);
       engineMat->EnableNormal(true);
     }
 
     if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {   
       engineMat->SetRoughnessMetallic(engineModel->textures[mat.values["metallicRoughnessTexture"].TextureIndex()]);
+      tinygltf::Texture& texture = gltfModel->textures[mat.values["metallicRoughnessTexture"].TextureIndex()]; 
+      if (texture.sampler != -1) engineMat->SetRoughMetalSampler(engineModel->samplers[texture.sampler]);
       engineMat->EnableRoughness(true);
       engineMat->EnableMetallic(true);
     }
 
     if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
       engineMat->SetAo(engineModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()]);
+      tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()];
+      if (texture.sampler != -1) engineMat->SetAoSampler(engineModel->samplers[texture.sampler]);
       engineMat->EnableAo(true);
     }
 
@@ -139,6 +229,8 @@ static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineMo
 
     if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
       engineMat->SetEmissive(engineModel->textures[mat.additionalValues["emissiveTexture"].TextureIndex()]);
+      tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["emissiveTexture"].TextureIndex()];
+      if (texture.sampler != -1) engineMat->SetEmissiveSampler(engineModel->samplers[texture.sampler]);
       engineMat->EnableEmissive(true);
     }
 
@@ -917,6 +1009,7 @@ ModelResultBits Load(const std::string path)
   model = new Model();
   model->name = std::move(modelName);
 
+  result |= LoadSamplers(&gltfModel, model);
   result |= LoadTextures(&gltfModel, model);
   result |= LoadMaterials(&gltfModel, model);
 

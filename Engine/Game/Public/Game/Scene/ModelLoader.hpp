@@ -16,6 +16,7 @@ namespace Recluse {
 
 class Material;
 class Mesh;
+class TextureSampler;
 
 namespace ModelLoader {
 
@@ -46,7 +47,8 @@ struct Model {
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;
   std::vector<AnimClip*>        animations;
-  std::vector<Skeleton*>    skeletons;
+  std::vector<Skeleton*>        skeletons;
+  std::vector<TextureSampler*>  samplers;
 };
 
 

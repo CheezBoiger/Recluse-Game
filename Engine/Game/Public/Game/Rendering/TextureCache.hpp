@@ -45,4 +45,17 @@ public:
 private:
   static std::unordered_map<tcache_t, Texture2D*>  sCache;
 };
+
+
+class SamplerCache {
+public:
+  static void Cache(std::string& name, TextureSampler* pSampler);
+  static void Get(std::string& name, TextureSampler** out);
+  static void UnCache(std::string& name, TextureSampler** out);
+  static void           CleanUpAll();
+  static size_t         CacheCount() { return sCache.size(); }
+
+private:
+  static std::unordered_map<std::string, TextureSampler*> sCache;
+};
 } // Recluse

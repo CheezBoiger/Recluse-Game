@@ -33,7 +33,6 @@ public:
 
     CubeObject()
   {
-    m_pSampler = nullptr;
     SetName("CubeObject :3");
   }
 
@@ -78,30 +77,10 @@ public:
 #else
     m_pRendererComponent->ForceForward(false);
     m_pRendererComponent->EnableStatic(true);
-    SamplerInfo info = {};
-    info._addrU = SAMPLER_ADDRESS_REPEAT;
-    info._addrV = SAMPLER_ADDRESS_REPEAT;
-    info._addrW = SAMPLER_ADDRESS_REPEAT;
-    info._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_BLACK;
-    info._enableAnisotropy = false;
-    info._maxAniso = 1.0f;
-    info._maxFilter = SAMPLER_FILTER_LINEAR;
-    info._maxLod = 1.0f;
-    info._minFilter = SAMPLER_FILTER_LINEAR;
-    info._minLod = 0.0f;
-    info._mipLodBias = 0.0f;
-    info._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
-    info._unnnormalizedCoordinates = false;
-    m_pSampler = gRenderer().CreateTextureSampler(info);
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Sponza", &model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->AddMesh(model->meshes[i]);
-      u32 primCount = model->meshes[i]->GetPrimitiveCount();
-      for (u32 p = 0; p < primCount; ++p) {
-        Material* mat = m_pRendererComponent->GetMesh(i)->GetPrimitive(p)->_pMat;
-        mat->SetSampler(m_pSampler);
-      }
     }
     trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #endif
@@ -204,13 +183,9 @@ public:
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
-    gRenderer().FreeTextureSampler(m_pSampler);
   }
 
 private:
-#if 1
-  TextureSampler*     m_pSampler;
-#endif
   Vector3             m_vRandDir;
   RendererComponent*  m_pRendererComponent;
   MeshComponent*      m_pMeshComponent;
