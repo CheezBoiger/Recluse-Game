@@ -204,7 +204,6 @@ public:
     m_pPhysicsComponent = &m_physicsComponent;
     m_pMeshComponent = &m_meshComponent;
     m_pRendererComponent = &m_rendererComponent;
-    m_pSampler = nullptr;
     m_sphereCollider = gPhysics().CreateSphereCollider(1.0f);
     //m_sphereCollider->SetCenter(Vector3(0.0f, 1.0f, 0.0f));
     m_physicsComponent.AddCollider(m_sphereCollider);
@@ -239,28 +238,6 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-    SamplerInfo samplerInfo = { };
-    samplerInfo._addrU = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._addrV = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._addrW = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_WHITE;
-    samplerInfo._enableAnisotropy = false;
-    samplerInfo._maxAniso = 16.0f;
-    samplerInfo._maxFilter = SAMPLER_FILTER_LINEAR;
-    samplerInfo._maxLod = 1.0f;
-    samplerInfo._minFilter = SAMPLER_FILTER_LINEAR;
-    samplerInfo._minLod = 0.0f;
-    samplerInfo._mipLodBias = 0.0f;
-    samplerInfo._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo._unnnormalizedCoordinates = false;
-
-    m_pSampler = gRenderer().CreateTextureSampler(samplerInfo);
-    m_pMaterialRef = mat;
-    m_pMaterialRef->SetAlbedoSampler(m_pSampler);
-    m_pMaterialRef->SetNormalSampler(m_pSampler);
-    m_pMaterialRef->SetRoughMetalSampler(m_pSampler);
-    m_pMaterialRef->SetAoSampler(m_pSampler);
-    m_pMaterialRef->SetEmissiveSampler(m_pSampler);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->GetPrimitive(0)->_pMat = mat;
     }
@@ -269,43 +246,25 @@ public:
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("tree", &model);
-    SamplerInfo samplerInfo = {};
-    samplerInfo._addrU = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._addrV = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._addrW = SAMPLER_ADDRESS_REPEAT;
-    samplerInfo._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_WHITE;
-    samplerInfo._enableAnisotropy = false;
-    samplerInfo._maxAniso = 16.0f;
-    samplerInfo._maxFilter = SAMPLER_FILTER_LINEAR;
-    samplerInfo._maxLod = 1.0f;
-    samplerInfo._minFilter = SAMPLER_FILTER_LINEAR;
-    samplerInfo._minLod = 0.0f;
-    samplerInfo._mipLodBias = 0.0f;
-    samplerInfo._mipmapMode = SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerInfo._unnnormalizedCoordinates = false;
+    ModelCache::Get("WaterBottle", &model);
 
-    m_pSampler = gRenderer().CreateTextureSampler(samplerInfo);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
+      for (size_t p = 0; p < model->meshes[i]->GetPrimitiveCount(); ++p) {
+        Primitive* prim = model->meshes[i]->GetPrimitive(p);
+        prim->_pMat->SetEmissiveFactor(0.2f);
+      }
     }
     //m_rendererComponent.EnableMorphTargets(true);
-    m_rendererComponent.ForceForward(true);
+    m_rendererComponent.ForceForward(false);
     //m_rendererComponent.SetMorphIndex0(0);
     //m_rendererComponent.SetMorphIndex1(1);
-    for (size_t i = 0; i < model->materials.size(); ++i) {
-      Material* material = model->materials[i];
-      material->SetSampler(m_pSampler);
-      material->DisableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_NORMAL_BIT | MAT_AO_BIT);
-      material->SetBaseColor(Vector4(0.8f, 0.8f, 0.8f, 1.0f));
-      //material->EnableEmissive(true);
-      //material->SetEmissiveFactor(1.0f);
-    }
+    
     //m_animationComponent.AddClip(model->animations[0], "Dance");
     //m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
     //m_animationComponent.Playback("Dance");
     //m_animationComponent.SetPlaybackRate(1.0f);
-    transform->Scale = Vector3(0.3f, 0.3f, 0.3f);
+    transform->Scale = Vector3(10.5f, 10.5f, 10.5f);
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);
@@ -313,14 +272,6 @@ public:
 
   void Update(r32 tick) override
   { 
-    r32 offsetUvX = static_cast<r32>(Time::CurrentTime()) * tick;
-    r32 offsetUvY = static_cast<r32>(Time::CurrentTime()) * tick;
-    Vector4 offset = Vector4(offsetUvX, offsetUvY);
-    m_pMaterialRef->SetUvOffsets(offset);
-    if (Keyboard::KeyPressed(KEY_CODE_B)) {
-      //m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w0 += 0.1f * tick;
-      m_pRendererComponent->GetMeshDescriptor()->ObjectData()->_w1 += 0.1f * tick;
-    }
   }
 
   void SetPosition(const Vector3& newPos)
@@ -335,7 +286,6 @@ public:
     m_animationComponent.CleanUp();
     m_physicsComponent.CleanUp();
 
-    gRenderer().FreeTextureSampler(m_pSampler);
     gPhysics().FreeCollider(m_sphereCollider);
   }
 
@@ -349,6 +299,5 @@ private:
   AnimationComponent        m_animationComponent;
   PhysicsComponent          m_physicsComponent;
   SphereCollider*           m_sphereCollider;
-  TextureSampler*           m_pSampler;
   Material*                 m_pMaterialRef;
 };

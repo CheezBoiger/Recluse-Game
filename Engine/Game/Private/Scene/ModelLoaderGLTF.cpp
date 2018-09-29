@@ -175,7 +175,7 @@ static ModelResultBits LoadSamplers(tinygltf::Model* gltfModel, Model* engineMod
     samplerInfo._minLod = 0.0f;
     samplerInfo._unnnormalizedCoordinates = false;
     TextureSampler* pSampler = gRenderer().CreateTextureSampler(samplerInfo);
-    SamplerCache::Cache(sampler.name, pSampler);
+    SamplerCache::Cache(pSampler);
     engineModel->samplers.push_back(pSampler);
   }
   return Model_None;

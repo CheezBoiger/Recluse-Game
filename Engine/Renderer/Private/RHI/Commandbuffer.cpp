@@ -200,4 +200,11 @@ void CommandBuffer::ClearColorImage(VkImage image, VkImageLayout imageLayout, co
   ASSERT_RECORDING();
   vkCmdClearColorImage(mHandle, image, imageLayout, pColor, rangeCount, pRanges);
 }
+
+
+void CommandBuffer::ClearAttachments(u32 attachmentCount, const VkClearAttachment* pAttachments, u32 rectCount, const VkClearRect* pRects)
+{
+  ASSERT_RECORDING();
+  vkCmdClearAttachments(mHandle, attachmentCount, pAttachments, rectCount, pRects);
+}
 } // Recluse

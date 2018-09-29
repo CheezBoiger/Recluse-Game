@@ -9,12 +9,21 @@
 using namespace Recluse;
 
 
-void LoadTextures()
+void LoadMaterials()
 {
   Image img;
+  Texture2D* albedo = nullptr;
+  Texture2D* normal = nullptr;
+  Texture2D* emissive = nullptr;
+  Texture2D* rustNormal = nullptr;
+  Texture2D* rustRough = nullptr;
+  Texture2D* rustAlbedo = nullptr;
+  Texture2D* grassBase = nullptr;
+  Texture2D* grassNormal = nullptr;
+  Texture2D* grassRough = nullptr;
   {
     img.Load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
-    Texture2D* albedo = gRenderer().CreateTexture2D();
+    albedo = gRenderer().CreateTexture2D();
     albedo->Initialize(img.Width(), img.Height());
     albedo->_Name = "BoxAlbedo";
     albedo->Update(img);
@@ -23,7 +32,7 @@ void LoadTextures()
   }
   {
     img.Load(FROM_TEXTURES_DIR("Box/normal.jpg"));
-    Texture2D* normal = gRenderer().CreateTexture2D();
+    normal = gRenderer().CreateTexture2D();
     normal->Initialize(img.Width(), img.Height());
     normal->_Name = "BoxNormal";
     normal->Update(img);
@@ -32,7 +41,7 @@ void LoadTextures()
   }
   {
     img.Load(FROM_TEXTURES_DIR("Box/emissive.jpg"));
-    Texture2D* emissive = gRenderer().CreateTexture2D();
+    emissive = gRenderer().CreateTexture2D();
     emissive->Initialize(img.Width(), img.Height());
     emissive->_Name = "BoxEmissive";
     emissive->Update(img);
@@ -41,57 +50,57 @@ void LoadTextures()
   }
   {
     img.Load(FROM_TEXTURES_DIR("grass1-albedo3.png"));
-    Texture2D* rustBase = gRenderer().CreateTexture2D();
-    rustBase->Initialize(img.Width(), img.Height());
-    rustBase->_Name = "GrassyAlbedo";
-    rustBase->Update(img);
+    grassBase = gRenderer().CreateTexture2D();
+    grassBase->Initialize(img.Width(), img.Height());
+    grassBase->_Name = "GrassyAlbedo";
+    grassBase->Update(img);
     img.CleanUp();
-    TextureCache::Cache(rustBase);
+    TextureCache::Cache(grassBase);
   }
   {
     img.Load(FROM_TEXTURES_DIR("grass1-normal2.png"));
-    Texture2D* rustNormal = gRenderer().CreateTexture2D();
-    rustNormal->Initialize(img.Width(), img.Height());
-    rustNormal->_Name = "GrassyNormal";
-    rustNormal->Update(img);
+    grassNormal = gRenderer().CreateTexture2D();
+    grassNormal->Initialize(img.Width(), img.Height());
+    grassNormal->_Name = "GrassyNormal";
+    grassNormal->Update(img);
     img.CleanUp();
-    TextureCache::Cache(rustNormal);
+    TextureCache::Cache(grassNormal);
   }
   {
     img.Load(FROM_TEXTURES_DIR("grass1-rough.png"));
-    Texture2D* rustRough = gRenderer().CreateTexture2D();
+    grassRough = gRenderer().CreateTexture2D();
+    grassRough->Initialize(img.Width(), img.Height());
+    grassRough->_Name = "GrassyRough";
+    grassRough->Update(img);
+    img.CleanUp();
+    TextureCache::Cache(grassRough);
+  }
+  {
+    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
+    rustAlbedo = gRenderer().CreateTexture2D();
+    rustAlbedo->Initialize(img.Width(), img.Height());
+    rustAlbedo->_Name = "RustedAlbedo";
+    rustAlbedo->Update(img);
+    img.CleanUp();
+    TextureCache::Cache(rustAlbedo);
+  }
+  {
+    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
+    rustRough = gRenderer().CreateTexture2D();
     rustRough->Initialize(img.Width(), img.Height());
-    rustRough->_Name = "GrassyRough";
+    rustRough->_Name = "RustedRough";
     rustRough->Update(img);
     img.CleanUp();
     TextureCache::Cache(rustRough);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
-    Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(img.Width(), img.Height());
-    rustMetal->_Name = "RustedAlbedo";
-    rustMetal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustMetal);
-  }
-  {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
-    Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(img.Width(), img.Height());
-    rustMetal->_Name = "RustedRough";
-    rustMetal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustMetal);
-  }
-  {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
-    Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(img.Width(), img.Height());
-    rustMetal->_Name = "RustedNormal";
-    rustMetal->Update(img);
+    rustNormal = gRenderer().CreateTexture2D();
+    rustNormal->Initialize(img.Width(), img.Height());
+    rustNormal->_Name = "RustedNormal";
+    rustNormal->Update(img);
     img.CleanUp();
-    TextureCache::Cache(rustMetal);
+    TextureCache::Cache(rustNormal);
   }
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_metallic.png"));
@@ -102,28 +111,18 @@ void LoadTextures()
     img.CleanUp();
     TextureCache::Cache(rustMetal);
   }
-}
-
-
-void LoadMaterials()
-{
   {
     Material* material = new Material();
     material->Initialize(&gRenderer());
-    Texture2D* tex;
-    TextureCache::Get(RTEXT("GrassyAlbedo"), &tex);
-
-    material->SetAlbedo(tex);
+    material->SetAlbedo(grassBase);
     material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     material->EnableAlbedo(true);
     material->SetRoughnessFactor(1.0f);
     material->SetMetallicFactor(1.0f);
-    TextureCache::Get(RTEXT("GrassyNormal"), &tex);
-    material->SetNormal(tex);
+    material->SetNormal(grassNormal);
     material->EnableNormal(true);
 
-    TextureCache::Get(RTEXT("GrassyRough"), &tex);
-    material->SetRoughnessMetallic(tex);
+    material->SetRoughnessMetallic(grassRough);
     material->EnableRoughness(true);
     MaterialCache::Cache(TEXT("GrassySample"), material);
   }
@@ -131,20 +130,16 @@ void LoadMaterials()
   {
     Material* material = new Material();
     material->Initialize(&gRenderer());
-    Texture2D* tex;
-    TextureCache::Get(RTEXT("RustedAlbedo"), &tex);
 
-    material->SetAlbedo(tex);
+    material->SetAlbedo(rustAlbedo);
     material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     material->EnableAlbedo(true);
     material->SetRoughnessFactor(1.0f);
     material->SetMetallicFactor(1.0f);
-    TextureCache::Get(RTEXT("RustedNormal"), &tex);
-    material->SetNormal(tex);
+    material->SetNormal(rustNormal);
     material->EnableNormal(true);
 
-    TextureCache::Get(RTEXT("RustedRough"), &tex);
-    material->SetRoughnessMetallic(tex);
+    material->SetRoughnessMetallic(rustRough);
     material->EnableRoughness(true);
     MaterialCache::Cache(TEXT("RustedSample"), material);  
   }

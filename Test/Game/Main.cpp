@@ -154,6 +154,7 @@ int main(int c, char* argv[])
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;
     params._EnableLocalReflections = true;
     params._EnableChromaticAberration = true;
+    params._EnableBloom = true;
 
     // Start up the engine and set the input controller.
     gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
@@ -175,7 +176,6 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   // manual loading of textures.
-  LoadTextures();
   LoadMaterials();
 
   // Mesh Loading.
@@ -229,6 +229,7 @@ int main(int c, char* argv[])
   //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
  // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/WaterBottle.glb"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
   //ModelLoader::Load(RTEXT("Assets/Tree/tree.gltf"));

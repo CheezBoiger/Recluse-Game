@@ -1838,9 +1838,11 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
     | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   pbr_Bright->Initialize(cImageInfo, cViewInfo);
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
   GlowTarget->Initialize(cImageInfo, cViewInfo);
+
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
   // Initialize downscaled render textures.
   cImageInfo.extent.width = windowExtent.width    >> 1;
@@ -2877,116 +2879,132 @@ void Renderer::GenerateHDRCmds(CommandBuffer* cmdBuffer)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
-  // TODO(): Need to allow switching on/off bloom passing.
-  m_Downscale._Strength = 1.35f;
-  m_Downscale._Scale = 3.3f;
-  m_Downscale._Horizontal = true;
-  VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
-  viewport.height = (r32)(windowExtent.height >> 1);
-  viewport.width =  (r32)(windowExtent.width  >> 1);
-  cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
-    cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
-    cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
-  DownscalePass2x.framebuffer = FB2xFinal->Handle();
-  DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->Handle();
-  cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
-    m_Downscale._Horizontal = false;
-    DownscaleSetNative = DownscaleSet2xFinal->Handle();
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+  if (m_currentGraphicsConfigs._EnableBloom) {
+    // TODO(): Need to allow switching on/off bloom passing.
+    m_Downscale._Strength = 1.35f;
+    m_Downscale._Scale = 3.3f;
+    m_Downscale._Horizontal = true;
+    VkDescriptorSet DownscaleSetNative = DownscaleSet2x->Handle();
+    viewport.height = (r32)(windowExtent.height >> 1);
+    viewport.width =  (r32)(windowExtent.width  >> 1);
+    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+    DownscalePass2x.framebuffer = FB2xFinal->Handle();
+    DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->Handle();
+    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+      m_Downscale._Horizontal = false;
+      DownscaleSetNative = DownscaleSet2xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->PushConstants(Downscale2x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  viewport.height = (r32)(windowExtent.height >> 2);
-  viewport.width = (r32)(windowExtent.width   >> 2);
-  DownscaleSetNative = DownscaleSet4x->Handle();
-  i32 _Horizontal = true;
-  cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
-    cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    viewport.height = (r32)(windowExtent.height >> 2);
+    viewport.width = (r32)(windowExtent.width   >> 2);
+    DownscaleSetNative = DownscaleSet4x->Handle();
+    i32 _Horizontal = true;
+    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  DownscalePass4x.framebuffer = FB4xFinal->Handle();
-  DownscalePass4x.renderPass = FB4xFinal->RenderPassRef()->Handle();
-  cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
-    _Horizontal = false;
-    DownscaleSetNative = DownscaleSet4xFinal->Handle();
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    DownscalePass4x.framebuffer = FB4xFinal->Handle();
+    DownscalePass4x.renderPass = FB4xFinal->RenderPassRef()->Handle();
+    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
+      _Horizontal = false;
+      DownscaleSetNative = DownscaleSet4xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  viewport.height = (r32)(windowExtent.height >> 3);
-  viewport.width = (r32)(windowExtent.width   >> 3);
-  DownscaleSetNative = DownscaleSet8x->Handle();
-  _Horizontal = true;
-  cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
-    cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    viewport.height = (r32)(windowExtent.height >> 3);
+    viewport.width = (r32)(windowExtent.width   >> 3);
+    DownscaleSetNative = DownscaleSet8x->Handle();
+    _Horizontal = true;
+    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
+      cmdBuffer->PushConstants(Downscale8x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  DownscalePass8x.framebuffer = FB8xFinal->Handle();
-  DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->Handle();
-  cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
-    _Horizontal = false;
-    DownscaleSetNative = DownscaleSet8xFinal->Handle();
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    DownscalePass8x.framebuffer = FB8xFinal->Handle();
+    DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->Handle();
+    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      _Horizontal = false;
+      DownscaleSetNative = DownscaleSet8xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->PushConstants(Downscale4x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  viewport.height = (r32)(windowExtent.height >> 4);
-  viewport.width = (r32)(windowExtent.width   >> 4);
-  DownscaleSetNative = DownscaleSet16x->Handle();
-  _Horizontal = true;
-  cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
-    cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    viewport.height = (r32)(windowExtent.height >> 4);
+    viewport.width = (r32)(windowExtent.width   >> 4);
+    DownscaleSetNative = DownscaleSet16x->Handle();
+    _Horizontal = true;
+    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
+      cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
 
-  DownscalePass16x.framebuffer = FB16xFinal->Handle();
-  DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->Handle();
-  cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
-    _Horizontal = false;
-    DownscaleSetNative = DownscaleSet16xFinal->Handle();
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-    cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-    cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    DownscalePass16x.framebuffer = FB16xFinal->Handle();
+    DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->Handle();
+    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+      _Horizontal = false;
+      DownscaleSetNative = DownscaleSet16xFinal->Handle();
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Layout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->PushConstants(Downscale16x->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->EndRenderPass();
+  }
 
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
   VkDescriptorSet GlowDescriptorNative = GlowSet->Handle();
   cmdBuffer->BeginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
+  if (!m_currentGraphicsConfigs._EnableBloom) {
+    VkClearAttachment clearAttachment = {};
+    clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    clearAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+    clearAttachment.colorAttachment = 0;
+    VkClearRect rect = {};
+    rect.baseArrayLayer = 0;
+    rect.layerCount = 1;
+    VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+    rect.rect.extent = extent;
+    rect.rect = { 0, 0 };
+    cmdBuffer->ClearAttachments(1, &clearAttachment, 1, &rect);
+  } else {
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Layout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
     cmdBuffer->DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
+  }
   cmdBuffer->EndRenderPass();
 
   VkDescriptorSet dSets[2];

@@ -11,7 +11,7 @@ namespace Recluse {
 
 
 std::unordered_map<tcache_t, Texture2D*> TextureCache::sCache;
-std::unordered_map<std::string, TextureSampler*> SamplerCache::sCache;
+std::unordered_map<uuid64, TextureSampler*> SamplerCache::sCache;
 
 
 TextureCache::TextureCache()
@@ -28,17 +28,16 @@ TextureCache::~TextureCache()
 TextureCache::CacheResult TextureCache::Cache(Texture2D* texture)
 {
   if (!texture) return Cache_Null_Pointer;
-  tcache_t v = std::hash<std::string>()(texture->_Name);
-  auto it = sCache.find(v);
+  auto it = sCache.find(texture->UUID());
   if (it != sCache.end()) {
     return Cache_Map_Exists;
   }
 
-  sCache[v] = texture;
+  sCache[texture->UUID()] = texture;
   return Cache_Success;
 }
 
-
+#if 0
 TextureCache::CacheResult TextureCache::Get(std::string texname, Texture2D** out)
 {
   tcache_t v = std::hash<std::string>()(texname);
@@ -64,7 +63,7 @@ TextureCache::CacheResult TextureCache::UnCache(std::string texname, Texture2D**
   sCache.erase(v);
   return Cache_Success;
 }
-
+#endif
 
 void TextureCache::CleanUpAll()
 {
@@ -97,17 +96,17 @@ void TextureCache::CleanUpAll()
 }
 
 
-void SamplerCache::Cache(std::string& name, TextureSampler* pSampler)
+void SamplerCache::Cache(TextureSampler* pSampler)
 {
-  auto& it = sCache.find(name);
+  auto& it = sCache.find(pSampler->UUID());
   if (it != sCache.end()) {
     return;
   }
 
-  sCache[name] = pSampler;
+  sCache[pSampler->UUID()] = pSampler;
 }
 
-
+#if 0
 void SamplerCache::Get(std::string& name, TextureSampler** out)
 {
   auto& it = sCache.find(name);
@@ -125,7 +124,7 @@ void SamplerCache::UnCache(std::string& name, TextureSampler** out)
     sCache.erase(it);
   }
 }
-
+#endif
 
 void SamplerCache::CleanUpAll()
 {

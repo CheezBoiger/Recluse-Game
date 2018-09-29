@@ -39,7 +39,7 @@ public:
   virtual void Save(const std::string& pathName) { }
 
   void          SetTextureHandle(Texture* newTex) { texture = newTex; }
-
+  u64           UUID() const { return m_uuid; }
   // Name of Texture.
   std::string   _Name;
 
@@ -48,6 +48,7 @@ protected:
     : texture(nullptr)
     , mRhi(nullptr)
     , m_TexType(type) 
+    , m_uuid(sIteration)
   {
     _Name = kDefaultName + std::to_string(sIteration++);  
   }
@@ -57,6 +58,7 @@ protected:
 
 private:
   Type        m_TexType;
+  u64         m_uuid;
 };
 
 
@@ -175,16 +177,20 @@ struct SamplerInfo {
 
 // Texture Sampler object, for sampling textures to/from the renderer.
 class TextureSampler {
+  static uuid64 sIteration;
 public:
-  TextureSampler() : mSampler(nullptr) { }
+  TextureSampler() : mSampler(nullptr) 
+                    , m_uuid(sIteration++) { }
 
   void          Initialize(VulkanRHI* pRhi, const SamplerInfo& info);
   void          CleanUp(VulkanRHI* pRhi);
 
   Sampler*      Handle() { return mSampler; }
+  uuid64 UUID() const { return m_uuid; }
 
 private:
   SamplerInfo   mInfo;
   Sampler*      mSampler;
+  uuid64 m_uuid;
 };
 } // Recluse

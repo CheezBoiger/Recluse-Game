@@ -110,8 +110,9 @@ public:
       GraphicsConfigParams params;
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
+      params._EnableBloom = false;
       params._AA = AA_FXAA_2x;
-      params._Shadows = GRAPHICS_QUALITY_NONE;
+      //params._Shadows = GRAPHICS_QUALITY_NONE;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().UpdateRendererConfigs(&params);
     }
@@ -120,8 +121,9 @@ public:
       GraphicsConfigParams params;
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
+      params._EnableBloom = true;
       params._AA = AA_FXAA_2x;
-      params._Shadows = GRAPHICS_QUALITY_ULTRA;
+      //params._Shadows = GRAPHICS_QUALITY_ULTRA;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().UpdateRendererConfigs(&params);
     }

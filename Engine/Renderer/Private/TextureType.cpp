@@ -15,6 +15,7 @@ namespace Recluse {
 
 std::string TextureBase::kDefaultName = "DefaultTexture_";
 u64         TextureBase::sIteration = 0;
+uuid64 TextureSampler::sIteration = 0;
 
 
 void Texture2D::Initialize(u32 width, u32 height, b32 genMips)

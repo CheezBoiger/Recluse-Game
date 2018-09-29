@@ -29,12 +29,13 @@ public:
   // Cache the texture2D into this data structure.
   static CacheResult                Cache(Texture2D* texture);
 
+#if 0
   // Get the specified texture 2d from cache.
   static CacheResult                Get(std::string texname, Texture2D** out);
 
   // Uncache a texture value from this structure.
   static CacheResult                UnCache(std::string texname, Texture2D** out);
-
+#endif
   // Clean up all texture from this cache. Note that this will also free texture handles
   // back to renderer memory!
   static void                       CleanUpAll();
@@ -49,13 +50,15 @@ private:
 
 class SamplerCache {
 public:
-  static void Cache(std::string& name, TextureSampler* pSampler);
+  static void Cache(TextureSampler* pSampler);
+#if 0
   static void Get(std::string& name, TextureSampler** out);
   static void UnCache(std::string& name, TextureSampler** out);
+#endif
   static void           CleanUpAll();
   static size_t         CacheCount() { return sCache.size(); }
 
 private:
-  static std::unordered_map<std::string, TextureSampler*> sCache;
+  static std::unordered_map<uuid64, TextureSampler*> sCache;
 };
 } // Recluse
