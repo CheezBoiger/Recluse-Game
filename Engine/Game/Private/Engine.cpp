@@ -252,8 +252,16 @@ void Engine::Update()
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();
-
+  TextureCube* pCube = nullptr;
+  static i32 ss = 0;
+  //if (ss <= 2) {
+    //pCube = gRenderer().BakeEnvironmentMap(Vector3(20.0f, 20.0f, 0.0f));
+  //}
   gRenderer().Render();
+  //if (ss  <= 2) {
+    //gRenderer().FreeTextureCube(pCube);
+    //ss++;
+ // }
 }
 
 

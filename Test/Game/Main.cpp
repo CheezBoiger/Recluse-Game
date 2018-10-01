@@ -22,7 +22,7 @@ using namespace Recluse;
 
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
-  static const u32 kMaxCount = 1;
+  static const u32 kMaxCount = 0;
   static const u32 kNumberOfMonsters = 0;
 public:
 
@@ -229,7 +229,7 @@ int main(int c, char* argv[])
   //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
  // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/WaterBottle.glb"));
+  ModelLoader::Load(RTEXT("Assets/WaterBottle.glb"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
   ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
   //ModelLoader::Load(RTEXT("Assets/Tree/tree.gltf"));

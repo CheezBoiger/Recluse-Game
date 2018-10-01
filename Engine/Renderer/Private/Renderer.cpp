@@ -1905,7 +1905,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
-    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -2122,7 +2122,7 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
-  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2767,7 +2767,7 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
   clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
-  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->Handle();
   gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->Handle();
@@ -3294,7 +3294,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
   clearValues[6].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
-  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_forwardFrameBuffer->Handle();
   renderPassCi.renderPass = pbr_forwardRenderPass->Handle();
@@ -3915,6 +3915,8 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   }
 
   if (reconstruct) {
+    m_pGlobal->Data()->_ScreenSize[0] = m_pWindow->Width();
+    m_pGlobal->Data()->_ScreenSize[1] = m_pWindow->Height();
     // Triple buffering atm, we will need to use user params to switch this.
     m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height(), bufferCount);
 
@@ -3933,8 +3935,6 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
     SetUpRenderTextures(false);
     SetUpFrameBuffers();
     SetUpGraphicsPipelines();
-    SetUpFinalOutputs();
-    SetUpPBR();
     SetUpForwardPBR();
     m_pUI->Initialize(m_pRhi);
   }
@@ -3942,6 +3942,8 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
   SetUpOffscreen(false);
   SetUpDownscale(false);
   SetUpHDR(false);
+  SetUpPBR();
+  SetUpFinalOutputs();
 
   CleanUpGlobalIlluminationBuffer();
   SetUpGlobalIlluminationBuffer();
@@ -4193,7 +4195,6 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
 
   pTexCube = new TextureCube();
   Texture* cubeTexture = m_pRhi->CreateTexture();
-  Texture* faceTexture = m_pRhi->CreateTexture();
 
   {
     VkImageCreateInfo imageCi{};
@@ -4225,73 +4226,123 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
     viewCi.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
     // Create the cube texture to be written onto.
     cubeTexture->Initialize(imageCi, viewCi, false);
-  
-    // Create the face texture to be rendered onto.
-    imageCi.flags = 0;
-    imageCi.arrayLayers = 1;
-    viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewCi.subresourceRange.layerCount = 1;
-    faceTexture->Initialize(imageCi, viewCi);
   }
 
-  CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-  VkCommandBufferBeginInfo begin{};
-  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-  
-  cmdBuffer.Begin(begin);
 
-    VkDeviceSize offsets = { 0 };
-
-    VkImageSubresourceRange subRange = {};
-    subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subRange.baseMipLevel = 0;
-    subRange.baseArrayLayer = 0;
-    subRange.levelCount = 1;
-    subRange.layerCount = 6;
-
-    VkImageMemoryBarrier imgMemBarrier = {};
-    imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    imgMemBarrier.subresourceRange = subRange;
-    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    imgMemBarrier.srcAccessMask = 0;
-    imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    imgMemBarrier.image = cubeTexture->Image();
-
-    // set the cubemap image layout for transfer from our framebuffer.
-    cmdBuffer.PipelineBarrier(
-      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      0,
-      0, nullptr,
-      0, nullptr,
-      1, &imgMemBarrier
-    );
-
-    VkRenderPassBeginInfo renderPassBegin{};
-    renderPassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     // TODO():
     Matrix4 view;
-    Matrix4 proj = Matrix4::Perspective(static_cast<r32>(Radians(CONST_PI_HALF)), 1.0f, 0.1f, 2000.0f);
+    Matrix4 proj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 1.0f, 0.1f, 2000.0f);
+    GlobalBuffer* pGlobal = m_pGlobal->Data();
+    i32 orx = pGlobal->_ScreenSize[0];
+    i32 ory = pGlobal->_ScreenSize[1];
+    Matrix4 prevView = pGlobal->_View;
+    Matrix4 prevProj = pGlobal->_Proj;
+    Matrix4 prevViewProj = pGlobal->_ViewProj;
+    Matrix4 prevInvViewProj = pGlobal->_InvViewProj;
+    Matrix4 prevInvView = pGlobal->_InvView;
+    Matrix4 prevInvProj = pGlobal->_InvProj;
+    Vector4 prevCameraPos = pGlobal->_CameraPos;
+    pGlobal->_ScreenSize[0] = texSize;
+    pGlobal->_ScreenSize[1] = texSize;
+
+    pGlobal->_InvProj = proj.Inverse();
+    CommandBuffer cmdBuffer;
+    cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
+    cmdBuffer.Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+    // TODO(): Signal a beginning and end callback or so, when performing 
+    // any rendering.
+    // Update the scene descriptors before rendering the frame.
+    SortCmdLists();
+
+    UpdateSceneDescriptors();
+
+    std::array<Matrix4, 6> viewMatrices = {
+      Quaternion::AngleAxis(Radians(-90.0f), Vector3(0.0f, 1.0f, 0.0f)).ToMatrix4(),
+      Quaternion::AngleAxis(Radians(90.0f), Vector3(0.0f, 1.0f, 0.0f)).ToMatrix4(),
+
+      Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f)).ToMatrix4(),
+      Quaternion::AngleAxis(Radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f)).ToMatrix4(),
+
+      Quaternion::AngleAxis(Radians(0.0f), Vector3(0.0f, 1.0f, 0.0f)).ToMatrix4(),
+      Quaternion::AngleAxis(Radians(180.0f), Vector3(0.0f, 1.0f, 0.0f)).ToMatrix4(),
+    };
 
     // For each cube face.
-    for (size_t i = 0; i < 6; ++i) {
-      view = Matrix4::Translate(kViewMatrices[i], position);
-      // All meshes must be rendered forward in order to produce the proper lighting in the situation.
-      cmdBuffer.BeginRenderPass(renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
-        
-      cmdBuffer.EndRenderPass();
 
+    // TODO(): Fix view matrix issue, rendering skybox incorrectly!
+    for (size_t i = 0; i < 6; ++i) {
+      view = Matrix4::Translate(Matrix4(), -position) * viewMatrices[i];
+      pGlobal->_CameraPos = Vector4(position, 1.0f);
+      pGlobal->_View = view;
+      pGlobal->_ViewProj = view * proj;
+      pGlobal->_InvView = view.Inverse();
+      pGlobal->_InvViewProj = pGlobal->_ViewProj.Inverse();
+      m_pGlobal->Update(m_pRhi);
+      
+      VkCommandBufferBeginInfo begin = { };
+      begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+      begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+      cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      cmdBuffer.Begin(begin);
+
+      // Render to frame first.
+      GenerateOffScreenCmds(&cmdBuffer);
+      GeneratePbrCmds(&cmdBuffer);
+      GenerateShadowCmds(&cmdBuffer);
+      GenerateSkyboxCmds(&cmdBuffer);
+      GenerateForwardPBRCmds(&cmdBuffer);
+
+      cmdBuffer.End();
+
+      VkSubmitInfo submit{};
+      submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      submit.commandBufferCount = 1;
+      VkCommandBuffer cmdBufs[] = { cmdBuffer.Handle() };
+      submit.pCommandBuffers = cmdBufs;
+
+      m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit, VK_NULL_HANDLE);
+      m_pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
+
+      cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      cmdBuffer.Begin(begin);
+      VkDeviceSize offsets = { 0 };
+
+      VkImageSubresourceRange subRange = {};
+      subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      subRange.baseMipLevel = 0;
+      subRange.baseArrayLayer = 0;
+      subRange.levelCount = 1;
+      subRange.layerCount = 6;
+
+      VkImageMemoryBarrier imgMemBarrier = {};
+      imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      imgMemBarrier.subresourceRange = subRange;
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+      imgMemBarrier.srcAccessMask = 0;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      imgMemBarrier.image = cubeTexture->Image();
+
+      // set the cubemap image layout for transfer from our framebuffer.
+      cmdBuffer.PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
+
+ 
       subRange.baseArrayLayer = 0;
       subRange.baseMipLevel = 0;
       subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       subRange.layerCount = 1;
       subRange.levelCount = 1;
 
-      imgMemBarrier.image = faceTexture->Image();
+      imgMemBarrier.image = pbr_FinalTextureKey->Image();
       imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -4326,7 +4377,7 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgCopy.extent.depth = 1;
 
       cmdBuffer.CopyImage(
-        faceTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        pbr_FinalTextureKey->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         cubeTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         1, &imgCopy
       );
@@ -4344,42 +4395,46 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
         0, nullptr,
         1, &imgMemBarrier
       );
+
+      subRange.baseMipLevel = 0;
+      subRange.baseArrayLayer = 0;
+      subRange.levelCount = 1;
+      subRange.layerCount = 6;
+
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      imgMemBarrier.image = cubeTexture->Image();
+      imgMemBarrier.subresourceRange = subRange;
+
+      cmdBuffer.PipelineBarrier(
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &imgMemBarrier
+      );
+      cmdBuffer.End();
+
+      submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      submit.commandBufferCount = 1;
+      submit.pCommandBuffers = cmdBufs;
+
+      m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit, VK_NULL_HANDLE);
+      m_pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
     }
 
-    subRange.baseMipLevel = 0;
-    subRange.baseArrayLayer = 0;
-    subRange.levelCount = 1;
-    subRange.layerCount = 6;
-
-    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    imgMemBarrier.image = cubeTexture->Image();
-    imgMemBarrier.subresourceRange = subRange;
-
-    cmdBuffer.PipelineBarrier(
-      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      0,
-      0, nullptr,
-      0, nullptr,
-      1, &imgMemBarrier
-    );
-  cmdBuffer.End();
-
-
-  VkSubmitInfo submit{};
-  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  submit.commandBufferCount = 1;
-  VkCommandBuffer cmdBufs[] = { cmdBuffer.Handle() };
-  submit.pCommandBuffers = cmdBufs;
-
-  m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit, VK_NULL_HANDLE);
-  m_pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
-
   pTexCube->SetTextureHandle(cubeTexture);
-  m_pRhi->FreeTexture(faceTexture);
+
+  pGlobal->_ScreenSize[0] = orx;
+  pGlobal->_ScreenSize[1] = ory;
+  pGlobal->_CameraPos = prevCameraPos;
+  pGlobal->_View = prevView;
+  pGlobal->_ViewProj = prevViewProj;
+  pGlobal->_InvView = prevInvView;
+  pGlobal->_InvViewProj = prevInvViewProj;
   return pTexCube;
 }
 } // Recluse

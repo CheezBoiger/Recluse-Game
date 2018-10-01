@@ -239,7 +239,10 @@ void TextureCube::Update(u32 count, Image const* images)
 void TextureCube::CleanUp()
 {
   // TODO(): 
-  R_ASSERT(false, "Not implemented.");
+  if ( texture ) {
+    mRhi->FreeTexture( texture );
+    texture = nullptr;
+  }
 }
 
 
