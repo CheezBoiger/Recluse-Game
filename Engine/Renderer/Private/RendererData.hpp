@@ -34,6 +34,7 @@ class GraphicsPipeline;
 class ComputePipeline;
 class DescriptorSetLayout;
 class DescriptorSet;
+class GlobalDescriptor;
 class Buffer;
 class HDR;
 
@@ -112,6 +113,7 @@ extern GraphicsPipeline*  pbr_staticForwardPipeline_NoLR;
 extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_LR;
 extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_NoLR;
 extern RenderPass*        pbr_forwardRenderPass;
+extern FrameBuffer*       pbr_forwardFrameBuffer;
 
 extern ComputePipeline* aa_PipelineKey;
 extern DescriptorSetLayout* aa_DescLayoutKey;   // Depends on the aliasing technique.
@@ -231,28 +233,7 @@ enum AntiAliasingType {
 };
 
 
-// Antialiasing engine, which must be done before HDR pass!
-class AntiAliasingPipe {
-public:
-  enum AntiAliasingType {
-    FXAA,
-    SMAA
-  };
-
-  static DescriptorSetLayout* CreateDescriptorSetLayout(AntiAliasingType type);
-  static GraphicsPipeline*    CreateGraphicsPipeline(AntiAliasingType type); 
-};
-
-
-class AntiAliasingEngine { 
-public:
-  Texture*          _outputImage;
-  Sampler*          _sampler;
-  AntiAliasingType  _type;
-};
-
-
-class AntiAliasingSMAA : public AntiAliasingEngine {
+class AntiAliasingSMAA {
 public:
 
   GraphicsPipeline* m;
@@ -263,9 +244,23 @@ public:
 };
 
 
-class AntiAliasingFXAA : public AntiAliasingEngine {
+class AntiAliasingFXAA {
 public:
+  AntiAliasingFXAA()
+    : m_output(nullptr) { }
+
+
+  void    Initialize(VulkanRHI* pRhi);
+  void    CreateGraphicsPipeline();
+  void    CleanUp(VulkanRHI* pRhi);   
+
+  void    GenerateCommands(CommandBuffer* pOut, GlobalDescriptor* pDescriptor);
+
+  Texture*  GetOutput() { return m_output; }
+
+private:
   GraphicsPipeline* m_piplineFXAA;
+  Texture* m_output;
 };
 } // RendererPass
 } // Recluse

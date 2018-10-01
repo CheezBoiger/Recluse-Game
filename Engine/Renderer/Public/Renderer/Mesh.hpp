@@ -24,6 +24,7 @@ struct Primitive {
   u32                   _firstIndex;
   u32                   _indexCount;
   CmdConfigBits         _localConfigs;
+  AABB                  _aabb;
 };
 
 // A Single instance of a mesh stored in gpu memory.

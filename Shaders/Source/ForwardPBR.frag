@@ -8,6 +8,33 @@ layout (location = 0) out vec4 vFragColor;
 
 #if !defined(ENABLE_WATER_RENDERING)
 layout (location = 1) out vec4 vBrightColor;
+layout (location = 2) out vec4 rt0;
+layout (location = 3) out vec4 rt1;
+layout (location = 4) out vec4 rt2;
+layout (location = 5) out vec4 rt3;
+
+
+struct GBuffer
+{
+  vec3 albedo;
+  vec3 normal;
+  vec3 pos;
+  vec3 emission;
+  float emissionStrength;
+  float roughness;
+  float metallic;
+  float ao;
+  vec4 anisoSpec;
+};
+
+
+void WriteGBuffer(GBuffer gbuffer)
+{
+  rt0 = vec4(gbuffer.albedo, gbuffer.ao);
+  rt1 = vec4(gbuffer.normal * 0.5 + 0.5, gbuffer.anisoSpec.x);
+  rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, gbuffer.anisoSpec.y);
+  rt3 = vec4(gbuffer.emission, 0.0);
+}
 #endif
 
 #define MAX_DIRECTION_LIGHTS    4
@@ -149,6 +176,7 @@ layout (set = 6, binding = 3) uniform samplerCubeArray diffMaps;   // Current se
 layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
 layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shadowing.
@@ -619,7 +647,6 @@ void main()
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
     outColor += CookTorrBRDFPoint(light, frag_in.position, fragAlbedo, V, N, fragRoughness, fragMetallic);
-    
   }
   
     outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);
@@ -630,6 +657,19 @@ void main()
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));
   vBrightColor = vec4(glow, 1.0);
+  
+  GBuffer gbuffer;
+  gbuffer.albedo = fragAlbedo;
+  gbuffer.pos = frag_in.position;
+  gbuffer.normal = N;
+  gbuffer.emission = fragEmissive;
+  gbuffer.emissionStrength = matBuffer.emissive;
+  gbuffer.metallic = fragMetallic;
+  gbuffer.roughness = fragRoughness;
+  gbuffer.ao = fragAO;
+  gbuffer.anisoSpec = matBuffer.anisoSpec;
+  
+  WriteGBuffer(gbuffer);
 }
 
 

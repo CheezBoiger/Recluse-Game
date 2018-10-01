@@ -73,6 +73,7 @@ ComputePipeline* pbr_computePipeline_NoLR         = nullptr;
 ComputePipeline* pbr_computePipeline_LR           = nullptr;
 RenderPass*      pbr_forwardRenderPass            = nullptr;
 FrameBuffer* pbr_FrameBufferKey                   = nullptr;
+FrameBuffer* pbr_forwardFrameBuffer               = nullptr;
 RenderPass* pbr_renderPass                        = nullptr;
 DescriptorSetLayout* pbr_DescLayoutKey            = nullptr;
 DescriptorSetLayout* pbr_compDescLayout           = nullptr;
@@ -641,7 +642,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
-  std::array<VkPipelineColorBlendAttachmentState, 2> colorBlendAttachments;
+  std::array<VkPipelineColorBlendAttachmentState, 6> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
@@ -655,6 +656,50 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   colorBlendAttachments[1] = CreateColorBlendAttachmentState(
     VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[2] = CreateColorBlendAttachmentState(
+    VK_TRUE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[3] = CreateColorBlendAttachmentState(
+    VK_FALSE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[4] = CreateColorBlendAttachmentState(
+    VK_FALSE,
+    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    VK_BLEND_OP_ADD,
+    VK_BLEND_FACTOR_ONE,
+    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_OP_ADD
+  );
+
+  colorBlendAttachments[5] = CreateColorBlendAttachmentState(
+    VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,

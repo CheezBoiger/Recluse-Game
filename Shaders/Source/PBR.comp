@@ -571,7 +571,6 @@ void main()
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
     outColor += CookTorrBRDFPoint(light, gbuffer, V, N);
-    
   }
   
   outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);

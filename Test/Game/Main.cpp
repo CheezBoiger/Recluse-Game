@@ -148,7 +148,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_FXAA_2x;
-    params._Shadows = GRAPHICS_QUALITY_HIGH;
+    params._Shadows = GRAPHICS_QUALITY_NONE;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
     params._renderScale = 1.0;
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;

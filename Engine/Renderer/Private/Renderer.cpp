@@ -103,13 +103,13 @@ Renderer::Renderer()
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
 
     if (!mesh1 || !mesh2) return false;
-    Matrix4 m1 = mesh1->ObjectData()->_Model;
-    Matrix4 m2 = mesh2->ObjectData()->_Model;
+    Vector3 p1 = cmd1._pPrimitive->_aabb.centroid * mesh1->ObjectData()->_Model;
+    Vector3 p2 = cmd2._pPrimitive->_aabb.centroid * mesh2->ObjectData()->_Model;
 
     Vector4 native_pos = m_pGlobal->Data()->_CameraPos;
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
-    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
-    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
+    Vector3 v1 = p1 - cam_pos;
+    Vector3 v2 = p2 - cam_pos;
 
     return v1.Length() < v2.Length();
   });
@@ -121,13 +121,13 @@ Renderer::Renderer()
     MeshDescriptor* mesh1 = cmd1._pMeshDesc;
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
     if (!mesh1 || !mesh2) return false;
-    Matrix4 m1 = mesh1->ObjectData()->_Model;
-    Matrix4 m2 = mesh2->ObjectData()->_Model;
+    Vector3 p1 = cmd1._pPrimitive->_aabb.centroid * mesh1->ObjectData()->_Model;
+    Vector3 p2 = cmd1._pPrimitive->_aabb.centroid *  mesh2->ObjectData()->_Model;
 
     Vector4 native_pos = m_pGlobal->Data()->_CameraPos;
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
-    Vector3 v1 = Vector3(m1[3][0], m1[3][1], m1[3][2]) - cam_pos;
-    Vector3 v2 = Vector3(m2[3][0], m2[3][1], m2[3][2]) - cam_pos;
+    Vector3 v1 = p1 - cam_pos;
+    Vector3 v2 = p2 - cam_pos;
 
     return v1.Length() > v2.Length();
   });
@@ -348,13 +348,13 @@ void Renderer::Render()
     // Submit to renderqueue.
     m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 4, submits);
 
-    // High Dynamic Range and Gamma Pass. Post process after rendering. This will include
-    // Bloom, AA, other effects.
-    if (m_HDR._Enabled) { m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &hdrSI); }
-
     //
     // TODO(): Add antialiasing here.
     // 
+
+    // High Dynamic Range and Gamma Pass. Post process after rendering. This will include
+    // Bloom, AA, other effects.
+    if (m_HDR._Enabled) { m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &hdrSI); }
 
     // Final render after post process.
     m_pRhi->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &finalSi);
@@ -1147,8 +1147,8 @@ void Renderer::SetUpFrameBuffers()
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
-  std::array<VkAttachmentReference, 4> attachmentColors;
-  VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  std::array<VkAttachmentReference, 6> attachmentColors;
+  VkAttachmentReference attachmentDepthRef = { 4u, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -1161,9 +1161,15 @@ void Renderer::SetUpFrameBuffers()
   attachmentColors[3].attachment = 3;
   attachmentColors[3].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+  attachmentColors[4].attachment = 4;
+  attachmentColors[4].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  attachmentColors[5].attachment = 5;
+  attachmentColors[5].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size() - 2);
   subpass.pColorAttachments = attachmentColors.data();
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
   
@@ -1200,7 +1206,7 @@ void Renderer::SetUpFrameBuffers()
   {
     Texture* pbr_Bright = pbr_BrightTextureKey;
     Texture* pbr_Final = pbr_FinalTextureKey;
-    std::array<VkAttachmentDescription, 3> pbrAttachmentDescriptions;
+    std::array<VkAttachmentDescription, 7> pbrAttachmentDescriptions;
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
       pbr_Final->Format(),
       VK_IMAGE_LAYOUT_UNDEFINED,
@@ -1236,13 +1242,13 @@ void Renderer::SetUpFrameBuffers()
 
     VkSubpassDescription pbrSubpass = {};
     pbrSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 1);
+    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 5);
     pbrSubpass.pColorAttachments = attachmentColors.data();
     attachmentDepthRef.attachment = 2;
     pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
 
     VkRenderPassCreateInfo pbrRenderpassCI = CreateRenderPassInfo(
-      static_cast<u32>(pbrAttachmentDescriptions.size()),
+      static_cast<u32>(pbrAttachmentDescriptions.size() - 4),
       pbrAttachmentDescriptions.data(),
       2,
       dependencies,
@@ -1250,7 +1256,7 @@ void Renderer::SetUpFrameBuffers()
       &pbrSubpass
     );
 
-    std::array<VkImageView, 3> pbrAttachments;
+    std::array<VkImageView, 7> pbrAttachments;
     pbrAttachments[0] = pbr_Final->View();
     pbrAttachments[1] = pbr_Bright->View();
     pbrAttachments[2] = gbuffer_Depth->View();
@@ -1259,7 +1265,7 @@ void Renderer::SetUpFrameBuffers()
       windowExtent.width,
       windowExtent.height,
       nullptr, // Finalize() call handles this for us.
-      static_cast<u32>(pbrAttachments.size()),
+      static_cast<u32>(pbrAttachments.size() - 4),
       pbrAttachments.data(),
       1
     );
@@ -1292,6 +1298,50 @@ void Renderer::SetUpFrameBuffers()
     );
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
+      gbuffer_Albedo->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Albedo->Samples()
+    );
+
+    pbrAttachmentDescriptions[3] = CreateAttachmentDescription(
+      gbuffer_Normal->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Normal->Samples()
+    );
+
+    pbrAttachmentDescriptions[4] = CreateAttachmentDescription(
+      gbuffer_Position->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Position->Samples()
+    );
+
+    pbrAttachmentDescriptions[5] = CreateAttachmentDescription(
+      gbuffer_Emission->Format(),
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
+      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      gbuffer_Emission->Samples()
+    );
+
+    pbrAttachmentDescriptions[6] = CreateAttachmentDescription(
       gbuffer_Depth->Format(),
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -1302,8 +1352,43 @@ void Renderer::SetUpFrameBuffers()
       gbuffer_Depth->Samples()
     );
 
+    pbrAttachments[0] = pbr_Final->View();
+    pbrAttachments[1] = pbr_Bright->View();
+    pbrAttachments[2] = gbuffer_Albedo->View();
+    pbrAttachments[3] = gbuffer_Normal->View();
+    pbrAttachments[4] = gbuffer_Position->View();
+    pbrAttachments[5] = gbuffer_Emission->View();
+    pbrAttachments[6] = gbuffer_Depth->View();
+
+    pbrSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 1);
+    pbrSubpass.pColorAttachments = attachmentColors.data();
+    attachmentDepthRef.attachment = 6;
+    pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
+
+    pbrRenderpassCI = CreateRenderPassInfo(
+      static_cast<u32>(pbrAttachmentDescriptions.size()),
+      pbrAttachmentDescriptions.data(),
+      2,
+      dependencies,
+      1,
+      &pbrSubpass
+    );
+
+    pbrFramebufferCI = CreateFrameBufferInfo(
+      windowExtent.width,
+      windowExtent.height,
+      nullptr, // Finalize() call handles this for us.
+      static_cast<u32>(pbrAttachments.size()),
+      pbrAttachments.data(),
+      1
+    );
+
     pbr_forwardRenderPass = m_pRhi->CreateRenderPass();
+    pbr_forwardFrameBuffer = m_pRhi->CreateFrameBuffer();
     pbr_forwardRenderPass->Initialize(pbrRenderpassCI);
+    pbr_forwardFrameBuffer->Finalize(pbrFramebufferCI, pbr_forwardRenderPass);
+    
   }
   
   // No need to render any depth, as we are only writing on a 2d surface.
@@ -1706,6 +1791,7 @@ void Renderer::CleanUpFrameBuffers()
   m_pRhi->FreeFrameBuffer(GlowFB);
   
   m_pRhi->FreeRenderPass(final_renderPass);
+  m_pRhi->FreeFrameBuffer(pbr_forwardFrameBuffer);
   m_pRhi->FreeFrameBuffer(final_frameBufferKey);
 
   m_pRhi->FreeRenderPass(pbr_forwardRenderPass);
@@ -3162,17 +3248,19 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
     skinMorphPipeline = pbr_forwardPipelineMorphTargets_LR;
     staticMorphPipeline = pbr_staticForwardPipelineMorphTargets_LR;
   }
-  std::array<VkClearValue, 5> clearValues;
+  std::array<VkClearValue, 7> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[4].depthStencil = { 1.0f, 0 };
+  clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[5].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+  clearValues[6].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
   VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassCi.framebuffer = pbr_FrameBufferKey->Handle();
+  renderPassCi.framebuffer = pbr_forwardFrameBuffer->Handle();
   renderPassCi.renderPass = pbr_forwardRenderPass->Handle();
   renderPassCi.pClearValues = clearValues.data();
   renderPassCi.clearValueCount = static_cast<u32>(clearValues.size());

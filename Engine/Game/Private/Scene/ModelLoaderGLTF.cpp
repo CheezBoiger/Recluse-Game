@@ -438,6 +438,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
     for (size_t i = 0; i < mesh.primitives.size(); ++i) {
       const tinygltf::Primitive& primitive = mesh.primitives[i];
+      Primitive primData;
       u32   vertexStart = static_cast<u32>(vertices.size());
       u32   indexStart = static_cast<u32>(indices.size());
       u32   indexCount = 0;
@@ -483,6 +484,8 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           vertices.push_back(vertex);
           min = Vector3::Min(min, p);
           max = Vector3::Max(max, p);
+          primData._aabb.min = Vector3::Min(primData._aabb.min, p);
+          primData._aabb.max = Vector3::Max(primData._aabb.max, p);
         }
       }
 
@@ -556,9 +559,10 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
         }
       }
 
-
-      Primitive primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
+
+      primData._aabb.ComputeCentroid();;
+
       primData._localConfigs |= globalConfig;
       if (engineModel->materials[primitive.material]->Native()->Transparent()) {
         primData._localConfigs |= CMD_TRANSPARENT_BIT;  
@@ -616,6 +620,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
       u32   vertexStart = static_cast<u32>(vertices.size());
       u32   indexStart = static_cast<u32>(indices.size());
       u32   indexCount = 0;
+      Primitive primData;
       if (primitive.indices < 0) continue;
       R_ASSERT(primitive.attributes.find("POSITION") != primitive.attributes.end(), "No position values within mesh!");
       
@@ -698,6 +703,8 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           vertices.push_back(vertex);
           min = Vector3::Min(min, p);
           max = Vector3::Max(max, p);
+          primData._aabb.min = Vector3::Min(primData._aabb.min, p);
+          primData._aabb.max = Vector3::Max(primData._aabb.max, p);
         }
       }
 
@@ -771,8 +778,10 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
         }
       }
 
-      Primitive primData;
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
+
+      primData._aabb.ComputeCentroid();
+
       primData._localConfigs |= globalConfig;
       if (engineModel->materials[primitive.material]->Native()->Transparent()) {
         primData._localConfigs |= CMD_TRANSPARENT_BIT;  
