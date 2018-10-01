@@ -652,6 +652,7 @@ void main()
     outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);
   vFragColor = vec4(outColor, transparency);
   
+#if !defined(ENABLE_WATER_RENDERING)
   vec3 glow = outColor.rgb - length(V) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
@@ -670,6 +671,7 @@ void main()
   gbuffer.anisoSpec = matBuffer.anisoSpec;
   
   WriteGBuffer(gbuffer);
+#endif
 }
 
 
