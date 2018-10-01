@@ -46,6 +46,11 @@ struct StaticVertex {
   Vector4 normal;
   Vector2 texcoord0;
   Vector2 texcoord1;
+
+  bool operator==(const StaticVertex& other) const {
+    return position == other.position && normal == other.normal 
+        && texcoord0 == other.texcoord0 && texcoord1 == other.texcoord1;
+  }
 };
 
 

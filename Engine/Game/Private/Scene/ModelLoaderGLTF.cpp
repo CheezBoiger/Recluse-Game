@@ -23,6 +23,7 @@
 #include <string>
 #include <set>
 #include <map>
+#include <unordered_map>
 
 
 #define SAMPLE_TRANSLATION_STRING   "translation"
@@ -30,7 +31,72 @@
 #define SAMPLE_SCALE_STRING         "scale"
 #define SAMPLE_WEIGHTS_STRING       "weights"
 
+namespace std {
+
+
+void hash_combine(size_t& seed, size_t hash) 
+{
+  hash += 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  seed ^= hash;
+}
+
+template<> struct hash<Recluse::Vector2>
+{
+  size_t operator()(Recluse::Vector2 const& vec) const
+  {
+    size_t seed = 0;
+    std::hash<Recluse::r32> hasher;
+    hash_combine(seed, hasher(vec.x));
+    hash_combine(seed, hasher(vec.y));
+    return seed;
+  }
+};
+
+
+template<> struct hash<Recluse::Vector3> 
+{
+  size_t operator()(Recluse::Vector3 const& vec) const 
+  {
+    size_t seed = 0;
+    std::hash<Recluse::r32> hasher;
+    hash_combine(seed, hasher(vec.x));
+    hash_combine(seed, hasher(vec.y));
+    hash_combine(seed, hasher(vec.z));
+    return seed;
+  }
+};
+
+
+template<> struct hash<Recluse::Vector4> 
+{
+  size_t operator()(Recluse::Vector4 const& vec) const 
+  {
+    size_t seed = 0;
+    std::hash<Recluse::r32> hasher;
+    hash_combine(seed, hasher(vec.x));
+    hash_combine(seed, hasher(vec.y));
+    hash_combine(seed, hasher(vec.z));
+    hash_combine(seed, hasher(vec.w));
+    return seed;
+  }
+};
+
+template<> struct hash<Recluse::StaticVertex> 
+{
+  size_t operator()(Recluse::StaticVertex const& vertex) const 
+  {
+    return (( hash<Recluse::Vector4>()(vertex.position) ^
+            ( hash<Recluse::Vector4>()(vertex.normal) << 1)) >> 1) ^
+            ( hash<Recluse::Vector2>()(vertex.texcoord0) << 1) ^
+            ( hash<Recluse::Vector2>()(vertex.texcoord1) << 1);
+  }
+};
+
+
+}
+
 namespace Recluse {
+
 namespace ModelLoader {
 
 

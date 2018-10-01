@@ -2711,7 +2711,7 @@ void Renderer::GenerateSkyboxCmds(CommandBuffer* cmdBuffer)
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].depthStencil = { 1.0f, 0 };
 
-  VkExtent2D windowExtent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -4231,7 +4231,8 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
 
     // TODO():
     Matrix4 view;
-    Matrix4 proj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 1.0f, 0.1f, 2000.0f);
+    Matrix4 proj = Matrix4::Perspective(static_cast<r32>(CONST_PI_HALF), 1.0f, 0.1f, 512.0f);
+    //proj[1][1] *= -1;
     GlobalBuffer* pGlobal = m_pGlobal->Data();
     i32 orx = pGlobal->_ScreenSize[0];
     i32 ory = pGlobal->_ScreenSize[1];
@@ -4245,6 +4246,7 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
     pGlobal->_ScreenSize[0] = texSize;
     pGlobal->_ScreenSize[1] = texSize;
 
+    pGlobal->_Proj = proj;
     pGlobal->_InvProj = proj.Inverse();
     CommandBuffer cmdBuffer;
     cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
