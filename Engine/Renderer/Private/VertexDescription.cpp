@@ -184,13 +184,13 @@ std::vector<VkVertexInputBindingDescription> MorphTargetVertexDescription::GetBi
 }
 
 
-size_t GetSize(VkFormat format)
+u32 GetSize(VkFormat format)
 {
   switch (format)
   {
-    case VK_FORMAT_R32G32B32A32_SFLOAT: return sizeof(r32) * 4;
-    case VK_FORMAT_R32G32B32_SFLOAT: return sizeof(r32) * 3;
-    case VK_FORMAT_R32G32_SFLOAT: return sizeof(r32) * 2;
+    case VK_FORMAT_R32G32B32A32_SFLOAT: return (u32)sizeof(r32) * 4;
+    case VK_FORMAT_R32G32B32_SFLOAT: return (u32)sizeof(r32) * 3;
+    case VK_FORMAT_R32G32_SFLOAT: return (u32)sizeof(r32) * 2;
     case VK_FORMAT_R32_SFLOAT:
     default: return sizeof(r32);
   }
@@ -201,9 +201,9 @@ std::vector<VkVertexInputAttributeDescription> MorphTargetVertexDescription::Get
 {
   std::vector<VkVertexInputAttributeDescription> attributes(attribs.size() + 8);
   size_t i = 0;
-  size_t offset = 0;
-  size_t binding = 0;
-  size_t location = 0;
+  u32 offset = 0;
+  u32 binding = 0;
+  u32 location = 0;
   for (; i < attribs.size(); ++i) {
     attributes[i].binding = attribs[i].binding;
     attributes[i].format = attribs[i].format;

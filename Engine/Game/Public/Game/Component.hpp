@@ -9,11 +9,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-#if defined(_DEBUG) || defined(_NDEBUG)
-  #include "Core/Utility/Profile.hpp"
-#else
-  #define R_TIMED_PROFILE_GAME()
-#endif
+#include "Core/Utility/Profile.hpp"
 
 namespace Recluse {
 

@@ -66,6 +66,7 @@ Renderer::Renderer()
   , m_SkyboxFinished(nullptr)
   , m_TotalCmdBuffers(3)
   , m_CurrCmdBufferIdx(0)
+  , m_pAntiAliasingFXAA(nullptr)
   , m_staticUpdate(false)
   , m_workers(kMaxRendererThreadWorkerCount)
   , m_Minimized(false)
@@ -391,6 +392,11 @@ void Renderer::CleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->DeviceWaitIdle();
 
+
+  m_pAntiAliasingFXAA->CleanUp(m_pRhi);
+  delete m_pAntiAliasingFXAA;
+  m_pAntiAliasingFXAA = nullptr;
+
   m_pBakeIbl->CleanUp(m_pRhi);
   delete m_pBakeIbl;
   m_pBakeIbl = nullptr;
@@ -493,6 +499,9 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
+
+  m_pAntiAliasingFXAA = new AntiAliasingFXAA();
+  m_pAntiAliasingFXAA->Initialize(m_pRhi, m_pGlobal);
 
   m_pBakeIbl = new BakeIBL();
   m_pBakeIbl->Initialize(m_pRhi);
@@ -1820,6 +1829,12 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   Texture* gbuffer_Depth = m_pRhi->CreateTexture();
   Sampler* gbuffer_Sampler = m_pRhi->CreateSampler();
 
+  RDEBUG_SET_VULKAN_NAME(gbuffer_Albedo, "Albedo");
+  RDEBUG_SET_VULKAN_NAME(gbuffer_Normal, "Normal");
+  RDEBUG_SET_VULKAN_NAME(gbuffer_roughMetalSpec, "RoughMetal");
+  RDEBUG_SET_VULKAN_NAME(gbuffer_Depth, "Depth");
+  RDEBUG_SET_VULKAN_NAME(gbuffer_Emission, "Emissive");
+
   Texture* hdr_Texture = m_pRhi->CreateTexture();
   Sampler* hdr_Sampler = m_pRhi->CreateSampler();
   
@@ -2437,6 +2452,10 @@ void Renderer::SetUpHDR(b32 fullSetUp)
     m_HDR._Semaphore->Initialize(semaCi);
   }
 
+  switch (m_currentGraphicsConfigs._AA) {
+  case AA_FXAA_2x: m_pAntiAliasingFXAA->UpdateSets(m_pRhi, m_pGlobal);
+  }
+
   DescriptorSet* hdrSet = m_pRhi->CreateDescriptorSet();
   hdr_gamma_descSetKey = hdrSet;
   std::array<VkWriteDescriptorSet, 3> hdrWrites;
@@ -2446,10 +2465,23 @@ void Renderer::SetUpHDR(b32 fullSetUp)
   hdrBufferInfo.buffer = m_pGlobal->Handle()->NativeBuffer();
 
   VkDescriptorImageInfo pbrImageInfo = { };
-  pbrImageInfo.sampler = gbuffer_SamplerKey->Handle();
-  pbrImageInfo.imageView = pbr_FinalTextureKey->View();
-  pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
+  switch (m_currentGraphicsConfigs._AA) {
+    case AA_FXAA_2x:
+    {
+      Texture* texture = m_pAntiAliasingFXAA->GetOutput();
+      Sampler* sampler = m_pAntiAliasingFXAA->GetOutputSampler();
+      pbrImageInfo.sampler = sampler->Handle();
+      pbrImageInfo.imageView = texture->View();
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    } break;
+    case AA_None:
+    default:  
+    {
+      pbrImageInfo.sampler = gbuffer_SamplerKey->Handle();
+      pbrImageInfo.imageView = pbr_FinalTextureKey->View();
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+  }
   // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
   VkDescriptorImageInfo bloomImageInfo = { };
   bloomImageInfo.sampler = gbuffer_SamplerKey->Handle();
@@ -3096,6 +3128,10 @@ void Renderer::GenerateHDRCmds(CommandBuffer* cmdBuffer)
   VkDescriptorSet dSets[2];
   dSets[0] = hdrSet->Handle();
   dSets[1] = m_pHDR->GetSet()->Handle();
+  
+  if (m_currentGraphicsConfigs._AA == AA_FXAA_2x) {
+    m_pAntiAliasingFXAA->GenerateCommands(m_pRhi, cmdBuffer, m_pGlobal);
+  }
 
   cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
     cmdBuffer->SetViewPorts(0, 1, &viewport);
@@ -3898,13 +3934,14 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
     SetUpFrameBuffers();
     SetUpGraphicsPipelines();
     SetUpFinalOutputs();
-    SetUpOffscreen(false);
-    SetUpDownscale(false);
-    SetUpHDR(false);
     SetUpPBR();
     SetUpForwardPBR();
     m_pUI->Initialize(m_pRhi);
   }
+
+  SetUpOffscreen(false);
+  SetUpDownscale(false);
+  SetUpHDR(false);
 
   CleanUpGlobalIlluminationBuffer();
   SetUpGlobalIlluminationBuffer();

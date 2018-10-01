@@ -231,6 +231,7 @@ enum AntiAliasingType {
   FXAA,
   SMAA
 };
+} // RendererPass
 
 
 class AntiAliasingSMAA {
@@ -247,20 +248,33 @@ public:
 class AntiAliasingFXAA {
 public:
   AntiAliasingFXAA()
-    : m_output(nullptr) { }
+    : m_output(nullptr)
+    , m_outputSampler(nullptr)
+    , m_pipeline(nullptr)
+    , m_descSet(nullptr)
+    , m_layout(nullptr) { }
 
 
-  void    Initialize(VulkanRHI* pRhi);
-  void    CreateGraphicsPipeline();
-  void    CleanUp(VulkanRHI* pRhi);   
+  void    Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
+  void    CleanUp(VulkanRHI* pRhi);
 
-  void    GenerateCommands(CommandBuffer* pOut, GlobalDescriptor* pDescriptor);
-
+  void    GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOut, GlobalDescriptor* pDescriptor);
+  void    UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
   Texture*  GetOutput() { return m_output; }
+  Sampler*  GetOutputSampler() { return m_outputSampler; }
 
 private:
-  GraphicsPipeline* m_piplineFXAA;
-  Texture* m_output;
+
+  void                    CreateTexture(VulkanRHI* pRhi);
+  void                    CreateDescriptorSetLayout(VulkanRHI* pRhi);
+  void                    CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
+  void                    CreateSampler(VulkanRHI* pRhi);
+
+
+  ComputePipeline*        m_pipeline;
+  Texture*                m_output;
+  Sampler*                m_outputSampler;
+  DescriptorSetLayout*    m_layout;
+  DescriptorSet*          m_descSet;
 };
-} // RendererPass
 } // Recluse

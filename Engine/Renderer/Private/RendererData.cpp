@@ -5,6 +5,7 @@
 #include "Core/Logging/Log.hpp"
 #include "Renderer.hpp"
 #include "HDR.hpp"
+#include "GlobalDescriptor.hpp"
 #include "SkyAtmosphere.hpp"
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/Shader.hpp"
@@ -12,8 +13,12 @@
 #include "RHI/GraphicsPipeline.hpp"
 #include "RHI/ComputePipeline.hpp"
 #include "RHI/Framebuffer.hpp"
+#include "RHI/Texture.hpp"
+#include "RHI/Commandbuffer.hpp"
+#include "RHI/Buffer.hpp"
 
 #include <array>
+
 
 #include "Filesystem/Filesystem.hpp"
 
@@ -1234,17 +1239,32 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
 
 void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa)
 {
-  std::string aaFrag = "";
-  switch (aa) {
-    case AA_FXAA_2x: aaFrag = fxaa_fragStr; break;
-    default: return;
-  };
+}
+} // RendererPass
+
+
+void AntiAliasingFXAA::Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
+{
+  
+  CreateTexture(pRhi);
+  CreateSampler(pRhi);
+  CreateDescriptorSetLayout(pRhi);
+  CreateDescriptorSet(pRhi, pWorld);
 
   VkPipelineLayoutCreateInfo layoutCi{};
   layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  
-  Shader* shader = Rhi->CreateShader();
-  LoadShader(aaFrag, shader);
+  layoutCi.pPushConstantRanges = nullptr;
+
+  VkDescriptorSetLayout setlayouts[] = {
+    GlobalSetLayoutKey->Layout(),
+    m_layout->Layout()
+  };
+
+  layoutCi.setLayoutCount = 2;
+  layoutCi.pSetLayouts = setlayouts;
+
+  Shader* shader = pRhi->CreateShader();
+  RendererPass::LoadShader("FXAA.comp.spv", shader);
 
   VkPipelineShaderStageCreateInfo shaderStageCi{};
   shaderStageCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1258,8 +1278,213 @@ void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
   compCi.stage = shaderStageCi;
   compCi.basePipelineHandle = VK_NULL_HANDLE;
 
-  Rhi->FreeShader(shader);
+  m_pipeline = pRhi->CreateComputePipeline();
+  m_pipeline->Initialize(compCi, layoutCi);
+  pRhi->FreeShader(shader);
 }
 
-} // RendererPass
+
+void AntiAliasingFXAA::CleanUp(VulkanRHI* pRhi)
+{
+  if ( m_output ) {
+    pRhi->FreeTexture(m_output);
+    m_output = nullptr;
+  }
+
+  if ( m_outputSampler ) {
+    pRhi->FreeSampler(m_outputSampler);
+    m_outputSampler = nullptr;
+  }
+
+  if ( m_layout ) {
+    pRhi->FreeDescriptorSetLayout(m_layout);
+    m_layout = nullptr;
+  }
+
+  if ( m_descSet ) {
+    pRhi->FreeDescriptorSet(m_descSet);
+    m_descSet = nullptr;
+  }
+
+  if ( m_pipeline ) {
+    pRhi->FreeComputePipeline(m_pipeline);
+    m_pipeline = nullptr;
+  }
+}
+
+
+void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
+{
+  m_output = pRhi->CreateTexture();
+  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  VkImageCreateInfo imgCi = { };
+  VkImageViewCreateInfo imgViewCi = { };
+  imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imgCi.arrayLayers = 1;
+  imgCi.extent.width = extent.width;
+  imgCi.extent.height = extent.height;
+  imgCi.extent.depth = 1;
+  imgCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgCi.imageType = VK_IMAGE_TYPE_2D;
+  imgCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgCi.mipLevels = 1;
+  imgCi.samples = VK_SAMPLE_COUNT_1_BIT;
+  imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imgCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+  
+  imgViewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  imgViewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  imgViewCi.subresourceRange.baseArrayLayer = 0;
+  imgViewCi.subresourceRange.baseMipLevel = 0;
+  imgViewCi.subresourceRange.layerCount = 1;
+  imgViewCi.subresourceRange.levelCount = 1;
+  imgViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+  RDEBUG_SET_VULKAN_NAME(m_output, "FXAA");
+  m_output->Initialize(imgCi, imgViewCi);
+}
+
+
+void AntiAliasingFXAA::CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+{
+  m_descSet = pRhi->CreateDescriptorSet();
+  m_descSet->Allocate(pRhi->DescriptorPool(), m_layout);
+
+  UpdateSets(pRhi, pDescriptor);
+}
+
+
+void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+{
+  pRhi->FreeTexture(m_output);
+
+  CreateTexture(pRhi);
+
+  VkDescriptorBufferInfo worldInfo = {};
+  worldInfo.buffer = pDescriptor->Handle()->NativeBuffer();
+  worldInfo.offset = 0;
+  worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
+
+  VkDescriptorImageInfo inputInfo = {};
+  inputInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  inputInfo.imageView = pbr_FinalTextureKey->View();
+  inputInfo.sampler = gbuffer_SamplerKey->Handle();
+
+  VkDescriptorImageInfo outputInfo = {};
+  outputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+  outputInfo.imageView = m_output->View();
+  outputInfo.sampler = nullptr;
+
+  std::array<VkWriteDescriptorSet, 2> writes;
+  writes[0] = {};
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].descriptorCount = 1;
+  writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writes[0].dstArrayElement = 0;
+  writes[0].dstBinding = 0;
+  writes[0].pImageInfo = &inputInfo;
+
+  writes[1] = {};
+  writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[1].descriptorCount = 1;
+  writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  writes[1].dstArrayElement = 0;
+  writes[1].dstBinding = 1;
+  writes[1].pImageInfo = &outputInfo;
+
+  m_descSet->Update(static_cast<u32>(writes.size()), writes.data());
+}
+
+
+void AntiAliasingFXAA::CreateDescriptorSetLayout(VulkanRHI* pRhi)
+{
+  VkDescriptorSetLayoutCreateInfo layoutCi = { };
+  layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+
+  std::array<VkDescriptorSetLayoutBinding, 2> binds;
+  binds[0] = { };
+  binds[0].binding = 0;
+  binds[0].descriptorCount = 1;
+  binds[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  binds[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  binds[1] = { };
+  binds[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+  binds[1].descriptorCount = 1;
+  binds[1].binding = 1;
+  binds[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+
+  layoutCi.bindingCount = static_cast<u32>(binds.size());
+  layoutCi.pBindings = binds.data();
+
+  m_layout = pRhi->CreateDescriptorSetLayout();
+  m_layout->Initialize(layoutCi);
+}
+
+
+void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal)
+{
+  VkImageSubresourceRange subrange = {};
+  subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subrange.baseArrayLayer = 0;
+  subrange.baseMipLevel = 0;
+  subrange.layerCount = 1;
+  subrange.levelCount = 1;
+
+  VkImageMemoryBarrier imageMemBarrier = { };
+  imageMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imageMemBarrier.subresourceRange = subrange;
+  imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+  imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+  imageMemBarrier.image = m_output->Image();
+
+  pOutput->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
+
+  VkDescriptorSet sets[] = {
+    pGlobal->Set()->Handle(),
+    m_descSet->Handle()
+  };
+
+  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  pOutput->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
+  pOutput->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Layout(), 0, 2, sets, 0, nullptr);
+  pOutput->Dispatch((extent.width / 16) + 1, (extent.height / 16) + 1, 1);
+
+  imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+  imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+  pOutput->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
+}
+
+
+void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
+{
+  m_outputSampler = pRhi->CreateSampler();
+  VkSamplerCreateInfo  samplerCi = { };
+  samplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  samplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  samplerCi.anisotropyEnable = VK_FALSE;
+  samplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  samplerCi.compareEnable = VK_FALSE;
+  samplerCi.compareOp = VK_COMPARE_OP_ALWAYS;
+  samplerCi.magFilter = VK_FILTER_NEAREST;
+  samplerCi.minLod = 0.0f;
+  samplerCi.maxAnisotropy = 1.0f;
+  samplerCi.minFilter = VK_FILTER_NEAREST;
+  samplerCi.maxLod = 1.0f;
+  samplerCi.mipLodBias = 0.0f;
+  samplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+  samplerCi.unnormalizedCoordinates = VK_FALSE;
+  m_outputSampler->Initialize(samplerCi);
+}
 } // Recluse

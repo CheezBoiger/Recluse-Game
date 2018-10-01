@@ -69,7 +69,9 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   mMipLevels = imageInfo.mipLevels;
   mArrayLayers = imageInfo.arrayLayers;
 
-  R_DEBUG(rNotify, "Texture Image created.\n");
+  R_DEBUG(rNotify, "Texture Image created for ");
+  R_DEBUG(rNormal, m_name);
+  R_DEBUG(rNormal, "\n");
   //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
   //R_DEBUG(rNotify, "Texture View: " << View() << "\n");
   //R_DEBUG(rNotify, "Texture Memory: " << Memory() << "\n");
@@ -78,7 +80,9 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
 
 void Texture::CleanUp()
 {
-  R_DEBUG(rNotify, "Freeing Texture:\n");
+  R_DEBUG(rNotify, "Freeing Texture: ");
+  R_DEBUG(rNormal, m_name);
+  R_DEBUG(rNormal, "\n");
   if (mImage) {
     //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
     vkDestroyImage(mOwner, mImage, nullptr);

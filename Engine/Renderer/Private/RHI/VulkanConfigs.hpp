@@ -18,6 +18,12 @@
 #define NVIDIA_WARP_SIZE           32   // Optimal CUDA SIMT workgroup size on Nvidia chips.
 #define AMD_WAVEFRONT_SIZE         64   // Optimal AMD workgroup size on Radeon chips.
 
+#if defined(_DEBUG)
+#define RDEBUG_SET_VULKAN_NAME(obj, name) obj->SetName(name)
+#else
+#define RDEBUG_SET_VULKAN_NAME(obj, name)
+#endif
+
 typedef unsigned long graphics_uuid_t;
 
 class VulkanHandle {
@@ -26,15 +32,27 @@ public:
   
   VulkanHandle()
     : mOwner(VK_NULL_HANDLE)
-    , m_uuid(uuid++) { }
+    , m_uuid(uuid++) 
+#if defined (_DEBUG)
+    , m_name("")
+#endif
+    { }
 
   void      SetOwner(VkDevice owner) { mOwner = owner; }
   VkDevice  Owner() { return mOwner; }
   graphics_uuid_t GetUUID() const { return m_uuid; }
 
+  DEBUG_OP(
+  void      SetName(const char* name) { m_name = name; }
+  const char*      GetName() { return m_name; }
+  )
+
 protected:
   VkDevice  mOwner;
   graphics_uuid_t m_uuid;
+  DEBUG_OP(
+  const char* m_name;
+  )
 };
 
 

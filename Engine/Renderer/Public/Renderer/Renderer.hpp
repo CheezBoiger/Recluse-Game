@@ -48,6 +48,7 @@ class UIOverlay;
 class Fence;
 class RenderObject;
 class SkinnedRenderObject;
+class AntiAliasingFXAA;
 class SkyRenderer;
 class DecalEngine;
 class ParticleEngine;
@@ -394,6 +395,7 @@ private:
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
   BakeIBL*              m_pBakeIbl;
+  AntiAliasingFXAA*     m_pAntiAliasingFXAA;
   Clusterer*            m_pClusterer;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;
