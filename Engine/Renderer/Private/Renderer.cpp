@@ -80,10 +80,14 @@ Renderer::Renderer()
   , m_pIrrMaps(nullptr)
   , m_pBrdfLUTs(nullptr)
   , m_pBakeIbl(nullptr)
+  , m_pFinalFinished(nullptr)
 {
   m_HDR._Enabled = true;
   m_Offscreen._CmdBuffers.resize(m_TotalCmdBuffers);
   m_Offscreen._ShadowCmdBuffers.resize(m_TotalCmdBuffers);
+
+  m_Offscreen._Semaphore = nullptr;
+  m_Offscreen._shadowSemaphore = nullptr;
 
   m_Downscale._Horizontal = 0;
   m_Downscale._Strength = 1.0f;
@@ -2243,6 +2247,16 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
 void Renderer::SetUpOffscreen(b32 fullSetup)
 {
   if (fullSetup) {
+    if (m_Offscreen._Semaphore) {
+      m_pRhi->FreeVkSemaphore(m_Offscreen._Semaphore);
+      m_Offscreen._Semaphore = nullptr;
+    }
+
+    if (m_Offscreen._shadowSemaphore) {
+      m_pRhi->FreeVkSemaphore(m_Offscreen._shadowSemaphore);
+      m_Offscreen._shadowSemaphore = nullptr;
+    }
+
     m_Offscreen._Semaphore = m_pRhi->CreateVkSemaphore();
     m_Offscreen._shadowSemaphore = m_pRhi->CreateVkSemaphore();
     VkSemaphoreCreateInfo semaCI = { };
@@ -3506,6 +3520,10 @@ void Renderer::SetUpPBR()
   Sampler* pbr_Sampler = gbuffer_SamplerKey;
 
   DescriptorSetLayout* pbr_Layout = pbr_DescLayoutKey;
+  if ( pbr_DescSetKey ) {
+    m_pRhi->FreeDescriptorSet( pbr_DescSetKey );
+    pbr_DescSetKey = nullptr;
+  }
   DescriptorSet* pbr_Set = m_pRhi->CreateDescriptorSet();
   pbr_DescSetKey = pbr_Set;
   {
@@ -3624,6 +3642,15 @@ void Renderer::SetUpPBR()
     pbr_compSet->Update(static_cast<u32>(writes.size()), writes.data());
   }
 
+  if (m_Pbr._CmdBuffer) {
+    m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffer);
+    m_Pbr._CmdBuffer = nullptr;
+  }
+
+  if (m_Pbr._Sema) {
+    m_pRhi->FreeVkSemaphore( m_Pbr._Sema );
+    m_Pbr._Sema = nullptr;
+  }
   m_Pbr._CmdBuffer = m_pRhi->CreateCommandBuffer();
   m_Pbr._CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
@@ -3642,6 +3669,10 @@ void Renderer::CleanUpPBR()
   m_pRhi->FreeCommandBuffer(m_Pbr._CmdBuffer);
 
   m_pRhi->FreeVkSemaphore(m_Pbr._Sema);
+  pbr_DescSetKey = nullptr;
+  pbr_compSet = nullptr;
+  m_Pbr._CmdBuffer = nullptr;
+  m_Pbr._Sema = nullptr;
 }
 
 
@@ -3654,6 +3685,10 @@ void Renderer::SetUpFinalOutputs()
   Sampler* pbr_Sampler = gbuffer_SamplerKey;
 
   DescriptorSetLayout* finalSetLayout = final_DescSetLayoutKey;
+  if ( final_DescSetKey ) {
+    m_pRhi->FreeDescriptorSet( final_DescSetKey );
+    final_DescSetKey = nullptr; 
+  }
   DescriptorSet* offscreenImageDescriptor = m_pRhi->CreateDescriptorSet();
   final_DescSetKey = offscreenImageDescriptor;
   offscreenImageDescriptor->Allocate(m_pRhi->DescriptorPool(), finalSetLayout);
@@ -3711,6 +3746,10 @@ void Renderer::SetUpFinalOutputs()
   m_pFinalCommandBuffer = m_pRhi->CreateCommandBuffer();
   m_pFinalCommandBuffer->Allocate(m_pRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
+  if ( m_pFinalFinished ) {
+    m_pRhi->FreeVkSemaphore( m_pFinalFinished );
+    m_pFinalFinished = nullptr;
+  }
   m_pFinalFinished = m_pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo info = { };
   info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO; 
@@ -3780,6 +3819,9 @@ void Renderer::CleanUpFinalOutputs()
   m_pRhi->FreeDescriptorSet(offscreenDescriptorSet);
   m_pRhi->FreeCommandBuffer(m_pFinalCommandBuffer);
   m_pRhi->FreeVkSemaphore(m_pFinalFinished);
+  m_pFinalCommandBuffer = nullptr;
+  m_pFinalFinished = nullptr;
+  final_DescSetKey = nullptr;
 }
 
 
@@ -4291,8 +4333,8 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
 
       // Render to frame first.
       GenerateOffScreenCmds(&cmdBuffer);
-      GeneratePbrCmds(&cmdBuffer);
       GenerateShadowCmds(&cmdBuffer);
+      GeneratePbrCmds(&cmdBuffer);
       GenerateSkyboxCmds(&cmdBuffer);
       GenerateForwardPBRCmds(&cmdBuffer);
 

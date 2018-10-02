@@ -9,7 +9,6 @@
 #include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
 
-
 namespace Recluse {
 
 
@@ -243,6 +242,12 @@ void TextureCube::CleanUp()
     mRhi->FreeTexture( texture );
     texture = nullptr;
   }
+}
+
+
+void TextureCube::Save(const std::string& filename)
+{
+  
 }
 
 

@@ -1,6 +1,7 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Utility/Image.hpp"
 #include "Utility/stb_image.hpp"
+#include "stb_image_write.hpp"
 
 namespace Recluse {
 
@@ -16,6 +17,13 @@ b8 Image::Load(const tchar* imgpath)
   if (!_data) return false;
 
   _memorySize = _width * _height * 4;
+  return true;
+}
+
+
+b8 Image::SavePNG(const tchar* imgpath)
+{
+  stbi_write_png(imgpath, _width, _height, _channels, _data, sizeof(u8) * _channels);
   return true;
 }
 

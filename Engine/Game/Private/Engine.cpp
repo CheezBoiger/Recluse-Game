@@ -252,10 +252,10 @@ void Engine::Update()
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();
-  //TextureCube* pCube = gRenderer().BakeEnvironmentMap(Vector3(20.0f, 20.0f, 0.0f));
+
+  //TextureCube* pCube = gRenderer().BakeEnvironmentMap(Vector3(0.0f, -10.0f, 0.0f));
   gRenderer().Render();
   //gRenderer().FreeTextureCube(pCube);
-
 }
 
 

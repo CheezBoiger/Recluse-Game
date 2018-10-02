@@ -44,8 +44,8 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
-#if 0
+    m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 1.0f, 15.0f));
+#if 1
     m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
 #endif
     m_pPhysicsComponent->Initialize(this);
@@ -68,7 +68,7 @@ public:
       , &material);
     Transform* trans = GetTransform();
     m_pRendererComponent->Initialize(this);
-#if 1
+#if 0
     m_pRendererComponent->EnableStatic(true);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);

@@ -18,6 +18,8 @@ struct Image {
   ~Image();
 
   b8            Load(const tchar* imgpath);
+  b8            SaveHDR(const tchar* imgpath);
+  b8            SavePNG(const tchar* imgpath);
 
   // Clean up image data. Returns true if image was cleaned up. Returns false if
   // no image data was cleaned up (which could mean there was no data to begin with.)

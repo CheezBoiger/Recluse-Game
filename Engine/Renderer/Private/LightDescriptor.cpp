@@ -127,10 +127,12 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 
   if (!m_pDynamicMap) {
     m_pDynamicMap = pRhi->CreateTexture();
+    RDEBUG_SET_VULKAN_NAME(m_pDynamicMap, "Dynamic Shadowmap.");
     m_pDynamicMap->Initialize(ImageCi, ViewCi);
   }
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->CreateTexture();
+    RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
     m_pStaticMap->Initialize(ImageCi, ViewCi);
   }
 
@@ -451,12 +453,12 @@ void ShadowMapSystem::InitializeShadowMap(VulkanRHI* pRhi)
   // TODO(): Once we create our shadow map, we will add it here.
   // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
-  globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
   globalShadowInfo.imageView = m_pDynamicMap->View();
   globalShadowInfo.sampler = _pSampler->Handle();
 
   VkDescriptorImageInfo staticShadowInfo = { };
-  staticShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  staticShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
   staticShadowInfo.imageView = m_pStaticMap->View();
   staticShadowInfo.sampler = _pSampler->Handle();
 

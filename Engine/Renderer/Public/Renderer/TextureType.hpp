@@ -118,7 +118,7 @@ public:
   void Initialize(u32 extentX, u32 extentY, u32 extentZ = 1);
   void Update(u32 count, Image const* images);
   void CleanUp() override;
-
+  void Save(const std::string& filename) override;
   u32   WidthPerFace() const;
   u32   HeightPerFace() const;
 };
