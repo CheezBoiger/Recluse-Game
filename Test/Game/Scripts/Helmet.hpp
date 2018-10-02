@@ -188,7 +188,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:

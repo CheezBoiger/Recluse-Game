@@ -79,6 +79,8 @@ public:
 
   void              SetAppName(const char* name) { appName = name; }
 
+  void              TakeSnapshot(const std::string screenshotname);
+
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
   // just plain recreate the renderer scene.

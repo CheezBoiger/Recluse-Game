@@ -375,7 +375,6 @@ void Renderer::Render()
     m_pRhi->SubmitCurrSwapchainCmdBuffer(1, &uiSignalSema, 1, &signal, m_cpuFence->Handle()); // cpuFence will need to wait until overlay is finished.
   EndFrame();
 
-
   // Compute pipeline render.
   VkSubmitInfo computeSubmit = { };
   computeSubmit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1897,10 +1896,6 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
 
   gbuffer_Albedo->Initialize(cImageInfo, cViewInfo);  
 
-  cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-  cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-  final_renderTexture->Initialize(cImageInfo, cViewInfo);
-
   cImageInfo.format = GBUFFER_ADDITIONAL_INFO_FORMAT;
   cViewInfo.format =  GBUFFER_ADDITIONAL_INFO_FORMAT;
   gbuffer_Emission->Initialize(cImageInfo, cViewInfo);
@@ -1911,6 +1906,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
     | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   pbr_Final->Initialize(cImageInfo, cViewInfo);
+  final_renderTexture->Initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
   cImageInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
@@ -4480,5 +4476,14 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
   pGlobal->_InvView = prevInvView;
   pGlobal->_InvViewProj = prevInvViewProj;
   return pTexCube;
+}
+
+
+void Renderer::TakeSnapshot(const std::string name)
+{
+  Texture2D tex2d;
+  tex2d.mRhi = m_pRhi;
+  tex2d.texture = final_renderTargetKey;
+  tex2d.Save(name);
 }
 } // Recluse

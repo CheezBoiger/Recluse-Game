@@ -190,6 +190,125 @@ u32 Texture2D::Height() const
 }
 
 
+void Texture2D::Save(const std::string filename) 
+{
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(mRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  Buffer stagingBuffer;
+  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+
+  VkBufferCreateInfo bufferci = {};
+  bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+  bufferci.size = VkDeviceSize(texture->Width() * texture->Height() * 4);
+  u8* data = new u8[bufferci.size];
+
+
+  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.Map();
+
+  // Stream out the image info.
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmdBuffer.Begin(beginInfo);
+
+  // Max barriers.
+  std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
+  size_t offset = 0;
+  for (u32 mipLevel = 0; mipLevel < texture->MipLevels(); ++mipLevel) {
+    VkBufferImageCopy region = {};
+    region.bufferOffset = offset;
+    region.bufferImageHeight = 0;
+    region.bufferRowLength = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageSubresource.mipLevel = mipLevel;
+    region.imageExtent.width = texture->Width();
+    region.imageExtent.height = texture->Height();
+    region.imageExtent.depth = 1;
+    region.imageOffset = { 0, 0, 0 };
+    bufferCopies[mipLevel] = region;
+  }
+
+  VkImageMemoryBarrier imgBarrier = {};
+  imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgBarrier.image = texture->Image();
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imgBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  imgBarrier.srcAccessMask = 0;
+  imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  imgBarrier.subresourceRange.baseArrayLayer = 0;
+  imgBarrier.subresourceRange.baseMipLevel = 0;
+  imgBarrier.subresourceRange.layerCount = texture->ArrayLayers();
+  imgBarrier.subresourceRange.levelCount = texture->MipLevels();
+
+  // TODO(): Copy buffer to image stream.
+  // Image memory barrier.
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgBarrier
+  );
+
+  // Send buffer image copy cmd.
+  cmdBuffer.CopyImageToBuffer(
+    texture->Image(),
+    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+    stagingBuffer.NativeBuffer(),
+    static_cast<u32>(bufferCopies.size()),
+    bufferCopies.data()
+  );
+
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+  imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgBarrier
+  );
+
+  cmdBuffer.End();
+
+  VkSubmitInfo submit = {};
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  submit.pCommandBuffers = cmd;
+
+  mRhi->TransferSubmit(0, 1, &submit);
+  mRhi->TransferWaitIdle(0);
+
+  memcpy(data, stagingBuffer.Mapped(), bufferci.size);
+  Image img;
+  img._data = data;
+  img._height = texture->Height();
+  img._width = texture->Width();
+  img._channels = 4;
+  img._memorySize = texture->Width() * texture->Height() * 4;
+  img.SavePNG(filename.c_str());
+
+  stagingBuffer.UnMap();
+  stagingBuffer.CleanUp();
+  delete[] data;
+}
+
+
 void TextureCube::Initialize(u32 extentX, u32 extentY, u32 extentZ)
 {
   if (texture) return;
@@ -245,9 +364,8 @@ void TextureCube::CleanUp()
 }
 
 
-void TextureCube::Save(const std::string& filename)
+void TextureCube::Save(const std::string filename)
 {
-  
 }
 
 

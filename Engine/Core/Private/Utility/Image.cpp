@@ -23,7 +23,9 @@ b8 Image::Load(const tchar* imgpath)
 
 b8 Image::SavePNG(const tchar* imgpath)
 {
-  stbi_write_png(imgpath, _width, _height, _channels, _data, sizeof(u8) * _channels);
+  if (!_data) { return false; }
+
+  stbi_write_png(imgpath, _width, _height, _channels, _data, _width * _channels);
   return true;
 }
 

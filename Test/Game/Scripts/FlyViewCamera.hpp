@@ -77,7 +77,8 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
      // pCam->SetFoV(pCam->FoV() + Radians(1.0f));
-     pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
+     //pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
+    gRenderer().TakeSnapshot("Dumbass.png");
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
@@ -123,7 +124,7 @@ public:
       params._EnableVsync = true;
       params._EnableBloom = true;
       params._AA = AA_FXAA_2x;
-      params._Shadows = GRAPHICS_QUALITY_NONE;
+      params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().UpdateRendererConfigs(&params);
     }

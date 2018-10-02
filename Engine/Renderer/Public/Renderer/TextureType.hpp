@@ -36,7 +36,7 @@ public:
   virtual void CleanUp() { }
 
   // Save this texture into a file for use in another life.
-  virtual void Save(const std::string& pathName) { }
+  virtual void Save(const std::string pathName) { }
 
   void          SetTextureHandle(Texture* newTex) { texture = newTex; }
   u64           UUID() const { return m_uuid; }
@@ -86,6 +86,8 @@ public:
   // same width and height in order to render properly. To write 
   // texture over to this object, call Update() after this call.
   void        Initialize(u32 width, u32 height, b32 genMips = false);
+  
+  void        Save(const std::string filename) override;
   // Update texture with a new image to be written over.
   void        Update(Image const& image);
   void        CleanUp() override;
@@ -118,7 +120,7 @@ public:
   void Initialize(u32 extentX, u32 extentY, u32 extentZ = 1);
   void Update(u32 count, Image const* images);
   void CleanUp() override;
-  void Save(const std::string& filename) override;
+  void Save(const std::string filename) override;
   u32   WidthPerFace() const;
   u32   HeightPerFace() const;
 };

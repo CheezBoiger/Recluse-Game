@@ -23,7 +23,6 @@ void LoadMaterials()
   Texture2D* grassRough = nullptr;
   {
     img.Load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
-    img.SavePNG("Nerd.png");
     albedo = gRenderer().CreateTexture2D();
     albedo->Initialize(img.Width(), img.Height());
     albedo->_Name = "BoxAlbedo";
