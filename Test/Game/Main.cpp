@@ -3,7 +3,8 @@
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
 
-
+#include "Renderer/Renderer.hpp"
+#include "Renderer/TextureType.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "../DemoTextureLoad.hpp"
 #include "Scripts/FlyViewCamera.hpp"
@@ -24,10 +25,12 @@ using namespace Recluse;
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
   static const u32 kNumberOfMonsters = 0;
+  TextureCube* cubemap;
 public:
 
   // Used to set up the scene. Call before updating.
   void SetUp() override {
+    cubemap = nullptr;
     cube = new CubeObject();
     lantern = new LanternObject();
     monster = new Monster();
@@ -74,6 +77,20 @@ public:
     // You are also allowed to configure hdr settings of the scene. This doesn't affect user parameters of
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
+
+#if 0
+    cubemap = gRenderer().CreateTextureCube();
+    cubemap->Initialize(512, 512, 1);
+
+    {
+      Image img;
+      img.Load("test.png");
+      cubemap->Update(img);
+      img.CleanUp();
+      gRenderer().SetSkyboxCubeMap(cubemap);
+      gRenderer().UsePreRenderSkyboxMap(true);
+    }
+#endif
   }
 
   // Start up function call, optional if no game object was called.
@@ -123,6 +140,12 @@ public:
 
     mainCam->CleanUp();
     delete mainCam;
+
+#if 0
+    gRenderer().FreeTextureCube(cubemap);
+    cubemap = nullptr;
+    gRenderer().UsePreRenderSkyboxMap(false);
+#endif
   }
 
 private:

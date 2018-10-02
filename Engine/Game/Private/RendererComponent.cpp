@@ -165,7 +165,7 @@ void RendererComponent::Update()
     const r32* weights = nullptr;
     u32 weightSz = 0;
     weights = m_pAnimHandle->_finalMorphs.data();
-    weightSz = m_pAnimHandle->_finalMorphs.size();
+    weightSz = static_cast<u32>(m_pAnimHandle->_finalMorphs.size());
     if (weightSz > 0) {
       renderData->_w0 = weights[0];
       renderData->_w1 = weights[1];

@@ -9,6 +9,8 @@
 #include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
 
+#include <array>
+
 namespace Recluse {
 
 
@@ -345,15 +347,6 @@ void TextureCube::Initialize(u32 extentX, u32 extentY, u32 extentZ)
 }
 
 
-void TextureCube::Update(u32 count, Image const* images)
-{
-  if (count < 1) return;
-
-  // TODO(): 
-  R_ASSERT(false, "Not implemented.");
-}
-
-
 void TextureCube::CleanUp()
 {
   // TODO(): 
@@ -366,6 +359,130 @@ void TextureCube::CleanUp()
 
 void TextureCube::Save(const std::string filename)
 {
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(mRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  // 6 textures.
+  std::vector<VkBufferImageCopy> imageCopyRegions;
+  VkDeviceSize offset = 0;
+
+  for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
+    for (size_t level = 0; level < texture->MipLevels(); ++level) {
+      VkBufferImageCopy region = { };
+      region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      region.imageSubresource.baseArrayLayer = (u32)layer;
+      region.imageSubresource.layerCount = 1;
+      region.imageSubresource.mipLevel = (u32)level;
+      region.imageExtent.width = texture->Width();
+      region.imageExtent.height = texture->Height();
+      region.imageExtent.depth = 1;
+      region.bufferOffset = offset;
+      imageCopyRegions.push_back(region);
+      offset += texture->Width() * texture->Height() * 4;
+    }
+  }
+
+  VkDeviceSize sizeInBytes = offset;
+
+  Buffer stagingBuffer;
+  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+
+  VkBufferCreateInfo bufferci = {};
+  bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+  bufferci.size = sizeInBytes;
+  u8* data = new u8[bufferci.size];
+
+  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.Map();
+
+  VkCommandBufferBeginInfo begin = {};
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  cmdBuffer.Begin(begin);
+
+  VkImageSubresourceRange subRange = {};
+  subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subRange.baseMipLevel = 0;
+  subRange.baseArrayLayer = 0;
+  subRange.levelCount = 1;
+  subRange.layerCount = 6;
+
+  VkImageMemoryBarrier imgMemBarrier = {};
+  imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgMemBarrier.subresourceRange = subRange;
+  imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  imgMemBarrier.srcAccessMask = 0;
+  imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgMemBarrier.image = texture->Image();
+
+  // set the cubemap image layout for transfer from our framebuffer.
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgMemBarrier
+  );
+
+////////////////////////////
+  cmdBuffer.CopyImageToBuffer(texture->Image(),
+    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+    stagingBuffer.NativeBuffer(),
+    static_cast<u32>(imageCopyRegions.size()),
+    imageCopyRegions.data());
+
+  subRange.baseMipLevel = 0;
+  subRange.baseArrayLayer = 0;
+  subRange.levelCount = 1;
+  subRange.layerCount = 6;
+
+  imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+  imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.subresourceRange = subRange;
+
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgMemBarrier
+  );
+
+  cmdBuffer.End();
+
+  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkSubmitInfo submit = { };
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  submit.pCommandBuffers = cmd;
+
+  mRhi->GraphicsSubmit(0, 1, &submit);
+  mRhi->GraphicsWaitIdle(0);
+
+  memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
+
+  Image img;
+  img._data = data;
+  img._height = texture->Height() * 6;
+  img._width = texture->Width();
+  img._channels = 4;
+  img._memorySize = u32(sizeInBytes);
+  img.SavePNG(filename.c_str());
+
+  stagingBuffer.UnMap();
+  stagingBuffer.CleanUp();
+  delete[] data;
 }
 
 
@@ -445,5 +562,126 @@ void TextureSampler::CleanUp(VulkanRHI* pRhi)
     pRhi->FreeSampler(mSampler);
     mSampler = nullptr;
   }
+}
+
+
+void TextureCube::Update(Image const& image)
+{
+  u32 width = image.Width();
+  u32 heightOffset = image.Height() / 6;
+
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(mRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  // 6 textures.
+  std::vector<VkBufferImageCopy> imageCopyRegions;
+  VkDeviceSize offset = 0;
+
+  for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
+    for (size_t level = 0; level < texture->MipLevels(); ++level) {
+      VkBufferImageCopy region = {};
+      region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      region.imageSubresource.baseArrayLayer = (u32)layer;
+      region.imageSubresource.layerCount = 1;
+      region.imageSubresource.mipLevel = (u32)level;
+      region.imageExtent.width = texture->Width();
+      region.imageExtent.height = heightOffset;
+      region.imageExtent.depth = 1;
+      region.bufferOffset = offset;
+      imageCopyRegions.push_back(region);
+      offset += texture->Width() * heightOffset * 4;
+    }
+  }
+
+  VkDeviceSize sizeInBytes = offset;
+
+  Buffer stagingBuffer;
+  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+
+  VkBufferCreateInfo bufferci = {};
+  bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  bufferci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+  bufferci.size = sizeInBytes;
+
+  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.Map();
+  memcpy(stagingBuffer.Mapped(), image.Data(), sizeInBytes);
+
+  VkCommandBufferBeginInfo begin = {};
+  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  cmdBuffer.Begin(begin);
+
+  VkImageSubresourceRange subRange = {};
+  subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  subRange.baseMipLevel = 0;
+  subRange.baseArrayLayer = 0;
+  subRange.levelCount = 1;
+  subRange.layerCount = 6;
+
+  VkImageMemoryBarrier imgMemBarrier = {};
+  imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgMemBarrier.subresourceRange = subRange;
+  imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  imgMemBarrier.srcAccessMask = 0;
+  imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgMemBarrier.image = texture->Image();
+
+  // set the cubemap image layout for transfer from our framebuffer.
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgMemBarrier
+  );
+
+  ////////////////////////////
+  cmdBuffer.CopyBufferToImage(stagingBuffer.NativeBuffer(),
+    texture->Image(),
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    static_cast<u32>(imageCopyRegions.size()),
+    imageCopyRegions.data());
+
+  subRange.baseMipLevel = 0;
+  subRange.baseArrayLayer = 0;
+  subRange.levelCount = 1;
+  subRange.layerCount = 6;
+
+  imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.subresourceRange = subRange;
+
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+    0,
+    0, nullptr,
+    0, nullptr,
+    1, &imgMemBarrier
+  );
+
+  cmdBuffer.End();
+
+  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkSubmitInfo submit = {};
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  submit.pCommandBuffers = cmd;
+
+  mRhi->GraphicsSubmit(0, 1, &submit);
+  mRhi->GraphicsWaitIdle(0);
+
+  stagingBuffer.UnMap();
+  stagingBuffer.CleanUp();
 }
 } // Recluse

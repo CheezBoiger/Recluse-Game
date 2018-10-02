@@ -30,6 +30,14 @@ b8 Image::SavePNG(const tchar* imgpath)
 }
 
 
+b8 Image::SaveHDR(const tchar* imgPath)
+{
+  if (!_data) { return false; }
+  stbi_write_hdr(imgPath, _width, _height, _channels, (const r32*)_data);
+  return true;
+}
+
+
 b8 Image::CleanUp()
 {
   if (_data) {

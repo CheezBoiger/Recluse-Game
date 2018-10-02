@@ -232,7 +232,9 @@ public:
   void              AdjustHDRSettings(const ParamsHDR& hdrSettings);
 
   // Set up and override Skybox cubemap for the renderer.
-  void              SetSkyboxCubeMap(TextureCube* cubemap);
+  void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
+
+  void              UsePreRenderSkyboxMap(b32 enable);
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
@@ -399,6 +401,7 @@ private:
   BakeIBL*              m_pBakeIbl;
   AntiAliasingFXAA*     m_pAntiAliasingFXAA;
   Clusterer*            m_pClusterer;
+  TextureCube*          m_preRenderSkybox;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;
   Texture2DArray*       m_pBrdfLUTs;

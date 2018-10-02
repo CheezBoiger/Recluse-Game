@@ -75,7 +75,7 @@ Renderer::Renderer()
   , m_workGroupSize(0)
   , m_pClusterer(nullptr)
   , m_particleEngine(nullptr)
-  , m_usePreRenderSkybox(true)
+  , m_usePreRenderSkybox(false)
   , m_pEnvMaps(nullptr)
   , m_pIrrMaps(nullptr)
   , m_pBrdfLUTs(nullptr)
@@ -2649,6 +2649,9 @@ void Renderer::UpdateSkyboxCubeMap()
 {
   DescriptorSet* skyboxSet = skybox_descriptorSetKey;
   Texture* cubemap = m_pSky->GetCubeMap();
+  if (m_usePreRenderSkybox) {
+    cubemap = m_preRenderSkybox->Handle(); 
+  }
   VkDescriptorImageInfo image = {};
   image.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   image.imageView = cubemap->View();
@@ -2684,6 +2687,13 @@ void Renderer::SetUpSkybox()
   VkSemaphoreCreateInfo sema = { };
   sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_SkyboxFinished->Initialize(sema);
+}
+
+
+void Renderer::UsePreRenderSkyboxMap(b32 enable)
+{
+  m_usePreRenderSkybox = enable;
+  UpdateSkyboxCubeMap();
 }
 
 
@@ -4086,6 +4096,14 @@ void Renderer::FreeMaterialDescriptor(MaterialDescriptor* descriptor)
 }
 
 
+TextureCube* Renderer::CreateTextureCube()
+{
+  TextureCube* pCube = new TextureCube();
+  pCube->mRhi = m_pRhi;
+  return pCube;
+}
+
+
 MeshDescriptor* Renderer::CreateMeshDescriptor()
 {
   MeshDescriptor* descriptor = new MeshDescriptor();
@@ -4233,6 +4251,7 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
 
   pTexCube = new TextureCube();
   Texture* cubeTexture = m_pRhi->CreateTexture();
+  pTexCube->mRhi = m_pRhi;
 
   {
     VkImageCreateInfo imageCi{};
@@ -4249,7 +4268,8 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
     imageCi.mipLevels = 1;
     imageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
-    imageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    imageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT 
+      | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     imageCi.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT; 
     imageCi.samples = VK_SAMPLE_COUNT_1_BIT;
 

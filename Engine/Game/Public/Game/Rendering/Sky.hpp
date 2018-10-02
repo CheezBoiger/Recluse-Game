@@ -15,6 +15,8 @@ namespace Recluse {
 // or to instead, allow the dev to use their own images to represent the sky.
 class Sky {
 public:
+  Sky()
+    : _skybox(nullptr) { }
 
   // enable pbr sky, this will render the sky instead of defining one. Uses
   // the primary light information from scene to render out where the sun/moon should
@@ -23,10 +25,7 @@ public:
 
   // If pbr sky rendering is disabled, then user wants to 
   // paste a cubemap sky instead. This must be defined then!
-  Texture2D*    _textures[6];
-
-
-  TextureCube*    GetCubeMap() { return m_cubeTexture; }
+  TextureCube*    _skybox;
 
   // Get information of the sun light, this will effect how to light works
   // for objects in the scene.
@@ -34,7 +33,6 @@ public:
 
 private:
   DirectionalLight  m_PrimaryLight;
-  TextureCube*      m_cubeTexture;
   Vector3           m_betaR;
   Vector3           m_betaM;  
   Vector3           m_sunDir;

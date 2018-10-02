@@ -78,7 +78,7 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
      // pCam->SetFoV(pCam->FoV() + Radians(1.0f));
      //pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
-    gRenderer().TakeSnapshot("Dumbass.png");
+      gRenderer().TakeSnapshot("screenshot.png");
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
