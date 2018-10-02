@@ -249,6 +249,9 @@ public:
   // application change, as it will result warnings from the renderer!
   void              BuildAsync();
 
+  // Wipes out all currently pushed in meshes in this renderer.
+  void              ClearCmdLists();
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -257,9 +260,6 @@ protected:
   // Once frame rendering is done, call this function to submit back to the swapchain 
   // for presenting to the window.
   void              EndFrame();
-
-  // Wipes out all currently pushed in meshes in this renderer.
-  void              ClearCmdLists();
 
 private:
 
