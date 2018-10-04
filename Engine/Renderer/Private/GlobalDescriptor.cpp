@@ -31,6 +31,8 @@ GlobalDescriptor::GlobalDescriptor()
   m_Global._EnableAA = false;
   m_Global._fDeltaTime = 0.0f;
   m_Global._fEngineTime = 0.0f;
+  m_Global._zNear = 0.1f;
+  m_Global._zFar = 1.0f;
 
   // Testing params.
   m_Global._vSunBrightness = 0.01f;

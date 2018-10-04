@@ -51,10 +51,11 @@ layout (set = 0, binding = 2) uniform GlobalBuffer {
   float fRayleighStength;
   float fMieStength;
   float fIntensity;
+  float zNear;
+  float zFar;
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
-  ivec2 pad;
 } gWorldBuffer;
 
 

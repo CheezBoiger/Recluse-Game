@@ -136,7 +136,14 @@ public:
 
   // Set Probe target positions to begin baking texture cubemaps, which will be stored into the 
   // set scene.
-  void                          SetEnvProbeTargets(Vector3* positions, u32 count);
+  void                          SetEnvProbeTargets(Vector3* positions, u32 count) {
+    m_envProbeTargets.resize(count);
+    for (size_t i = 0; i < count; ++i) {
+      m_envProbeTargets[i] = positions[i];
+    }
+  };
+
+  void                          ClearProbeTargets() { m_envProbeTargets.clear(); }
 
 private:
 
@@ -160,6 +167,7 @@ private:
   ViewFrustum*                  m_frustums[kMaxViewFrustums];
   i32                           m_currFrustumCount;
   EngineMode                    m_engineMode;
+  std::vector<Vector3>          m_envProbeTargets;
 };
 
 

@@ -125,6 +125,8 @@ void Camera::FlushToGpuBus()
   gGlobalBuffer->_InvViewProj = gGlobalBuffer->_ViewProj.Inverse();
   gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
   gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
+  gGlobalBuffer->_zFar = m_ZFar;
+  gGlobalBuffer->_zNear = m_ZNear;
   gGlobalBuffer->_ScreenSize[0] = pWindow->Width();
   gGlobalBuffer->_ScreenSize[1] = pWindow->Height();
   gGlobalBuffer->_BloomEnabled = Bloom();

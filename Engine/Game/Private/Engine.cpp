@@ -257,6 +257,16 @@ void Engine::Update()
   switch (m_engineMode) {
     case EngineMode_Bake:
     {
+      static const char* probname = "Probe";
+      for (size_t i = 0; i < m_envProbeTargets.size(); ++i) {
+        Vector3 position = m_envProbeTargets[i];
+        TextureCube* cube = gRenderer().BakeEnvironmentMap(position);
+        std::string name = std::string(probname) + std::to_string(i) + ".png";
+        Log(rNotify) << "probe : " << name << " baking.";
+        cube->Save(name.c_str());
+        Log() << " Done!\n";
+        gRenderer().FreeTextureCube(cube);
+      }
       break;
     }
     case EngineMode_Game:

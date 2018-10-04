@@ -2698,7 +2698,9 @@ void Renderer::SetUpSkybox()
 void Renderer::UsePreRenderSkyboxMap(b32 enable)
 {
   m_usePreRenderSkybox = enable;
+  m_pRhi->GraphicsWaitIdle(0);
   UpdateSkyboxCubeMap();
+  BuildSkyboxCmdList();
 }
 
 

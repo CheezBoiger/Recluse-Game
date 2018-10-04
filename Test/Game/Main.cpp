@@ -25,12 +25,14 @@ using namespace Recluse;
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
   static const u32 kNumberOfMonsters = 0;
-  TextureCube* cubemap;
+  TextureCube* cubemap1;
+  TextureCube* cubemap0;
 public:
 
   // Used to set up the scene. Call before updating.
   void SetUp() override {
-    cubemap = nullptr;
+    cubemap1 = nullptr;
+    cubemap0 = nullptr;
     cube = new CubeObject();
     lantern = new LanternObject();
     monster = new Monster();
@@ -79,15 +81,20 @@ public:
     m_hdrSettings._bloomStrength = 1.0f;
 
 #if 0
-    cubemap = gRenderer().CreateTextureCube();
-    cubemap->Initialize(512, 512, 1);
+    cubemap0 = gRenderer().CreateTextureCube();
+    cubemap1 = gRenderer().CreateTextureCube();
+    cubemap0->Initialize(512, 512, 1);
+    cubemap1->Initialize(512, 512, 1);
 
     {
       Image img;
-      img.Load("testcubemap.png");
-      cubemap->Update(img);
+      img.Load("Probe0.png");
+      cubemap0->Update(img);
       img.CleanUp();
-      gRenderer().SetSkyboxCubeMap(cubemap);
+      img.Load("Probe1.png");
+      cubemap1->Update(img);
+      img.CleanUp();
+      gRenderer().SetSkyboxCubeMap(cubemap0);
       gRenderer().UsePreRenderSkyboxMap(true);
     }
 #endif
@@ -142,8 +149,10 @@ public:
     delete mainCam;
 
 #if 0
-    gRenderer().FreeTextureCube(cubemap);
-    cubemap = nullptr;
+    gRenderer().FreeTextureCube(cubemap0);
+    gRenderer().FreeTextureCube(cubemap1);
+    cubemap0 = nullptr;
+    cubemap1 = nullptr;
     gRenderer().UsePreRenderSkyboxMap(false);
 #endif
   }
@@ -273,16 +282,28 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   // Game loop.
-#if 1
+#if 0
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
     scene.Update((r32)Time::FixTime);
     gEngine().Update();
   }
+#else
+  gEngine().SetEngineMode(EngineMode_Bake);
+  // Testing enviroment probe map baking.
+  std::array<Vector3, 5> positions = {
+      Vector3(  0.0f,   -10.0f,     0.0f),
+      Vector3(  0.0f,     0.0f,     0.0f),
+      Vector3(  0.0f,   -14.0f,     0.0f),
+      Vector3(  10.0f,    0.0f,     0.0f),
+      Vector3(  0.0f,   -14.0f,     3.0f)
+  };
+  gEngine().SetEnvProbeTargets(positions.data(), positions.size());
+  gEngine().Update();
+  gEngine().SignalStop();
+  gEngine().Update();
 #endif
-  //gEngine().SignalStop();
-  //gEngine().Update();
   // Once done using the scene, clean it up.
   scene.CleanUp();
   // Finish.

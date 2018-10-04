@@ -57,10 +57,11 @@ struct GlobalBuffer {
   r32             _fRayleighStength;
   r32             _fMieStength;
   r32             _fIntensity;
+  r32             _zNear;
+  r32             _zFar;
   i32             _BloomEnabled;
   i32             _EnableShadows;
   i32             _EnableAA;
-  i32             _Pad[2];
 };
 
 
