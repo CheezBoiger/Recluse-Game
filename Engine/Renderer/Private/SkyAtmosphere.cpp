@@ -97,7 +97,7 @@ void SkyRenderer::Initialize()
   CreateCubeMap(pRhi);
   CreateGraphicsPipeline(pRhi);
   CreateCommandBuffer(pRhi);
-  BuildCmdBuffer(pRhi);
+  BuildCmdBuffer(pRhi, nullptr);
 
   m_pAtmosphereSema = pRhi->CreateVkSemaphore();
   VkSemaphoreCreateInfo semaCi = { };
@@ -521,20 +521,24 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
+void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput)
 {
-  if (m_pCmdBuffer) {
-    rhi->WaitAllGraphicsQueues();
-    m_pCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  CommandBuffer* cmdBuffer = m_pCmdBuffer;
+  if (pOutput) {
+    cmdBuffer = pOutput;
+
+  } else {
+    if (m_pCmdBuffer) {
+      rhi->WaitAllGraphicsQueues();
+      m_pCmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    }
+
+    VkCommandBufferBeginInfo begin = { };
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    cmdBuffer->Begin(begin);
   }
   
-  VkCommandBufferBeginInfo begin = { };
-  begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
- 
-  CommandBuffer* cmdBuffer = m_pCmdBuffer;
-  cmdBuffer->Begin(begin);
-
     VkClearValue colorClear;
     colorClear.color = { 0.0f, 0.0f, 0.0f, 1.0f };
     VkRenderPassBeginInfo renderpassBegin = { };
@@ -691,7 +695,9 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi)
       1, &imgMemBarrier
     );
     
-  cmdBuffer->End();
+  if (!pOutput) {
+    cmdBuffer->End();
+  }
 }
 
 

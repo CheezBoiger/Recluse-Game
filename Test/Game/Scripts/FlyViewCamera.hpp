@@ -83,7 +83,7 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
       //pCam->SetFoV(pCam->FoV() - Radians(1.0f));
-      pCam->SetExposure(pCam->Exposure() + 2.0f * Time::DeltaTime);
+      pCam->SetExposure(pCam->Exposure() + 2.0f * (r32)Time::DeltaTime);
     }
 
     if (!bFollow) {

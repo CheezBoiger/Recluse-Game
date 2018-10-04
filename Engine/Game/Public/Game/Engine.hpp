@@ -61,6 +61,12 @@ struct InputAxis {
 };
 
 
+enum EngineMode {
+  EngineMode_Game,
+  EngineMode_Bake
+};
+
+
 // Engine object.
 class Engine {
   static const size_t kMaxViewFrustums = 32;
@@ -124,6 +130,14 @@ public:
   
   static size_t                 GetMaxViewFrustumCount() { return kMaxViewFrustums; }
 
+  void                          SetEngineMode(EngineMode newMode) { m_engineMode = newMode; }
+
+  EngineMode                    GetEngineMode() const { return m_engineMode; }
+
+  // Set Probe target positions to begin baking texture cubemaps, which will be stored into the 
+  // set scene.
+  void                          SetEnvProbeTargets(Vector3* positions, u32 count);
+
 private:
 
   void                          Stop();
@@ -145,6 +159,7 @@ private:
   std::vector<std::thread>      m_workers;
   ViewFrustum*                  m_frustums[kMaxViewFrustums];
   i32                           m_currFrustumCount;
+  EngineMode                    m_engineMode;
 };
 
 

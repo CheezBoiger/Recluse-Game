@@ -74,11 +74,12 @@ public:
   Vector3                 GetAirColor() const { return m_vAirColor; }
   void                    SetAirColor(Vector3 color) { m_vAirColor = color; }
 
+  void                    BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr);
+
 private:
   void                    CreateRenderAttachment(VulkanRHI* rhi);
   void                    CreateCubeMap(VulkanRHI* rhi);
   void                    CreateCommandBuffer(VulkanRHI* rhi);
-  void                    BuildCmdBuffer(VulkanRHI* rhi);
   void                    CreateGraphicsPipeline(VulkanRHI* rhi);
   void                    CreateFrameBuffer(VulkanRHI* rhi);
   

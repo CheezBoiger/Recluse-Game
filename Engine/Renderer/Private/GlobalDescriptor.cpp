@@ -22,8 +22,8 @@ GlobalDescriptor::GlobalDescriptor()
   : m_pGlobalBuffer(nullptr)
   , m_pDescriptorSet(nullptr)
 {
-  m_Global._ScreenSize[0] = 0;
-  m_Global._ScreenSize[1] = 0;
+  m_Global._ScreenSize[0] = 1;
+  m_Global._ScreenSize[1] = 1;
   m_Global._Gamma = 2.2f;
   m_Global._BloomEnabled = true;
   m_Global._Exposure = 1.0f;

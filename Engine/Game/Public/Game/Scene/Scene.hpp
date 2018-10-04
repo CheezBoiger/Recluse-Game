@@ -99,7 +99,7 @@ private:
   // Global illumination Lighting information cache.
   //std::vector<LightProbe*>       m_lightProbes;
   //std::vector<ReflectionProbe*>  m_reflectionProbes;
-
+  std::vector<TextureCube*>         m_envMaps;
 
   // Physics based information may go here as well.
 };

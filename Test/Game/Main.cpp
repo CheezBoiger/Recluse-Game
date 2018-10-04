@@ -78,13 +78,13 @@ public:
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
 
-#if 0
+#if 1
     cubemap = gRenderer().CreateTextureCube();
     cubemap->Initialize(512, 512, 1);
 
     {
       Image img;
-      img.Load("test.png");
+      img.Load("testcubemap.png");
       cubemap->Update(img);
       img.CleanUp();
       gRenderer().SetSkyboxCubeMap(cubemap);
@@ -141,7 +141,7 @@ public:
     mainCam->CleanUp();
     delete mainCam;
 
-#if 0
+#if 1
     gRenderer().FreeTextureCube(cubemap);
     cubemap = nullptr;
     gRenderer().UsePreRenderSkyboxMap(false);
@@ -273,16 +273,18 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   // Game loop.
+#if 1
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
     scene.Update((r32)Time::FixTime);
     gEngine().Update();
   }
-
+#endif
+  //gEngine().SignalStop();
+  //gEngine().Update();
   // Once done using the scene, clean it up.
   scene.CleanUp();
-
   // Finish.
   AssetManager::CleanUpAssets();
   // Clean up engine

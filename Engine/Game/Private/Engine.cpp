@@ -97,6 +97,7 @@ Engine::Engine()
   , m_stopping(false)
   , m_bSignalLoadScene(false)
   , m_dLag(0.0)
+  , m_engineMode(EngineMode_Game)
 {
   m_workers.resize(4);
   for (size_t i = 0; i < kMaxViewFrustums; ++i) {
@@ -253,7 +254,18 @@ void Engine::Update()
   m_workers[1].join();
   m_workers[2].join();
 
-  gRenderer().Render();
+  switch (m_engineMode) {
+    case EngineMode_Bake:
+    {
+      break;
+    }
+    case EngineMode_Game:
+    default:
+    {
+      gRenderer().Render();
+      break;
+    }
+  }
 }
 
 

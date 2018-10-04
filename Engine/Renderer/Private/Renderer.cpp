@@ -479,6 +479,8 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   GlobalDescriptor* gMat = new GlobalDescriptor();
   gMat->Initialize(m_pRhi);
+  gMat->Data()->_ScreenSize[0] = window->Width();
+  gMat->Data()->_ScreenSize[1] = window->Height();
   gMat->Update(m_pRhi);
   m_pGlobal = gMat;
 
@@ -2122,7 +2124,10 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
-  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
+  VkExtent2D windowExtent = { 
+    (u32)m_pGlobal->Data()->_ScreenSize[0], 
+    (u32)m_pGlobal->Data()->_ScreenSize[1] 
+  };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2731,7 +2736,10 @@ void Renderer::GenerateSkyboxCmds(CommandBuffer* cmdBuffer)
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].depthStencil = { 1.0f, 0 };
 
-  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
+  VkExtent2D windowExtent = { 
+    (u32)m_pGlobal->Data()->_ScreenSize[0], 
+    (u32)m_pGlobal->Data()->_ScreenSize[1] 
+  };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2751,8 +2759,8 @@ void Renderer::GenerateSkyboxCmds(CommandBuffer* cmdBuffer)
     
   // Start the renderpass.
   buf->BeginRenderPass(renderBegin, VK_SUBPASS_CONTENTS_INLINE);
-    buf->SetViewPorts(0, 1, &viewport);
     buf->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Pipeline());
+    buf->SetViewPorts(0, 1, &viewport);
     buf->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Layout(), 0, 2, descriptorSets, 0, nullptr);
     VertexBuffer* vertexbuffer = m_pSky->GetSkyboxVertexBuffer();
     IndexBuffer* idxBuffer = m_pSky->GetSkyboxIndexBuffer();
@@ -2787,7 +2795,10 @@ void Renderer::GenerateOffScreenCmds(CommandBuffer* cmdBuffer)
   clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
-  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
+  VkExtent2D windowExtent = { 
+    (u32)m_pGlobal->Data()->_ScreenSize[0], 
+    (u32)m_pGlobal->Data()->_ScreenSize[1] 
+  };
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->Handle();
   gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->Handle();
@@ -3314,7 +3325,10 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
   clearValues[6].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
-  VkExtent2D windowExtent = { m_pGlobal->Data()->_ScreenSize[0], m_pGlobal->Data()->_ScreenSize[1] };
+  VkExtent2D windowExtent = { 
+    (u32)m_pGlobal->Data()->_ScreenSize[0], 
+    (u32)m_pGlobal->Data()->_ScreenSize[1] 
+  };
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_forwardFrameBuffer->Handle();
   renderPassCi.renderPass = pbr_forwardRenderPass->Handle();
@@ -4351,6 +4365,10 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
       GenerateOffScreenCmds(&cmdBuffer);
       GenerateShadowCmds(&cmdBuffer);
       GeneratePbrCmds(&cmdBuffer);
+      if (m_pSky->NeedsRendering()) {
+        m_pSky->BuildCmdBuffer(m_pRhi, &cmdBuffer);
+        m_pSky->MarkClean();
+      }
       GenerateSkyboxCmds(&cmdBuffer);
       GenerateForwardPBRCmds(&cmdBuffer);
 
@@ -4501,6 +4519,7 @@ TextureCube* Renderer::BakeEnvironmentMap(const Vector3& position, u32 texSize)
 
 void Renderer::TakeSnapshot(const std::string name)
 {
+  m_pRhi->WaitAllGraphicsQueues();
   Texture2D tex2d;
   tex2d.mRhi = m_pRhi;
   tex2d.texture = final_renderTargetKey;
