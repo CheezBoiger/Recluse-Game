@@ -78,7 +78,7 @@ public:
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
 
-#if 1
+#if 0
     cubemap = gRenderer().CreateTextureCube();
     cubemap->Initialize(512, 512, 1);
 
@@ -141,7 +141,7 @@ public:
     mainCam->CleanUp();
     delete mainCam;
 
-#if 1
+#if 0
     gRenderer().FreeTextureCube(cubemap);
     cubemap = nullptr;
     gRenderer().UsePreRenderSkyboxMap(false);
