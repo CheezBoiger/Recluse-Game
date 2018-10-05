@@ -121,7 +121,7 @@ layout (set = 7, binding = 0, rg32ui) uniform readonly uimage3D lightClusters;
 layout (set = 7, binding = 1, r16ui) uniform readonly uimage1D lightIndices;
 
 
-#define BLOCKER_SEARCH_NUM_SAMPLES 16
+#define BLOCKER_SEARCH_NUM_SAMPLES 32
 #define PCF_NUM_SAMPLES 64
 #define NEAR_PLANE 0.1
 #define LIGHT_WORLD_SIZE 10.0
@@ -576,6 +576,11 @@ void main()
   
   outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);
   vec4 color = vec4(outColor, 1.0);
+  
+  //vec3 I = -V;
+  //vec3 R = I - 2.0 * dot(N, I) * N;
+  //color = vec4(texture(diffMap, R).rgb, 1.0);
+  
   imageStore(outResult, uv, color);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;

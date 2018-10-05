@@ -184,7 +184,7 @@ layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup
 
 #define SHADOW_FACTOR 0.0
 #define SHADOW_BIAS   0.0000000000
-#define BLOCKER_SEARCH_NUM_SAMPLES 16
+#define BLOCKER_SEARCH_NUM_SAMPLES 32
 #define PCF_NUM_SAMPLES 64
 #define NEAR_PLANE 0.1
 #define LIGHT_WORLD_SIZE 10.0

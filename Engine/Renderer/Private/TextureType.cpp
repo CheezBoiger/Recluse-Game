@@ -347,6 +347,18 @@ void TextureCube::Initialize(u32 extentX, u32 extentY, u32 extentZ)
 }
 
 
+u32 TextureCube::WidthPerFace() const
+{
+  return texture->Width();
+}
+
+
+u32 TextureCube::HeightPerFace() const
+{
+  return texture->Height();
+}
+
+
 void TextureCube::CleanUp()
 {
   // TODO(): 

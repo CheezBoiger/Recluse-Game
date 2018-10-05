@@ -116,9 +116,13 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
       Camera::GetMain()->EnableInterleavedVideo(true);
+      //gRenderer().SetSkyboxCubeMap(cubemap0);
+      //gRenderer().UsePreRenderSkyboxMap(true);
     }
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
       Camera::GetMain()->EnableInterleavedVideo(false);
+      //gRenderer().SetSkyboxCubeMap(cubemap1);
+      //gRenderer().UsePreRenderSkyboxMap(true);
     }
   }
 
@@ -282,7 +286,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   // Game loop.
-#if 0
+#if 1
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();

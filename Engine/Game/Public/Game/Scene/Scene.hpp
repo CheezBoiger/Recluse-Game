@@ -19,7 +19,9 @@ namespace Recluse {
 
 class GameObject;
 class Scene;
+class ReflectionProbe;
 
+struct LightProbe;
 
 class SceneNode {
 public:
@@ -83,6 +85,8 @@ public:
   Sky*                      GetSky() { return &m_sky; }
   const ParamsHDR&          GetHDRSettings() const { return m_hdrSettings; }
 
+  void                      SetGlobalEnvMap(TextureCube* pCube) { m_globalEnvMap = pCube; }
+
 protected:
   // hdr settings allowed to be adjusted for this scene.
   ParamsHDR                 m_hdrSettings;
@@ -97,9 +101,12 @@ private:
   SceneNode                 m_Root;
 
   // Global illumination Lighting information cache.
-  //std::vector<LightProbe*>       m_lightProbes;
-  //std::vector<ReflectionProbe*>  m_reflectionProbes;
-  std::vector<TextureCube*>         m_envMaps;
+  std::vector<LightProbe*>          m_localLightProbes;
+  std::vector<ReflectionProbe*>     m_localReflectionProbes;
+  std::vector<TextureCube*>         m_localEnvMaps;
+  TextureCube*                      m_globalEnvMap;
+  LightProbe*                       m_globalLightProbe;
+  ReflectionProbe*                  m_globalReflectionProbe;
 
   // Physics based information may go here as well.
 };

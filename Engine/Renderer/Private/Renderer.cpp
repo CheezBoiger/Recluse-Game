@@ -19,6 +19,7 @@
 #include "SkyAtmosphere.hpp"
 #include "Decal.hpp"
 #include "HDR.hpp"
+#include "LightProbe.hpp"
 #include "Clusters.hpp"
 #include "BakeIBL.hpp"
 #include "Particles.hpp"
@@ -76,9 +77,6 @@ Renderer::Renderer()
   , m_pClusterer(nullptr)
   , m_particleEngine(nullptr)
   , m_usePreRenderSkybox(false)
-  , m_pEnvMaps(nullptr)
-  , m_pIrrMaps(nullptr)
-  , m_pBrdfLUTs(nullptr)
   , m_pBakeIbl(nullptr)
   , m_pFinalFinished(nullptr)
 {
@@ -435,6 +433,8 @@ void Renderer::CleanUp()
   }
 
   CleanUpGlobalIlluminationBuffer();
+  delete m_pGlobalIllumination;
+  m_pGlobalIllumination = nullptr;
 
   m_RenderQuad.CleanUp(m_pRhi);
   CleanUpForwardPBR();
@@ -572,7 +572,12 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
     m_pUI->Initialize(m_pRhi);
   }
 
+  m_pGlobalIllumination = new GlobalIllumination();
+
   SetUpGlobalIlluminationBuffer();
+
+  UpdateGlobalIlluminationBuffer();
+
   m_Initialized = true;
   return true;
 }
@@ -2209,7 +2214,7 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer)
       m_pLights->Set()->Handle(),
       shadow.ShadowMapViewDescriptor()->Handle(),
       shadow.StaticShadowMapViewDescriptor()->Handle(),
-      m_pGlobalIllumination->Handle(),
+      m_pGlobalIllumination->GetDescriptorSet()->Handle(),
       pbr_compSet->Handle()
     };
 
@@ -2700,7 +2705,10 @@ void Renderer::UsePreRenderSkyboxMap(b32 enable)
   m_usePreRenderSkybox = enable;
   m_pRhi->GraphicsWaitIdle(0);
   UpdateSkyboxCubeMap();
+  UpdateGlobalIlluminationBuffer();
+
   BuildSkyboxCmdList();
+  BuildPbrCmdList();
 }
 
 
@@ -3390,7 +3398,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       DescriptorSets[3] = m_pLights->Set()->Handle();
       DescriptorSets[4] = shadow.ShadowMapViewDescriptor()->Handle();
       DescriptorSets[5] = shadow.StaticShadowMapViewDescriptor()->Handle();
-      DescriptorSets[6] = m_pGlobalIllumination->Handle(); // Need global illumination data.
+      DescriptorSets[6] = m_pGlobalIllumination->GetDescriptorSet()->Handle(); // Need global illumination data.
       DescriptorSets[7] = (Skinned ? renderCmd._pJointDesc->CurrJointSet()->Handle() : nullptr);
 
       // Bind materials.
@@ -3417,123 +3425,24 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
 
 void Renderer::SetUpGlobalIlluminationBuffer()
 {
-  m_pGlobalIllumination = m_pRhi->CreateDescriptorSet();
-  DescriptorSetLayout* layout = nullptr;
-  std::array<VkWriteDescriptorSet, 6> writeSets;
-  u32 count = 3;
+  m_pGlobalIllumination->Initialize(m_pRhi, m_currentGraphicsConfigs._EnableLocalReflections);
+}
 
-  VkDescriptorImageInfo globalIrrMap = { };
-  VkDescriptorImageInfo globalEnvMap = { };
-  VkDescriptorImageInfo globalBrdfLut = { };
-  VkDescriptorImageInfo localIrrMaps = { };
-  VkDescriptorImageInfo localEnvMaps = { };
-  VkDescriptorImageInfo localBrdfLuts = { };
 
-  globalIrrMap.sampler = DefaultSampler2DKey->Handle();
-  globalEnvMap.sampler = DefaultSampler2DKey->Handle();
-  globalBrdfLut.sampler = DefaultSampler2DKey->Handle();
-  localIrrMaps.sampler = DefaultSampler2DKey->Handle();
-  localEnvMaps.sampler = DefaultSampler2DKey->Handle();
-  localBrdfLuts.sampler = DefaultSampler2DKey->Handle();
-
-  globalIrrMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalEnvMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  globalBrdfLut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  localIrrMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  localEnvMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  localBrdfLuts.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-  globalIrrMap.imageView = m_pSky->GetCubeMap()->View();
-  globalEnvMap.imageView = m_pSky->GetCubeMap()->View();
-  globalBrdfLut.imageView = DefaultTextureKey->View();
-  // TODO(): These are place holders, we don't have data for these yet!
-  // Obtain env and irr maps from scene when building!
-  localIrrMaps.imageView = DefaultTextureKey->View();
-  localEnvMaps.imageView = DefaultTextureKey->View();
-  localBrdfLuts.imageView = DefaultTextureKey->View();
-
-  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[0].descriptorCount = 1;
-  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[0].dstBinding = 0;
-  writeSets[0].dstArrayElement = 0;
-  writeSets[0].pImageInfo = &globalIrrMap;
-  writeSets[0].dstSet = nullptr;
-  writeSets[0].pBufferInfo = nullptr;
-  writeSets[0].pTexelBufferView = nullptr;
-  writeSets[0].pNext = nullptr;
-
-  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[1].descriptorCount = 1;
-  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[1].dstBinding = 1;
-  writeSets[1].dstArrayElement = 0;
-  writeSets[1].pImageInfo = &globalEnvMap;
-  writeSets[1].dstSet = nullptr;
-  writeSets[1].pBufferInfo = nullptr;
-  writeSets[1].pTexelBufferView = nullptr;
-  writeSets[1].pNext = nullptr;
-
-  writeSets[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[2].descriptorCount = 1;
-  writeSets[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[2].dstBinding = 2;
-  writeSets[2].dstArrayElement = 0;
-  writeSets[2].pImageInfo = &globalBrdfLut;
-  writeSets[2].dstSet = nullptr;
-  writeSets[2].pBufferInfo = nullptr;
-  writeSets[2].pTexelBufferView = nullptr;
-  writeSets[2].pNext = nullptr;
-
-  writeSets[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[3].descriptorCount = 1;
-  writeSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[3].dstBinding = 3;
-  writeSets[3].dstArrayElement = 0;
-  writeSets[3].pImageInfo = &localIrrMaps;
-  writeSets[3].dstSet = nullptr;
-  writeSets[3].pBufferInfo = nullptr;
-  writeSets[3].pTexelBufferView = nullptr;
-  writeSets[3].pNext = nullptr;
-
-  writeSets[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[4].descriptorCount = 1;
-  writeSets[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[4].dstBinding = 4;
-  writeSets[4].dstArrayElement = 0;
-  writeSets[4].pImageInfo = &localEnvMaps;
-  writeSets[4].dstSet = nullptr;
-  writeSets[4].pBufferInfo = nullptr;
-  writeSets[4].pTexelBufferView = nullptr;
-  writeSets[4].pNext = nullptr;
-
-  writeSets[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[5].descriptorCount = 1;
-  writeSets[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  writeSets[5].dstBinding = 2;
-  writeSets[5].dstArrayElement = 0;
-  writeSets[5].pImageInfo = &localBrdfLuts;
-  writeSets[5].dstSet = nullptr;
-  writeSets[5].pBufferInfo = nullptr;
-  writeSets[5].pTexelBufferView = nullptr;
-  writeSets[5].pNext = nullptr;
-
-  if (m_currentGraphicsConfigs._EnableLocalReflections) {
-    layout = globalIllumination_DescLR;
-    count = 6;
-  } else {
-    layout = globalIllumination_DescNoLR;
+void Renderer::UpdateGlobalIlluminationBuffer()
+{
+  Texture* pCube = m_pSky->GetCubeMap();
+  if (m_usePreRenderSkybox) {
+    pCube = m_preRenderSkybox->Handle();
   }
-
-  m_pGlobalIllumination->Allocate(m_pRhi->DescriptorPool(), layout);
-  m_pGlobalIllumination->Update(count, writeSets.data());
+  m_pGlobalIllumination->SetGlobalEnvMap(pCube);
+  m_pGlobalIllumination->Update(this);
 }
 
 
 void Renderer::CleanUpGlobalIlluminationBuffer()
 {
-  m_pRhi->FreeDescriptorSet(m_pGlobalIllumination);
-  m_pGlobalIllumination = nullptr;
+  m_pGlobalIllumination->CleanUp(m_pRhi);
 }
 
 
@@ -4011,6 +3920,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
 
   CleanUpGlobalIlluminationBuffer();
   SetUpGlobalIlluminationBuffer();
+  UpdateGlobalIlluminationBuffer();
 
   Build();
   m_pLights->PrimaryShadowMapSystem().SignalStaticMapUpdate();

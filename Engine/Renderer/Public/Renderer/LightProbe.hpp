@@ -8,8 +8,14 @@
 namespace Recluse {
 
 
+class TextureCubeArray;
+class Texture2DArray;
+class DescriptorSet;
+class DescriptorSetLayout;
 class TextureCube;
+class Texture;
 class VulkanRHI;
+class Renderer;
 
 struct Image;
 
@@ -38,5 +44,36 @@ public:
   static const u32 kMaxAllowedProbes = 128;
 
   std::vector<LightProbe> GenerateProbes(u32 count = kMaxAllowedProbes);
+};
+
+
+class GlobalIllumination {
+public:
+  GlobalIllumination();
+  ~GlobalIllumination();
+
+  void              Initialize(VulkanRHI* pRhi, b32 enableLocalReflections);
+
+  void              Update(Renderer* pRenderer);
+
+  void              CleanUp(VulkanRHI* pRhi);
+
+  void              SetGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
+
+  // Set up irradiance maps for this renderer to use for look up.
+  void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
+
+  // Set up enviroment maps for this renderer to use for look up.
+  void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
+
+  DescriptorSet*   GetDescriptorSet() { return m_pGlobalIllumination; }
+
+private:
+  Texture*              m_pGlobalEnvMap;
+  TextureCubeArray*     m_pEnvMaps;
+  TextureCubeArray*     m_pIrrMaps;
+  Texture2DArray*       m_pBrdfLUTs;
+  DescriptorSet*        m_pGlobalIllumination;
+  b32                   m_localReflectionsEnabled;
 };
 } // Recluse

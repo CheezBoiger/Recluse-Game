@@ -22,7 +22,6 @@ namespace Recluse {
 
 
 class VulkanRHI;
-class LightProbe;
 class CommandBuffer;
 class ReflectionProbe;
 class GraphicsPipeline;
@@ -35,6 +34,7 @@ class JointDescriptor;
 class MaterialDescriptor;
 class LightDescriptor;
 class GlobalDescriptor;
+class GlobalIllumination;
 class UIDescriptor;
 class TextureCube;
 class Semaphore;
@@ -57,7 +57,7 @@ class Clusterer;
 class BakeIBL;
 
 struct SamplerInfo;
-
+struct LightProbe;
 
 typedef u32 renderer_key_t;
 
@@ -219,12 +219,6 @@ public:
 
   HDR*              GetHDR() { return m_pHDR; }
 
-  // Set up irradiance maps for this renderer to use for look up.
-  void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
-
-  // Set up enviroment maps for this renderer to use for look up.
-  void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
-
   // Get the name of the device used for rendering graphics and compute.
   const char*       GetDeviceName();
 
@@ -235,6 +229,8 @@ public:
   void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
 
   void              UsePreRenderSkyboxMap(b32 enable);
+
+  b32               UsingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
@@ -296,6 +292,7 @@ private:
   void              BuildSkyboxCmdList();
   void              BuildForwardPBRCmdList();
   void              BuildFinalCmdList();
+  void              UpdateGlobalIlluminationBuffer();
 
   void              SetUpDownscale(b32 FullSetUp);
   void              CleanUpDownscale(b32 FullCleanUp);
@@ -399,13 +396,11 @@ private:
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
   BakeIBL*              m_pBakeIbl;
+  GlobalIllumination*   m_pGlobalIllumination;
   AntiAliasingFXAA*     m_pAntiAliasingFXAA;
   Clusterer*            m_pClusterer;
   TextureCube*          m_preRenderSkybox;
-  TextureCubeArray*     m_pEnvMaps;
-  TextureCubeArray*     m_pIrrMaps;
-  Texture2DArray*       m_pBrdfLUTs;
-  DescriptorSet*        m_pGlobalIllumination;
+
   u32                   m_CurrCmdBufferIdx;
   u32                   m_TotalCmdBuffers;
   u32                   m_workGroupSize;
