@@ -80,11 +80,11 @@ public:
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
 
-#if 0
+#if 1
     cubemap0 = gRenderer().CreateTextureCube();
     cubemap1 = gRenderer().CreateTextureCube();
-    cubemap0->Initialize(512, 512, 1);
-    cubemap1->Initialize(512, 512, 1);
+    cubemap0->Initialize(512);
+    cubemap1->Initialize(512);
 
     {
       Image img;
@@ -115,14 +115,15 @@ public:
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
-      Camera::GetMain()->EnableInterleavedVideo(true);
-      //gRenderer().SetSkyboxCubeMap(cubemap0);
-      //gRenderer().UsePreRenderSkyboxMap(true);
+      //Camera::GetMain()->EnableInterleavedVideo(true);
+      gRenderer().SetSkyboxCubeMap(cubemap0);
+      gRenderer().UsePreRenderSkyboxMap(true);
     }
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
-      Camera::GetMain()->EnableInterleavedVideo(false);
+      //Camera::GetMain()->EnableInterleavedVideo(false);
       //gRenderer().SetSkyboxCubeMap(cubemap1);
       //gRenderer().UsePreRenderSkyboxMap(true);
+      gRenderer().UsePreRenderSkyboxMap(false);
     }
   }
 
@@ -152,7 +153,7 @@ public:
     mainCam->CleanUp();
     delete mainCam;
 
-#if 0
+#if 1
     gRenderer().FreeTextureCube(cubemap0);
     gRenderer().FreeTextureCube(cubemap1);
     cubemap0 = nullptr;
@@ -184,7 +185,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_None;
-    params._Shadows = GRAPHICS_QUALITY_HIGH;
+    params._Shadows = GRAPHICS_QUALITY_NONE;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
     params._renderScale = 1.0;
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;
@@ -260,7 +261,7 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   //ModelLoader::Load(RTEXT("Assets/Monster/Monster.gltf"));
   //ModelLoader::Load(RTEXT("Assets/CesiumMan.glb"));
-  //ModelLoader::Load(RTEXT("Assets/RiggedFigure.glb"));
+  ModelLoader::Load(RTEXT("Assets/RiggedFigure.glb"));
   //ModelLoader::Load(RTEXT("Assets/RiggedSimple.gltf"));
   //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
  // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));

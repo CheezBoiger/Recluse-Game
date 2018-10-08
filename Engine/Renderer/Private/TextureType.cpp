@@ -311,17 +311,17 @@ void Texture2D::Save(const std::string filename)
 }
 
 
-void TextureCube::Initialize(u32 extentX, u32 extentY, u32 extentZ)
+void TextureCube::Initialize(u32 dim)
 {
   if (texture) return;
 
   VkImageCreateInfo imageCi = { };
   imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  imageCi.extent.width = extentX;
-  imageCi.extent.height = extentY;
-  imageCi.extent.depth = extentZ;
+  imageCi.extent.width = dim;
+  imageCi.extent.height = dim;
+  imageCi.extent.depth = 1;
   imageCi.arrayLayers = 6;
-  imageCi.imageType = extentZ == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+  imageCi.imageType = VK_IMAGE_TYPE_2D;
   imageCi.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
   imageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imageCi.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -695,5 +695,48 @@ void TextureCube::Update(Image const& image)
 
   stagingBuffer.UnMap();
   stagingBuffer.CleanUp();
+}
+
+
+void TextureCubeArray::Initialize(u32 dim, u32 cubeLayers)
+{
+  VkImageCreateInfo imgCi = { };
+  imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;  
+  imgCi.arrayLayers = 6 * cubeLayers;
+  imgCi.extent.width = dim;
+  imgCi.extent.height = dim;
+  imgCi.extent.depth = 1;
+  imgCi.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;  
+  imgCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgCi.imageType = VK_IMAGE_TYPE_2D;
+  imgCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgCi.mipLevels = 1;
+  imgCi.samples = VK_SAMPLE_COUNT_1_BIT;
+  imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imgCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+  VkImageViewCreateInfo viewCi = { };
+  viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+  viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  viewCi.subresourceRange.baseArrayLayer = 0;
+  viewCi.subresourceRange.baseMipLevel = 0;
+  viewCi.subresourceRange.layerCount = 6 * cubeLayers;
+  viewCi.subresourceRange.levelCount = 1;
+  viewCi.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;;
+  viewCi.components = { };
+
+  texture = mRhi->CreateTexture();
+  texture->Initialize(imgCi, viewCi);  
+}
+
+
+void TextureCubeArray::CleanUp()
+{
+  if (texture) {
+    mRhi->FreeTexture(texture);
+    texture = nullptr;
+  }
 }
 } // Recluse

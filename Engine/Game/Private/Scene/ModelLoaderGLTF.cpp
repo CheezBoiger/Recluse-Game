@@ -102,12 +102,10 @@ namespace ModelLoader {
 
 void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 indexCount)
 {
-  Primitive prim;
-  prim._pMat = mat;
-  prim._firstIndex = firstIndex;
-  prim._indexCount = indexCount;
-  prim._localConfigs = 0;
-  handle = std::move(prim);
+  handle._pMat = mat;
+  handle._firstIndex = firstIndex;
+  handle._indexCount = indexCount;
+  handle._localConfigs = 0;
 }
 
 

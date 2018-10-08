@@ -204,7 +204,7 @@ void Animation::ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton)
   if (!pSkeleton) return;
 
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
-    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pOutput[i] * pSkeleton->_rootInvTransform;
+    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pOutput[i]  * pSkeleton->_rootInvTransform;
   }
 }
 

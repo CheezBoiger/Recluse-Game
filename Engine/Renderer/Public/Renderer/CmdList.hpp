@@ -35,7 +35,7 @@ public:
   size_t                  PushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { Resize(mCmdList.size() << 1); } mCmdList[m_currIdx] = cmd; return m_currIdx++; }
   void                    Erase(u32 i) { mCmdList.erase(mRenderList.begin() + i); }
   // Sort using alg.
-  void                    Sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx - 1), mCompare); }
+  void                    Sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx), mCompare); }
   void                    Clear() { m_currIdx = 0; }
 
 private:

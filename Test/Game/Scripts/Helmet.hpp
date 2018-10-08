@@ -57,7 +57,7 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->Enable(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("BrainStem", &model);
+    ModelCache::Get("RiggedFigure", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];

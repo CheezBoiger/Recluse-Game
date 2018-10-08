@@ -69,6 +69,16 @@ in FRAG_IN {
 } frag_in;
 
 
+struct PBRInfo {
+  vec3 albedo;
+  vec3 F0;
+  vec3 N;
+  vec3 V;
+  float roughness;
+  float NoV;
+};
+
+
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
 layout (set = 0, binding = 0) uniform GlobalBuffer {
@@ -428,7 +438,7 @@ vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 
 
 // TODO():
-vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, float roughness, float metallic, inout PBRInfo pbrInfo)
 {
   vec3 L = light.position.xyz - vPosition;
   float distance = length(L);
@@ -438,65 +448,54 @@ vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, vec3 V, ve
   vec3 color = vec3(0.0);
   float falloff = (distance / light.range);
   float attenuation = light.intensity - (light.intensity * falloff);
-  vec3 nV = normalize(V);
   vec3 nL = normalize(L);
-  vec3 nN = normalize(N);
   
-  vec3 H = normalize(nV + nL);
+  vec3 H = normalize(pbrInfo.V + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
-  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
-  float NoH = clamp(dot(nN, H), 0.0, 1.0);
-  float VoH = clamp(dot(nV, H), 0.0, 1.0);
-  vec3 F0 = vec3(0.04);
-  
-  F0 = mix(F0, Albedo, metallic);
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
   vec3 radiance = light.color.xyz * attenuation;
   
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(VoH, F0);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
     
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
   
-    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV)) * NoL;
   }
   return color * radiance;
 }
 
 
 // TODO():
-vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, float roughness, float metallic, inout PBRInfo pbrInfo)
 {
   vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
-  vec3 radiance = light.color.xyz * light.intensity;  
-  vec3 nV = normalize(V);
+  vec3 radiance = light.color.xyz * light.intensity;
   vec3 nL = normalize(L);
-  vec3 nN = normalize(N);
   
-  vec3 H = normalize(nV + nL);
+  vec3 H = normalize(pbrInfo.V + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
-  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
-  float NoH = clamp(dot(nN, H), 0.0, 1.0);
-  float VoH = clamp(dot(nV, H), 0.0, 1.0);
-  vec3 F0 = vec3(0.04);
-  
-  F0 = mix(F0, Albedo, metallic);
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(pbrInfo.N, pbrInfo.V)), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
   
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(VoH, F0);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
-    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV)) * NoL;
+    color += (LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV)) * NoL;
   }
   return color * radiance;
 }
@@ -504,35 +503,30 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, vec3 Albedo, vec3 V, vec3 N, 
 
 // TODO(): This will eventually be integrated into Directional, as we will need to 
 // support more shadow maps (using a Sampler2DArray.)
-vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, vec3 V, vec3 N, float roughness, float metallic)
+vec3 CookTorrBRDFPrimary(DirectionLight light, vec3 vPosition, vec3 Albedo, float roughness, float metallic, inout PBRInfo pbrInfo)
 {
   vec3 color = vec3(0.0);
   vec3 L = -(light.direction.xyz);
-  vec3 radiance = light.color.xyz * light.intensity;  
-  vec3 nV = normalize(V);
+  vec3 radiance = light.color.xyz * light.intensity;
   vec3 nL = normalize(L);
-  vec3 nN = normalize(N);
   
-  vec3 H = normalize(nV + nL);
+  vec3 H = normalize(pbrInfo.V + nL);
   
-  float NoL = clamp(dot(nN, nL), 0.001, 1.0);
-  float NoV = clamp(abs(dot(nN, nV)), 0.001, 1.0);
-  float NoH = clamp(dot(nN, H), 0.0, 1.0);
-  float VoH = clamp(dot(nV, H), 0.0, 1.0);
-  vec3 F0 = vec3(0.04);
-  
-  F0 = mix(F0, Albedo, metallic);
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(pbrInfo.N, pbrInfo.V)), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
   
   if (NoL > 0.0) {
     float D = DGGX(NoH, roughness);
-    float G = GSchlickSmithGGX(NoL, NoV, roughness);  
-    vec3 F = FSchlick(VoH, F0);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
     
     
-    color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, NoV);
+    color += LambertDiffuse(kD, Albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV);
     
     vec4 staticShadowClip = staticLightSpace.viewProj * vec4(vPosition, 1.0);
     float staticShadowFactor = ((staticLightSpace.shadowTechnique.x < 1) ? FilterPCF(staticShadowMap, staticShadowClip) : PCSS(staticShadowMap, staticShadowClip));
@@ -624,6 +618,17 @@ void main()
   
   vec3 N = normalize(fragNormal);
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
+  vec3 F0 = vec3(0.04);
+  F0 = mix(F0, fragAlbedo, fragMetallic);
+  float NoV = clamp(abs(dot(N, V)), 0.001, 1.0);
+  
+  PBRInfo pbrInfo;
+  pbrInfo.albedo = fragAlbedo;
+  pbrInfo.F0 = F0;
+  pbrInfo.NoV = NoV;
+  pbrInfo.N = N;
+  pbrInfo.V = V;
+  pbrInfo.roughness = fragRoughness;
   
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
@@ -633,7 +638,7 @@ void main()
     DirectionLight light = gLightBuffer.primaryLight;
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
-    outColor += CookTorrBRDFPrimary(light, frag_in.position, fragAlbedo, V, N, fragRoughness, fragMetallic); 
+    outColor += CookTorrBRDFPrimary(light, frag_in.position, fragAlbedo, fragRoughness, fragMetallic, pbrInfo); 
     outColor = max(outColor, ambient);
   }
   
@@ -641,13 +646,13 @@ void main()
     DirectionLight light = gLightBuffer.directionLights[i];
     if (light.enable <= 0) { continue; }
     outColor += light.ambient.rgb * fragAlbedo;
-    outColor += CookTorrBRDFDirectional(light, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    outColor += CookTorrBRDFDirectional(light, fragAlbedo, fragRoughness, fragMetallic, pbrInfo);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
     if (light.enable <= 0) { continue; }
-    outColor += CookTorrBRDFPoint(light, frag_in.position, fragAlbedo, V, N, fragRoughness, fragMetallic);
+    outColor += CookTorrBRDFPoint(light, frag_in.position, fragAlbedo, fragRoughness, fragMetallic, pbrInfo);
   }
   
     outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);

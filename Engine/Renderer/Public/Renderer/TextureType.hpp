@@ -117,7 +117,7 @@ class TextureCube : public TextureBase {
 public:
   TextureCube() : TextureBase(TEXTURE_CUBE) { }
 
-  void Initialize(u32 extentX, u32 extentY, u32 extentZ = 1);
+  void Initialize(u32 dim);
   void Update(Image const& image);
   void CleanUp() override;
   void Save(const std::string filename) override;
@@ -133,6 +133,16 @@ class TextureCubeArray : public TextureBase {
 public:
   TextureCubeArray() : TextureBase(TEXTURE_CUBE_ARRAY) { }
 
+  void Initialize(u32 dim = 512, u32 cubeLayers = 1);
+  void CleanUp() override;
+  void Update(const Image& arrayimage);
+  void Update(const TextureCube* pCubeMaps, u32 count);
+  //void Update(const Image& imgCubeMap, u32 count); 
+  void Save(const std::string filename) override;
+  u32 LayerCount() const;
+  u32 MipMapCount() const;
+
+  friend class Renderer;
 };
 
 

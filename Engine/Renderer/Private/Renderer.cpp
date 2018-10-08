@@ -113,8 +113,9 @@ Renderer::Renderer()
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
     Vector3 v1 = p1 - cam_pos;
     Vector3 v2 = p2 - cam_pos;
-
-    return v1.Length() < v2.Length();
+    r32 l1 = v1.Length();
+    r32 l2 = v2.Length();
+    return l1 < l2;
   });
 
   // Use painter's algorithm in this case for forward, simply because of 
