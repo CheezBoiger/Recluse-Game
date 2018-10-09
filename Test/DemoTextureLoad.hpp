@@ -24,7 +24,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
     albedo = gRenderer().CreateTexture2D();
-    albedo->Initialize(img.Width(), img.Height());
+    albedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     albedo->_Name = "BoxAlbedo";
     albedo->Update(img);
     img.CleanUp();
@@ -33,7 +33,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Box/normal.jpg"));
     normal = gRenderer().CreateTexture2D();
-    normal->Initialize(img.Width(), img.Height());
+    normal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     normal->_Name = "BoxNormal";
     normal->Update(img);
     img.CleanUp();
@@ -42,7 +42,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Box/emissive.jpg"));
     emissive = gRenderer().CreateTexture2D();
-    emissive->Initialize(img.Width(), img.Height());
+    emissive->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     emissive->_Name = "BoxEmissive";
     emissive->Update(img);
     img.CleanUp();
@@ -51,7 +51,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("grass1-albedo3.png"));
     grassBase = gRenderer().CreateTexture2D();
-    grassBase->Initialize(img.Width(), img.Height());
+    grassBase->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     grassBase->_Name = "GrassyAlbedo";
     grassBase->Update(img);
     img.CleanUp();
@@ -60,7 +60,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("grass1-normal2.png"));
     grassNormal = gRenderer().CreateTexture2D();
-    grassNormal->Initialize(img.Width(), img.Height());
+    grassNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     grassNormal->_Name = "GrassyNormal";
     grassNormal->Update(img);
     img.CleanUp();
@@ -69,7 +69,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("grass1-rough.png"));
     grassRough = gRenderer().CreateTexture2D();
-    grassRough->Initialize(img.Width(), img.Height());
+    grassRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     grassRough->_Name = "GrassyRough";
     grassRough->Update(img);
     img.CleanUp();
@@ -78,7 +78,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
     rustAlbedo = gRenderer().CreateTexture2D();
-    rustAlbedo->Initialize(img.Width(), img.Height());
+    rustAlbedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     rustAlbedo->_Name = "RustedAlbedo";
     rustAlbedo->Update(img);
     img.CleanUp();
@@ -87,7 +87,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
     rustRough = gRenderer().CreateTexture2D();
-    rustRough->Initialize(img.Width(), img.Height());
+    rustRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     rustRough->_Name = "RustedRough";
     rustRough->Update(img);
     img.CleanUp();
@@ -96,7 +96,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
     rustNormal = gRenderer().CreateTexture2D();
-    rustNormal->Initialize(img.Width(), img.Height());
+    rustNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     rustNormal->_Name = "RustedNormal";
     rustNormal->Update(img);
     img.CleanUp();
@@ -105,7 +105,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_metallic.png"));
     Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(img.Width(), img.Height());
+    rustMetal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
     rustMetal->_Name = "RustedMetal";
     rustMetal->Update(img);
     img.CleanUp();

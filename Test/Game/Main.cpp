@@ -27,12 +27,14 @@ class TestScene : public Scene {
   static const u32 kNumberOfMonsters = 0;
   TextureCube* cubemap1;
   TextureCube* cubemap0;
+  Texture2D* brdfLUT;
 public:
 
   // Used to set up the scene. Call before updating.
   void SetUp() override {
     cubemap1 = nullptr;
     cubemap0 = nullptr;
+    brdfLUT = nullptr;
     cube = new CubeObject();
     lantern = new LanternObject();
     monster = new Monster();
@@ -80,12 +82,13 @@ public:
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
 
-#if 1
+#if 0
     cubemap0 = gRenderer().CreateTextureCube();
     cubemap1 = gRenderer().CreateTextureCube();
+    brdfLUT = gRenderer().CreateTexture2D();
     cubemap0->Initialize(512);
     cubemap1->Initialize(512);
-
+    brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
       img.Load("Probe0.png");
@@ -94,7 +97,11 @@ public:
       img.Load("Probe1.png");
       cubemap1->Update(img);
       img.CleanUp();
+      img.Load("brdf.png");
+      brdfLUT->Update(img);
+      img.CleanUp();
       gRenderer().SetSkyboxCubeMap(cubemap0);
+      gRenderer().SetGlobalBRDFLUT(brdfLUT);
       gRenderer().UsePreRenderSkyboxMap(true);
     }
 #endif
@@ -153,12 +160,14 @@ public:
     mainCam->CleanUp();
     delete mainCam;
 
-#if 1
+#if 0
+    gRenderer().UsePreRenderSkyboxMap(false);
     gRenderer().FreeTextureCube(cubemap0);
     gRenderer().FreeTextureCube(cubemap1);
+    gRenderer().FreeTexture2D(brdfLUT);
     cubemap0 = nullptr;
     cubemap1 = nullptr;
-    gRenderer().UsePreRenderSkyboxMap(false);
+    brdfLUT = nullptr;
 #endif
   }
 
@@ -304,8 +313,11 @@ int main(int c, char* argv[])
       Vector3(  10.0f,    0.0f,     0.0f),
       Vector3(  0.0f,   -14.0f,     3.0f)
   };
-  gEngine().SetEnvProbeTargets(positions.data(), positions.size());
+  //gEngine().SetEnvProbeTargets(positions.data(), positions.size());
   gEngine().Update();
+  Texture2D* g = gRenderer().GenerateBRDFLUT();
+  g->Save("brdf.png");
+  gRenderer().FreeTexture2D(g);
   gEngine().SignalStop();
   gEngine().Update();
 #endif

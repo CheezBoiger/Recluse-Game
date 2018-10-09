@@ -227,7 +227,10 @@ public:
 
   // Set up and override Skybox cubemap for the renderer.
   void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
+  void              SetGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
 
+  // NOTE(): If brdf, or envmap, was cleaned up before cleaning up the engine, be sure to 
+  // call this first, before freeing the set maps!
   void              UsePreRenderSkyboxMap(b32 enable);
 
   b32               UsingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }

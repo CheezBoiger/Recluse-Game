@@ -114,6 +114,7 @@ GlobalIllumination::GlobalIllumination()
   , m_pEnvMaps(nullptr)
   , m_pGlobalEnvMap(nullptr)
   , m_pIrrMaps(nullptr)
+  , m_pGlobalBRDFLUT(nullptr)
   , m_localReflectionsEnabled(false)
 {
 }
@@ -179,9 +180,12 @@ void GlobalIllumination::Update(Renderer* pRenderer)
   localBrdfLuts.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   Texture* pTexture = m_pGlobalEnvMap;
+  Texture* pBRDF = DefaultTextureKey;
+  if (m_pGlobalBRDFLUT && m_pGlobalBRDFLUT->View()) { pBRDF = m_pGlobalBRDFLUT; }
+
   globalIrrMap.imageView = pTexture->View();
   globalEnvMap.imageView = pTexture->View();
-  globalBrdfLut.imageView = DefaultTextureKey->View();
+  globalBrdfLut.imageView = pBRDF->View();
   // TODO(): These are place holders, we don't have data for these yet!
   // Obtain env and irr maps from scene when building!
   localIrrMaps.imageView = DefaultTextureKey->View();

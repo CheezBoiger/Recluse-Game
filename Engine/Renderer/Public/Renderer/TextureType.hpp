@@ -12,6 +12,12 @@ class Sampler;
 struct Image;
 
 
+enum RFormat {
+  RFORMAT_R8G8B8A8_UNORM,
+  RFORMAT_R16G16_UNORM
+};
+
+
 struct TextureBase {
   static std::string  kDefaultName;
   static u64          sIteration;
@@ -85,7 +91,7 @@ public:
   // All images that are uploaded to this texture must then be the 
   // same width and height in order to render properly. To write 
   // texture over to this object, call Update() after this call.
-  void        Initialize(u32 width, u32 height, b32 genMips = false);
+  void        Initialize(RFormat format, u32 width, u32 height, b32 genMips = false);
   
   void        Save(const std::string filename) override;
   // Update texture with a new image to be written over.

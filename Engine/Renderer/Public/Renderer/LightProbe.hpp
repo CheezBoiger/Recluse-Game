@@ -59,7 +59,8 @@ public:
   void              CleanUp(VulkanRHI* pRhi);
 
   void              SetGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
-
+  
+  void              SetGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
   // Set up irradiance maps for this renderer to use for look up.
   void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
 
@@ -70,6 +71,7 @@ public:
 
 private:
   Texture*              m_pGlobalEnvMap;
+  Texture*              m_pGlobalBRDFLUT;
   TextureCubeArray*     m_pEnvMaps;
   TextureCubeArray*     m_pIrrMaps;
   Texture2DArray*       m_pBrdfLUTs;

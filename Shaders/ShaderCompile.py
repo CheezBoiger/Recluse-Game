@@ -94,7 +94,8 @@ recluse_shaders = [
   Shader('StaticGBuffer_MorphTargets', 'StaticGBuffer.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
   Shader('ShadowMapping_MorphTargets', 'ShadowMapping.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
   Shader('LightClusterAssignment', 'LightClusterAssignment.comp'),
-  Shader('PrefilterSpecular', 'PrefilterSpecular.comp')
+  Shader('PrefilterSpecular', 'PrefilterSpecular.comp'),
+  Shader('GenerateBRDFLUT', 'GenerateBRDFLUT.comp')
 ]
   
 def get_shader_ext(filename):

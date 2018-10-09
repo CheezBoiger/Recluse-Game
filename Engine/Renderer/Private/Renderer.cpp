@@ -90,6 +90,10 @@ Renderer::Renderer()
   m_Downscale._Horizontal = 0;
   m_Downscale._Strength = 1.0f;
   m_Downscale._Scale = 1.0f;
+  m_skybox._brdfLUT = nullptr;
+  m_skybox._envmap = nullptr;
+  m_skybox._irradiance = nullptr;
+  m_skybox._specular = nullptr;
 
   m_cmdDeferredList.Resize(1024);
   m_forwardCmdList.Resize(1024);
@@ -3433,10 +3437,15 @@ void Renderer::SetUpGlobalIlluminationBuffer()
 void Renderer::UpdateGlobalIlluminationBuffer()
 {
   Texture* pCube = m_pSky->GetCubeMap();
+  Texture* pTex = nullptr;
   if (m_usePreRenderSkybox) {
     pCube = m_preRenderSkybox->Handle();
   }
+  if (m_skybox._brdfLUT) {
+    pTex = m_skybox._brdfLUT->Handle();
+  }
   m_pGlobalIllumination->SetGlobalEnvMap(pCube);
+  m_pGlobalIllumination->SetGlobalBRDFLUT(pTex);
   m_pGlobalIllumination->Update(this);
 }
 
@@ -4437,5 +4446,79 @@ void Renderer::TakeSnapshot(const std::string name)
   tex2d.mRhi = m_pRhi;
   tex2d.texture = final_renderTargetKey;
   tex2d.Save(name);
+}
+
+
+Texture2D* Renderer::GenerateBRDFLUT(u32 x, u32 y)
+{
+  Texture2D* tex2D = new Texture2D();
+  Texture* texture = m_pRhi->CreateTexture();
+  tex2D->mRhi = m_pRhi;
+  {
+    VkImageCreateInfo imgCi = { };
+    imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imgCi.arrayLayers = 1;
+    imgCi.extent.width = x;
+    imgCi.extent.height = y;
+    imgCi.extent.depth = 1;
+    imgCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    imgCi.imageType = VK_IMAGE_TYPE_2D;
+    imgCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgCi.mipLevels = 1;
+    imgCi.samples = VK_SAMPLE_COUNT_1_BIT;
+    imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imgCi.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT 
+      | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT; 
+
+    VkImageViewCreateInfo viewCi = { };
+    viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCi.components = { };
+    viewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
+    viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewCi.subresourceRange.baseArrayLayer = 0;
+    viewCi.subresourceRange.baseMipLevel = 0;
+    viewCi.subresourceRange.layerCount = 1;
+    viewCi.subresourceRange.levelCount = 1;
+    viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    texture->Initialize(imgCi, viewCi);
+  }
+
+  CommandBuffer cmd;
+  cmd.SetOwner(m_pRhi->LogicDevice()->Native());
+  cmd.Allocate(m_pRhi->ComputeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  VkCommandBufferBeginInfo beginInfo = { };
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmd.Begin(beginInfo);
+
+  GlobalBuffer* g = m_pGlobal->Data();
+  i32 prevx = g->_ScreenSize[0];
+  i32 prevy = g->_ScreenSize[1];
+  g->_ScreenSize[0] = x;
+  g->_ScreenSize[1] = y;
+  m_pGlobal->Update(m_pRhi);
+  m_pBakeIbl->UpdateTargetBRDF(texture);
+  m_pBakeIbl->RenderGenBRDF(&cmd, m_pGlobal, texture);
+
+  cmd.End();
+
+  VkSubmitInfo submitInfo = { };
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  VkCommandBuffer native[] = { cmd.Handle() };
+  submitInfo.pCommandBuffers = native;
+
+  m_pRhi->ComputeSubmit(0, submitInfo);
+  m_pRhi->ComputeWaitIdle(0);
+
+
+  g->_ScreenSize[0] = prevx;
+  g->_ScreenSize[1] = prevy;
+  m_pGlobal->Update(m_pRhi);
+  tex2D->texture = texture;
+  return tex2D;
 }
 } // Recluse

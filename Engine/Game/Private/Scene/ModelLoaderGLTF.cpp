@@ -113,7 +113,7 @@ static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineMod
 {
   for (tinygltf::Image& image : gltfModel->images) {
     Texture2D* pTex = gRenderer().CreateTexture2D();
-    pTex->Initialize(static_cast<u32>(image.width), 
+    pTex->Initialize(RFORMAT_R8G8B8A8_UNORM, static_cast<u32>(image.width),
                   static_cast<u32>(image.height));
     Image img;
 

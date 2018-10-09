@@ -18,6 +18,7 @@ class Texture;
 class FrameBuffer;
 class RenderPass;
 class GraphicsPipeline;
+class GlobalDescriptor;
 
 class BakeIBL {
 public:
@@ -29,8 +30,8 @@ public:
 
   void                  RenderPrefilterSpec(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
   void                  RenderIrrDiff(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
-  void                  RenderGenBRDF(CommandBuffer* pCmd);
-
+  void                  RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target);
+  void                  UpdateTargetBRDF(Texture* target);
 private:
 
 
@@ -49,24 +50,5 @@ private:
   DescriptorSet*        m_pSpecSet;
   DescriptorSet*        m_pDiffSet;
   DescriptorSet*        m_pBRDFSet;
-};
-
-
-class EnvMapBaker {
-public:
-
-  EnvMapBaker();
-  ~EnvMapBaker();
-
-  void      Initialize(VulkanRHI* pRhi, u32 texSize);
-  void      CleanUp(VulkanRHI* pRhi);
-
-  Texture*  GenerateEnvMap(const Vector3& position, CmdList<MeshRenderCmd>& scene);
-
-private:
-  GraphicsPipeline*     m_pipeline;
-  FrameBuffer*          m_framebuffer;
-  RenderPass*           m_renderpass;
-  Texture*              m_texture;
 };
 } // Recluse

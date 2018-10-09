@@ -19,7 +19,17 @@ u64         TextureBase::sIteration = 0;
 uuid64 TextureSampler::sIteration = 0;
 
 
-void Texture2D::Initialize(u32 width, u32 height, b32 genMips)
+VkFormat GetNativeFormat(RFormat format)
+{
+  switch (format) {
+    case RFORMAT_R16G16_UNORM: return VK_FORMAT_R16G16_UNORM;
+    case RFORMAT_R8G8B8A8_UNORM:
+    default: return VK_FORMAT_R8G8B8A8_UNORM;
+  }
+}
+
+
+void Texture2D::Initialize(RFormat format, u32 width, u32 height, b32 genMips)
 {
   if (texture) return;
 
@@ -32,7 +42,7 @@ void Texture2D::Initialize(u32 width, u32 height, b32 genMips)
   imgCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCI.mipLevels = mips;
   imgCI.arrayLayers = 1;
-  imgCI.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgCI.format = GetNativeFormat(format);
   imgCI.imageType = VK_IMAGE_TYPE_2D;
   imgCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -52,7 +62,7 @@ void Texture2D::Initialize(u32 width, u32 height, b32 genMips)
   imgViewCI.subresourceRange.layerCount = 1;
   imgViewCI.subresourceRange.levelCount = mips;
   imgViewCI.components = { };
-  imgViewCI.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgViewCI.format = GetNativeFormat(format);
   
   texture->Initialize(imgCI, imgViewCI);
 }
