@@ -112,7 +112,7 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
   _particleConfig._fadeThreshold = 1.0f;
   _particleConfig._isWorldSpace = 0.0f;
   _particleConfig._lifeTimeScale = 1.0f;
-  _particleConfig._particleMaxAlive = 1.0f;
+  _particleConfig._particleMaxAlive = 2.0f;
   _particleConfig._rate = 1.0f;
 
   m_particleBuffer = pRhi->CreateBuffer();
@@ -155,11 +155,13 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
   std::random_device dev;
   std::mt19937 twist(dev());
   std::uniform_real_distribution<r32> uni(-0.3f, 0.3f);
+  r32 grad = 10.0f;
   for (size_t i = 0; i < particles.size(); ++i) {
     particles[i]._velocity = Vector4(uni(twist), uni(twist), uni(twist), 0.0f);
-    particles[i]._life = 100.0f;
-    particles[i]._color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    particles[i]._sz = 0.1f;
+    particles[i]._life = grad;
+    particles[i]._color = Vector4(0.0f, 0.0f, 0.0f, 0.6f);
+    particles[i]._sz = 0.3f;
+    grad = grad - 1.0f / static_cast<r32>(particles.size());
   }
 
   {
@@ -340,7 +342,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   colorBlendCi.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   std::array<VkPipelineColorBlendAttachmentState, 6> colorBlendAttachments;
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
-    VK_FALSE,
+    VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -351,7 +353,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   );
 
   colorBlendAttachments[1] = CreateColorBlendAttachmentState(
-    VK_FALSE,
+    VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
     VK_BLEND_FACTOR_SRC_ALPHA,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,

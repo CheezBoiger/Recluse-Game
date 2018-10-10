@@ -88,9 +88,14 @@ void main()
       if (p.life > 0.0) {
         // Update the particle as it is still alive.
         p.position += p.velocity * gWorldBuffer.fDeltaTime;
-        particleBuffer.particles[idx] = p;
+      } else {
+        // reset.
+        mat4 model = particleConfig.model;
+        p.life.x = particleConfig.particleMaxAlive;
+        p.position = vec4(model[3][0], model[3][1], model[3][2], model[3][3]);
       }
     }
+    particleBuffer.particles[idx] = p;
   }
 }
 

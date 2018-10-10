@@ -4545,7 +4545,7 @@ void Renderer::PushParticleSystem(ParticleSystem* system)
 ParticleSystem* Renderer::CreateParticleSystem()
 {
   ParticleSystem* particleSystem = new ParticleSystem();
-  particleSystem->Initialize(m_pRhi, m_particleEngine->GetParticleSystemDescriptorLayout(), 100);
+  particleSystem->Initialize(m_pRhi, m_particleEngine->GetParticleSystemDescriptorLayout(), 1000);
   particleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT | PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
   return particleSystem;
 }
