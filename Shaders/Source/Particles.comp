@@ -56,12 +56,6 @@ struct Particle {
   float   life;
 };
 
-
-layout (set = 1, binding = 0) buffer ParticleBuffer {
-  Particle  particles[ ];
-} particleBuffer;
-
-
 layout (set = 1, binding = 0) uniform ParticleConfig {
   float level[16];
   mat4  model;
@@ -77,6 +71,11 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
 } particleConfig;
 
 
+layout (set = 1, binding = 2) buffer ParticleBuffer {
+  Particle  particles[ ];
+} particleBuffer;
+
+
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
@@ -89,6 +88,7 @@ void main()
       if (p.life > 0.0) {
         // Update the particle as it is still alive.
         p.position += p.velocity * gWorldBuffer.fDeltaTime;
+        particleBuffer.particles[idx] = p;
       }
     }
   }

@@ -74,6 +74,10 @@ out VertOut {
   float life;
 } vert_out;
 
+out gl_PerVertex {
+  vec4 gl_Position;
+};
+
 void main()
 {
   vec4 worldPos = vec4(position.xyz, 1.0);
@@ -81,13 +85,11 @@ void main()
   if (particleBuffer.isWorldSpace <= 0.0) {
     worldPos = particleBuffer.model * worldPos;
   }
-  
-  gl_Position = gWorldBuffer.view * worldPos;
-  
   vert_out.worldPos = worldPos;
   vert_out.color = color;
   vert_out.angle = angle;
   vert_out.size = size;
   vert_out.weight = weight;
   vert_out.life = life;
+  gl_Position = gWorldBuffer.view * worldPos;
 }

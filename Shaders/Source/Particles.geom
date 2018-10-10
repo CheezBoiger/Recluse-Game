@@ -4,8 +4,7 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (points) in;
-layout (triangle_strip) out;
-layout (max_vertices = 4) out;
+layout (triangle_strip, max_vertices = 4) out;
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -79,37 +78,39 @@ out FragIn {
 
 void main()
 {
-  float size = vert_out[0].size;
-  vec4 P = gl_in[0].gl_Position;
-  mat4 p = gWorldBuffer.proj;
-  
-  vec2 va = P.xy + vec2(-0.5, -0.5) * size;
-  gl_Position = p * vec4(va, P.zw);
-  frag_in.uv = vec2(0.0, 0.0);
-  frag_in.color = vert_out[0].color;
-  frag_in.life = vert_out[0].life;
-  EmitVertex();
-  
-  vec2 vb = P.xy + vec2(-0.5, 0.5) * size;
-  gl_Position = p * vec4(vb, P.zw);
-  frag_in.uv = vec2(0.0, 1.0);
-  frag_in.color = vert_out[0].color;
-  frag_in.life = vert_out[0].life;
-  EmitVertex();
-  
-  vec2 vd = P.xy + vec2(0.5, -0.5) * size;
-  gl_Position = p * vec4(vd, P.zw);
-  frag_in.uv = vec2(1.0, 0.0);
-  frag_in.color = vert_out[0].color;
-  frag_in.life = vert_out[0].life;
-  EmitVertex();
-  
-  vec2 vc = P.xy + vec2(0.5, 0.5) * size;
-  gl_Position = p * vec4(vc, P.zw);
-  frag_in.uv = vec2(1.0, 1.0);
-  frag_in.color = vert_out[0].color;
-  frag_in.life = vert_out[0].life;
-  EmitVertex();
-  
-  EndPrimitive();
+  for (int i = 0; i < gl_in.length(); ++i) {
+    float size = vert_out[i].size;
+    vec4 P = gl_in[i].gl_Position;
+    mat4 p = gWorldBuffer.proj;
+    
+    vec2 va = P.xy + vec2(-0.5, -0.5) * size;
+    gl_Position = p * vec4(va, P.zw);
+    frag_in.uv = vec2(0.0, 0.0);
+    frag_in.color = vert_out[i].color;
+    frag_in.life = vert_out[i].life;
+    EmitVertex();
+    
+    vec2 vb = P.xy + vec2(-0.5, 0.5) * size;
+    gl_Position = p * vec4(vb, P.zw);
+    frag_in.uv = vec2(0.0, 1.0);
+    frag_in.color = vert_out[i].color;
+    frag_in.life = vert_out[i].life;
+    EmitVertex();
+    
+    vec2 vd = P.xy + vec2(0.5, -0.5) * size;
+    gl_Position = p * vec4(vd, P.zw);
+    frag_in.uv = vec2(1.0, 0.0);
+    frag_in.color = vert_out[i].color;
+    frag_in.life = vert_out[i].life;
+    EmitVertex();
+    
+    vec2 vc = P.xy + vec2(0.5, 0.5) * size;
+    gl_Position = p * vec4(vc, P.zw);
+    frag_in.uv = vec2(1.0, 1.0);
+    frag_in.color = vert_out[i].color;
+    frag_in.life = vert_out[i].life;
+    EmitVertex();
+    
+    EndPrimitive();
+  }
 }

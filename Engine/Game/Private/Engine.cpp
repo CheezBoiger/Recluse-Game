@@ -4,6 +4,7 @@
 #include "MaterialComponent.hpp"
 #include "LightComponent.hpp"
 #include "PhysicsComponent.hpp"
+#include "ParticleSystemComponent.hpp"
 #include "AudioComponent.hpp"
 
 #include "Scene/Scene.hpp"
@@ -248,6 +249,7 @@ void Engine::Update()
     PointLightComponent::UpdateComponents();
   });
 
+  ParticleSystemComponent::UpdateComponents();
   gUI().UpdateState(dt);
 
   m_workers[0].join();

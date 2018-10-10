@@ -5,6 +5,10 @@
 
 layout (location = 0) out vec4 outputColor;
 layout (location = 1) out vec4 brightColor;
+layout (location = 2) out vec4 rt0;
+layout (location = 3) out vec4 rt1;
+layout (location = 4) out vec4 rt2;
+layout (location = 5) out vec4 rt3;
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -45,7 +49,7 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   int   enableAA;
 } gWorldBuffer;
 
-layout (set = 1, binding = 1) uniform ParticleBuffer {
+layout (set = 1, binding = 0) uniform ParticleBuffer {
   float level[16];
   mat4  model;
   mat4  modelView;
@@ -72,6 +76,7 @@ in FragIn {
 
 void main()
 {
+  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.worldPos.xyz);
   // for test.
   // TODO(): 
   vec4 color = frag_in.color;
@@ -80,4 +85,10 @@ void main()
     discard;
   }
   outputColor = color;
+  
+  vec3 glow = color.rgb - length(V) * 0.2;
+  glow = max(glow, vec3(0.0));
+  glow = glow * 0.02;
+  glow = clamp(glow, vec3(0.0), vec3(1.0));
+  brightColor = vec4(glow, 1.0);
 }

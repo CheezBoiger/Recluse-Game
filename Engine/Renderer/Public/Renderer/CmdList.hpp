@@ -19,7 +19,7 @@ template<typename Cmd>
 class CmdList {
 public:
   typedef std::function<bool(Cmd& cmd1, Cmd& cmd2)> CmdCompareFunc;
-  CmdList(size_t size = 0)
+  CmdList(size_t size = 1)
     : mCmdList(size)
     , mCompare(nullptr)
     , m_currIdx(0) { } 
@@ -38,6 +38,7 @@ public:
   void                    Sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx), mCompare); }
   void                    Clear() { m_currIdx = 0; }
 
+  const Cmd*              Data() { return mCmdList.data(); }
 private:
   std::vector<Cmd>        mCmdList;
   CmdCompareFunc         mCompare;

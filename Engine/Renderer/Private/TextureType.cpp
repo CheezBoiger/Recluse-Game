@@ -338,7 +338,7 @@ void TextureCube::Initialize(u32 dim)
   imageCi.samples = VK_SAMPLE_COUNT_1_BIT;
   imageCi.mipLevels = 1;
   imageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
-  imageCi.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  imageCi.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   imageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
   VkImageViewCreateInfo viewCi = { };

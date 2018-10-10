@@ -2,6 +2,7 @@
 #pragma once
 #include "Game/Engine.hpp"
 #include "Game/Scene/Scene.hpp"
+#include "Game/ParticleSystemComponent.hpp"
 #include "Game/Geometry/UVSphere.hpp"
 #include "Renderer/UserParams.hpp"
 
@@ -27,7 +28,7 @@ class HelmetObject : public Item
   R_GAME_OBJECT(HelmetObject)
 public:
 
-    HelmetObject()
+  HelmetObject()
   {
   }
 
@@ -188,7 +189,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -196,7 +197,10 @@ public:
 
   void OnStartUp() override 
   {
+    m_pParticleSystem = nullptr;
+    m_pParticleSystem = new ParticleSystemComponent();
     m_rendererComponent.Initialize(this);
+    m_pParticleSystem->Initialize(this);
     m_meshComponent.Initialize(this);
     m_animationComponent.Initialize(this);
     m_physicsComponent.Initialize(this);
@@ -285,6 +289,7 @@ public:
     m_meshComponent.CleanUp();
     m_animationComponent.CleanUp();
     m_physicsComponent.CleanUp();
+    m_pParticleSystem->CleanUp();
 
     gPhysics().FreeCollider(m_sphereCollider);
   }
@@ -299,5 +304,6 @@ private:
   AnimationComponent        m_animationComponent;
   PhysicsComponent          m_physicsComponent;
   SphereCollider*           m_sphereCollider;
+  ParticleSystemComponent*  m_pParticleSystem;
   Material*                 m_pMaterialRef;
 };

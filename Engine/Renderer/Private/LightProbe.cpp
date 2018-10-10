@@ -19,7 +19,20 @@ namespace Recluse {
 Vector3 GetWorldDirection(u32 faceIdx, u32 px, u32 py, u32 width, u32 height)
 {
   Vector3 worldDir = Vector3();
+  Vector2 pixelSize(1.0f / static_cast<r32>(width), 1.0f / static_cast<r32>(height));
+  Vector2 uv = Vector2(static_cast<r32>(px) + 0.5f, static_cast<r32>(py) + 0.5f) * pixelSize;
+  uv.y = 1.f - uv.y;
+  uv -= 0.5f; // [-0.5, 0.5]
 
+  switch (faceIdx) {
+    case 0:   worldDir = Vector3( 0.5f,  uv.y, -uv.x); break;
+    case 1:   worldDir = Vector3(-0.5f,  uv.y,  uv.x); break;
+    case 2:   worldDir = Vector3( uv.x,  0.5f, -uv.y); break;
+    case 3:   worldDir = Vector3( uv.x, -0.5f,  uv.y); break;
+    case 4:   worldDir = Vector3( uv.x,  uv.y,  0.5f); break;
+    case 5:   worldDir = Vector3(-uv.x,  uv.y, -0.5f); break;
+    default:  worldDir = Vector3(); break;
+  }
   return worldDir;
 }
 
@@ -38,11 +51,12 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
   u32 width = envMap->WidthPerFace();
   u32 height = envMap->HeightPerFace();
   r32 pixelA = (1.0f / static_cast<r32>(width)) * (1.0f / static_cast<r32>(height));
-  u8* data = new u8[width * height * 4];
+  u8* data = nullptr;
 
   {
     VkCommandBuffer cmdBuf;
     VkCommandBufferAllocateInfo allocInfo = {};
+    Texture* texture = envMap->Handle();
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = rhi->GraphicsCmdPool(0);
     allocInfo.commandBufferCount = 1;
@@ -51,8 +65,119 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     
     // Read image data through here.
     // TODO(): 
+    // 6 textures.
+    std::vector<VkBufferImageCopy> imageCopyRegions;
+    VkDeviceSize offset = 0;
+
+    for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
+      for (size_t level = 0; level < texture->MipLevels(); ++level) {
+        VkBufferImageCopy region = {};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.baseArrayLayer = (u32)layer;
+        region.imageSubresource.layerCount = 1;
+        region.imageSubresource.mipLevel = (u32)level;
+        region.imageExtent.width = texture->Width();
+        region.imageExtent.height = texture->Height();
+        region.imageExtent.depth = 1;
+        region.bufferOffset = offset;
+        imageCopyRegions.push_back(region);
+        offset += texture->Width() * texture->Height() * 4;
+      }
+    }
+
+    VkDeviceSize sizeInBytes = offset;
+
+    Buffer stagingBuffer;
+    stagingBuffer.SetOwner(rhi->LogicDevice()->Native());
+
+    VkBufferCreateInfo bufferci = {};
+    bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bufferci.size = sizeInBytes;
+    data = new u8[bufferci.size];
+
+    stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    stagingBuffer.Map();
+
+    VkCommandBufferBeginInfo begin = {};
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    
+    vkResetCommandBuffer(cmdBuf, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+    vkBeginCommandBuffer(cmdBuf, &begin);
+
+    VkImageSubresourceRange subRange = {};
+    subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    VkImageMemoryBarrier imgMemBarrier = {};
+    imgMemBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    imgMemBarrier.subresourceRange = subRange;
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    imgMemBarrier.srcAccessMask = 0;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.image = texture->Image();
+
+    // set the cubemap image layout for transfer from our framebuffer.
+    vkCmdPipelineBarrier(
+      cmdBuf,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+
+    ////////////////////////////
+    vkCmdCopyImageToBuffer(cmdBuf, texture->Image(),
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+      stagingBuffer.NativeBuffer(),
+      static_cast<u32>(imageCopyRegions.size()),
+      imageCopyRegions.data());
+
+    subRange.baseMipLevel = 0;
+    subRange.baseArrayLayer = 0;
+    subRange.levelCount = 1;
+    subRange.layerCount = 6;
+
+    imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    imgMemBarrier.image = texture->Image();
+    imgMemBarrier.subresourceRange = subRange;
+
+    vkCmdPipelineBarrier(
+      cmdBuf,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgMemBarrier
+    );
+
+    vkEndCommandBuffer(cmdBuf);
+
+    VkSubmitInfo submit = { };
+    submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit.commandBufferCount = 1;
+    VkCommandBuffer cmdB[] = { cmdBuf };
+    submit.pCommandBuffers = cmdB;
+    rhi->GraphicsSubmit(0, 1, &submit);
+    rhi->GraphicsWaitIdle(0);
+
+    memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
 
     vkFreeCommandBuffers(rhi->LogicDevice()->Native(), rhi->GraphicsCmdPool(0), 1, &cmdBuf);
+    stagingBuffer.CleanUp();
   }
   // Reference by Jian Ru's Laugh Engine implementation: https://github.com/jian-ru/laugh_engine
   // Research information though https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
@@ -67,7 +192,10 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
         wi = wi.Normalize();
         // Obtain our solid angle differential.
         r32 dw = pixelA * n.Dot(-wi) / dist2;
-        Vector3 L = Vector3(data[py * width + px]);
+        i32 offset = py * width + px;
+        Vector3 L = Vector3(static_cast<r32>(data[offset + 0]) / 255.0f,
+                            static_cast<r32>(data[offset + 1]) / 255.0f,
+                            static_cast<r32>(data[offset + 2]) / 255.0f);
 
         // Compute our coefficients by taking the sum of each lobe and applying over the distance lighting distribution.
         // which calculates the overall irradiance E(). 

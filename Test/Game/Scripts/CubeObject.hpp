@@ -143,7 +143,7 @@ public:
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
-    std::string engine = RTEXT("Recluse Engine v0.0.25");
+    std::string engine = RTEXT("Recluse Engine v0.0.26");
     std::string device = gRenderer().GetDeviceName();
     std::string globalTime = "time: " + std::to_string(Time::CurrentTime()) + " s";
     Window* window = gEngine().GetWindow();

@@ -71,6 +71,12 @@ Vector2 Vector2::operator*(const r32 scaler) const
 }
 
 
+Vector2 Vector2::operator*(const Vector2& other) const
+{
+  return Vector2(x * other.x, y * other.y);
+}
+
+
 Vector2 Vector2::operator/(const r32 scaler) const
 {
   r32 scale = 1.0f / scaler;
@@ -144,6 +150,12 @@ b8 Vector2::operator==(const Vector2& other) const
 b8 Vector2::operator!=(const Vector2& other) const
 {
   return !(*this == other);
+}
+
+
+Vector2 operator/(const r32 scaler, const Vector2& other)
+{
+  return Vector2(scaler / other.x, scaler / other.y);
 }
 
 

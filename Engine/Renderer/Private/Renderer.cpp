@@ -637,7 +637,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     GlobalBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     GlobalBindings[0].descriptorCount = 1;
     GlobalBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT 
-      | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+      | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
     GlobalBindings[0].pImmutableSamplers = nullptr;
 
     VkDescriptorSetLayoutCreateInfo GlobalLayout = {};
@@ -3425,6 +3425,10 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       }
     }
   cmdBuffer->EndRenderPass();
+
+  // TODO(): Move particle compute on separate job, can be ran asyncronously!
+  m_particleEngine->GenerateParticleComputeCommands(m_pRhi, cmdBuffer, m_pGlobal, m_particleSystems);
+  m_particleEngine->GenerateParticleRenderCommands(m_pRhi, cmdBuffer, m_pGlobal, m_particleSystems);
 }
 
 
@@ -3811,6 +3815,11 @@ void Renderer::UpdateSceneDescriptors()
     descriptor->Update(m_pRhi);
   }
 
+  for (size_t i = 0; i < m_particleSystems.Size(); ++i) {
+    ParticleSystem* system = m_particleSystems[i];
+    system->Update(m_pRhi);
+  }
+
   // Update realtime hdr settings.
   m_pHDR->UpdateToGPU(m_pRhi);
 }
@@ -3914,11 +3923,13 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
     CleanUpGraphicsPipelines();
     CleanUpFrameBuffers();
     CleanUpRenderTextures(false);
+    m_particleEngine->CleanUpPipeline(m_pRhi);
 
     SetUpRenderTextures(false);
     SetUpFrameBuffers();
     SetUpGraphicsPipelines();
     SetUpForwardPBR();
+    m_particleEngine->InitializePipeline(m_pRhi);
     m_pUI->Initialize(m_pRhi);
   }
 
@@ -4123,6 +4134,7 @@ void Renderer::ClearCmdLists()
   m_meshDescriptors.Clear();
   m_jointDescriptors.Clear();
   m_materialDescriptors.Clear();
+  m_particleSystems.Clear();
 }
 
 
@@ -4520,5 +4532,29 @@ Texture2D* Renderer::GenerateBRDFLUT(u32 x, u32 y)
   m_pGlobal->Update(m_pRhi);
   tex2D->texture = texture;
   return tex2D;
+}
+
+
+void Renderer::PushParticleSystem(ParticleSystem* system)
+{
+  if (!system) return;
+  m_particleSystems.PushBack(system);
+}
+
+
+ParticleSystem* Renderer::CreateParticleSystem()
+{
+  ParticleSystem* particleSystem = new ParticleSystem();
+  particleSystem->Initialize(m_pRhi, m_particleEngine->GetParticleSystemDescriptorLayout(), 100);
+  particleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT | PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
+  return particleSystem;
+}
+
+
+void Renderer::FreeParticleSystem(ParticleSystem* particle)
+{
+  if (!particle) { return; }
+  particle->CleanUp(m_pRhi);
+  delete particle;
 }
 } // Recluse

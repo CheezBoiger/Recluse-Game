@@ -13,6 +13,7 @@
 #include "RenderQuad.hpp"
 #include "GlobalDescriptor.hpp"
 #include "LightDescriptor.hpp"
+#include "Particles.hpp"
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
 #include "HDR.hpp"
@@ -133,11 +134,15 @@ public:
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
 
+  ParticleSystem* CreateParticleSystem();
+
   // Create a UI descriptor.
   UIDescriptor*     CreateUIDescriptor();
 
   GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
   LightBuffer*      LightData() { return m_pLights->Data(); }
+
+  void              FreeParticleSystem(ParticleSystem* system);
 
   //  Frees up the allocated texture1d object.
   void              FreeTexture1D(Texture1D* texture);
@@ -215,6 +220,7 @@ public:
 
   // Push mesh to render.
   void              PushMeshRender(MeshRenderCmd& cmd);
+  void              PushParticleSystem(ParticleSystem* system);
   BufferUI*         GetUiBuffer() const;
 
   HDR*              GetHDR() { return m_pHDR; }
@@ -334,6 +340,7 @@ private:
   CmdList<JointDescriptor*>         m_jointDescriptors;
   CmdList<MeshDescriptor*>          m_meshDescriptors;
   CmdList<MaterialDescriptor*>      m_materialDescriptors;
+  CmdList<ParticleSystem*>          m_particleSystems;
 
   // Number of workers in this renderer instance. Used to enable multithreading.
   std::vector<std::thread>          m_workers;

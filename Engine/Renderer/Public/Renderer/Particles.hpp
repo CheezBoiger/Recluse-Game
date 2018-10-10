@@ -6,6 +6,7 @@
 
 #include "Core/Math/Vector4.hpp"
 #include "Core/Math/Vector3.hpp"
+#include "CmdList.hpp"
 
 #include <vector>
 
@@ -16,6 +17,7 @@ class GraphicsPipeline;
 class ComputePipeline;
 class StructureBuffer;
 class Texture;
+class GlobalDescriptor;
 class DescriptorSetLayout;
 class DescriptorSet;
 class RenderPass;
@@ -40,12 +42,20 @@ struct Particle {
 };
 
 
+struct ParticleTrailPosition {
+  Vector3 _lastPos;     // last position.
+  Vector3 _currentPos;  // current position.
+  Vector3 _nextPos;     // next position.
+  Vector3 _info;        // x = size, y = weight, z = life.
+};
+
+
 struct ParticleSystemConfig {
   // level determines at which point in a particle's life, will it 
   // trigger the specific texture index to be displayed, and for how long
   // until the next level of its life is reached. Max of 16 levels, which also means
   // a max of 16 levels allowed in a particle texture array.
-  r32             _level[16];
+  Vector4         _level[16];
   Matrix4         _model;           // Model of the particle system source.
   Matrix4         _modelView;       // ModelView matrix.
   r32             _fadeAt;
@@ -60,8 +70,9 @@ struct ParticleSystemConfig {
 
 
 enum ParticleUpdate {
-  PARTICLE_BUFFER_UPDATE_BIT      = (1 << 0),
-  PARTICLE_DESCRIPTOR_UPDATE_BIT  = (1 << 1)
+  PARTICLE_CONFIG_BUFFER_UPDATE_BIT      = (1 << 0),
+  PARTICLE_DESCRIPTOR_UPDATE_BIT  = (1 << 1),
+  PARTICLE_VERTEX_BUFFER_UPDATE_BIT = (1 << 2)
 };
 
 
@@ -85,14 +96,20 @@ struct ParticleSystem {
   void                  PushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
   void                  Update(VulkanRHI* pRhi);
 
+  void                  SetParticleMaxCount(u32 maxCount);
+  void                  SetParticleMaxLife(r32 maxLife);
+
   Texture2DArray*       _texture;
   TextureSampler*       _sampler;
   ParticleSystemConfig  _particleConfig;
 
+  DescriptorSet*        GetSet() const { return m_pDescriptorSet; }
+  Buffer*               GetParticleBuffer() const { return m_particleBuffer; }
+
 private:
 
   void                  UpdateDescriptor();
-
+  void                  UpdateGpuParticles(VulkanRHI* pRhi);
   void                  ClearUpdateBits() { m_updateBits = 0x0; }
   DescriptorSet*        m_pDescriptorSet;
 
@@ -123,15 +140,22 @@ public:
   void                Initialize(VulkanRHI* pRhi);
   void                CleanUp(VulkanRHI* pRhi);
 
+
+  void                CleanUpPipeline(VulkanRHI* pRhi);
+  void                InitializePipeline(VulkanRHI* pRhi);
+
   // Generate render commands for the given particles.
-  void                GenerateParticleRenderCommands(CommandBuffer* cmdBuffer, ParticleSystem* descriptor);
+  void                GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList);
 
   // Generate commands to compute particle positions and life. This will generate particle
   // computation commands for the given particle system.
-  void                GenerateParticleComputeCommands(CommandBuffer* cmdBuffer, ParticleSystem* descriptor);
+  void                GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList);
 
-  DescriptorSetLayout* GetParticleSystemDescriptorLayout() { m_pParticleDescriptorSetLayout; }
+  DescriptorSetLayout* GetParticleSystemDescriptorLayout() { return m_pParticleDescriptorSetLayout; }
 private:
+
+  void                InitializeRenderPass(VulkanRHI* pRhi);
+
   // Compute pipeline for particle calculations.
   ComputePipeline*      m_pParticleCompute;
 

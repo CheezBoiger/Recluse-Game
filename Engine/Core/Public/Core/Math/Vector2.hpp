@@ -27,6 +27,7 @@ struct Vector2 {
   Vector2 operator-(const Vector2& other) const;
   Vector2 operator-() const;
 
+  Vector2 operator*(const Vector2& other) const;
   Vector2 operator*(const r32 scaler) const;
   Vector2 operator/(const r32 scaler) const;
 
@@ -43,6 +44,8 @@ struct Vector2 {
 
   b8      operator==(const Vector2& other) const; 
   b8      operator!=(const Vector2& other) const;
+
+  friend Vector2 operator/(const r32 scaler, const Vector2& other);
 };
 
 

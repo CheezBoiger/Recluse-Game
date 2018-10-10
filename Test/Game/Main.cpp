@@ -12,6 +12,7 @@
 #include "Scripts/CubeObject.hpp"
 #include "Scripts/Lantern.hpp"
 #include "Core/Utility/Cpu.hpp"
+#include "Renderer/LightProbe.hpp"
 
 // Scripts.
 #include <array>
@@ -82,7 +83,7 @@ public:
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
 
-#if 0
+#if 1
     cubemap0 = gRenderer().CreateTextureCube();
     cubemap1 = gRenderer().CreateTextureCube();
     brdfLUT = gRenderer().CreateTexture2D();
@@ -91,7 +92,7 @@ public:
     brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
-      img.Load("Probe0.png");
+      img.Load("testcubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
       img.Load("Probe1.png");
@@ -160,7 +161,7 @@ public:
     mainCam->CleanUp();
     delete mainCam;
 
-#if 0
+#if 1
     gRenderer().UsePreRenderSkyboxMap(false);
     gRenderer().FreeTextureCube(cubemap0);
     gRenderer().FreeTextureCube(cubemap1);
@@ -194,7 +195,7 @@ int main(int c, char* argv[])
     params._Buffering = TRIPLE_BUFFER;
     params._EnableVsync = true;
     params._AA = AA_None;
-    params._Shadows = GRAPHICS_QUALITY_NONE;
+    params._Shadows = GRAPHICS_QUALITY_HIGH;
     params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
     params._renderScale = 1.0;
     params._LightQuality = GRAPHICS_QUALITY_ULTRA;
@@ -262,7 +263,7 @@ int main(int c, char* argv[])
   }
 
   // Model Loading.
-  //ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
   //ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
   //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));

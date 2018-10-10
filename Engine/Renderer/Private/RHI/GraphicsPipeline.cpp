@@ -10,6 +10,12 @@ GraphicsPipeline::~GraphicsPipeline()
 {
   if (mPipeline) {
     R_DEBUG(rWarning, "Graphics pipeline CleanUp was not called prior to its deletion!\n");
+    R_ASSERT(false, "");
+  }
+
+  if (mLayout) {
+    R_DEBUG(rWarning, "pipeline layout CleanUp was not called prior to its deletion!\n");
+    R_ASSERT(false, "");
   }
 }
 
@@ -34,10 +40,13 @@ void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
 
 void GraphicsPipeline::CleanUp()
 {
-  if (mPipeline && mLayout) {
+  if (mPipeline) {
     vkDestroyPipeline(mOwner, mPipeline, nullptr);
-    vkDestroyPipelineLayout(mOwner, mLayout, nullptr);
     mPipeline = VK_NULL_HANDLE;
+  }
+
+  if (mLayout) {
+    vkDestroyPipelineLayout(mOwner, mLayout, nullptr);
     mLayout = VK_NULL_HANDLE;
   }
 }
