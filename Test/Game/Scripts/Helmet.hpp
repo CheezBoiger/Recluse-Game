@@ -272,6 +272,7 @@ public:
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);
+    m_pParticleSystem->EnableWorldSpace(true);
   }
 
   void Update(r32 tick) override

@@ -154,12 +154,12 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
   std::vector<Particle> particles(_particleConfig._maxParticles);
   std::random_device dev;
   std::mt19937 twist(dev());
-  std::uniform_real_distribution<r32> uni(-1.0f, 1.0f);
+  std::uniform_real_distribution<r32> uni(-0.3f, 0.3f);
   for (size_t i = 0; i < particles.size(); ++i) {
     particles[i]._velocity = Vector4(uni(twist), uni(twist), uni(twist), 0.0f);
     particles[i]._life = 100.0f;
     particles[i]._color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-    particles[i]._sz = 0.5f;
+    particles[i]._sz = 0.1f;
   }
 
   {

@@ -22,6 +22,8 @@ public:
     : m_pParticleSystem(nullptr) { }
 
   void Update() override;  
+  
+  void EnableWorldSpace(b32 enable);
 
 private:
   ParticleSystem* m_pParticleSystem;
