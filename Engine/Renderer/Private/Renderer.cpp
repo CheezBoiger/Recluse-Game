@@ -2054,6 +2054,12 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
 
     defaultTexture->Initialize(dImageInfo, dViewInfo);
     DefaultTextureKey = defaultTexture;
+
+    if (!DefaultTexture2DArrayView) {
+      dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+      dViewInfo.image = defaultTexture->Image();
+      vkCreateImageView(m_pRhi->LogicDevice()->Native(), &dViewInfo, nullptr, &DefaultTexture2DArrayView);
+    }
   }
 }
 
@@ -2116,6 +2122,11 @@ void Renderer::CleanUpRenderTextures(b32 fullCleanup)
 
     m_pRhi->FreeTexture(defaultTexture);
     m_pRhi->FreeSampler(defaultSampler);
+
+    if (DefaultTexture2DArrayView) {
+      vkDestroyImageView(m_pRhi->LogicDevice()->Native(), DefaultTexture2DArrayView, nullptr);
+      DefaultTexture2DArrayView = VK_NULL_HANDLE;
+    }
   }
 }
 
@@ -4542,10 +4553,10 @@ void Renderer::PushParticleSystem(ParticleSystem* system)
 }
 
 
-ParticleSystem* Renderer::CreateParticleSystem()
+ParticleSystem* Renderer::CreateParticleSystem(u32 maxInitParticleCount)
 {
   ParticleSystem* particleSystem = new ParticleSystem();
-  particleSystem->Initialize(m_pRhi, m_particleEngine->GetParticleSystemDescriptorLayout(), 1000);
+  particleSystem->Initialize(m_pRhi, m_particleEngine->GetParticleSystemDescriptorLayout(), maxInitParticleCount);
   particleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT | PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
   return particleSystem;
 }

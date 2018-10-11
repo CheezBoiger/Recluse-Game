@@ -34,6 +34,8 @@ class TextureSampler;
 struct Particle {
   Vector4 _position;  // Position of the particle.
   Vector4 _velocity;
+  Vector4 _initVelocity;
+  Vector4 _acceleration;  // acceleration.
   Vector4 _color;
   r32     _angle;
   r32     _sz;        // size of the particle.
@@ -58,6 +60,7 @@ struct ParticleSystemConfig {
   Vector4         _level[16];
   Matrix4         _model;           // Model of the particle system source.
   Matrix4         _modelView;       // ModelView matrix.
+  Vector4         _hasAtlas;          // 1.0 if system has an atlas.
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 
@@ -88,7 +91,10 @@ struct ParticleSystem {
     , m_pDescriptorSet(nullptr)
     , m_updateBits(0)
     , _texture(nullptr)
-    , _sampler(nullptr) { }
+    , _sampler(nullptr)
+    , m_updateFunct(nullptr) { }
+
+  typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> InitUpdateFunc;
 
   // Must initialize for compute pipeline as well!
   void                  Initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
@@ -96,7 +102,14 @@ struct ParticleSystem {
   void                  PushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
   void                  Update(VulkanRHI* pRhi);
 
-  void                  SetParticleMaxCount(u32 maxCount);
+  void                  SetUpdateFunc(InitUpdateFunc updateFunct) { m_updateFunct = updateFunct; }
+
+  void                  SetParticleMaxCount(u32 maxCount) { 
+    if (maxCount == _particleConfig._maxParticles) return; 
+    _particleConfig._maxParticles = r32(maxCount);
+    PushUpdate(PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
+  }
+
   void                  SetParticleMaxLife(r32 maxLife);
 
   Texture2DArray*       _texture;
@@ -107,6 +120,9 @@ struct ParticleSystem {
   Buffer*               GetParticleBuffer() const { return m_particleBuffer; }
 
 private:
+
+  void                  CleanUpGpuBuffer(VulkanRHI* pRhi);
+  void                  SetUpGpuBuffer(VulkanRHI* pRhi);
 
   void                  UpdateDescriptor();
   void                  UpdateGpuParticles(VulkanRHI* pRhi);
@@ -119,6 +135,7 @@ private:
   // Particle Configuration buffer.
   Buffer*               m_particleConfigBuffer;
   particle_update_bits  m_updateBits;
+  InitUpdateFunc        m_updateFunct;
 };
 
 

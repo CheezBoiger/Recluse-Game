@@ -9,7 +9,7 @@ namespace Recluse {
 
 
 struct ParticleSystem;
-
+class Texture2DArray;
 
 class ParticleSystemComponent : public Component {
 protected:
@@ -24,6 +24,8 @@ public:
   void Update() override;  
   
   void EnableWorldSpace(b32 enable);
+  void SetMaxParticleCount(u32 maxCount);
+  void SetTextureArray(Texture2DArray* texture);
 
 private:
   ParticleSystem* m_pParticleSystem;

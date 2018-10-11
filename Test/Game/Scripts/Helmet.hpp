@@ -50,6 +50,9 @@ public:
     m_pRendererComponent = new SkinnedRendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pAnim = new AnimationComponent();
+    m_pParticles = new ParticleSystemComponent();
+    m_pParticles->Initialize(this);
+    m_pParticles->EnableWorldSpace(true);
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
@@ -170,18 +173,21 @@ public:
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
     m_pAnim->CleanUp();
+    m_pParticles->CleanUp();
 
     delete m_pMeshComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
     delete m_pAnim;
+    delete m_pParticles;
   }
 
 private:
   Vector3             m_vRandDir;
   r32                 m_factor;
   AnimationComponent*  m_pAnim;
+  ParticleSystemComponent* m_pParticles;
 };
 
 
@@ -189,7 +195,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 
-#define MODEL_TYPE DRONE
+#define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -277,6 +283,9 @@ public:
 
   void Update(r32 tick) override
   { 
+    if (Keyboard::KeyPressed(KEY_CODE_V)) {
+      m_pParticleSystem->SetMaxParticleCount(18000);
+    }
   }
 
   void SetPosition(const Vector3& newPos)

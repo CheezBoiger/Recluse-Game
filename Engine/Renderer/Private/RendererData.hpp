@@ -52,6 +52,7 @@ extern std::string ShadersPath;
 
 extern Texture* DefaultTextureKey;
 extern Sampler* DefaultSampler2DKey;
+extern VkImageView DefaultTexture2DArrayView;
 
 // Debug pipeline, for debugging purposes.
 // This allows drawing lines, shapes, or anything that 

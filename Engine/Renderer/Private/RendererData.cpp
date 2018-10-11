@@ -31,6 +31,7 @@ std::array<Matrix4, 6> kViewMatrices;
 
 Texture* DefaultTextureKey          = nullptr;
 Sampler* DefaultSampler2DKey        = nullptr;
+VkImageView DefaultTexture2DArrayView = VK_NULL_HANDLE;
 
 GraphicsPipeline* ShadowMapPipelineKey              = nullptr;
 GraphicsPipeline* DynamicShadowMapPipelineKey       = nullptr;

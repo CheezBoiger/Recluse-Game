@@ -17,8 +17,6 @@
 
 #include "Core/Exception.hpp"
 
-#include <random>
-#include <algorithm>
 #include <vector>
 #include <array>
 
@@ -49,7 +47,7 @@ VkVertexInputBindingDescription GetParticleTrailBindingDescription()
 std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 {
   u32 offset = 0;
-  std::vector<VkVertexInputAttributeDescription> description(7);
+  std::vector<VkVertexInputAttributeDescription> description(9);
   // Position
   description[0] = { };
   description[0].binding = 0;
@@ -64,42 +62,81 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
   description[1].location = 1;
   description[1].offset = offset;
   offset += sizeof(Vector4);
-  // Color
+
+  // Init Velocity
   description[2] = { };
   description[2].binding = 0;
   description[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[2].location = 2;
   description[2].offset = offset;
   offset += sizeof(Vector4);
-  // Angle
-  description[3] = { };
+
+  // Acceleration
+  description[3] = {};
   description[3].binding = 0;
-  description[3].format = VK_FORMAT_R32_SFLOAT;
+  description[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[3].location = 3;
   description[3].offset = offset;
-  offset += sizeof(r32);
-  // Size
+  offset += sizeof(Vector4);
+  // Color
   description[4] = { };
   description[4].binding = 0;
-  description[4].format = VK_FORMAT_R32_SFLOAT;
+  description[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[4].location = 4;
   description[4].offset = offset;
-  offset += sizeof(r32);
-  // Weight
+  offset += sizeof(Vector4);
+  // Angle
   description[5] = { };
   description[5].binding = 0;
   description[5].format = VK_FORMAT_R32_SFLOAT;
   description[5].location = 5;
   description[5].offset = offset;
   offset += sizeof(r32);
-  // Life
+  // Size
   description[6] = { };
   description[6].binding = 0;
   description[6].format = VK_FORMAT_R32_SFLOAT;
   description[6].location = 6;
   description[6].offset = offset;
+  offset += sizeof(r32);
+  // Weight
+  description[7] = { };
+  description[7].binding = 0;
+  description[7].format = VK_FORMAT_R32_SFLOAT;
+  description[7].location = 7;
+  description[7].offset = offset;
+  offset += sizeof(r32);
+  // Life
+  description[8] = { };
+  description[8].binding = 0;
+  description[8].format = VK_FORMAT_R32_SFLOAT;
+  description[8].location = 8;
+  description[8].offset = offset;
   
   return description;
+}
+
+
+void ParticleSystem::SetUpGpuBuffer(VulkanRHI* pRhi)
+{
+  m_particleBuffer = pRhi->CreateBuffer();
+  VkBufferCreateInfo gpuBufferCi = {};
+  gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<u32>(_particleConfig._maxParticles));
+  gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+    | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+    | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+  m_particleBuffer->Initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+}
+
+
+void ParticleSystem::CleanUpGpuBuffer(VulkanRHI* pRhi)
+{
+  if (m_particleBuffer) {
+    pRhi->FreeBuffer(m_particleBuffer);
+    m_particleBuffer = nullptr;
+  }
 }
 
 
@@ -112,22 +149,14 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
   _particleConfig._fadeThreshold = 1.0f;
   _particleConfig._isWorldSpace = 0.0f;
   _particleConfig._lifeTimeScale = 1.0f;
-  _particleConfig._particleMaxAlive = 2.0f;
+  _particleConfig._particleMaxAlive = 10.0f;
   _particleConfig._rate = 1.0f;
+  _particleConfig._lifeTimeScale = 5.0f;
+  _particleConfig._hasAtlas = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-  m_particleBuffer = pRhi->CreateBuffer();
   m_particleConfigBuffer = pRhi->CreateBuffer();
 
-  {
-    VkBufferCreateInfo gpuBufferCi = { };
-    gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<u32>(_particleConfig._maxParticles));
-    gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT 
-      | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT 
-      | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-    m_particleBuffer->Initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  }
+  SetUpGpuBuffer(pRhi);
 
   {
     VkBufferCreateInfo bufferCi = { };
@@ -152,16 +181,8 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
   // TODO(): Randomizing stuff, so we need to figure out how to check when a particle is dead,
   // and reupdate after.
   std::vector<Particle> particles(_particleConfig._maxParticles);
-  std::random_device dev;
-  std::mt19937 twist(dev());
-  std::uniform_real_distribution<r32> uni(-0.3f, 0.3f);
-  r32 grad = 10.0f;
-  for (size_t i = 0; i < particles.size(); ++i) {
-    particles[i]._velocity = Vector4(uni(twist), uni(twist), uni(twist), 0.0f);
-    particles[i]._life = grad;
-    particles[i]._color = Vector4(0.0f, 0.0f, 0.0f, 0.6f);
-    particles[i]._sz = 0.3f;
-    grad = grad - 1.0f / static_cast<r32>(particles.size());
+  if (m_updateFunct) {
+    m_updateFunct(&_particleConfig, particles.data(), particles.size());
   }
 
   {
@@ -187,7 +208,7 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
 
   cmdBuffer.Begin(beginInfo);
   VkBufferCopy region = {};
-  region.size = sizeof(Particle) * _particleConfig._maxParticles;
+  region.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
   region.srcOffset = 0;
   region.dstOffset = 0;
   cmdBuffer.CopyBuffer(staging.NativeBuffer(),
@@ -221,13 +242,13 @@ void ParticleSystem::UpdateDescriptor()
   storage.offset = 0;
   storage.range = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
 
-  Texture* textureImg = DefaultTextureKey;
+  VkImageView textureView = DefaultTexture2DArrayView;
   Sampler* sampler = DefaultSampler2DKey;
-  if (_texture) textureImg = _texture->Handle();
+  if (_texture) textureView = _texture->Handle()->View();
   if (_sampler) sampler = _sampler->Handle();
   VkDescriptorImageInfo imgInfo = {};
   imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  imgInfo.imageView = textureImg->View();
+  imgInfo.imageView = textureView;
   imgInfo.sampler = sampler->Handle();
 
   // TODO():
@@ -259,12 +280,19 @@ void ParticleSystem::UpdateDescriptor()
 
 void ParticleSystem::Update(VulkanRHI* pRhi)
 {
-  if (m_updateBits & PARTICLE_DESCRIPTOR_UPDATE_BIT) {
-    UpdateDescriptor();
-  }
 
   if (m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) {
+    VkDeviceSize sz = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
+    if (sz != m_particleBuffer->MemorySize()) {
+      CleanUpGpuBuffer(pRhi);
+      SetUpGpuBuffer(pRhi);
+      m_updateBits |= PARTICLE_DESCRIPTOR_UPDATE_BIT;
+    }
     UpdateGpuParticles(pRhi);
+  }
+
+  if (m_updateBits & PARTICLE_DESCRIPTOR_UPDATE_BIT) {
+    UpdateDescriptor();
   }
 
   if (m_updateBits & PARTICLE_CONFIG_BUFFER_UPDATE_BIT) {
@@ -284,10 +312,7 @@ void ParticleSystem::Update(VulkanRHI* pRhi)
 
 void ParticleSystem::CleanUp(VulkanRHI* pRhi)
 {
-  if ( m_particleBuffer ) {
-    pRhi->FreeBuffer( m_particleBuffer );
-    m_particleBuffer = nullptr;
-  }
+  CleanUpGpuBuffer(pRhi);
 
   if ( m_particleConfigBuffer ) {
     pRhi->FreeBuffer( m_particleConfigBuffer );

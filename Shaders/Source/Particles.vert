@@ -5,11 +5,13 @@
 
 layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   velocity;
-layout (location = 2) in vec4   color;
-layout (location = 3) in float  angle;
-layout (location = 4) in float  size;
-layout (location = 5) in float  weight;
-layout (location = 6) in float  life;
+layout (location = 2) in vec4   initVelocity;
+layout (location = 3) in vec4   acceleration;
+layout (location = 4) in vec4   color;
+layout (location = 5) in float  angle;
+layout (location = 6) in float  size;
+layout (location = 7) in float  weight;
+layout (location = 8) in float  life;
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
@@ -55,6 +57,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   float level[16];
   mat4  model;
   mat4  modelView;
+  vec4  hasTexture;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;

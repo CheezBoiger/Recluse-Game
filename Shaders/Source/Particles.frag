@@ -53,6 +53,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   float level[16];
   mat4  model;
   mat4  modelView;
+  vec4  hasTexture;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -80,6 +81,12 @@ void main()
   // for test.
   // TODO(): 
   vec4 color = frag_in.color;
+  if (particleBuffer.hasTexture.x >= 1.0) {
+    vec3 uvw = vec3(frag_in.uv, particleBuffer.level[0]);
+    vec4 t0 = texture(particleAtlas, uvw);
+    color.xyz += t0.rgb;
+    color.w = t0.a;
+  }
   
   if (color.a < 0.5) {
     discard;

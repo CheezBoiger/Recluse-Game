@@ -134,7 +134,7 @@ public:
   // Create a material descriptor.
   MaterialDescriptor* CreateMaterialDescriptor();
 
-  ParticleSystem* CreateParticleSystem();
+  ParticleSystem* CreateParticleSystem(u32 maxInitParticleCount = 100);
 
   // Create a UI descriptor.
   UIDescriptor*     CreateUIDescriptor();
