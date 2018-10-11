@@ -1,7 +1,10 @@
 # Recluse Game and Engine Source Code
 Current state of the Game Engine and it's graphics:
 
+Below demonstrates animation, particles (white quads), and global illumination with ibl probe:
 ![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/NvidiaSponza.png)
+
+Other pictures below represent previous build of the engine:
 ![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/ChromaticAbberrationTest.png)
 ![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/Helmet.png)
 ![alt tag](https://raw.githubusercontent.com/Cheezboiger/Recluse-Game/master/Regression/Shaders/PhysicsTest.png)
