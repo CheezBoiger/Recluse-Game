@@ -194,7 +194,7 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-
+#define ENABLE_PARTICLE_TEXTURE_TEST 0
 #define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
@@ -222,6 +222,17 @@ public:
     m_physicsComponent.SetRollingFriction(0.1f);
     m_physicsComponent.SetSpinningFriction(0.1f);
 
+#if ENABLE_PARTICLE_TEXTURE_TEST
+    {
+      m_particleTexture = gRenderer().CreateTexture2DArray();
+      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 160, 160, 16);
+      Image img;
+      img.Load("particle.jpg");
+      m_particleTexture->Update(img, 4, 4);
+      img.CleanUp();
+      m_pParticleSystem->SetTextureArray(m_particleTexture);
+    }
+#endif
 #if MODEL_TYPE == MONSTER
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Monster", &model);
@@ -302,6 +313,11 @@ public:
     m_pParticleSystem->CleanUp();
 
     gPhysics().FreeCollider(m_sphereCollider);
+
+#if ENABLE_PARTICLE_TEXTURE_TEST
+    gRenderer().FreeTexture2DArray(m_particleTexture);
+    m_particleTexture = nullptr;
+#endif
   }
 
 private:
@@ -316,4 +332,5 @@ private:
   SphereCollider*           m_sphereCollider;
   ParticleSystemComponent*  m_pParticleSystem;
   Material*                 m_pMaterialRef;
+  Texture2DArray*           m_particleTexture;
 };

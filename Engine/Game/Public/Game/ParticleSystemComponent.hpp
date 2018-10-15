@@ -3,6 +3,7 @@
 
 #include "Engine.hpp"
 #include "Component.hpp"
+#include "Core/Math/Vector4.hpp"
 
 
 namespace Recluse {

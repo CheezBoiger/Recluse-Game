@@ -19,7 +19,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
 
   m_pParticleSystem = gRenderer().CreateParticleSystem();
 
-  m_pParticleSystem->SetUpdateFunc([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
+  m_pParticleSystem->SetUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
     std::random_device dev;
     std::mt19937 twist(dev());
     std::uniform_real_distribution<r32> uni(-3.0f, 3.0f);
@@ -28,7 +28,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
     for (size_t i = 0; i < count; ++i) {
       Particle& p = particles[i];
       p._position = Vector4(config->_model[3][0], config->_model[3][1], config->_model[3][2], 1.0f);
-      p._color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+      p._color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
       p._velocity = Vector4(uni(twist), uni(twist), uni(twist), 0.0f);
       p._initVelocity = p._velocity;
       p._life = life;
@@ -53,6 +53,10 @@ void ParticleSystemComponent::OnCleanUp()
 void ParticleSystemComponent::Update()
 {
   if (!m_pParticleSystem) return;
+
+  std::vector<Particle> parts(m_pParticleSystem->_particleConfig._maxParticles);
+  m_pParticleSystem->GetParticleState(parts.data());
+
   Transform* transform = GetTransform();
   ParticleSystemConfig* data = &m_pParticleSystem->_particleConfig;
   data->_model = transform->GetLocalToWorldMatrix();
@@ -76,5 +80,13 @@ void ParticleSystemComponent::EnableWorldSpace(b32 enable)
   } else {
     data->_isWorldSpace = 0.0f;
   }
+}
+
+
+void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
+{
+  m_pParticleSystem->_texture = texture;
+  m_pParticleSystem->_particleConfig._hasAtlas = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  m_pParticleSystem->PushUpdate(PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 } // Recluse

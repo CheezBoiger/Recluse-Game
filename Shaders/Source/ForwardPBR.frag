@@ -386,6 +386,34 @@ float PCSS(in sampler2D shadowMap, vec4 sc)
 const float PI = 3.14159265359;
 
 
+vec4 SRGBToLINEAR(vec4 srgbIn)
+{
+  vec3 linOut = pow(srgbIn.xyz, vec3(2.2));
+  return vec4(linOut, srgbIn.w);
+}
+
+
+vec3 GetIBLContribution(inout PBRInfo pbrInfo, 
+  vec3 reflection,
+  in sampler2D brdfLUT, 
+  in samplerCube diffuseCube, 
+  in samplerCube specCube)
+{
+  float mipCount = 9.0;
+  float lod = pbrInfo.roughness * mipCount;
+  vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
+  vec3 diffuseLight = SRGBToLINEAR(texture(diffuseCube, pbrInfo.N)).rgb;
+  
+#if defined(USE_TEX_LOD)
+#else
+  vec3 specularLight = SRGBToLINEAR(texture(specCube, reflection)).rgb;
+#endif
+  vec3 diffuse = diffuseLight * pbrInfo.albedo;
+  vec3 specular = specularLight * (pbrInfo.F0 * brdf.x + brdf.y);
+  return specular;
+}
+
+
 // Trowbridge-Reitz to calculate the Roughness
 float DGGX(float NoH, float roughness)
 {
@@ -621,6 +649,7 @@ void main()
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, fragAlbedo, fragMetallic);
   float NoV = clamp(abs(dot(N, V)), 0.001, 1.0);
+  vec3 R = -normalize(V - 2.0 * dot(N, V) * N);
   
   PBRInfo pbrInfo;
   pbrInfo.albedo = fragAlbedo;
@@ -632,7 +661,7 @@ void main()
   
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
-  vec3 outColor = vec3(0.0);
+  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, diffMap, specMap);
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;

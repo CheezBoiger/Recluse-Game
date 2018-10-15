@@ -4015,13 +4015,16 @@ void Renderer::FreeTexture2D(Texture2D* texture)
 Texture2DArray* Renderer::CreateTexture2DArray()
 {
   Texture2DArray* texture = new Texture2DArray();
+  texture->mRhi = m_pRhi;
   return texture;
 }
 
 
 void Renderer::FreeTexture2DArray(Texture2DArray* texture)
 {
-  // TODO():
+  if (!texture) return;
+  texture->CleanUp();
+  delete texture;
 }
 
 void Renderer::FreeTextureCube(TextureCube* texture)

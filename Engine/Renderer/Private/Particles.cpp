@@ -4,6 +4,7 @@
 #include "GlobalDescriptor.hpp"
 #include "TextureType.hpp"
 #include "Core/Logging/Log.hpp"
+#include "Renderer.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/DescriptorSet.hpp"
@@ -37,7 +38,7 @@ VkVertexInputBindingDescription GetParticleTrailBindingDescription()
 {
   // Instance data is used for this pipeline.
   VkVertexInputBindingDescription description = {};
-  description.stride = sizeof(ParticleTrailPosition);
+  description.stride = sizeof(ParticleTrail);
   description.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
   description.binding = 0;
   return description;
@@ -126,7 +127,8 @@ void ParticleSystem::SetUpGpuBuffer(VulkanRHI* pRhi)
   gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<u32>(_particleConfig._maxParticles));
   gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
     | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-    | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    | VK_BUFFER_USAGE_TRANSFER_DST_BIT
+    | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   m_particleBuffer->Initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 }
 
@@ -170,6 +172,63 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
 
   m_pDescriptorSet = pRhi->CreateDescriptorSet();
   m_pDescriptorSet->Allocate(pRhi->DescriptorPool(), particleLayout);
+}
+
+
+void ParticleSystem::GetParticleState(Particle* output)
+{
+  if (!output) return;
+  VulkanRHI* pRhi = gRenderer().RHI();
+  Buffer staging;
+  staging.SetOwner(pRhi->LogicDevice()->Native());
+
+  {
+    VkBufferCreateInfo stagingCI = {};
+    stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    stagingCI.size = sizeof(Particle) * _particleConfig._maxParticles;
+    stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    staging.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+    staging.Map();
+  }
+
+  CommandBuffer cmdBuffer;
+  cmdBuffer.SetOwner(pRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  cmdBuffer.Begin(beginInfo);
+  VkBufferCopy region = {};
+  region.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
+  region.srcOffset = 0;
+  region.dstOffset = 0;
+  cmdBuffer.CopyBuffer(
+    m_particleBuffer->NativeBuffer(),
+    staging.NativeBuffer(),
+    1,
+    &region);
+  cmdBuffer.End();
+
+  VkCommandBuffer cmd = cmdBuffer.Handle();
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &cmd;
+
+  pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+
+  Particle* particles = (Particle* )staging.Mapped();
+  for (u32 i = 0; i < _particleConfig._maxParticles; ++i) {
+    output[i] = particles[i];
+  }
+
+  staging.UnMap();
+  staging.CleanUp();
 }
 
 
@@ -848,7 +907,6 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   renderPassInfo.pClearValues = clearValues.data();
 
   cmdBuffer->BeginRenderPass(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);  
-  cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->Pipeline());
   VkViewport viewport = { };
   viewport.width = (r32)extent.width;
   viewport.height = (r32)extent.height;
@@ -859,12 +917,29 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   cmdBuffer->SetViewPorts(0, 1, &viewport);
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
+    GraphicsPipeline* pRenderPipe = nullptr;
+    switch (system->GetParticleType()) {
+      case PARTICLE_TYPE_POINT:
+      {
+        pRenderPipe = m_pParticleRender;
+      } break;
+      case PARTICLE_TYPE_TRAIL:
+      {
+        pRenderPipe = m_pParticleTrailRender;
+      } break;
+      default:
+      {
+        R_ASSERT(false, "Unknown particle pipeline.");
+        continue;
+      }
+    }
     VkDeviceSize offset[] = { 0 };
     VkDescriptorSet sets[] = { 
       global->Set()->Handle(),
       system->GetSet()->Handle()
     };
     VkBuffer nativeBuffer = system->GetParticleBuffer()->NativeBuffer();
+    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->Layout(),
       0, 2, sets, 0, nullptr);
     cmdBuffer->BindVertexBuffers(0, 1, &nativeBuffer, offset);

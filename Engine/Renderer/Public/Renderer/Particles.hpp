@@ -44,7 +44,7 @@ struct Particle {
 };
 
 
-struct ParticleTrailPosition {
+struct ParticleTrail {
   Vector3 _lastPos;     // last position.
   Vector3 _currentPos;  // current position.
   Vector3 _nextPos;     // next position.
@@ -78,6 +78,10 @@ enum ParticleUpdate {
   PARTICLE_VERTEX_BUFFER_UPDATE_BIT = (1 << 2)
 };
 
+typedef enum eParticleType {
+  PARTICLE_TYPE_POINT,
+  PARTICLE_TYPE_TRAIL
+} ParticleType;
 
 using particle_update_bits = u32;
 
@@ -92,9 +96,11 @@ struct ParticleSystem {
     , m_updateBits(0)
     , _texture(nullptr)
     , _sampler(nullptr)
+    , m_particleType(PARTICLE_TYPE_POINT)
     , m_updateFunct(nullptr) { }
 
-  typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> InitUpdateFunc;
+  typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> ParticleUpdateFunct;
+  typedef std::function<void(ParticleSystemConfig*, ParticleTrail*, u32)> ParticleTrailUpdateFunct;
 
   // Must initialize for compute pipeline as well!
   void                  Initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
@@ -102,7 +108,12 @@ struct ParticleSystem {
   void                  PushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
   void                  Update(VulkanRHI* pRhi);
 
-  void                  SetUpdateFunc(InitUpdateFunc updateFunct) { m_updateFunct = updateFunct; }
+  // Get the current state of the particle buffer. Size is the current max particle count of this particle system.
+  void                  GetParticleState(Particle* output);
+  void                  GetParticleTrailState(ParticleTrail* output);
+
+  void                  SetUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
+  void                  SetTrailUpdateFunct(ParticleTrailUpdateFunct updateFunct) { m_updateTrailFunct = updateFunct; }
 
   void                  SetParticleMaxCount(u32 maxCount) { 
     if (maxCount == _particleConfig._maxParticles) return; 
@@ -118,6 +129,7 @@ struct ParticleSystem {
 
   DescriptorSet*        GetSet() const { return m_pDescriptorSet; }
   Buffer*               GetParticleBuffer() const { return m_particleBuffer; }
+  ParticleType          GetParticleType() const { return m_particleType; }
 
 private:
 
@@ -133,9 +145,11 @@ private:
   Buffer*               m_particleBuffer;
 
   // Particle Configuration buffer.
-  Buffer*               m_particleConfigBuffer;
-  particle_update_bits  m_updateBits;
-  InitUpdateFunc        m_updateFunct;
+  Buffer*                   m_particleConfigBuffer;
+  particle_update_bits      m_updateBits;
+  ParticleUpdateFunct       m_updateFunct;
+  ParticleTrailUpdateFunct  m_updateTrailFunct;
+  ParticleType              m_particleType;
 };
 
 
@@ -178,6 +192,9 @@ private:
 
   // Particle Renderer pipeline. This pipeline is instanced.
   GraphicsPipeline*     m_pParticleRender;
+
+  // Particle trail Renderer pipeline. 
+  GraphicsPipeline*     m_pParticleTrailRender;
 
   // 
   DescriptorSetLayout*  m_pParticleDescriptorSetLayout;

@@ -110,6 +110,16 @@ private:
 class Texture2DArray : public TextureBase {
 public:
   Texture2DArray() : TextureBase(TEXTURE_2D_ARRAY) { }
+
+  // width, and height must be the same size for every layer!
+  void            Initialize(RFormat format, u32 width, u32 height, u32 layers);
+
+  // Image to update the texture array, will be sliced and distributed according to
+  // each layer.
+  void            Update(const Image& img, u32 x, u32 y);
+
+  void            CleanUp() override;
+  friend class Renderer;
 };
 
 // 3 Dimensional texture object.

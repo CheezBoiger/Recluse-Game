@@ -74,6 +74,12 @@ in FragIn {
   float life;
 } frag_in;
 
+vec4 SRGBToLINEAR(vec4 srgbIn)
+{
+  vec3 linOut = pow(srgbIn.xyz, vec3(2.2));
+  return vec4(linOut, srgbIn.w);
+}
+
 
 void main()
 {
@@ -82,7 +88,42 @@ void main()
   // TODO(): 
   vec4 color = frag_in.color;
   if (particleBuffer.hasTexture.x >= 1.0) {
-    vec3 uvw = vec3(frag_in.uv, particleBuffer.level[0]);
+    vec3 uvw = vec3(frag_in.uv, 0.0);
+
+    if (frag_in.life >= particleBuffer.level[0]) {
+      uvw.z = 0.0;
+    } else if (frag_in.life >= particleBuffer.level[1]) {
+      uvw.z = 1.0;
+    } else if (frag_in.life >= particleBuffer.level[2]) {
+      uvw.z = 2.0;
+    } else if (frag_in.life >= particleBuffer.level[3]) {
+      uvw.z = 3.0;
+    } else if (frag_in.life >= particleBuffer.level[4]) {
+      uvw.z = 4.0;
+    } else if (frag_in.life >= particleBuffer.level[5]) {
+      uvw.z = 5.0;
+    } else if (frag_in.life >= particleBuffer.level[6]) {
+      uvw.z = 6.0;
+    } else if (frag_in.life >= particleBuffer.level[7]) {
+      uvw.z = 7.0;
+    } else if (frag_in.life >= particleBuffer.level[8]) {
+      uvw.z = 8.0;
+    } else if (frag_in.life >= particleBuffer.level[9]) {
+      uvw.z = 9.0;
+    } else if (frag_in.life >= particleBuffer.level[10]) {
+      uvw.z = 10.0;
+    } else if (frag_in.life >= particleBuffer.level[11]) {
+      uvw.z = 11.0;
+    } else if (frag_in.life >= particleBuffer.level[12]) {
+      uvw.z = 12.0;
+    } else if (frag_in.life >= particleBuffer.level[13]) {
+      uvw.z = 13.0;
+    } else if (frag_in.life >= particleBuffer.level[14]) {
+      uvw.z = 14.0;
+    } else if (frag_in.life >= particleBuffer.level[15]) {
+      uvw.z = 15.0;
+    }
+    
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb;
     color.w = t0.a;
@@ -91,7 +132,7 @@ void main()
   if (color.a < 0.5) {
     discard;
   }
-  outputColor = color;
+  outputColor = SRGBToLINEAR(color);
   
   vec3 glow = color.rgb - length(V) * 0.2;
   glow = max(glow, vec3(0.0));
