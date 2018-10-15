@@ -142,6 +142,8 @@ void Animation::DoSampleJob(AnimJobSubmitInfo& job, r32 gt)
     if (pose._time > lt) {
       currPoseIdx = static_cast<u32>(i) - 1u;
       nextPoseIdx = static_cast<u32>(i);
+      currPoseIdx = currPoseIdx > job._pBaseClip->_aAnimPoseSamples.size() ? 
+        job._pBaseClip->_aAnimPoseSamples.size() - 1u : currPoseIdx;
       break;
     }
   }
