@@ -646,6 +646,7 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
     }
     pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
 
+
     if (!morphVertices.empty()) {
       pMesh->AllocateMorphTargetBuffer(morphVertices.size());
       for ( size_t i = 0; i < morphVertices.size(); ++i ) {
@@ -958,15 +959,6 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   const tinygltf::BufferView& bufView = model.bufferViews[accessor.bufferView];
   const tinygltf::Buffer& buf = model.buffers[bufView.buffer];
 
-  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);
-
-  for (size_t i = 0; i < accessor.count; ++i) {
-    Matrix4 invBindMat(&bindMatrices[i * 16]);
-    Matrix4 bindMat = invBindMat.Inverse();
-    bindMat = bindMat * parentMatrix;
-    skeleton._joints[i]._InvBindPose = bindMat.Inverse();
-  }
-
   struct NodeTag {
     u8                _parent;
     Matrix4           _parentTransform;
@@ -1007,6 +999,16 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
       nodeMap[node.children[child]] = tag;
     }
   }
+
+  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);
+
+  for (size_t i = 0; i < accessor.count; ++i) {
+    Matrix4 invBindMat(&bindMatrices[i * 16]);
+    Matrix4 bindMat = invBindMat.Inverse();
+    bindMat = bindMat * parentMatrix;
+    skeleton._joints[i]._InvBindPose = bindMat.Inverse();
+  }
+
   Skeleton::PushSkeleton(skeleton);
   
   engineModel->skeletons.push_back(Skeleton::GetSkeleton(skeleton._uuid));
@@ -1024,8 +1026,8 @@ static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, M
   }
 
   if (node.skin != -1) {
-    skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
-    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
+    skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))/*transform._globalMatrix*/);
+    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))/*transform._globalMatrix*/);
     pMesh->SetSkeletonReference(skeleId);
   }
   else {

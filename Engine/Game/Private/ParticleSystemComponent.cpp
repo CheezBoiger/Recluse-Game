@@ -68,12 +68,14 @@ void ParticleSystemComponent::Update()
 
 void ParticleSystemComponent::SetMaxParticleCount(u32 maxCount)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->SetParticleMaxCount(maxCount);
 }
 
 
 void ParticleSystemComponent::EnableWorldSpace(b32 enable)
 {
+  if (!m_pParticleSystem) return;
   ParticleSystemConfig* data = &m_pParticleSystem->_particleConfig;
   if (enable) {
     data->_isWorldSpace = 1.0f;
@@ -85,6 +87,7 @@ void ParticleSystemComponent::EnableWorldSpace(b32 enable)
 
 void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_texture = texture;
   m_pParticleSystem->_particleConfig._hasAtlas = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   m_pParticleSystem->PushUpdate(PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
@@ -93,6 +96,7 @@ void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
 
 void ParticleSystemComponent::SetLevel(u32 idx, r32 at)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._level[idx] = at;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
@@ -100,6 +104,7 @@ void ParticleSystemComponent::SetLevel(u32 idx, r32 at)
 
 void ParticleSystemComponent::UseAtlas(b32 enable)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._hasAtlas = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
@@ -107,6 +112,7 @@ void ParticleSystemComponent::UseAtlas(b32 enable)
 
 void ParticleSystemComponent::SetMaxAlive(r32 maxAlive)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._particleMaxAlive = maxAlive;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
@@ -114,6 +120,7 @@ void ParticleSystemComponent::SetMaxAlive(r32 maxAlive)
 
 void ParticleSystemComponent::SetLifetimeScale(r32 scale)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lifeTimeScale = scale;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
@@ -121,6 +128,7 @@ void ParticleSystemComponent::SetLifetimeScale(r32 scale)
 
 void ParticleSystemComponent::SetGlobalScale(r32 scale)
 {
+  if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._globalScale = scale;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }

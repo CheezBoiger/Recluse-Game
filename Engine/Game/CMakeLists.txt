@@ -109,8 +109,10 @@ add_library(${RECLUSE_GAME} STATIC
 
 if (USE_FBX)
 target_link_libraries(${RECLUSE_GAME}
-  ${RECLUSE_FBX_DIR}/lib/vs2015/x64/release/libfbxsdk.lib
+  optimized ${RECLUSE_FBX_DIR}/lib/vs2015/x64/release/libfbxsdk-mt.lib
+  debug ${RECLUSE_FBX_DIR}/lib/vs2015/x64/debug/libfbxsdk-mt.lib
 )
+include_directories(${RECLUSE_FBX_DIR}/include)
 endif()
 
 # Doing some stuff for organization.

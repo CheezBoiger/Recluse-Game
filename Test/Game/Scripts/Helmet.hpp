@@ -51,7 +51,7 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
     m_pAnim = new AnimationComponent();
     m_pParticles = new ParticleSystemComponent();
-    m_pParticles->Initialize(this);
+    //m_pParticles->Initialize(this);
     m_pParticles->EnableWorldSpace(true);
 
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
@@ -194,8 +194,8 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-#define ENABLE_PARTICLE_TEXTURE_TEST 1
-#define MODEL_TYPE DRONE
+#define ENABLE_PARTICLE_TEXTURE_TEST 0
+#define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -268,7 +268,7 @@ public:
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("DamagedHelmet", &model);
+    ModelCache::Get("WaterBottle", &model);
 
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
