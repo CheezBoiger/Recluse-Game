@@ -32,7 +32,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
       p._velocity = Vector4(uni(twist), uni(twist), uni(twist), 0.0f);
       p._initVelocity = p._velocity;
       p._life = life;
-      p._sz = 0.1f;
+      p._sz = 0.5f;
       p._acceleration = Vector4(0.0f, -1.8f, 0.0f, 0.0f);
       life += offset * config->_lifeTimeScale;
     }
@@ -88,5 +88,40 @@ void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
   m_pParticleSystem->_texture = texture;
   m_pParticleSystem->_particleConfig._hasAtlas = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   m_pParticleSystem->PushUpdate(PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetLevel(u32 idx, r32 at)
+{
+  m_pParticleSystem->_particleConfig._level[idx] = at;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::UseAtlas(b32 enable)
+{
+  m_pParticleSystem->_particleConfig._hasAtlas = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetMaxAlive(r32 maxAlive)
+{
+  m_pParticleSystem->_particleConfig._particleMaxAlive = maxAlive;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetLifetimeScale(r32 scale)
+{
+  m_pParticleSystem->_particleConfig._lifeTimeScale = scale;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetGlobalScale(r32 scale)
+{
+  m_pParticleSystem->_particleConfig._globalScale = scale;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 } // Recluse

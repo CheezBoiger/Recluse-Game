@@ -50,6 +50,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  model;
   mat4  modelView;
   vec4  hasTexture;
+  vec4  globalScale;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -80,7 +81,7 @@ out FragIn {
 void main()
 {
   for (int i = 0; i < gl_in.length(); ++i) {
-    float size = vert_out[i].size;
+    float size = vert_out[i].size * particleBuffer.globalScale.x;
     vec4 P = gl_in[i].gl_Position;
     mat4 p = gWorldBuffer.proj;
     

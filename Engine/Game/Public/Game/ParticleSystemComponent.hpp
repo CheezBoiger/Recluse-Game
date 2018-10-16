@@ -26,7 +26,14 @@ public:
   
   void EnableWorldSpace(b32 enable);
   void SetMaxParticleCount(u32 maxCount);
+  void SetMaxAlive(r32 maxAlive);
+  void SetLifetimeScale(r32 scale);
   void SetTextureArray(Texture2DArray* texture);
+  void SetGlobalScale(r32 globalScale);
+
+  void SetLevel(u32 idx, r32 at);
+
+  void UseAtlas(b32 enable);
 
 private:
   ParticleSystem* m_pParticleSystem;

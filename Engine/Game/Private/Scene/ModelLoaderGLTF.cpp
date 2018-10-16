@@ -1,5 +1,5 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
-#include "Scene/ModelLoader.hpp"
+#include "ModelLoaderGLTF.hpp"
 #include "Core/Logging/Log.hpp"
 #include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
@@ -98,7 +98,7 @@ template<> struct hash<Recluse::StaticVertex>
 namespace Recluse {
 
 namespace ModelLoader {
-
+namespace GLTF {
 
 void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 indexCount)
 {
@@ -957,8 +957,8 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   const tinygltf::Accessor& accessor = model.accessors[skin.inverseBindMatrices];
   const tinygltf::BufferView& bufView = model.bufferViews[accessor.bufferView];
   const tinygltf::Buffer& buf = model.buffers[bufView.buffer];
-  
-  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);  
+
+  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);
 
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
@@ -975,13 +975,13 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   std::map<i32, NodeTag> nodeMap;
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
-    NodeTransform rootTransform = CalculateGlobalTransform(root, 
+    NodeTransform rootTransform = CalculateGlobalTransform(root,
       Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
     skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
     NodeTag tag{ 0xff, Matrix4() };
     nodeMap[skin.skeleton] = tag;
     for (size_t i = 0; i < root.children.size(); ++i) {
-      NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)), 
+      NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)),
         rootTransform._globalMatrix };
       nodeMap[root.children[i]] = tag;
     }
@@ -997,7 +997,7 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     auto it = nodeMap.find(skinJointIdx);
     if (it != nodeMap.end()) {
       NodeTag& tag = it->second;
-      localTransform = CalculateGlobalTransform(node, tag._parentTransform);    
+      localTransform = CalculateGlobalTransform(node, tag._parentTransform);
       joint._iParent = tag._parent;
     }
 
@@ -1007,7 +1007,6 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
       nodeMap[node.children[child]] = tag;
     }
   }
-  
   Skeleton::PushSkeleton(skeleton);
   
   engineModel->skeletons.push_back(Skeleton::GetSkeleton(skeleton._uuid));
@@ -1101,5 +1100,6 @@ ModelResultBits Load(const std::string path)
   result |= Model_Success;
   return result;
 }
+} // GLTF
 } // ModelLoader
 } // Recluse

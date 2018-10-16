@@ -63,6 +63,7 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
   mat4  model;
   mat4  modelView;
   vec4  hasTexture;
+  vec4  globalScale;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -87,7 +88,7 @@ void main()
     uint idx = gl_GlobalInvocationID.x + i;
     Particle p = particleBuffer.particles[idx];
     if (p.life >= 0.0) {
-      p.life.x -= gWorldBuffer.fDeltaTime * particleConfig.rate;
+      p.life -= gWorldBuffer.fDeltaTime * particleConfig.rate;
       if (p.life > 0.0) {
         // Update the particle as it is still alive.
         p.velocity += gWorldBuffer.fDeltaTime * p.acceleration;
@@ -95,7 +96,7 @@ void main()
       } else {
         // reset.
         mat4 model = particleConfig.model;
-        p.life.x = particleConfig.particleMaxAlive * particleConfig.lifeTimeScale;
+        p.life = particleConfig.particleMaxAlive * particleConfig.lifeTimeScale;
         p.velocity = p.initVelocity;
         p.position = vec4(model[3][0], model[3][1], model[3][2], model[3][3]);
       }

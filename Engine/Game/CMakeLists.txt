@@ -71,6 +71,7 @@ set(GAME_FILES
   ${SCENE_PRIVATE_DIR}/Scene.cpp
   ${SCENE_PRIVATE_DIR}/ModelLoader.cpp
   ${SCENE_PRIVATE_DIR}/ModelLoaderGLTF.cpp
+  ${SCENE_PRIVATE_DIR}/ModelLoaderGLTF.hpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.hpp
   ${SCENE_PRIVATE_DIR}/tiny_gltf.cpp
   ${SCENE_PRIVATE_DIR}/json.hpp
@@ -97,6 +98,7 @@ set(GAME_FILES
 if (USE_FBX)
 set(GAME_FILES ${GAME_FILES}
   ${SCENE_PRIVATE_DIR}/ModelLoaderFBX.cpp
+  ${SCENE_PRIVATE_DIR}/ModelLoaderFBX.hpp
 )
 endif()
 

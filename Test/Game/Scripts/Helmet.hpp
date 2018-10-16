@@ -194,8 +194,8 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-#define ENABLE_PARTICLE_TEXTURE_TEST 0
-#define MODEL_TYPE SPHERE
+#define ENABLE_PARTICLE_TEXTURE_TEST 1
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -225,12 +225,13 @@ public:
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
       m_particleTexture = gRenderer().CreateTexture2DArray();
-      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 160, 160, 16);
+      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 198, 197, 1);
       Image img;
-      img.Load("particle.jpg");
-      m_particleTexture->Update(img, 4, 4);
+      img.Load("fireparticle.png");
+      m_particleTexture->Update(img, 1, 1);
       img.CleanUp();
       m_pParticleSystem->SetTextureArray(m_particleTexture);
+      m_pParticleSystem->SetGlobalScale(5.0f);
     }
 #endif
 #if MODEL_TYPE == MONSTER
@@ -267,7 +268,7 @@ public:
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("WaterBottle", &model);
+    ModelCache::Get("DamagedHelmet", &model);
 
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
@@ -285,7 +286,7 @@ public:
     //m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
     //m_animationComponent.Playback("Dance");
     //m_animationComponent.SetPlaybackRate(1.0f);
-    transform->Scale = Vector3(10.5f, 10.5f, 10.5f);
+    transform->Scale = Vector3(1.5f, 1.5f, 1.5f);
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);

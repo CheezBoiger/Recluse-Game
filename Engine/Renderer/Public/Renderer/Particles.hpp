@@ -61,6 +61,7 @@ struct ParticleSystemConfig {
   Matrix4         _model;           // Model of the particle system source.
   Matrix4         _modelView;       // ModelView matrix.
   Vector4         _hasAtlas;          // 1.0 if system has an atlas.
+  Vector4         _globalScale;     // global scale, this is a scaler!
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 
