@@ -18,6 +18,7 @@ struct Joint {
   static const u8 kNoParentId = 0xff;
 
   Matrix4       _InvBindPose;     // Bind pose transform of this joint.
+  Matrix4       _localBindShape;  // Bind shape matrix, transform that is relative to its parent.
   std::string   _name;            // name of the joint.
   u8            _iParent;         // Joint parent, represented as an id in byte form.
   DEBUG_OP(u8   _id);             // node id test.

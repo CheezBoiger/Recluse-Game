@@ -43,6 +43,19 @@ enum CmdConfig {
 };
 
 
+enum DebugCmdConfig {
+  DEBUG_CONFIG_NONE_BIT = 0,
+  DEBUG_CONFIG_ALBEDO_BIT = (1 << 0),
+  DEBUG_CONFIG_NORMAL_BIT = (1 << 1),
+  DEBUG_CONFIG_ROUGH_BIT = (1 << 2),
+  DEBUG_CONFIG_METAL_BIT = (1 << 3),
+  DEBUG_CONFIG_EMISSIVE_BIT = (1 << 4),
+  DEBUG_CONFIG_DIRECT_LIGHT_BIT = (1 << 5),
+  DEBUG_CONFIG_POINT_LIGHT_BIT = (1 << 6),
+  DEBUG_CONFIG_IBL_BIT = (1 << 7)
+};
+
+
 enum UiType {
   UI_TEXT,
   UI_IMAGE,
@@ -52,6 +65,7 @@ enum UiType {
 
   
 typedef u32 CmdConfigBits;
+typedef u32 DebugConfigBits;
 
 
 struct MeshRenderCmd {
@@ -60,6 +74,7 @@ struct MeshRenderCmd {
     , _pMeshData(nullptr)
     , _pMorph0(nullptr)
     , _pMorph1(nullptr)
+    , _debugConfig(0)
     , _instances(1) { }
 
   MeshData*               _pMeshData;
@@ -71,6 +86,7 @@ struct MeshRenderCmd {
   u32                     _instances;
   u32                     _primitiveCount;
   CmdConfigBits           _config;
+  DebugConfigBits         _debugConfig;       // Debug only if CMD_DEBUG_BIT is on.
 };
 
 
@@ -83,6 +99,7 @@ struct PrimitiveRenderCmd {
   JointDescriptor*        _pJointDesc;
   u32                     _instances;
   CmdConfigBits           _config;
+  DebugConfigBits         _debugConfig;
 };
 
 

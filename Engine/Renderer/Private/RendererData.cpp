@@ -754,9 +754,13 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   layouts[6] = globalIllumination_DescLR->Layout();
   layouts[7] = BonesSetLayoutKey->Layout();
 
+  struct ivec4 {
+    i32 v[4];
+  };
+
   VkPushConstantRange range = { };
   range.offset = 0;
-  range.size = sizeof(Vector4);
+  range.size = sizeof(ivec4);
   range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};

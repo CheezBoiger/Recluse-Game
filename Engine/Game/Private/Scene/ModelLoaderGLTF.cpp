@@ -989,8 +989,9 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     auto it = nodeMap.find(skinJointIdx);
     if (it != nodeMap.end()) {
       NodeTag& tag = it->second;
-      localTransform = CalculateGlobalTransform(node, tag._parentTransform);
+      localTransform = CalculateGlobalTransform(node, Matrix4());
       joint._iParent = tag._parent;
+      joint._localBindShape = localTransform._globalMatrix;
     }
 
     DEBUG_OP(joint._id = static_cast<u8>(skinJointIdx));
@@ -1026,8 +1027,8 @@ static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, M
   }
 
   if (node.skin != -1) {
-    skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))/*transform._globalMatrix*/);
-    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))/*transform._globalMatrix*/);
+    skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
+    Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
     pMesh->SetSkeletonReference(skeleId);
   }
   else {

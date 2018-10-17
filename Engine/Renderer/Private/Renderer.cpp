@@ -3428,8 +3428,12 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       cmdBuffer->SetViewPorts(0, 1, &viewport);
 
       if (debugging) {
-        Vector4 value = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-        cmdBuffer->PushConstants(Pipe->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector4), &value);
+        struct ivec4 {
+          i32 v[4];
+        };
+        ivec4 value;
+        value.v[0] = renderCmd._debugConfig;
+        cmdBuffer->PushConstants(Pipe->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ivec4), &value);
       }
 
       if (indexBuffer) {
@@ -4201,6 +4205,7 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     primCmd._pMorph1 = cmd._pMorph1;
     primCmd._pPrimitive = &prim;
     primCmd._instances = 1;
+    primCmd._debugConfig = cmd._debugConfig;
 
     R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
     m_materialDescriptors.PushBack(prim._pMat->Native());

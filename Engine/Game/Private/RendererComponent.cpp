@@ -24,6 +24,7 @@ DEFINE_COMPONENT_MAP(SkinnedRendererComponent);
 RendererComponent::RendererComponent()
   : m_meshDescriptor(nullptr)
   , m_configs(CMD_RENDERABLE_BIT | CMD_SHADOWS_BIT)
+  , m_debugConfigs(0)
   , m_bDirty(true)
   , m_currLod(Mesh::kMeshLodZero)
   , m_allowLod(true)
@@ -132,6 +133,17 @@ void RendererComponent::EnableMorphTargets(b32 enable)
 }
 
 
+void RendererComponent::SetDebugBits(b32 bits)
+{
+  m_debugConfigs |= bits;
+}
+
+void RendererComponent::UnSetDebugBits(b32 bits)
+{
+  m_debugConfigs &= ~bits;
+}
+
+
 void RendererComponent::Update()
 {
   if (!Enabled() || m_meshes.empty()) return;
@@ -149,6 +161,7 @@ void RendererComponent::Update()
     cmd._pMeshDesc = m_meshDescriptor;
     cmd._pJointDesc = GetJointDescriptor();
     cmd._config = m_configs;
+    cmd._debugConfig = m_debugConfigs;
 
     // Push mesh data to renderer.
     Mesh* pMesh = m_meshes[i];

@@ -34,6 +34,7 @@ struct AnimHandle {
   }
 
   Matrix4           _finalPalette[64];
+  Matrix4           _currentPoses[64];
   std::vector<r32>  _finalMorphs;
   u32               _paletteSz;
   uuid64            _uuid;
@@ -96,7 +97,10 @@ protected:
   void          DoSampleJob(AnimJobSubmitInfo& job, r32 gt);
   void          DoBlendJob(AnimJobSubmitInfo& job, r32 gt);
 
-  void          ApplySkeletonPose(Matrix4* pOutput, Skeleton* pSkeleton);
+  void          ApplySkeletonPose(Matrix4* pOutput, Matrix4* pLocalPoses, Skeleton* pSkeleton);
+  void          GetCurrentAndNextPoseIdx(u32* outCurr, u32* outNext, AnimClip* pClip, r32 lt);
+  b32           EmptyPoseSamples(AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx);
+  void          ApplyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx, r32 lt);
 
 private:
 

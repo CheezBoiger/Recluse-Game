@@ -48,6 +48,10 @@ public:
   void                      EnableSkin(b32 enable);
   void                      EnableDebug(b32 enable);
 
+  // These bits corresponds to RenderCommand debug bits. See Renderer/RenderCmd.hpp for DebugConfigBits.
+  void                      SetDebugBits(b32 bits);
+  void                      UnSetDebugBits(b32 bits);
+
   b32                       Dirty() const { return m_bDirty; }
   b32                       TransparentEnabled() const;
   b32                       ShadowEnabled() const;
@@ -89,6 +93,7 @@ protected:
   std::vector<Mesh*>        m_meshes;
   b32                       m_bDirty;
   u32                       m_configs;
+  b32                       m_debugConfigs;
   b32                       m_allowLod;
   u32                       m_currLod;
   i32                       m_morphIndex0; // Morph index for binding.

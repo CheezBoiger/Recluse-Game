@@ -190,7 +190,7 @@ layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup
 
 #if defined(ENABLE_DEBUG)
 layout (push_constant) uniform Debug {
-  vec4  display;
+  ivec4  display;
 } debug_info;
 #endif
 
@@ -694,10 +694,32 @@ void main()
     outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);
     
 #else
+
+#define DEBUG_ALBEDO (1<<0)
+#define DEBUG_NORMAL (1<<1)
+#define DEBUG_ROUGH  (1<<2)
+#define DEBUG_METAL  (1<<3)
+#define DEBUG_EMISSIVE (1<<4)
+#define DEBUG_IBL (1<<7)
   vec3 outColor = vec3(0.0);
-  float v = debug_info.display.x;
-  if (v == 1.0) {
-    outColor = fragAlbedo;
+  int v = debug_info.display.x;
+  if ((v & DEBUG_ALBEDO) == DEBUG_ALBEDO) {
+    outColor += fragAlbedo;
+  } 
+  if ((v & DEBUG_NORMAL) == DEBUG_NORMAL) {
+    outColor += N;
+  }
+  if ((v & DEBUG_ROUGH) == DEBUG_ROUGH){
+    outColor.g += fragRoughness;
+  }
+  if ((v & DEBUG_METAL) == DEBUG_METAL) {
+    outColor.b += fragMetallic;
+  }
+  if ((v & DEBUG_EMISSIVE) == DEBUG_EMISSIVE) {
+    outColor += matBuffer.emissive * 20.0 * fragEmissive;
+  }
+  if ((v & DEBUG_IBL) == DEBUG_IBL) {
+    outColor += GetIBLContribution(pbrInfo, R, brdfLut, diffMap, specMap);
   }
 #endif
 
