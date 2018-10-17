@@ -1739,6 +1739,14 @@ void Renderer::CleanUpGraphicsPipelines()
   m_pRhi->FreeGraphicsPipeline(pbr_forwardPipelineMorphTargets_NoLR);
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineMorphTargets_LR);
   m_pRhi->FreeGraphicsPipeline(pbr_staticForwardPipelineMorphTargets_NoLR);
+  m_pRhi->FreeGraphicsPipeline(pbr_static_LR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_static_NoLR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_static_mt_LR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_static_mt_NoLR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_dynamic_LR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_dynamic_LR_mt_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_dynamic_NoLR_Debug);
+  m_pRhi->FreeGraphicsPipeline(pbr_dynamic_NoLR_mt_Debug);
 
   GraphicsPipeline* QuadPipeline = final_PipelineKey;
   m_pRhi->FreeGraphicsPipeline(QuadPipeline);
@@ -3331,15 +3339,26 @@ void Renderer::CleanUpForwardPBR()
 
 void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   GraphicsPipeline* staticPipeline = pbr_staticForwardPipeline_NoLR;
   GraphicsPipeline* skinPipeline = pbr_forwardPipeline_NoLR;
   GraphicsPipeline* skinMorphPipeline = pbr_forwardPipelineMorphTargets_NoLR;
   GraphicsPipeline* staticMorphPipeline = pbr_staticForwardPipelineMorphTargets_NoLR;
+  GraphicsPipeline* staticPipelineDebug = pbr_static_NoLR_Debug;
+  GraphicsPipeline* skinPipelineDebug = pbr_dynamic_NoLR_Debug;
+  GraphicsPipeline* staticMorphPipelineDebug = pbr_static_mt_NoLR_Debug;
+  GraphicsPipeline* skinMorphPipelineDebug = pbr_dynamic_NoLR_mt_Debug;
+
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
     staticPipeline = pbr_staticForwardPipeline_LR;
     skinPipeline = pbr_forwardPipeline_LR;
     skinMorphPipeline = pbr_forwardPipelineMorphTargets_LR;
     staticMorphPipeline = pbr_staticForwardPipelineMorphTargets_LR;
+    staticPipelineDebug = pbr_static_LR_Debug;
+    skinPipelineDebug = pbr_dynamic_LR_Debug;
+    staticMorphPipelineDebug = pbr_static_mt_LR_Debug;
+    skinMorphPipelineDebug = pbr_dynamic_LR_mt_Debug;
   }
   std::array<VkClearValue, 7> clearValues;
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -3380,7 +3399,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
       b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-
+      b32 debugging = (renderCmd._config & CMD_DEBUG_BIT);
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
 
@@ -3389,10 +3408,14 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
       VkBuffer vb = vertexBuffer->Handle()->NativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
-      GraphicsPipeline* Pipe = Skinned ? skinPipeline : staticPipeline;
+      GraphicsPipeline* Pipe = (Skinned ? 
+        (debugging ? skinPipelineDebug : skinPipeline) 
+        : (debugging ? staticPipelineDebug : staticPipeline));
       cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
       if (renderCmd._config & CMD_MORPH_BIT) {
-        Pipe = Skinned ? skinMorphPipeline : staticMorphPipeline;
+        Pipe = (Skinned ? 
+          (debugging ? skinMorphPipelineDebug : skinMorphPipeline) 
+          : (debugging ? staticMorphPipelineDebug : staticMorphPipeline));
         R_ASSERT(renderCmd._pMorph0, "morph0 is null");
         R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
         VkBuffer morph0 = renderCmd._pMorph0->VertexData()->Handle()->NativeBuffer();
@@ -3403,6 +3426,11 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer)
   
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
       cmdBuffer->SetViewPorts(0, 1, &viewport);
+
+      if (debugging) {
+        Vector4 value = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+        cmdBuffer->PushConstants(Pipe->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Vector4), &value);
+      }
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->Handle()->NativeBuffer();
@@ -3566,6 +3594,10 @@ void Renderer::SetUpPBR()
     pbr_Set->Update(static_cast<u32>(writeInfo.size()), writeInfo.data());
   }
 
+  if (pbr_compSet) {
+    m_pRhi->FreeDescriptorSet(pbr_compSet);
+    pbr_compSet = nullptr;
+  }
   pbr_compSet = m_pRhi->CreateDescriptorSet();
   {
     VkDescriptorImageInfo outResult = { };
@@ -4183,7 +4215,7 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     m_meshDescriptors.PushBack(cmd._pMeshDesc);
 
     u32 config = primCmd._config;
-    if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT))) {
+    if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT | CMD_DEBUG_BIT))) {
       m_forwardCmdList.PushBack(primCmd);
     }
     else {

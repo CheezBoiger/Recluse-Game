@@ -188,6 +188,12 @@ layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current se
 layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
+#if defined(ENABLE_DEBUG)
+layout (push_constant) uniform Debug {
+  vec4  display;
+} debug_info;
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shadowing.
@@ -659,6 +665,7 @@ void main()
   pbrInfo.V = V;
   pbrInfo.roughness = fragRoughness;
   
+#if !defined(ENABLE_DEBUG)
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
   vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, diffMap, specMap);
@@ -685,6 +692,15 @@ void main()
   }
   
     outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);
+    
+#else
+  vec3 outColor = vec3(0.0);
+  float v = debug_info.display.x;
+  if (v == 1.0) {
+    outColor = fragAlbedo;
+  }
+#endif
+
   vFragColor = vec4(outColor, transparency);
   
 #if !defined(ENABLE_WATER_RENDERING)

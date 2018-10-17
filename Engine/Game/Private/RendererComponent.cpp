@@ -73,6 +73,12 @@ void RendererComponent::EnableShadow(b32 enable)
   else { m_configs &= ~CMD_SHADOWS_BIT; }
 }
 
+void RendererComponent::EnableDebug(b32 enable)
+{
+  if (enable) { m_configs |= CMD_DEBUG_BIT; }
+  else { m_configs &= ~CMD_DEBUG_BIT; }
+}
+
 
 b32 RendererComponent::ShadowEnabled() const
 {

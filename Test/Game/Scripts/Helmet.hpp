@@ -260,6 +260,7 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
+    m_rendererComponent.EnableDebug(true);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->GetPrimitive(0)->_pMat = mat;
     }

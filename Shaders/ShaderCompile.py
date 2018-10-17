@@ -52,7 +52,9 @@ class Shader():
 '''
 recluse_shaders = [
   Shader('ForwardPBR_NoLR', 'ForwardPBR.frag', params='-Od'),
+  Shader('ForwardPBR_NoLR_Debug', 'ForwardPBR.frag', params='-Od -DENABLE_DEBUG=1'),
   Shader('ForwardPBR_LR', 'ForwardPBR.frag', params='-Od -DLOCAL_REFLECTIONS=1'),
+  Shader('ForwardPBR_LR_Debug', 'ForwardPBR.frag', params='-Od -DLOCAL_REFLECTIONS=1 -DENABLE_DEBUG=1'),
   Shader('ForwardPBR', 'ForwardPBR.vert'),
   Shader('PBR_LR_Nvidia', 'PBR.comp', params='-DNVIDIA=1 -DLOCAL_REFLECTIONS=1'),
   Shader('PBR_NoLR_Nvidia', 'PBR.comp', params='-DNVIDIA=1'),
