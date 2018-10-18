@@ -209,7 +209,7 @@ void Animation::ApplySkeletonPose(Matrix4* pOutput, Matrix4* pLocalPoses, Skelet
       parentTransform = pLocalPoses[pSkeleton->_joints[i]._iParent];
     }
     currentPose = pLocalPoses[i] * parentTransform;
-    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * currentPose * pSkeleton->_rootInvTransform;
+    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pSkeleton->_joints[i]._invGlobalTransform.Inverse();
   }
 }
 

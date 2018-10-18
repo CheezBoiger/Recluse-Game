@@ -960,25 +960,28 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   const tinygltf::Buffer& buf = model.buffers[bufView.buffer];
 
   struct NodeTag {
+    i32               _gltfParent;
     u8                _parent;
     Matrix4           _parentTransform;
   };
 
   std::map<i32, NodeTag> nodeMap;
+/*
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
     NodeTransform rootTransform = CalculateGlobalTransform(root,
-      Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
-    skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
-    NodeTag tag{ 0xff, Matrix4() };
+      Matrix4::Scale(Matrix4(), Vector3(1.0f, 1.0f, 1.0f)));
+    //skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
+    NodeTag tag{ -1 , 0xff, rootTransform._globalMatrix };
     nodeMap[skin.skeleton] = tag;
+    
     for (size_t i = 0; i < root.children.size(); ++i) {
-      NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)),
+      NodeTag tag = { skin.skeleton, 0,
         rootTransform._globalMatrix };
       nodeMap[root.children[i]] = tag;
     }
   }
-
+*/
   for (size_t i = 0; i < skin.joints.size(); ++i) {
     size_t idx = i;
     Joint& joint = skeleton._joints[idx];
@@ -989,14 +992,18 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     auto it = nodeMap.find(skinJointIdx);
     if (it != nodeMap.end()) {
       NodeTag& tag = it->second;
-      localTransform = CalculateGlobalTransform(node, Matrix4());
+      localTransform = CalculateGlobalTransform(node, tag._parentTransform);
       joint._iParent = tag._parent;
-      joint._localBindShape = localTransform._globalMatrix;
+      joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
+    } else {
+      localTransform = CalculateGlobalTransform(node, parentMatrix/*Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))*/);
+      joint._iParent = 0xff;
+      joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
     }
 
     DEBUG_OP(joint._id = static_cast<u8>(skinJointIdx));
     for (size_t child = 0; child < node.children.size(); ++child) {
-      NodeTag tag = { static_cast<u8>(idx), localTransform._globalMatrix };
+      NodeTag tag = { static_cast<u8>(skinJointIdx), i, localTransform._globalMatrix };
       nodeMap[node.children[child]] = tag;
     }
   }
