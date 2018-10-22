@@ -58,6 +58,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  model;
   mat4  modelView;
   vec4  hasTexture;
+  vec4  lightFactor;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;

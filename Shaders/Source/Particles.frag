@@ -55,6 +55,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  modelView;
   vec4  hasTexture;
   vec4  globalScale;
+  vec4  lightFactor;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -126,7 +127,7 @@ void main()
     }
     
     vec4 t0 = texture(particleAtlas, uvw);
-    color.xyz += t0.rgb;
+    color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;
   }
   

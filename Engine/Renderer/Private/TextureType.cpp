@@ -826,21 +826,24 @@ void Texture2DArray::Update(const Image& img, u32 x, u32 y)
   size_t offset = 0;
   u32 layer = 0;
 
-  for (u32 layer = 0; layer < texture->ArrayLayers(); ++layer) {
-    VkBufferImageCopy region = {};
-    region.bufferOffset = offset;
-    region.bufferImageHeight = img.Height() * 4;
-    region.bufferRowLength = img.Width();
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.baseArrayLayer = layer;
-    region.imageSubresource.layerCount = 1;
-    region.imageSubresource.mipLevel = 0;
-    region.imageExtent.width =  texture->Width();
-    region.imageExtent.height = texture->Height();
-    region.imageExtent.depth = 1;
-    region.imageOffset = { 0, 0, 0 };
-    bufferCopies[layer] = region;
-    offset += widthOffset * 4;
+  for (u32 yi = 0; yi < y; ++yi) {
+    offset = heightOffset * img.Width() * 4 * yi;
+    for (u32 xi = 0; xi < x; ++xi) {
+      VkBufferImageCopy region = {};
+      region.bufferOffset = offset;
+      region.bufferImageHeight = 0;
+      region.bufferRowLength = img.Width();
+      region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      region.imageSubresource.baseArrayLayer = layer;
+      region.imageSubresource.layerCount = 1;
+      region.imageSubresource.mipLevel = 0;
+      region.imageExtent.width =  texture->Width();
+      region.imageExtent.height = texture->Height();
+      region.imageExtent.depth = 1;
+      region.imageOffset = { 0, 0, 0 };
+      bufferCopies[layer++] = region;
+      offset += widthOffset * 4;
+    }
   }
   VkImageMemoryBarrier imgBarrier = {};
   imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

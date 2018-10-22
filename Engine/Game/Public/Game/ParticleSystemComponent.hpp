@@ -30,6 +30,7 @@ public:
   void SetLifetimeScale(r32 scale);
   void SetTextureArray(Texture2DArray* texture);
   void SetGlobalScale(r32 globalScale);
+  void SetBrightnessFactor(r32 scale);
 
   void SetLevel(u32 idx, r32 at);
 

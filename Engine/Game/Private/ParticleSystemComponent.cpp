@@ -22,7 +22,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
   m_pParticleSystem->SetUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
     std::random_device dev;
     std::mt19937 twist(dev());
-    std::uniform_real_distribution<r32> uni(-3.0f, 3.0f);
+    std::uniform_real_distribution<r32> uni(-0.2f, 0.2f);
     r32 offset = config->_particleMaxAlive / config->_maxParticles;
     r32 life = 0.0f;
     for (size_t i = 0; i < count; ++i) {
@@ -33,7 +33,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
       p._initVelocity = p._velocity;
       p._life = life;
       p._sz = 0.5f;
-      p._acceleration = Vector4(0.0f, -1.8f, 0.0f, 0.0f);
+      p._acceleration = Vector4(0.0f, 0.1f, 0.0f, 0.0f);
       life += offset * config->_lifeTimeScale;
     }
   });
@@ -130,6 +130,14 @@ void ParticleSystemComponent::SetGlobalScale(r32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._globalScale = scale;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetBrightnessFactor(r32 scale)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._lightFactor = scale;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 } // Recluse

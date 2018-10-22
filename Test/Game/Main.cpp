@@ -268,7 +268,7 @@ int main(int c, char* argv[])
   //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
   //ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
+  ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   //ModelLoader::Load(RTEXT("Assets/Monster/Monster.gltf"));
   //ModelLoader::Load(RTEXT("Assets/CesiumMan.glb"));
   ModelLoader::Load(RTEXT("Assets/RiggedFigure.gltf"));
