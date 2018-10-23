@@ -56,6 +56,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  hasTexture;
   vec4  globalScale;
   vec4  lightFactor;
+  vec4  angleRate;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -129,9 +130,14 @@ void main()
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;
+    
+    if (frag_in.life <= particleBuffer.fadeAt) {
+      float ia = mix(0.0, color.w, frag_in.life / particleBuffer.fadeAt);
+      color.w = ia;
+    }
   }
   
-  if (color.a < 0.1) {
+  if (color.a < 0.015) {
     discard;
   }
   outputColor = SRGBToLINEAR(color);

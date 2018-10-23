@@ -143,7 +143,7 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
 {
   _particleConfig._maxParticles = static_cast<r32>(initialParticleCount);
   _particleConfig._angleThreshold = 0.0f;
-  _particleConfig._fadeAt = 0.0f;
+  _particleConfig._fadeAt = 10.0f;
   _particleConfig._fadeThreshold = 1.0f;
   _particleConfig._isWorldSpace = 0.0f;
   _particleConfig._lifeTimeScale = 1.0f;
@@ -151,6 +151,7 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
   _particleConfig._rate = 1.0f;
   _particleConfig._globalScale = 1.0f;
   _particleConfig._lifeTimeScale = 1.0f;
+  _particleConfig._angleRate = 15.0f;
   _particleConfig._hasAtlas = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
   _particleConfig._lightFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 

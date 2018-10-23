@@ -64,6 +64,7 @@ layout (set = 1, binding = 0) uniform ParticleConfig {
   vec4  hasTexture;
   vec4  globalScale;
   vec4  lightFactor;
+  vec4  angleRate;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -101,8 +102,10 @@ void main()
         p.position = vec4(model[3][0], model[3][1], model[3][2], model[3][3]) + p.offsetPos;
       }
     }
+    
     float camLength = length(p.position.xyz - gWorldBuffer.cameraPos.xyz); 
     p.camDist.xyzw = vec4(camLength, camLength, camLength, camLength);
+    p.particleInfo.x += gWorldBuffer.fDeltaTime * particleConfig.angleRate.x; 
     particleBuffer.particles[idx] = p;
   }
 }

@@ -52,6 +52,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  hasTexture;
   vec4  globalScale;
   vec4  lightFactor;
+  vec4  angleRate;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -79,35 +80,45 @@ out FragIn {
   float life;
 } frag_in;
 
+#define CONST_PI                3.141592653589793238462643383279502884197169399375
+#define DEG_TO_RAD(deg)         ((deg) * (CONST_PI / 180.0))
+#define ROTATE_VEC2(a, xrot, yrot)    vec2(a.x * xrot - a.y * yrot, a.x * yrot + a.y * xrot)
 void main()
 {
   for (int i = 0; i < gl_in.length(); ++i) {
     float size = vert_out[i].size * particleBuffer.globalScale.x;
     vec4 P = gl_in[i].gl_Position;
     mat4 p = gWorldBuffer.proj;
+    float xrot = cos(DEG_TO_RAD(vert_out[i].angle));
+    float yrot = sin(DEG_TO_RAD(vert_out[i].angle));
+    vec2 rotation = vec2(xrot, yrot);
     
-    vec2 va = P.xy + vec2(-0.5, -0.5) * size;
+    vec2 va = vec2(-0.5, -0.5); 
+    va = P.xy + ROTATE_VEC2(va, xrot, yrot) * size;
     gl_Position = p * vec4(va, P.zw);
     frag_in.uv = vec2(0.0, 0.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     EmitVertex();
     
-    vec2 vb = P.xy + vec2(-0.5, 0.5) * size;
+    vec2 vb = vec2(-0.5, 0.5);
+    vb = P.xy + ROTATE_VEC2(vb, xrot, yrot) * size;
     gl_Position = p * vec4(vb, P.zw);
     frag_in.uv = vec2(0.0, 1.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     EmitVertex();
     
-    vec2 vd = P.xy + vec2(0.5, -0.5) * size;
+    vec2 vd = vec2(0.5, -0.5);
+    vd = P.xy + ROTATE_VEC2(vd, xrot, yrot) * size;
     gl_Position = p * vec4(vd, P.zw);
     frag_in.uv = vec2(1.0, 0.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     EmitVertex();
     
-    vec2 vc = P.xy + vec2(0.5, 0.5) * size;
+    vec2 vc = vec2(0.5, 0.5);
+    vc = P.xy + ROTATE_VEC2(vc, xrot, yrot) * size;
     gl_Position = p * vec4(vc, P.zw);
     frag_in.uv = vec2(1.0, 1.0);
     frag_in.color = vert_out[i].color;

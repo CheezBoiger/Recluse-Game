@@ -62,6 +62,7 @@ struct ParticleSystemConfig {
   Vector4         _hasAtlas;          // 1.0 if system has an atlas.
   Vector4         _globalScale;     // global scale, this is a scaler!
   Vector4         _lightFactor;
+  Vector4         _angleRate;         // rate of which to rotate.
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 

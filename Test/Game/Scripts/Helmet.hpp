@@ -233,7 +233,7 @@ public:
       m_pParticleSystem->SetMaxParticleCount(256);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(4.0f);
-      m_pParticleSystem->SetBrightnessFactor(0.5f);
+      m_pParticleSystem->SetBrightnessFactor(0.2f);
 /*
       m_pParticleSystem->SetLevel(0, 15.0f);
       m_pParticleSystem->SetLevel(1, 14.0f);
