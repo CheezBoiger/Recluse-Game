@@ -57,6 +57,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  globalScale;
   vec4  lightFactor;
   vec4  angleRate;
+  vec4  fadeIn;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -130,6 +131,12 @@ void main()
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;
+    
+    if (particleBuffer.fadeIn.x != 0 && frag_in.life >= particleBuffer.fadeIn.x) {
+      float m = particleBuffer.particleMaxAlive;
+      float ia = mix(0.0, color.w, (m - frag_in.life) / (m - particleBuffer.fadeIn.x));
+      color.w = ia;
+    }
     
     if (frag_in.life <= particleBuffer.fadeAt) {
       float ia = mix(0.0, color.w, frag_in.life / particleBuffer.fadeAt);

@@ -59,6 +59,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  hasTexture;
   vec4  lightFactor;
   vec4  angleRate;
+  vec4  fadeIn;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;

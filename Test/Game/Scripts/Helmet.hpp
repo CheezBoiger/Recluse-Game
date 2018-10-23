@@ -230,9 +230,9 @@ public:
       img.Load("smoke.png");
       m_particleTexture->Update(img, 1, 1);
       img.CleanUp();
-      m_pParticleSystem->SetMaxParticleCount(256);
+      m_pParticleSystem->SetMaxParticleCount(2);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
-      m_pParticleSystem->SetGlobalScale(4.0f);
+      m_pParticleSystem->SetGlobalScale(10.0f);
       m_pParticleSystem->SetBrightnessFactor(0.2f);
 /*
       m_pParticleSystem->SetLevel(0, 15.0f);
