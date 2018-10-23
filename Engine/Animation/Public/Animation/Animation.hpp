@@ -96,6 +96,7 @@ protected:
   
   void          DoSampleJob(AnimJobSubmitInfo& job, r32 gt);
   void          DoBlendJob(AnimJobSubmitInfo& job, r32 gt);
+  
 
   void          ApplySkeletonPose(Matrix4* pOutput, Matrix4* pLocalPoses, Skeleton* pSkeleton);
   void          GetCurrentAndNextPoseIdx(u32* outCurr, u32* outNext, AnimClip* pClip, r32 lt);

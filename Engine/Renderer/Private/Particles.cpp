@@ -48,7 +48,7 @@ VkVertexInputBindingDescription GetParticleTrailBindingDescription()
 std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 {
   u32 offset = 0;
-  std::vector<VkVertexInputAttributeDescription> description(9);
+  std::vector<VkVertexInputAttributeDescription> description(8);
   // Position
   description[0] = { };
   description[0].binding = 0;
@@ -56,15 +56,14 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
   description[0].location = 0;
   description[0].offset = offset;
   offset += sizeof(Vector4);
-  // Velocity
-  description[1] = { };
+  // Position offset
+  description[1] = {};
   description[1].binding = 0;
   description[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[1].location = 1;
   description[1].offset = offset;
   offset += sizeof(Vector4);
-
-  // Init Velocity
+  // Velocity
   description[2] = { };
   description[2].binding = 0;
   description[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -72,47 +71,44 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
   description[2].offset = offset;
   offset += sizeof(Vector4);
 
-  // Acceleration
-  description[3] = {};
+  // Init Velocity
+  description[3] = { };
   description[3].binding = 0;
   description[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[3].location = 3;
   description[3].offset = offset;
   offset += sizeof(Vector4);
-  // Color
-  description[4] = { };
+
+  // Acceleration
+  description[4] = {};
   description[4].binding = 0;
   description[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[4].location = 4;
   description[4].offset = offset;
   offset += sizeof(Vector4);
-  // Angle
+  // Color
   description[5] = { };
   description[5].binding = 0;
-  description[5].format = VK_FORMAT_R32_SFLOAT;
+  description[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[5].location = 5;
   description[5].offset = offset;
-  offset += sizeof(r32);
-  // Size
+  offset += sizeof(Vector4);
+
+  // Angle, size, weight, life.
   description[6] = { };
   description[6].binding = 0;
-  description[6].format = VK_FORMAT_R32_SFLOAT;
+  description[6].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[6].location = 6;
   description[6].offset = offset;
-  offset += sizeof(r32);
-  // Weight
-  description[7] = { };
+  offset += sizeof(Vector4);
+
+  // camDist.
+  description[7] = {};
   description[7].binding = 0;
-  description[7].format = VK_FORMAT_R32_SFLOAT;
+  description[7].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[7].location = 7;
   description[7].offset = offset;
-  offset += sizeof(r32);
-  // Life
-  description[8] = { };
-  description[8].binding = 0;
-  description[8].format = VK_FORMAT_R32_SFLOAT;
-  description[8].location = 8;
-  description[8].offset = offset;
+  offset += sizeof(Vector4);
   
   return description;
 }
@@ -242,7 +238,11 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
   // TODO(): Randomizing stuff, so we need to figure out how to check when a particle is dead,
   // and reupdate after.
   std::vector<Particle> particles(_particleConfig._maxParticles);
-  if (m_updateFunct) {
+  if (m_updateBits & PARTICLE_SORT_BUFFER_UPDATE_BIT) {
+    CPUBoundSort(particles);
+  } 
+
+  if ((m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) && m_updateFunct) {
     m_updateFunct(&_particleConfig, particles.data(), particles.size());
   }
 
@@ -339,10 +339,19 @@ void ParticleSystem::UpdateDescriptor()
 }
 
 
+void ParticleSystem::CPUBoundSort(std::vector<Particle>& currentState)
+{
+  if (m_sortFunct) {
+    GetParticleState(currentState.data());
+    std::sort(currentState.begin(), currentState.end(), m_sortFunct);
+  }
+}
+
+
 void ParticleSystem::Update(VulkanRHI* pRhi)
 {
 
-  if (m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) {
+  if (m_updateBits & (PARTICLE_VERTEX_BUFFER_UPDATE_BIT | PARTICLE_SORT_BUFFER_UPDATE_BIT)) {
     VkDeviceSize sz = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     if (sz != m_particleBuffer->MemorySize()) {
       CleanUpGpuBuffer(pRhi);
@@ -430,66 +439,66 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   colorBlendAttachments[0] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
 
   colorBlendAttachments[1] = CreateColorBlendAttachmentState(
     VK_TRUE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
 
   colorBlendAttachments[2] = CreateColorBlendAttachmentState(
     VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
 
   colorBlendAttachments[3] = CreateColorBlendAttachmentState(
     VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
 
   colorBlendAttachments[4] = CreateColorBlendAttachmentState(
     VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
 
   colorBlendAttachments[5] = CreateColorBlendAttachmentState(
     VK_FALSE,
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-    VK_BLEND_FACTOR_SRC_ALPHA,
+    VK_BLEND_FACTOR_ONE,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD,
     VK_BLEND_FACTOR_ONE,
-    VK_BLEND_FACTOR_ZERO,
+    VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
   colorBlendCi.attachmentCount = static_cast<u32>(colorBlendAttachments.size());

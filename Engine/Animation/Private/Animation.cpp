@@ -198,18 +198,21 @@ void Animation::ApplySkeletonPose(Matrix4* pOutput, Matrix4* pLocalPoses, Skelet
 {
   if (!pSkeleton) return;
 
-  b32 rootInJoints = pSkeleton->_rootInJoints;
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
     Matrix4 parentTransform;
     Matrix4 currentPose;
     u8 parentId = pSkeleton->_joints[i]._iParent;
-    if (parentId == Joint::kNoParentId) {
-      parentTransform = Matrix4();
-    } else {
-      parentTransform = pLocalPoses[pSkeleton->_joints[i]._iParent];
+    if (parentId != Joint::kNoParentId) {
+      parentTransform = pLocalPoses[parentId];
     }
+    // Now become work space joint matrices
     currentPose = pLocalPoses[i] * parentTransform;
+    pLocalPoses[i] = currentPose;
+  }
+
+  for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
     pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pSkeleton->_joints[i]._invGlobalTransform.Inverse();
+
   }
 }
 

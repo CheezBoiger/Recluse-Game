@@ -4,14 +4,13 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout (location = 0) in vec4   position;
-layout (location = 1) in vec4   velocity;
-layout (location = 2) in vec4   initVelocity;
-layout (location = 3) in vec4   acceleration;
-layout (location = 4) in vec4   color;
-layout (location = 5) in float  angle;
-layout (location = 6) in float  size;
-layout (location = 7) in float  weight;
-layout (location = 8) in float  life;
+layout (location = 1) in vec4   offsetPos;
+layout (location = 2) in vec4   velocity;
+layout (location = 3) in vec4   initVelocity;
+layout (location = 4) in vec4   acceleration;
+layout (location = 5) in vec4   color;
+layout (location = 6) in vec4   particleInfo; // x = angle, y = size, z = weight, w = life.
+layout (location = 7) in vec4   camDist;
 
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
@@ -91,9 +90,9 @@ void main()
   }
   vert_out.worldPos = worldPos;
   vert_out.color = color;
-  vert_out.angle = angle;
-  vert_out.size = size;
-  vert_out.weight = weight;
-  vert_out.life = life;
+  vert_out.angle = particleInfo.x;
+  vert_out.size = particleInfo.y;
+  vert_out.weight = particleInfo.z;
+  vert_out.life = particleInfo.w;
   gl_Position = gWorldBuffer.view * worldPos;
 }

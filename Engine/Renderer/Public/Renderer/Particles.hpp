@@ -33,14 +33,13 @@ class TextureSampler;
 // (Shader Storage Buffer Object.)
 struct Particle {
   Vector4 _position;  // Position of the particle.
+  Vector4 _offsetPosition; // initial offset.
   Vector4 _velocity;
   Vector4 _initVelocity;
   Vector4 _acceleration;  // acceleration.
   Vector4 _color;
-  r32     _angle;
-  r32     _sz;        // size of the particle.
-  r32     _weight;
-  r32     _life;
+  Vector4 _info;          // x = angle, y = size, z = weight, w = life.
+  Vector4 _camDist;
 };
 
 
@@ -77,7 +76,8 @@ struct ParticleSystemConfig {
 enum ParticleUpdate {
   PARTICLE_CONFIG_BUFFER_UPDATE_BIT      = (1 << 0),
   PARTICLE_DESCRIPTOR_UPDATE_BIT  = (1 << 1),
-  PARTICLE_VERTEX_BUFFER_UPDATE_BIT = (1 << 2)
+  PARTICLE_VERTEX_BUFFER_UPDATE_BIT = (1 << 2),
+  PARTICLE_SORT_BUFFER_UPDATE_BIT = (1 << 3)
 };
 
 typedef enum eParticleType {
@@ -99,10 +99,12 @@ struct ParticleSystem {
     , _texture(nullptr)
     , _sampler(nullptr)
     , m_particleType(PARTICLE_TYPE_POINT)
-    , m_updateFunct(nullptr) { }
+    , m_updateFunct(nullptr)
+    , m_sortFunct(nullptr) { }
 
   typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> ParticleUpdateFunct;
   typedef std::function<void(ParticleSystemConfig*, ParticleTrail*, u32)> ParticleTrailUpdateFunct;
+  typedef std::function<b32(const Particle&, const Particle&)> ParticleSortFunct;
 
   // Must initialize for compute pipeline as well!
   void                  Initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
@@ -113,7 +115,8 @@ struct ParticleSystem {
   // Get the current state of the particle buffer. Size is the current max particle count of this particle system.
   void                  GetParticleState(Particle* output);
   void                  GetParticleTrailState(ParticleTrail* output);
-
+  
+  void                  SetSortFunct(ParticleSortFunct sortFunct) { m_sortFunct = sortFunct; }
   void                  SetUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
   void                  SetTrailUpdateFunct(ParticleTrailUpdateFunct updateFunct) { m_updateTrailFunct = updateFunct; }
 
@@ -134,7 +137,7 @@ struct ParticleSystem {
   ParticleType          GetParticleType() const { return m_particleType; }
 
 private:
-
+  void                  CPUBoundSort(std::vector<Particle>& particles);
   void                  CleanUpGpuBuffer(VulkanRHI* pRhi);
   void                  SetUpGpuBuffer(VulkanRHI* pRhi);
 
@@ -151,6 +154,7 @@ private:
   particle_update_bits      m_updateBits;
   ParticleUpdateFunct       m_updateFunct;
   ParticleTrailUpdateFunct  m_updateTrailFunct;
+  ParticleSortFunct         m_sortFunct;
   ParticleType              m_particleType;
 };
 

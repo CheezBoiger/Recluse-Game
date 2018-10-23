@@ -131,7 +131,7 @@ void main()
     color.w = t0.a;
   }
   
-  if (color.a < 0.5) {
+  if (color.a < 0.1) {
     discard;
   }
   outputColor = SRGBToLINEAR(color);

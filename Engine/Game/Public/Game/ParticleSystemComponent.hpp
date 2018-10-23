@@ -20,7 +20,8 @@ protected:
 
 public:
   ParticleSystemComponent()
-    : m_pParticleSystem(nullptr) { }
+    : m_pParticleSystem(nullptr)
+    , m_shouldSort(false) { }
 
   void Update() override;  
   
@@ -31,12 +32,16 @@ public:
   void SetTextureArray(Texture2DArray* texture);
   void SetGlobalScale(r32 globalScale);
   void SetBrightnessFactor(r32 scale);
+  void EnableSorting(b32 enable) { m_shouldSort = enable; } 
 
   void SetLevel(u32 idx, r32 at);
 
   void UseAtlas(b32 enable);
 
+  b32 Sorting() const { return m_shouldSort; }
+
 private:
   ParticleSystem* m_pParticleSystem;
+  b32 m_shouldSort;
 };
 } // Recluse

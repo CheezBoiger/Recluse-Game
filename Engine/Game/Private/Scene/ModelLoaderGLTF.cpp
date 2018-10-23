@@ -966,22 +966,6 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   };
 
   std::map<i32, NodeTag> nodeMap;
-/*
-  if (skin.skeleton != -1) {
-    const tinygltf::Node& root = model.nodes[skin.skeleton];
-    NodeTransform rootTransform = CalculateGlobalTransform(root,
-      Matrix4::Scale(Matrix4(), Vector3(1.0f, 1.0f, 1.0f)));
-    //skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
-    NodeTag tag{ -1 , 0xff, rootTransform._globalMatrix };
-    nodeMap[skin.skeleton] = tag;
-    
-    for (size_t i = 0; i < root.children.size(); ++i) {
-      NodeTag tag = { skin.skeleton, 0,
-        rootTransform._globalMatrix };
-      nodeMap[root.children[i]] = tag;
-    }
-  }
-*/
   for (size_t i = 0; i < skin.joints.size(); ++i) {
     size_t idx = i;
     Joint& joint = skeleton._joints[idx];
@@ -996,7 +980,7 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
       joint._iParent = tag._parent;
       joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
     } else {
-      localTransform = CalculateGlobalTransform(node, parentMatrix/*Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f))*/);
+      localTransform = CalculateGlobalTransform(node, Matrix4());
       joint._iParent = 0xff;
       joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
     }
@@ -1012,9 +996,7 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
 
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
-    Matrix4 bindMat = invBindMat.Inverse();
-    bindMat = bindMat * parentMatrix;
-    skeleton._joints[i]._InvBindPose = bindMat.Inverse();
+    skeleton._joints[i]._InvBindPose = invBindMat;
   }
 
   Skeleton::PushSkeleton(skeleton);

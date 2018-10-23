@@ -30,22 +30,38 @@ r32* Matrix4::operator[](const size_t i)
 Matrix4 Matrix4::operator*(const Matrix4& other) const 
 {
 #if !defined FAST_INTRINSICS
-  r32 m00 = Data[0][0]; r32 om00 = other.Data[0][0];
-  r32 m01 = Data[0][1]; r32 om01 = other.Data[0][1];
-  r32 m02 = Data[0][2]; r32 om02 = other.Data[0][2];
-  r32 m03 = Data[0][3]; r32 om03 = other.Data[0][3];
-  r32 m10 = Data[1][0]; r32 om10 = other.Data[1][0];
-  r32 m11 = Data[1][1]; r32 om11 = other.Data[1][1];
-  r32 m12 = Data[1][2]; r32 om12 = other.Data[1][2];
-  r32 m13 = Data[1][3]; r32 om13 = other.Data[1][3];
-  r32 m20 = Data[2][0]; r32 om20 = other.Data[2][0];
-  r32 m21 = Data[2][1]; r32 om21 = other.Data[2][1];
-  r32 m22 = Data[2][2]; r32 om22 = other.Data[2][2];
-  r32 m23 = Data[2][3]; r32 om23 = other.Data[2][3];
-  r32 m30 = Data[3][0]; r32 om30 = other.Data[3][0];
-  r32 m31 = Data[3][1]; r32 om31 = other.Data[3][1];
-  r32 m32 = Data[3][2]; r32 om32 = other.Data[3][2];
-  r32 m33 = Data[3][3]; r32 om33 = other.Data[3][3];
+  r32 m00 = Data[0][0];
+  r32 m01 = Data[0][1];
+  r32 m02 = Data[0][2];
+  r32 m03 = Data[0][3];
+  r32 m10 = Data[1][0];
+  r32 m11 = Data[1][1];
+  r32 m12 = Data[1][2];
+  r32 m13 = Data[1][3];
+  r32 m20 = Data[2][0];
+  r32 m21 = Data[2][1];
+  r32 m22 = Data[2][2];
+  r32 m23 = Data[2][3];
+  r32 m30 = Data[3][0];
+  r32 m31 = Data[3][1];
+  r32 m32 = Data[3][2];
+  r32 m33 = Data[3][3];
+  r32 om00 = other.Data[0][0];
+  r32 om01 = other.Data[0][1];
+  r32 om02 = other.Data[0][2];
+  r32 om03 = other.Data[0][3];
+  r32 om10 = other.Data[1][0];
+  r32 om11 = other.Data[1][1];
+  r32 om12 = other.Data[1][2];
+  r32 om13 = other.Data[1][3];
+  r32 om20 = other.Data[2][0];
+  r32 om21 = other.Data[2][1];
+  r32 om22 = other.Data[2][2];
+  r32 om23 = other.Data[2][3];
+  r32 om30 = other.Data[3][0];
+  r32 om31 = other.Data[3][1];
+  r32 om32 = other.Data[3][2];
+  r32 om33 = other.Data[3][3]; 
   return Matrix4(
     m00 * om00 + m01 * om10 + m02 * om20 + m03 * om30,
     m00 * om01 + m01 * om11 + m02 * om21 + m03 * om31,

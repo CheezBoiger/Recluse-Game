@@ -48,14 +48,13 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 // The particle and it's information.
 struct Particle {
   vec4    position;
+  vec4    offsetPos;
   vec4    velocity;
   vec4    initVelocity;
   vec4    acceleration;
   vec4    color;
-  float   size;
-  float   angle;
-  float   weight;
-  float   life;
+  vec4    particleInfo; // x = angle, y = size, z = weight, w = life.
+  vec4    camDist;
 };
 
 layout (set = 1, binding = 0) uniform ParticleConfig {
@@ -88,20 +87,22 @@ void main()
   for (int i = 0; (gl_GlobalInvocationID.x + i) < bufferSz; i += 256) {
     uint idx = gl_GlobalInvocationID.x + i;
     Particle p = particleBuffer.particles[idx];
-    if (p.life >= 0.0) {
-      p.life -= gWorldBuffer.fDeltaTime * particleConfig.rate;
-      if (p.life > 0.0) {
+    if (p.particleInfo.w >= 0.0) {
+      p.particleInfo.w -= gWorldBuffer.fDeltaTime * particleConfig.rate;
+      if (p.particleInfo.w > 0.0) {
         // Update the particle as it is still alive.
         p.velocity += gWorldBuffer.fDeltaTime * p.acceleration;
         p.position += p.velocity * gWorldBuffer.fDeltaTime;
       } else {
         // reset.
         mat4 model = particleConfig.model;
-        p.life = particleConfig.particleMaxAlive * particleConfig.lifeTimeScale;
+        p.particleInfo.w = particleConfig.particleMaxAlive * particleConfig.lifeTimeScale;
         p.velocity = p.initVelocity;
-        p.position = vec4(model[3][0], model[3][1], model[3][2], model[3][3]);
+        p.position = vec4(model[3][0], model[3][1], model[3][2], model[3][3]) + p.offsetPos;
       }
     }
+    float camLength = length(p.position.xyz - gWorldBuffer.cameraPos.xyz); 
+    p.camDist.xyzw = vec4(camLength, camLength, camLength, camLength);
     particleBuffer.particles[idx] = p;
   }
 }

@@ -61,7 +61,7 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->Enable(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("BrainStem", &model);
+    ModelCache::Get("RiggedFigure", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -225,15 +225,16 @@ public:
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
       m_particleTexture = gRenderer().CreateTexture2DArray();
-      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 160, 160, 16);
+      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 420, 420, 1);
       Image img;
-      img.Load("particle.png");
-      m_particleTexture->Update(img, 4, 4);
+      img.Load("smoke.png");
+      m_particleTexture->Update(img, 1, 1);
       img.CleanUp();
       m_pParticleSystem->SetMaxParticleCount(256);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
-      m_pParticleSystem->SetGlobalScale(1.0f);
-      m_pParticleSystem->SetBrightnessFactor(2.0f);
+      m_pParticleSystem->SetGlobalScale(4.0f);
+      m_pParticleSystem->SetBrightnessFactor(0.5f);
+/*
       m_pParticleSystem->SetLevel(0, 15.0f);
       m_pParticleSystem->SetLevel(1, 14.0f);
       m_pParticleSystem->SetLevel(2, 13.0f);
@@ -250,6 +251,8 @@ public:
       m_pParticleSystem->SetLevel(13, 2.0f);
       m_pParticleSystem->SetLevel(14, 1.0f);
       m_pParticleSystem->SetLevel(15, 0.5f);
+*/
+    m_pParticleSystem->EnableSorting(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER
@@ -316,7 +319,7 @@ public:
   void Update(r32 tick) override
   { 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
-      m_pParticleSystem->SetMaxParticleCount(18000);
+      m_pParticleSystem->SetMaxParticleCount(512);
     }
   }
 
