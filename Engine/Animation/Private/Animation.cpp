@@ -170,6 +170,8 @@ void Animation::DoSampleJob(AnimJobSubmitInfo& job, r32 gt)
   }
   job._output->_currState._fCurrLocalTime = lt;
   Skeleton* pSkeleton = Skeleton::GetSkeleton(job._pBaseClip->_skeletonId);
+  Matrix4* palette = job._output->_finalPalette;
+  u32 paletteSz = job._output->_paletteSz;
 
   u32 currPoseIdx = 0;
   u32 nextPoseIdx = 0;
@@ -178,41 +180,67 @@ void Animation::DoSampleJob(AnimJobSubmitInfo& job, r32 gt)
 
   ApplyMorphTargets(job._output, job._pBaseClip, currPoseIdx, nextPoseIdx, lt);
 
-  if (EmptyPoseSamples(job._pBaseClip, currPoseIdx, nextPoseIdx)) { return; }
+  if (EmptyPoseSamples(job._pBaseClip, currPoseIdx, nextPoseIdx)) return;
+
+  Matrix4 globalTransform;
+  b32 rootInJoints = pSkeleton ? pSkeleton->_rootInJoints : false;
+  {
+    Matrix4 localTransform = LinearInterpolate(
+      &job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses[0],
+      &job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._aLocalPoses[0],
+      job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._time,
+      job._pBaseClip->_aAnimPoseSamples[nextPoseIdx]._time,
+      lt);
+    if (rootInJoints) {
+      job._output->_finalPalette[0] = localTransform;
+    }
+    globalTransform = localTransform;
+  }
 
   AnimPose* currAnimPose = &job._pBaseClip->_aAnimPoseSamples[currPoseIdx];
   AnimPose* nextAnimPose = &job._pBaseClip->_aAnimPoseSamples[nextPoseIdx];
 
-  for (size_t i = 0; i < job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.size(); ++i) {
+
+  // TODO(): Need to figure out how to map nodes to certain indices, as gltf does not 
+  // sort animation samples by joint hierarchy.
+  for (size_t i = 1; i < job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.size(); ++i) {
+    size_t idx = (rootInJoints ? i : i - 1);
     JointPose* currJoint = &currAnimPose->_aLocalPoses[i];
     JointPose* nextJoint = &nextAnimPose->_aLocalPoses[i];
     Matrix4 localTransform = LinearInterpolate(currJoint, nextJoint, currAnimPose->_time, nextAnimPose->_time, lt);
-    job._output->_currentPoses[i] = localTransform;
+
+    // For now, we are checking marked node ids of the gltf hierarchy.
+    for (size_t j = 0; j < pSkeleton->_joints.size(); ++j) {
+      if (pSkeleton->_joints[j]._id == currJoint->_id) {
+        job._output->_finalPalette[j] = localTransform;
+        break;  
+      }
+    }
   }
 
-  ApplySkeletonPose(job._output->_finalPalette, job._output->_currentPoses, pSkeleton);
+  ApplySkeletonPose(job._output->_finalPalette, globalTransform, pSkeleton);
 }
 
 
-void Animation::ApplySkeletonPose(Matrix4* pOutput, Matrix4* pLocalPoses, Skeleton* pSkeleton)
+void Animation::ApplySkeletonPose(Matrix4* pOutput, Matrix4 globalMatrix, Skeleton* pSkeleton)
 {
   if (!pSkeleton) return;
 
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
     Matrix4 parentTransform;
-    Matrix4 currentPose;
     u8 parentId = pSkeleton->_joints[i]._iParent;
-    if (parentId != Joint::kNoParentId) {
-      parentTransform = pLocalPoses[parentId];
+    if (parentId == Joint::kNoParentId) {
+      parentTransform = globalMatrix;
+    } else {
+      parentTransform = pOutput[parentId];
     }
-    // Now become work space joint matrices
-    currentPose = pLocalPoses[i] * parentTransform;
-    pLocalPoses[i] = currentPose;
+    pOutput[i] = pOutput[i] * parentTransform;
   }
 
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
-    pOutput[i] = pSkeleton->_joints[i]._InvBindPose * pSkeleton->_joints[i]._invGlobalTransform.Inverse();
-
+    pOutput[i] =  pSkeleton->_joints[i]._invBindPose * 
+                  pOutput[i] * 
+                  pSkeleton->_rootInvTransform;
   }
 }
 

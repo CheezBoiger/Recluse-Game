@@ -27,12 +27,16 @@ public:
   
   void EnableWorldSpace(b32 enable);
   void SetMaxParticleCount(u32 maxCount);
-  void SetMaxAlive(r32 maxAlive);
+  void SetMaxLife(r32 maxLife);
   void SetLifetimeScale(r32 scale);
   void SetTextureArray(Texture2DArray* texture);
   void SetGlobalScale(r32 globalScale);
   void SetBrightnessFactor(r32 scale);
+  void SetFadeIn(r32 fadeIn);
+  void SetFadeOut(r32 fadeOut);
+  void SetRate(r32 rate);
   void EnableSorting(b32 enable) { m_shouldSort = enable; } 
+  void SetAngleRate(r32 rate);
 
   void SetLevel(u32 idx, r32 at);
 

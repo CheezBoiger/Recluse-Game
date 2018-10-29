@@ -402,7 +402,7 @@ static ModelResultBits LoadAnimations(tinygltf::Model* gltfModel, Model* engineM
           pose._aLocalPoses[jointIndex]._trans = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
                                                          outputValues[outputId * 3 + 2]);
-          DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
+          pose._aLocalPoses[jointIndex]._id = node;
         }
       }
       if (channel.target_path == SAMPLE_ROTATION_STRING) {
@@ -416,7 +416,7 @@ static ModelResultBits LoadAnimations(tinygltf::Model* gltfModel, Model* engineM
                                                           outputValues[outputId * 4 + 1],
                                                           outputValues[outputId * 4 + 2],
                                                           outputValues[outputId * 4 + 3]);
-
+          pose._aLocalPoses[jointIndex]._id = node;
         }
       }
       if (channel.target_path == SAMPLE_SCALE_STRING) {
@@ -429,7 +429,7 @@ static ModelResultBits LoadAnimations(tinygltf::Model* gltfModel, Model* engineM
           pose._aLocalPoses[jointIndex]._scale = Vector3(outputValues[outputId * 3 + 0],
                                                          outputValues[outputId * 3 + 1],
                                                          outputValues[outputId * 3 + 2]);
-          DEBUG_OP(pose._aLocalPoses[jointIndex]._id = node);
+          pose._aLocalPoses[jointIndex]._id = node;
         }
       }
       if (channel.target_path == SAMPLE_WEIGHTS_STRING) {
@@ -958,14 +958,36 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   const tinygltf::Accessor& accessor = model.accessors[skin.inverseBindMatrices];
   const tinygltf::BufferView& bufView = model.bufferViews[accessor.bufferView];
   const tinygltf::Buffer& buf = model.buffers[bufView.buffer];
+  
+  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);  
+
+  for (size_t i = 0; i < accessor.count; ++i) {
+    Matrix4 invBindMat(&bindMatrices[i * 16]);
+    Matrix4 bindMat = invBindMat.Inverse();
+    bindMat = bindMat * parentMatrix;
+    skeleton._joints[i]._invBindPose = bindMat.Inverse();
+  }
 
   struct NodeTag {
-    i32               _gltfParent;
     u8                _parent;
     Matrix4           _parentTransform;
   };
 
   std::map<i32, NodeTag> nodeMap;
+  if (skin.skeleton != -1) {
+    const tinygltf::Node& root = model.nodes[skin.skeleton];
+    NodeTransform rootTransform = CalculateGlobalTransform(root, 
+      Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
+    skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
+    NodeTag tag{ 0xff, Matrix4() };
+    nodeMap[skin.skeleton] = tag;
+    for (size_t i = 0; i < root.children.size(); ++i) {
+      NodeTag tag = { (rootInJoints ? static_cast<u8>(0) : static_cast<u8>(0xff)), 
+        rootTransform._globalMatrix };
+      nodeMap[root.children[i]] = tag;
+    }
+  }
+
   for (size_t i = 0; i < skin.joints.size(); ++i) {
     size_t idx = i;
     Joint& joint = skeleton._joints[idx];
@@ -976,29 +998,17 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     auto it = nodeMap.find(skinJointIdx);
     if (it != nodeMap.end()) {
       NodeTag& tag = it->second;
-      localTransform = CalculateGlobalTransform(node, tag._parentTransform);
+      localTransform = CalculateGlobalTransform(node, tag._parentTransform);    
       joint._iParent = tag._parent;
-      joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
-    } else {
-      localTransform = CalculateGlobalTransform(node, Matrix4());
-      joint._iParent = 0xff;
-      joint._invGlobalTransform = localTransform._globalMatrix.Inverse();
     }
 
-    DEBUG_OP(joint._id = static_cast<u8>(skinJointIdx));
+    joint._id = static_cast<u8>(skinJointIdx);
     for (size_t child = 0; child < node.children.size(); ++child) {
-      NodeTag tag = { static_cast<u8>(skinJointIdx), i, localTransform._globalMatrix };
+      NodeTag tag = { static_cast<u8>(idx), localTransform._globalMatrix };
       nodeMap[node.children[child]] = tag;
     }
   }
-
-  const r32* bindMatrices = reinterpret_cast<const r32*>(&buf.data[bufView.byteOffset + accessor.byteOffset]);
-
-  for (size_t i = 0; i < accessor.count; ++i) {
-    Matrix4 invBindMat(&bindMatrices[i * 16]);
-    skeleton._joints[i]._InvBindPose = invBindMat;
-  }
-
+  
   Skeleton::PushSkeleton(skeleton);
   
   engineModel->skeletons.push_back(Skeleton::GetSkeleton(skeleton._uuid));

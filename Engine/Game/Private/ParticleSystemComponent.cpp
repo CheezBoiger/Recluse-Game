@@ -117,10 +117,10 @@ void ParticleSystemComponent::UseAtlas(b32 enable)
 }
 
 
-void ParticleSystemComponent::SetMaxAlive(r32 maxAlive)
+void ParticleSystemComponent::SetMaxLife(r32 maxLife)
 {
   if (!m_pParticleSystem) return;
-  m_pParticleSystem->_particleConfig._particleMaxAlive = maxAlive;
+  m_pParticleSystem->_particleConfig._particleMaxAlive = maxLife;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
@@ -145,6 +145,38 @@ void ParticleSystemComponent::SetBrightnessFactor(r32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lightFactor = scale;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetFadeOut(r32 fadeOut)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._fadeAt = fadeOut;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._fadeIn = fadeIn;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetAngleRate(r32 rate)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._angleRate = rate;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetRate(r32 rate)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._rate = rate;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 } // Recluse

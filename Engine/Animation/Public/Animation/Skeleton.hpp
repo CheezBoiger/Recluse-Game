@@ -17,11 +17,10 @@ typedef i32      skeleton_uuid_t;
 struct Joint {
   static const u8 kNoParentId = 0xff;
 
-  Matrix4       _InvBindPose;     // Bind pose transform of this joint.
-  Matrix4       _invGlobalTransform;  // Bind shape matrix, transform that is relative to its parent.
+  Matrix4       _invBindPose;     // Bind pose transform of this joint.
   std::string   _name;            // name of the joint.
   u8            _iParent;         // Joint parent, represented as an id in byte form.
-  DEBUG_OP(u8   _id);             // node id test.
+  u8            _id;              // node id test.
 };
 
 
@@ -58,5 +57,6 @@ public:
   // This skeleton's unique id.
   skeleton_uuid_t             _uuid;
   b32                         _rootInJoints;
+  Matrix4                     _rootInvTransform;
 };
 } // Recluse

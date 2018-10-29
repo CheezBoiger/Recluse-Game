@@ -108,6 +108,7 @@ public:
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
     trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
+    //trans->Rotation = Quaternion::AngleAxis(Radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -230,9 +231,9 @@ public:
       img.Load("smoke.png");
       m_particleTexture->Update(img, 1, 1);
       img.CleanUp();
-      m_pParticleSystem->SetMaxParticleCount(2);
+      m_pParticleSystem->SetMaxParticleCount(64);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
-      m_pParticleSystem->SetGlobalScale(10.0f);
+      m_pParticleSystem->SetGlobalScale(1.0f);
       m_pParticleSystem->SetBrightnessFactor(0.2f);
 /*
       m_pParticleSystem->SetLevel(0, 15.0f);
