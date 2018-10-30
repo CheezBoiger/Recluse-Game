@@ -61,7 +61,7 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->Enable(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("RiggedFigure", &model);
+    ModelCache::Get("Wolf", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -92,6 +92,9 @@ public:
     m_pRendererComponent->ForceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->AddMesh(model->meshes[i]);
+      for (size_t j = 0; j < model->meshes[i]->GetPrimitiveCount(); ++j) {
+        model->meshes[i]->GetPrimitive(j)->_pMat->EnableEmissive(false);
+      }
     }
 
 #if 0
@@ -107,8 +110,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
-    //trans->Rotation = Quaternion::AngleAxis(Radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->Scale = Vector3(50.0f, 50.0f, 50.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -120,7 +122,7 @@ public:
     clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
     
     m_pAnim->AddClip(clip, "InitialPose");
-    m_pAnim->Playback("InitialPose");
+    //m_pAnim->Playback("InitialPose");
     m_pAnim->SetPlaybackRate(0.0f);
   }
 
@@ -195,7 +197,7 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-#define ENABLE_PARTICLE_TEXTURE_TEST 1
+#define ENABLE_PARTICLE_TEXTURE_TEST 0
 #define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
@@ -226,34 +228,19 @@ public:
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
       m_particleTexture = gRenderer().CreateTexture2DArray();
-      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 420, 420, 1);
+      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 128, 128, 64);
       Image img;
-      img.Load("smoke.png");
-      m_particleTexture->Update(img, 1, 1);
+      img.Load("ParticleAtlas.png");
+      m_particleTexture->Update(img, 8, 8);
       img.CleanUp();
       m_pParticleSystem->SetMaxParticleCount(64);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(1.0f);
-      m_pParticleSystem->SetBrightnessFactor(0.2f);
-/*
-      m_pParticleSystem->SetLevel(0, 15.0f);
-      m_pParticleSystem->SetLevel(1, 14.0f);
-      m_pParticleSystem->SetLevel(2, 13.0f);
-      m_pParticleSystem->SetLevel(3, 12.0f);
-      m_pParticleSystem->SetLevel(4, 11.0f);
-      m_pParticleSystem->SetLevel(5, 10.0f);
-      m_pParticleSystem->SetLevel(6, 9.0f);
-      m_pParticleSystem->SetLevel(7, 8.0f);
-      m_pParticleSystem->SetLevel(8, 7.0f);
-      m_pParticleSystem->SetLevel(9, 6.0f);
-      m_pParticleSystem->SetLevel(10, 5.0f);
-      m_pParticleSystem->SetLevel(11, 4.0f);
-      m_pParticleSystem->SetLevel(12, 3.0f);
-      m_pParticleSystem->SetLevel(13, 2.0f);
-      m_pParticleSystem->SetLevel(14, 1.0f);
-      m_pParticleSystem->SetLevel(15, 0.5f);
-*/
-    m_pParticleSystem->EnableSorting(true);
+      m_pParticleSystem->SetBrightnessFactor(1.0f);
+      m_pParticleSystem->SetFadeOut(15.0f);
+      m_pParticleSystem->SetFadeIn(0.0f);
+    m_pParticleSystem->SetAnimationScale(50.0f);
+      m_pParticleSystem->EnableSorting(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER

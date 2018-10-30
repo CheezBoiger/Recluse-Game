@@ -101,14 +101,6 @@ void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
 }
 
 
-void ParticleSystemComponent::SetLevel(u32 idx, r32 at)
-{
-  if (!m_pParticleSystem) return;
-  m_pParticleSystem->_particleConfig._level[idx] = at;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
-}
-
-
 void ParticleSystemComponent::UseAtlas(b32 enable)
 {
   if (!m_pParticleSystem) return;
@@ -161,6 +153,14 @@ void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._fadeIn = fadeIn;
+  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
+
+
+void ParticleSystemComponent::SetAnimationScale(r32 scale)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._animScale = scale;
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 

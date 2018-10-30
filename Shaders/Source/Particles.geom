@@ -46,7 +46,6 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 layout (set = 1, binding = 0) uniform ParticleBuffer {
-  float level[16];
   mat4  model;
   mat4  modelView;
   vec4  hasTexture;
@@ -54,6 +53,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  lightFactor;
   vec4  angleRate;
   vec4  fadeIn;
+  vec4  animScale;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;

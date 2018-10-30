@@ -50,7 +50,6 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
 } gWorldBuffer;
 
 layout (set = 1, binding = 0) uniform ParticleBuffer {
-  float level[16];
   mat4  model;
   mat4  modelView;
   vec4  hasTexture;
@@ -58,6 +57,7 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   vec4  lightFactor;
   vec4  angleRate;
   vec4  fadeIn;
+  vec4  animScale;
   float fadeAt;
   float fadeThreshold;
   float angleThreshold;
@@ -93,41 +93,7 @@ void main()
   vec4 color = frag_in.color;
   if (particleBuffer.hasTexture.x >= 1.0) {
     vec3 uvw = vec3(frag_in.uv, 0.0);
-
-    if (frag_in.life >= particleBuffer.level[0]) {
-      uvw.z = 0.0;
-    } else if (frag_in.life >= particleBuffer.level[1]) {
-      uvw.z = 1.0;
-    } else if (frag_in.life >= particleBuffer.level[2]) {
-      uvw.z = 2.0;
-    } else if (frag_in.life >= particleBuffer.level[3]) {
-      uvw.z = 3.0;
-    } else if (frag_in.life >= particleBuffer.level[4]) {
-      uvw.z = 4.0;
-    } else if (frag_in.life >= particleBuffer.level[5]) {
-      uvw.z = 5.0;
-    } else if (frag_in.life >= particleBuffer.level[6]) {
-      uvw.z = 6.0;
-    } else if (frag_in.life >= particleBuffer.level[7]) {
-      uvw.z = 7.0;
-    } else if (frag_in.life >= particleBuffer.level[8]) {
-      uvw.z = 8.0;
-    } else if (frag_in.life >= particleBuffer.level[9]) {
-      uvw.z = 9.0;
-    } else if (frag_in.life >= particleBuffer.level[10]) {
-      uvw.z = 10.0;
-    } else if (frag_in.life >= particleBuffer.level[11]) {
-      uvw.z = 11.0;
-    } else if (frag_in.life >= particleBuffer.level[12]) {
-      uvw.z = 12.0;
-    } else if (frag_in.life >= particleBuffer.level[13]) {
-      uvw.z = 13.0;
-    } else if (frag_in.life >= particleBuffer.level[14]) {
-      uvw.z = 14.0;
-    } else if (frag_in.life >= particleBuffer.level[15]) {
-      uvw.z = 15.0;
-    }
-    
+    uvw.z = (particleBuffer.particleMaxAlive - frag_in.life) * particleBuffer.animScale.x;
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;

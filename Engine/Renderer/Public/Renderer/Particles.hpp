@@ -52,11 +52,6 @@ struct ParticleTrail {
 
 
 struct ParticleSystemConfig {
-  // level determines at which point in a particle's life, will it 
-  // trigger the specific texture index to be displayed, and for how long
-  // until the next level of its life is reached. Max of 16 levels, which also means
-  // a max of 16 levels allowed in a particle texture array.
-  Vector4         _level[16];
   Matrix4         _model;           // Model of the particle system source.
   Matrix4         _modelView;       // ModelView matrix.
   Vector4         _hasAtlas;          // 1.0 if system has an atlas.
@@ -64,6 +59,7 @@ struct ParticleSystemConfig {
   Vector4         _lightFactor;
   Vector4         _angleRate;         // rate of which to rotate.
   Vector4         _fadeIn;
+  Vector4         _animScale;
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 

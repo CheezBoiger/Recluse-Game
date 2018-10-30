@@ -170,7 +170,7 @@ static SamplerAddressMode GetSamplerAddressMode(i32 wrap)
       case TINYGLTF_TEXTURE_WRAP_REPEAT: return SAMPLER_ADDRESS_REPEAT;
       case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE: return SAMPLER_ADDRESS_CLAMP_TO_EDGE;
       case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT: return SAMPLER_ADDRESS_MIRRORED_REPEAT;
-      default: return SAMPLER_ADDRESS_CLAMP_TO_EDGE;
+      default: return SAMPLER_ADDRESS_REPEAT;
     }
 }
 
@@ -225,7 +225,6 @@ static void InitSamplerFilterMode(SamplerInfo& info, i32 minFilter, i32 magFilte
 
 static ModelResultBits LoadSamplers(tinygltf::Model* gltfModel, Model* engineModel)
 {
-  
   for (auto& sampler : gltfModel->samplers) {
     SamplerInfo samplerInfo = { };
     samplerInfo._addrU = GetSamplerAddressMode(sampler.wrapS);
@@ -739,7 +738,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4(Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix), 0.0f);
+          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).Normalize(), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
