@@ -61,7 +61,7 @@ public:
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->Enable(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("Wolf", &model);
+    ModelCache::Get("BrainStem", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
@@ -110,7 +110,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(50.0f, 50.0f, 50.0f);
+    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -122,7 +122,7 @@ public:
     clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
     
     m_pAnim->AddClip(clip, "InitialPose");
-    //m_pAnim->Playback("InitialPose");
+    m_pAnim->Playback("InitialPose");
     m_pAnim->SetPlaybackRate(0.0f);
   }
 
@@ -230,7 +230,7 @@ public:
       m_particleTexture = gRenderer().CreateTexture2DArray();
       m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 128, 128, 64);
       Image img;
-      img.Load("ParticleAtlas.png");
+      img.Load("Assets/World/ParticleAtlas.png");
       m_particleTexture->Update(img, 8, 8);
       img.CleanUp();
       m_pParticleSystem->SetMaxParticleCount(64);
@@ -238,9 +238,11 @@ public:
       m_pParticleSystem->SetGlobalScale(1.0f);
       m_pParticleSystem->SetBrightnessFactor(1.0f);
       m_pParticleSystem->SetFadeOut(15.0f);
+      m_pParticleSystem->SetAngleRate(0.0f);
       m_pParticleSystem->SetFadeIn(0.0f);
-    m_pParticleSystem->SetAnimationScale(50.0f);
-      m_pParticleSystem->EnableSorting(true);
+      m_pParticleSystem->SetMaxLife(1.5f);
+      m_pParticleSystem->SetAnimationScale(50.0f, 64.0f);
+      m_pParticleSystem->EnableSorting(false);
     }
 #endif
 #if MODEL_TYPE == MONSTER

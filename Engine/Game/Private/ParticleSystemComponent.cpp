@@ -35,6 +35,7 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
       p._initVelocity = p._velocity;
       p._info.w = life;
       p._info.y = 0.5f;
+      p._info.x = 180.0f;
       p._acceleration = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
       life += offset * config->_lifeTimeScale;
     }
@@ -157,10 +158,10 @@ void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
 }
 
 
-void ParticleSystemComponent::SetAnimationScale(r32 scale)
+void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max)
 {
   if (!m_pParticleSystem) return;
-  m_pParticleSystem->_particleConfig._animScale = scale;
+  m_pParticleSystem->_particleConfig._animScale = Vector2(scale, max);
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 

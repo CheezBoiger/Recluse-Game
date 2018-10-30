@@ -37,7 +37,7 @@ public:
   void SetRate(r32 rate);
   void EnableSorting(b32 enable) { m_shouldSort = enable; } 
   void SetAngleRate(r32 rate);
-  void SetAnimationScale(r32 scale);
+  void SetAnimationScale(r32 scale, r32 max = 16.0f);
 
   void UseAtlas(b32 enable);
 

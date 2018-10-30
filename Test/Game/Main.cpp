@@ -92,13 +92,13 @@ public:
     brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
-      img.Load("testcubemap.png");
+      img.Load("Assets/World/testcubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
-      img.Load("Probe1.png");
+      img.Load("Assets/World/Probe1.png");
       cubemap1->Update(img);
       img.CleanUp();
-      img.Load("brdf.png");
+      img.Load("Assets/World/brdf.png");
       brdfLUT->Update(img);
       img.CleanUp();
       gRenderer().SetSkyboxCubeMap(cubemap0);

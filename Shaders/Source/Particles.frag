@@ -93,7 +93,7 @@ void main()
   vec4 color = frag_in.color;
   if (particleBuffer.hasTexture.x >= 1.0) {
     vec3 uvw = vec3(frag_in.uv, 0.0);
-    uvw.z = (particleBuffer.particleMaxAlive - frag_in.life) * particleBuffer.animScale.x;
+    uvw.z = mod((particleBuffer.particleMaxAlive - frag_in.life) * particleBuffer.animScale.x, particleBuffer.animScale.y);
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;

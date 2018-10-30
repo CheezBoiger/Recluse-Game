@@ -20,6 +20,9 @@ struct Vector4 {
   Vector4(const Vector3& other, r32 w = 0.0f)
     : Vector4(other.x, other.y, other.z, w)  { }
 
+  Vector4(const Vector2& other, r32 z = 0.0f, r32 w = 0.0f)
+    : Vector4(other.x, other.y, z, w) { }
+
   Vector4(const r32* rawDat)
     : Vector4(rawDat[0], rawDat[1], rawDat[2], rawDat[3]) 
   { }
