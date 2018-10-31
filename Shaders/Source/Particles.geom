@@ -75,7 +75,7 @@ in VertOut {
 
 out FragIn {
   vec4  color;
-  vec4  worldPos;
+  vec4  clipPos;
   vec2  uv;
   float angle;
   float life;
@@ -100,6 +100,7 @@ void main()
     frag_in.uv = vec2(0.0, 0.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
+    frag_in.clipPos = gl_Position.xyzw;
     EmitVertex();
     
     vec2 vb = vec2(-0.5, 0.5);
@@ -108,6 +109,7 @@ void main()
     frag_in.uv = vec2(0.0, 1.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
+    frag_in.clipPos = gl_Position.xyzw;
     EmitVertex();
     
     vec2 vd = vec2(0.5, -0.5);
@@ -116,6 +118,7 @@ void main()
     frag_in.uv = vec2(1.0, 0.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
+    frag_in.clipPos = gl_Position.xyzw;
     EmitVertex();
     
     vec2 vc = vec2(0.5, 0.5);
@@ -124,6 +127,7 @@ void main()
     frag_in.uv = vec2(1.0, 1.0);
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
+    frag_in.clipPos = gl_Position.xyzw;
     EmitVertex();
     
     EndPrimitive();

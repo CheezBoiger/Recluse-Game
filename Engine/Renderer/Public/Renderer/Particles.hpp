@@ -59,7 +59,7 @@ struct ParticleSystemConfig {
   Vector4         _lightFactor;
   Vector4         _angleRate;         // rate of which to rotate.
   Vector4         _fadeIn;
-  Vector4         _animScale;
+  Vector4         _animScale;       // x = rate, y = maxOffset, z = offset
   r32             _fadeAt;
   r32             _fadeThreshold;
   r32             _angleThreshold; 

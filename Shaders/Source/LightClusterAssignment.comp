@@ -102,8 +102,19 @@ layout (set = 2, binding = 0) writeonly buffer Cluster {
 // indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
 // to that source.
 layout (set = 2, binding = 1) writeonly buffer indices {
-  ClusterIndex      clusterIndices[];
+  uint      clusterIndices[];
 };
+
+
+layout (set = 2, binding = 2) buffer LightBVH {
+  uint  numLevels;
+  uint  numNodes;
+  uint  numMaxNodes;
+  uint  numMaxLights;
+  vec4  nodesMin[];
+  vec4  nodesMax[];
+  uvec4 nodeIndices[];
+} lightBVH;
 
 // Light data.
 layout (set = 3, binding = 0) uniform LightBuffer {
@@ -116,12 +127,121 @@ layout (set = 3, binding = 0) uniform DecalBuffer {
   DecalInfo       decals[MAX_DECALS_SIZE];
 } gDecalBuffer;
 
-layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 1) in;
+
+#define NAN 0./0.
+
+///////////////////////////////////////////////////////////////////////////
+// Light BVH functions.
+///////////////////////////////////////////////////////////////////////////
+
+uint GetLevelStart(uint level)
+{
+  switch (level) {
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return 33;
+    case 3: return 1057;
+    case 4: return 33825;
+    case 5: return 1082401;
+  }
+  return 0;
+}
+
+
+void SetNodeLightBVH(uint level, uint nodeId, vec3 nodeMin, vec3 nodeMax)
+{
+  uint levelStart = GetLevelStart(level);
+  uint nodeIndex = levelStart + nodeId;
+  if ( gl_GlobalInvocationID.x == 0 ) {
+    lightBVH.nodesMin[nodeIndex] = vec4(nodeMin, 0.0);
+    lightBVH.nodesMax[nodeIndex] = vec4(nodeMax, 0.0);
+  }
+}
+
+
+void SetLeafLightBVH(uint leafId, uint lightId) 
+{
+  if ( leafId < lightBVH.numNodes ) {
+    lightBVH.nodeIndices[leafId].x = lightId;
+  }
+}
+
+
+vec3 GetNodeMin(uint idx)
+{
+  return lightBVH.nodesMin[idx].xyz;
+}
+
+
+vec3 GetNodeMax(uint idx)
+{
+  return lightBVH.nodesMax[idx].xyz;
+}
+
+
+void SetRoot(vec4 rootMin, vec4 rootMax)
+{
+  lightBVH.nodesMin[0] = rootMin;
+  lightBVH.nodesMax[0] = rootMax;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//
+///////////////////////////////////////////////////////////////////////////
+
+vec4 SphereAABBMinOP(vec4 aa, vec4 ab)
+{
+  return vec4(min(aa.x, ab.x),
+              min(aa.y, ab.y),
+              min(aa.z, ab.z),
+              0.0);
+}
+
+
+vec4 SphereAABBMaxOP(vec4 aa, vec4 ab)
+{
+  return vec4(max(aa.x, ab.x),
+              max(aa.y, ab.y),
+              max(aa.z, ab.z),
+              0.0);
+}
+
+
+bool Overlaps(const vec4 aaMin, const vec4 aaMax, const vec4 abMin, const vec4 abMax)
+{
+  return aaMax.x > abMin.x && aaMin.x < abMax.x
+      && aaMax.y > abMin.y && aaMin.y < abMax.y
+      && aaMax.z > abMin.z && aaMin.z < abMax.z;
+}
+
+
+PointLight GetLightRange(uint idx)
+{
+  if (idx < MAX_POINT_LIGHTS) {
+    PointLight l;
+    l.position = vec4(NAN, NAN, NAN, NAN);
+    return l;
+  }
+  return gLightBuffer.pointLights[idx];
+}
+
+
+void LightHierarchyMakeKeys()
+{
+  uint index = gl_GlobalInvocationID.x;
+  if (index < MAX_POINT_LIGHTS) return;
+  const uint kCoordBits = 8;
+  const uint kCoordScale = (1u<<kCoordBits) - 1u; 
+  
+  PointLight sphere = GetLightRange(index);
+  if (sphere.position.x == NAN) return;
+  
+}
+
+
+layout (local_size_x = WORKGROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-  ivec2 imgUv = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
-  vec2 uv = (vec2(imgUv) + 0.5) / vec2(gWorldBuffer.screenSize);
-  float depth = texture(inDepth, uv).r;
-  
-  
+  LightHierarchyMakeKeys();  
 }

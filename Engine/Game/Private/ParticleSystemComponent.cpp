@@ -158,10 +158,10 @@ void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
 }
 
 
-void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max)
+void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max, r32 offset)
 {
   if (!m_pParticleSystem) return;
-  m_pParticleSystem->_particleConfig._animScale = Vector2(scale, max);
+  m_pParticleSystem->_particleConfig._animScale = Vector3(scale, max, offset);
   m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 

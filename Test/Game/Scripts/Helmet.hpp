@@ -197,7 +197,7 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-#define ENABLE_PARTICLE_TEXTURE_TEST 0
+#define ENABLE_PARTICLE_TEXTURE_TEST 1
 #define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
@@ -228,21 +228,22 @@ public:
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
       m_particleTexture = gRenderer().CreateTexture2DArray();
-      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 128, 128, 64);
+      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 192, 192, 25);
       Image img;
-      img.Load("Assets/World/ParticleAtlas.png");
-      m_particleTexture->Update(img, 8, 8);
+      img.Load("Assets/World/bloodhit-1.png");
+      m_particleTexture->Update(img, 5, 5);
       img.CleanUp();
-      m_pParticleSystem->SetMaxParticleCount(64);
+      m_pParticleSystem->SetMaxParticleCount(100);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(1.0f);
-      m_pParticleSystem->SetBrightnessFactor(1.0f);
-      m_pParticleSystem->SetFadeOut(15.0f);
+      m_pParticleSystem->SetBrightnessFactor(0.5f);
+      m_pParticleSystem->SetFadeOut(0.0f);
       m_pParticleSystem->SetAngleRate(0.0f);
       m_pParticleSystem->SetFadeIn(0.0f);
       m_pParticleSystem->SetMaxLife(1.5f);
-      m_pParticleSystem->SetAnimationScale(50.0f, 64.0f);
-      m_pParticleSystem->EnableSorting(false);
+      m_pParticleSystem->SetAnimationScale(25.0f, 8.0f, 0.0f);
+      m_pParticleSystem->UseAtlas(true);
+      m_pParticleSystem->EnableSorting(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER

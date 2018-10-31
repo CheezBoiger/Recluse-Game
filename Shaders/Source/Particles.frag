@@ -72,7 +72,7 @@ layout (set = 1, binding = 1) uniform sampler2DArray particleAtlas;
 
 in FragIn {
   vec4  color;
-  vec4  worldPos;
+  vec4  clipPos;
   vec2  uv;
   float angle;
   float life;
@@ -87,13 +87,18 @@ vec4 SRGBToLINEAR(vec4 srgbIn)
 
 void main()
 {
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.worldPos.xyz);
+  vec4 worldPos = frag_in.clipPos / frag_in.clipPos.w;
+  worldPos *= gWorldBuffer.invViewProj;
+  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - worldPos.xyz);
   // for test.
   // TODO(): 
   vec4 color = frag_in.color;
   if (particleBuffer.hasTexture.x >= 1.0) {
     vec3 uvw = vec3(frag_in.uv, 0.0);
-    uvw.z = mod((particleBuffer.particleMaxAlive - frag_in.life) * particleBuffer.animScale.x, particleBuffer.animScale.y);
+    uvw.z = mod(
+      (particleBuffer.particleMaxAlive - frag_in.life) * particleBuffer.animScale.x, 
+      particleBuffer.animScale.y) + particleBuffer.animScale.z;
+      
     vec4 t0 = texture(particleAtlas, uvw);
     color.xyz += t0.rgb * particleBuffer.lightFactor.r;
     color.w = t0.a;
