@@ -8,6 +8,8 @@ set(RS_SOURCE_DIR Source)
 set(RS_CAMERA_DIR ${RS_SOURCE_DIR}/Camera)
 set(RS_WEAPON_DIR ${RS_SOURCE_DIR}/Weapon)
 set(RS_PLAYABLE_DIR ${RS_SOURCE_DIR}/Playable)
+set(RS_SCENES_DIR  ${RS_SOURCE_DIR}/Scenes)
+set(RS_UI_DIR       ${RS_SOURCE_DIR}/UI)
 
 
 include_directories(${RECLUSE_ENGINE_INCLUDE_DIRS})
@@ -34,6 +36,14 @@ set(RS_TARGET_FIILES
   ${RS_PLAYABLE_DIR}/IActor.hpp
   ${RS_PLAYABLE_DIR}/Player.hpp
   ${RS_PLAYABLE_DIR}/Player.cpp
+  
+  ${RS_SCENES_DIR}/TestScene.hpp
+  ${RS_SCENES_DIR}/TestScene.cpp
+  
+  ${RS_UI_DIR}/MenuHandle.hpp
+  ${RS_UI_DIR}/MenuHandle.cpp
+  ${RS_UI_DIR}/HUDDisplay.hpp
+  ${RS_UI_DIR}/HUDDisplay.cpp
   
   ${RS_SOURCE_DIR}/Main.cpp
 )

@@ -5,8 +5,6 @@
 
 using namespace Recluse;
 
-namespace rs {
-
 
 class IActor;
  
@@ -43,40 +41,41 @@ enum BulletType {
 
 enum DamageEffects {
   // No effect.
-  DamageEffects_None = (1 << 0),
+  DamageEffects_None = (0),
 
-  // Burning effect. Which deals damage over time and temporarily removes health regeneration.
-  DamageEffects_Burning = (1 << 1),
+  // Burning effect. Which deals damage over time and applies a percentage reduction of health regen.
+  DamageEffects_Burning = (1 << 0),
 
   // Frozen effect. Deals damage over time and slows down enemies.
-  DamageEffects_Frozen = (1 << 2),
+  DamageEffects_Frozen = (1 << 1),
 
-  // Possessed effect. Allows control from host.
-  DamageEffects_Possessed = (1 << 3),
+  // Possessed effect. Allows bypassing shield and armor, while preventing energy regeneration.
+  // Possessed enemies are also capable of instant death if health is dropped below a certain threshold.
+  DamageEffects_Possessed = (1 << 2),
 
   // Stunned effects. Causes victim to be disabled for a duration.
-  DamageEffects_Stunned = (1 << 4),
+  DamageEffects_Stunned = (1 << 3),
 
   // Dazed effect. Causes difficulty in movement on victim for a duration.
-  DamageEffects_Dazed = (1 << 5),
+  DamageEffects_Dazed = (1 << 4),
 
   // Shocked effect. Boosts damage onto victim from enemies.
-  DamageEffects_Shocked = (1 << 6),
+  DamageEffects_Shocked = (1 << 5),
 
   // Poisoned effect. Causes damage over time and a certain percentage of it will 
-  // kill the victim.
-  DamageEffects_Poisoned = (1 << 8),
+  // kill the victim instantly.
+  DamageEffects_Poisoned = (1 << 6),
 
   // Slow effect. Slows target at a certain percentage.
-  DamageEffects_Slowed = (1 << 9),
+  DamageEffects_Slowed = (1 << 7),
 
   // Bleeding effect. Causes target to lose health regen (may also negate health regen). No material can reduce its damage.
-  DamageEffects_Bleeding = (1 << 10)
+  DamageEffects_Bleeding = (1 << 8)
 };
 
 
 enum DamageType {
-  // Normal damage. the higher the damage, the likely hood of it dealing Dazed or stunned
+  // Normal damage. the higher the damage to armor ratio of the victim, the likely hood of it dealing Dazed or stunned
   // effects.
   DamageType_Normal = (1 << 0),
 
@@ -102,7 +101,10 @@ enum DamageType {
   DamageType_Puncture = (1 << 7),
 
   // Explosive damage deals dazed effects.
-  DamageType_Explosive = (1 << 9)
+  DamageType_Explosive = (1 << 9),
+
+  // Poison damage deals reduced energy regeneration along with damage to health.
+  DamageType_Poison = (1 << 10)
 };
 
 
@@ -130,7 +132,10 @@ enum ArmorMaterial {
   ArmorMaterial_ThickSkin = (1 << 4),
 
   // Demonic reduces all types, along with removing stun and daze.
-  ArmorMaterial_Demonic = (1 << 5)
+  ArmorMaterial_Demonic = (1 << 5),
+
+  // Shield allows damage absorption before dealing damage to health.
+  ArmorMaterial_Shield = (1 << 6)
 };
 
 
@@ -217,4 +222,3 @@ private:
 class WeaponDamageHandler {
 public:
 };
-}
