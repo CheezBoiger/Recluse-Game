@@ -83,6 +83,8 @@ public:
       m_pRendererComponent->AddMesh(model->meshes[i]);
     }
     trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
+    m_pRendererComponent->EnableDebug(false);
+    m_pRendererComponent->SetDebugBits(DEBUG_CONFIG_ALBEDO_BIT);
 #endif
     std::random_device r;
     std::mt19937 twist(r());

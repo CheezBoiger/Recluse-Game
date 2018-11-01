@@ -361,9 +361,10 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
   GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
   VkPipelineLayoutCreateInfo hdrLayout = {};
-  std::array<VkDescriptorSetLayout, 2> hdrSetLayout; 
-  hdrSetLayout[0] = hdr_gamma_descSetLayoutKey->Layout();
-  hdrSetLayout[1] = pHDR->GetSetLayout()->Layout();
+  std::array<VkDescriptorSetLayout, 3> hdrSetLayout; 
+  hdrSetLayout[0] = GlobalSetLayoutKey->Layout();
+  hdrSetLayout[1] = hdr_gamma_descSetLayoutKey->Layout();
+  hdrSetLayout[2] = pHDR->GetSetLayout()->Layout();
 
   Shader* HdrFrag = Rhi->CreateShader();
   Shader* HdrVert = Rhi->CreateShader();
@@ -401,7 +402,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  hdrLayout.setLayoutCount = static_cast<u32>(hdrSetLayout.size());;
+  hdrLayout.setLayoutCount = static_cast<u32>(hdrSetLayout.size());
   hdrLayout.pSetLayouts = hdrSetLayout.data();
   hdrLayout.pPushConstantRanges = &pushConstantRange;
   hdrLayout.pushConstantRangeCount = 1;

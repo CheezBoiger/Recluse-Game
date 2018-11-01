@@ -900,7 +900,7 @@ void Renderer::SetUpDescriptorSetLayouts()
   // HDR Layout pass.
   DescriptorSetLayout* hdrSetLayout = m_pRhi->CreateDescriptorSetLayout();
   hdr_gamma_descSetLayoutKey = hdrSetLayout;
-  std::array<VkDescriptorSetLayoutBinding, 3> hdrBindings;
+  std::array<VkDescriptorSetLayoutBinding, 2> hdrBindings;
   hdrBindings[0].binding = 0;
   hdrBindings[0].descriptorCount = 1;
   hdrBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -912,12 +912,6 @@ void Renderer::SetUpDescriptorSetLayouts()
   hdrBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   hdrBindings[1].pImmutableSamplers = nullptr;
   hdrBindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  hdrBindings[2].binding = 2;
-  hdrBindings[2].descriptorCount = 1;
-  hdrBindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  hdrBindings[2].pImmutableSamplers = nullptr;
-  hdrBindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   VkDescriptorSetLayoutCreateInfo hdrLayoutCi = {};
   hdrLayoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -2502,11 +2496,7 @@ void Renderer::SetUpHDR(b32 fullSetUp)
 
   DescriptorSet* hdrSet = m_pRhi->CreateDescriptorSet();
   hdr_gamma_descSetKey = hdrSet;
-  std::array<VkWriteDescriptorSet, 3> hdrWrites;
-  VkDescriptorBufferInfo hdrBufferInfo = {};
-  hdrBufferInfo.offset = 0;
-  hdrBufferInfo.range = sizeof(GlobalBuffer);
-  hdrBufferInfo.buffer = m_pGlobal->Handle()->NativeBuffer();
+  std::array<VkWriteDescriptorSet, 2> hdrWrites;
 
   VkDescriptorImageInfo pbrImageInfo = { };
   switch (m_currentGraphicsConfigs._AA) {
@@ -2551,16 +2541,6 @@ void Renderer::SetUpHDR(b32 fullSetUp)
   hdrWrites[1].pBufferInfo = nullptr;
   hdrWrites[1].pTexelBufferView = nullptr;
   hdrWrites[1].pNext = nullptr;
-
-  hdrWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  hdrWrites[2].descriptorCount = 1;
-  hdrWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  hdrWrites[2].dstArrayElement = 0;
-  hdrWrites[2].dstBinding = 2;
-  hdrWrites[2].pImageInfo = nullptr; //
-  hdrWrites[2].pBufferInfo = &hdrBufferInfo;
-  hdrWrites[2].pTexelBufferView = nullptr;
-  hdrWrites[2].pNext = nullptr;
 
   // Allocate and update the hdr buffer.
   hdrSet->Allocate(m_pRhi->DescriptorPool(), hdr_gamma_descSetLayoutKey);
@@ -3190,9 +3170,10 @@ void Renderer::GenerateHDRCmds(CommandBuffer* cmdBuffer)
   }
   cmdBuffer->EndRenderPass();
 
-  VkDescriptorSet dSets[2];
-  dSets[0] = hdrSet->Handle();
-  dSets[1] = m_pHDR->GetSet()->Handle();
+  VkDescriptorSet dSets[3];
+  dSets[0] = m_pGlobal->Set()->Handle();
+  dSets[1] = hdrSet->Handle();
+  dSets[2] = m_pHDR->GetSet()->Handle();
   
   if (m_currentGraphicsConfigs._AA == AA_FXAA_2x) {
     m_pAntiAliasingFXAA->GenerateCommands(m_pRhi, cmdBuffer, m_pGlobal);
@@ -3201,7 +3182,7 @@ void Renderer::GenerateHDRCmds(CommandBuffer* cmdBuffer)
   cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 2, dSets, 0, nullptr);
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Layout(), 0, 3, dSets, 0, nullptr);
     cmdBuffer->PushConstants(hdrPipeline->Layout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);

@@ -46,6 +46,7 @@ struct GlobalBuffer {
   Vector3         _vSunDir; // Sun direction, must be normalized!
   r32             _vSunBrightness;
   Vector4         _vAirColor;
+  Vector4         _fov;
   r32             _fEngineTime; // Current time passed within the engine.
   r32             _fDeltaTime;  // Elapsed time between frames.
   r32             _Gamma;

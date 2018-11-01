@@ -6,12 +6,24 @@
 
 #include "Common/Globals.glsl"
 
-layout (set = 1, binding = 0) uniform image2D inCurrentImage;
-layout (set = 1, binding = 1) uniform image2D inHisto;
-layout (set = 1, binding = 2) uniform image2D outResult;
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
 
-layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+in VertOut {
+  vec4 currWPos;
+  vec4 prevWPos;
+  vec4 nextWPos;
+} vert_out[];
+
+
+out FragIn {
+} frag_in;
+
+
 void main()
 {
+  
 
+  EndPrimitive();
 }

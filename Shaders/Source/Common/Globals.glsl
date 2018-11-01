@@ -16,10 +16,12 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   vec4  b_plane;
   vec4  n_plane;
   vec4  f_plane;
+  vec4  clipPlane0;
   vec2  mousePos;
   ivec2 screenSize;
   vec4  vSun; // Sundir.xyz and w is brightness.
   vec4  vAirColor;
+  vec4  fov;
   float fEngineTime; // total current time of the engine. 
   float fDeltaTime; // elapsed time between frames.
   float gamma;
@@ -31,8 +33,9 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   float fRayleighStength;
   float fMieStength;
   float fIntensity;
+  float zNear;
+  float zFar;
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
-  ivec2 pad;
 } gWorldBuffer;
