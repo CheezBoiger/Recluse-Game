@@ -186,7 +186,7 @@ void ParticleSystem::GetParticleState(Particle* output)
   {
     VkBufferCreateInfo stagingCI = {};
     stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    stagingCI.size = sizeof(Particle) * _particleConfig._maxParticles;
+    stagingCI.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     staging.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -240,13 +240,13 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
 
   // TODO(): Randomizing stuff, so we need to figure out how to check when a particle is dead,
   // and reupdate after.
-  std::vector<Particle> particles(_particleConfig._maxParticles);
+  std::vector<Particle> particles((size_t)_particleConfig._maxParticles);
   if (m_updateBits & PARTICLE_SORT_BUFFER_UPDATE_BIT) {
     CPUBoundSort(particles);
   } 
 
   if ((m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) && m_updateFunct) {
-    m_updateFunct(&_particleConfig, particles.data(), particles.size());
+    m_updateFunct(&_particleConfig, particles.data(), (u32)particles.size());
   }
 
   {
@@ -957,7 +957,7 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->Layout(),
       0, 2, sets, 0, nullptr);
     cmdBuffer->BindVertexBuffers(0, 1, &nativeBuffer, offset);
-    cmdBuffer->Draw(system->_particleConfig._maxParticles, 1, 0, 0);
+    cmdBuffer->Draw((u32)system->_particleConfig._maxParticles, 1, 0, 0);
   }
   cmdBuffer->EndRenderPass();
 }

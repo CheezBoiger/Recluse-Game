@@ -44,10 +44,11 @@ struct Particle {
 
 
 struct ParticleTrail {
-  Vector3 _lastPos;     // last position.
-  Vector3 _currentPos;  // current position.
-  Vector3 _nextPos;     // next position.
-  Vector3 _info;        // x = size, y = weight, z = life.
+  Vector4 _currWPos;     // last position.
+  Vector4 _prevWPos;  // current position.
+  Vector4 _nextWPos;     // next position.
+  Vector4 _color;       // color.
+  r32     _radius;
 };
 
 
@@ -101,7 +102,6 @@ struct ParticleSystem {
     , m_sortFunct(nullptr) { }
 
   typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> ParticleUpdateFunct;
-  typedef std::function<void(ParticleSystemConfig*, ParticleTrail*, u32)> ParticleTrailUpdateFunct;
   typedef std::function<b32(const Particle&, const Particle&)> ParticleSortFunct;
 
   // Must initialize for compute pipeline as well!
@@ -112,11 +112,9 @@ struct ParticleSystem {
 
   // Get the current state of the particle buffer. Size is the current max particle count of this particle system.
   void                  GetParticleState(Particle* output);
-  void                  GetParticleTrailState(ParticleTrail* output);
   
   void                  SetSortFunct(ParticleSortFunct sortFunct) { m_sortFunct = sortFunct; }
   void                  SetUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
-  void                  SetTrailUpdateFunct(ParticleTrailUpdateFunct updateFunct) { m_updateTrailFunct = updateFunct; }
 
   void                  SetParticleMaxCount(u32 maxCount) { 
     if (maxCount == _particleConfig._maxParticles) return; 
@@ -151,9 +149,15 @@ private:
   Buffer*                   m_particleConfigBuffer;
   particle_update_bits      m_updateBits;
   ParticleUpdateFunct       m_updateFunct;
-  ParticleTrailUpdateFunct  m_updateTrailFunct;
   ParticleSortFunct         m_sortFunct;
   ParticleType              m_particleType;
+};
+
+
+// Particle Trails.
+class ParticleTrailSystem {
+public:
+  
 };
 
 

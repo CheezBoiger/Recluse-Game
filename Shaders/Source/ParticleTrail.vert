@@ -10,12 +10,16 @@
 layout (location = 0) in vec4 currPosition;
 layout (location = 1) in vec4 prevPosition;
 layout (location = 2) in vec4 nextPosition;
+layout (location = 3) in vec4 color;
+layout (location = 4) in float radius;
 
 
 out VertOut {
   vec4 currWPos;
   vec4 prevWPos;
   vec4 nextWPos;
+  vec4 color;
+  float radius;
 } vert_out; 
 
 
@@ -26,7 +30,9 @@ void main()
   vec4 nextWorldPos = vec4(nextPosition.xyz, 1.0);
   
   gl_Position = currWorldPos;
-  vert_out.currPos = currWorldPos;
+  vert_out.currWPos = currWorldPos;
   vert_out.prevWPos = prevWorldPos;
   vert_out.nextWPos = nextWorldPos;
+  vert_out.color = color;
+  vert_out.radius = radius;
 }

@@ -92,7 +92,7 @@ public:
     m_pRendererComponent->ForceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->AddMesh(model->meshes[i]);
-      for (size_t j = 0; j < model->meshes[i]->GetPrimitiveCount(); ++j) {
+      for (u32 j = 0; j < model->meshes[i]->GetPrimitiveCount(); ++j) {
         model->meshes[i]->GetPrimitive(j)->_pMat->EnableEmissive(false);
       }
     }

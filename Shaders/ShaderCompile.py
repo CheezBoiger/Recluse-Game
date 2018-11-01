@@ -97,7 +97,10 @@ recluse_shaders = [
   Shader('ShadowMapping_MorphTargets', 'ShadowMapping.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
   Shader('LightClusterAssignment', 'LightClusterAssignment.comp'),
   Shader('PrefilterSpecular', 'PrefilterSpecular.comp'),
-  Shader('GenerateBRDFLUT', 'GenerateBRDFLUT.comp')
+  Shader('GenerateBRDFLUT', 'GenerateBRDFLUT.comp'),
+  Shader('ParticleTrail', 'ParticleTrail.vert'),
+  Shader('ParticleTrail', 'ParticleTrail.geom'),
+  Shader('ParticleTrail', 'ParticleTrail.frag')
 ]
   
 def get_shader_ext(filename):
