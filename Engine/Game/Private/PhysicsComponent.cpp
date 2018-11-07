@@ -140,4 +140,18 @@ void PhysicsComponent::AddCollider(Collider* coll)
   R_ASSERT(coll, "Collider was null.");
   gPhysics().AddCollider(m_pRigidBody, coll);
 }
+
+
+void PhysicsComponent::SetAngleFactor(const Vector3& angleFactor)
+{
+  m_pRigidBody->_angleFactor = angleFactor;
+  m_updateBits |= PHYSICS_UPDATE_ANGLE_FACTOR;
+}
+
+
+void PhysicsComponent::SetLinearFactor(const Vector3& linearFactor)
+{
+  m_pRigidBody->_linearFactor = linearFactor;
+  m_updateBits |= PHYSICS_UPDATE_LINEAR_FACTOR;
+}
 } // Recluse

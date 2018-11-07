@@ -22,6 +22,7 @@ struct Vector3 {
   static Vector3  FRONT;
   static Vector3  BACK;
   static Vector3  ZERO;
+  static Vector3  ONE;
 
   Vector3(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f)
     : x(x), y(y), z(z) { }

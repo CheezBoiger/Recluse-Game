@@ -52,6 +52,12 @@ public:
   void            SetFriction(r32 friction);
   void            SetRollingFriction(r32 friction);
   void            SetSpinningFriction(r32 friction);
+  
+  // Rotation axis that can be influenced by outside forces. 1.0 to enable, 0.0 to disable.
+  void            SetAngleFactor(const Vector3& angleFactor);
+
+  // Transform axis that can be influeced by outside forces. 1.0 to enable, 0.0 to disable.
+  void            SetLinearFactor(const Vector3& linearFactor);
 
   RigidBody*      GetRigidBody() { return m_pRigidBody; }
 

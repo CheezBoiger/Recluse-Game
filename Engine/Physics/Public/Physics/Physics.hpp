@@ -60,7 +60,9 @@ enum PhysicsUpdateBits {
   PHYSICS_UPDATE_RESET = (1 << 10),
   PHYSICS_UPDATE_MASS = (1 << 11),
   PHYSICS_UPDATE_CENTER_OF_MASS = (1 << 12),
-  PHYSICS_UPDATE_CLEAR_FORCES = (1 << 13)
+  PHYSICS_UPDATE_CLEAR_FORCES = (1 << 13),
+  PHYSICS_UPDATE_ANGLE_FACTOR = (1 << 14),
+  PHYSICS_UPDATE_LINEAR_FACTOR = (1 << 15)
 };
 
 
@@ -104,7 +106,7 @@ public:
   virtual void                            AddCollider(RigidBody* body, Collider* collider) { }
   virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
   virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) { return false; }
-
+  virtual void                            UpdateCollider(Collider* collider) { }
 private:
 };
 

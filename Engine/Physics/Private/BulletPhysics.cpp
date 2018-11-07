@@ -190,6 +190,7 @@ BoxCollider* BulletPhysics::CreateBoxCollider(const Vector3& scale)
   btCollisionShape* pShape = new btBoxShape(
     btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
   kCollisionShapes[collider->GetUUID()] = pShape;
+  
   return collider;
 }
 
@@ -202,7 +203,7 @@ void BulletPhysics::FreeRigidBody(RigidBody* body)
   RigidBundle& bundle = kRigidBodyMap[uuid];
   
   bt_manager._pWorld->removeRigidBody(bundle.native);
-  
+
   delete bundle.rigidBody;
   delete bundle.native->getMotionState();
   delete bundle.native;
@@ -609,6 +610,20 @@ void BulletPhysics::UpdateRigidBody(RigidBody* body, physics_update_bits_t bits)
 
   if (bits & PHYSICS_UPDATE_ANGULAR_VELOCITY) {
     
+  }
+
+  if (bits & PHYSICS_UPDATE_ANGLE_FACTOR) {
+    rigidBody->setAngularFactor(
+      btVector3(btScalar(body->_angleFactor.x),
+        btScalar(body->_angleFactor.y),
+        btScalar(body->_angleFactor.z)));
+  }
+
+  if (bits & PHYSICS_UPDATE_LINEAR_FACTOR) {
+    rigidBody->setLinearFactor(
+      btVector3(btScalar(body->_linearFactor.x),
+        btScalar(body->_linearFactor.y),
+        btScalar(body->_linearFactor.z)));
   }
 
   if (bits & PHYSICS_UPDATE_FORCES) {

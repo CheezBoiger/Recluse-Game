@@ -80,14 +80,14 @@ ShadowMapSystem::~ShadowMapSystem()
 }
 
 
-void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
+void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail)
 {
   // ShadowMap is a depth image.
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   ImageCi.arrayLayers = 1;
-  ImageCi.extent.width = 512 << shadowDetail;
-  ImageCi.extent.height = 512 << shadowDetail;
+  ImageCi.extent.width = 512 << dynamicShadowDetail;
+  ImageCi.extent.height = 512 << dynamicShadowDetail;
   ImageCi.extent.depth = 1;
   ImageCi.format = VK_FORMAT_D32_SFLOAT;
   ImageCi.imageType = VK_IMAGE_TYPE_2D;
@@ -133,16 +133,23 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
+    ImageCi.extent.width = 512 << staticShadowDetail;
+    ImageCi.extent.height = 512 << staticShadowDetail;
     m_pStaticMap->Initialize(ImageCi, ViewCi);
   }
 
   InitializeShadowMap(pRhi);
 
-  if (shadowDetail < GRAPHICS_QUALITY_MEDIUM) {
+  if (dynamicShadowDetail < GRAPHICS_QUALITY_MEDIUM) {
     m_viewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-    m_staticViewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
   } else {
     m_viewSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+  }
+
+  if (staticShadowDetail < GRAPHICS_QUALITY_MEDIUM) {
+    m_staticViewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+  }
+  else {
     m_staticViewSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
   }
 }
@@ -818,6 +825,7 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     // Pass as one matrix.
     view = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
     m_staticViewSpace._ViewProj = view * proj;
+    m_staticViewSpace._lightSz = 15.0f / m_staticShadowViewportHeight;
     R_ASSERT(m_pStaticLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
     memcpy(m_pStaticLightViewBuffer->Mapped(), &m_staticViewSpace, sizeof(LightViewSpace));
 
@@ -1098,7 +1106,7 @@ void LightDescriptor::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 #endif 
 
   m_primaryMapSystem._pSampler = m_pShadowSampler;
-  m_primaryMapSystem.Initialize(pRhi, shadowDetail);
+  m_primaryMapSystem.Initialize(pRhi, shadowDetail, shadowDetail);
 }
 
 

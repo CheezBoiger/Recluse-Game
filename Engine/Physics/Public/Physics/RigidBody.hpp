@@ -36,12 +36,16 @@ struct RigidBody : public PhysicsObject {
     , _kinematic(false)
     , _collider(nullptr)
     , _mass(1.0f)
-    , _friction(0.0f) { }
+    , _friction(0.0f)
+    , _angleFactor(Vector3::ONE)
+    , _linearFactor(Vector3::ONE) { }
   void                  InvokeCollision(Collision* body);
 
   Vector3               _velocity;
   Vector3               _position;
   Vector3               _centerOfMass;
+  Vector3               _linearFactor;
+  Vector3               _angleFactor;
   r32                   _mass;
   r32                   _friction;
   r32                   _rollingFriction;

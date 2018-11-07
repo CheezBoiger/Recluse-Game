@@ -57,6 +57,7 @@ public:
     m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
     m_pPhysicsComponent->Initialize(this);
+    m_pPhysicsComponent->SetAngleFactor(Vector3(0.0f, 0.0f, 1.0f));
     m_pCollider->SetCenter(Vector3(0.0f, 0.5f, 0.0f));
     m_pPhysicsComponent->AddCollider(m_pCollider);
     m_pPhysicsComponent->Enable(false);

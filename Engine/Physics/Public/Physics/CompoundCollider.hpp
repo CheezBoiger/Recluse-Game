@@ -14,6 +14,8 @@ class CompoundCollider : public Collider {
 public:
 
   void AddCollider(Collider* collider);
+  void RemoveCollider(Collider* collider);
+  void RecalculateLocalInertia();
 
   std::vector<Collider*> m_colliders;
 };

@@ -127,12 +127,12 @@ public:
     , m_pStaticLightViewDescriptorSet(nullptr)
     , m_rShadowViewportWidth(20.0f)
     , m_rShadowViewportHeight(20.0f)
-    , m_staticShadowViewportWidth(40.0f)
-    , m_staticShadowViewportHeight(40.0f) { }
+    , m_staticShadowViewportWidth(100.0f)
+    , m_staticShadowViewportHeight(100.0f) { }
 
   ~ShadowMapSystem();
 
-  void              Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail);
+  void              Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
   void              CleanUp(VulkanRHI* pRhi);
 
   Texture*          StaticMap() { return m_pStaticMap; }
