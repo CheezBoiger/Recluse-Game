@@ -14,6 +14,7 @@ namespace Recluse {
 class GameObject;
 class Collider;
 struct RigidBody;
+class MeshDescriptor;
 
 
 // NOTE(): Be sure to initialize Physics Component first, before calling any other function
@@ -61,11 +62,14 @@ public:
 
   RigidBody*      GetRigidBody() { return m_pRigidBody; }
 
+  void            EnableDebug(b32 enable);
+
 private:
 
   void            SetTransform(const Vector3& newPos, const Quaternion& newRot);
 
   RigidBody*              m_pRigidBody;
   physics_update_bits_t   m_updateBits;
+  b32                     m_debug;
 };
 } // Recluse

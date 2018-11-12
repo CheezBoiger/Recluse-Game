@@ -12,10 +12,15 @@ class Physics;
 
 class CompoundCollider : public Collider {
 public:
+  CompoundCollider()
+    : Collider(PHYSICS_COLLIDER_TYPE_COMPOUND) { }
+  ~CompoundCollider() { }
 
   void AddCollider(Collider* collider);
   void RemoveCollider(Collider* collider);
-  void RecalculateLocalInertia();
+
+  std::vector<Collider*>& GetColliders( void ) { return m_colliders; }
+private:
 
   std::vector<Collider*> m_colliders;
 };

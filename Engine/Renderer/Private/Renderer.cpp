@@ -317,7 +317,7 @@ void Renderer::Render()
 
   // begin frame. This is where we start our render process per frame.
   BeginFrame();
-    while (m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Recording() || !m_pRhi->CmdBuffersComplete()) {}
+    while (m_Offscreen._CmdBuffers[CurrentCmdBufferIdx()]->Recording()) {}
 
     // Render shadow map here. Primary shadow map is our concern.
     if (m_pLights->PrimaryShadowEnabled() || StaticNeedsUpdate()) {
@@ -2011,7 +2011,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   samplerCI.mipLodBias = 0.0f;
   samplerCI.maxAnisotropy = 16.0f;
   samplerCI.anisotropyEnable = VK_FALSE;
-  samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+  samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
   samplerCI.maxLod = 1.0f;
   samplerCI.minLod = 0.0f;
   samplerCI.unnormalizedCoordinates = VK_FALSE;
@@ -4188,10 +4188,11 @@ void Renderer::PushMeshRender(MeshRenderCmd& cmd)
     primCmd._instances = 1;
     primCmd._debugConfig = cmd._debugConfig;
 
-    R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
-    m_materialDescriptors.PushBack(prim._pMat->Native());
-    R_ASSERT(prim._pMat->Native() == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
-
+    if (primCmd._config & ~CMD_BASIC_RENDER_BIT) {
+      R_ASSERT(prim._pMat, "No material descriptor added to this primitive. Need to set a material descriptor!");
+      m_materialDescriptors.PushBack(prim._pMat->Native());
+      R_ASSERT(prim._pMat->Native() == m_materialDescriptors[m_materialDescriptors.Size() - 1], "Corrupted material descriptors.");
+    }
     if (primCmd._config & CMD_SKINNED_BIT) {
       R_ASSERT(cmd._pJointDesc, "No joint descriptoer added to this command.");
       m_jointDescriptors.PushBack(cmd._pJointDesc);

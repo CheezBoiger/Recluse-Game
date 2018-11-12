@@ -100,7 +100,8 @@ recluse_shaders = [
   Shader('GenerateBRDFLUT', 'GenerateBRDFLUT.comp'),
   Shader('ParticleTrail', 'ParticleTrail.vert'),
   Shader('ParticleTrail', 'ParticleTrail.geom'),
-  Shader('ParticleTrail', 'ParticleTrail.frag')
+  Shader('ParticleTrail', 'ParticleTrail.frag'),
+  Shader('Simple', 'Simple.frag')
 ]
   
 def get_shader_ext(filename):

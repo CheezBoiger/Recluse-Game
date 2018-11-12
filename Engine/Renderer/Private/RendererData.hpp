@@ -61,6 +61,13 @@ extern GraphicsPipeline*  debug_linePipeline;
 extern GraphicsPipeline*  debug_wireframePipeline;
 extern RenderPass*        debug_renderPass;
 
+// Simple renderer pipeline requires no material information, 
+// is not shaded with shadow, and has no ibl. For debugging purposes.
+extern GraphicsPipeline*  simple_staticWireframePipeline;
+extern GraphicsPipeline*  simple_staticSolidPipeline;
+extern GraphicsPipeline*  simple_dynamicWireframePipeline;
+extern GraphicsPipeline*  simple_dynamicSolidPipeline;
+
 extern GraphicsPipeline* ShadowMapPipelineKey;
 extern GraphicsPipeline* shadowMap_staticMorphTargetsPipeline;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;

@@ -11,13 +11,20 @@ namespace Recluse {
 
 
 class SphereCollider : public Collider {
+  static MeshData* kSphereMesh;
 public:
   SphereCollider(r32 radius = 0.0f)
-    : m_radius(radius) { }
+    : Collider(PHYSICS_COLLIDER_TYPE_SPHERE) 
+    , m_radius(radius) { }
 
   r32             GetRadius() const { return m_radius; }
 
   void            SetRadius(r32 radius);
+
+  static void InitMeshDebugData();
+  static void CleanUpMeshDebugData();
+
+  MeshData* GetDebugMeshData() override { return kSphereMesh; }
 
 private:
   r32 m_radius;

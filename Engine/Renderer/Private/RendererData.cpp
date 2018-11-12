@@ -48,6 +48,11 @@ GraphicsPipeline* transparent_staticShadowPipe = nullptr;
 GraphicsPipeline* transparent_dynamicShadowPipe = nullptr;
 GraphicsPipeline* transparent_colorFilterPipe = nullptr;
 
+GraphicsPipeline* simple_renderWireframePipeline = nullptr;
+GraphicsPipeline* simple_renderSolidPipeline = nullptr;
+extern GraphicsPipeline*  simple_dynamicWireframePipeline = nullptr;
+extern GraphicsPipeline*  simple_dynamicSolidPipeline = nullptr;
+
 GraphicsPipeline* gbuffer_PipelineKey               = nullptr;
 GraphicsPipeline* gbuffer_morphTargetPipeline     = nullptr;
 GraphicsPipeline* gbuffer_StaticPipelineKey         = nullptr;

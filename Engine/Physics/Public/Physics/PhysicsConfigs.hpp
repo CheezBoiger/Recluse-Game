@@ -7,6 +7,10 @@
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Core.hpp"
 
+#include "Renderer/MeshData.hpp"
+#include "Renderer/Vertex.hpp"
+#include "Renderer/Mesh.hpp"
+
 
 namespace Recluse {
 
@@ -28,6 +32,11 @@ public:
   virtual ~PhysicsObject() { }
 
   physics_uuid_t                GetUUID() const { return m_uuid; }
+
+  virtual MeshData*  GetDebugMeshData() { return nullptr;  }
+
+  virtual BasicDebugRenderCmd GetRenderCmd() { return BasicDebugRenderCmd(); }
+
 private:
   physics_uuid_t                m_uuid;
 };

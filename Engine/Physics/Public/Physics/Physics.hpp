@@ -74,8 +74,8 @@ public:
   virtual ~Physics() { }
   Physics() { }
 
-  virtual void                            OnStartUp() override { }
-  virtual void                            OnShutDown() override { }
+  virtual void                            OnStartUp() override;
+  virtual void                            OnShutDown() override;
 
 
   virtual RigidBody*                      CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }

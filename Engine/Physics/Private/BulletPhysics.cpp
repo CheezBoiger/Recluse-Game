@@ -94,8 +94,9 @@ void BulletPhysics::OnStartUp()
 {
   if (!gRenderer().IsActive()) {
     R_DEBUG(rWarning, "Renderer is not active! Physics will carry on however...\n");
+  } else {
+    Physics::OnStartUp();
   }
-
   Initialize();
 
   R_DEBUG(rNotify, "Physics Engine is successfully initialized.\n");
@@ -104,6 +105,7 @@ void BulletPhysics::OnStartUp()
 
 void BulletPhysics::OnShutDown()
 {
+  Physics::OnShutDown();
   CleanUp();
 }
 
@@ -513,8 +515,6 @@ void BulletPhysics::SetSpinningFriction(RigidBody* body, r32 friction)
 void BulletPhysics::UpdateCompoundCollider(RigidBody* body, CompoundCollider* collider)
 {
   R_ASSERT(body, "body is null.");
-  physics_uuid_t uuid = body->GetUUID();
-  RigidBundle* bundle = GetRigidBundle(uuid);
   btCompoundShape* pCompound = nullptr;
 
   {
@@ -532,8 +532,7 @@ void BulletPhysics::UpdateCompoundCollider(RigidBody* body, CompoundCollider* co
     pCompound->removeChildShape(pChild);
   }
 
-
-  auto& colliders = collider->m_colliders;
+  auto& colliders = collider->GetColliders();
   for (i32 i = 0; i < colliders.size(); ++i) {
     btCollisionShape* shape = GetCollisionShape(colliders[i]);
     if (!shape) continue;

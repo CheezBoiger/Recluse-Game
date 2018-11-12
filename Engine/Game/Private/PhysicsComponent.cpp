@@ -1,6 +1,8 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
 
 #include "PhysicsComponent.hpp"
+#include "Renderer/Renderer.hpp"
+#include "Renderer/MeshDescriptor.hpp"
 #include "GameObject.hpp"
 #include "Core/Exception.hpp"
 
@@ -35,6 +37,24 @@ void PhysicsComponent::Update()
   transform->Rotation = m_pRigidBody->_rotation;
   //Vector3 finalOffset = transform->Rotation * m_relOffset;
   transform->Position = m_pRigidBody->_position; // - finalOffset;
+
+  if (m_debug && m_pRigidBody->_collider) {
+    Collider* pCol = m_pRigidBody->_collider;
+    if (pCol->GetColliderType() == PHYSICS_COLLIDER_TYPE_COMPOUND) {
+      CompoundCollider* compound = static_cast<CompoundCollider*>(pCol);
+      auto colliders = compound->GetColliders();
+      for (size_t i = 0; i < colliders.size(); ++i) {
+        Collider* coll = colliders[i];
+        coll->Update();
+        BasicDebugRenderCmd rC = coll->GetRenderCmd();
+        gRenderer().PushMeshRender(rC);
+      }
+    } else {
+      m_pRigidBody->_collider->Update();
+      BasicDebugRenderCmd rC = m_pRigidBody->_collider->GetRenderCmd();
+      gRenderer().PushMeshRender(rC);
+    }
+  }
 }
 
 
@@ -153,5 +173,11 @@ void PhysicsComponent::SetLinearFactor(const Vector3& linearFactor)
 {
   m_pRigidBody->_linearFactor = linearFactor;
   m_updateBits |= PHYSICS_UPDATE_LINEAR_FACTOR;
+}
+
+
+void PhysicsComponent::EnableDebug(b32 enable)
+{
+  m_debug = enable;
 }
 } // Recluse

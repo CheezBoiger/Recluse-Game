@@ -39,7 +39,9 @@ enum CmdConfig {
   CMD_WATER_REFLECT_BIT = (1 << 10),  // Allow mesh to be reflected by water.
   CMD_STATIC_BIT        = (1 << 11),  // Mesh is static, or is not changing. Useful for shadow maps.
   CMD_SKINNED_BIT       = (1 << 12),  // command is skinned, contains joint buffer.
-  CMD_MORPH_BIT         = (1 << 13)   // command contains morph targets.
+  CMD_MORPH_BIT         = (1 << 13),  // command contains morph targets.
+  CMD_WIREFRAME_BIT     = (1 << 14),  // Wireframe mode.
+  CMD_BASIC_RENDER_BIT  = (1 << 15)   // Basic render bit, redirects rendering to simple pipeline, with no material.
 };
 
 
@@ -100,6 +102,11 @@ struct PrimitiveRenderCmd {
   u32                     _instances;
   CmdConfigBits           _config;
   DebugConfigBits         _debugConfig;
+};
+
+
+struct BasicDebugRenderCmd : public MeshRenderCmd {
+  Vector4                 _color;
 };
 
 

@@ -8,11 +8,30 @@
 #include "Renderer/Renderer.hpp"
 
 
+#include "SphereCollider.hpp"
+#include "BoxCollider.hpp"
+#include "Renderer/MeshData.hpp"
+#include "Renderer/MeshDescriptor.hpp"
+
 namespace Recluse {
 
 
 Physics& gPhysics()
 {
   return EngineModule<BulletPhysics>::Instance();
+}
+
+
+void Physics::OnStartUp()
+{
+  BoxCollider::InitMeshDebugData();
+  SphereCollider::InitMeshDebugData();
+}
+
+
+void Physics::OnShutDown()
+{
+  BoxCollider::CleanUpMeshDebugData();
+  SphereCollider::CleanUpMeshDebugData();
 }
 } // Recluse

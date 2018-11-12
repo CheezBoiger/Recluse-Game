@@ -120,19 +120,6 @@ void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   gCore().StartUp();
   gCore().ThrPool().RunAll();
   gFilesystem().StartUp();
-  gAnimation().StartUp();
-#if !defined FORCE_PHYSICS_OFF
-  gPhysics().StartUp();
-#endif
-#if !defined FORCE_AUDIO_OFF
-  gAudio().StartUp();
-#endif
-  // For renderer, you want to send the name to the device that will be used for debugging and
-  // information for vendors.
-  gRenderer().SetAppName(appName.c_str());
-  gRenderer().StartUp();
-
-  gUI().StartUp();
 
   Window::SetKeyboardCallback(KeyCallback);
   Window::SetWindowResizeCallback(WindowResized);
@@ -140,16 +127,32 @@ void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   Window::SetMouseButtonCallback(MouseButtonClick);
 
   m_window.Create(appName, width, height);
+
+  if (fullscreen) {
+    m_window.SetToFullScreen();
+  }
+  else {
+    m_window.SetToCenter();
+  }
+
+  // For renderer, you want to send the name to the device that will be used for debugging and
+  // information for vendors.
+  gRenderer().SetAppName(appName.c_str());
+  gRenderer().StartUp();
   gRenderer().Initialize(&m_window, params);
 
   Material::InitializeDefault(&gRenderer());
   LightComponent::GlobalInitialize();
 
-  if (fullscreen) {
-    m_window.SetToFullScreen();
-  } else {
-    m_window.SetToCenter();
-  }
+
+  gAnimation().StartUp();
+#if !defined FORCE_PHYSICS_OFF
+  gPhysics().StartUp();
+#endif
+#if !defined FORCE_AUDIO_OFF
+  gAudio().StartUp();
+#endif
+  gUI().StartUp();
 }
 
 
@@ -157,16 +160,11 @@ void Engine::CleanUp()
 {
   if (m_running) return;
   gCore().ThrPool().StopAll();
-  if (!m_window.ShouldClose()) {
-    m_window.Close();
-    Window::PollEvents();
-  }
 
   LightComponent::GlobalCleanUp();
   Material::CleanUpDefault(&gRenderer());
 
   gUI().ShutDown();
-  gRenderer().ShutDown();
 #if !defined FORCE_AUDIO_OFF
   gAudio().ShutDown();
 #endif
@@ -174,6 +172,13 @@ void Engine::CleanUp()
   gPhysics().ShutDown();
 #endif
   gAnimation().ShutDown();
+  gRenderer().ShutDown();
+
+  if (!m_window.ShouldClose()) {
+    m_window.Close();
+    Window::PollEvents();
+  }
+
   gFilesystem().ShutDown();
   gCore().ShutDown();
   m_running = false;
