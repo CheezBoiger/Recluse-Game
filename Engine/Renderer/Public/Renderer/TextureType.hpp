@@ -85,7 +85,8 @@ private:
 // 2 Dimensional texture object.
 class Texture2D : public TextureBase {
 public:
-  Texture2D() : TextureBase(TEXTURE_2D) { }
+  Texture2D() : TextureBase(TEXTURE_2D)
+              , m_bGenMips(false) { }
 
   // Initializes the texture object with fixed width and height.
   // All images that are uploaded to this texture must then be the 
@@ -101,7 +102,7 @@ public:
   u32         Width() const;
   u32         Height() const;
 private:
-
+  b32         m_bGenMips;
   friend class Renderer;
 };
 

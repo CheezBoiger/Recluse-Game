@@ -78,7 +78,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
     rustAlbedo = gRenderer().CreateTexture2D();
-    rustAlbedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    rustAlbedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
     rustAlbedo->_Name = "RustedAlbedo";
     rustAlbedo->Update(img);
     img.CleanUp();
@@ -87,7 +87,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
     rustRough = gRenderer().CreateTexture2D();
-    rustRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    rustRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
     rustRough->_Name = "RustedRough";
     rustRough->Update(img);
     img.CleanUp();
@@ -96,7 +96,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
     rustNormal = gRenderer().CreateTexture2D();
-    rustNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    rustNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
     rustNormal->_Name = "RustedNormal";
     rustNormal->Update(img);
     img.CleanUp();
@@ -105,7 +105,7 @@ void LoadMaterials()
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_metallic.png"));
     Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    rustMetal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
     rustMetal->_Name = "RustedMetal";
     rustMetal->Update(img);
     img.CleanUp();

@@ -5,6 +5,8 @@
 #include "RHI/Buffer.hpp"
 #include "RHI/LogicalDevice.hpp"
 
+#include "Renderer.hpp"
+
 #include "Core/Math/Common.hpp"
 #include "Core/Utility/Image.hpp"
 #include "Core/Exception.hpp"
@@ -34,6 +36,7 @@ void Texture2D::Initialize(RFormat format, u32 width, u32 height, b32 genMips)
   if (texture) return;
 
   texture = mRhi->CreateTexture();
+  m_bGenMips = genMips;
 
   VkImageCreateInfo imgCI = { };
   VkImageViewCreateInfo imgViewCI = { };
@@ -52,6 +55,9 @@ void Texture2D::Initialize(RFormat format, u32 width, u32 height, b32 genMips)
   imgCI.extent.height = height;
   imgCI.extent.depth = 1;
   imgCI.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  if (genMips) {
+    imgCI.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  }
   
   imgViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO; 
   imgViewCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -74,6 +80,112 @@ void Texture2D::CleanUp()
     mRhi->FreeTexture(texture);
     texture = nullptr;
   }
+}
+
+
+void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 mipLevels)
+{
+  {
+    VkFormatProperties properties;
+    vkGetPhysicalDeviceFormatProperties(VulkanRHI::gPhysicalDevice.Handle(), format, &properties);
+    if (!(properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+      R_DEBUG(rError, "Texture image format on this GPU does not support linear blitting. Skipping mipmap gen.\n");
+      return;
+    }
+  }
+
+  CommandBuffer cmdBuffer; 
+  cmdBuffer.SetOwner(gRenderer().RHI()->LogicDevice()->Native());
+  cmdBuffer.Allocate(gRenderer().RHI()->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  
+  {
+    VkCommandBufferBeginInfo begin = { };
+    begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    cmdBuffer.Begin(begin);
+  }
+
+  VkImageMemoryBarrier barrier = { };
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER; 
+  barrier.image = image;
+  barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.layerCount = 1;
+  barrier.subresourceRange.levelCount = 1;
+
+  u32 mipWidth = width;
+  u32 mipHeight = height;
+
+  for (u32 i = 1; i < mipLevels; ++i) {
+    barrier.subresourceRange.baseMipLevel = i - 1;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    cmdBuffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_TRANSFER_BIT, 
+      VK_PIPELINE_STAGE_TRANSFER_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &barrier);
+
+    VkImageBlit blit= { };
+    blit.srcOffsets[0] = { 0, 0, 0 };
+    blit.srcOffsets[1] = { i32(mipWidth), i32(mipHeight), 1 };
+    blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.srcSubresource.baseArrayLayer = 0;
+    blit.srcSubresource.layerCount = 1;
+    blit.srcSubresource.mipLevel = i - 1;
+    blit.dstOffsets[0] = { 0, 0, 0 };
+    blit.dstOffsets[1] = { mipWidth > 1 ? i32(mipWidth / 2) : 1, mipHeight > 1 ? i32(mipHeight / 2) : 1, 1 };
+    blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    blit.dstSubresource.baseArrayLayer = 0;
+    blit.dstSubresource.layerCount = 1;
+    blit.dstSubresource.mipLevel = i;
+
+    cmdBuffer.ImageBlit(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+      image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      1, &blit, VK_FILTER_LINEAR);
+
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    cmdBuffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+      0, 
+      0, nullptr,
+      0, nullptr,
+      1, &barrier);
+    if (mipWidth > 1) mipWidth /= 2;
+    if (mipHeight > 1) mipHeight /= 2;
+  }
+
+  barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  
+  cmdBuffer.PipelineBarrier(
+    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+    0, nullptr,
+    0, nullptr,
+    1, &barrier);
+  
+  cmdBuffer.End();
+  
+  VkSubmitInfo submit = { };
+  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit.commandBufferCount = 1;
+  submit.pCommandBuffers = cmd;
+  
+  gRenderer().RHI()->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  gRenderer().RHI()->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
 }
 
 
@@ -104,9 +216,9 @@ void Texture2D::Update(Image const& Image)
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   // Max barriers.
-  std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
+  std::vector<VkBufferImageCopy> bufferCopies(1);
   size_t offset = 0;
-  for (u32 mipLevel = 0; mipLevel < texture->MipLevels(); ++mipLevel) {
+  for (u32 mipLevel = 0; mipLevel < 1; ++mipLevel) {
     VkBufferImageCopy region = { };
     region.bufferOffset = offset;
     region.bufferImageHeight = 0;
@@ -157,19 +269,20 @@ void Texture2D::Update(Image const& Image)
     bufferCopies.data()
   );
 
-  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-  imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-  imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+  if (!m_bGenMips) {
+    imgBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    imgBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  buffer.PipelineBarrier(
-    VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-    0,
-    0, nullptr,
-    0, nullptr,
-    1, &imgBarrier
-  );
-
+    buffer.PipelineBarrier(
+      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      0,
+      0, nullptr,
+      0, nullptr,
+      1, &imgBarrier
+    );
+  }
   buffer.End();
 
   // TODO(): Submit it to graphics queue!
@@ -185,6 +298,14 @@ void Texture2D::Update(Image const& Image)
 
   buffer.Free();
   stagingBuffer.CleanUp();
+
+  if (m_bGenMips) {
+    GenerateMipMaps(texture->Image(), 
+      texture->Format(), 
+      texture->Width(), 
+      texture->Height(), 
+      texture->MipLevels());
+  } 
 }
 
 

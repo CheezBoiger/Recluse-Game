@@ -207,4 +207,18 @@ void CommandBuffer::ClearAttachments(u32 attachmentCount, const VkClearAttachmen
   ASSERT_RECORDING();
   vkCmdClearAttachments(mHandle, attachmentCount, pAttachments, rectCount, pRects);
 }
+
+
+void CommandBuffer::ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageBlit* pRegions, VkFilter filter)
+{
+  ASSERT_RECORDING();
+  vkCmdBlitImage(mHandle,
+    srcImage,
+    srcImageLayout,
+    dstImage,
+    dstImageLayout, 
+    regionCount,
+    pRegions,
+    filter);
+}
 } // Recluse

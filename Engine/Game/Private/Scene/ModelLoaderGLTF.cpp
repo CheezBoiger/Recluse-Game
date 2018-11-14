@@ -114,7 +114,7 @@ static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineMod
   for (tinygltf::Image& image : gltfModel->images) {
     Texture2D* pTex = gRenderer().CreateTexture2D();
     pTex->Initialize(RFORMAT_R8G8B8A8_UNORM, static_cast<u32>(image.width),
-                  static_cast<u32>(image.height));
+                  static_cast<u32>(image.height), true);
     Image img;
 
     u8* pImgBuffer = nullptr;
@@ -234,7 +234,7 @@ static ModelResultBits LoadSamplers(tinygltf::Model* gltfModel, Model* engineMod
     samplerInfo._borderColor = SAMPLER_BORDER_COLOR_OPAQUE_WHITE;
     samplerInfo._enableAnisotropy = false;
     samplerInfo._maxAniso = 16.0f;
-    samplerInfo._maxLod = 1.0f;
+    samplerInfo._maxLod = 32.0f;
     samplerInfo._minLod = 0.0f;
     samplerInfo._unnnormalizedCoordinates = false;
     TextureSampler* pSampler = gRenderer().CreateTextureSampler(samplerInfo);

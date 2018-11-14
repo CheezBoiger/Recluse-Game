@@ -58,6 +58,9 @@ public:
   void            ClearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges);
   void            ClearAttachments(u32 attachmentCount, const VkClearAttachment* pAttachments, u32 rectCount, const VkClearRect* pRects);
   void            Reset(const VkCommandBufferResetFlags flags);
+
+  void            ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageBlit* pRegions, VkFilter filter);
+
   VkCommandBuffer Handle() { return mHandle; }
   VkCommandPool   PoolOwner() { return mPoolOwner; }
   b32             Recording() { return mRecording; }

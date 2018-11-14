@@ -2003,7 +2003,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   samplerCI.magFilter = VK_FILTER_LINEAR;
   samplerCI.minFilter = VK_FILTER_LINEAR;
-  samplerCI.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  samplerCI.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR; 
   samplerCI.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
   samplerCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -2012,7 +2012,7 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   samplerCI.maxAnisotropy = 16.0f;
   samplerCI.anisotropyEnable = VK_FALSE;
   samplerCI.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
-  samplerCI.maxLod = 1.0f;
+  samplerCI.maxLod = 16.0f;
   samplerCI.minLod = 0.0f;
   samplerCI.unnormalizedCoordinates = VK_FALSE;
 
