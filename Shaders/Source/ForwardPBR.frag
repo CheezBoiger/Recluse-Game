@@ -142,11 +142,22 @@ layout (set = 5, binding = 0) uniform StaticLightSpace {
 
 layout (set = 5, binding = 1) uniform sampler2D staticShadowMap;
 
-layout (set = 6, binding = 0) uniform samplerCube diffMap;
+struct DiffuseSH {
+  vec4 c[9];
+};
+
+layout (set = 6, binding = 0) buffer GlobalMapInfo {
+  DiffuseSH sh;
+} globalMapInfo;
 layout (set = 6, binding = 1) uniform samplerCube specMap;
 layout (set = 6, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 6, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
+layout (set = 6, binding = 3) buffer LocalMapInfo {
+  vec4      positions[ ];
+  vec4      minAABB[ ];
+  vec4      maxAABB[ ];
+  DiffuseSH shs[ ];
+} localMapInfo;
 layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
 layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
@@ -631,7 +642,7 @@ void main()
 #if !defined(ENABLE_DEBUG)
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
-  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, diffMap, specMap);
+  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, specMap, specMap);
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
@@ -682,7 +693,7 @@ void main()
     outColor += matBuffer.emissive * 20.0 * fragEmissive;
   }
   if ((v & DEBUG_IBL) == DEBUG_IBL) {
-    outColor += GetIBLContribution(pbrInfo, R, brdfLut, diffMap, specMap);
+    outColor += GetIBLContribution(pbrInfo, R, brdfLut, specMap, specMap);
   }
 #endif
 
