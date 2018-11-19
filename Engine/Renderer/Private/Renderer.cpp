@@ -450,6 +450,7 @@ void Renderer::CleanUp()
   CleanUpFinalOutputs();
   CleanUpDescriptorSetLayouts();
   CleanUpGraphicsPipelines();
+  ShadowMapSystem::CleanUpShadowPipelines(m_pRhi);
   CleanUpFrameBuffers();
   CleanUpRenderTextures(true);
 
@@ -493,22 +494,23 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   m_pSky->Initialize();
   m_pSky->MarkDirty();
 
-  m_pLights = new LightDescriptor();
-  m_pLights->Initialize(m_pRhi, params->_Shadows);
-  m_pLights->Update(m_pRhi, m_pGlobal->Data());
-
   m_pHDR = new HDR();
   m_pHDR->Initialize(m_pRhi);
   m_pHDR->UpdateToGPU(m_pRhi);
 
   SetUpSkybox();
   SetUpGraphicsPipelines();
+  ShadowMapSystem::InitializeShadowPipelines(m_pRhi);
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
+
+  m_pLights = new LightDescriptor();
+  m_pLights->Initialize(m_pRhi, params->_Shadows);
+  m_pLights->Update(m_pRhi, m_pGlobal->Data());
 
   m_pAntiAliasingFXAA = new AntiAliasingFXAA();
   m_pAntiAliasingFXAA->Initialize(m_pRhi, m_pGlobal);
@@ -791,7 +793,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     // Global IrrMap.
     globalIllum[0].binding = 0;
     globalIllum[0].descriptorCount = 1;
-    globalIllum[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     globalIllum[0].pImmutableSamplers = nullptr;
     globalIllum[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     // Global EnvMap.
@@ -809,7 +811,7 @@ void Renderer::SetUpDescriptorSetLayouts()
     // Irradiance Map array.
     globalIllum[3].binding = 3;
     globalIllum[3].descriptorCount = 1;
-    globalIllum[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    globalIllum[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     globalIllum[3].pImmutableSamplers = nullptr;
     globalIllum[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     // Radiance (Enviroment Map) array.

@@ -68,13 +68,25 @@ layout (set = 4, binding = 0) uniform StaticLightSpace {
 layout (set = 4, binding = 1) uniform sampler2D staticShadowMap;
 
 
-layout (set = 5, binding = 0) uniform samplerCube diffMap;
-layout (set = 5, binding = 1) uniform samplerCube specMap;
-layout (set = 5, binding = 2) uniform sampler2D brdfLut;
+struct DiffuseSH {
+  vec4 c[9];
+};
+
+layout (set = 6, binding = 0) buffer GlobalMapInfo {
+  DiffuseSH sh;
+} globalMapInfo;
+layout (set = 6, binding = 1) uniform samplerCube specMap;
+layout (set = 6, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 5, binding = 3) uniform samplerCubeArray diffMaps;   // Current set irradiance map.
-layout (set = 5, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
-layout (set = 5, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
+layout (set = 6, binding = 3) buffer LocalMapInfo {
+  vec4      positions[ ];
+  vec4      minAABB[ ];
+  vec4      maxAABB[ ];
+  DiffuseSH shs[ ];
+  int size;
+} localMapInfo;
+layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
 #define BLOCKER_SEARCH_NUM_SAMPLES 16

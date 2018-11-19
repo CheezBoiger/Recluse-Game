@@ -241,9 +241,10 @@ GlobalIllumination::GlobalIllumination()
   , m_pBrdfLUTs(nullptr)
   , m_pEnvMaps(nullptr)
   , m_pGlobalEnvMap(nullptr)
-  , m_pIrrMaps(nullptr)
   , m_pGlobalBRDFLUT(nullptr)
   , m_localReflectionsEnabled(false)
+  , m_pLocalGIBuffer(nullptr)
+  , m_pGlobalGIBuffer(nullptr)
 {
 }
 
@@ -259,9 +260,28 @@ void GlobalIllumination::Initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
   DescriptorSetLayout* layout = nullptr;
   if (enableLocalReflections) {
     layout = globalIllumination_DescLR;
+    if (!m_pLocalGIBuffer) {
+      m_pLocalGIBuffer = pRhi->CreateBuffer();
+      VkBufferCreateInfo buffCi = { };
+      buffCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+      buffCi.size = VkDeviceSize(sizeof(LocalInfoGI));
+      buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+      buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+      m_pLocalGIBuffer->Initialize(buffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    }
   }
   else {
     layout = globalIllumination_DescNoLR;
+  }
+
+  if (!m_pGlobalGIBuffer) {
+    m_pGlobalGIBuffer = pRhi->CreateBuffer();
+    VkBufferCreateInfo gBuffCi = {};
+    gBuffCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    gBuffCi.size = VkDeviceSize(sizeof(DiffuseSH));
+    gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    m_pGlobalGIBuffer->Initialize(gBuffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
   }
 
   m_pGlobalIllumination->Allocate(pRhi->DescriptorPool(), layout);
@@ -273,6 +293,16 @@ void GlobalIllumination::CleanUp(VulkanRHI* pRhi)
   if (m_pGlobalIllumination) {
     pRhi->FreeDescriptorSet(m_pGlobalIllumination);
     m_pGlobalIllumination = nullptr;
+  }
+
+  if (m_pGlobalGIBuffer) {
+    pRhi->FreeBuffer(m_pGlobalGIBuffer);
+    m_pGlobalGIBuffer = nullptr;
+  }
+
+  if (m_pLocalGIBuffer) {
+    pRhi->FreeBuffer(m_pLocalGIBuffer);
+    m_pLocalGIBuffer = nullptr;
   }
 }
 
@@ -286,24 +316,29 @@ void GlobalIllumination::Update(Renderer* pRenderer)
     count = 6;
   }
 
-  VkDescriptorImageInfo globalIrrMap = {};
+  VkDescriptorBufferInfo globalIrrInfo = {};
+  VkDescriptorBufferInfo localIrrInfo = {};
+
   VkDescriptorImageInfo globalEnvMap = {};
   VkDescriptorImageInfo globalBrdfLut = {};
-  VkDescriptorImageInfo localIrrMaps = {};
   VkDescriptorImageInfo localEnvMaps = {};
   VkDescriptorImageInfo localBrdfLuts = {};
 
-  globalIrrMap.sampler = DefaultSampler2DKey->Handle();
+  globalIrrInfo.buffer = m_pGlobalGIBuffer->NativeBuffer();
+  globalIrrInfo.offset = 0;
+  globalIrrInfo.range = VkDeviceSize(sizeof(DiffuseSH));
+
+  localIrrInfo.buffer = m_pLocalGIBuffer->NativeBuffer();
+  localIrrInfo.offset = 0;
+  localIrrInfo.range = VkDeviceSize(sizeof(LocalInfoGI));
+
   globalEnvMap.sampler = DefaultSampler2DKey->Handle();
   globalBrdfLut.sampler = DefaultSampler2DKey->Handle();
-  localIrrMaps.sampler = DefaultSampler2DKey->Handle();
   localEnvMaps.sampler = DefaultSampler2DKey->Handle();
   localBrdfLuts.sampler = DefaultSampler2DKey->Handle();
 
-  globalIrrMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalEnvMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalBrdfLut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  localIrrMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   localEnvMaps.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   localBrdfLuts.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -311,23 +346,21 @@ void GlobalIllumination::Update(Renderer* pRenderer)
   Texture* pBRDF = DefaultTextureKey;
   if (m_pGlobalBRDFLUT && m_pGlobalBRDFLUT->View()) { pBRDF = m_pGlobalBRDFLUT; }
 
-  globalIrrMap.imageView = pTexture->View();
   globalEnvMap.imageView = pTexture->View();
   globalBrdfLut.imageView = pBRDF->View();
   // TODO(): These are place holders, we don't have data for these yet!
   // Obtain env and irr maps from scene when building!
-  localIrrMaps.imageView = DefaultTextureKey->View();
   localEnvMaps.imageView = DefaultTextureKey->View();
   localBrdfLuts.imageView = DefaultTextureKey->View();
 
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[0].descriptorCount = 1;
-  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
   writeSets[0].dstBinding = 0;
   writeSets[0].dstArrayElement = 0;
-  writeSets[0].pImageInfo = &globalIrrMap;
+  writeSets[0].pBufferInfo = &globalIrrInfo;
   writeSets[0].dstSet = nullptr;
-  writeSets[0].pBufferInfo = nullptr;
+  writeSets[0].pImageInfo = nullptr;
   writeSets[0].pTexelBufferView = nullptr;
   writeSets[0].pNext = nullptr;
 
@@ -355,12 +388,12 @@ void GlobalIllumination::Update(Renderer* pRenderer)
 
   writeSets[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[3].descriptorCount = 1;
-  writeSets[3].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
   writeSets[3].dstBinding = 3;
   writeSets[3].dstArrayElement = 0;
-  writeSets[3].pImageInfo = &localIrrMaps;
+  writeSets[3].pBufferInfo = &localIrrInfo;
   writeSets[3].dstSet = nullptr;
-  writeSets[3].pBufferInfo = nullptr;
+  writeSets[3].pImageInfo = nullptr;
   writeSets[3].pTexelBufferView = nullptr;
   writeSets[3].pNext = nullptr;
 

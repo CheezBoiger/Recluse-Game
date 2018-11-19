@@ -113,6 +113,7 @@ public:
     , m_pDynamicFrameBuffer(nullptr)
     , m_pLightViewDescriptorSet(nullptr)
     , m_pLightViewBuffer(nullptr)
+#if 0
     , m_pDynamicRenderPass(nullptr)
     , m_pSkinnedPipeline(nullptr)
     , m_pStaticSkinnedPipeline(nullptr)
@@ -123,6 +124,7 @@ public:
     , m_pStaticMorphPipeline(nullptr)
     , m_pStaticPipeline(nullptr)
     , m_pStaticRenderPass(nullptr)
+#endif 
     , m_staticMapNeedsUpdate(true)
     , m_pStaticLightViewDescriptorSet(nullptr)
     , m_rShadowViewportWidth(20.0f)
@@ -166,6 +168,9 @@ public:
   r32               GetStaticShadowMapWidth() const { return m_staticShadowViewportWidth; }
   r32               GetStaticShadowMapHeight() const { return m_staticShadowViewportHeight; }
 
+  static void       InitializeShadowPipelines(VulkanRHI* pRhi);
+  static void       CleanUpShadowPipelines(VulkanRHI* pRhi);
+
 private:
 
   void              InitializeShadowMap(VulkanRHI* pRhi);
@@ -180,20 +185,20 @@ private:
   // common used pipelines.
   // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
   // a static object.
-  GraphicsPipeline* m_pSkinnedPipeline;
-  GraphicsPipeline* m_pSkinnedMorphPipeline;
-  GraphicsPipeline* m_pStaticPipeline;
-  GraphicsPipeline* m_pStaticMorphPipeline;
-  GraphicsPipeline* m_pStaticSkinnedPipeline;
-  GraphicsPipeline* m_pStaticSkinnedMorphPipeline;
-  GraphicsPipeline* m_pStaticStaticPipeline;
-  GraphicsPipeline* m_pStaticStaticMorphPipeline;
+  static GraphicsPipeline* k_pSkinnedPipeline;
+  static GraphicsPipeline* k_pSkinnedMorphPipeline;
+  static GraphicsPipeline* k_pStaticPipeline;
+  static GraphicsPipeline* k_pStaticMorphPipeline;
+  static GraphicsPipeline* k_pStaticSkinnedPipeline;
+  static GraphicsPipeline* k_pStaticSkinnedMorphPipeline;
+  static GraphicsPipeline* k_pStaticStaticPipeline;
+  static GraphicsPipeline* k_pStaticStaticMorphPipeline;
+  static RenderPass*       k_pDynamicRenderPass;
+  static RenderPass*       k_pStaticRenderPass;
 
   // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*      m_pStaticFrameBuffer;
   FrameBuffer*      m_pDynamicFrameBuffer;
-  RenderPass*       m_pDynamicRenderPass;
-  RenderPass*       m_pStaticRenderPass;
   Buffer*           m_pLightViewBuffer;
   Buffer*           m_pStaticLightViewBuffer;
   DescriptorSet*    m_pLightViewDescriptorSet;

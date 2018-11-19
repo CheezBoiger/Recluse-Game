@@ -157,6 +157,7 @@ layout (set = 6, binding = 3) buffer LocalMapInfo {
   vec4      minAABB[ ];
   vec4      maxAABB[ ];
   DiffuseSH shs[ ];
+  int size;
 } localMapInfo;
 layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
 layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.

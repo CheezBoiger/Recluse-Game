@@ -4,6 +4,7 @@
 #include "Core/Types.hpp"
 #include "Core/Utility/Vector.hpp"
 #include "Core/Math/Vector3.hpp"
+#include "Core/Math/Vector4.hpp"
 
 namespace Recluse {
 
@@ -16,6 +17,7 @@ class TextureCube;
 class Texture;
 class VulkanRHI;
 class Renderer;
+class Buffer;
 
 struct Image;
 
@@ -47,6 +49,20 @@ public:
 };
 
 
+struct DiffuseSH {
+  Vector4 _c[9];
+};
+
+
+struct LocalInfoGI {
+  Vector4 _positions[32];
+  Vector4 _minAABB[32];
+  Vector4 _maxAABB[32];
+  DiffuseSH _diffuse[32];
+  i32       _size;
+};
+
+
 class GlobalIllumination {
 public:
   GlobalIllumination();
@@ -61,8 +77,6 @@ public:
   void              SetGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
   
   void              SetGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
-  // Set up irradiance maps for this renderer to use for look up.
-  void              SetIrraMap(TextureCubeArray* maps) { m_pIrrMaps = maps; }
 
   // Set up enviroment maps for this renderer to use for look up.
   void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
@@ -72,10 +86,13 @@ public:
 private:
   Texture*              m_pGlobalEnvMap;
   Texture*              m_pGlobalBRDFLUT;
+  Buffer*               m_pGlobalGIBuffer;
+  Buffer*               m_pLocalGIBuffer;
   TextureCubeArray*     m_pEnvMaps;
-  TextureCubeArray*     m_pIrrMaps;
   Texture2DArray*       m_pBrdfLUTs;
   DescriptorSet*        m_pGlobalIllumination;
+  DiffuseSH             m_globalDiffuseSH;
+  LocalInfoGI           m_localGICpu;
   b32                   m_localReflectionsEnabled;
 };
 } // Recluse
