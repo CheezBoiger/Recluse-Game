@@ -10,37 +10,29 @@
 namespace Recluse {
 
 
-class WwiseEngine;
+class AudioEngine;
 
 
 enum AudioResult {
   Audio_Success,
-  Audio_Failed_SoundEngine,
-  Audio_Failed_MusicEngine,
-  Audio_Failed_StreamManager,
-  Audio_Failed_MemoryManager,
-  Audio_Failed_FilePackage
+  Audio_Fail
 };
 
+typedef uuid64 AudioId;
 
 // Audio Engine stuff.
 class Audio : public EngineModule<Audio> {
 public:
-  Audio()
-    : mWwise(nullptr) { }
-
+  virtual ~Audio() { }
 
   // TODO():
-  void              AddGameObject(game_uuid_t uuid);
-  void              RemoveGameObject(game_uuid_t uuid);
+  virtual AudioId           CreateAudioObject() { return ~0u; }
+  virtual AudioResult       FreeAudioObject(AudioId id) { return Audio_Success; }
 
-  void              OnStartUp() override;
-  void              OnShutDown() override;
+  virtual void              OnStartUp() override { }
+  virtual void              OnShutDown() override { }
 
-  void              UpdateState(r64 dt);
-
-private:
-  WwiseEngine*      mWwise;
+  virtual void              UpdateState(r64 dt) { }
 };
 
 

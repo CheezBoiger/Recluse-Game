@@ -101,14 +101,18 @@ public:
     //Quaternion q = Quaternion::AngleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
     //transform->Rotation = transform->Rotation * q;
     // Test sun rendering. This is not mandatory for running the engine!
-#define ALLOW_SUN_MOVEMENT 0
+#define ALLOW_SUN_MOVEMENT 1
 #if ALLOW_SUN_MOVEMENT >= 1
-    Scene* scene = gEngine().GetScene();
-    DirectionalLight* light = scene->GetSky()->GetSunLight();
-    light->_Direction = Vector3(
-      0.0f, 
-      sinf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f,
-      cosf(static_cast<r32>(Time::CurrentTime() * 0.1)) * 0.5f).Normalize();
+    static r32 tt = 0.0f;
+    if (Keyboard::KeyPressed(KEY_CODE_Q)) {
+      Scene* scene = gEngine().GetScene();
+      DirectionalLight* light = scene->GetSky()->GetSunLight();
+      light->_Direction = Vector3(
+        0.0f, 
+        sinf(static_cast<r32>(tt * 0.01f)) * 0.5f,
+        cosf(static_cast<r32>(tt * 0.01f)) * 0.5f).Normalize();
+      tt += 1.0f;
+    }
 #endif
     AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
     aabb.min = (aabb.min * transform->Scale) + transform->Position;

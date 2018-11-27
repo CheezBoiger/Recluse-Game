@@ -104,7 +104,7 @@ void MeshDescriptor::Update(VulkanRHI* pRhi)
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pObjectBuffer->Memory();
-    range.size = m_pObjectBuffer->MemorySize();
+    range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
@@ -181,7 +181,7 @@ void JointDescriptor::Update(VulkanRHI* pRhi)
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pJointsBuffer->Memory();
-    range.size = m_pJointsBuffer->MemorySize();
+    range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 

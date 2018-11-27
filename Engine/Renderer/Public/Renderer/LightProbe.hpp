@@ -59,7 +59,6 @@ struct LocalInfoGI {
   Vector4 _minAABB[32];
   Vector4 _maxAABB[32];
   DiffuseSH _diffuse[32];
-  i32       _size;
 };
 
 

@@ -161,7 +161,6 @@ public:
   b32               StaticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
 
   void              SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
-  void              SetStaticLightDir(const Vector3& dir) { m_staticSunlightDir = dir; }
   void              SetStaticShadowMapWidth(r32 width) { m_staticShadowViewportWidth = width; }
   void              SetStaticShadowMapHeight(r32 height) { m_staticShadowViewportHeight = height; }
 
@@ -174,14 +173,13 @@ public:
 private:
 
   void              InitializeShadowMap(VulkanRHI* pRhi);
-
-  Vector3           m_staticSunlightDir;
   Vector3           m_staticViewerPos;
   r32               m_staticShadowViewportWidth;
   r32               m_staticShadowViewportHeight;
 
   Texture*          m_pStaticMap;
   Texture*          m_pDynamicMap;
+  Texture*          m_pShadowMergeMap;  // Merging map of the static and dynamic shadow maps.
   // common used pipelines.
   // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
   // a static object.
@@ -193,12 +191,18 @@ private:
   static GraphicsPipeline* k_pStaticSkinnedMorphPipeline;
   static GraphicsPipeline* k_pStaticStaticPipeline;
   static GraphicsPipeline* k_pStaticStaticMorphPipeline;
+  
+  
   static RenderPass*       k_pDynamicRenderPass;
   static RenderPass*       k_pStaticRenderPass;
 
   // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*      m_pStaticFrameBuffer;
   FrameBuffer*      m_pDynamicFrameBuffer;
+  
+  // Point map based framebuffer.
+  FrameBuffer*      m_pStaticOmniFrameBuffer;
+  FrameBuffer*      m_pDynamicOmniFrameBuffer;
   Buffer*           m_pLightViewBuffer;
   Buffer*           m_pStaticLightViewBuffer;
   DescriptorSet*    m_pLightViewDescriptorSet;

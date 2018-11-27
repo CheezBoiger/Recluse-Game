@@ -748,6 +748,12 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
     render(renderCmd);
   }
   pCmdBuffer->EndRenderPass();
+
+  if (dynamicCmds.Size() == 0) {
+    R_DEBUG(rNotify, "Empty dynamic map cmd buffer updated.\n");
+    return;
+  }
+  R_DEBUG(rNotify, "Updated dynamic map cmd buffer.\n");
 }
 
 
@@ -894,18 +900,17 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pLightViewBuffer->Memory();
-    range.size = m_pLightViewBuffer->MemorySize();
+    range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   if ( m_staticMapNeedsUpdate ) {
     viewerPos = m_staticViewerPos;
-    Vector3 Eye = Vector3(
-      m_staticSunlightDir.x,
-      m_staticSunlightDir.y,
-      m_staticSunlightDir.z
+    Eye = Vector3(
+      light->_Direction.x,
+      light->_Direction.y,
+      light->_Direction.z
     );
-
     proj = Matrix4::Ortho(
       m_staticShadowViewportWidth,
       m_staticShadowViewportHeight,
@@ -925,7 +930,7 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pStaticLightViewBuffer->Memory();
-    range.size = m_pStaticLightViewBuffer->MemorySize();
+    range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 }
@@ -1235,13 +1240,6 @@ void LightDescriptor::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer)
 #else
   if ((PrimaryShadowEnabled() || m_primaryMapSystem.StaticMapNeedsUpdate()) && m_primaryMapSystem.ShadowMapViewDescriptor()) {
 #endif
-    if ( m_primaryMapSystem.StaticMapNeedsUpdate() ) {
-      Vector3 dir = Vector3(m_Lights._PrimaryLight._Direction.x,
-        m_Lights._PrimaryLight._Direction.y,
-        m_Lights._PrimaryLight._Direction.z);
-
-      m_primaryMapSystem.SetStaticLightDir(dir);
-    }
     m_primaryMapSystem.Update(pRhi, gBuffer, &m_Lights);
 #if 0
     R_ASSERT(m_pLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
@@ -1261,7 +1259,7 @@ void LightDescriptor::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer)
   VkMappedMemoryRange lightRange = { };
   lightRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   lightRange.memory = m_pLightBuffer->Memory();
-  lightRange.size = m_pLightBuffer->MemorySize();
+  lightRange.size = VK_WHOLE_SIZE;
   pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &lightRange);
 }
 

@@ -1854,8 +1854,13 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
   RDEBUG_SET_VULKAN_NAME(gbuffer_Depth, "Depth");
   RDEBUG_SET_VULKAN_NAME(gbuffer_Emission, "Emissive");
 
+  RDEBUG_SET_VULKAN_NAME(pbr_Final, "PBR Lighting");
+  RDEBUG_SET_VULKAN_NAME(pbr_Bright, "Bright");
+  RDEBUG_SET_VULKAN_NAME(GlowTarget, "Glow");
+
   Texture* hdr_Texture = m_pRhi->CreateTexture();
   Sampler* hdr_Sampler = m_pRhi->CreateSampler();
+  RDEBUG_SET_VULKAN_NAME(hdr_Texture, "HDR");
   
   Texture* final_renderTexture = m_pRhi->CreateTexture();
 
@@ -2030,15 +2035,15 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
     VkImageViewCreateInfo dViewInfo = {};
 
     dImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    dImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    dImageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
     dImageInfo.imageType = VK_IMAGE_TYPE_2D;
     dImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
     dImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     dImageInfo.mipLevels = 1;
     dImageInfo.extent.depth = 1;
     dImageInfo.arrayLayers = 1;
-    dImageInfo.extent.width = windowExtent.width;
-    dImageInfo.extent.height = windowExtent.height;
+    dImageInfo.extent.width = 1;
+    dImageInfo.extent.height = 1;
     dImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     dImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     dImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
@@ -2055,9 +2060,19 @@ void Renderer::SetUpRenderTextures(b32 fullSetup)
     dViewInfo.subresourceRange.levelCount = 1;
 
     Texture* defaultTexture = m_pRhi->CreateTexture();
-
+    RDEBUG_SET_VULKAN_NAME(defaultTexture, "Default Texture");
     defaultTexture->Initialize(dImageInfo, dViewInfo);
     DefaultTextureKey = defaultTexture;
+
+    {
+      Texture2D tex2d;
+      tex2d.mRhi = m_pRhi;
+      tex2d.texture = defaultTexture;
+      tex2d.m_bGenMips = false;
+      Image img; img._data = new u8[4]; img._height = 1; img._width = 1; img._memorySize = 4;
+      tex2d.Update(img);
+      delete img._data;
+    }
 
     if (!DefaultTexture2DArrayView) {
       dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
@@ -2364,7 +2379,7 @@ void Renderer::SetUpDownscale(b32 FullSetUp)
   VkDescriptorImageInfo Img = { };
   Img.sampler = gbuffer_Sampler->Handle();
   Img.imageView = RTBright->View();
-  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   
   VkWriteDescriptorSet WriteSet = { };
   WriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -2508,14 +2523,14 @@ void Renderer::SetUpHDR(b32 fullSetUp)
       Sampler* sampler = m_pAntiAliasingFXAA->GetOutputSampler();
       pbrImageInfo.sampler = sampler->Handle();
       pbrImageInfo.imageView = texture->View();
-      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     } break;
     case AA_None:
     default:  
     {
       pbrImageInfo.sampler = gbuffer_SamplerKey->Handle();
       pbrImageInfo.imageView = pbr_FinalTextureKey->View();
-      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     }
   }
   // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
@@ -3172,6 +3187,8 @@ void Renderer::GenerateHDRCmds(CommandBuffer* cmdBuffer)
   }
   cmdBuffer->EndRenderPass();
 
+  
+
   VkDescriptorSet dSets[3];
   dSets[0] = m_pGlobal->Set()->Handle();
   dSets[1] = hdrSet->Handle();
@@ -3670,7 +3687,7 @@ void Renderer::SetUpFinalOutputs()
   {
     // Final texture must be either hdr post process texture, or pbr output without hdr.
     VkDescriptorImageInfo renderTextureFinal = {};
-    renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     if (m_HDR._Enabled) {
       renderTextureFinal.sampler = hdr_Sampler->Handle();
@@ -3701,7 +3718,7 @@ void Renderer::SetUpFinalOutputs()
 
     // TODO(): Antialiasing will need to be compensated here, similar to final texture, above.
     VkDescriptorImageInfo renderTextureOut = {};
-    renderTextureOut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    renderTextureOut.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     renderTextureOut.imageView = final_renderTargetKey->View();
     renderTextureOut.sampler = hdr_gamma_samplerKey->Handle();
 
@@ -3814,6 +3831,7 @@ void Renderer::UpdateSceneDescriptors()
     m_pGlobal->Data()->_vSunDir = sunDir;
     m_pSky->SetAirColor(airColor);
     m_pSky->MarkDirty();
+    m_pLights->PrimaryShadowMapSystem().SignalStaticMapUpdate();
   }
 
   // Update the global descriptor.

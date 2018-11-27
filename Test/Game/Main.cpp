@@ -303,7 +303,7 @@ int main(int c, char* argv[])
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();
-    scene.Update((r32)Time::FixTime);
+    scene.Update((r32)Time::DeltaTime);
     gEngine().Update();
   }
 #else

@@ -153,11 +153,10 @@ layout (set = 6, binding = 1) uniform samplerCube specMap;
 layout (set = 6, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
 layout (set = 6, binding = 3) buffer LocalMapInfo {
-  vec4      positions[ ];
-  vec4      minAABB[ ];
-  vec4      maxAABB[ ];
-  DiffuseSH shs[ ];
-  int size;
+  vec4      positions[32];
+  vec4      minAABB[32];
+  vec4      maxAABB[32];
+  DiffuseSH shs[32];
 } localMapInfo;
 layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
 layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.

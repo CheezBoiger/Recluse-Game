@@ -71,6 +71,7 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
 
   R_DEBUG(rNotify, "Texture Image created for ");
   R_DEBUG(rNormal, m_name);
+  R_DEBUG(rNormal, " ");
   R_DEBUG(rNormal, mImage);
   R_DEBUG(rNormal, "\n");
   //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
@@ -83,6 +84,7 @@ void Texture::CleanUp()
 {
   R_DEBUG(rNotify, "Freeing Texture: ");
   R_DEBUG(rNormal, m_name);
+  R_DEBUG(rNormal, " ");
   R_DEBUG(rNormal, mImage);
   R_DEBUG(rNormal, "\n");
   if (mImage) {

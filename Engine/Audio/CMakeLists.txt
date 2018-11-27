@@ -5,56 +5,21 @@ project("Audio")
 set(AUDIO_PUBLIC_DIR         Public/Audio)
 set(AUDIO_PRIVATE_DIR        Private)
 
-string(REPLACE "\\" "/" RECLUSE_WWISE_DIR ${RECLUSE_WWISE_DIR})
-set(AUDIO_WWISE_DEFAULTS_DIR ${RECLUSE_WWISE_DIR}/samples/SoundEngine)
-set(WWISE_LIB_DIR            ${RECLUSE_WWISE_DIR}/x64_vc150/Release\(StaticCRT\)/lib)
+string(REPLACE "\\" "/" RECLUSE_OPENAL_DIR ${RECLUSE_OPENAL_DIR})
+set(OPENAL_HEADER_DIR ${RECLUSE_OPENAL_DIR}/include)
+set(OPENAL_LIB_DIR ${RECLUSE_OPENAL_DIR}/libs/Win64)
 
 
 include_directories(
   ${RECLUSE_ENGINE_INCLUDE_DIRS}
   ${AUDIO_PUBLIC_DIR}
-  ${RECLUSE_WWISE_DIR}/include
-  ${RECLUSE_WWISE_DIR}/samples/SoundEngine/Common
-  ${RECLUSE_WWISE_DIR}/samples/SoundEngine/Win32
-)
-
-set(AUDIO_DEPENDENCIES
-  dinput8.lib
-  dsound.lib
-  dxguid.lib
+  ${OPENAL_HEADER_DIR}
 )
 
 
 set(AUDIO_LIBS
-  ${WWISE_LIB_DIR}/AkAudioInputSource.lib
-  ${WWISE_LIB_DIR}/AkCompressorFX.lib
-  ${WWISE_LIB_DIR}/AkDelayFX.lib
-  ${WWISE_LIB_DIR}/AkExpanderFX.lib
-  ${WWISE_LIB_DIR}/AkFlangerFX.lib
-  ${WWISE_LIB_DIR}/AkGainFX.lib
-  ${WWISE_LIB_DIR}/AkGuitarDistortionFX.lib
-  ${WWISE_LIB_DIR}/AkHarmonizerFX.lib
-  ${WWISE_LIB_DIR}/AkMatrixReverbFX.lib
-  ${WWISE_LIB_DIR}/AkMemoryMgr.lib
-  ${WWISE_LIB_DIR}/AkMeterFX.lib
-  ${WWISE_LIB_DIR}/AkMusicEngine.lib
-  ${WWISE_LIB_DIR}/AkParametricEQFX.lib
-  ${WWISE_LIB_DIR}/AkPeakLimiterFX.lib
-  ${WWISE_LIB_DIR}/AkPitchShifterFX.lib
-  ${WWISE_LIB_DIR}/AkRecorderFX.lib
-  ${WWISE_LIB_DIR}/AkReflectFX.lib
-  ${WWISE_LIB_DIR}/AkRoomVerbFX.lib
-  ${WWISE_LIB_DIR}/AkSilenceSource.lib
-  ${WWISE_LIB_DIR}/AkSineSource.lib
-  ${WWISE_LIB_DIR}/AkSoundEngine.lib
-  ${WWISE_LIB_DIR}/AkSpatialAudio.lib
-  ${WWISE_LIB_DIR}/AkStereoDelayFX.lib
-  ${WWISE_LIB_DIR}/AkStreamMgr.lib
-  ${WWISE_LIB_DIR}/AkSynthOneSource.lib
-  ${WWISE_LIB_DIR}/AktimeStretchFX.lib
-  ${WWISE_LIB_DIR}/AkToneSource.lib
-  ${WWISE_LIB_DIR}/AkTremoloFX.lib
-  ${WWISE_LIB_DIR}/AkVorbisDecoder.lib
+  ${OPENAL_LIB_DIR}/OpenAL32.lib
+  ${OPENAL_LIB_DIR}/EFX-Util_MT/EFX-Util.lib
 )
 
 
@@ -67,32 +32,8 @@ set(AUDIO_FILES
   ${AUDIO_PRIVATE_DIR}/Audio.cpp
   ${AUDIO_PRIVATE_DIR}/AudioListener.cpp
   ${AUDIO_PRIVATE_DIR}/AudioSource.cpp
-  ${AUDIO_PRIVATE_DIR}/WwiseEngine.hpp
-  ${AUDIO_PRIVATE_DIR}/WwiseEngine.cpp
-  ${AUDIO_PRIVATE_DIR}/AudioMemAllocDefines.cpp
-
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkDefaultLowLevelIODispatcher.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkDefaultLowLevelIODispatcher.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFileLocationBase.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFileLocationBase.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackage.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackage.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackageLowLevelIO.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackageLowLevelIO.inl
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackageLUT.cpp 
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkFilePackageLUT.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkMultipleFileLocation.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Common/AkMultipleFileLocation.inl
-
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkDefaultIOHookBlocking.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkDefaultIOHookBlocking.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkDefaultIOHookDeferred.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkDefaultIOHookDeferred.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkFileHelpers.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkFilePackageLowLevelIOBlocking.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/AkFilePackageLowLevelIODeferred.h
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/stdafx.cpp
-  ${AUDIO_WWISE_DEFAULTS_DIR}/Win32/stdafx.h
+  ${AUDIO_PRIVATE_DIR}/AudioEngine.hpp
+  ${AUDIO_PRIVATE_DIR}/AudioEngine.cpp
 )
 
 
@@ -103,7 +44,6 @@ add_library(${RECLUSE_AUDIO} STATIC
 
 target_link_libraries(${RECLUSE_AUDIO}
   ${AUDIO_LIBS}
-  ${AUDIO_DEPENDENCIES}
 )
 
 # Doing some stuff for organization.

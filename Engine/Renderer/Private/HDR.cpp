@@ -112,7 +112,7 @@ void HDR::UpdateToGPU(VulkanRHI* pRhi)
   VkMappedMemoryRange memRange = { };
   memRange.memory = m_pBuffer->Memory();
   memRange.offset = 0;
-  memRange.size = m_pBuffer->MemorySize();
+  memRange.size = VK_WHOLE_SIZE;
   memRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &memRange);
 }
