@@ -230,8 +230,8 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowD
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   ImageCi.arrayLayers = 1;
-  ImageCi.extent.width = 512 << dynamicShadowDetail;
-  ImageCi.extent.height = 512 << dynamicShadowDetail;
+  ImageCi.extent.width = 256 << dynamicShadowDetail;
+  ImageCi.extent.height = 256 << dynamicShadowDetail;
   ImageCi.extent.depth = 1;
   ImageCi.format = VK_FORMAT_D32_SFLOAT;
   ImageCi.imageType = VK_IMAGE_TYPE_2D;
@@ -272,13 +272,17 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowD
   if (!m_pDynamicMap) {
     m_pDynamicMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pDynamicMap, "Dynamic Shadowmap.");
+    R_DEBUG(rNotify, "Dynamic Shadow map size: ");
+    R_DEBUG(rNormal, std::to_string(ImageCi.extent.width) + "x" + std::to_string(ImageCi.extent.height) + "\n");
     m_pDynamicMap->Initialize(ImageCi, ViewCi);
   }
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
-    ImageCi.extent.width = 512 << staticShadowDetail;
-    ImageCi.extent.height = 512 << staticShadowDetail;
+    ImageCi.extent.width = 256 << staticShadowDetail;
+    ImageCi.extent.height = 256 << staticShadowDetail;
+    R_DEBUG(rNotify, "Static Shadow map size: ");
+    R_DEBUG(rNormal, std::to_string(ImageCi.extent.width) + "x" + std::to_string(ImageCi.extent.height) + "\n");
     m_pStaticMap->Initialize(ImageCi, ViewCi);
   }
 

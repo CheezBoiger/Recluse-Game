@@ -63,7 +63,7 @@ int main(int c, char* argv[])
     // renderer directly.
     GraphicsConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
-    params._EnableVsync = true;
+    params._EnableVsync = Window::GetRefreshRate() <= 60 ? true : false;
     params._AA = AA_None;
     params._Shadows = GRAPHICS_QUALITY_NONE;
     gRenderer().UpdateRendererConfigs(&params);
@@ -74,6 +74,7 @@ int main(int c, char* argv[])
   window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   printf(RTEXT("App directory: %s\n"), gFilesystem().CurrentAppDirectory());
+  Log() << Window::GetRefreshRate() << "\n";
 
   // Create a game object.
   // Create the scene.

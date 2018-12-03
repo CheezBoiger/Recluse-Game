@@ -39,6 +39,16 @@ enum GraphicsQuality {
 };
 
 
+enum WindowResolution {
+  Resolution_800x600,
+  Resolution_1200x800,
+  Resolution_1920x1080,
+  Resolution_1920x1440,
+  Resolution_2560x1440,
+  Resolution_3840x2160,
+};
+
+
 class GraphicsConfigParams {
 public:
   // Determine draw buffering, and number of back buffers the renderer will use for 
@@ -101,6 +111,8 @@ public:
 
   // Allows the the renderer engine to multithread its workload.
   b32             _EnableMultithreadedRendering;
+
+  WindowResolution _Resolution;
 };
 
 
@@ -118,7 +130,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   true,
   true,
   true,
-  true
+  true,
+  Resolution_800x600
 };
 
 } // Recluse

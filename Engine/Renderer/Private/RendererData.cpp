@@ -1413,7 +1413,7 @@ void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
   imgCi.samples = VK_SAMPLE_COUNT_1_BIT;
   imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   imgCi.tiling = VK_IMAGE_TILING_OPTIMAL;
-  imgCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+  imgCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   
   imgViewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   imgViewCi.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -1450,7 +1450,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 
   VkDescriptorImageInfo inputInfo = {};
-  inputInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  inputInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   inputInfo.imageView = pbr_FinalTextureKey->View();
   inputInfo.sampler = gbuffer_SamplerKey->Handle();
 
@@ -1538,7 +1538,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
   pOutput->Dispatch((extent.width / 16) + 1, (extent.height / 16) + 1, 1);
 
   imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
   imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
   imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 

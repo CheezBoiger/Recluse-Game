@@ -514,4 +514,13 @@ void Window::InputMousePos(i32 x, i32 y)
     gMousePositionCallback(this, (r64)x, (r64)y);
   }
 }
+
+
+u32 Window::GetRefreshRate()
+{
+  DEVMODEA lDevMode;
+  EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &lDevMode);
+  DWORD hertz = lDevMode.dmDisplayFrequency;
+  return u32(hertz);
+}
 } // Recluse 

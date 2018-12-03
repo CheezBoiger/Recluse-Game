@@ -74,6 +74,9 @@ public:
 
   HWND          Handle() { return mHandle; }
 
+  // Get the refresh rate (in hertz (Hz)) of currently displaying window.
+  static u32   GetRefreshRate();
+
   b32           ShouldClose() const { return mRequestClose; }
   b32           FullScreen() const { return mFullScreen; }
   b32           Showing() const { return mShowing; }

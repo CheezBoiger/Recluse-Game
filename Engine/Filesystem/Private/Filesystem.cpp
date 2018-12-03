@@ -40,4 +40,21 @@ const tchar* Filesystem::CurrentAppDirectory()
 {
   return m_CurrentDirectoryPath.data();
 }
+
+
+FilesystemResult Filesystem::ReadFrom(const tchar* filepath, FileHandle* buf)
+{
+  HANDLE fileH = CreateFile(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (fileH == INVALID_HANDLE_VALUE) {
+    return FilesystemResult_NotFound;
+  }
+  DWORD sz = GetFileSize(fileH, NULL);
+  DWORD bytesRead;
+  buf->Buf = new tchar[sz + 1];
+  buf->Sz = sz;
+  ReadFile(fileH, buf->Buf, sz, &bytesRead, NULL);
+  CloseHandle(fileH);
+  buf->Buf[sz] = '\0';
+  return FilesystemResult_Success;
+}
 } // Recluse

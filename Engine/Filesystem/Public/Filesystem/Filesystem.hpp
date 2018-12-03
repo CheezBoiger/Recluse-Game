@@ -12,21 +12,35 @@ namespace Recluse {
 
 
 struct FileHandle {
-    u64   Sz;
-    u8*   Buf;
+  u64   Sz;
+  tchar*   Buf;
+
+  static const u64 kNoFile = 0xffffffffffffffff; 
+  
+  FileHandle()
+    : Sz(kNoFile)
+    , Buf(nullptr) { }
+
+  virtual ~FileHandle()
+  {
+    if (Sz != kNoFile) { delete Buf; }
+    Buf = nullptr;
+  }
 };
 
 
-struct AsyncFileHandle {
+struct AsyncFileHandle : public FileHandle {
     // Check if the file is finished reading. If not, 
     // Buf and Sz are not readable!
     b8    Finished;
-    // Size of the buffer.
-    u64   Sz;
-    // The buffer to read from.
-    u8*   Buf;
 };
 
+
+enum FilesystemResult {
+  FilesystemResult_Success,
+  FilesystemResult_Failed,
+  FilesystemResult_NotFound
+};
 
 // Filesystem module, intended to hold onto files lulz.
 class Filesystem : public EngineModule<Filesystem> {
@@ -44,7 +58,8 @@ public:
   void                      OnShutDown() override;
   void                      SetCurrentAppDirectory(tchar* ApplicationPath);
   void                      AppendSearchPath(tchar* path);
-  void                      ReadFile(FileHandle* Buf);
+  FilesystemResult          ReadFrom(const tchar* filepath, FileHandle* Buf);
+  FilesystemResult          WriteTo(const tchar* filepath, tchar* in, u32 sz);
   void                      AsyncReadFile(AsyncFileHandle* Buf);
 
   // Current application directory of the executable.

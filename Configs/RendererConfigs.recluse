@@ -1,0 +1,15 @@
+[Buffering] = double
+[AntiAliasing] = none
+[TextureQuality] = medium
+[ShadowQuality] = medium
+[LightingQuality] = medium
+[ModelQuality] = medium
+[LevelOfDetail] = 100.0
+[RenderScale] = 100.0
+[VSync] = true
+[ChromaticAberration] = true
+[PostProcessing] = true
+[LocalReflections] = true
+[Bloom] = true
+[MultithreadedRendering] = true
+[Resolution] = 800x600

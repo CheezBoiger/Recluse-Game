@@ -22,4 +22,8 @@ macro(copy_engine_dependencies_to_exe target)
                       COMMAND ${CMAKE_COMMAND} -E copy_directory
                       ${CMAKE_SOURCE_DIR}/Shaders/Bin $<TARGET_FILE_DIR:${target}>/Shaders
   )
+  add_custom_command(TARGET ${target}
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory
+                     ${CMAKE_SOURCE_DIR}/Configs $<TARGET_FILE_DIR:${target}>/Configs
+  )
 endmacro()
