@@ -509,7 +509,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   SetUpForwardPBR();
 
   m_pLights = new LightDescriptor();
-  m_pLights->Initialize(m_pRhi, params->_Shadows);
+  m_pLights->Initialize(m_pRhi, params->_Shadows, params->_EnableSoftShadows);
   m_pLights->Update(m_pRhi, m_pGlobal->Data());
 
   m_pAntiAliasingFXAA = new AntiAliasingFXAA();
@@ -3907,6 +3907,10 @@ void Renderer::UpdateRuntimeConfigs(const GraphicsConfigParams* params)
       m_pGlobal->Data()->_EnableShadows = true;
     } break;
   }
+
+  ShadowMapSystem& sunShadow = m_pLights->PrimaryShadowMapSystem();
+  sunShadow.EnableDynamicMapSoftShadows(params->_EnableSoftShadows);
+  sunShadow.EnableStaticMapSoftShadows(params->_EnableSoftShadows);
 
   m_pHDR->GetRealtimeConfiguration()->_allowChromaticAberration = 
     (params->_EnableChromaticAberration ? Vector4(1.0f) : Vector4(0.0f));

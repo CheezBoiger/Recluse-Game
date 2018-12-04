@@ -224,7 +224,9 @@ ShadowMapSystem::~ShadowMapSystem()
 }
 
 
-void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail)
+void ShadowMapSystem::Initialize(VulkanRHI* pRhi, 
+  GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail,
+  b32 staticSoftShadows, b32 dynamicSoftShadows)
 {
   // ShadowMap is a depth image.
   VkImageCreateInfo ImageCi = {};
@@ -287,19 +289,20 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowD
   }
 
   InitializeShadowMap(pRhi);
+  
+  EnableStaticMapSoftShadows(staticSoftShadows);
+  EnableDynamicMapSoftShadows(dynamicSoftShadows);
+}
 
-  if (dynamicShadowDetail < GRAPHICS_QUALITY_MEDIUM) {
-    m_viewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-  } else {
-    m_viewSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
-  }
 
-  if (staticShadowDetail < GRAPHICS_QUALITY_MEDIUM) {
-    m_staticViewSpace._shadowTechnique = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-  }
-  else {
-    m_staticViewSpace._shadowTechnique = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
-  }
+void ShadowMapSystem::EnableDynamicMapSoftShadows(b32 enable)
+{
+  m_viewSpace._shadowTechnique = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
+}
+
+void ShadowMapSystem::EnableStaticMapSoftShadows(b32 enable)
+{
+  m_staticViewSpace._shadowTechnique = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
 }
 
 
@@ -1063,7 +1066,7 @@ LightDescriptor::~LightDescriptor()
 }
 
 
-void LightDescriptor::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
+void LightDescriptor::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows)
 {
   R_ASSERT(pRhi, "RHI owner not set for light material upon initialization!\n");
   // This class has already been initialized.
@@ -1159,7 +1162,7 @@ void LightDescriptor::Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
 #endif 
 
   m_primaryMapSystem._pSampler = m_pShadowSampler;
-  m_primaryMapSystem.Initialize(pRhi, shadowDetail, shadowDetail);
+  m_primaryMapSystem.Initialize(pRhi, shadowDetail, shadowDetail, enableSoftShadows, enableSoftShadows);
 }
 
 

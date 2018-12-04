@@ -123,6 +123,14 @@ GraphicsConfigParams ReadGraphicsConfig()
           graphics._EnablePostProcessing = false;
         }
       }
+      if (AvailableOption(line, "SoftShadows")) {
+        std::string option = GetOption(line);
+        if (option.compare("true") == 0) {
+          graphics._EnableSoftShadows = true;
+        } else {
+          graphics._EnableSoftShadows = false;
+        }
+      }
       line.clear();
     }
   }

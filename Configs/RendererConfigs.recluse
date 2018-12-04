@@ -10,6 +10,7 @@
 [ChromaticAberration] = true
 [PostProcessing] = true
 [LocalReflections] = true
+[SoftShadows] = true
 [Bloom] = true
 [MultithreadedRendering] = true
 [Resolution] = 800x600

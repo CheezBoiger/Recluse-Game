@@ -134,7 +134,8 @@ public:
 
   ~ShadowMapSystem();
 
-  void              Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
+  void              Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail, 
+                      b32 staticSoftShadows = true, b32 dynamicSoftShadows = true);
   void              CleanUp(VulkanRHI* pRhi);
 
   Texture*          StaticMap() { return m_pStaticMap; }
@@ -163,6 +164,9 @@ public:
   void              SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
   void              SetStaticShadowMapWidth(r32 width) { m_staticShadowViewportWidth = width; }
   void              SetStaticShadowMapHeight(r32 height) { m_staticShadowViewportHeight = height; }
+
+  void              EnableStaticMapSoftShadows(b32 enable);
+  void              EnableDynamicMapSoftShadows(b32 enable);
 
   r32               GetStaticShadowMapWidth() const { return m_staticShadowViewportWidth; }
   r32               GetStaticShadowMapHeight() const { return m_staticShadowViewportHeight; }
@@ -229,7 +233,7 @@ public:
   void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer);
 
   // Initialize. 
-  void                Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail);
+  void                Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows = true);
 
   // Cleanup.
   void                CleanUp(VulkanRHI* pRhi);

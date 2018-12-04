@@ -112,6 +112,11 @@ public:
   // Allows the the renderer engine to multithread its workload.
   b32             _EnableMultithreadedRendering;
 
+  // Soft shadows. Performs additional computations to produce realistic shadows that better translate 
+  // to how large lights would shade an object in a scene by blurring depending on distance from
+  // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
+  b32             _EnableSoftShadows;
+
   WindowResolution _Resolution;
 };
 
@@ -125,6 +130,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   GRAPHICS_QUALITY_HIGH,
   1.0f,
   1.0f,
+  true,
   true,
   true,
   true,
