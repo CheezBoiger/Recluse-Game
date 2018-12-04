@@ -927,7 +927,8 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     // Pass as one matrix.
     view = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
     m_staticViewSpace._ViewProj = view * proj;
-    m_staticViewSpace._lightSz = 15.0f / m_staticShadowViewportHeight;
+    m_staticViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
+    m_staticViewSpace._lightSz.x = 5.0f / m_rShadowViewportHeight;//15.0f / m_staticShadowViewportHeight;
     R_ASSERT(m_pStaticLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
     memcpy(m_pStaticLightViewBuffer->Mapped(), &m_staticViewSpace, sizeof(LightViewSpace));
 

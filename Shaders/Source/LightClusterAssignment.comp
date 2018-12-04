@@ -74,9 +74,9 @@ layout (set = 2, binding = 2) buffer LightBVH {
   uint  numNodes;
   uint  numMaxNodes;
   uint  numMaxLights;
-  vec4  nodesMin[];
-  vec4  nodesMax[];
-  uvec4 nodeIndices[];
+  vec4  nodesMin[128];
+  vec4  nodesMax[128];
+  uvec4 nodeIndices[128];
 } lightBVH;
 
 
