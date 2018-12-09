@@ -6,24 +6,7 @@
 #extension GL_GOOGLE_include_directive : enable
 
 #include "Common/Globals.glsl"
-
-struct DirectionLight {
-  vec4  direction;
-  vec4  ambient;
-  vec4  color;
-  float intensity;
-  int   enable;
-  ivec2 pad;
-};
-
-struct PointLight {
-  vec4    position;
-  vec4    color;
-  float   range;
-  float   intensity;
-  int     enable;
-  int     pad;
-};
+#include "Common/LightingPBR.glsl"
 
 
 struct DecalInfo {
@@ -34,8 +17,6 @@ struct DecalInfo {
 
 
 #define WORKGROUP_SIZE        16
-#define MAX_POINT_LIGHTS      64
-#define MAX_DIRECTION_LIGHTS  8
 #define MAX_DECALS_SIZE       64
 
 // Depth and render target information.

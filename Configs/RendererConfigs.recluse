@@ -12,5 +12,5 @@
 [LocalReflections] = true
 [SoftShadows] = true
 [Bloom] = true
-[MultithreadedRendering] = true
+[Multithreading] = true
 [Resolution] = 800x600

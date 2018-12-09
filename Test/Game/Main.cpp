@@ -147,6 +147,14 @@ GraphicsConfigParams ReadGraphicsConfig()
           graphics._EnableSoftShadows = false;
         }
       }
+      if (AvailableOption(line, "Multithreading")) {
+        std::string option = GetOption(line);
+        if (option.compare("true") == 0) {
+          graphics._EnableMultithreadedRendering = true;
+        } else {
+          graphics._EnableMultithreadedRendering = false;
+        }
+      }
       line.clear();
     }
   }

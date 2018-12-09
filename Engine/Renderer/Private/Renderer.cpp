@@ -3760,7 +3760,33 @@ void Renderer::CheckCmdUpdate()
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  m_workers[0] = std::thread([&]() -> void {
+  if (m_currentGraphicsConfigs._EnableMultithreadedRendering) {
+    m_workers[0] = std::thread([&]() -> void {
+      CommandBuffer* offscreenCmdList = m_Offscreen._CmdBuffers[idx];
+      offscreenCmdList->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      offscreenCmdList->Begin(begin);
+      GenerateOffScreenCmds(offscreenCmdList);
+      offscreenCmdList->End();
+
+      m_Forward._CmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+      m_Forward._CmdBuffer->Begin(begin);
+      GenerateForwardPBRCmds(m_Forward._CmdBuffer);
+      m_Forward._CmdBuffer->End();
+    });
+
+    if (m_pLights->PrimaryShadowEnabled() || m_pLights->PrimaryShadowMapSystem().StaticMapNeedsUpdate()) {
+      CommandBuffer* shadowBuf = m_Offscreen._ShadowCmdBuffers[idx];
+      R_ASSERT(shadowBuf, "Shadow Buffer is null.");
+      shadowBuf->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      shadowBuf->Begin(begin);
+      GenerateShadowCmds(shadowBuf);
+      shadowBuf->End();
+    }
+
+    m_pUI->BuildCmdBuffers(m_pGlobal);
+    m_workers[0].join();
+  } else {
     CommandBuffer* offscreenCmdList = m_Offscreen._CmdBuffers[idx];
     offscreenCmdList->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     offscreenCmdList->Begin(begin);
@@ -3772,18 +3798,17 @@ void Renderer::CheckCmdUpdate()
     m_Forward._CmdBuffer->Begin(begin);
     GenerateForwardPBRCmds(m_Forward._CmdBuffer);
     m_Forward._CmdBuffer->End();
-  });
 
-  if (m_pLights->PrimaryShadowEnabled() || m_pLights->PrimaryShadowMapSystem().StaticMapNeedsUpdate()) {
-    CommandBuffer* shadowBuf = m_Offscreen._ShadowCmdBuffers[idx];
-    R_ASSERT(shadowBuf, "Shadow Buffer is null.");
-    shadowBuf->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    shadowBuf->Begin(begin);
-    GenerateShadowCmds(shadowBuf);
-    shadowBuf->End();
+    if (m_pLights->PrimaryShadowEnabled() || m_pLights->PrimaryShadowMapSystem().StaticMapNeedsUpdate()) {
+      CommandBuffer* shadowBuf = m_Offscreen._ShadowCmdBuffers[idx];
+      R_ASSERT(shadowBuf, "Shadow Buffer is null.");
+      shadowBuf->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      shadowBuf->Begin(begin);
+      GenerateShadowCmds(shadowBuf);
+      shadowBuf->End();
+    }
+    m_pUI->BuildCmdBuffers(m_pGlobal);
   }
-
-  m_pUI->BuildCmdBuffers(m_pGlobal);
 
 #if 0
   if (m_NeedsUpdate) {
@@ -3794,7 +3819,6 @@ void Renderer::CheckCmdUpdate()
     }
   }
 #endif
-  m_workers[0].join();
   m_CurrCmdBufferIdx = idx;
 }
 

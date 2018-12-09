@@ -9,6 +9,10 @@
 
 const float PI = 3.14159265359;
 
+#define MAX_DIRECTION_LIGHTS    4
+#define MAX_SPOT_LIGHTS         64
+#define MAX_POINT_LIGHTS        64
+
 struct PBRInfo {
   vec3 albedo;
   vec3 F0;
@@ -17,6 +21,37 @@ struct PBRInfo {
   float roughness;
   float NoV;
 };
+
+
+struct DirectionLight {
+  vec4  direction;
+  vec4  ambient;
+  vec4  color;
+  float intensity;
+  int   enable;
+  ivec2 pad;
+};
+
+
+struct PointLight {
+  vec4    position;
+  vec4    color;
+  float   range;
+  float   intensity;
+  int     enable;
+  int     pad;
+};
+
+
+struct SpotLight {
+  vec4    position;
+  vec4    color;
+  float   range;
+  float   outer;
+  float   inner;
+  int     enable;
+};
+
 
 vec4 SRGBToLINEAR(vec4 srgbIn)
 {
@@ -127,4 +162,16 @@ vec2 EncodeNormal(vec3 n)
 {
   float p = sqrt(n.z * 8.0 + 8.0);
   return vec2(n.xy / p + 0.5);
+}
+
+
+vec3 DecodeNormal(vec4 enc)
+{
+  vec2 fenc = enc.xy * 4.0 - 2.0;
+  float f = dot(fenc, fenc);
+  float g = sqrt(1.0 - f / 4.0);
+  vec3 n;
+  n.xy = fenc * g;
+  n.z = 1.0 - f / 2.0;
+  return n;
 }

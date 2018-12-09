@@ -115,6 +115,7 @@ public:
       params._AA = AA_None;
       params._Shadows = GRAPHICS_QUALITY_NONE;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
+      params._EnableMultithreadedRendering = true;
       gRenderer().UpdateRendererConfigs(&params);
     }
 
@@ -123,6 +124,7 @@ public:
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
       params._EnableBloom = true;
+      params._EnableMultithreadedRendering = false;
       params._AA = AA_FXAA_2x;
       params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;

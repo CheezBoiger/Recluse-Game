@@ -63,8 +63,9 @@ struct SpotLight {
   Vector4           _Position;
   Vector4           _Color;
   r32               _Range;
+  r32               _OuterCutOff;
+  r32               _InnerCutOff;
   i32               _Enable;
-  i32               _Pad;
 };
 
 
@@ -211,11 +212,14 @@ private:
   Buffer*           m_pStaticLightViewBuffer;
   DescriptorSet*    m_pLightViewDescriptorSet;
   DescriptorSet*    m_pStaticLightViewDescriptorSet;
+  Texture*          m_omniMapArray;
   LightViewSpace    m_viewSpace;
   LightViewSpace    m_staticViewSpace;
   r32               m_rShadowViewportWidth;
   r32               m_rShadowViewportHeight;
   b32               m_staticMapNeedsUpdate;
+  u32               m_numPointLights;
+  std::vector<Vector3> m_pointMapPositions;
 };
 
 

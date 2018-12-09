@@ -20,28 +20,6 @@ layout (location = 4) out vec4 rt2;
 layout (location = 5) out vec4 rt3;
 #endif
 
-#define MAX_DIRECTION_LIGHTS    4
-#define MAX_POINT_LIGHTS        64
-
-struct DirectionLight {
-  vec4  direction;
-  vec4  ambient;
-  vec4  color;
-  float intensity;
-  int   enable;
-  ivec2 pad;
-};
-
-
-struct PointLight {
-  vec4    position;
-  vec4    color;
-  float   range;
-  float   intensity;
-  int     enable;
-  int     pad;
-};
-
 in FRAG_IN {
   vec3 position;
   float lodBias;
@@ -131,8 +109,6 @@ layout (push_constant) uniform Debug {
   ivec4  display;
 } debug_info;
 #endif
-
-
 
 // TODO():
 vec3 CookTorrBRDFPoint(PointLight light, vec3 vPosition, vec3 Albedo, float roughness, float metallic, inout PBRInfo pbrInfo)
