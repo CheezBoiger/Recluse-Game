@@ -5,6 +5,11 @@
 #include "Logging/Log.hpp"
 #include <cmath>
 
+#if defined _M_X64 && __USE_INTEL_INTRINSICS__
+#define FAST_INTRINSICS 1
+#include <xmmintrin.h>
+#endif
+
 namespace Recluse {
 
 
@@ -80,21 +85,43 @@ r32 Vector3::LengthSqr() const
 
 Vector3 Vector3::operator+(const Vector3& other) const
 {
+#if FAST_INTRINSICS
+  r32 v0[4];
+  v0[0] = x; v0[1] = y; v0[2] = z; v0[3] = 0.0f;
+  __m128 a0 = _mm_load_ps(v0);
+  v0[0] = other.x; v0[1] = other.y; v0[2] = other.z;
+  __m128 b0 = _mm_load_ps(v0);
+  __m128 ans = _mm_add_ps(a0, b0);
+  _mm_store_ps(v0, ans);
+  return Vector3(v0[0], v0[1], v0[2]);
+#else
   return Vector3(
     x + other.x,
     y + other.y,
     z + other.z
   );
+#endif
 }
 
 
 Vector3 Vector3::operator-(const Vector3& other) const
 {
+#if FAST_INTRINSICS
+  r32 v0[4];
+  v0[0] = x; v0[1] = y; v0[2] = z; v0[3] = 0.0f;
+  __m128 a0 = _mm_load_ps(v0);
+  v0[0] = other.x; v0[1] = other.y; v0[2] = other.z;
+  __m128 b0 = _mm_load_ps(&other.x);
+  __m128 ans = _mm_sub_ps(a0, b0);
+  _mm_store_ps(v0, ans);
+  return Vector3(v0[0], v0[1], v0[2]);
+#else
   return Vector3(
     x - other.x,
     y - other.y,
     z - other.z
   );
+#endif
 }
 
 

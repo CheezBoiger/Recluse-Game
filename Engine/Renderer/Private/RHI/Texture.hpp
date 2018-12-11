@@ -30,6 +30,21 @@ private:
 };
 
 
+class ImageView {
+public:
+  ImageView()
+    : m_view(VK_NULL_HANDLE) { }
+
+  ~ImageView();
+
+  void        Initialize(VkDevice device, const VkImageViewCreateInfo& info);
+  void        CleanUp(VkDevice device);
+  VkImageView Handle() { return m_view; }
+private:
+  VkImageView m_view;
+};
+
+
 // Texture object.
 class Texture : public VulkanHandle {
 public:

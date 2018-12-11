@@ -27,6 +27,7 @@ class GraphicsPipeline;
 class Texture1D;
 class Texture2DArray;
 class TextureCube;
+class ImageView;
 class FrameBuffer;
 class RenderPass;
 
@@ -61,6 +62,7 @@ struct PointLight {
 
 struct SpotLight {
   Vector4           _Position;
+  Vector4           _Direction;
   Vector4           _Color;
   r32               _Range;
   r32               _OuterCutOff;
@@ -83,16 +85,19 @@ struct LightGridBuffer {
 
 
 #define MAX_DIRECTIONAL_LIGHTS  4
+#define MAX_SPOT_LIGHTS         16
 #define MAX_POINT_LIGHTS        64
 
 
 struct LightBuffer {
   static u32        MaxNumDirectionalLights();
   static u32        MaxNumPointLights();
+  static u32        MaxNumSpotLights();
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  _PrimaryLight;
   DirectionalLight  _DirectionalLights [MAX_DIRECTIONAL_LIGHTS];
   PointLight        _PointLights       [MAX_POINT_LIGHTS];
+  SpotLight         _SpotLights        [MAX_SPOT_LIGHTS];
 };
 
 
@@ -106,33 +111,10 @@ public:
 // Shadow System, that takes care of shadow rendering. Reponsible for one particular light source,
 // depending on whether it is a Directional, or Point, light source.
 class ShadowMapSystem {
+  // Maximum shadow map pixel dimension.
+  static const u32 kMaxShadowDim = 8192u;
 public:
-  ShadowMapSystem()
-    : m_pStaticMap(nullptr)
-    , m_pDynamicMap(nullptr)
-    , m_pStaticFrameBuffer(nullptr)
-    , m_pDynamicFrameBuffer(nullptr)
-    , m_pLightViewDescriptorSet(nullptr)
-    , m_pLightViewBuffer(nullptr)
-#if 0
-    , m_pDynamicRenderPass(nullptr)
-    , m_pSkinnedPipeline(nullptr)
-    , m_pStaticSkinnedPipeline(nullptr)
-    , m_pStaticSkinnedMorphPipeline(nullptr)
-    , m_pStaticStaticPipeline(nullptr)
-    , m_pStaticStaticMorphPipeline(nullptr)
-    , m_pSkinnedMorphPipeline(nullptr)
-    , m_pStaticMorphPipeline(nullptr)
-    , m_pStaticPipeline(nullptr)
-    , m_pStaticRenderPass(nullptr)
-#endif 
-    , m_staticMapNeedsUpdate(true)
-    , m_pStaticLightViewDescriptorSet(nullptr)
-    , m_rShadowViewportWidth(20.0f)
-    , m_rShadowViewportHeight(20.0f)
-    , m_staticShadowViewportWidth(100.0f)
-    , m_staticShadowViewportHeight(100.0f) { }
-
+  ShadowMapSystem();
   ~ShadowMapSystem();
 
   void              Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail, 
@@ -148,8 +130,7 @@ public:
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
   void              Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1);
 
-  void              SetViewportWidth(r32 width) { m_rShadowViewportWidth = width; }
-  void              SetViewportHeight(r32 height) { m_rShadowViewportHeight = height; }
+  void              SetViewportDim(r32 dim) { m_rShadowViewportDim = dim; }
 
   void              GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds);
   void              GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds);
@@ -163,14 +144,12 @@ public:
   b32               StaticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
 
   void              SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
-  void              SetStaticShadowMapWidth(r32 width) { m_staticShadowViewportWidth = width; }
-  void              SetStaticShadowMapHeight(r32 height) { m_staticShadowViewportHeight = height; }
+  void              SetStaticShadowMapDim(r32 dim) { m_staticShadowViewportDim = dim; }
 
   void              EnableStaticMapSoftShadows(b32 enable);
   void              EnableDynamicMapSoftShadows(b32 enable);
 
-  r32               GetStaticShadowMapWidth() const { return m_staticShadowViewportWidth; }
-  r32               GetStaticShadowMapHeight() const { return m_staticShadowViewportHeight; }
+  r32               GetStaticShadowMapDim() const { return m_staticShadowViewportDim; }
 
   static void       InitializeShadowPipelines(VulkanRHI* pRhi);
   static void       CleanUpShadowPipelines(VulkanRHI* pRhi);
@@ -179,11 +158,12 @@ private:
 
   void              InitializeShadowMap(VulkanRHI* pRhi);
   Vector3           m_staticViewerPos;
-  r32               m_staticShadowViewportWidth;
-  r32               m_staticShadowViewportHeight;
+  r32               m_staticShadowViewportDim;
 
-  Texture*          m_pStaticMap;
-  Texture*          m_pDynamicMap;
+  // Maps that contain shadow information on the directional, sunlight/moonlight object.
+  // These are 2D arrays containing cascaded shadow maps.
+  Texture*          m_pStaticMap;       
+  Texture*          m_pDynamicMap;      
   Texture*          m_pShadowMergeMap;  // Merging map of the static and dynamic shadow maps.
   // common used pipelines.
   // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
@@ -204,6 +184,12 @@ private:
   // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*      m_pStaticFrameBuffer;
   FrameBuffer*      m_pDynamicFrameBuffer;
+
+  struct Cascade {
+    FrameBuffer* _framebuffer;
+    ImageView*   _view;
+    DescriptorSet*  _set;
+  };
   
   // Point map based framebuffer.
   FrameBuffer*      m_pStaticOmniFrameBuffer;
@@ -215,11 +201,12 @@ private:
   Texture*          m_omniMapArray;
   LightViewSpace    m_viewSpace;
   LightViewSpace    m_staticViewSpace;
-  r32               m_rShadowViewportWidth;
-  r32               m_rShadowViewportHeight;
+  r32               m_rShadowViewportDim;
   b32               m_staticMapNeedsUpdate;
   u32               m_numPointLights;
   std::vector<Vector3> m_pointMapPositions;
+  std::vector<Cascade> m_dynamicCascades;
+  std::vector<Cascade> m_staticCascades;
 };
 
 

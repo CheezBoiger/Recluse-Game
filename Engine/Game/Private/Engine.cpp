@@ -239,19 +239,14 @@ void Engine::Update()
   });
 
   m_workers[1] = std::thread([&]() -> void {
-    {
-      Camera* pMain = Camera::GetMain();
-      if (pMain) {
-        pMain->FlushToGpuBus();
-      }
-    }
-    MeshComponent::UpdateComponents();
-    RendererComponent::UpdateComponents();
-    SkinnedRendererComponent::UpdateComponents();
+    PointLightComponent::UpdateComponents();
+    SpotLightComponent::UpdateComponents();
   });
 
   m_workers[2] = std::thread([&]() -> void {
-    PointLightComponent::UpdateComponents();
+    MeshComponent::UpdateComponents();
+    RendererComponent::UpdateComponents();
+    SkinnedRendererComponent::UpdateComponents();
   });
 
   ParticleSystemComponent::UpdateComponents();
@@ -260,6 +255,13 @@ void Engine::Update()
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();
+
+  {
+    Camera* pMain = Camera::GetMain();
+    if (pMain) {
+      pMain->FlushToGpuBus();
+    }
+  }
 
   switch (m_engineMode) {
     case EngineMode_Bake:

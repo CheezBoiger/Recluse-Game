@@ -51,8 +51,14 @@ b8 BasicVectorMath()
   }
 
   Log() << "Vector3 subtraction\n";
+  r32 sx = -2.4111f;
+  r32 sy = -3.3663f;
+  r32 sz = 132.222f;
   Vector3 c4 = b3 - a3;
   Log() << "Calculated Subtraction Vector: " << c4 << "\n";
+  if (!ToleranceSuccess(c4, Vector3(sx, sy, sz))) {
+    return false;
+  }
   return true;
 }
 } // Test

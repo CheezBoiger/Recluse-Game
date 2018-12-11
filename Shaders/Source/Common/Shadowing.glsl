@@ -1,5 +1,5 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
-#define BLOCKER_SEARCH_NUM_SAMPLES 32
+#define BLOCKER_SEARCH_NUM_SAMPLES 36
 #define PCF_NUM_SAMPLES 64
 #define NEAR_PLANE 0.1
 #define LIGHT_WORLD_SIZE 10.0
@@ -204,3 +204,20 @@ float PCSS(in sampler2D shadowMap,
   
   return PCF_Filter(shadowMap, uv, zReceiver, filterRadiusUV);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS, 
+  in sampler2D staticSM, in LightSpace dynamicLS, in sampler2D dynamicSM)
+{
+    vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
+    float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip) : PCSS(staticSM, staticLS, staticShadowClip));
+    float shadowFactor = staticShadowFactor;
+    if (enableShadows >= 1) {
+      vec4 shadowClip = dynamicLS.viewProj * vec4(wp, 1.0);
+      float dynamicShadowFactor = ((dynamicLS.shadowTechnique.x < 1) ? FilterPCF(dynamicSM, shadowClip) : PCSS(dynamicSM, dynamicLS, shadowClip));
+      shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
+    }
+    return shadowFactor;
+}
+

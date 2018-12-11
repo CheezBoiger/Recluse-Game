@@ -10,15 +10,17 @@
 const float PI = 3.14159265359;
 
 #define MAX_DIRECTION_LIGHTS    4
-#define MAX_SPOT_LIGHTS         64
+#define MAX_SPOT_LIGHTS         16
 #define MAX_POINT_LIGHTS        64
 
 struct PBRInfo {
+  vec3 WP;      // world position.
   vec3 albedo;
   vec3 F0;
   vec3 N;
   vec3 V;
   float roughness;
+  float metallic;
   float NoV;
 };
 
@@ -45,6 +47,7 @@ struct PointLight {
 
 struct SpotLight {
   vec4    position;
+  vec4    direction;
   vec4    color;
   float   range;
   float   outer;
@@ -175,3 +178,107 @@ vec3 DecodeNormal(vec4 enc)
   n.z = 1.0 - f / 2.0;
   return n;
 }
+
+
+/////////////////////////////////////////////////////////////////////
+
+
+// TODO():
+vec3 CookTorrBRDFPoint(PointLight light, inout PBRInfo pbrInfo)
+{
+  vec3 L = light.position.xyz - pbrInfo.WP;
+  float distance = length(L);
+  // Return if range is less than the distance between light and fragment.
+  if (light.range < distance) { return vec3(0.0); }
+
+  vec3 color = vec3(0.0);
+  float falloff = (distance / light.range);
+  float attenuation = light.intensity - (light.intensity * falloff);
+  vec3 nL = normalize(L);
+  
+  vec3 H = normalize(pbrInfo.V + nL);
+  
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
+  vec3 radiance = light.color.xyz * attenuation;
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, pbrInfo.roughness);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, pbrInfo.roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
+    
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - pbrInfo.metallic;
+  
+    color = (LambertDiffuse(kD, pbrInfo.albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV)) * radiance * NoL;
+  }
+  return color;
+}
+
+
+// TODO():
+vec3 CookTorrBRDFDirectional(DirectionLight light, inout PBRInfo pbrInfo)
+{
+  vec3 color = vec3(0.0);
+  vec3 L = -(light.direction.xyz);
+  vec3 radiance = light.color.xyz * light.intensity;
+  vec3 nL = normalize(L);
+  
+  vec3 H = normalize(pbrInfo.V + nL);
+  
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(pbrInfo.N, pbrInfo.V)), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, pbrInfo.roughness);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, pbrInfo.roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - pbrInfo.metallic;
+    
+    color += (LambertDiffuse(kD, pbrInfo.albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV)) * radiance * NoL;
+  }
+  return color;
+}
+
+
+vec3 CookTorrBRDFSpot(SpotLight light, inout PBRInfo pbrInfo)
+{
+  vec3 color = vec3(0.0);
+  vec3 nL = normalize(light.position.xyz - pbrInfo.WP);
+  float theta = dot(nL, normalize(-light.direction.xyz));
+  float epsilon = (light.inner - light.outer);
+  float intensity = clamp((theta - light.outer) / epsilon, 0.0, 1.0);
+  vec3 radiance = light.color.xyz;
+  
+  vec3 H = normalize(pbrInfo.V + nL);
+  
+  float NoL = clamp(dot(pbrInfo.N, nL), 0.001, 1.0);
+  float NoV = clamp(abs(dot(pbrInfo.N, pbrInfo.V)), 0.001, 1.0);
+  float NoH = clamp(dot(pbrInfo.N, H), 0.0, 1.0);
+  float VoH = clamp(dot(pbrInfo.V, H), 0.0, 1.0);
+  
+  if (NoL > 0.0) {
+    float D = DGGX(NoH, pbrInfo.roughness);
+    float G = GSchlickSmithGGX(NoL, pbrInfo.NoV, pbrInfo.roughness);  
+    vec3 F = FSchlick(VoH, pbrInfo.F0);
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - pbrInfo.metallic;
+    
+    color += (LambertDiffuse(kD, pbrInfo.albedo) + BRDF(D, F, G, NoL, pbrInfo.NoV)) * radiance * intensity * NoL;
+  }
+  
+  return color;
+}
+
+
+
+
+
+

@@ -44,6 +44,7 @@ GraphicsPipeline* ShadowMapSystem::k_pStaticStaticPipeline = nullptr;
 GraphicsPipeline* ShadowMapSystem::k_pStaticStaticMorphPipeline = nullptr;
 RenderPass*       ShadowMapSystem::k_pDynamicRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pStaticRenderPass = nullptr;
+u32               kTotalCascades = 4;
 
 u32 LightBuffer::MaxNumDirectionalLights()
 {
@@ -57,6 +58,12 @@ u32 LightBuffer::MaxNumPointLights()
 }
 
 
+u32 LightBuffer::MaxNumSpotLights()
+{
+  return MAX_SPOT_LIGHTS;
+}
+
+
 void InitializeShadowMapRenderPass(RenderPass* renderPass, VkFormat format, VkSampleCountFlagBits samples);
 void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
   RenderPass* pRenderPass,
@@ -66,6 +73,35 @@ void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
   std::vector<VkVertexInputAttributeDescription>& attributes,
   b32 skinned,
   b32 morphTargets = false);
+
+
+ShadowMapSystem::ShadowMapSystem()
+  : m_pStaticMap(nullptr)
+  , m_pDynamicMap(nullptr)
+  , m_pStaticFrameBuffer(nullptr)
+  , m_pDynamicFrameBuffer(nullptr)
+  , m_pLightViewDescriptorSet(nullptr)
+  , m_pLightViewBuffer(nullptr)
+#if 0
+  , m_pDynamicRenderPass(nullptr)
+  , m_pSkinnedPipeline(nullptr)
+  , m_pStaticSkinnedPipeline(nullptr)
+  , m_pStaticSkinnedMorphPipeline(nullptr)
+  , m_pStaticStaticPipeline(nullptr)
+  , m_pStaticStaticMorphPipeline(nullptr)
+  , m_pSkinnedMorphPipeline(nullptr)
+  , m_pStaticMorphPipeline(nullptr)
+  , m_pStaticPipeline(nullptr)
+  , m_pStaticRenderPass(nullptr)
+#endif 
+  , m_staticMapNeedsUpdate(true)
+  , m_pStaticLightViewDescriptorSet(nullptr)
+  , m_rShadowViewportDim(10.0f)
+  , m_staticShadowViewportDim(100.0f)
+  , m_dynamicCascades(kTotalCascades)
+  , m_staticCascades(kTotalCascades)
+{ 
+}
 
 
 void ShadowMapSystem::InitializeShadowPipelines(VulkanRHI* pRhi)
@@ -228,12 +264,19 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
   GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail,
   b32 staticSoftShadows, b32 dynamicSoftShadows)
 {
+  u32 dDim = kMaxShadowDim;
+  if (dynamicShadowDetail <= GRAPHICS_QUALITY_HIGH) {
+    dDim >>= 1;
+  }
+  if (dynamicShadowDetail <= GRAPHICS_QUALITY_MEDIUM) {
+    dDim >>= 1;
+  }
   // ShadowMap is a depth image.
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   ImageCi.arrayLayers = 1;
-  ImageCi.extent.width = 256 << dynamicShadowDetail;
-  ImageCi.extent.height = 256 << dynamicShadowDetail;
+  ImageCi.extent.width = dDim;
+  ImageCi.extent.height = dDim;
   ImageCi.extent.depth = 1;
   ImageCi.format = VK_FORMAT_D32_SFLOAT;
   ImageCi.imageType = VK_IMAGE_TYPE_2D;
@@ -281,8 +324,15 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
-    ImageCi.extent.width = 256 << staticShadowDetail;
-    ImageCi.extent.height = 256 << staticShadowDetail;
+    u32 sDim = kMaxShadowDim;
+    if (staticShadowDetail <= GRAPHICS_QUALITY_HIGH) {
+      sDim >>= 1;
+    }   
+    if (staticShadowDetail <= GRAPHICS_QUALITY_MEDIUM) {
+      sDim >>= 1;
+    }
+    ImageCi.extent.width = sDim;
+    ImageCi.extent.height = sDim;
     R_DEBUG(rNotify, "Static Shadow map size: ");
     R_DEBUG(rNormal, std::to_string(ImageCi.extent.width) + "x" + std::to_string(ImageCi.extent.height) + "\n");
     m_pStaticMap->Initialize(ImageCi, ViewCi);
@@ -890,13 +940,13 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
   Matrix4 view = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
   // TODO(): This may need to be adjustable depending on scale.
   Matrix4 proj = Matrix4::Ortho(
-    m_rShadowViewportWidth,
-    m_rShadowViewportHeight,
+    m_rShadowViewportDim,
+    m_rShadowViewportDim,
     1.0f,
     8000.0f
   );
   m_viewSpace._ViewProj = view * proj;
-  r32 lightSz = 5.0f / m_rShadowViewportHeight;
+  r32 lightSz = 5.0f / m_rShadowViewportDim;
   m_viewSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
   m_viewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
 
@@ -919,8 +969,8 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
       light->_Direction.z
     );
     proj = Matrix4::Ortho(
-      m_staticShadowViewportWidth,
-      m_staticShadowViewportHeight,
+      m_staticShadowViewportDim,
+      m_staticShadowViewportDim,
       1.0f,
       8000.0f
     );
@@ -931,7 +981,7 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     view = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
     m_staticViewSpace._ViewProj = view * proj;
     m_staticViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
-    m_staticViewSpace._lightSz.x = 5.0f / m_rShadowViewportHeight;//15.0f / m_staticShadowViewportHeight;
+    m_staticViewSpace._lightSz.x = 5.0f / m_staticShadowViewportDim;//15.0f / m_staticShadowViewportHeight;
     R_ASSERT(m_pStaticLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
     memcpy(m_pStaticLightViewBuffer->Mapped(), &m_staticViewSpace, sizeof(LightViewSpace));
 
@@ -1019,6 +1069,16 @@ LightDescriptor::LightDescriptor()
     m_Lights._DirectionalLights[i]._Color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
     m_Lights._DirectionalLights[i]._Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
   }
+
+  for (size_t i = 0; i < LightBuffer::MaxNumSpotLights(); ++i) {
+    m_Lights._SpotLights[i]._Color = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    m_Lights._SpotLights[i]._Enable = false;
+    m_Lights._SpotLights[i]._InnerCutOff = 1.0f;
+    m_Lights._SpotLights[i]._OuterCutOff = 1.0f;
+    m_Lights._SpotLights[i]._Position = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+    m_Lights._SpotLights[i]._Direction = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+  }
+
 #if 0
   m_PrimaryLightSpace._lightSz = Vector4();
   m_PrimaryLightSpace._near = Vector4();

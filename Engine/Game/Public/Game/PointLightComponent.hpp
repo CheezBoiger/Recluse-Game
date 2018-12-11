@@ -44,4 +44,25 @@ private:
   PointLight* m_NativeLight;  
   Vector3     m_offset;
 };
+
+
+class SpotLightComponent : public LightComponent {
+  RCOMPONENT(SpotLightComponent);
+public:
+  static std::queue<u32> sAvailableSpotLightIds;
+
+  SpotLightComponent()
+    : LightComponent(LightComponent::SPOT_LIGHT)
+    , m_NativeLight(nullptr) { }
+
+  void  OnInitialize(GameObject* owner) override;
+  void  OnCleanUp() override;
+  void  Update() override;
+
+  virtual void OnEnable() override { m_NativeLight->_Enable = Enabled(); }
+
+private:
+  SpotLight* m_NativeLight;
+  Vector3     m_offset;
+};
 } // Recluse

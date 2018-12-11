@@ -4,6 +4,10 @@
 #include "Logging/Log.hpp"
 #include <math.h>
 
+#if defined _M_X64 && __USE_INTEL_INTRINSICS__
+#define FAST_INTRINSICS 1
+#include <xmmintrin.h>
+#endif
 
 namespace Recluse {
 
@@ -38,17 +42,33 @@ Vector4 Vector4::Max(const Vector4& a, const Vector4& b)
 
 Vector4 Vector4::operator+(const Vector4& other) const
 {
+#if FAST_INTRINSICS
+  __m128 a0 = _mm_load_ps(&x);
+  __m128 b0 = _mm_load_ps(&other.x);
+  __m128 ans = _mm_add_ps(a0, b0);
+  Vector4 v1; _mm_store_ps(&v1.x, ans);
+  return v1;
+#else
   return Vector4(
     x + other.x, y + other.y, z + other.z, w + other.z
   );
+#endif
 }
 
 
 Vector4 Vector4::operator-(const Vector4& other) const
 {
+#if FAST_INTRINSICS
+  __m128 a0 = _mm_load_ps(&x);
+  __m128 b0 = _mm_load_ps(&other.x);
+  __m128 ans = _mm_sub_ps(a0, b0);
+  Vector4 v1; _mm_store_ps(&v1.x, ans);
+  return v1;
+#else
   return Vector4(
     x - other.x, y - other.y, z - other.z, w - other.w
   );
+#endif
 }
 
 
@@ -79,19 +99,33 @@ Vector4 Vector4::operator/(const r32 scaler) const
 
 void Vector4::operator+=(const Vector4& other)
 {
+#if FAST_INTRINSICS
+  __m128 v0 = _mm_load_ps(&x);
+  __m128 v1 = _mm_load_ps(&other.x);
+  __m128 ans = _mm_add_ps(v0, v1);
+  _mm_store_ps(&x, ans);
+#else
   x += other.x;
   y += other.y;
   z += other.z;
   w += other.w;
+#endif
 }
 
 
 void Vector4::operator-=(const Vector4& other)
 {
+#if FAST_INTRINSICS
+  __m128 v0 = _mm_load_ps(&x);
+  __m128 v1 = _mm_load_ps(&other.x);
+  __m128 ans = _mm_sub_ps(v0, v1);
+  _mm_store_ps(&x, ans);
+#else
   x -= other.x;
   y -= other.y;
   z -= other.z;
   w -= other.w;
+#endif
 }
 
 

@@ -23,6 +23,14 @@
 using namespace Recluse;
 
 
+struct CameraTransition {
+  r32 interpolate;    // smoothness.
+  r32 time;           // how long to remain in this position.
+  Vector3 position;   // Position of this transition.
+  Quaternion rotation;  // rotated face of this transition.
+};
+
+
 // Main camera is an object in the scene.
 class MainCamera : public GameObject
 {
@@ -67,6 +75,9 @@ public:
 
     bFollow = false;
     m_pPhysicsComponent->SetMass(0.0f);
+
+    m_pSpotLight = new SpotLightComponent();
+    m_pSpotLight->Initialize(this);
   }
 
   // Game object updating.
@@ -77,13 +88,15 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
      // pCam->SetFoV(pCam->FoV() + Radians(1.0f));
-     pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
+     //pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
       //gRenderer().TakeSnapshot("screenshot.png");
+      m_pSpotLight->Enable(false);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
       //pCam->SetFoV(pCam->FoV() - Radians(1.0f));
-      pCam->SetExposure(pCam->Exposure() + 2.0f * (r32)Time::DeltaTime);
+      //pCam->SetExposure(pCam->Exposure() + 2.0f * (r32)Time::DeltaTime);
+      m_pSpotLight->Enable(true);
     }
 
     if (!bFollow) {
@@ -196,9 +209,11 @@ public:
   void OnCleanUp() override 
   {
     m_pPhysicsComponent->CleanUp();
+    m_pSpotLight->CleanUp();
 
     delete m_pPhysicsComponent;
     delete m_pCollider;
+    delete m_pSpotLight;
   }
 
 private:
@@ -217,6 +232,8 @@ private:
   r32     t = 0.0f;
 #endif
   PhysicsComponent* m_pPhysicsComponent;
+  SpotLightComponent* m_pSpotLight;
+
   Collider*         m_pCollider;
   b32               bFollow;
   // Object to hold on to.

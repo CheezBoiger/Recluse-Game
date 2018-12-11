@@ -3227,9 +3227,7 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer)
 {
   ShadowMapSystem& system = m_pLights->PrimaryShadowMapSystem();
-  if (m_pLights->PrimaryShadowEnabled()) {
-    system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList);
-  }
+  system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList);
   if (system.StaticMapNeedsUpdate()) {
     system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList);
     SignalStaticUpdate();

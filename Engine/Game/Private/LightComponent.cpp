@@ -16,16 +16,19 @@ namespace Recluse {
 
 std::queue<u32> PointLightComponent::sAvailablePointLightIds;
 std::queue<u32> LightComponent::sAvailableDirectionalLightIds;
+std::queue<u32> SpotLightComponent::sAvailableSpotLightIds;
 Mesh*           kPointLightMesh = nullptr;
 Primitive       pointLightPrim;
 
 DEFINE_COMPONENT_MAP(PointLightComponent);
+DEFINE_COMPONENT_MAP(SpotLightComponent);
 
 
 void LightComponent::GlobalInitialize()
 {
   u32 pointLightCount = LightBuffer::MaxNumPointLights();
   u32 dirLightCount = LightBuffer::MaxNumDirectionalLights();
+  u32 spotLightCount = LightBuffer::MaxNumSpotLights();
 
   for (u32 i = 0; i < pointLightCount; ++i) {
     PointLightComponent::sAvailablePointLightIds.push(i);
@@ -33,6 +36,10 @@ void LightComponent::GlobalInitialize()
 
   for (u32 i = 0; i < dirLightCount; ++i) {
     sAvailableDirectionalLightIds.push(i);
+  }
+
+  for (u32 i = 0; i < spotLightCount; ++i) {
+    SpotLightComponent::sAvailableSpotLightIds.push(i);
   }
 
   PointLightComponent::InitializeMeshDebug();
@@ -154,5 +161,53 @@ void PointLightComponent::OnDebug()
     gRenderer().FreeMeshDescriptor(m_descriptor);
     m_descriptor = nullptr;
   }
+}
+
+
+void SpotLightComponent::OnCleanUp()
+{
+  if (m_Id >= LightBuffer::MaxNumSpotLights()) {
+    return;
+  }
+  
+  // Push back light id as it is now available.
+  sAvailableSpotLightIds.push(m_Id);
+  m_NativeLight->_Enable = false;
+
+  UNREGISTER_COMPONENT(SpotLightComponent);
+}
+
+
+void SpotLightComponent::OnInitialize(GameObject* owner)
+{
+  if (sAvailableSpotLightIds.empty()) {
+    R_DEBUG(rError, "Spot light can not be assigned a spot light! Max exceeded!\n");
+    return;
+  }
+  m_Id = sAvailableSpotLightIds.front();
+  sAvailableSpotLightIds.pop();
+
+  LightBuffer* lights = gRenderer().LightData();
+  m_NativeLight = &lights->_SpotLights[m_Id];
+  m_NativeLight->_Enable = true;
+  m_NativeLight->_Range = 1.0f;
+  m_NativeLight->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  m_NativeLight->_InnerCutOff = cosf(Radians(12.7f));
+  m_NativeLight->_OuterCutOff = cosf(Radians(17.5f));
+
+  REGISTER_COMPONENT(SpotLightComponent, this);
+}
+
+
+void SpotLightComponent::Update()
+{
+  Transform* transform = GetOwner()->GetTransform();
+  if (!transform) {
+    return;
+  }
+  // Rotate about the same area of where the position should be.
+  Vector3 rel = transform->Rotation * m_offset;
+  m_NativeLight->_Position = transform->Position + rel;
+  m_NativeLight->_Direction = transform->Front();
 }
 } // Recluse

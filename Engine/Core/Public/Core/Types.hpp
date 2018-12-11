@@ -35,3 +35,5 @@ typedef u64               uuid64;
 #else
  #define DEBUG_OP(param)
 #endif
+
+#define __USE_INTEL_INTRINSICS__ 0

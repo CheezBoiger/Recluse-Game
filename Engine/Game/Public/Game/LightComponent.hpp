@@ -24,7 +24,8 @@ public:
   enum LightType {
     UNKNOWN_LIGHT,
     POINT_LIGHT,
-    DIRECTION_LIGHT
+    DIRECTION_LIGHT,
+    SPOT_LIGHT
   };
 
   LightComponent(LightType type = UNKNOWN_LIGHT)

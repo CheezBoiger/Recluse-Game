@@ -105,4 +105,27 @@ void Texture::CleanUp()
     mMemory = VK_NULL_HANDLE;
   }
 }
+
+
+ImageView::~ImageView()
+{
+}
+
+
+void ImageView::Initialize(VkDevice device, const VkImageViewCreateInfo& info)
+{
+  VkResult result = vkCreateImageView(device, &info, nullptr, &m_view);
+  DEBUG_OP(if (result != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to create image view!\n");
+  });
+}
+
+
+void ImageView::CleanUp(VkDevice device)
+{
+  if (m_view) {
+    vkDestroyImageView(device, m_view, nullptr);
+    m_view = VK_NULL_HANDLE;
+  }
+}
 } // Recluse
