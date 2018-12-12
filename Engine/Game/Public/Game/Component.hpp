@@ -18,8 +18,10 @@ class Transform;
 
 #define RCOMPONENT(cls) private: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
     friend class GameObject; \
+    static uuid64 kUID; \
     static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
     static const tchar* GetName() { return #cls; } \
+    static uuid64 GenerateUID() { uuid64 uid = kUID++; return uid; } \
     public: static void UpdateComponents() { \
               for (auto& it : _k##cls##s) { \
                 cls* comp = it.second; \
@@ -30,16 +32,16 @@ class Transform;
     private:
 
 #define REGISTER_COMPONENT(cls, pComp) { \
-          uuid64 uuid = GetOwner()->GetId(); \
-          auto it = _k##cls##s.find(uuid); \
+          m_componentUID = GenerateUID(); \
+          auto it = _k##cls##s.find(m_componentUID); \
           if (it == _k##cls##s.end()) { \
-            _k##cls##s[uuid] = pComp; \
+            _k##cls##s[m_componentUID] = pComp; \
           } \
        }
 
 #define UNREGISTER_COMPONENT(cls) { \
           if (GetOwner()) { \
-            uuid64 uuid = GetOwner()->GetId(); \
+            uuid64 uuid = GetUID(); \
             auto it = _k##cls##s.find(uuid); \
             if (it != _k##cls##s.end()) { \
             } \
@@ -47,7 +49,8 @@ class Transform;
         }
 
 
-#define DEFINE_COMPONENT_MAP(cls) std::unordered_map<uuid64, cls*> cls::_k##cls##s
+#define DEFINE_COMPONENT_MAP(cls) std::unordered_map<uuid64, cls*> cls::_k##cls##s; \
+                                  uuid64 cls::kUID = 0; 
                                 
     
 
@@ -105,6 +108,8 @@ public:
 
   Transform*    GetTransform();
 
+  uuid64        GetUID() { return m_componentUID; }
+
 protected:
   // Mandatory that this update function is defined.
   virtual void  Update() { }
@@ -116,6 +121,8 @@ protected:
   virtual void  OnInitialize(GameObject* owner) { }
   virtual void  OnCleanUp() { }
   virtual void  OnEnable() { }
+
+  uuid64        m_componentUID; 
 
 private:
   GameObject*   m_pGameObjectOwner;

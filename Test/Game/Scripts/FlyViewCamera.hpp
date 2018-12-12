@@ -82,6 +82,15 @@ public:
     m_pSpotLight->SetInnerCutoff(cosf(Radians(20.0f)));
     m_pSpotLight->SetColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
     m_pSpotLight->SetIntensity(2.0f);
+    m_pSpotLight->SetOffset(Vector3(0.5f, -0.5f, 0.0f));
+
+    m_pSpotLight2 = new SpotLightComponent();
+    m_pSpotLight2->Initialize(this);
+    m_pSpotLight2->SetOuterCutoff(cosf(Radians(25.0f)));
+    m_pSpotLight2->SetInnerCutoff(cosf(Radians(20.0f)));
+    m_pSpotLight2->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    m_pSpotLight2->SetIntensity(2.0f);
+    m_pSpotLight2->SetOffset(Vector3(-0.5f, -0.5f, 0.0f));
   }
 
   // Game object updating.
@@ -95,12 +104,14 @@ public:
      //pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
       //gRenderer().TakeSnapshot("screenshot.png");
       m_pSpotLight->Enable(false);
+      m_pSpotLight2->Enable(false);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
       //pCam->SetFoV(pCam->FoV() - Radians(1.0f));
       //pCam->SetExposure(pCam->Exposure() + 2.0f * (r32)Time::DeltaTime);
       m_pSpotLight->Enable(true);
+      m_pSpotLight2->Enable(true);
     }
 
     if (!bFollow) {
@@ -214,10 +225,11 @@ public:
   {
     m_pPhysicsComponent->CleanUp();
     m_pSpotLight->CleanUp();
-
+    m_pSpotLight2->CleanUp();
     delete m_pPhysicsComponent;
     delete m_pCollider;
     delete m_pSpotLight;
+    delete m_pSpotLight2;
   }
 
 private:
@@ -237,6 +249,7 @@ private:
 #endif
   PhysicsComponent* m_pPhysicsComponent;
   SpotLightComponent* m_pSpotLight;
+  SpotLightComponent* m_pSpotLight2;
 
   Collider*         m_pCollider;
   b32               bFollow;

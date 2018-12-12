@@ -66,6 +66,7 @@ public:
   void SetInnerCutoff(r32 cutoff) { m_NativeLight->_InnerCutOff = cutoff; }
   void SetIntensity(r32 intensity) override { m_NativeLight->_Color.w = intensity; }
   virtual void OnEnable() override { m_NativeLight->_Enable = Enabled(); }
+  void SetOffset(const Vector3& offset) { m_offset = offset; }
 
 private:
   SpotLight* m_NativeLight;
