@@ -136,7 +136,7 @@ vec3 BRDF(float D, vec3 F, float G, float NoL, float NoV)
 
 
 ////////////////////////////////////////////////////////////////////
-
+#if !defined NO_NORMAL_TANGENT
 mat3 BiTangentFrame(vec3 Normal, vec3 Position, vec2 UV)
 {
   vec3 dp1 = dFdx(Position);
@@ -159,7 +159,7 @@ vec3 GetNormal(in sampler2D normal, float lod, vec3 N, vec3 V, vec2 TexCoord)
   mat3 TBN = BiTangentFrame(N, V, TexCoord);
   return normalize(TBN * tNormal);
 }
-
+#endif
 
 vec2 EncodeNormal(vec3 n)
 {
@@ -250,11 +250,16 @@ vec3 CookTorrBRDFDirectional(DirectionLight light, inout PBRInfo pbrInfo)
 vec3 CookTorrBRDFSpot(SpotLight light, inout PBRInfo pbrInfo)
 {
   vec3 color = vec3(0.0);
-  vec3 nL = normalize(light.position.xyz - pbrInfo.WP);
+  vec3 L = light.position.xyz - pbrInfo.WP;
+  vec3 nL = normalize(L);
+  float distance = length(L);
+  if (light.range < distance) return color;
+  float falloff = (distance / light.range);
   float theta = dot(nL, normalize(-light.direction.xyz));
   float epsilon = (light.inner - light.outer);
-  float intensity = clamp((theta - light.outer) / epsilon, 0.0, 1.0);
-  vec3 radiance = light.color.xyz;
+  float intensity = clamp((theta - light.outer) / epsilon, 0.0, 1.0) * light.color.w;
+  float attenuation = intensity - (intensity * falloff);
+  vec3 radiance = light.color.xyz * attenuation;
   
   vec3 H = normalize(pbrInfo.V + nL);
   

@@ -59,6 +59,12 @@ public:
   void  OnCleanUp() override;
   void  Update() override;
 
+  void SetRange(r32 range) { m_NativeLight->_Range = range; }
+  void SetColor(const Vector4& color) override { m_NativeLight->_Color = color; }
+
+  void SetOuterCutoff(r32 cutoff) { m_NativeLight->_OuterCutOff = cutoff; }
+  void SetInnerCutoff(r32 cutoff) { m_NativeLight->_InnerCutOff = cutoff; }
+  void SetIntensity(r32 intensity) override { m_NativeLight->_Color.w = intensity; }
   virtual void OnEnable() override { m_NativeLight->_Enable = Enabled(); }
 
 private:

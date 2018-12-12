@@ -78,6 +78,10 @@ public:
 
     m_pSpotLight = new SpotLightComponent();
     m_pSpotLight->Initialize(this);
+    m_pSpotLight->SetOuterCutoff(cosf(Radians(25.0f)));
+    m_pSpotLight->SetInnerCutoff(cosf(Radians(20.0f)));
+    m_pSpotLight->SetColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
+    m_pSpotLight->SetIntensity(2.0f);
   }
 
   // Game object updating.

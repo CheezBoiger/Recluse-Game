@@ -190,7 +190,7 @@ void SpotLightComponent::OnInitialize(GameObject* owner)
   LightBuffer* lights = gRenderer().LightData();
   m_NativeLight = &lights->_SpotLights[m_Id];
   m_NativeLight->_Enable = true;
-  m_NativeLight->_Range = 1.0f;
+  m_NativeLight->_Range = 10.0f;
   m_NativeLight->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
   m_NativeLight->_InnerCutOff = cosf(Radians(12.7f));
   m_NativeLight->_OuterCutOff = cosf(Radians(17.5f));
