@@ -2,13 +2,13 @@
 #pragma once
 
 #include "Core/Types.hpp"
-#include "Vector3.hpp"
-#include "Matrix4.hpp"
 
 namespace Recluse {
 
 
 class Log;
+struct Matrix4;
+struct Vector3;
 
 // Quaternion mathematical object for spatial rotations.
 // Quaternions of this library are formatted as XYZW form.
@@ -26,11 +26,13 @@ struct Quaternion {
   static Quaternion EulerAnglesToQuaternion(const Vector3& euler);
   static Quaternion Matrix4ToQuaternion(const Matrix4& rot);  
   static Quaternion LookRotation(const Vector3&dir, const Vector3& up);
+  static Quaternion Identity() { return Quaternion(); }
   
   Quaternion        operator+(const Quaternion& other) const;
   Quaternion        operator-(const Quaternion& other) const;
   Quaternion        operator*(const Quaternion& other) const;
 
+  
   Quaternion        operator*(const r32 scaler) const;
   Quaternion        operator/(const r32 scaler) const;
   Quaternion        operator-() const;

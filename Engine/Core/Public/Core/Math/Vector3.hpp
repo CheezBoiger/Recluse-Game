@@ -8,6 +8,7 @@ namespace Recluse {
 
 class Log;
 struct Matrix3;
+struct Quaternion;
 
 // Math vector object of 3 components <x, y, z>.
 struct Vector3 {
@@ -52,6 +53,7 @@ struct Vector3 {
 
   // Vector3 to matrix3 multiplication in row major order.
   Vector3         operator*(const Matrix3& other) const;
+  Vector3         operator*(const Quaternion& other) const;
 
   void            operator+=(const Vector3& other);
   void            operator-=(const Vector3& other);

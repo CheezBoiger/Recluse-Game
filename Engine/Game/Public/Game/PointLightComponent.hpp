@@ -53,7 +53,9 @@ public:
 
   SpotLightComponent()
     : LightComponent(LightComponent::SPOT_LIGHT)
-    , m_NativeLight(nullptr) { }
+    , m_NativeLight(nullptr)
+    , m_fixed(false)
+    , m_rotQuat(Quaternion::Identity()) { }
 
   void  OnInitialize(GameObject* owner) override;
   void  OnCleanUp() override;
@@ -61,15 +63,21 @@ public:
 
   void SetRange(r32 range) { m_NativeLight->_Range = range; }
   void SetColor(const Vector4& color) override { m_NativeLight->_Color = color; }
+  void EnableFixed(b32 enable) { m_fixed = enable; }
+  void EnableShadowing(b32 enable) { m_enableShadow = enable; }
 
   void SetOuterCutoff(r32 cutoff) { m_NativeLight->_OuterCutOff = cutoff; }
   void SetInnerCutoff(r32 cutoff) { m_NativeLight->_InnerCutOff = cutoff; }
   void SetIntensity(r32 intensity) override { m_NativeLight->_Color.w = intensity; }
   virtual void OnEnable() override { m_NativeLight->_Enable = Enabled(); }
   void SetOffset(const Vector3& offset) { m_offset = offset; }
+  void SetRotationOffset(const Quaternion& rot) { m_rotQuat = rot; }
 
 private:
-  SpotLight* m_NativeLight;
+  Quaternion  m_rotQuat;
+  SpotLight*  m_NativeLight;
   Vector3     m_offset;
+  b32         m_fixed : 1,
+              m_enableShadow : 1;
 };
 } // Recluse

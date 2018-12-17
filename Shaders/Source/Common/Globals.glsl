@@ -1,4 +1,6 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
+#ifndef GLOBALS_H
+#define GLOBALS_H
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
@@ -39,3 +41,5 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   int   enableShadows;
   int   enableAA;
 } gWorldBuffer;
+
+#endif // GLOBALS_H

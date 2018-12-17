@@ -82,6 +82,10 @@ ShadowMapSystem::ShadowMapSystem()
   , m_pDynamicFrameBuffer(nullptr)
   , m_pLightViewDescriptorSet(nullptr)
   , m_pLightViewBuffer(nullptr)
+  , m_pOmniMapArray(nullptr)
+  , m_pSpotLightMapArray(nullptr)
+  , m_pStaticOmniMapArray(nullptr)
+  , m_pStaticSpotLightMapArray(nullptr)
 #if 0
   , m_pDynamicRenderPass(nullptr)
   , m_pSkinnedPipeline(nullptr)
@@ -260,6 +264,86 @@ ShadowMapSystem::~ShadowMapSystem()
 }
 
 
+void ShadowMapSystem::InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 resolution)
+{
+  {
+    VkImageCreateInfo imageCi = { };
+    imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCi.arrayLayers = MAX_SPOT_LIGHTS;
+    imageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    imageCi.mipLevels = 1;
+    imageCi.format = VK_FORMAT_D32_SFLOAT;
+    imageCi.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageCi.imageType = VK_IMAGE_TYPE_2D;
+    imageCi.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageCi.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageCi.extent.depth = 1;
+    imageCi.extent.height = resolution;
+    imageCi.extent.width = resolution;
+ 
+    VkImageViewCreateInfo viewCi = { };
+    viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCi.format = VK_FORMAT_D32_SFLOAT;
+    viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    viewCi.subresourceRange.baseArrayLayer = 0;
+    viewCi.subresourceRange.baseMipLevel = 0;
+    viewCi.subresourceRange.layerCount = MAX_SPOT_LIGHTS;
+    viewCi.subresourceRange.levelCount = 1;
+    viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;  
+  
+    if ( !m_pSpotLightMapArray ) {
+      m_pSpotLightMapArray = pRhi->CreateTexture();
+      m_pSpotLightMapArray->Initialize(imageCi, viewCi);
+    }
+  
+    if ( !m_pStaticSpotLightMapArray ) {
+      m_pStaticSpotLightMapArray = pRhi->CreateTexture();
+      m_pStaticSpotLightMapArray->Initialize(imageCi, viewCi);
+    }
+  }
+  {
+    DescriptorSetLayout* pLightSpaceLayout = LightViewDescriptorSetLayoutKey;
+    VkImageViewCreateInfo viewCi = { };
+    viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewCi.image = m_pSpotLightMapArray->Image();
+    viewCi.subresourceRange.baseMipLevel = 0;
+    viewCi.subresourceRange.layerCount = 1;
+    viewCi.subresourceRange.levelCount = 1;
+    viewCi.format = VK_FORMAT_D32_SFLOAT;
+    
+    // This may require us to have to lower the allowed spotlights rendering.
+    m_spotLightShadowMaps.resize(MAX_SPOT_LIGHTS);
+    for ( u32 i = 0; i < m_spotLightShadowMaps.size(); ++i ) {
+      ShadowMapLayer& layerView = m_spotLightShadowMaps[i];
+      viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+      viewCi.subresourceRange.baseArrayLayer = i;
+      layerView._view = pRhi->CreateImageView(viewCi);
+    }
+  }
+}
+
+
+void ShadowMapSystem::CleanUpSpotLightShadowMapArray(VulkanRHI* pRhi)
+{
+  for ( u32 i = 0; i < m_spotLightShadowMaps.size(); ++i ) {
+    ShadowMapLayer& layerView = m_spotLightShadowMaps[i];
+    pRhi->FreeImageView(layerView._view);
+    layerView._view = nullptr;
+  }
+
+  if (m_pSpotLightMapArray) {
+    pRhi->FreeTexture(m_pSpotLightMapArray);
+    m_pSpotLightMapArray = nullptr;
+  }
+  if (m_pStaticSpotLightMapArray) {
+    pRhi->FreeTexture(m_pStaticSpotLightMapArray);
+    m_pStaticSpotLightMapArray = nullptr;
+  }
+}
+
+
 void ShadowMapSystem::Initialize(VulkanRHI* pRhi, 
   GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail,
   b32 staticSoftShadows, b32 dynamicSoftShadows)
@@ -338,7 +422,8 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
     m_pStaticMap->Initialize(ImageCi, ViewCi);
   }
 
-  InitializeShadowMap(pRhi);
+  InitializeShadowMap(pRhi);  
+  InitializeSpotLightShadowMapArray(pRhi);
   
   EnableStaticMapSoftShadows(staticSoftShadows);
   EnableDynamicMapSoftShadows(dynamicSoftShadows);
@@ -1030,6 +1115,8 @@ void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
     pRhi->FreeFrameBuffer(m_pStaticFrameBuffer);
     m_pStaticFrameBuffer = nullptr;
   }
+
+  CleanUpSpotLightShadowMapArray(pRhi);
 }
 
 

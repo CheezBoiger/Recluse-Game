@@ -214,6 +214,8 @@ public:
     m_meshComponent.Initialize(this);
     m_animationComponent.Initialize(this);
     m_physicsComponent.Initialize(this);
+    m_spotLightComponent.Initialize(this);
+
     Transform* transform = GetTransform();
     m_pPhysicsComponent = &m_physicsComponent;
     m_pMeshComponent = &m_meshComponent;
@@ -225,6 +227,14 @@ public:
     m_physicsComponent.SetFriction(1.0f);
     m_physicsComponent.SetRollingFriction(0.1f);
     m_physicsComponent.SetSpinningFriction(0.1f);
+
+    m_spotLightComponent.SetOuterCutoff(cosf(Radians(25.0f)));
+    m_spotLightComponent.SetInnerCutoff(cosf(Radians(20.0f)));
+    m_spotLightComponent.SetColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
+    m_spotLightComponent.SetIntensity(5.0f);
+    m_spotLightComponent.SetOffset(Vector3(0.0f, 7.0f, 0.0f));
+    m_spotLightComponent.SetRotationOffset(Quaternion::AngleAxis(Radians(90.0f), Vector3::RIGHT));
+    m_spotLightComponent.EnableFixed(true);
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
@@ -327,6 +337,7 @@ public:
     m_animationComponent.CleanUp();
     m_physicsComponent.CleanUp();
     m_pParticleSystem->CleanUp();
+    m_spotLightComponent.CleanUp();
 
     gPhysics().FreeCollider(m_sphereCollider);
 
@@ -344,6 +355,7 @@ private:
 #endif
   MeshComponent             m_meshComponent;
   AnimationComponent        m_animationComponent;
+  SpotLightComponent        m_spotLightComponent;
   PhysicsComponent          m_physicsComponent;
   SphereCollider*           m_sphereCollider;
   ParticleSystemComponent*  m_pParticleSystem;

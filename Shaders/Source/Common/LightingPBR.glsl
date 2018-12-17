@@ -6,6 +6,8 @@
 // f = fEmissive + fDiffuse + fSpecular
 //
 ////////////////////////////////////////////////////////////////////
+#ifndef LIGHTING_PBR_H
+#define LIGHTING_PBR_H
 
 const float PI = 3.14159265359;
 
@@ -282,7 +284,7 @@ vec3 CookTorrBRDFSpot(SpotLight light, inout PBRInfo pbrInfo)
   return color;
 }
 
-
+#endif // LIGHTING_PBR_H
 
 
 

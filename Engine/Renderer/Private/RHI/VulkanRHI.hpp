@@ -26,6 +26,7 @@ class CommandBuffer;
 class Sampler;
 class Texture;
 class DescriptorSet;
+class ImageView;
 class DescriptorSetLayout;
 class GPUConfigParams;
 class Query;
@@ -104,6 +105,7 @@ public:
   ComputePipeline*              CreateComputePipeline();
   FrameBuffer*                  CreateFrameBuffer();
   Sampler*                      CreateSampler();
+  ImageView*                    CreateImageView(const VkImageViewCreateInfo& info);
   Texture*                      CreateTexture();
   Shader*                       CreateShader();
   CommandBuffer*                CreateCommandBuffer();
@@ -112,6 +114,7 @@ public:
   Query*                        CreateQuery();
   RenderPass*                   CreateRenderPass();
 
+  void                          FreeImageView(ImageView* imgView);
   void                          FreeBuffer(Buffer* buffer);
   void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
   void                          FreeComputePipeline(ComputePipeline* pipeline);

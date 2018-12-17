@@ -2,6 +2,9 @@
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Math/Common.hpp"
 
+#include "Core/Math/Vector3.hpp"
+#include "Core/Math/Matrix4.hpp"
+
 #include "Logging/Log.hpp"
 #include "Exception.hpp"
 #include <cmath>

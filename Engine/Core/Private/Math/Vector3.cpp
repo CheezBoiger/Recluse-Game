@@ -1,6 +1,8 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "Math/Vector3.hpp"
 #include "Math/Matrix3.hpp"
+#include "Math/Quaternion.hpp"
+
 #include "Math/Ray.hpp"
 #include "Logging/Log.hpp"
 #include <cmath>
@@ -243,5 +245,14 @@ Log& operator<<(Log& log, const Ray& ray)
   log << "Origin:    " << ray.Origin << " "
       << "Direction: " << ray.Direction; 
   return log;
+}
+
+
+Vector3 Vector3::operator*(const Quaternion& other) const
+{
+  const Vector3 u(other.x, other.y, other.z);
+  const Vector3& v = (*this);
+  r32 s = other.w;
+  return (u * u.Dot(v) * 2.0f) + (v * (s * s - u.Dot(u))) + (u.Cross(v) * s * 2.0f);
 }
 } // Recluse

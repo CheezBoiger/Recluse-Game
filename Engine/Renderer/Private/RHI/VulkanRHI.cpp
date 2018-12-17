@@ -809,6 +809,22 @@ void VulkanRHI::FreeShader(Shader* shader)
 }
 
 
+ImageView* VulkanRHI::CreateImageView(const VkImageViewCreateInfo& viewCi)
+{
+  ImageView* pView = new ImageView();
+  pView->Initialize(mLogicalDevice.Native(), viewCi);
+  return pView;
+}
+
+
+void VulkanRHI::FreeImageView(ImageView* pView)
+{
+  if ( !pView ) return;
+  pView->CleanUp(mLogicalDevice.Native());
+  delete pView;
+}
+
+
 DescriptorSet* VulkanRHI::CreateDescriptorSet()
 {
   DescriptorSet* dset = new DescriptorSet();

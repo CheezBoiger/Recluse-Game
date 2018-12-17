@@ -3,6 +3,8 @@
 
 #include "Core/Types.hpp"
 #include "Core/Serialize.hpp"
+#include "Core/Math/Matrix3.hpp"
+#include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Quaternion.hpp"
 #include "Core/Memory/SmartPointer.hpp"

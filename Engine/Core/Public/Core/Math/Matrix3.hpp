@@ -3,7 +3,6 @@
 
 
 #include "Core/Types.hpp"
-#include "Vector3.hpp"
 
 
 namespace Recluse {

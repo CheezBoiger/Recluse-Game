@@ -1,4 +1,6 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
+#ifndef GBUFFERDEFINES_H
+#define GBUFFERDEFINES_H
 #define NAN                     0./0.
 
 struct GBuffer
@@ -64,3 +66,5 @@ void WriteGBuffer(GBuffer gbuffer,
   rt2 = vec4(gbuffer.emissionStrength, gbuffer.roughness, gbuffer.metallic, gbuffer.anisoSpec.y);
   rt3 = vec4(gbuffer.emission, 0.0);
 }
+
+#endif // GBUFFERDEFINES_H

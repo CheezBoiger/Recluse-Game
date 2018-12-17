@@ -1,4 +1,9 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
+#ifndef SHADOWING_H
+#define SHADOWING_H
+
+#include "LightingPBR.glsl"
+
 #define BLOCKER_SEARCH_NUM_SAMPLES 36
 #define PCF_NUM_SAMPLES 64
 #define NEAR_PLANE 0.1
@@ -13,6 +18,12 @@ struct LightSpace {
   vec4 lightSz;
   vec4 shadowTechnique;
 };
+
+
+struct SpotLightSpace {
+  mat4 viewProjs[MAX_SPOT_LIGHTS];
+};
+
 
 vec2 poissonDisk[64] = {
   vec2( -0.613392,  0.617481),
@@ -112,6 +123,7 @@ float textureProj(in sampler2D shadowMap, vec4 P, vec2 offset)
 
 float FilterPCF(in sampler2D shadowMap, vec4 sc)
 {
+#if 0
   ivec2 texDim = textureSize(shadowMap, 0);
   float scale = 0.5;
   float dx = scale * 1.0 / float(texDim.x);
@@ -121,13 +133,41 @@ float FilterPCF(in sampler2D shadowMap, vec4 sc)
   float count = 0.0;
   float range = 3.5;
 	
-  for (float x = -range; x <= range; x++) {
-    for (float y = -range; y <= range; y++) {
+  for (float x = -range; x <= range; x += 1.0) {
+    for (float y = -range; y <= range; y += 1.0) {
       shadowFactor += textureProj(shadowMap, sc, vec2(dx*x, dy*y));
       count += 1.0;
     }
   }
   return shadowFactor / count;
+#endif
+  vec3 projC = sc.xyz / sc.w;
+  projC.st = projC.st * 0.5 + 0.5;
+  float currDepth = projC.z;
+  
+  float shadow = 0.0;
+  float range = 2.0;
+  vec2 texelSz = (1.0 / textureSize(shadowMap, 0)) * 0.5;
+  
+  float bias = 0.0;
+  float count = 0.0;
+  if (currDepth <= 1.0) {
+    for (float x = -range; x <= range; ++x) {
+      for (float y = -range; y <= range; ++y) {
+        float pcfDepth = texture(shadowMap, projC.xy + vec2(x, y) * texelSz).r;
+        shadow += ((currDepth - bias) > pcfDepth) ? 0.0 : 1.0;
+        count += 1.0;
+      }
+    }
+  }
+  shadow /= count;
+  return shadow;
+}
+
+
+float FilterPCFArray(in sampler2DArray shadowMapArray, vec4 sc, uint layer)
+{
+  return 0.0;
 }
 
 
@@ -221,3 +261,4 @@ float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS,
     return shadowFactor;
 }
 
+#endif // SHADOWING_H
