@@ -186,7 +186,8 @@ void main()
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
     float shadowFactor = GetShadowFactor(gWorldBuffer.enableShadows, pbrInfo.WP,
                                           staticLightSpace.lightSpace, staticShadowMap,
-                                          dynamicLightSpace.lightSpace, dynamicShadowMap);
+                                          dynamicLightSpace.lightSpace, dynamicShadowMap,
+                                          light.direction.xyz, pbrInfo.N);
     radiance *= shadowFactor;
     outColor += radiance;
     outColor = max(outColor, ambient);
