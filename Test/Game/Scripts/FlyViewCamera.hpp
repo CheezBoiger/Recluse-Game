@@ -216,7 +216,6 @@ public:
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir.Normalize(), Vector3::UP);
 #endif
-
     // Must update the camera manually, as it may need to be updated before other game logic.
     pCam->Update();
   }

@@ -212,7 +212,7 @@ public:
     {
       Sky* pSky = GetSky();
       DirectionalLight* pPrimary = pSky->GetSunLight();
-      pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
+      pPrimary->_Ambient = Vector4(0.01f, 0.01f, 0.04f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
       pPrimary->_Enable = true;

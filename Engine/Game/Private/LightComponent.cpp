@@ -208,9 +208,11 @@ void SpotLightComponent::Update()
 
   if (!m_fixed) {
     // Rotate about the same area of where the position should be.
-    Vector3 rel = transform->Rotation * m_offset;
-    m_NativeLight->_Position = transform->Position + rel;
-    m_NativeLight->_Direction = transform->Front() * m_rotQuat;
+    if (m_syncGameObject) {
+      Vector3 rel = transform->Rotation * m_offset;
+      m_NativeLight->_Position = transform->Position + rel;
+      m_NativeLight->_Direction = transform->Front() * m_rotQuat;
+    }
   } else {
     // Fixed transformation. No Relative rotation to the parent mesh.
     m_NativeLight->_Position = transform->Position + m_offset;
