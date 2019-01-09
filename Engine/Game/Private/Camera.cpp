@@ -58,7 +58,9 @@ void Camera::Update()
   if (!GetOwner()) return;
 
   Transform* transform = GetOwner()->GetTransform();
- 
+  // NOTE(): This will effectively cause the game object transform to update twice! 
+  // One here, and the other during Scene traversal in Engine object!
+  transform->Update(); 
   Vector3 pos = transform->Position;
 
 // Testing how to go about water rendering.
