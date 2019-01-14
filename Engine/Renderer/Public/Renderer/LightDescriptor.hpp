@@ -162,9 +162,10 @@ public:
 
 private:
 
-  void                      InitializeShadowMap(VulkanRHI* pRhi);
-  void                      InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 resolution = 512u);
-
+  void                      InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
+  void                      InitializeShadowMapDescriptors(VulkanRHI* pRhi);
+  void                      InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
+  void                      InitializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution = kMaxShadowDim);
 
   void                      CleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
 
@@ -223,6 +224,7 @@ private:
   Texture*                  m_pStaticOmniMapArray;
   Texture*                  m_pSpotLightMapArray;
   Texture*                  m_pStaticSpotLightMapArray;
+  Texture*                  m_pCascadeShadowMapD;
   LightViewSpace            m_viewSpace;
   LightViewSpace            m_staticViewSpace;
   r32                       m_rShadowViewportDim;

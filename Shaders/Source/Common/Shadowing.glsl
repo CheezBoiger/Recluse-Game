@@ -11,6 +11,8 @@
 #define LIGHT_FRUSTUM_WIDTH 40.0
 
 #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
+#define MAX_SPOTLIGHT_SHADOWMAPS 4
+#define MAX_CASCADING_SHADOWMAP_COUNT 3 
 
 struct LightSpace {
   mat4 viewProj;
@@ -21,7 +23,7 @@ struct LightSpace {
 
 
 struct SpotLightSpace {
-  mat4 viewProjs[MAX_SPOT_LIGHTS];
+  mat4 viewProjs[MAX_SPOTLIGHT_SHADOWMAPS]; // Only 4 spotlights at a time.
 };
 
 

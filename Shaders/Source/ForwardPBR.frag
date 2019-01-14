@@ -73,6 +73,20 @@ layout (set = 3, binding = 0) uniform LightBuffer {
   SpotLight       spotLights[MAX_SPOT_LIGHTS];
 } gLightBuffer;
 
+/////////////////////////////////////////////////////////////////////////////
+// Note: Change light space to hold both Static and dynamic! Make shadow map into sampler2DArray instead!
+#if defined SHADOWMAP_ARRAY
+layout (set = 4, binding = 0) uniform PrimaryLightSpace {
+  LightSpace staticLightSpace;
+  LightSpace dynamicLightSpace;
+} primaryLightSpace;
+
+// cascading map for dynamic shadows.
+layout (set = 4, binding = 1) uniform sampler2DArray cascadingShadowMapArrayD;
+// Shadow map cache used by objects that don't require shadow updating.
+layout (set = 4, binding = 2) uniform sampler2D shadowMapS;
+
+#else
 layout (set = 4, binding = 0) uniform DynamicLightSpace {
   LightSpace lightSpace;
 } dynamicLightSpace;
@@ -84,7 +98,9 @@ layout (set = 5, binding = 0) uniform StaticLightSpace {
 } staticLightSpace;
 
 layout (set = 5, binding = 1) uniform sampler2D staticShadowMap;
+#endif
 
+/////////////////////////////////////////////////////////////////////////////
 struct DiffuseSH {
   vec4 c[9];
 };

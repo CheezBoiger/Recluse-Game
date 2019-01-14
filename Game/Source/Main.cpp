@@ -26,7 +26,7 @@ b32 AvailableOption(const std::string& line, const tchar* option)
 }
 
 
-GraphicsConfigParams ReadGraphicsConfig()
+GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
 {
   GraphicsConfigParams graphics = kDefaultGpuConfigs;
   FileHandle Buf;
@@ -37,7 +37,7 @@ GraphicsConfigParams ReadGraphicsConfig()
   }
 
   std::string line = "";
-  for ( size_t i = 0; i < Buf.Sz; ++i ) {
+  for (size_t i = 0; i < Buf.Sz; ++i) {
     tchar ch = Buf.Buf[i];
     line.push_back(ch);
     if (ch == '\n') {
@@ -46,9 +46,11 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("triple") == 0) {
           graphics._Buffering = TRIPLE_BUFFER;
-        } else if (option.compare("single") == 0) {
+        }
+        else if (option.compare("single") == 0) {
           graphics._Buffering = SINGLE_BUFFER;
-        } else {
+        }
+        else {
           graphics._Buffering = DOUBLE_BUFFER;
         }
       }
@@ -56,9 +58,11 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("fxaa") == 0) {
           graphics._AA = AA_FXAA_2x;
-        } else if (option.compare("smaa2x") == 0) {
+        }
+        else if (option.compare("smaa2x") == 0) {
           graphics._AA = AA_SMAA_2x;
-        } else {
+        }
+        else {
           graphics._AA = AA_None;
         }
       }
@@ -69,13 +73,17 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("ultra") == 0) {
           graphics._Shadows = GRAPHICS_QUALITY_ULTRA;
-        } else if (option.compare("high") == 0) {
+        }
+        else if (option.compare("high") == 0) {
           graphics._Shadows = GRAPHICS_QUALITY_HIGH;
-        } else if (option.compare("medium") == 0) {
+        }
+        else if (option.compare("medium") == 0) {
           graphics._Shadows = GRAPHICS_QUALITY_MEDIUM;
-        } else if (option.compare("low") == 0) {
+        }
+        else if (option.compare("low") == 0) {
           graphics._Shadows = GRAPHICS_QUALITY_LOW;
-        } else {
+        }
+        else {
           graphics._Shadows = GRAPHICS_QUALITY_NONE;
         }
       }
@@ -95,7 +103,8 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableVsync = true;
-        } else {
+        }
+        else {
           graphics._EnableVsync = false;
         }
       }
@@ -103,7 +112,8 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableChromaticAberration = true;
-        } else {
+        }
+        else {
           graphics._EnableChromaticAberration = false;
         }
       }
@@ -111,7 +121,8 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableBloom = true;
-        } else {
+        }
+        else {
           graphics._EnableBloom = false;
         }
       }
@@ -119,7 +130,8 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnablePostProcessing = true;
-        } else {
+        }
+        else {
           graphics._EnablePostProcessing = false;
         }
       }
@@ -127,7 +139,8 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableSoftShadows = true;
-        } else {
+        }
+        else {
           graphics._EnableSoftShadows = false;
         }
       }
@@ -135,9 +148,25 @@ GraphicsConfigParams ReadGraphicsConfig()
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableMultithreadedRendering = true;
-        } else {
+        }
+        else {
           graphics._EnableMultithreadedRendering = false;
         }
+      }
+      if (AvailableOption(line, "Resolution")) {
+        std::string option = GetOption(line);
+        if (option.compare("800x600") == 0) { graphics._Resolution = Resolution_800x600; w = 800; h = 600; }
+        else if (option.compare("1200x800") == 0) { graphics._Resolution = Resolution_1200x800; w = 1200; h = 800; }
+        else if (option.compare("1280x720") == 0) { graphics._Resolution = Resolution_1280x720; w = 1280; h = 720; }
+        else if (option.compare("1440x900") == 0) { graphics._Resolution = Resolution_1440x900; w = 1400; h = 900; }
+        else if (option.compare("1920x1080") == 0) { graphics._Resolution = Resolution_1920x1080; w = 1920; h = 1080; }
+        else if (option.compare("1920x1440") == 0) { graphics._Resolution = Resolution_1920x1440; w = 1920; h = 1440; }
+      }
+      if (AvailableOption(line, "Window")) {
+        std::string option = GetOption(line);
+        if (option.compare("borderless") == 0) { graphics._WindowType = WindowType_Borderless; }
+        else if (option.compare("fullscreen") == 0) { graphics._WindowType = WindowType_Fullscreen; }
+        else if (option.compare("border") == 0) { graphics._WindowType = WindowType_Border; }
       }
       line.clear();
     }
@@ -151,19 +180,30 @@ int main(int c, char* argv[])
   // Before the game engine starts up, we want to read our configuration file, 
   // used to determine engine settings saved by user.
   {
-    GraphicsConfigParams params = ReadGraphicsConfig();
-    i32 width = 0;
-    i32 height = 0;
-    if (params._Resolution == Resolution_800x600) {
-      width = 800;
-      height = 600;
-    }
+    u32 width = 800;
+    u32 height = 600;
+    GraphicsConfigParams params = ReadGraphicsConfig(width, height);
     gEngine().StartUp("Recluse", false, width, height, &params);
+    gEngine().Run();
+    Window* pWindow = gEngine().GetWindow();
+    switch (params._WindowType) {
+    case WindowType_Borderless:
+    {
+      pWindow->SetToWindowed(width, height, true);
+      pWindow->SetToCenter();
+    } break;
+    case WindowType_Border:
+    {
+      pWindow->SetToWindowed(width, height);
+      pWindow->SetToCenter();
+    } break;
+    case WindowType_Fullscreen:
+    default:
+      pWindow->SetToFullScreen();
+    }
+    pWindow->Show();
   }
-  gEngine().Run();
   
-  Window* pMainWindow = gEngine().GetWindow();
-  pMainWindow->Show();
   while (gEngine().Running()) {
     Time::Update();
     gEngine().ProcessInput();

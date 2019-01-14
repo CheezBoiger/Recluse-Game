@@ -42,7 +42,7 @@ b32 AvailableOption(const std::string& line, const tchar* option)
 }
 
 
-GraphicsConfigParams ReadGraphicsConfig()
+GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
 {
   GraphicsConfigParams graphics = kDefaultGpuConfigs;
   FileHandle Buf;
@@ -155,6 +155,21 @@ GraphicsConfigParams ReadGraphicsConfig()
           graphics._EnableMultithreadedRendering = false;
         }
       }
+      if (AvailableOption(line, "Resolution")) {
+        std::string option = GetOption(line);
+        if (option.compare("800x600") == 0) { graphics._Resolution = Resolution_800x600; w = 800; h = 600; }
+        else if (option.compare("1200x800") == 0) { graphics._Resolution = Resolution_1200x800; w = 1200; h = 800; }
+        else if (option.compare("1280x720") == 0) { graphics._Resolution = Resolution_1280x720; w = 1280; h = 720; }
+        else if (option.compare("1440x900") == 0) { graphics._Resolution = Resolution_1440x900; w = 1400; h = 900; }
+        else if (option.compare("1920x1080") == 0) { graphics._Resolution = Resolution_1920x1080; w = 1920; h = 1080; }
+        else if (option.compare("1920x1440") == 0) { graphics._Resolution = Resolution_1920x1440; w = 1920; h = 1440; }
+      }
+      if (AvailableOption(line, "Window")) {
+        std::string option = GetOption(line);
+        if (option.compare("borderless") == 0) { graphics._WindowType = WindowType_Borderless; }
+        else if (option.compare("fullscreen") == 0) { graphics._WindowType = WindowType_Fullscreen; }
+        else if (option.compare("border") == 0) { graphics._WindowType = WindowType_Border; }
+      }
       line.clear();
     }
   }
@@ -212,7 +227,7 @@ public:
     {
       Sky* pSky = GetSky();
       DirectionalLight* pPrimary = pSky->GetSunLight();
-      pPrimary->_Ambient = Vector4(0.01f, 0.01f, 0.04f, 1.0f);
+      pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
       pPrimary->_Enable = true;
@@ -331,19 +346,38 @@ int main(int c, char* argv[])
   // Setting the renderer to vsync double buffering when starting up the engine,
   // Inputting gpu params is optional, and can pass nullptr if you prefer default.
   {
-    GraphicsConfigParams params = ReadGraphicsConfig();
+    u32 w = 800, h = 600;
+    GraphicsConfigParams params = ReadGraphicsConfig(w, h);
     // Start up the engine and set the input controller.
-    gEngine().StartUp(RTEXT("Recluse Test Game"), false, 1200, 800, &params);
+    gEngine().StartUp(RTEXT("Recluse Test Game"), false, w, h, &params);
+    gEngine().Run();
+    Window* pWindow = gEngine().GetWindow();
+    switch (params._WindowType) {
+    case WindowType_Borderless:
+    {
+      pWindow->SetToWindowed(w, h, true);
+      pWindow->SetToCenter();
+    } break;
+    case WindowType_Border:
+    {
+      pWindow->SetToWindowed(w, h);
+      pWindow->SetToCenter();
+    } break;
+    case WindowType_Fullscreen:
+    default:
+      pWindow->SetToFullScreen();
+    }
+    pWindow->Show();
   }
 
   // One may also adjust the renderer settings during runtime as well, using the call
   // gRenderer().UpdateRendererConfigs().
 
-  Window* window = gEngine().GetWindow();
+  //Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
-  window->Show();
+  //window->Show();
   //window->SetToFullScreen();
-  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
+  //window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
 
   ///////////////////////////////////////////////////////////////////////////////////
   // Everything within initialization will normally be handled by Managers, for now
@@ -419,7 +453,6 @@ int main(int c, char* argv[])
   scene.SetUp();
 
   // Run engine, and push the scene to reference.
-  gEngine().Run();
   gEngine().PushScene(&scene);
 
   // Optional startup call.

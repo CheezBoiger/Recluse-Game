@@ -44,7 +44,7 @@ GraphicsPipeline* ShadowMapSystem::k_pStaticStaticPipeline = nullptr;
 GraphicsPipeline* ShadowMapSystem::k_pStaticStaticMorphPipeline = nullptr;
 RenderPass*       ShadowMapSystem::k_pDynamicRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pStaticRenderPass = nullptr;
-u32               kTotalCascades = 4;
+u32               kTotalCascades = 3;
 
 u32 LightBuffer::MaxNumDirectionalLights()
 {
@@ -86,6 +86,7 @@ ShadowMapSystem::ShadowMapSystem()
   , m_pSpotLightMapArray(nullptr)
   , m_pStaticOmniMapArray(nullptr)
   , m_pStaticSpotLightMapArray(nullptr)
+  , m_pCascadeShadowMapD(nullptr)
 #if 0
   , m_pDynamicRenderPass(nullptr)
   , m_pSkinnedPipeline(nullptr)
@@ -264,12 +265,17 @@ ShadowMapSystem::~ShadowMapSystem()
 }
 
 
-void ShadowMapSystem::InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 resolution)
+void ShadowMapSystem::InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers, u32 resolution)
 {
+  if (layers > MAX_SPOT_LIGHTS) {
+    R_DEBUG(rWarning, "SpotLight layers init is greater than number of spotlights allowed! Defaulting to Max Spot Light count for layers\n");
+    layers = MAX_SPOT_LIGHTS;
+  }
+
   {
     VkImageCreateInfo imageCi = { };
     imageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageCi.arrayLayers = MAX_SPOT_LIGHTS;
+    imageCi.arrayLayers = layers;
     imageCi.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     imageCi.mipLevels = 1;
     imageCi.format = VK_FORMAT_D32_SFLOAT;
@@ -288,7 +294,7 @@ void ShadowMapSystem::InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 res
     viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
     viewCi.subresourceRange.baseArrayLayer = 0;
     viewCi.subresourceRange.baseMipLevel = 0;
-    viewCi.subresourceRange.layerCount = MAX_SPOT_LIGHTS;
+    viewCi.subresourceRange.layerCount = layers;
     viewCi.subresourceRange.levelCount = 1;
     viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;  
   
@@ -314,7 +320,7 @@ void ShadowMapSystem::InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 res
     viewCi.format = VK_FORMAT_D32_SFLOAT;
     
     // This may require us to have to lower the allowed spotlights rendering.
-    m_spotLightShadowMaps.resize(MAX_SPOT_LIGHTS);
+    m_spotLightShadowMaps.resize(layers);
     for ( u32 i = 0; i < m_spotLightShadowMaps.size(); ++i ) {
       ShadowMapLayer& layerView = m_spotLightShadowMaps[i];
       viewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -344,9 +350,14 @@ void ShadowMapSystem::CleanUpSpotLightShadowMapArray(VulkanRHI* pRhi)
 }
 
 
-void ShadowMapSystem::Initialize(VulkanRHI* pRhi, 
-  GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail,
-  b32 staticSoftShadows, b32 dynamicSoftShadows)
+void ShadowMapSystem::InitializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution)
+{
+
+}
+
+
+void ShadowMapSystem::InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, 
+  GraphicsQuality staticShadowDetail)
 {
   u32 dDim = kMaxShadowDim;
   if (dynamicShadowDetail <= GRAPHICS_QUALITY_HIGH) {
@@ -411,7 +422,7 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
     u32 sDim = kMaxShadowDim;
     if (staticShadowDetail <= GRAPHICS_QUALITY_HIGH) {
       sDim >>= 1;
-    }   
+    }
     if (staticShadowDetail <= GRAPHICS_QUALITY_MEDIUM) {
       sDim >>= 1;
     }
@@ -421,8 +432,15 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
     R_DEBUG(rNormal, std::to_string(ImageCi.extent.width) + "x" + std::to_string(ImageCi.extent.height) + "\n");
     m_pStaticMap->Initialize(ImageCi, ViewCi);
   }
+}
 
-  InitializeShadowMap(pRhi);  
+
+void ShadowMapSystem::Initialize(VulkanRHI* pRhi, 
+  GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail,
+  b32 staticSoftShadows, b32 dynamicSoftShadows)
+{
+  InitializeShadowMapD(pRhi, dynamicShadowDetail, staticShadowDetail);
+  InitializeShadowMapDescriptors(pRhi);  
   InitializeSpotLightShadowMapArray(pRhi);
   
   EnableStaticMapSoftShadows(staticSoftShadows);
@@ -722,7 +740,7 @@ void InitializeShadowMapFrameBuffer(FrameBuffer* frameBuffer, RenderPass* render
 }
 
 
-void ShadowMapSystem::InitializeShadowMap(VulkanRHI* pRhi)
+void ShadowMapSystem::InitializeShadowMapDescriptors(VulkanRHI* pRhi)
 {
   DescriptorSetLayout* viewLayout = LightViewDescriptorSetLayoutKey;
 

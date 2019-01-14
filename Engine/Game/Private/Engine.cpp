@@ -194,6 +194,9 @@ void Engine::Run()
   Time::Start();
   gRenderer().Build();
   m_running = true;
+
+  // Update once.
+  Update();
 }
 
 

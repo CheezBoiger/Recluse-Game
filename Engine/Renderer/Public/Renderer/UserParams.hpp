@@ -15,13 +15,6 @@ enum FrameBuffering {
 };
 
 
-enum WindowType {
-  WINDOW_BORDER,
-  WINDOW_BORDERLESS,
-  WINDOW_FULLSCREEN
-};
-
-
 enum AntiAliasing {
   AA_None,
   AA_FXAA_2x,
@@ -39,9 +32,18 @@ enum GraphicsQuality {
 };
 
 
+enum WindowType {
+  WindowType_Fullscreen,
+  WindowType_Borderless,
+  WindowType_Border
+};
+
+
 enum WindowResolution {
   Resolution_800x600,
   Resolution_1200x800,
+  Resolution_1280x720,
+  Resolution_1440x900,
   Resolution_1920x1080,
   Resolution_1920x1440,
   Resolution_2560x1440,
@@ -118,6 +120,7 @@ public:
   b32             _EnableSoftShadows;
 
   WindowResolution _Resolution;
+  WindowType       _WindowType;
 };
 
 
@@ -137,7 +140,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   true,
   true,
   true,
-  Resolution_800x600
+  Resolution_800x600,
+  WindowType_Border
 };
 
 } // Recluse

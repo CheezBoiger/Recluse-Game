@@ -182,6 +182,10 @@ public:
       transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
     }
 
+    // Must update the camera manually, as it may need to be updated before other game logic.
+    // Update before ray picking.
+    pCam->Update();
+
     // Testing ray cast.
     if (Mouse::ButtonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
@@ -216,8 +220,6 @@ public:
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
     transform->Rotation = Quaternion::LookRotation(dir.Normalize(), Vector3::UP);
 #endif
-    // Must update the camera manually, as it may need to be updated before other game logic.
-    pCam->Update();
   }
 
   void OnCleanUp() override 

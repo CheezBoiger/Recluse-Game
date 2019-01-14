@@ -14,3 +14,13 @@
 [Bloom] = true
 [Multithreading] = true
 [Resolution] = 800x600
+[Window] = borderless
+[Particles] = medium
+[Decals] = medium
+[RTX] = false
+[PhysicsQuality] = high
+[AudioQuality] = high
+[MasterVolume] = 100.0
+[CharacterVolume] = 100.0
+[WeaponVolume] = 100.0
+[EnviromentVolume] = 100.0
