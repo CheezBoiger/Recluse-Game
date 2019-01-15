@@ -13,6 +13,8 @@
 #include "Core/Logging/Log.hpp"
 #include "Filesystem/Filesystem.hpp"
 
+#include <random>
+
 namespace Recluse {
 
 
@@ -268,6 +270,7 @@ void GlobalIllumination::Initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
       buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
       buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       m_pLocalGIBuffer->Initialize(buffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+      m_pLocalGIBuffer->Map();
     }
   }
   else {
@@ -282,6 +285,7 @@ void GlobalIllumination::Initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
     gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     m_pGlobalGIBuffer->Initialize(gBuffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalGIBuffer->Map();
   }
 
   m_pGlobalIllumination->Allocate(pRhi->DescriptorPool(), layout);
@@ -307,10 +311,24 @@ void GlobalIllumination::CleanUp(VulkanRHI* pRhi)
 }
 
 
+void GlobalIllumination::UpdateGlobalGI(VulkanRHI* pRhi)
+{
+  R_ASSERT(m_pGlobalGIBuffer->Mapped(), "Unmapped global GI data.");
+  memcpy(m_pGlobalGIBuffer->Mapped(), &m_globalDiffuseSH, sizeof(DiffuseSH));
+  VkMappedMemoryRange range = { };
+  range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+  range.memory = m_pGlobalGIBuffer->Memory();
+  range.offset = 0;
+  range.size = VK_WHOLE_SIZE;
+  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+}
+
+
 void GlobalIllumination::Update(Renderer* pRenderer)
 {
   std::array<VkWriteDescriptorSet, 6> writeSets;
   u32 count = 3;
+  UpdateGlobalGI(pRenderer->RHI());
 
   if (m_localReflectionsEnabled) {
     count = 6;

@@ -58,6 +58,11 @@ struct SpotLight {
 };
 
 
+struct DiffuseSH {
+  vec4 c[9];
+};
+
+
 vec4 SRGBToLINEAR(vec4 srgbIn)
 {
   vec3 linOut = pow(srgbIn.xyz, vec3(2.2));
@@ -65,16 +70,36 @@ vec4 SRGBToLINEAR(vec4 srgbIn)
 }
 
 
+vec3 SampleSH(in vec3 n, in vec4 sh[9])
+{
+  float x = n.x;
+  float y = n.y;
+  float z = n.z;
+  vec3 r = sh[0].xyz + 
+            
+            sh[1].xyz * x +
+            sh[2].xyz * y +
+            sh[3].xyz * z +
+          
+            sh[4].xyz * z * x +
+            sh[5].xyz * y * z +
+            sh[6].xyz * y * x +
+            sh[7].xyz * (3.0 * z * z - 1.0) +
+            sh[8].xyz * (x * x - y * y);
+  return max(r, vec3(0.0));
+}
+
+
 vec3 GetIBLContribution(inout PBRInfo pbrInfo, 
   vec3 reflection,
   in sampler2D brdfLUT, 
-  in samplerCube diffuseCube, 
+  in DiffuseSH diffuseSH, 
   in samplerCube specCube)
 {
   float mipCount = 9.0;
   float lod = pbrInfo.roughness * mipCount;
   vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
-  vec3 diffuseLight = SRGBToLINEAR(texture(diffuseCube, pbrInfo.N)).rgb;
+  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c);//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
   
 #if defined(USE_TEX_LOD)
 #else
@@ -82,7 +107,7 @@ vec3 GetIBLContribution(inout PBRInfo pbrInfo,
 #endif
   vec3 diffuse = diffuseLight * pbrInfo.albedo;
   vec3 specular = specularLight * (pbrInfo.F0 * brdf.x + brdf.y);
-  return specular;
+  return diffuse + specular;
 }
 
 

@@ -42,11 +42,6 @@ layout (set = 4, binding = 0) uniform StaticLightSpace {
 
 layout (set = 4, binding = 1) uniform sampler2D staticShadowMap;
 
-
-struct DiffuseSH {
-  vec4 c[9];
-};
-
 layout (set = 5, binding = 0) buffer GlobalMapInfo {
   DiffuseSH sh;
 } globalMapInfo;
@@ -88,7 +83,7 @@ void main()
   
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
-  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, specMap, specMap);//vec3(0.0);
+  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);//vec3(0.0);
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;

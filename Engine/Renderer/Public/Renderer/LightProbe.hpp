@@ -83,6 +83,8 @@ public:
   DescriptorSet*   GetDescriptorSet() { return m_pGlobalIllumination; }
 
 private:
+  void              UpdateGlobalGI(VulkanRHI* pRhi);
+
   Texture*              m_pGlobalEnvMap;
   Texture*              m_pGlobalBRDFLUT;
   Buffer*               m_pGlobalGIBuffer;

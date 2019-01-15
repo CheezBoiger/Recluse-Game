@@ -101,9 +101,6 @@ layout (set = 5, binding = 1) uniform sampler2D staticShadowMap;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-struct DiffuseSH {
-  vec4 c[9];
-};
 
 layout (set = 6, binding = 0) buffer GlobalMapInfo {
   DiffuseSH sh;
@@ -193,7 +190,7 @@ void main()
 #if !defined(ENABLE_DEBUG)
   // Brute force lights for now.
   // TODO(): Map light probes in the future, to produce environment ambient instead.
-  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, specMap, specMap);
+  vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);
 
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
@@ -256,7 +253,7 @@ void main()
     outColor += matBuffer.emissive * 20.0 * fragEmissive;
   }
   if ((v & DEBUG_IBL) == DEBUG_IBL) {
-    outColor += GetIBLContribution(pbrInfo, R, brdfLut, specMap, specMap);
+    outColor += GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);
   }
 #endif
 
