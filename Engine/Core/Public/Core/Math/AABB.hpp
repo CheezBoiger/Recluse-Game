@@ -21,6 +21,9 @@ struct AABB {
 
   b32       Contains(const AABB& other) const;
   
+  // Checks if a point is inside this bounding box.
+  b32       Inside(const Vector3& p) const;
+
   // Minimum lower bound of the bounding box.
   Vector3     min;
 

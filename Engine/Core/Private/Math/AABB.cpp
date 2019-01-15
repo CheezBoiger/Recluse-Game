@@ -25,11 +25,20 @@ void AABB::ComputeSurfaceArea()
 
 b32 AABB::Overlaps(const AABB& other) const
 {
-  return false;
+  b32 x = (max.x >= other.min.x) && (min.x <= other.max.x);
+  b32 y = (max.y >= other.min.y) && (min.y <= other.max.y);
+  b32 z = (max.z >= other.min.z) && (min.z <= other.max.z); 
+  return (x && y && z);
 }
 
 
 b32 AABB::Contains(const AABB& other) const
+{
+  return false;
+}
+
+
+b32 AABB::Inside(const Vector3& p) const
 {
   return false;
 }
