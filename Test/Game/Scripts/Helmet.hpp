@@ -235,6 +235,7 @@ public:
     m_spotLightComponent.SetOffset(Vector3(0.0f, 7.0f, 0.0f));
     m_spotLightComponent.SetRotationOffset(Quaternion::AngleAxis(Radians(90.0f), Vector3::RIGHT));
     m_spotLightComponent.EnableFixed(true);
+    m_spotLightComponent.Enable(false);
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
@@ -254,7 +255,7 @@ public:
       m_pParticleSystem->SetMaxLife(2.55f);
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
-      m_pParticleSystem->EnableSorting(true);
+      m_pParticleSystem->EnableSorting(false);
     }
 #endif
 #if MODEL_TYPE == MONSTER
@@ -321,7 +322,7 @@ public:
   void Update(r32 tick) override
   { 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
-      m_pParticleSystem->SetMaxParticleCount(512);
+      m_pParticleSystem->SetMaxParticleCount(100);
     }
   }
 

@@ -474,7 +474,7 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
   if (!params) {
     params = &kDefaultGpuConfigs;
   }
-  
+
   m_pWindow = window;
   m_pRhi->Initialize(window->Handle(), params);
 
@@ -500,20 +500,23 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
 
   SetUpSkybox();
   SetUpGraphicsPipelines();
+
+  // Dependency on shadow map pipeline initialization.
   ShadowMapSystem::InitializeShadowPipelines(m_pRhi);
+  m_pLights = new LightDescriptor();
+  m_pLights->Initialize(m_pRhi, params->_Shadows, params->_EnableSoftShadows);
+  m_pLights->Update(m_pRhi, m_pGlobal->Data());
+
+  UpdateRuntimeConfigs(params);
+  m_pAntiAliasingFXAA = new AntiAliasingFXAA();
+  m_pAntiAliasingFXAA->Initialize(m_pRhi, m_pGlobal);
+
   SetUpFinalOutputs();
   SetUpOffscreen(true);
   SetUpDownscale(true);
   SetUpHDR(true);
   SetUpPBR();
   SetUpForwardPBR();
-
-  m_pLights = new LightDescriptor();
-  m_pLights->Initialize(m_pRhi, params->_Shadows, params->_EnableSoftShadows);
-  m_pLights->Update(m_pRhi, m_pGlobal->Data());
-
-  m_pAntiAliasingFXAA = new AntiAliasingFXAA();
-  m_pAntiAliasingFXAA->Initialize(m_pRhi, m_pGlobal);
 
   m_pBakeIbl = new BakeIBL();
   m_pBakeIbl->Initialize(m_pRhi);
@@ -571,8 +574,6 @@ b32 Renderer::Initialize(Window* window, const GraphicsConfigParams* params)
       cmdBuffer.DrawIndexed(m_RenderQuad.Indices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer.EndRenderPass();
   });
-
-  UpdateRuntimeConfigs(params);
 
   if (!m_pUI) {
     m_pUI = new UIOverlay();
