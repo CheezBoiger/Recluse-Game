@@ -4,7 +4,7 @@
 #extension GL_ARB_shading_language_420pack  : enable
 
 
-layout (set = 2, binding = 0) uniform MaterialBuffer {
+layout (set = 1, binding = 0) uniform MaterialBuffer {
   vec4  color;
   vec4  anisoSpec;
   vec4  offsetUV;
@@ -22,11 +22,11 @@ layout (set = 2, binding = 0) uniform MaterialBuffer {
   int   pad;
 } matBuffer;
 
-layout (set = 2, binding = 1) uniform sampler2D albedo;
-layout (set = 2, binding = 2) uniform sampler2D roughnessMetallic;
-layout (set = 2, binding = 3) uniform sampler2D normal;
-layout (set = 2, binding = 4) uniform sampler2D ao;
-layout (set = 2, binding = 5) uniform sampler2D emissive;
+layout (set = 1, binding = 1) uniform sampler2D albedo;
+layout (set = 1, binding = 2) uniform sampler2D roughnessMetallic;
+layout (set = 1, binding = 3) uniform sampler2D normal;
+layout (set = 1, binding = 4) uniform sampler2D ao;
+layout (set = 1, binding = 5) uniform sampler2D emissive;
 
 in FragIn {
   vec2 uv0;

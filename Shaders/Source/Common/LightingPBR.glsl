@@ -90,6 +90,19 @@ vec3 SampleSH(in vec3 n, in vec4 sh[9])
 }
 
 
+vec3 LocalCorrect(vec3 R, vec3 bboxMin, vec3 bboxMax, vec3 wP, vec3 cubMapP)
+{
+  vec3 invR = vec3(1.0, 1.0, 1.0) / R;
+  vec3 intersectAtMaxPlane = (bboxMax - wP) * invR;
+  vec3 intersectAtMinPlane = (bboxMin - wP) * invR;
+  vec3 largestIntersect = max(intersectAtMaxPlane, intersectAtMinPlane);
+  float distance = min(min(largestIntersect.x, largestIntersect.y), largestIntersect.z);
+  vec3 intersectPosWS = wP + R * distance;
+  vec3 localCorrect = intersectPosWS - cubMapP;
+  return localCorrect;
+}
+
+
 vec3 GetIBLContribution(inout PBRInfo pbrInfo, 
   vec3 reflection,
   in sampler2D brdfLUT, 
@@ -104,6 +117,33 @@ vec3 GetIBLContribution(inout PBRInfo pbrInfo,
 #if defined(USE_TEX_LOD)
 #else
   vec3 specularLight = SRGBToLINEAR(texture(specCube, reflection)).rgb;
+#endif
+  vec3 diffuse = diffuseLight * pbrInfo.albedo;
+  vec3 specular = specularLight * (pbrInfo.F0 * brdf.x + brdf.y);
+  return diffuse + specular;
+}
+
+
+// Local corrected reflection vector, for IBL local reflections.
+// TODO(): This will need to transition to samplerCubeArray instead of samplerCube!!! 
+vec3 GetIBLContributionLocal(inout PBRInfo pbrInfo, 
+  in vec3 reflection,
+  in vec3 cmPos,
+  in vec3 minAABB,
+  in vec3 maxAABB,
+  in sampler2D brdfLUT, 
+  in DiffuseSH diffuseSH, 
+  in samplerCube specCube)
+{
+  float mipCount = 9.0;
+  float lod = pbrInfo.roughness * mipCount;
+  vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
+  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c);//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
+  
+#if defined(USE_TEX_LOD)
+#else
+  vec3 localCorrect = LocalCorrect(reflection, minAABB, maxAABB, pbrInfo.WP, cmPos);
+  vec3 specularLight = SRGBToLINEAR(texture(specCube, localCorrect)).rgb;
 #endif
   vec3 diffuse = diffuseLight * pbrInfo.albedo;
   vec3 specular = specularLight * (pbrInfo.F0 * brdf.x + brdf.y);

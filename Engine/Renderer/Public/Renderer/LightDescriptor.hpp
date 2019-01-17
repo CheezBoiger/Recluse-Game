@@ -79,6 +79,15 @@ struct LightViewSpace {
 };
 
 
+struct LightViewCascadeSpace {
+  Matrix4         _ViewProj[3]; // must correspond to kTotalCascades in ShadowMapSystem!
+  Vector4         _split[3];
+  Vector4         _near;
+  Vector4         _lightSz;
+  Vector4         _shadowTechnique;
+};
+
+
 struct LightGridBuffer {
   
 };
@@ -112,7 +121,8 @@ public:
 // depending on whether it is a Directional, or Point, light source.
 class ShadowMapSystem {
   // Maximum shadow map pixel dimension.
-  static const u32          kMaxShadowDim = 8192u;
+  static const u32          kMaxShadowDim;
+  static const u32          kTotalCascades;
 public:
                             ShadowMapSystem();
                             ~ShadowMapSystem();
@@ -165,9 +175,10 @@ private:
   void                      InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
   void                      InitializeShadowMapDescriptors(VulkanRHI* pRhi);
   void                      InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
-  void                      InitializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution = kMaxShadowDim);
+  void                      InitializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail);
 
   void                      CleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
+  void                      CleanUpShadowMapCascades(VulkanRHI* pRhi);
 
   Vector3                   m_staticViewerPos;
   r32                       m_staticShadowViewportDim;
@@ -200,7 +211,6 @@ private:
   struct Cascade {
     FrameBuffer*            _framebuffer;
     ImageView*              _view;
-    DescriptorSet*          _set;
   };
 
 
@@ -218,8 +228,10 @@ private:
   FrameBuffer*              m_pDynamicOmniFrameBuffer;
   Buffer*                   m_pLightViewBuffer;
   Buffer*                   m_pStaticLightViewBuffer;
+  Buffer*                   m_pCascadeLightViewBuffer;
   DescriptorSet*            m_pLightViewDescriptorSet;
   DescriptorSet*            m_pStaticLightViewDescriptorSet;
+  DescriptorSet*            m_pCascadeDescriptorSet;
   Texture*                  m_pOmniMapArray;
   Texture*                  m_pStaticOmniMapArray;
   Texture*                  m_pSpotLightMapArray;
@@ -227,12 +239,12 @@ private:
   Texture*                  m_pCascadeShadowMapD;
   LightViewSpace            m_viewSpace;
   LightViewSpace            m_staticViewSpace;
+  LightViewCascadeSpace     m_cascadeViewSpace;
   r32                       m_rShadowViewportDim;
   b32                       m_staticMapNeedsUpdate;
   u32                       m_numPointLights;
   std::vector<Vector3>      m_pointMapPositions;
-  std::vector<Cascade>      m_dynamicCascades;
-  std::vector<Cascade>      m_staticCascades;
+  std::vector<Cascade>      m_cascades;
   std::vector<ShadowMapLayer> m_spotLightShadowMaps;
 };
 

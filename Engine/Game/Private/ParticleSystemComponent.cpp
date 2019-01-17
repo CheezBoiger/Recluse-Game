@@ -59,7 +59,7 @@ void ParticleSystemComponent::OnCleanUp()
 
 void ParticleSystemComponent::Update()
 {
-  if (!m_pParticleSystem) return;
+  if (!Enabled() || !m_pParticleSystem) return;
 
   Transform* transform = GetTransform();
   ParticleSystemConfig* data = &m_pParticleSystem->_particleConfig;

@@ -13,7 +13,7 @@
 [SoftShadows] = true
 [Bloom] = true
 [Multithreading] = true
-[Resolution] = 800x600
+[Resolution] = 1440x900
 [Window] = borderless
 [Particles] = medium
 [Decals] = medium

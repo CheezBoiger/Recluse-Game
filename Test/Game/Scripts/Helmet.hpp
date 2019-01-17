@@ -245,7 +245,7 @@ public:
       img.Load("Assets/World/ParticleAtlas.png");
       m_particleTexture->Update(img, 8, 8);
       img.CleanUp();
-      m_pParticleSystem->SetMaxParticleCount(100);
+      m_pParticleSystem->SetMaxParticleCount(5000);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(1.0f);
       m_pParticleSystem->SetBrightnessFactor(1.5f);
@@ -256,6 +256,7 @@ public:
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
       m_pParticleSystem->EnableSorting(false);
+      m_pParticleSystem->Enable(false);
     }
 #endif
 #if MODEL_TYPE == MONSTER

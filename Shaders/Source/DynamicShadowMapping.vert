@@ -38,12 +38,12 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 
 // One directional light.
-layout (set = 1, binding = 0) uniform LightSpace {
+layout (push_constant) uniform LightSpace {
   mat4  viewProj;
 } light_space;
 
 
-layout (set = 3, binding = 0) uniform JointsBuffer {
+layout (set = 2, binding = 0) uniform JointsBuffer {
   mat4 joints[MAX_JOINTS];
 } joints_buffer;
 

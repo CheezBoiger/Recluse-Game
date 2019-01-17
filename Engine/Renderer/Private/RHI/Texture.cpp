@@ -73,6 +73,8 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   R_DEBUG(rNormal, m_name);
   R_DEBUG(rNormal, " ");
   R_DEBUG(rNormal, mImage);
+  R_DEBUG(rNormal, " for ");
+  R_DEBUG(rNormal,  imageInfo.extent.width * imageInfo.extent.height << " bytes.");
   R_DEBUG(rNormal, "\n");
   //R_DEBUG(rNotify, "Texture Image: " << Image() << "\n");
   //R_DEBUG(rNotify, "Texture View: " << View() << "\n");
