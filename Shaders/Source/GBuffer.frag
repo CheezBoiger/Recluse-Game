@@ -10,6 +10,7 @@
 
 in FRAG_IN {
   vec3  position;
+  vec3  vpos;
   float lodBias;
   vec3  normal;
   float pad1;

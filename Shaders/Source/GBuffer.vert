@@ -48,6 +48,7 @@ layout (set = 3, binding = 0) uniform JointsBuffer {
 
 out FRAG_IN {
   vec3  position;
+  vec3  vpos;
   float lodBias;
   vec3  normal;
   float pad1;
@@ -101,6 +102,7 @@ void main()
   frag_in.uv0 = temp_uv0;
   frag_in.uv1 = temp_uv1;
   frag_in.normal = normalize(objBuffer.normalMatrix * skinNormal).xyz;
+  frag_in.vpos = (gWorldBuffer.view * worldPosition).xyz;
   
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 }

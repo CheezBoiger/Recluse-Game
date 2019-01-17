@@ -22,6 +22,14 @@ struct LightSpace {
 };
 
 
+struct LightSpaceCascade {
+  mat4 viewProj[MAX_CASCADING_SHADOWMAP_COUNT];
+  vec4 split[MAX_CASCADING_SHADOWMAP_COUNT];
+  vec4 near;
+  vec4 lightSz;
+  vec4 shadowTechnique;
+};
+
 struct SpotLightSpace {
   mat4 viewProjs[MAX_SPOTLIGHT_SHADOWMAPS]; // Only 4 spotlights at a time.
 };
@@ -169,6 +177,34 @@ float FilterPCF(in sampler2D shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec
 }
 
 
+float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec3 fragPos, int layer)
+{
+  vec3 projC = sc.xyz / sc.w;
+  projC.st = projC.st * 0.5 + 0.5;
+  float currDepth = projC.z;
+  
+  float shadow = 0.0;
+  float range = 3.0;
+  vec2 texelSz = (1.0 / textureSize(shadowMap, 0).xy) * 0.5;
+  
+  normal = normalize(normal);
+  vec3 lightDir = -lightPos;
+  float bias = 0.0; //min(-0.000001 * dot(normal, lightDir), 0.0);
+  float count = 0.0;
+  if (currDepth <= 1.0) {
+    for (float x = -range; x <= range; x += 1.0) {
+      for (float y = -range; y <= range; y += 1.0) {
+        float pcfDepth = texture(shadowMap, vec3(projC.xy + vec2(x, y) * texelSz, layer)).r;
+        shadow += ((currDepth - bias) > pcfDepth) ? 0.0 : 1.0;
+        count += 1.0;
+      }
+    }
+  }
+  shadow /= count;
+  return shadow;
+}
+
+
 float FilterPCFArray(in sampler2DArray shadowMapArray, vec4 sc, uint layer)
 {
   return 0.0;
@@ -260,6 +296,29 @@ float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS,
     if (enableShadows >= 1) {
       vec4 shadowClip = dynamicLS.viewProj * vec4(wp, 1.0);
       float dynamicShadowFactor = ((dynamicLS.shadowTechnique.x < 1) ? FilterPCF(dynamicSM, shadowClip, lightPos, normal, wp) : PCSS(dynamicSM, dynamicLS, shadowClip));
+      shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
+    }
+    return shadowFactor;
+}
+
+
+float GetShadowFactorCascade(int enableShadows, vec3 wp, vec3 vpos, in LightSpace staticLS, 
+  in sampler2D staticSM, in LightSpaceCascade dynamicLS, in sampler2DArray dynamicSM, vec3 lightPos, vec3 normal)
+{
+    int cascadeIdx = 0;
+    for (int i = 0; i < MAX_CASCADING_SHADOWMAP_COUNT; ++i) {
+      if (vpos.z > dynamicLS.split[i].x) {
+        cascadeIdx = i;
+      }
+    }
+    //return float(cascadeIdx);
+    
+    vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
+    float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
+    float shadowFactor = staticShadowFactor;
+    if (enableShadows >= 1) {
+      vec4 shadowClip = dynamicLS.viewProj[cascadeIdx] * vec4(wp, 1.0);
+      float dynamicShadowFactor = FilterPCFCascade(dynamicSM, shadowClip, lightPos, normal, wp, cascadeIdx);
       shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
     }
     return shadowFactor;

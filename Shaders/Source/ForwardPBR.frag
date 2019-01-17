@@ -22,6 +22,7 @@ layout (location = 5) out vec4 rt3;
 
 in FRAG_IN {
   vec3 position;
+  vec3 vpos;
   float lodBias;
   vec3 normal;
   float pad1;
@@ -88,10 +89,10 @@ layout (set = 4, binding = 2) uniform sampler2D shadowMapS;
 
 #else
 layout (set = 4, binding = 0) uniform DynamicLightSpace {
-  LightSpace lightSpace;
+  LightSpaceCascade lightSpace;
 } dynamicLightSpace;
 
-layout (set = 4, binding = 1) uniform sampler2D dynamicShadowMap;
+layout (set = 4, binding = 1) uniform sampler2DArray dynamicShadowMap;
 
 layout (set = 5, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
@@ -168,8 +169,9 @@ void main()
   
   if (matBuffer.hasEmissive >= 1) {
     fragEmissive = pow(texture(emissive, uv0, objBuffer.lod).rgb, vec3(2.2));
-  }   
+  } 
   
+  vec3 vpos = frag_in.vpos;
   vec3 N = normalize(fragNormal);
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 F0 = vec3(0.04);
@@ -197,7 +199,7 @@ void main()
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
-    float shadowFactor = GetShadowFactor(gWorldBuffer.enableShadows, pbrInfo.WP,
+    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, vpos,
                                           staticLightSpace.lightSpace, staticShadowMap,
                                           dynamicLightSpace.lightSpace, dynamicShadowMap,
                                           light.direction.xyz, pbrInfo.N);

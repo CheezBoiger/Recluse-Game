@@ -31,10 +31,10 @@ layout (set = 2, binding = 0) uniform LightBuffer {
 } gLightBuffer;
 
 layout (set = 3, binding = 0) uniform DynamicLightSpace {
-  LightSpace  lightSpace;
+  LightSpaceCascade  lightSpace;
 } dynamicLightSpace;
 
-layout (set = 3, binding = 1) uniform sampler2D dynamicShadowMap;
+layout (set = 3, binding = 1) uniform sampler2DArray dynamicShadowMap;
 
 layout (set = 4, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
@@ -90,7 +90,8 @@ void main()
     vec3 ambient = light.ambient.rgb * gbuffer.albedo;
     outColor += ambient;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
-    float shadowFactor = GetShadowFactor(gWorldBuffer.enableShadows, pbrInfo.WP,
+    vec4 vpos = gWorldBuffer.view * vec4(pbrInfo.WP, 1.0);
+    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, vpos.xyz,
                                           staticLightSpace.lightSpace, staticShadowMap,
                                           dynamicLightSpace.lightSpace, dynamicShadowMap,
                                           light.direction.xyz, pbrInfo.N);

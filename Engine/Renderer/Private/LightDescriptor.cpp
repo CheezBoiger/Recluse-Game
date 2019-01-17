@@ -105,7 +105,7 @@ ShadowMapSystem::ShadowMapSystem()
 #endif 
   , m_staticMapNeedsUpdate(true)
   , m_pStaticLightViewDescriptorSet(nullptr)
-  , m_rShadowViewportDim(10.0f)
+  , m_rShadowViewportDim(15.0f)
   , m_staticShadowViewportDim(100.0f)
   , m_cascades(kTotalCascades)
 { 
@@ -411,7 +411,7 @@ void ShadowMapSystem::InitializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
   ViewCi.subresourceRange.baseMipLevel = 0;
   ViewCi.subresourceRange.layerCount = kTotalCascades;
   ViewCi.subresourceRange.levelCount = 1;
-  ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
   m_pCascadeShadowMapD = pRhi->CreateTexture();
   RDEBUG_SET_VULKAN_NAME(m_pCascadeShadowMapD, "Cascade Shadow Map");
@@ -470,7 +470,7 @@ void ShadowMapSystem::InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
   m_pLightViewBuffer = pRhi->CreateBuffer();
   m_pStaticLightViewBuffer = pRhi->CreateBuffer();
   VkBufferCreateInfo bufferCI = {};
-  VkDeviceSize dSize = sizeof(LightViewSpace);
+  VkDeviceSize dSize = sizeof(LightViewCascadeSpace);
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCI.size = dSize;
@@ -839,7 +839,7 @@ void ShadowMapSystem::InitializeShadowMapDescriptors(VulkanRHI* pRhi)
   VkDescriptorBufferInfo viewBuf = {};
   viewBuf.buffer = m_pLightViewBuffer->NativeBuffer();
   viewBuf.offset = 0;
-  viewBuf.range = sizeof(LightViewSpace);
+  viewBuf.range = sizeof(LightViewCascadeSpace);
 
   VkDescriptorBufferInfo staticViewBuf = {};
   staticViewBuf.buffer = m_pStaticLightViewBuffer->NativeBuffer();
@@ -850,8 +850,8 @@ void ShadowMapSystem::InitializeShadowMapDescriptors(VulkanRHI* pRhi)
   // This will pass the rendered shadow map to the pbr pipeline.
   VkDescriptorImageInfo globalShadowInfo = {};
   globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-  globalShadowInfo.imageView = m_pDynamicMap->View();
-  globalShadowInfo.sampler = _pSampler->Handle();
+  globalShadowInfo.imageView = m_pCascadeShadowMapD->View();
+  globalShadowInfo.sampler = _pSampler->Handle(); 
 
   VkDescriptorImageInfo staticShadowInfo = { };
   staticShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -978,14 +978,14 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
       pCmdBuffer->Draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
     }
   };
-
+/*
   pCmdBuffer->BeginRenderPass(renderPass, VK_SUBPASS_CONTENTS_INLINE);
   for (size_t i = 0; i < dynamicCmds.Size(); ++i) {
     PrimitiveRenderCmd& renderCmd = dynamicCmds[i];
     render(renderCmd, m_viewSpace._ViewProj);
   }
   pCmdBuffer->EndRenderPass();
-
+*/
   for (u32 i = 0; i < m_cascades.size(); ++i) {
     renderPass.framebuffer = m_cascades[i]._framebuffer->Handle();
     renderPass.renderPass = m_cascades[i]._framebuffer->RenderPassRef()->Handle();
@@ -1143,17 +1143,30 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
   m_viewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
 
   r32 cShadowDim = m_rShadowViewportDim;
+  r32 nf = 0.2f;
+  r32 ff = 1000.0f;
+  r32 clipRange = ff - nf;
+  r32 minZ = nf;
+  r32 maxZ = ff + clipRange;
+  r32 range = maxZ - minZ;
+  r32 ratio = maxZ / minZ;
+
   for (size_t i = 0; i < kTotalCascades; ++i) {
     Matrix4& mat = m_cascadeViewSpace._ViewProj[i];
     Matrix4 p = Matrix4::Ortho(cShadowDim, cShadowDim, 1.0f, 8000.0f);
     Matrix4 v = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
+    r32 pp = (i + 1) / static_cast<r32>(kTotalCascades);
+    r32 l = minZ * powf(ratio, pp);
+    r32 u = minZ + range * pp;
+    r32 d = ((0.f * (l - u) + u) - minZ) / clipRange;
+    m_cascadeViewSpace._split[i] = Vector4(d, d, d, d);
     mat = v * p;
-    cShadowDim *= 2.0f;
+    cShadowDim *= 2.5f;
   }
 
   {
     R_ASSERT(m_pLightViewBuffer->Mapped(), "Light view buffer was not mapped!");
-    memcpy(m_pLightViewBuffer->Mapped(), &m_viewSpace, sizeof(LightViewSpace));
+    memcpy(m_pLightViewBuffer->Mapped(), &m_cascadeViewSpace, sizeof(LightViewCascadeSpace));
 
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
