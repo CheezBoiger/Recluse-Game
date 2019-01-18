@@ -21,6 +21,7 @@ void LoadMaterials()
   Texture2D* grassBase = nullptr;
   Texture2D* grassNormal = nullptr;
   Texture2D* grassRough = nullptr;
+/*
   {
     img.Load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
     albedo = gRenderer().CreateTexture2D();
@@ -75,6 +76,7 @@ void LoadMaterials()
     img.CleanUp();
     TextureCache::Cache(grassRough);
   }
+*/
   {
     img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
     rustAlbedo = gRenderer().CreateTexture2D();
@@ -111,6 +113,7 @@ void LoadMaterials()
     img.CleanUp();
     TextureCache::Cache(rustMetal);
   }
+/*
   {
     Material* material = new Material();
     material->Initialize(&gRenderer());
@@ -126,7 +129,7 @@ void LoadMaterials()
     material->EnableRoughness(true);
     MaterialCache::Cache(TEXT("GrassySample"), material);
   }
-
+*/
   {
     Material* material = new Material();
     material->Initialize(&gRenderer());

@@ -133,7 +133,7 @@ public:
   void                      CleanUp(VulkanRHI* pRhi);
 
   Texture*                  StaticMap() { return m_pStaticMap; }
-  Texture*                  DynamicMap() { return m_pDynamicMap; }
+  //Texture*                  DynamicMap() { return m_pDynamicMap; }
 
   LightViewSpace&           ViewSpace() { return m_viewSpace; }
   LightViewSpace&           StaticViewSpace() { return m_staticViewSpace; }
@@ -186,7 +186,7 @@ private:
   // Maps that contain shadow information on the directional, sunlight/moonlight object.
   // These are 2D arrays containing cascaded shadow maps.
   Texture*                  m_pStaticMap;       
-  Texture*                  m_pDynamicMap;      
+  //Texture*                  m_pDynamicMap;      
   Texture*                  m_pShadowMergeMap;  // Merging map of the static and dynamic shadow maps.
   // common used pipelines.
   // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
@@ -206,7 +206,7 @@ private:
 
   // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*              m_pStaticFrameBuffer;
-  FrameBuffer*              m_pDynamicFrameBuffer;
+  //FrameBuffer*              m_pDynamicFrameBuffer;
 
   struct Cascade {
     FrameBuffer*            _framebuffer;

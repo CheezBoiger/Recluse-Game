@@ -429,7 +429,7 @@ int main(int c, char* argv[])
   }
 
   // Model Loading.
-  ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
   //ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
   //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
@@ -437,15 +437,15 @@ int main(int c, char* argv[])
   ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
   //ModelLoader::Load(RTEXT("Assets/Monster/Monster.gltf"));
   //ModelLoader::Load(RTEXT("Assets/CesiumMan.glb"));
-  ModelLoader::Load(RTEXT("Assets/RiggedFigure.gltf"));
-  ModelLoader::Load(RTEXT("Assets/RiggedSimple.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/RiggedFigure.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/RiggedSimple.gltf"));
   //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
  // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
   ModelLoader::Load(RTEXT("Assets/WaterBottle.glb"));
-  ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
-  ModelLoader::Load(RTEXT("Assets/Wolf.glb"));
-  ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
+  //ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
+  //ModelLoader::Load(RTEXT("Assets/Wolf.glb"));
+  //ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
   //ModelLoader::Load(RTEXT("Assets/Wolf/Wolf.glb"));
   //ModelLoader::Load(RTEXT("Assets/Tree/tree.gltf"));
 

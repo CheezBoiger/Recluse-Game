@@ -199,7 +199,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 #define ENABLE_PARTICLE_TEXTURE_TEST 1
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -317,7 +317,7 @@ public:
     //m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
     //m_animationComponent.Playback("Dance");
     //m_animationComponent.SetPlaybackRate(1.0f);
-    transform->Scale = Vector3(1.5f, 1.5f, 1.5f);
+    transform->Scale = Vector3(10.5f, 10.5f, 10.5f);
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);

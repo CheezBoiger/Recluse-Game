@@ -79,9 +79,9 @@ void InitializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
 
 ShadowMapSystem::ShadowMapSystem()
   : m_pStaticMap(nullptr)
-  , m_pDynamicMap(nullptr)
+  //, m_pDynamicMap(nullptr)
   , m_pStaticFrameBuffer(nullptr)
-  , m_pDynamicFrameBuffer(nullptr)
+  //, m_pDynamicFrameBuffer(nullptr)
   , m_pLightViewDescriptorSet(nullptr)
   , m_pLightViewBuffer(nullptr)
   , m_pOmniMapArray(nullptr)
@@ -242,18 +242,22 @@ void ShadowMapSystem::CleanUpShadowPipelines(VulkanRHI* pRhi)
 ShadowMapSystem::~ShadowMapSystem()
 {
   DEBUG_OP(
+/*
     if (m_pDynamicFrameBuffer) {
       R_DEBUG(rWarning, "Dynamic Frame Buffer not destroyed prior to destruct call.");
     }
+*/
     if (m_pStaticFrameBuffer) {
       R_DEBUG(rWarning, "Static frame buffer not destroyed prior to destruct call.");
     }
     if (m_pStaticMap) {
       R_DEBUG(rWarning, "Static map not destroyed prior to destruct call.");
     }
+/*
     if (m_pDynamicMap) {
       R_DEBUG(rWarning, "Dynamic map not destroyed prior to destruct call.");
     }
+*/
     if (m_pLightViewDescriptorSet) {
       R_DEBUG(rWarning, "Light view descriptor set not destroyed prior to destruct call.");
     }
@@ -480,7 +484,7 @@ void ShadowMapSystem::InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
   m_pStaticLightViewBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   m_pLightViewBuffer->Map();
   m_pStaticLightViewBuffer->Map();
-
+/*
   if (!m_pDynamicMap) {
     m_pDynamicMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pDynamicMap, "Dynamic Shadowmap.");
@@ -488,6 +492,7 @@ void ShadowMapSystem::InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
     R_DEBUG(rNormal, std::to_string(ImageCi.extent.width) + "x" + std::to_string(ImageCi.extent.height) + "\n");
     m_pDynamicMap->Initialize(ImageCi, ViewCi);
   }
+*/
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->CreateTexture();
     RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
@@ -883,12 +888,12 @@ void ShadowMapSystem::InitializeShadowMapDescriptors(VulkanRHI* pRhi)
   writes[1].pImageInfo = &staticShadowInfo;
   writes[0].pBufferInfo = &staticViewBuf;
   m_pStaticLightViewDescriptorSet->Update(static_cast<u32>(writes.size()), writes.data());
-
+/*
   if (!m_pDynamicFrameBuffer) {
     m_pDynamicFrameBuffer = pRhi->CreateFrameBuffer();
     InitializeShadowMapFrameBuffer(m_pDynamicFrameBuffer, k_pDynamicRenderPass, m_pDynamicMap, m_pDynamicMap->View());
   }
-
+*/
   if (!m_pStaticFrameBuffer) {
     m_pStaticFrameBuffer = pRhi->CreateFrameBuffer();
     InitializeShadowMapFrameBuffer(m_pStaticFrameBuffer, k_pStaticRenderPass, m_pStaticMap, m_pStaticMap->View());
@@ -910,9 +915,9 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
 
   VkRenderPassBeginInfo renderPass = {};
   renderPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPass.framebuffer = m_pDynamicFrameBuffer->Handle();
-  renderPass.renderPass = m_pDynamicFrameBuffer->RenderPassRef()->Handle();
-  renderPass.renderArea.extent = { m_pDynamicFrameBuffer->Width(), m_pDynamicFrameBuffer->Height() };
+  //renderPass.framebuffer = m_cascades[0]._framebuffer->Handle();
+  //renderPass.renderPass = m_cascades[0]._framebuffer->RenderPassRef()->Handle();
+  renderPass.renderArea.extent = { m_cascades[0]._framebuffer->Width(), m_cascades[0]._framebuffer->Height() };
   renderPass.renderArea.offset = { 0, 0 };
   VkClearValue depthValue = {};
   depthValue.depthStencil = { 1.0f, 0 };
@@ -920,15 +925,15 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
   renderPass.pClearValues = &depthValue;
 
   VkViewport viewport = {};
-  viewport.height = (r32)m_pDynamicFrameBuffer->Height();
-  viewport.width = (r32)m_pDynamicFrameBuffer->Width();
+  viewport.height = (r32)m_cascades[0]._framebuffer->Height();
+  viewport.width = (r32)m_cascades[0]._framebuffer->Width();
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
   VkRect2D scissor = {};
-  scissor.extent = { m_pDynamicFrameBuffer->Width(), m_pDynamicFrameBuffer->Height() };
+  scissor.extent = { m_cascades[0]._framebuffer->Width(), m_cascades[0]._framebuffer->Height() };
   scissor.offset = { 0, 0 };
 
   auto render = [&](PrimitiveRenderCmd& renderCmd, const Matrix4& lightVP) -> void {
@@ -1229,12 +1234,12 @@ void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
     pRhi->FreeBuffer( m_pStaticLightViewBuffer );
     m_pStaticLightViewBuffer = nullptr;
   }
-
+/*
   if (m_pDynamicMap) {
     pRhi->FreeTexture(m_pDynamicMap);
     m_pDynamicMap = nullptr;
   }
-
+*/
   if (m_pStaticMap) {
     pRhi->FreeTexture(m_pStaticMap);
     m_pStaticMap = nullptr;
@@ -1244,12 +1249,12 @@ void ShadowMapSystem::CleanUp(VulkanRHI* pRhi)
     pRhi->FreeDescriptorSet(m_pLightViewDescriptorSet);
     m_pLightViewDescriptorSet = nullptr;
   }
-
+/*
   if (m_pDynamicFrameBuffer) {
     pRhi->FreeFrameBuffer(m_pDynamicFrameBuffer);
     m_pDynamicFrameBuffer = nullptr;
   }
-
+*/
   if (m_pStaticFrameBuffer) {
     pRhi->FreeFrameBuffer(m_pStaticFrameBuffer);
     m_pStaticFrameBuffer = nullptr;
