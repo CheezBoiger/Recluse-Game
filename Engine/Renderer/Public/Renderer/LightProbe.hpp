@@ -76,6 +76,12 @@ public:
   void              SetGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
   
   void              SetGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
+  void              SetGlobalProbe(LightProbe* probe) { 
+    if (!probe) return;
+    for (u32 i = 0; i < 9; ++i) {
+      m_globalDiffuseSH._c[i] = probe->_shcoeff[i];
+    }
+  }
 
   // Set up enviroment maps for this renderer to use for look up.
   void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }

@@ -75,17 +75,17 @@ vec3 SampleSH(in vec3 n, in vec4 sh[9])
   float x = n.x;
   float y = n.y;
   float z = n.z;
-  vec3 r = sh[0].xyz + 
+  vec3 r =  sh[0].xyz * 0.886228 + 
             
-            sh[1].xyz * x +
-            sh[2].xyz * y +
-            sh[3].xyz * z +
+            sh[1].xyz * 1.023328 * y +
+            sh[2].xyz * 1.023328 * z +
+            sh[3].xyz * 1.023328 * x +
           
-            sh[4].xyz * z * x +
-            sh[5].xyz * y * z +
-            sh[6].xyz * y * x +
-            sh[7].xyz * (3.0 * z * z - 1.0) +
-            sh[8].xyz * (x * x - y * y);
+            sh[4].xyz * 0.858085 * x * y +
+            sh[5].xyz * 0.858085 * y * z +
+            sh[6].xyz * 0.247708 * (3.0 * z * z - 1.0) +
+            sh[7].xyz * 0.858085 * x * z +
+            sh[8].xyz * 0.429043 * (x * x - y * y);
   return max(r, vec3(0.0));
 }
 
@@ -112,7 +112,7 @@ vec3 GetIBLContribution(inout PBRInfo pbrInfo,
   float mipCount = 9.0;
   float lod = pbrInfo.roughness * mipCount;
   vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
-  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c);//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
+  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c) * 0.25;//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
   
 #if defined(USE_TEX_LOD)
 #else

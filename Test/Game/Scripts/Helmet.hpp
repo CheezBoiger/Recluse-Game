@@ -245,7 +245,7 @@ public:
       img.Load("Assets/World/ParticleAtlas.png");
       m_particleTexture->Update(img, 8, 8);
       img.CleanUp();
-      m_pParticleSystem->SetMaxParticleCount(5000);
+      m_pParticleSystem->SetMaxParticleCount(50);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(1.0f);
       m_pParticleSystem->SetBrightnessFactor(1.5f);
@@ -256,7 +256,7 @@ public:
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
       m_pParticleSystem->EnableSorting(false);
-      m_pParticleSystem->Enable(false);
+      m_pParticleSystem->Enable(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER
@@ -285,6 +285,10 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
+    mat->DisableMaps(MAT_ALBEDO_BIT | MAT_METAL_BIT | MAT_ROUGH_BIT | MAT_NORMAL_BIT);
+    mat->SetRoughnessFactor(1.0f);
+    mat->SetMetallicFactor(0.1f);
+    mat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     m_rendererComponent.EnableDebug(false);
     m_rendererComponent.SetDebugBits(DEBUG_CONFIG_IBL_BIT);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {

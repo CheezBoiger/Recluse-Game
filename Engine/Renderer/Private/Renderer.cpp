@@ -74,6 +74,7 @@ Renderer::Renderer()
   , m_pGlobalIllumination(nullptr)
   , m_decalEngine(nullptr)
   , m_workGroupSize(0)
+  , m_globalLightProbe(nullptr)
   , m_pClusterer(nullptr)
   , m_particleEngine(nullptr)
   , m_usePreRenderSkybox(false)
@@ -3490,6 +3491,7 @@ void Renderer::UpdateGlobalIlluminationBuffer()
   if (m_skybox._brdfLUT) {
     pTex = m_skybox._brdfLUT->Handle();
   }
+  m_pGlobalIllumination->SetGlobalProbe(m_globalLightProbe);
   m_pGlobalIllumination->SetGlobalEnvMap(pCube);
   m_pGlobalIllumination->SetGlobalBRDFLUT(pTex);
   m_pGlobalIllumination->Update(this);

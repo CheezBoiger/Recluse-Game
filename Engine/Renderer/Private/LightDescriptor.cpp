@@ -1143,23 +1143,13 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
   m_viewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
 
   r32 cShadowDim = m_rShadowViewportDim;
-  r32 nf = 0.2f;
-  r32 ff = 1000.0f;
-  r32 clipRange = ff - nf;
-  r32 minZ = nf;
-  r32 maxZ = ff + clipRange;
-  r32 range = maxZ - minZ;
-  r32 ratio = maxZ / minZ;
-
+  r32 rr = 0.67f;
   for (size_t i = 0; i < kTotalCascades; ++i) {
     Matrix4& mat = m_cascadeViewSpace._ViewProj[i];
     Matrix4 p = Matrix4::Ortho(cShadowDim, cShadowDim, 1.0f, 8000.0f);
     Matrix4 v = Matrix4::LookAt(-Eye, viewerPos, Vector3::UP);
-    r32 pp = (i + 1) / static_cast<r32>(kTotalCascades);
-    r32 l = minZ * powf(ratio, pp);
-    r32 u = minZ + range * pp;
-    r32 d = ((0.f * (l - u) + u) - minZ) / clipRange;
-    m_cascadeViewSpace._split[i] = Vector4(d, d, d, d);
+    m_cascadeViewSpace._split[i] = Vector4(rr, rr, rr, rr);
+    rr *= 2.5f;
     mat = v * p;
     cShadowDim *= 2.5f;
   }

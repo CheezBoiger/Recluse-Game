@@ -227,7 +227,7 @@ public:
     {
       Sky* pSky = GetSky();
       DirectionalLight* pPrimary = pSky->GetSunLight();
-      pPrimary->_Ambient = Vector4(0.1f, 0.1f, 0.4f, 1.0f);
+      pPrimary->_Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
       pPrimary->_Enable = true;
@@ -250,12 +250,14 @@ public:
       img.Load("Assets/World/testcubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
-      img.Load("Assets/World/Probe1.png");
+      img.Load("Assets/World/Probe2.png");
       cubemap1->Update(img);
       img.CleanUp();
       img.Load("Assets/World/brdf.png");
       brdfLUT->Update(img);
       img.CleanUp();
+      lightprobe.GenerateSHCoefficients(gRenderer().RHI(), cubemap0);
+      gRenderer().SetGlobalLightProbe(&lightprobe);
       gRenderer().SetSkyboxCubeMap(cubemap0);
       gRenderer().SetGlobalBRDFLUT(brdfLUT);
       gRenderer().UsePreRenderSkyboxMap(true);
@@ -332,6 +334,7 @@ private:
   std::array<Monster*, kNumberOfMonsters> monsters;
   CubeObject*                             cube;
   LanternObject*                          lantern;
+  LightProbe                              lightprobe;
   Monster*                                monster;
   MainCamera*                             mainCam;
 };

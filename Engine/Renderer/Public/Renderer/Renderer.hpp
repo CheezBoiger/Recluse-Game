@@ -234,6 +234,7 @@ public:
   // Set up and override Skybox cubemap for the renderer.
   void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
   void              SetGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
+  void              SetGlobalLightProbe(LightProbe* probe) { m_globalLightProbe = probe; }
 
   // NOTE(): If brdf, or envmap, was cleaned up before cleaning up the engine, be sure to 
   // call this first, before freeing the set maps!
@@ -410,6 +411,7 @@ private:
   AntiAliasingFXAA*     m_pAntiAliasingFXAA;
   Clusterer*            m_pClusterer;
   TextureCube*          m_preRenderSkybox;
+  LightProbe*           m_globalLightProbe;
 
   u32                   m_CurrCmdBufferIdx;
   u32                   m_TotalCmdBuffers;

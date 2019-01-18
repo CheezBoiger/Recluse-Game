@@ -194,7 +194,7 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
         wi = wi.Normalize();
         // Obtain our solid angle differential.
         r32 dw = pixelA * n.Dot(-wi) / dist2;
-        i32 offset = py * width + px;
+        i32 offset = py * width + px * 4;
         Vector3 L = Vector3(static_cast<r32>(data[offset + 0]) / 255.0f,
                             static_cast<r32>(data[offset + 1]) / 255.0f,
                             static_cast<r32>(data[offset + 2]) / 255.0f);
