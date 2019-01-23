@@ -199,7 +199,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 #define ENABLE_PARTICLE_TEXTURE_TEST 1
-#define MODEL_TYPE DRONE
+#define MODEL_TYPE SPHERE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -256,7 +256,7 @@ public:
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
       m_pParticleSystem->EnableSorting(false);
-      m_pParticleSystem->Enable(true);
+      m_pParticleSystem->Enable(false);
     }
 #endif
 #if MODEL_TYPE == MONSTER
@@ -285,9 +285,6 @@ public:
     Material* mat = nullptr;
     MaterialCache::Get("RustedSample", &mat);
     m_rendererComponent.AddMesh(mesh);
-    mat->DisableMaps(MAT_ALBEDO_BIT | MAT_METAL_BIT | MAT_ROUGH_BIT | MAT_NORMAL_BIT);
-    mat->SetRoughnessFactor(1.0f);
-    mat->SetMetallicFactor(0.1f);
     mat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     m_rendererComponent.EnableDebug(false);
     m_rendererComponent.SetDebugBits(DEBUG_CONFIG_IBL_BIT);
@@ -299,13 +296,15 @@ public:
     transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("WaterBottle", &model);
+    ModelCache::Get("DamagedHelmet", &model);
 
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.AddMesh(model->meshes[i]);
       for (size_t p = 0; p < model->meshes[i]->GetPrimitiveCount(); ++p) {
         Primitive* prim = model->meshes[i]->GetPrimitive(p);
         prim->_pMat->SetEmissiveFactor(0.2f);
+        prim->_pMat->DisableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
+        prim->_pMat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
       }
     }
     //m_rendererComponent.EnableMorphTargets(true);
@@ -317,7 +316,7 @@ public:
     //m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
     //m_animationComponent.Playback("Dance");
     //m_animationComponent.SetPlaybackRate(1.0f);
-    transform->Scale = Vector3(10.5f, 10.5f, 10.5f);
+    transform->Scale = Vector3(1.5f, 1.5f, 1.5f);
  #endif
 
     transform->Position = Vector3(2.0f, 5.0f, 0.0f);

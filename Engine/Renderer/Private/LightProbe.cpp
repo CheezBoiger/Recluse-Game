@@ -186,6 +186,7 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
   //
   for (u32 fi = 0; fi < 6; ++fi ) {
     Vector3 n = GetWorldNormalFromCubeFace(fi);
+    u32 ho = fi * height;
     for (u32 py = 0; py < height; ++py) {
       for (u32 px = 0; px < width; ++px) {
         
@@ -194,7 +195,7 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
         wi = wi.Normalize();
         // Obtain our solid angle differential.
         r32 dw = pixelA * n.Dot(-wi) / dist2;
-        i32 offset = py * width + px * 4;
+        i32 offset = ho * width + py * width + px * 4;
         Vector3 L = Vector3(static_cast<r32>(data[offset + 0]) / 255.0f,
                             static_cast<r32>(data[offset + 1]) / 255.0f,
                             static_cast<r32>(data[offset + 2]) / 255.0f);
@@ -207,8 +208,8 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
         _shcoeff[3] += L * 0.488603f * dw * wi.x;
         _shcoeff[4] += L * 1.092548f * dw * wi.x * wi.y;
         _shcoeff[5] += L * 1.092548f * dw * wi.y * wi.z;
-        _shcoeff[6] += L * 1.092548f * dw * wi.x * wi.z;
-        _shcoeff[7] += L * 0.315392f * dw * (3.0f * (wi.z * wi.z) - 1.0f);
+        _shcoeff[6] += L * 0.315392f * dw * (3.0f * (wi.z * wi.z) - 1.0f);
+        _shcoeff[7] += L * 1.092548f * dw * wi.x * wi.z;
         _shcoeff[8] += L * 0.546274f * dw * (wi.x * wi.x - wi.y * wi.y); 
       }
     }
