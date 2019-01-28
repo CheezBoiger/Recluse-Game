@@ -160,7 +160,6 @@ void main()
 {
   vec2 uv = frag_in.uv;
   vec3 color = texture(sceneSurface, uv).rgb;
-  vec3 bloom = texture(bloomSurface, uv).rgb;
   
   // TODO(): These need to be set as a descripter param instead.
   float k = -0.15;
@@ -233,7 +232,10 @@ void main()
   
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (gWorldBuffer.bloomEnabled >= 1) { color += bloom * paramConfigs.bloomStrength; }
+  if (gWorldBuffer.bloomEnabled >= 1) { 
+    vec3 bloom = texture(bloomSurface, uv).rgb;
+    color += bloom * paramConfigs.bloomStrength; 
+  }
   
   // Extended exposure pass with Uncharted 2 tone mapping. Gamma correction
   // is also enabled.
