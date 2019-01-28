@@ -199,7 +199,7 @@ private:
 #define DRONE 2
 #define MONSTER 3
 #define ENABLE_PARTICLE_TEXTURE_TEST 1
-#define MODEL_TYPE SPHERE
+#define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
@@ -303,8 +303,10 @@ public:
       for (size_t p = 0; p < model->meshes[i]->GetPrimitiveCount(); ++p) {
         Primitive* prim = model->meshes[i]->GetPrimitive(p);
         prim->_pMat->SetEmissiveFactor(0.2f);
-        prim->_pMat->DisableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
+        //prim->_pMat->DisableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
         prim->_pMat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        //prim->_pMat->SetRoughnessFactor(1.0f);
+        //prim->_pMat->SetMetallicFactor(0.04f);
       }
     }
     //m_rendererComponent.EnableMorphTargets(true);

@@ -68,7 +68,7 @@ public:
       , &material);
     Transform* trans = GetTransform();
     m_pRendererComponent->Initialize(this);
-#if 0
+#if 1
     m_pRendererComponent->EnableStatic(true);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);

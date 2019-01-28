@@ -47,8 +47,15 @@ endif(USE_FBX)
 
 if (AUDIO)
   set(RECLUSE_OPENAL_DIR       $ENV{OPENALSDK})
+  set(RECLUSE_FMOD_DIR         $ENV{FMODSDK})
+  set(RECLUSE_USE_FMOD         ON)
+  add_definitions(-DRECLUSE_TYPE_FMOD=1
+                  -DRECLUSE_TYPE_AL=2
+    -DRECLUSE_AUDIO_TYPE=RECLUSE_TYPE_FMOD)
 else()
   set(RECLUSE_OPENAL_DIR       "")
+  set(RECLUSE_FMOD_DIR         "")
+  set(RECUSE_USE_FMOD          OFF)
   add_definitions(-DFORCE_AUDIO_OFF=1)
 endif()
 

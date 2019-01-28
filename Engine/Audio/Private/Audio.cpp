@@ -8,7 +8,7 @@ namespace Recluse {
 
 Audio& gAudio()
 {
-  static AudioEngine engine;
+  static FMODAudioEngine engine;
   return engine;
 }
 } // Recluse

@@ -654,7 +654,7 @@ void BufferUI::EmitImage(const UiImageInfo& imgInfo)
   struct nk_image img;
   
   Texture2D* pTex = imgInfo._descriptor->GetImage();
-  img.handle = nk_handle_ptr(imgInfo._descriptor);
+  img.handle = nk_handle_ptr(imgInfo._descriptor->GetDescriptorSet());
   img.region[0] = imgInfo._region[0];
   img.region[1] = imgInfo._region[1];
   img.region[2] = imgInfo._region[2];

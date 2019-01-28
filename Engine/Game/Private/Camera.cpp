@@ -40,7 +40,7 @@ Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
   , m_OrthoScale(1.0f)
   , m_Bloom(false)
   , m_Gamma(2.2f)
-  , m_Exposure(4.5f)
+  , m_Exposure(1.4f)
   , m_FrustumCull(false)
   , m_interleaveVideo(false)
 {

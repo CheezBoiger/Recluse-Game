@@ -186,6 +186,13 @@ public:
     // Update before ray picking.
     pCam->Update();
 
+#if !defined FORCE_AUDIO_OFF
+    gAudio().SetListener3DOrientation(
+      transform->Position,
+      transform->Front(),
+      transform->Up());
+#endif
+
     // Testing ray cast.
     if (Mouse::ButtonDown(Mouse::LEFT)) {
       RayTestHit hitOut;

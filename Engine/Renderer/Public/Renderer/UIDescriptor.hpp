@@ -13,6 +13,7 @@ namespace Recluse {
 class DescriptorSet;
 class VulkanRHI;
 class Buffer;
+class Sampler;
 class Texture2D;
 
 struct UITransform {
@@ -29,18 +30,28 @@ enum UIDescriptorType {
 
 class UIDescriptor {
 public:
-
+  UIDescriptor()
+    : m_pSet(nullptr)
+    , m_image(nullptr)
+    , m_sampler(nullptr)
+    , m_needsUpdate(false) { }
 
   void            Initialize(VulkanRHI* pRhi);  
   void            Update(VulkanRHI* pRhi);
   void            CleanUp(VulkanRHI* pRhi);
-
+  void            SetImage(Texture2D* pTex) { m_image = pTex; MarkToUpdate(); }
   Texture2D*        GetImage() { return m_image; }
+  
+  DescriptorSet*    GetDescriptorSet() { return m_pSet; }
 
 private:
 
+  void            MarkToUpdate() { m_needsUpdate = true; }
+
   Texture2D*        m_image;
+  Sampler*        m_sampler;
   DescriptorSet*    m_pSet;
   UIDescriptorType  m_type;
+  b32               m_needsUpdate;
 };
 } // Recluse

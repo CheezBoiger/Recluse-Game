@@ -9,17 +9,32 @@ string(REPLACE "\\" "/" RECLUSE_OPENAL_DIR ${RECLUSE_OPENAL_DIR})
 set(OPENAL_HEADER_DIR ${RECLUSE_OPENAL_DIR}/include)
 set(OPENAL_LIB_DIR ${RECLUSE_OPENAL_DIR}/libs/Win64)
 
+set(FMOD_LOWLEVEL_HEADER_DIR ${RECLUSE_FMOD_DIR}/api/lowlevel/inc)
+set(FMOD_LOWLEVEL_LIB_DIR    ${RECLUSE_FMOD_DIR}/api/lowlevel/lib)
+
+set(FMOD_STUDIO_HEADER_DIR ${RECLUSE_FMOD_DIR}/api/studio/inc)
+set(FMOD_STUDIO_LIB_DIR    ${RECLUSE_FMOD_DIR}/api/studio/lib)
+
 
 include_directories(
   ${RECLUSE_ENGINE_INCLUDE_DIRS}
   ${AUDIO_PUBLIC_DIR}
-  ${OPENAL_HEADER_DIR}
+  ${FMOD_LOWLEVEL_HEADER_DIR}
+  ${FMOD_STUDIO_HEADER_DIR}
 )
 
 
-set(AUDIO_LIBS
+set(OPENAL_AUDIO_LIBS
   ${OPENAL_LIB_DIR}/OpenAL32.lib
   ${OPENAL_LIB_DIR}/EFX-Util_MT/EFX-Util.lib
+)
+
+set(FMOD_AUDIO_LIBS
+  ${FMOD_LOWLEVEL_LIB_DIR}/fmod64_vc.lib
+  ${FMOD_LOWLEVEL_LIB_DIR}/fmodL64_vc.lib
+  
+  ${FMOD_STUDIO_LIB_DIR}/fmodstudio64_vc.lib
+  ${FMOD_STUDIO_LIB_DIR}/fmodstudioL64_vc.lib
 )
 
 
@@ -43,7 +58,7 @@ add_library(${RECLUSE_AUDIO} STATIC
 
 
 target_link_libraries(${RECLUSE_AUDIO}
-  ${AUDIO_LIBS}
+  ${FMOD_AUDIO_LIBS}
 )
 
 # Doing some stuff for organization.

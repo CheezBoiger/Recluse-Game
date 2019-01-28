@@ -237,7 +237,9 @@ void main()
   
   // Extended exposure pass with Uncharted 2 tone mapping. Gamma correction
   // is also enabled.
-  vec3 tone = Uncharted2Tonemap(color * gWorldBuffer.exposure);
+  color *= gWorldBuffer.exposure;
+  const float exposureBias = 2.0;
+  vec3 tone = Uncharted2Tonemap(color * exposureBias);
   tone = tone * (1.0 / Uncharted2Tonemap(vec3(11.2)));
   
   // Gamma correction.

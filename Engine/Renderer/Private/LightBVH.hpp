@@ -59,4 +59,9 @@ private:
   DescriptorSet*  m_descSet;
   LightBVH        m_cpuBvh;
 };
+
+
+struct ProbeBVH {
+
+};
 } // Recluse

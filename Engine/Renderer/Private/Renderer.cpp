@@ -25,6 +25,7 @@
 #include "Particles.hpp"
 #include "Mesh.hpp"
 #include "Material.hpp"
+#include "UIDescriptor.hpp"
 
 #include "RHI/VulkanRHI.hpp"
 #include "RHI/GraphicsPipeline.hpp"
@@ -4638,5 +4639,20 @@ void Renderer::FreeParticleSystem(ParticleSystem* particle)
   if (!particle) { return; }
   particle->CleanUp(m_pRhi);
   delete particle;
+}
+
+
+UIDescriptor* Renderer::CreateUIDescriptor()
+{
+  UIDescriptor* pDesc = new UIDescriptor();
+  return pDesc;
+}
+
+
+void Renderer::FreeUIDescriptor(UIDescriptor* pDesc)
+{
+  if (!pDesc) return;
+  pDesc->CleanUp(m_pRhi);
+  delete pDesc;
 }
 } // Recluse

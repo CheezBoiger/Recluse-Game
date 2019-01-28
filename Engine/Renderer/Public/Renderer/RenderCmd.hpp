@@ -41,7 +41,9 @@ enum CmdConfig {
   CMD_SKINNED_BIT       = (1 << 12),  // command is skinned, contains joint buffer.
   CMD_MORPH_BIT         = (1 << 13),  // command contains morph targets.
   CMD_WIREFRAME_BIT     = (1 << 14),  // Wireframe mode.
-  CMD_BASIC_RENDER_BIT  = (1 << 15)   // Basic render bit, redirects rendering to simple pipeline, with no material.
+  CMD_BASIC_RENDER_BIT  = (1 << 15),  // Basic render bit, redirects rendering to simple pipeline, with no material.
+  CMD_REFRACTION_BIT    = (1 << 16),  // Refraction bit. Mesh refracts.
+  CMD_CUSTOM_SHADE_BIT  = (1 << 17)   // Mesh uses custom shader.
 };
 
 

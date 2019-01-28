@@ -26,4 +26,12 @@ macro(copy_engine_dependencies_to_exe target)
                      COMMAND ${CMAKE_COMMAND} -E copy_directory
                      ${CMAKE_SOURCE_DIR}/Configs $<TARGET_FILE_DIR:${target}>/Configs
   )
+  if (RECLUSE_USE_FMOD)
+  add_custom_command(TARGET ${target}
+                     COMMAND ${CMAKE_COMMAND} -E copy
+                     $ENV{FMODSDK}/api/lowlevel/lib/fmod64.dll $<TARGET_FILE_DIR:${target}>/fmod64.dll)
+  add_custom_command(TARGET ${target}
+                     COMMAND ${CMAKE_COMMAND} -E copy
+                     $ENV{FMODSDK}/api/studio/lib/fmodstudio64.dll $<TARGET_FILE_DIR:${target}>/fmodstudio64.dll) 
+  endif()                     
 endmacro()

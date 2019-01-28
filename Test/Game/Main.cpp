@@ -196,6 +196,11 @@ public:
     monster = new Monster();
     mainCam = new MainCamera();
 
+#if !defined FORCE_AUDIO_OFF
+    // Testing audio.
+    gAudio().LoadSound("wave.mp3", true, true, false);
+    gAudio().InitiateSound("wave.mp3", Vector3(0.0f, 0.0f, 0.0f), 1.0f);
+#endif
     GetRoot()->AddChild(mainCam);
     mainCam->Start();
 
@@ -250,13 +255,14 @@ public:
       img.Load("Assets/World/testcubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
-      img.Load("Assets/World/Probe2.png");
+      img.Load("Assets/World/Probe3.png");
       cubemap1->Update(img);
       img.CleanUp();
       img.Load("Assets/World/brdf.png");
       brdfLUT->Update(img);
       img.CleanUp();
       lightprobe.GenerateSHCoefficients(gRenderer().RHI(), cubemap0);
+      otherLightProbe.GenerateSHCoefficients(gRenderer().RHI(), cubemap1);
       gRenderer().SetGlobalLightProbe(&lightprobe);
       gRenderer().SetSkyboxCubeMap(cubemap0);
       gRenderer().SetGlobalBRDFLUT(brdfLUT);
@@ -282,13 +288,15 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
       //Camera::GetMain()->EnableInterleavedVideo(true);
       gRenderer().SetSkyboxCubeMap(cubemap0);
+      gRenderer().SetGlobalLightProbe(&lightprobe);
       gRenderer().UsePreRenderSkyboxMap(true);
     }
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
       //Camera::GetMain()->EnableInterleavedVideo(false);
-      //gRenderer().SetSkyboxCubeMap(cubemap1);
+      gRenderer().SetSkyboxCubeMap(cubemap1);
       //gRenderer().UsePreRenderSkyboxMap(true);
-      gRenderer().UsePreRenderSkyboxMap(false);
+      gRenderer().SetGlobalLightProbe(&otherLightProbe);
+      gRenderer().UsePreRenderSkyboxMap(true);
     }
   }
 
@@ -335,6 +343,7 @@ private:
   CubeObject*                             cube;
   LanternObject*                          lantern;
   LightProbe                              lightprobe;
+  LightProbe                              otherLightProbe;
   Monster*                                monster;
   MainCamera*                             mainCam;
 };
