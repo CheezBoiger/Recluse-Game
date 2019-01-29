@@ -273,9 +273,12 @@ void BulletPhysics::UpdateState(r64 dt, r64 tick)
     btTransform transform = bundle.native->getWorldTransform();
     btQuaternion q = transform.getRotation();
     btVector3 p = transform.getOrigin();
+    btVector3 velocity = bundle.native->getLinearVelocity();
+    btVector3 angularVelocity = bundle.native->getAngularVelocity();
 
     bundle.rigidBody->_rotation = Quaternion(q.x(), q.y(), q.z(), q.w());
     bundle.rigidBody->_position = Vector3(p.x(), p.y(), p.z());
+    bundle.rigidBody->_velocity = Vector3(velocity.x(), velocity.y(), velocity.z());    
   }
 }
 

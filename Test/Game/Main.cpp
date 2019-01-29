@@ -196,11 +196,6 @@ public:
     monster = new Monster();
     mainCam = new MainCamera();
 
-#if !defined FORCE_AUDIO_OFF
-    // Testing audio.
-    gAudio().LoadSound("wave.mp3", true, true, false);
-    gAudio().InitiateSound("wave.mp3", Vector3(0.0f, 0.0f, 0.0f), 1.0f);
-#endif
     GetRoot()->AddChild(mainCam);
     mainCam->Start();
 
@@ -252,17 +247,19 @@ public:
     brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
-      img.Load("Assets/World/testcubemap.png");
+      img.Load("Assets/World/cubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
-      img.Load("Assets/World/Probe3.png");
+      img.Load("Assets/World/Probe0.png");
       cubemap1->Update(img);
       img.CleanUp();
       img.Load("Assets/World/brdf.png");
       brdfLUT->Update(img);
       img.CleanUp();
       lightprobe.GenerateSHCoefficients(gRenderer().RHI(), cubemap0);
+      lightprobe._bias = 0.55f;
       otherLightProbe.GenerateSHCoefficients(gRenderer().RHI(), cubemap1);
+      otherLightProbe._bias = 1.0f;
       gRenderer().SetGlobalLightProbe(&lightprobe);
       gRenderer().SetSkyboxCubeMap(cubemap0);
       gRenderer().SetGlobalBRDFLUT(brdfLUT);

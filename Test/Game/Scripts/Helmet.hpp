@@ -237,6 +237,12 @@ public:
     m_spotLightComponent.EnableFixed(true);
     m_spotLightComponent.Enable(false);
 
+#if !defined FORCE_AUDIO_OFF
+    // Testing audio.
+    gAudio().LoadSound("wave.mp3", true, true, false);
+    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 1.0f);
+#endif
+
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
       m_particleTexture = gRenderer().CreateTexture2DArray();
@@ -330,6 +336,10 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
       m_pParticleSystem->SetMaxParticleCount(100);
     }
+    
+#if !defined FORCE_AUDIO_OFF
+    gAudio().SetChannel3DPosition(m_audioChannel, GetTransform()->Position, m_physicsComponent.GetRigidBody()->_velocity);
+#endif
   }
 
   void SetPosition(const Vector3& newPos)
@@ -368,4 +378,7 @@ private:
   ParticleSystemComponent*  m_pParticleSystem;
   Material*                 m_pMaterialRef;
   Texture2DArray*           m_particleTexture;
+#if !defined FORCE_AUDIO_OFF
+  u32                       m_audioChannel;
+#endif
 };

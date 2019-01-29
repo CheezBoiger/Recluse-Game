@@ -35,7 +35,7 @@ public:
   virtual void              LoadSound(const std::string& soundName, b32 is3D, b32 looping, b32 stream) {}
   virtual void              UnLoadSound(const std::string& soundName) { }
   virtual u32               InitiateSound(const std::string& soundName, const Vector3& pos, r32 volume) { return 0; }
-  virtual void              SetChannel3DPosition(u32 nChannelId, const Vector3& pos) { }
+  virtual void              SetChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel = Vector3()) { }
   virtual void              SetChannelVolume(u32 nChannelId, r32 volume) { }
 
   virtual void              UpdateState(r64 dt) { }

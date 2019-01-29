@@ -145,12 +145,13 @@ u32 FMODAudioEngine::InitiateSound(const std::string& soundName, const Vector3& 
 }
 
 
-void FMODAudioEngine::SetChannel3DPosition(u32 nChannelId, const Vector3& pos) 
+void FMODAudioEngine::SetChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) 
 { 
   auto it = m_channelMap.find(nChannelId);
   if (it == m_channelMap.end()) { return; }
   FMOD_VECTOR v = ToFMODVector(pos);
-  FMOD_RESULT result = it->second->set3DAttributes(&v, nullptr); // velocity can be set, but for now we won't.
+  FMOD_VECTOR velocity = ToFMODVector(vel);
+  FMOD_RESULT result = it->second->set3DAttributes(&v, &velocity); // velocity can be set, but for now we won't.
   R_ASSERT(result == FMOD_OK, "");
 }
 

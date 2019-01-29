@@ -5,6 +5,7 @@
 #include "Core/Utility/Vector.hpp"
 #include "Core/Math/Vector3.hpp"
 #include "Core/Math/Vector4.hpp"
+#include "Core/Math/AABB.hpp"
 
 namespace Recluse {
 
@@ -25,7 +26,11 @@ struct Image;
 struct LightProbe {
   Vector3 _shcoeff[9];   // Spherical harmonic coefficients.
   Vector3 _position;  // Position of where the this probe is, in 3D space.
-  r32     _r;         // radius of effect, that this light probe will influence.
+  AABB    _aabb;    // AABB bounds.
+  r32     _bias;      // bias.
+
+  LightProbe()
+    : _bias(1.0f) { }
 
   // Generate SH coefficients from texture enviroment cube data.
   void    GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap);
@@ -51,6 +56,7 @@ public:
 
 struct DiffuseSH {
   Vector4 _c[9];
+  Vector4 _bias;
 };
 
 
@@ -81,6 +87,7 @@ public:
     for (u32 i = 0; i < 9; ++i) {
       m_globalDiffuseSH._c[i] = probe->_shcoeff[i];
     }
+    m_globalDiffuseSH._bias = probe->_bias;
   }
 
   // Set up enviroment maps for this renderer to use for look up.

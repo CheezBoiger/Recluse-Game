@@ -43,7 +43,7 @@ public:
   virtual void              LoadSound(const std::string& soundName, b32 is3D = true, b32 looping = false, b32 stream = false) override;
   virtual void              UnLoadSound(const std::string& soundName) override;
   virtual u32               InitiateSound(const std::string& soundName, const Vector3& pos, r32 volume) override;
-  virtual void              SetChannel3DPosition(u32 nChannelId, const Vector3& pos) override;
+  virtual void              SetChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) override;
   virtual void              SetChannelVolume(u32 nChannelId, r32 volume) override;
 
   virtual void              SetListener3DOrientation(const Vector3& pos, const Vector3& forward, const Vector3& up) override;

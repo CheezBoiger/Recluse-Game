@@ -60,6 +60,7 @@ struct SpotLight {
 
 struct DiffuseSH {
   vec4 c[9];
+  vec4 bias;
 };
 
 
@@ -112,7 +113,7 @@ vec3 GetIBLContribution(inout PBRInfo pbrInfo,
   float mipCount = 9.0;
   float lod = pbrInfo.roughness * mipCount;
   vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
-  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c) * 0.25;//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
+  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c) * diffuseSH.bias.xxx;//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
   
 #if defined(USE_TEX_LOD)
 #else
@@ -138,7 +139,7 @@ vec3 GetIBLContributionLocal(inout PBRInfo pbrInfo,
   float mipCount = 9.0;
   float lod = pbrInfo.roughness * mipCount;
   vec3 brdf = SRGBToLINEAR(texture(brdfLUT, vec2(pbrInfo.NoV, 1.0 - pbrInfo.roughness))).rgb;
-  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c);//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
+  vec3 diffuseLight = SampleSH(pbrInfo.N, diffuseSH.c) * diffuseSH.bias.xxx;//SRGBToLINEAR(texture(specCube, pbrInfo.N)).rgb;
   
 #if defined(USE_TEX_LOD)
 #else

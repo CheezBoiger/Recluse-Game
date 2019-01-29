@@ -230,7 +230,7 @@ b32 LightProbe::LoadFromFile(const std::string& filename)
 {
   memset(_shcoeff, 0, sizeof(_shcoeff));
   _position = Vector3();
-  _r = 0.0f;
+  _bias = 1.0f;
 
   // Load up coefficients here.
 
