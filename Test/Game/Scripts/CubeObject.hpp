@@ -76,7 +76,7 @@ public:
     trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
     m_pRendererComponent->ForceForward(false);
-    m_pRendererComponent->EnableStatic(true);
+    m_pRendererComponent->EnableStatic(false);
     ModelLoader::Model* model = nullptr;
     ModelCache::Get("Sponza", &model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
@@ -168,7 +168,9 @@ public:
       gUI().EmitText(nearS, 6.0f, 80.0f, 800.0f, 20.0f);
       gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
       gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
+      gUI().SetForegroundColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
       gUI().EmitText(lol, spos.x, spos.y, 300.0f, 30.0f);
+      gUI().SetForegroundColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
       auto data = Profiler::GetAll(PROFILE_TYPES_RENDERER);
       float offset = 120.0f;
       for (auto it : data) {

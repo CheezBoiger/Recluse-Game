@@ -7,7 +7,6 @@ namespace Recluse {
 
 
 b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
-  u32 swapchainImageCount,
   QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation)
 {
   VkResult Result = vkCreateDevice(physical, &info, nullptr, &handle);
@@ -42,7 +41,7 @@ b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCre
   vkGetDeviceQueue(handle, mPresentationQueueFamily._idx, 0u, &mPresentationQueue);
 
   R_DEBUG(rNotify, "Queues created.\n");
-  CreateSemaphores(swapchainImageCount);
+
   CreateComputeFence();
   return true;
 }
@@ -93,21 +92,6 @@ void LogicalDevice::WaitOnQueues()
 
   for (VkQueue& queue : mTransferQueues) {
     vkQueueWaitIdle(queue);
-  }
-}
-
-
-void LogicalDevice::CreateSemaphores(u32 count)
-{
-  VkSemaphoreCreateInfo semaphoreCI = {};
-  semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  if (vkCreateSemaphore(handle, &semaphoreCI, nullptr, &mImageAvailableSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
-
-  if (vkCreateSemaphore(handle, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
   }
 }
 

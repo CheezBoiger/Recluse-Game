@@ -52,11 +52,7 @@ MaterialDescriptor::MaterialDescriptor()
 
 MaterialDescriptor::~MaterialDescriptor()
 {
-  DEBUG_OP(
-  if (m_pBuffer) {
-    R_DEBUG(rWarning, "MaterialDescriptor buffer was not properly cleaned up!\n");
-  }
-  );
+  R_ASSERT(!m_pBuffer, "MaterialDescriptor buffer was not properly cleaned up!\n");
 }
 
 

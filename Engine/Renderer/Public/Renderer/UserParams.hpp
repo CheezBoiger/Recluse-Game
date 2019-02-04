@@ -9,9 +9,9 @@ namespace Recluse {
 
 
 enum FrameBuffering {
-  SINGLE_BUFFER,
-  DOUBLE_BUFFER,
-  TRIPLE_BUFFER
+  SINGLE_BUFFER = 1,
+  DOUBLE_BUFFER = 2,
+  TRIPLE_BUFFER = 3
 };
 
 

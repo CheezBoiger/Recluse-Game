@@ -327,7 +327,7 @@ void UIOverlay::Render()
   R_ASSERT(m_pRhi, "Null RHI for ui overlay!");
 
   // Render the overlay.
-  CommandBuffer* cmdBuffer = m_CmdBuffer;
+  CommandBuffer* cmdBuffer = m_CmdBuffers[m_pRhi->CurrentImageIndex()];
 
   
 }
@@ -336,14 +336,16 @@ void UIOverlay::Render()
 void UIOverlay::Initialize(VulkanRHI* rhi)
 {
   m_pRhi = rhi;
-
-  m_CmdBuffer = m_pRhi->CreateCommandBuffer();
-  m_CmdBuffer->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-
-  m_pSemaphore = m_pRhi->CreateVkSemaphore();
-  VkSemaphoreCreateInfo semaCi = { };
+  m_pSemaphores.resize(rhi->BufferingCount());
+  m_CmdBuffers.resize(rhi->BufferingCount());
+  VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  m_pSemaphore->Initialize(semaCi);
+  for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
+    m_CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
+    m_CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_pSemaphores[i] = m_pRhi->CreateVkSemaphore();
+    m_pSemaphores[i]->Initialize(semaCi);
+  }
 
   InitializeRenderPass();
   CreateDescriptorSetLayout();
@@ -364,12 +366,14 @@ void UIOverlay::CleanUp()
   CleanUpDescriptorSetLayout();
   CleanUpBuffers();
 
-  m_pRhi->FreeVkSemaphore(m_pSemaphore);
-  m_pSemaphore = nullptr;
+  for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
+    m_pRhi->FreeVkSemaphore(m_pSemaphores[i]);
+    m_pSemaphores[i] = nullptr;
 
-  CommandBuffer* cmdBuf = m_CmdBuffer;
-  m_pRhi->FreeCommandBuffer(cmdBuf);
-  m_CmdBuffer = nullptr;
+    CommandBuffer* cmdBuf = m_CmdBuffers[i];
+    m_pRhi->FreeCommandBuffer(cmdBuf);
+    m_CmdBuffers[i] = nullptr;
+  }
 
   if (m_renderPass) {
     m_pRhi->FreeRenderPass(m_renderPass);
@@ -673,7 +677,7 @@ void BufferUI::EndCanvas()
 }
 
 
-void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global)
+void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex)
 {
   VkViewport viewport = {};
   viewport.x = 0.0f;
@@ -686,7 +690,7 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global)
   // TODO(): This needs to be programmable now. Not hardcoded this way...
   NkObject* nk = gNkDevice();
 
-  CommandBuffer* cmdBuffer = m_CmdBuffer;
+  CommandBuffer* cmdBuffer = m_CmdBuffers[m_pRhi->CurrentFrame()];
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
   VkCommandBufferBeginInfo beginInfo = { };
@@ -755,7 +759,7 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global)
   VkBuffer vert = m_vertBuffer->NativeBuffer();
   VkBuffer indx = m_indicesBuffer->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
-  VkDescriptorSet sets[] = { global->Set()->Handle(), nk->_font_set->Handle() };
+  VkDescriptorSet sets[] = { global->Set(frameIndex)->Handle(), nk->_font_set->Handle() };
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.

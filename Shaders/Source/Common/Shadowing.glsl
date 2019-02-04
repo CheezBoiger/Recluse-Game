@@ -184,7 +184,7 @@ float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3
   float currDepth = projC.z;
   
   float shadow = 0.0;
-  float range = 3.0;
+  float range = 1.0;
   vec2 texelSz = (1.0 / textureSize(shadowMap, 0).xy) * 0.5;
   
   normal = normalize(normal);

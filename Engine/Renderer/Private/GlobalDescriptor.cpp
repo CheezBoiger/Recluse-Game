@@ -19,8 +19,6 @@ namespace Recluse {
 
 
 GlobalDescriptor::GlobalDescriptor()
-  : m_pGlobalBuffer(nullptr)
-  , m_pDescriptorSet(nullptr)
 {
   m_Global._ScreenSize[0] = 1;
   m_Global._ScreenSize[1] = 1;
@@ -52,11 +50,13 @@ GlobalDescriptor::GlobalDescriptor()
 GlobalDescriptor::~GlobalDescriptor()
 {
   DEBUG_OP(
-  if (m_pGlobalBuffer) {
-    R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
-  }
-  if (m_pDescriptorSet) {
-    R_DEBUG(rWarning, "Global material was not properly cleaned up!\n");
+  for (u32 i = 0; i < m_pDescriptorSets.size(); ++i) {
+    if (m_pGlobalBuffers[i]) {
+      R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
+    }
+    if (m_pDescriptorSets[i]) {
+      R_DEBUG(rWarning, "Global material was not properly cleaned up!\n");
+    }
   }
   );
 }
@@ -65,68 +65,75 @@ GlobalDescriptor::~GlobalDescriptor()
 void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
 {
   R_ASSERT(pRhi, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
-  R_ASSERT(!m_pGlobalBuffer && !m_pDescriptorSet, "This global buffer is already intialized...\n");
 
-  m_pGlobalBuffer = pRhi->CreateBuffer();
   VkDeviceSize dSize = sizeof(GlobalBuffer);
   VkBufferCreateInfo bufferCI = {};
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferCI.size = dSize;
   bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-  m_pGlobalBuffer->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
-  m_pGlobalBuffer->Map();
-
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;
 
-  m_pDescriptorSet = pRhi->CreateDescriptorSet();
-  m_pDescriptorSet->Allocate(pRhi->DescriptorPool(), pbrLayout);
+  m_pGlobalBuffers.resize(pRhi->BufferingCount());
+  m_pDescriptorSets.resize(pRhi->BufferingCount());
+  for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
+    m_pGlobalBuffers[i] = pRhi->CreateBuffer();
 
-  VkDescriptorBufferInfo globalBufferInfo = {};
-  globalBufferInfo.buffer = m_pGlobalBuffer->NativeBuffer();
-  globalBufferInfo.offset = 0;
-  globalBufferInfo.range = sizeof(GlobalBuffer);
+    m_pGlobalBuffers[i]->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalBuffers[i]->Map();
 
-  std::array<VkWriteDescriptorSet, 1> writeSets;
-  writeSets[0].descriptorCount = 1;
-  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  writeSets[0].dstBinding = 0;
-  writeSets[0].dstArrayElement = 0;
-  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  writeSets[0].pNext = nullptr;
-  writeSets[0].pBufferInfo = &globalBufferInfo;
 
-  m_pDescriptorSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+    m_pDescriptorSets[i] = pRhi->CreateDescriptorSet();
+    m_pDescriptorSets[i]->Allocate(pRhi->DescriptorPool(), pbrLayout);
+
+    VkDescriptorBufferInfo globalBufferInfo = {};
+    globalBufferInfo.buffer = m_pGlobalBuffers[i]->NativeBuffer();
+    globalBufferInfo.offset = 0;
+    globalBufferInfo.range = sizeof(GlobalBuffer);
+
+    std::array<VkWriteDescriptorSet, 1> writeSets;
+    writeSets[0].descriptorCount = 1;
+    writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeSets[0].dstBinding = 0;
+    writeSets[0].dstArrayElement = 0;
+    writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeSets[0].pNext = nullptr;
+    writeSets[0].pBufferInfo = &globalBufferInfo;
+
+    m_pDescriptorSets[i]->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+  }
 }
 
 
 void GlobalDescriptor::CleanUp(VulkanRHI* pRhi)
 {
   // TODO
-  if (m_pDescriptorSet) {
+  for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
+    if (m_pDescriptorSets[i]) {
 
-    pRhi->FreeDescriptorSet(m_pDescriptorSet);
-    m_pDescriptorSet = nullptr;
-  }
+      pRhi->FreeDescriptorSet(m_pDescriptorSets[i]);
+      m_pDescriptorSets[i] = nullptr;
+    }
 
-  if (m_pGlobalBuffer) {
-    m_pGlobalBuffer->UnMap();
-    pRhi->FreeBuffer(m_pGlobalBuffer);
-    m_pGlobalBuffer = nullptr;
+    if (m_pGlobalBuffers[i]) {
+      m_pGlobalBuffers[i]->UnMap();
+      pRhi->FreeBuffer(m_pGlobalBuffers[i]);
+      m_pGlobalBuffers[i] = nullptr;
+    }
   }
 }
 
 
-void GlobalDescriptor::Update(VulkanRHI* pRhi)
+void GlobalDescriptor::Update(VulkanRHI* pRhi, u32 frameIndex)
 {
-  R_ASSERT(m_pGlobalBuffer->Mapped(), "Global data was not mapped!");
-  memcpy(m_pGlobalBuffer->Mapped(), &m_Global, sizeof(GlobalBuffer));
-
+  u32 currFrame = frameIndex;
+  R_ASSERT(m_pGlobalBuffers[currFrame]->Mapped(), "Global data was not mapped!");
+  memcpy(m_pGlobalBuffers[currFrame]->Mapped(), &m_Global, sizeof(GlobalBuffer));
+  
   VkMappedMemoryRange range = { };
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  range.memory = m_pGlobalBuffer->Memory();
-  range.size = m_pGlobalBuffer->MemorySize();
+  range.memory = m_pGlobalBuffers[currFrame]->Memory();
+  range.size = m_pGlobalBuffers[currFrame]->MemorySize();
   pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse

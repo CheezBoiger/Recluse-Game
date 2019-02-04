@@ -50,15 +50,16 @@ Semaphore::~Semaphore()
 
 void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
 {
-  if (vkCreateSemaphore(mOwner, &info, nullptr, &mSema) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create semaphore!\n");
-  }
+  VkResult result = vkCreateSemaphore(mOwner, &info, nullptr, &mSema);
+  R_ASSERT(result == VK_SUCCESS, "Failed to init semaphore.\n");
+  R_DEBUG(rNotify, "Semaphore Handle created: " << mSema << " \n");
 }
 
 
 void Semaphore::CleanUp()
 {
   if (mSema) {
+    R_DEBUG(rNotify, "Semphore object " << mSema << " destroyed successfully.\n");
     vkDestroySemaphore(mOwner, mSema, nullptr);
     mSema = VK_NULL_HANDLE;
   }
@@ -67,9 +68,8 @@ void Semaphore::CleanUp()
 
 void Fence::Initialize(const VkFenceCreateInfo& info)
 {
-  if (vkCreateFence(mOwner, &info, nullptr, &mFence) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create fence!\n");
-  }
+  VkResult result = vkCreateFence(mOwner, &info, nullptr, &mFence);
+  R_ASSERT(result == VK_SUCCESS, "Failed to init fence.\n");
 }
 
 
@@ -98,9 +98,11 @@ VulkanRHI::VulkanRHI()
   , mSwapchainCmdBufferBuild(nullptr)
   , mCurrDescSets(0)
   , m_depthBoundsAllowed(VK_FALSE)
+  , m_currentFrame(0)
 {
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
+  mSwapchainInfo.mCurrentImageIndex = 0;
   mSwapchainInfo.mCmdBufferSets.resize(2);
 
   mGraphicsCmdPools.resize(2);
@@ -220,14 +222,14 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
-  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate, mSwapchain.ImageCount(),
+  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate,
       &graphicsQueueFamily, &computeQueueFamily, &transferQueueFamily, &presentationQueueFamily)) {
     R_DEBUG(rError, "Vulkan logical device failed to create.\n");
     return;
   }
 
   VkPresentModeKHR presentMode = GetPresentMode(params);
-  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode);
+  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, params->_Buffering, 3);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -308,7 +310,7 @@ void VulkanRHI::CleanUp()
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
     vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
     framebuffer = VK_NULL_HANDLE;
-  }
+  } 
 
   vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
     
@@ -317,7 +319,7 @@ void VulkanRHI::CleanUp()
   vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
 
   // NOTE(): Clean up any vulkan modules before destroying the logical device!
-  mSwapchain.CleanUp();
+  mSwapchain.CleanUp(mLogicalDevice);
 
   if (mSurface != VK_NULL_HANDLE) {
     gContext.DestroySurface(mSurface);
@@ -551,12 +553,17 @@ void VulkanRHI::AcquireNextImage()
   R_TIMED_PROFILE_RENDERER();
 
   VkResult result = vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
-    mLogicalDevice.ImageAvailableSemaphore(), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-    VkExtent2D windowExtent = mSwapchain.SwapchainExtent();
-    ReConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width, 
-      windowExtent.height, mSwapchain.CurrentBufferCount());
-  }
+    mSwapchain.ImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
+}
+
+
+void VulkanRHI::WaitForFrameInFlightFence()
+{
+  R_TIMED_PROFILE_RENDERER();
+
+  VkFence inflight = CurrentInFlightFence();
+  WaitForFences(1, &inflight, VK_TRUE, UINT64_MAX);
+  ResetFences(1, &inflight);
 }
 
 
@@ -590,7 +597,7 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
 
 void VulkanRHI::Present()
 {
-  VkSemaphore signalSemaphores[] = { mLogicalDevice.GraphicsFinishedSemaphore() };
+  VkSemaphore signalSemaphores[] = { CurrentGraphicsFinishedSemaphore() };
   VkSwapchainKHR swapchains[] = { mSwapchain.Handle() };
 
   VkPresentInfoKHR presentInfo = { };
@@ -602,9 +609,16 @@ void VulkanRHI::Present()
   presentInfo.pWaitSemaphores = signalSemaphores;
   presentInfo.pImageIndices = &mSwapchainInfo.mCurrentImageIndex;
 
-  if (vkQueuePresentKHR(mLogicalDevice.PresentQueue(), &presentInfo) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to present!\n");
+  VkResult result = vkQueuePresentKHR(mLogicalDevice.PresentQueue(), &presentInfo);
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    VkExtent2D windowExtent = mSwapchain.SwapchainExtent();
+    ReConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width,
+      windowExtent.height, mSwapchain.CurrentBufferCount(), mSwapchain.ImageCount());
   }
+  //R_ASSERT(result == VK_SUCCESS, "Failed to present!\n");
+
+  // Increment to next frame after every present of the current frame.
+  m_currentFrame = (m_currentFrame + 1) % mSwapchain.CurrentBufferCount();
 }
 
 
@@ -712,7 +726,7 @@ void VulkanRHI::RebuildCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 desiredBuffers)
+void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount)
 {
   if (width <= 0 || height <= 0) return;
 
@@ -730,11 +744,14 @@ void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height,
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
 
-  mSwapchain.ReCreate(mSurface, surfaceFormats[0], presentMode, capabilities, desiredBuffers);
+  mSwapchain.ReCreate(mLogicalDevice, mSurface, surfaceFormats[0], presentMode, capabilities, buffers, desiredImageCount);
   
   CreateDepthAttachment();
   SetUpSwapchainRenderPass();
   QueryFromSwapchain();
+  
+  // Readjust frame count since we are now changing swapchain frame resource count.
+  m_currentFrame = m_currentFrame % mSwapchain.CurrentBufferCount();
 }
 
 

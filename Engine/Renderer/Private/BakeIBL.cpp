@@ -124,11 +124,11 @@ void BakeIBL::CleanUpComputePipelines(VulkanRHI* pRhi)
 }
 
 
-void BakeIBL::RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target)
+void BakeIBL::RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex)
 {
   if (!pCmd || !target) return;
 
-  VkDescriptorSet sets[] = { pGlobal->Set()->Handle(), m_pBRDFSet->Handle() };
+  VkDescriptorSet sets[] = { pGlobal->Set(frameIndex)->Handle(), m_pBRDFSet->Handle() };
   pCmd->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->Pipeline());
   pCmd->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->Layout(),
     0, 2, sets, 0, nullptr);

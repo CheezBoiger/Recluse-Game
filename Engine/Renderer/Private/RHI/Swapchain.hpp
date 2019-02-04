@@ -21,14 +21,15 @@ struct SwapchainImage {
 
 // Vulkan Swapchain handler. Handles all information regarding the swapchain of a 
 // surface.
-class Swapchain : public VulkanHandle {
+class Swapchain {
 public:
   Swapchain();
   ~Swapchain();
 
-  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent);
+  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent, 
+                                    u32 buffers = 1, u32 desiredImages = 2);
 
-  void                          CleanUp();
+  void                          CleanUp(LogicalDevice& device);
 
   VkSwapchainKHR                Handle() { return mSwapchain; }
 
@@ -40,19 +41,28 @@ public:
   
   // Recreate the swapchain. desiredBuffers specifies how many swapchain images to use for displaying.
   // default is minimum buffers from gpu query, using 0 to signal default swapchain image count.
-  // 2 is double buffered, and 3 is tripled buffered.
-  void                          ReCreate(VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
-                                  VkSurfaceCapabilitiesKHR capabilities, u32 desiredBuffers = 0);
+  void                          ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
+                                  VkSurfaceCapabilitiesKHR capabilities, u32 buffers, u32 desiredImageCount);
 
   VkSurfaceFormatKHR            SwapchainSurfaceFormat() const { return mCurrentSurfaceFormat; }
   VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }
   VkPresentModeKHR              CurrentPresentMode() const { return mCurrentPresentMode; }
   u32                           CurrentBufferCount() const { return mCurrentBufferCount; }
+
+  VkSemaphore                   ImageAvailableSemaphore(u32 idx = 0) { return m_imageAvailableSemas[idx]; }
+  VkSemaphore                   GraphicsFinishedSemaphore(u32 idx = 0) { return m_graphicsFinishedSemas[idx]; }
+  VkFence                       InFlightFence(u32 idx = 0) { return m_inFlightFences[idx]; }
   
 private:
-  void                          QuerySwapchainImages();
+  void                          QuerySwapchainImages(LogicalDevice& device);
+  void                          CreateSemaphores(LogicalDevice& device, u32 count);
 
   VkSwapchainKHR                mSwapchain;
+
+  // Each semaphore corresponds to the number of swapchain images in the swapchain.
+  std::vector<VkSemaphore>      m_imageAvailableSemas;
+  std::vector<VkSemaphore>      m_graphicsFinishedSemas;
+  std::vector<VkFence>          m_inFlightFences;
 
   VkExtent2D                    mSwapchainExtent;
   u32                           mCurrentBufferCount;

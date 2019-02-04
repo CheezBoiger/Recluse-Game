@@ -72,18 +72,18 @@ public:
   GlobalDescriptor();
   ~GlobalDescriptor();
 
-  void              Update(VulkanRHI* pRhi);
+  void              Update(VulkanRHI* pRhi, u32 frameIndex);
   void              Initialize(VulkanRHI* pRhi);
   void              CleanUp(VulkanRHI* pRhi);
 
-  DescriptorSet*    Set() { return m_pDescriptorSet; }
+  DescriptorSet*    Set(u32 idx) { return m_pDescriptorSets[idx]; }
 
   GlobalBuffer*     Data() { return &m_Global; }
-  Buffer*           Handle() { return m_pGlobalBuffer; }
+  Buffer*           Handle(u32 idx) { return m_pGlobalBuffers[idx]; }
 
 private:
-  DescriptorSet*    m_pDescriptorSet;
-  Buffer*           m_pGlobalBuffer;
+  std::vector<DescriptorSet*>    m_pDescriptorSets;
+  std::vector<Buffer*>           m_pGlobalBuffers;
   GlobalBuffer      m_Global;
 
   friend class Renderer;

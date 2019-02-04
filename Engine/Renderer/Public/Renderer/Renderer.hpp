@@ -276,32 +276,32 @@ private:
   void              CleanUpGraphicsPipelines();
   void              CleanUpFrameBuffers();
   void              CleanUpRenderTextures(b32 fullCleanup);
-  void              CleanUpOffscreen(b32 fullCleanup);
+  void              CleanUpOffscreen();
   void              CleanUpFinalOutputs();
   void              SetUpFinalOutputs();
   void              SetUpForwardPBR();
   void              SetUpRenderTextures(b32 fullSetup);
-  void              SetUpOffscreen(b32 fullSetup);
+  void              SetUpOffscreen();
   void              SetUpDebugPass();
   void              CleanUpDebugPass();
   void              GenerateDebugCmds();
   void              SetUpPBR();
-  void              SetUpSkybox();
-  void              GenerateOffScreenCmds(CommandBuffer* buf);
-  void              GeneratePbrCmds(CommandBuffer* buf);
-  void              GenerateShadowCmds(CommandBuffer* buf);
-  void              GenerateHDRCmds(CommandBuffer* buf);
-  void              GenerateSkyboxCmds(CommandBuffer* buf);
+  void              SetUpSkybox(b32 justSemaphores);
+  void              GenerateOffScreenCmds(CommandBuffer* buf, u32 frameIndex);
+  void              GeneratePbrCmds(CommandBuffer* buf, u32 frameIndex);
+  void              GenerateShadowCmds(CommandBuffer* buf, u32 frameIndex);
+  void              GenerateHDRCmds(CommandBuffer* buf, u32 frameIndex);
+  void              GenerateSkyboxCmds(CommandBuffer* buf, u32 frameIndex);
   void              GenerateFinalCmds(CommandBuffer* buf);
-  void              GenerateForwardPBRCmds(CommandBuffer* buf);
+  void              GenerateForwardPBRCmds(CommandBuffer* buf, u32 frameIndex);
 
   void              BuildOffScreenCmdList();
-  void              BuildPbrCmdList();
+  void              BuildPbrCmdLists();
   void              BuildShadowCmdList();
   void              BuildHDRCmdList();
-  void              BuildSkyboxCmdList();
+  void              BuildSkyboxCmdLists();
   void              BuildForwardPBRCmdList();
-  void              BuildFinalCmdList();
+  void              BuildFinalCmdLists();
   void              UpdateGlobalIlluminationBuffer();
 
   void              SetUpDownscale(b32 FullSetUp);
@@ -312,14 +312,13 @@ private:
   void              CleanUpHDR(b32 fullCleanup);
   void              CleanUpPBR();
   void              UpdateSkyboxCubeMap();
-  void              CleanUpSkybox();
-  void              UpdateSceneDescriptors();
+  void              CleanUpSkybox(b32 justSemaphores);
+  void              UpdateSceneDescriptors(u32 frameIndex);
   void              RenderOverlay();
   void              RenderPrimaryShadows();
   void              CheckCmdUpdate();
   void              SetUpGlobalIlluminationBuffer();
   void              CleanUpGlobalIlluminationBuffer();
-  inline u32        CurrentCmdBufferIdx() { return m_CurrCmdBufferIdx; }
   
   // Signals that tell if renderer needs to update any static data. Is cleaned out every 
   // frame!
@@ -353,26 +352,26 @@ private:
   VulkanRHI*        m_pRhi;
 
   struct {
-    std::vector<CommandBuffer*>   _CmdBuffers;
-    std::vector<CommandBuffer*>   _ShadowCmdBuffers;
-    Semaphore*                    _Semaphore;
-    Semaphore*                    _shadowSemaphore;
+    std::vector<CommandBuffer*>   _cmdBuffers;
+    std::vector<CommandBuffer*>   _shadowCmdBuffers;
+    std::vector<Semaphore*>       _semaphores;
+    std::vector<Semaphore*>       _shadowSemaphores;
   } m_Offscreen; 
 
   struct {
-    CommandBuffer*                _CmdBuffer;
-    Semaphore*                    _Sema;
+    std::vector<CommandBuffer*>   _CmdBuffers;
+    std::vector<Semaphore*>       _Semas;
   } m_Pbr;
 
   struct {
-    CommandBuffer*                _CmdBuffer;
-    Semaphore*                    _Semaphore;
+    std::vector<CommandBuffer*>   _cmdBuffers;
+    std::vector<Semaphore*>       _semaphores;
   } m_Forward;
 
   struct {
     ParamsHDR                     _pushCnst;
-    CommandBuffer*                _CmdBuffer;
-    Semaphore*                    _Semaphore;
+    std::vector<CommandBuffer*>   _CmdBuffers;
+    std::vector<Semaphore*>       _semaphores;
     b32                           _Enabled;
   } m_HDR;
 
@@ -383,22 +382,17 @@ private:
   } m_Downscale;
 
   struct {
-    CommandBuffer*              _cmdBuffer;
-    Semaphore*                  _semaphore;
-  };
-
-  struct {
     Texture2D*                    _envmap;
     Texture2D*                    _irradiance;
     Texture2D*                    _specular;
     Texture2D*                    _brdfLUT;
   } m_skybox;
 
-  CommandBuffer*        m_pSkyboxCmdBuffer;
-  CommandBuffer*        m_pFinalCommandBuffer;
+  std::vector<CommandBuffer*>        m_pSkyboxCmdBuffers;
+  std::vector<CommandBuffer*>        m_pFinalCommandBuffers;
   Fence*                m_cpuFence;
-  Semaphore*            m_pFinalFinished;
-  Semaphore*            m_SkyboxFinished;
+  std::vector<Semaphore*>  m_pFinalFinishedSemas;
+  std::vector<Semaphore*>            m_SkyboxFinishedSignals;
   RenderQuad            m_RenderQuad;
   GraphicsConfigParams  m_currentGraphicsConfigs;
   UIOverlay*            m_pUI;
@@ -412,9 +406,6 @@ private:
   Clusterer*            m_pClusterer;
   TextureCube*          m_preRenderSkybox;
   LightProbe*           m_globalLightProbe;
-
-  u32                   m_CurrCmdBufferIdx;
-  u32                   m_TotalCmdBuffers;
   u32                   m_workGroupSize;
 
   b32                   m_staticUpdate;

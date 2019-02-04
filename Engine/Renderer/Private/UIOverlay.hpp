@@ -29,7 +29,6 @@ class UIOverlay {
 public:
   UIOverlay() 
     : m_pGraphicsPipeline(VK_NULL_HANDLE)
-    , m_pSemaphore(VK_NULL_HANDLE)
     , m_renderPass(nullptr)
     , m_pDescLayout(VK_NULL_HANDLE)
     , m_vertBuffer(nullptr)
@@ -43,15 +42,13 @@ public:
   void                        Render();
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(GlobalDescriptor* global);
+  void                        BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex);
 
-  Semaphore*                  Signal() { return m_pSemaphore; }
+  Semaphore*                  Signal(u32 idx) { return m_pSemaphores[idx]; }
 
   DescriptorSetLayout*        GetMaterialLayout() { return m_pDescLayout; }
 
-  CommandBuffer*              GetCommandBuffer() { return m_CmdBuffer; }
-
-  Semaphore*                  GetSemaphore() { return m_pSemaphore; }
+  CommandBuffer*              GetCommandBuffer(u32 idx) { return m_CmdBuffers[idx]; }
 
   RenderPass*                 GetRenderPass() { return m_renderPass; }
 
@@ -69,8 +66,8 @@ private:
   void                        StreamBuffers();
 
   VulkanRHI*                  m_pRhi;
-  Semaphore*                  m_pSemaphore;
-  CommandBuffer*              m_CmdBuffer;
+  std::vector<Semaphore*>     m_pSemaphores;
+  std::vector<CommandBuffer*> m_CmdBuffers;
   Buffer*                     m_vertStagingBuffer;
   Buffer*                     m_indicesStagingBuffer;
   Buffer*                     m_vertBuffer;

@@ -48,11 +48,6 @@ GraphicsPipeline* transparent_staticShadowPipe = nullptr;
 GraphicsPipeline* transparent_dynamicShadowPipe = nullptr;
 GraphicsPipeline* transparent_colorFilterPipe = nullptr;
 
-GraphicsPipeline* simple_renderWireframePipeline = nullptr;
-GraphicsPipeline* simple_renderSolidPipeline = nullptr;
-extern GraphicsPipeline*  simple_dynamicWireframePipeline = nullptr;
-extern GraphicsPipeline*  simple_dynamicSolidPipeline = nullptr;
-
 GraphicsPipeline* gbuffer_PipelineKey               = nullptr;
 GraphicsPipeline* gbuffer_morphTargetPipeline     = nullptr;
 GraphicsPipeline* gbuffer_StaticPipelineKey         = nullptr;
@@ -1445,7 +1440,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   CreateTexture(pRhi);
 
   VkDescriptorBufferInfo worldInfo = {};
-  worldInfo.buffer = pDescriptor->Handle()->NativeBuffer();
+  worldInfo.buffer = pDescriptor->Handle(pRhi->CurrentFrame())->NativeBuffer();
   worldInfo.offset = 0;
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 
@@ -1506,7 +1501,7 @@ void AntiAliasingFXAA::CreateDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal)
+void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, u32 frameIndex)
 {
   VkImageSubresourceRange subrange = {};
   subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1528,7 +1523,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
 
   VkDescriptorSet sets[] = {
-    pGlobal->Set()->Handle(),
+    pGlobal->Set(frameIndex)->Handle(),
     m_descSet->Handle()
   };
 
@@ -1568,5 +1563,61 @@ void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
   samplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
   samplerCi.unnormalizedCoordinates = VK_FALSE;
   m_outputSampler->Initialize(samplerCi);
+}
+
+
+void DebugManager::InitializeRenderPass(VulkanRHI* pRhi)
+{
+  Texture* pbrFinal = pbr_FinalTextureKey;
+  std::array<VkAttachmentDescription, 1> attachments;
+  attachments[0].format = pbrFinal->Format();
+  attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+  attachments[0].samples = pbrFinal->Samples();
+  attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+  std::array<VkAttachmentReference, 1> refs;
+  refs[0].attachment = 0;
+  refs[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  VkAttachmentReference depthRef;
+  depthRef.attachment = 1;
+  depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+  VkSubpassDescription debugSubpass = { };
+  debugSubpass.colorAttachmentCount = 1;
+  debugSubpass.inputAttachmentCount = 0;
+  debugSubpass.pColorAttachments = refs.data();
+  debugSubpass.pDepthStencilAttachment = &depthRef;
+  debugSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+  VkRenderPassCreateInfo rpCi = { };
+  rpCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+  rpCi.attachmentCount = attachments.size();
+  rpCi.pAttachments = attachments.data();
+  rpCi.pSubpasses = &debugSubpass;
+  rpCi.subpassCount = 1;
+
+  m_renderPass = pRhi->CreateRenderPass();
+  m_renderPass->Initialize(rpCi);
+}
+
+
+void DebugManager::Initialize(VulkanRHI* pRhi)
+{
+  InitializeRenderPass(pRhi);
+
+}
+
+
+void DebugManager::CleanUp(VulkanRHI* pRhi)
+{
+  if (m_renderPass) {
+    pRhi->FreeRenderPass(m_renderPass);
+    m_renderPass = nullptr;
+  }
 }
 } // Recluse

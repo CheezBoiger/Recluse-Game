@@ -210,6 +210,10 @@ public:
 
   void                          ResetFences(const u32 fenceCount, const VkFence* pFences);
 
+  void                          WaitForFrameInFlightFence();
+
+  VkFence                       CurrentInFlightFence() { return mSwapchain.InFlightFence(m_currentFrame); }
+
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
   // If no signals are specified, or signalSemaphoreCount is equal to 0, cmdbuffer will default
@@ -223,7 +227,7 @@ public:
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
   // requery their resources as they have been recreated!
-  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 desiredBuffers = 0);
+  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount = 0);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.
@@ -233,7 +237,8 @@ public:
   void                          SwapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
 
   // Obtain the Graphics Finished Semaphore from swapchain.
-  VkSemaphore                   GraphicsFinishedSemaphore() { return mLogicalDevice.GraphicsFinishedSemaphore(); }
+  VkSemaphore                   CurrentGraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(m_currentFrame); }
+  VkSemaphore                   CurrentImageAvailableSemaphore() { return mSwapchain.ImageAvailableSemaphore(m_currentFrame); }
 
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!
@@ -252,6 +257,8 @@ public:
   u32                           GraphicsQueueCount() const { return mLogicalDevice.GraphicsQueueCount(); }
   u32                           TransferQueueCount() const { return mLogicalDevice.TransferQueueCount(); }
   u32                           ComputeQueueCount() const { return mLogicalDevice.ComputeQueueCount(); }
+  u32                           CurrentFrame() const { return m_currentFrame; }
+  u32                           BufferingCount() const { return mSwapchain.CurrentBufferCount(); }
   const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
 
 private:
@@ -298,5 +305,6 @@ private:
 
   SwapchainCmdBufferBuildFunc   mSwapchainCmdBufferBuild;
   u32                           mCurrDescSets;
+  u32                           m_currentFrame;
 };
 } // Recluse

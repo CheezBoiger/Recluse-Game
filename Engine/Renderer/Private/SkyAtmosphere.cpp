@@ -521,7 +521,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput)
+void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 frameIndex)
 {
   CommandBuffer* cmdBuffer = m_pCmdBuffer;
   if (pOutput) {
@@ -562,7 +562,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput)
     GlobalDescriptor* global = gRenderer().GlobalNative();
     RenderQuad*       quad = gRenderer().GetRenderQuad();
 
-    VkDescriptorSet globalDesc = global->Set()->Handle();
+    VkDescriptorSet globalDesc = global->Set(frameIndex)->Handle();
     VkBuffer vertexbuf = quad->Quad()->Handle()->NativeBuffer();
     VkBuffer indexbuf = quad->Indices()->Handle()->NativeBuffer();
     VkIndexType indexType = GetNativeIndexType(quad->Indices()->GetSizeType());

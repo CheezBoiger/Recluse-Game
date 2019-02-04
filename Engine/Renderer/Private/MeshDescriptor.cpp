@@ -35,54 +35,61 @@ Matrix4 JointBuffer::defaultMatrices[64] = {
 MeshDescriptor::MeshDescriptor()
   : m_Visible(true)
   , m_Static(true) 
-  , m_bNeedsUpdate(true)
 {
   m_ObjectData._HasJoints = false;
   m_ObjectData._LoD = 0.0f;
   m_ObjectData._w0 = 0.0f;
   m_ObjectData._w1 = 0.0f;
-  m_meshSet = nullptr;
-
 }
 
 
 MeshDescriptor::~MeshDescriptor()
 {
-  if (m_meshSet) {
-    Log(rError) << "Mesh Descriptor Set were not cleaned up before destruction of this object!\n";
-  }
-  if (m_pObjectBuffer) {
-    R_DEBUG(rWarning, "Object buffer from mesh was not properly cleaned up!\n");
+  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+    if (m_pGpuHandles[i]._pSet) {
+      Log(rError) << "Mesh Descriptor Set were not cleaned up before destruction of this object!\n";
+    }
+    if (m_pGpuHandles[i]._pBuf) {
+      R_DEBUG(rWarning, "Object buffer from mesh was not properly cleaned up!\n");
+    }
   }
 }
 
 
 void MeshDescriptor::Initialize(VulkanRHI* pRhi)
 {
-  // Create the render buffer for the object.
-  m_pObjectBuffer = pRhi->CreateBuffer();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
   VkBufferCreateInfo objectCI = {};
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   objectCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   objectCI.size = objectSize;
   objectCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-  m_pObjectBuffer->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-  m_pObjectBuffer->Map();
-  m_meshSet = pRhi->CreateDescriptorSet();
-
   DescriptorSetLayout* MeshLayout = MeshSetLayoutKey;
-  m_meshSet->Allocate(pRhi->DescriptorPool(), MeshLayout);
+
+  m_pGpuHandles.resize(pRhi->BufferingCount());
+
+  // Create the render buffer for the object.
+  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+    m_pGpuHandles[i]._pBuf = pRhi->CreateBuffer();
+    m_pGpuHandles[i]._pBuf->Initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pGpuHandles[i]._pBuf->Map();
+    m_pGpuHandles[i]._pSet = pRhi->CreateDescriptorSet();
+    m_pGpuHandles[i]._pSet->Allocate(pRhi->DescriptorPool(), MeshLayout);
+    m_pGpuHandles[i]._updates = MESH_BUFFER_UPDATE_BIT | MESH_DESCRIPTOR_UPDATE_BIT;
+  }
 }
 
 
-void MeshDescriptor::Update(VulkanRHI* pRhi)
+void MeshDescriptor::Update(VulkanRHI* pRhi, u32 frameIndex)
 {
   // Mesh
-  if ((m_bNeedsUpdate & MESH_DESCRIPTOR_UPDATE_BIT)) {
+  Buffer* pBuf = m_pGpuHandles[frameIndex]._pBuf;
+  DescriptorSet* pSet = m_pGpuHandles[frameIndex]._pSet;
+  u32& updates = m_pGpuHandles[frameIndex]._updates;
+
+  if ((updates & MESH_DESCRIPTOR_UPDATE_BIT)) {
     VkDescriptorBufferInfo objBufferInfo = {};
-    objBufferInfo.buffer = m_pObjectBuffer->NativeBuffer();
+    objBufferInfo.buffer = pBuf->NativeBuffer();
     objBufferInfo.offset = 0;
     objBufferInfo.range = sizeof(ObjectBuffer);
     VkWriteDescriptorSet MeshWriteSet = {};
@@ -93,22 +100,23 @@ void MeshDescriptor::Update(VulkanRHI* pRhi)
     MeshWriteSet.pBufferInfo = &objBufferInfo;
     MeshWriteSet.descriptorCount = 1;
     MeshWriteSet.pNext = nullptr;
-    m_meshSet->Update(1, &MeshWriteSet);
+    pSet->Update(1, &MeshWriteSet);
     //SwapDescriptorSet();
   }
 
-  if ((m_bNeedsUpdate & MESH_BUFFER_UPDATE_BIT)) {
-    R_ASSERT(m_pObjectBuffer->Mapped(), "Object buffer was not mapped.");
-    memcpy(m_pObjectBuffer->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
+  if ((updates & MESH_BUFFER_UPDATE_BIT)) {
+    R_ASSERT(pBuf->Mapped(), "Object buffer was not mapped.");
+    memcpy(pBuf->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
 
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = m_pObjectBuffer->Memory();
+    range.memory = pBuf->Memory();
     range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
-  m_bNeedsUpdate = 0;
+  // configure back to 0, since we have updated this buffer.
+  updates = 0;
 }
 
 
@@ -116,32 +124,35 @@ void MeshDescriptor::CleanUp(VulkanRHI* pRhi)
 {
   // Need to wait before we can remove this object in cmd buffer.
   pRhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
-  if (m_meshSet) {
-    pRhi->FreeDescriptorSet(m_meshSet);
-    m_meshSet = nullptr;
-  }
+  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+    if (m_pGpuHandles[i]._pSet) {
+      pRhi->FreeDescriptorSet(m_pGpuHandles[i]._pSet);
+      m_pGpuHandles[i]._pSet = nullptr;
+    }
 
-  if (m_pObjectBuffer) {
-    m_pObjectBuffer->UnMap();
-    pRhi->FreeBuffer(m_pObjectBuffer);
-    m_pObjectBuffer = nullptr;
+    if (m_pGpuHandles[i]._pBuf) {
+      m_pGpuHandles[i]._pBuf->UnMap();
+      pRhi->FreeBuffer(m_pGpuHandles[i]._pBuf);
+      m_pGpuHandles[i]._pBuf = nullptr;
+    }
   }
 }
 
 
 JointDescriptor::JointDescriptor()
-  : m_pJointsBuffer(nullptr)
-  , m_jointSet(nullptr)
-  , m_bNeedsUpdate(true)
 {
 }
 
 
 JointDescriptor::~JointDescriptor()
 {
-  if (m_pJointsBuffer) {
-    R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
+  DEBUG_OP(
+  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+    if (m_pJointHandles[i]._pBuf) {
+      R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
+    }
   }
+  );
 }
 
 
@@ -153,60 +164,68 @@ void JointDescriptor::Initialize(VulkanRHI* pRhi)
   jointCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   jointCI.size = jointsSize;
 
-  m_pJointsBuffer = pRhi->CreateBuffer();
-  m_pJointsBuffer->Initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-  m_pJointsBuffer->Map();
+  m_pJointHandles.resize(pRhi->BufferingCount());
 
-  DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
+  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+    m_pJointHandles[i]._pBuf = pRhi->CreateBuffer();
+    m_pJointHandles[i]._pBuf->Initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pJointHandles[i]._pBuf->Map();
 
-  m_jointSet = pRhi->CreateDescriptorSet();
+    DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
 
-  m_jointSet->Allocate(pRhi->DescriptorPool(), jointLayout);
-
-  UpdateJointSets();
+    m_pJointHandles[i]._pSet = pRhi->CreateDescriptorSet();
+    m_pJointHandles[i]._pSet->Allocate(pRhi->DescriptorPool(), jointLayout);
+    UpdateJointSets(i);
+  }
 }
 
 
-void JointDescriptor::Update(VulkanRHI* pRhi)
+void JointDescriptor::Update(VulkanRHI* pRhi, u32 frameIndex)
 {
-  if ((m_bNeedsUpdate & JOINT_DESCRIPTOR_UPDATE_BIT)) {
+  UpdateManager& m = m_pJointHandles[frameIndex];
+  u32 updates = m._updates;
+  Buffer* pBuf = m._pBuf;
+
+  if ((updates & JOINT_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rDebug, "Updating Joint Sets.\n");
-    UpdateJointSets();
+    UpdateJointSets(frameIndex);
   }
 
-  if ((m_bNeedsUpdate & JOINT_BUFFER_UPDATE_BIT)) {
-    R_ASSERT(m_pJointsBuffer->Mapped(), "Joint buffer was not mapped.!");
-    memcpy(m_pJointsBuffer->Mapped(), &m_jointsData, sizeof(JointBuffer));
+  if ((updates & JOINT_BUFFER_UPDATE_BIT)) {
+    R_ASSERT(pBuf->Mapped(), "Joint buffer was not mapped.!");
+    memcpy(pBuf->Mapped(), &m_jointsData, sizeof(JointBuffer));
 
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = m_pJointsBuffer->Memory();
+    range.memory = pBuf->Memory();
     range.size = VK_WHOLE_SIZE;
     pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
-  m_bNeedsUpdate = 0;
+  m._updates = 0;
 }
 
 
 void JointDescriptor::CleanUp(VulkanRHI* pRhi)
 {
-  pRhi->FreeDescriptorSet(m_jointSet);
-  m_jointSet = nullptr;
+  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+    pRhi->FreeDescriptorSet(m_pJointHandles[i]._pSet);
+    m_pJointHandles[i]._pSet = nullptr;
 
-  if (m_pJointsBuffer) {
-    pRhi->FreeBuffer(m_pJointsBuffer);
-    m_pJointsBuffer = nullptr;
+    if (m_pJointHandles[i]._pBuf) {
+      pRhi->FreeBuffer(m_pJointHandles[i]._pBuf);
+      m_pJointHandles[i]._pBuf = nullptr;
+    }
   }
 }
 
 
-void JointDescriptor::UpdateJointSets()
+void JointDescriptor::UpdateJointSets(u32 frameIndex)
 {
   // Bones
   R_DEBUG(rNotify, "Updating bone descriptor set.\n");
   VkDescriptorBufferInfo boneBufferInfo = {};
-  boneBufferInfo.buffer = m_pJointsBuffer->NativeBuffer();
+  boneBufferInfo.buffer = m_pJointHandles[frameIndex]._pBuf->NativeBuffer();
   boneBufferInfo.offset = 0;
   boneBufferInfo.range = sizeof(JointBuffer);
   VkWriteDescriptorSet BoneWriteSet = {};
@@ -218,6 +237,6 @@ void JointDescriptor::UpdateJointSets()
   BoneWriteSet.descriptorCount = 1;
   BoneWriteSet.pNext = nullptr;
 
-  m_jointSet->Update(1, &BoneWriteSet);
+  m_pJointHandles[frameIndex]._pSet->Update(1, &BoneWriteSet);
 }
 } // Recluse

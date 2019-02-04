@@ -184,11 +184,11 @@ public:
   void                InitializePipeline(VulkanRHI* pRhi);
 
   // Generate render commands for the given particles.
-  void                GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList);
+  void                GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
 
   // Generate commands to compute particle positions and life. This will generate particle
   // computation commands for the given particle system.
-  void                GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList);
+  void                GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
 
   DescriptorSetLayout* GetParticleSystemDescriptorLayout() { return m_pParticleDescriptorSetLayout; }
 private:

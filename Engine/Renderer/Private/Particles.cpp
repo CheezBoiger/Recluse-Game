@@ -879,7 +879,7 @@ ParticleEngine::~ParticleEngine()
 
 
 void ParticleEngine::GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, 
-  CmdList<ParticleSystem*>& particleList)
+  CmdList<ParticleSystem*>& particleList, u32 frameIndex)
 {
   if (particleList.Size() == 0) return;
 
@@ -888,7 +888,7 @@ void ParticleEngine::GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
     VkDescriptorSet sets[] = {
-      global->Set()->Handle(),
+      global->Set(frameIndex)->Handle(),
       system->GetSet()->Handle()
     };
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->Layout(),
@@ -899,7 +899,7 @@ void ParticleEngine::GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
 
 
 void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, 
-  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList)
+  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex)
 {
   if (particleList.Size() == 0) return;
   VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
@@ -949,7 +949,7 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
     }
     VkDeviceSize offset[] = { 0 };
     VkDescriptorSet sets[] = { 
-      global->Set()->Handle(),
+      global->Set(frameIndex)->Handle(),
       system->GetSet()->Handle()
     };
     VkBuffer nativeBuffer = system->GetParticleBuffer()->NativeBuffer();

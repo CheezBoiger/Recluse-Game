@@ -240,7 +240,7 @@ public:
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
     gAudio().LoadSound("wave.mp3", true, true, false);
-    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 1.0f);
+    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 0.5f);
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
@@ -262,7 +262,7 @@ public:
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
       m_pParticleSystem->EnableSorting(false);
-      m_pParticleSystem->Enable(false);
+      m_pParticleSystem->Enable(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER

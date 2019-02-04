@@ -61,13 +61,6 @@ extern GraphicsPipeline*  debug_linePipeline;
 extern GraphicsPipeline*  debug_wireframePipeline;
 extern RenderPass*        debug_renderPass;
 
-// Simple renderer pipeline requires no material information, 
-// is not shaded with shadow, and has no ibl. For debugging purposes.
-extern GraphicsPipeline*  simple_staticWireframePipeline;
-extern GraphicsPipeline*  simple_staticSolidPipeline;
-extern GraphicsPipeline*  simple_dynamicWireframePipeline;
-extern GraphicsPipeline*  simple_dynamicSolidPipeline;
-
 extern GraphicsPipeline* ShadowMapPipelineKey;
 extern GraphicsPipeline* shadowMap_staticMorphTargetsPipeline;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;
@@ -274,7 +267,7 @@ public:
   void    Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
   void    CleanUp(VulkanRHI* pRhi);
 
-  void    GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOut, GlobalDescriptor* pDescriptor);
+  void    GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOut, GlobalDescriptor* pDescriptor, u32 frameIndex);
   void    UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
   Texture*  GetOutput() { return m_output; }
   Sampler*  GetOutputSampler() { return m_outputSampler; }
@@ -292,5 +285,31 @@ private:
   Sampler*                m_outputSampler;
   DescriptorSetLayout*    m_layout;
   DescriptorSet*          m_descSet;
+};
+
+
+class DebugManager {
+public:
+  DebugManager()
+    : m_renderPass(nullptr)
+    , m_staticWireframePipeline(nullptr)
+    , m_dynamicWireframePipeline(nullptr) { }
+
+  void                Initialize(VulkanRHI* pRhi);
+  void                CleanUp(VulkanRHI* pRhi);
+
+  RenderPass*         GetRenderPass() { return m_renderPass; }
+  GraphicsPipeline*   GetWireFrameStaticPipeline() { }
+  GraphicsPipeline*   GetWireFrameDynamicPipeline() { }
+
+private:
+  void                InitializeRenderPass(VulkanRHI* pRhi);
+  // Simple renderer pipeline requires no material information, 
+  // is not shaded with shadow, and has no ibl. For debugging purposes.
+  GraphicsPipeline*  m_staticWireframePipeline;
+  GraphicsPipeline*  m_staticSolidPipeline;
+  GraphicsPipeline*  m_dynamicWireframePipeline;
+  GraphicsPipeline*  m_dynamicSolidPipeline;
+  RenderPass*        m_renderPass;
 };
 } // Recluse

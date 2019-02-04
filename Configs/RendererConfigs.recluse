@@ -18,6 +18,7 @@
 [Particles] = medium
 [Decals] = medium
 [RTX] = false
+[SSAO] = none
 [PhysicsQuality] = high
 [AudioQuality] = high
 [MasterVolume] = 100.0

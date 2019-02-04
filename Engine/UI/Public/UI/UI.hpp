@@ -14,6 +14,7 @@ namespace Recluse {
 
 class Texture2D;
 class Renderer;
+class GUIImage;
 class BufferUI;
 
 // User Interface manager.
@@ -36,9 +37,13 @@ public:
   // TODO(): Needs to be more object oriented in the API level, instead of this way.
   void                      SetForegroundColor(const Vector4& color) { m_currForeColor = color; }
   void                      SetBackgroundColor(const Vector4& color) { m_currBackColor = color; }
+  
+  void                      ImportFont(const std::string& fontpath);
+
   void                      BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 height);
   void                      EmitText(const std::string& text, r32 x, r32 y, r32 width, r32 height);
   void                      EndCanvas();
+  void                      EmitImage(GUIImage* image);
 
 private:
   r32                     m_currX;

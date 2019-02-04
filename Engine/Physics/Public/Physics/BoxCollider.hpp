@@ -8,17 +8,20 @@
 namespace Recluse {
 
 
-
 class BoxCollider : public Collider {
-  static MeshData* kBoxMesh;
 public:
   BoxCollider()
     : Collider(PHYSICS_COLLIDER_TYPE_BOX) { }
 
+
+#if R_ENABLE_PHYSICS_DEBUG
+private:
+  static MeshData* kBoxMesh;
+public:
   static void InitMeshDebugData();
   static void CleanUpMeshDebugData();
 
   MeshData* GetDebugMeshData() override { return kBoxMesh; }
-
+#endif
 };
 } // Recluse

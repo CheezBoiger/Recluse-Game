@@ -139,17 +139,17 @@ public:
   LightViewSpace&           StaticViewSpace() { return m_staticViewSpace; }
 
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
-  void                      Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1);
+  void                      Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1, u32 frameIndex = 0);
 
   void                      SetViewportDim(r32 dim) { m_rShadowViewportDim = dim; }
 
-  void                      GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds);
-  void                      GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds);
+  void                      GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, u32 frameIndex);
+  void                      GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, u32 frameIndex);
 
   void                      SignalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
-  DescriptorSet*            ShadowMapViewDescriptor() { return m_pLightViewDescriptorSet; }
-  DescriptorSet*            StaticShadowMapViewDescriptor() { return m_pStaticLightViewDescriptorSet; }
+  DescriptorSet*            ShadowMapViewDescriptor(u32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            StaticShadowMapViewDescriptor(u32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
 
   Sampler*                  _pSampler;
   b32                       StaticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
@@ -224,28 +224,28 @@ private:
   };
   
   // Point map based framebuffer.
-  FrameBuffer*              m_pStaticOmniFrameBuffer;
-  FrameBuffer*              m_pDynamicOmniFrameBuffer;
-  Buffer*                   m_pLightViewBuffer;
-  Buffer*                   m_pStaticLightViewBuffer;
-  Buffer*                   m_pCascadeLightViewBuffer;
-  DescriptorSet*            m_pLightViewDescriptorSet;
-  DescriptorSet*            m_pStaticLightViewDescriptorSet;
-  DescriptorSet*            m_pCascadeDescriptorSet;
-  Texture*                  m_pOmniMapArray;
-  Texture*                  m_pStaticOmniMapArray;
-  Texture*                  m_pSpotLightMapArray;
-  Texture*                  m_pStaticSpotLightMapArray;
-  Texture*                  m_pCascadeShadowMapD;
-  LightViewSpace            m_viewSpace;
-  LightViewSpace            m_staticViewSpace;
-  LightViewCascadeSpace     m_cascadeViewSpace;
-  r32                       m_rShadowViewportDim;
-  b32                       m_staticMapNeedsUpdate;
-  u32                       m_numPointLights;
-  std::vector<Vector3>      m_pointMapPositions;
-  std::vector<Cascade>      m_cascades;
-  std::vector<ShadowMapLayer> m_spotLightShadowMaps;
+  FrameBuffer*                  m_pStaticOmniFrameBuffer;
+  FrameBuffer*                  m_pDynamicOmniFrameBuffer;
+  std::vector<Buffer*>          m_pLightViewBuffers;
+  std::vector<Buffer*>          m_pStaticLightViewBuffers;
+  std::vector<Buffer*>          m_pCascadeLightViewBuffers;
+  std::vector<DescriptorSet*>   m_pLightViewDescriptorSets;
+  std::vector<DescriptorSet*>   m_pStaticLightViewDescriptorSets;
+  std::vector<DescriptorSet*>   m_pCascadeDescriptorSets;
+  Texture*                      m_pOmniMapArray;
+  Texture*                      m_pStaticOmniMapArray;
+  Texture*                      m_pSpotLightMapArray;
+  Texture*                      m_pStaticSpotLightMapArray;
+  LightViewSpace                m_viewSpace;
+  LightViewSpace                m_staticViewSpace;
+  LightViewCascadeSpace         m_cascadeViewSpace;
+  r32                           m_rShadowViewportDim;
+  b32                           m_staticMapNeedsUpdate;
+  u32                           m_numPointLights;
+  std::vector<Texture*>         m_pCascadeShadowMapD;
+  std::vector<Vector3>          m_pointMapPositions;
+  std::vector<std::vector<Cascade>>          m_cascades;
+  std::vector<ShadowMapLayer>   m_spotLightShadowMaps;
 };
 
 
@@ -260,7 +260,7 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer);
+  void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIndex);
 
   // Initialize. 
   void                Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows = true);
@@ -305,7 +305,7 @@ private:
 
 #if 0
   DescriptorSet*      m_pLightViewDescriptorSet;
-
+w
   // After computing the clusters to shade our lights, we store them in here!
   Buffer*             m_pLightGrid;
 

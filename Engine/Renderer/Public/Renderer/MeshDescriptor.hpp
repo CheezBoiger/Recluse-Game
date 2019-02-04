@@ -8,6 +8,8 @@
 #include "Core/Math/Matrix4.hpp"
 #include "Core/Math/Quaternion.hpp"
 
+#include <vector>
+
 namespace Recluse {
 
 class Buffer;
@@ -41,6 +43,13 @@ struct JointBuffer {
   Matrix4 _mJoints[kMaxNumberOfJointMatrices];
 };
 
+
+struct UpdateManager {
+  DescriptorSet*  _pSet;
+  Buffer*         _pBuf;
+  b32             _updates;
+};
+
 // MeshDesciptor is a descriptor that defines how to render an object. This is needed in order
 // to show something on display, as the renderer relies heavily on this object for
 // command buffer creation. It basically defines the transform of the meshdata to render, as well
@@ -54,33 +63,32 @@ public:
   void  Initialize(VulkanRHI* pRhi);
   void  CleanUp(VulkanRHI* pRhi);
 
-  void  Update(VulkanRHI* pRhi);
+  void  Update(VulkanRHI* pRhi, u32 frameIndex);
 
   void          SetVisible(b32 enable) { m_Visible = enable; }
   void          PushUpdate(b32 updateBits = MESH_BUFFER_UPDATE_BIT) 
-                  { m_bNeedsUpdate |= updateBits; }
+   { for (u32 i = 0; i < m_pGpuHandles.size(); ++i) { m_pGpuHandles[i]._updates |= updateBits; } }
 
   ObjectBuffer* ObjectData() { return &m_ObjectData; }
-  DescriptorSet*          CurrMeshSet() { return m_meshSet; }
+  DescriptorSet*          CurrMeshSet(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pSet; }
 
   b32           Visible() const { return m_Visible; }
   b32           Static() const { return m_Static; }
-  Buffer*       NativeObjectBuffer() { return m_pObjectBuffer; }
+  Buffer*       NativeObjectBuffer(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pBuf; }
 
 protected:
 
   //void                    SwapDescriptorSet() { m_currIdx = (m_currIdx == 0 ? 1 : 0); }
 
   ObjectBuffer  m_ObjectData;
-  Buffer*       m_pObjectBuffer;
-  b32           m_bNeedsUpdate;
 
   b32             m_Visible;
   b32             m_Static;
   
   u32             m_currIdx;
-  DescriptorSet*  m_meshSet;
-  
+
+  std::vector<UpdateManager> m_pGpuHandles;
+
   friend class Renderer;
 };
 
@@ -92,23 +100,21 @@ public:
   
   void  Initialize(VulkanRHI* pRhi);
   void  CleanUp(VulkanRHI* pRhi);
-  void  Update(VulkanRHI* pRhi);  
+  void  Update(VulkanRHI* pRhi, u32 frameIndex);  
 
   JointBuffer*  JointData() { return &m_jointsData; }
-  Buffer*       NativeJointBuffer() { return m_pJointsBuffer; }
-  DescriptorSet*  CurrJointSet() { return m_jointSet; }
+  Buffer*       NativeJointBuffer(u32 frameIndex) { return m_pJointHandles[frameIndex]._pBuf; }
+  DescriptorSet*  CurrJointSet(u32 frameIndex) { return m_pJointHandles[frameIndex]._pSet; }
   void          PushUpdate(b32 bits = JOINT_BUFFER_UPDATE_BIT) 
-    { m_bNeedsUpdate |= bits; }
+    { for(u32 i = 0; i < m_pJointHandles.size(); ++i)  m_pJointHandles[i]._updates |= bits; }
 
-  void          UpdateJointSets();
+  void          UpdateJointSets(u32 frameIndex);
 
   u32   NumJoints() { return JointBuffer::kMaxNumberOfJointMatrices; }
 
 private:
-  b32           m_bNeedsUpdate;
+  std::vector<UpdateManager> m_pJointHandles;
   JointBuffer   m_jointsData;
-  Buffer*       m_pJointsBuffer;
-  DescriptorSet*  m_jointSet;
   friend class  Renderer;
 };
 } // Recluse

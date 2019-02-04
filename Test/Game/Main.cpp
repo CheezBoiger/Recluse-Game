@@ -247,7 +247,7 @@ public:
     brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
-      img.Load("Assets/World/cubemap.png");
+      img.Load("Assets/World/testcubemap.png");
       cubemap0->Update(img);
       img.CleanUp();
       img.Load("Assets/World/Probe0.png");
@@ -487,7 +487,7 @@ int main(int c, char* argv[])
       Vector3(  10.0f,    0.0f,     0.0f),
       Vector3(  0.0f,   -14.0f,     3.0f)
   };
-  //gEngine().SetEnvProbeTargets(positions.data(), positions.size());
+  gEngine().SetEnvProbeTargets(positions.data(), positions.size());
   gEngine().Update();
   Texture2D* g = gRenderer().GenerateBRDFLUT();
   g->Save("brdf.png");

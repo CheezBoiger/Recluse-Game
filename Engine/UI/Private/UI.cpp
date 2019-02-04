@@ -1,8 +1,10 @@
 // Copyright (c) 2017 Recluse Project. All rights reserved.
 #include "UI.hpp"
+#include "GUIImage.hpp"
 
 #include "Renderer/Renderer.hpp"
 #include "Renderer/RenderCmd.hpp"
+
 #include "Core/Exception.hpp"
 
 
@@ -83,5 +85,10 @@ void UI::BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 heig
 void UI::EndCanvas()
 {
   m_currUiBuffer->EndCanvas();
+}
+
+
+void UI::EmitImage(GUIImage* image)
+{
 }
 } // Recluse

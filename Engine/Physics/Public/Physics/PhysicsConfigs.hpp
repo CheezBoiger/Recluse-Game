@@ -11,6 +11,8 @@
 #include "Renderer/Vertex.hpp"
 #include "Renderer/Mesh.hpp"
 
+#define R_ENABLE_PHYSICS_DEBUG 1
+
 
 namespace Recluse {
 
