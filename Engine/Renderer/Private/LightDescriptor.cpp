@@ -500,9 +500,6 @@ void ShadowMapSystem::InitializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
       ViewCi.subresourceRange.baseArrayLayer = j;
       ViewCi.image = m_pCascadeShadowMapD[i]->Image();
       cascade[j]._view = pRhi->CreateImageView(ViewCi);
-      cascade[j]._framebuffer = pRhi->CreateFrameBuffer();
-      InitializeShadowMapFrameBuffer(cascade[j]._framebuffer, k_pDynamicRenderPass, m_pCascadeShadowMapD[i],
-        cascade[j]._view->Handle());
       cascadeViews[j] = cascade[j]._view->Handle();
     }
 
@@ -1019,7 +1016,7 @@ void ShadowMapSystem::GenerateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
   viewport.x = 0.0f;
 
   VkRect2D scissor = {};
-  scissor.extent = { m_cascades[frameIndex][0]._framebuffer->Width(), m_cascades[frameIndex][0]._framebuffer->Height() };
+  scissor.extent = { pFb->Width(), pFb->Height() };
   scissor.offset = { 0, 0 };
 
   auto render = [&](PrimitiveRenderCmd& renderCmd, const Matrix4& lightVP, u32 subpassIdx) -> void {
@@ -1329,10 +1326,6 @@ void ShadowMapSystem::CleanUpShadowMapCascades(VulkanRHI* pRhi)
       if ( cascade[j]._view ) { 
         pRhi->FreeImageView(cascade[j]._view);
         cascade[j]._view = nullptr;
-      }
-      if ( cascade[j]._framebuffer ) {
-        pRhi->FreeFrameBuffer( cascade[j]._framebuffer );
-        cascade[j]._framebuffer = nullptr;
       }
     }
   }

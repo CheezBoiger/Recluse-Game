@@ -214,7 +214,6 @@ private:
   //FrameBuffer*              m_pDynamicFrameBuffer;
 
   struct Cascade {
-    FrameBuffer*            _framebuffer;
     ImageView*              _view;
   };
 
