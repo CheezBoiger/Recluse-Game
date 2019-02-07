@@ -53,7 +53,7 @@ struct PointLight {
   r32               _Range;
   r32               _Intensity;
   i32               _Enable;
-  i32               _Pad;
+  i32               _shadowIndex;
 
   PointLight()
     : _Enable(false), _Range(1.0f) { }
@@ -68,6 +68,9 @@ struct SpotLight {
   r32               _OuterCutOff;
   r32               _InnerCutOff;
   i32               _Enable;
+  r32               _goboIndex;
+  r32               _shadowIndex;
+  Vector2           _pad;
 };
 
 
@@ -191,10 +194,11 @@ private:
   // common used pipelines.
   // TODO(): We don't need to create multiple instances of these pipelines, we must place them in 
   // a static object.
-  static GraphicsPipeline*  k_pSkinnedPipeline;
-  static GraphicsPipeline*  k_pSkinnedMorphPipeline;
-  static GraphicsPipeline*  k_pStaticPipeline;
-  static GraphicsPipeline*  k_pStaticMorphPipeline;
+  static std::vector<GraphicsPipeline*>  k_pSkinnedPipeline;
+  static std::vector<GraphicsPipeline*>  k_pSkinnedMorphPipeline;
+  static std::vector<GraphicsPipeline*>  k_pStaticMorphPipeline;
+  static std::vector<GraphicsPipeline*>  k_pStaticPipeline;
+
   static GraphicsPipeline*  k_pStaticSkinnedPipeline;
   static GraphicsPipeline*  k_pStaticSkinnedMorphPipeline;
   static GraphicsPipeline*  k_pStaticStaticPipeline;
@@ -203,6 +207,7 @@ private:
   
   static RenderPass*        k_pDynamicRenderPass;
   static RenderPass*        k_pStaticRenderPass;
+  static RenderPass*        k_pCascadeRenderPass;
 
   // Items that are dependent on each instance of a Shadow Mapping system.
   FrameBuffer*              m_pStaticFrameBuffer;
@@ -224,6 +229,7 @@ private:
   };
   
   // Point map based framebuffer.
+  std::vector<FrameBuffer*>     m_pCascadeFrameBuffers;
   FrameBuffer*                  m_pStaticOmniFrameBuffer;
   FrameBuffer*                  m_pDynamicOmniFrameBuffer;
   std::vector<Buffer*>          m_pLightViewBuffers;

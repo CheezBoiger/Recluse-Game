@@ -192,7 +192,7 @@ BoxCollider* BulletPhysics::CreateBoxCollider(const Vector3& scale)
   btCollisionShape* pShape = new btBoxShape(
     btVector3(btScalar(scale.x), btScalar(scale.y), btScalar(scale.z)));
   kCollisionShapes[collider->GetUUID()] = pShape;
-  
+  collider->SetExtent(scale);
   return collider;
 }
 
@@ -440,7 +440,7 @@ SphereCollider* BulletPhysics::CreateSphereCollider(r32 radius)
   SphereCollider* sphere = new SphereCollider(radius);
   btSphereShape* nativeSphere = new btSphereShape(btScalar(radius));
   kCollisionShapes[sphere->GetUUID()] = nativeSphere;
-  
+  sphere->SetRadius(radius);
   return sphere;
 }
 
@@ -536,12 +536,12 @@ void BulletPhysics::UpdateCompoundCollider(RigidBody* body, CompoundCollider* co
   }
 
   auto& colliders = collider->GetColliders();
-  for (i32 i = 0; i < colliders.size(); ++i) {
-    btCollisionShape* shape = GetCollisionShape(colliders[i]);
+  for (auto pCollider : colliders) {
+    btCollisionShape* shape = GetCollisionShape(pCollider);
     if (!shape) continue;
     btTransform localTransform;
     localTransform.setIdentity();
-    Vector3 center = colliders[i]->GetCenter();
+    Vector3 center = pCollider->GetCenter();
     localTransform.setOrigin(btVector3(
       btScalar(center.x),
       btScalar(center.y),

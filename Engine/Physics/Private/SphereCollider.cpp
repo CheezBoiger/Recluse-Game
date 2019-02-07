@@ -34,4 +34,11 @@ void SphereCollider::CleanUpMeshDebugData()
     kSphereMesh = nullptr;
   }
 }
+
+
+void SphereCollider::SetRadius(r32 radius)
+{
+  SetDirty();
+  m_radius = radius;
+}
 } // Recluse

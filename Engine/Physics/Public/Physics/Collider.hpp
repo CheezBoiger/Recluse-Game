@@ -38,9 +38,14 @@ public:
 
   b32         NeedsUpdate() const { return m_needsUpdate; }
 
-private:
+protected:
+
+  void              SetDirty() { m_needsUpdate = true; }
   Vector3           m_center;
   b32               m_needsUpdate;
+
+private:
+
   ColliderType      m_colliderType;
 };
 } // Recluse

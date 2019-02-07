@@ -10,6 +10,7 @@
 #include "Item.hpp"
 #include "Game/Scene/ModelLoader.hpp"
 #include "Physics/BoxCollider.hpp"
+#include "Game/ParticleSystemComponent.hpp"
 #include "../DemoTextureLoad.hpp"
 
 // Scripts.
@@ -30,8 +31,9 @@ class CubeObject : public GameObject
   r32     m_healthRegen;
 
 public:
-
-    CubeObject()
+    
+  CubeObject(b32 enableUI)
+      : m_enableUI(enableUI)
   {
     SetName("CubeObject :3");
   }
@@ -69,7 +71,7 @@ public:
     Transform* trans = GetTransform();
     m_pRendererComponent->Initialize(this);
 #if 0
-    m_pRendererComponent->EnableStatic(true);
+    m_pRendererComponent->EnableStatic(false);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
     mesh->GetPrimitive(0)->_pMat = material;
@@ -92,10 +94,19 @@ public:
     //trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->Position = Vector3(0.0f, -15.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+
+    m_particleSystem = new ParticleSystemComponent();
+    m_particleSystem->Initialize(this);
+    m_particleSystem->SetMaxParticleCount(3000);
+    m_particleSystem->SetMaxLife(200.0f);
+    m_particleSystem->SetAcceleration(Vector3(1.0f, -0.8f, 0.8f));
+    m_particleSystem->SetAngleRate(1.0f);
+    m_particleSystem->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   void Update(r32 tick) override
   {
+    if (!m_enableUI) { return; }
     Transform* transform = GetTransform();
     //transform->Position += m_vRandDir * tick;
     //Quaternion q = Quaternion::AngleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
@@ -186,11 +197,13 @@ public:
     m_pMeshComponent->CleanUp();
     m_pRendererComponent->CleanUp();
     m_pPhysicsComponent->CleanUp();
+    m_particleSystem->CleanUp();
 
     delete m_pMeshComponent;
     delete m_pRendererComponent;
     delete m_pPhysicsComponent;
     delete m_pCollider;
+    delete m_particleSystem;
   }
 
 private:
@@ -200,4 +213,6 @@ private:
   Material*           m_pMaterial;
   PhysicsComponent*   m_pPhysicsComponent;
   Collider*           m_pCollider;
+  ParticleSystemComponent*  m_particleSystem;
+  b32                 m_enableUI;
 };

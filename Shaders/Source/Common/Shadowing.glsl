@@ -12,7 +12,7 @@
 
 #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
 #define MAX_SPOTLIGHT_SHADOWMAPS 4
-#define MAX_CASCADING_SHADOWMAP_COUNT 3 
+#define MAX_CASCADING_SHADOWMAP_COUNT 3
 
 struct LightSpace {
   mat4 viewProj;
@@ -184,7 +184,7 @@ float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3
   float currDepth = projC.z;
   
   float shadow = 0.0;
-  float range = 1.0;
+  float range = 2.0;
   vec2 texelSz = (1.0 / textureSize(shadowMap, 0).xy) * 0.5;
   
   normal = normalize(normal);

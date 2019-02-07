@@ -83,7 +83,13 @@ public:
   
   void              SetGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
   void              SetGlobalProbe(LightProbe* probe) { 
-    if (!probe) return;
+    if (!probe) {
+      for (u32 i = 0; i < 9; ++i) {
+        m_globalDiffuseSH._c[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+      }
+      m_globalDiffuseSH._bias = 1.0f;
+      return;
+    }
     for (u32 i = 0; i < 9; ++i) {
       m_globalDiffuseSH._c[i] = probe->_shcoeff[i];
     }

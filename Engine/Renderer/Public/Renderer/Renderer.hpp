@@ -231,6 +231,8 @@ public:
   // Adjusts bloom strength of the renderer.
   void              AdjustHDRSettings(const ParamsHDR& hdrSettings);
 
+  void              UpdateSky();
+
   // Set up and override Skybox cubemap for the renderer.
   void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
   void              SetGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}

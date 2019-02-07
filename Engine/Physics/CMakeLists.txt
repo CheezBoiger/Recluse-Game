@@ -32,6 +32,7 @@ set(PHYSICS_FILES
   ${PHYSICS_PRIVATE_DIR}/Collision.cpp
   ${PHYSICS_PRIVATE_DIR}/RigidBody.cpp
   ${PHYSICS_PRIVATE_DIR}/PhysicsMesh.cpp
+  ${PHYSICS_PRIVATE_DIR}/CompoundCollider.cpp
 )
 
 

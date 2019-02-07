@@ -43,8 +43,8 @@ void PhysicsComponent::Update()
     if (pCol->GetColliderType() == PHYSICS_COLLIDER_TYPE_COMPOUND) {
       CompoundCollider* compound = static_cast<CompoundCollider*>(pCol);
       auto colliders = compound->GetColliders();
-      for (size_t i = 0; i < colliders.size(); ++i) {
-        Collider* coll = colliders[i];
+      for (auto pCol : colliders) {
+        Collider* coll = pCol;
         coll->Update();
         BasicDebugRenderCmd rC = coll->GetRenderCmd();
         gRenderer().PushMeshRender(rC);

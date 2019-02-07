@@ -111,7 +111,7 @@ public:
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
     Transform* trans = GetTransform();
-    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
+    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
     trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
     //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
@@ -240,7 +240,7 @@ public:
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
     gAudio().LoadSound("wave.mp3", true, true, false);
-    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 0.5f);
+    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 0.1f);
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST

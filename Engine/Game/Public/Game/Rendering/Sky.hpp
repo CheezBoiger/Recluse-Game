@@ -3,6 +3,7 @@
 
 
 #include "Core/Types.hpp"
+
 #include "Renderer/TextureType.hpp"
 #include "Renderer/LightDescriptor.hpp"
 
@@ -31,8 +32,21 @@ public:
   // for objects in the scene.
   DirectionalLight* GetSunLight() { return &m_PrimaryLight; }
 
+  void              SetSkyColor(const Vector3& color);
+
+  void              SetMie(const Vector3& bM);
+
+  void              SetRayleigh(const Vector3& bR);
+
+  void              SetMieDistrib(r32 d);
+
+  void              SetScatterStrength(r32 s);
+
+  void              SetSkyIntensity(r32 i);
+
 private:
   DirectionalLight  m_PrimaryLight;
+  Vector3           m_skyColor;
   Vector3           m_betaR;
   Vector3           m_betaM;  
   Vector3           m_sunDir;

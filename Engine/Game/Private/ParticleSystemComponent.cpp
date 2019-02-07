@@ -30,13 +30,13 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
       Particle& p = particles[i];
       p._position = Vector4(config->_model[3][0], config->_model[3][1], config->_model[3][2], 1.0f);
       p._offsetPosition = Vector4(pos(twist), 0.0f, pos(twist));
-      p._color = Vector4(0.0f, 0.0f, 0.0f, 0.6f);
+      p._color = m_color;
       p._velocity = Vector4(uni(twist), 0.0f/*uni(twist)*/, uni(twist), 0.0f);
       p._initVelocity = p._velocity;
       p._info.w = life;
       p._info.y = 0.5f;
       p._info.x = 180.0f;
-      p._acceleration = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+      p._acceleration = Vector4(m_acceleration, 0.0f);
       life += offset * config->_lifeTimeScale;
     }
   });

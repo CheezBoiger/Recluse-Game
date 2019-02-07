@@ -3907,6 +3907,12 @@ void Renderer::CleanUpFinalOutputs()
 }
 
 
+void Renderer::UpdateSky()
+{
+  m_pSky->MarkDirty();
+}
+
+
 void Renderer::UpdateSceneDescriptors(u32 frameIndex)
 {
   // Update global data.

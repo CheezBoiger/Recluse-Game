@@ -43,7 +43,7 @@ struct PointLight {
   float   range;
   float   intensity;
   int     enable;
-  int     pad;
+  int     shadow;     // shadow index used for this spotlight.
 };
 
 
@@ -55,6 +55,7 @@ struct SpotLight {
   float   outer;
   float   inner;
   int     enable;
+  vec4    goboShadow;       // gobo.x and shadow.y index. Corresponds to the stencil used for this light.
 };
 
 

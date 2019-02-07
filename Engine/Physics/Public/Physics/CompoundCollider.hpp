@@ -5,6 +5,8 @@
 
 #include "Core/Types.hpp"
 
+#include <list>
+
 namespace Recluse {
 
 
@@ -17,11 +19,12 @@ public:
   ~CompoundCollider() { }
 
   void AddCollider(Collider* collider);
-  void RemoveCollider(Collider* collider);
+  Collider* RemoveCollider(Collider* collider);
 
-  std::vector<Collider*>& GetColliders( void ) { return m_colliders; }
+  std::list<Collider*>& GetColliders() { return m_colliders; }
+
 private:
 
-  std::vector<Collider*> m_colliders;
+  std::list<Collider*>    m_colliders;
 };
 } // Recluse

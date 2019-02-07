@@ -221,4 +221,11 @@ void CommandBuffer::ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, Vk
     pRegions,
     filter);
 }
+
+
+void CommandBuffer::NextSubpass(VkSubpassContents contents)
+{
+  ASSERT_RECORDING();
+  vkCmdNextSubpass(mHandle, contents);
+}
 } // Recluse

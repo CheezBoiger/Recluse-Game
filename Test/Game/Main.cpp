@@ -184,6 +184,7 @@ class TestScene : public Scene {
   TextureCube* cubemap1;
   TextureCube* cubemap0;
   Texture2D* brdfLUT;
+  CubeObject* acube;
 public:
 
   // Used to set up the scene. Call before updating.
@@ -191,12 +192,14 @@ public:
     cubemap1 = nullptr;
     cubemap0 = nullptr;
     brdfLUT = nullptr;
-    cube = new CubeObject();
+    cube = new CubeObject(true);
+    acube = new CubeObject(false);
     lantern = new LanternObject();
     monster = new Monster();
     mainCam = new MainCamera();
 
     GetRoot()->AddChild(mainCam);
+    GetRoot()->AddChild(acube);
     mainCam->Start();
 
     for (u32 i = 0; i < kMaxCount; ++i) {
@@ -219,7 +222,9 @@ public:
     GetRoot()->AddChild(cube);
     GetRoot()->AddChild(lantern);
     GetRoot()->AddChild(monster);
-    cube->Start();
+    cube->Start();  //cube->GetTransform()->Scale = Vector3(100.0f, 100.0f, 100.0f);
+    //acube->Start(); acube->GetTransform()->Position = Vector3(0.0f, -300.0f, 0.0f);
+   //cube->GetTransform()->Scale = Vector3(50.0f, 50.0f, 50.0f);
     lantern->Start();
     monster->Start();
 
@@ -232,6 +237,8 @@ public:
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
       pPrimary->_Enable = true;
       pPrimary->_Intensity = 5.0f;
+      //pSky->SetSkyColor(Vector3(0.0f, 0.0f, 0.0f));
+      //pSky->SetSkyIntensity(50.0f);
     }
     
     // You are also allowed to configure hdr settings of the scene. This doesn't affect user parameters of
@@ -290,10 +297,11 @@ public:
     }
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
       //Camera::GetMain()->EnableInterleavedVideo(false);
-      gRenderer().SetSkyboxCubeMap(cubemap1);
+      //gRenderer().SetSkyboxCubeMap(cubemap1);
       //gRenderer().UsePreRenderSkyboxMap(true);
-      gRenderer().SetGlobalLightProbe(&otherLightProbe);
-      gRenderer().UsePreRenderSkyboxMap(true);
+      //gRenderer().SetGlobalLightProbe(&otherLightProbe);
+      gRenderer().SetGlobalLightProbe(nullptr);
+      gRenderer().UsePreRenderSkyboxMap(false);
     }
   }
 
@@ -322,6 +330,9 @@ public:
 
     mainCam->CleanUp();
     delete mainCam;
+
+    acube->CleanUp();
+    delete acube;
 
 #if 1
     gRenderer().UsePreRenderSkyboxMap(false);

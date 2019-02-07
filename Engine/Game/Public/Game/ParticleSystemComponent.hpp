@@ -38,6 +38,8 @@ public:
   void EnableSorting(b32 enable) { m_shouldSort = enable; } 
   void SetAngleRate(r32 rate);
   void SetAnimationScale(r32 scale, r32 max = 16.0f, r32 offset = 0.0f);
+  void SetAcceleration(const Vector3& acc) { m_acceleration = acc; }
+  void SetColor(const Vector4& color) { m_color = color; }
 
   void UseAtlas(b32 enable);
 
@@ -45,6 +47,8 @@ public:
 
 private:
   ParticleSystem* m_pParticleSystem;
+  Vector3     m_acceleration;
+  Vector4     m_color;
   b32 m_shouldSort;
 };
 } // Recluse
