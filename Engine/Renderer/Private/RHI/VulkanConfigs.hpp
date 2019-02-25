@@ -15,8 +15,8 @@
 #define INDEX_SIZE_TYPE_32_BIT      4
 
 #define INTEL_WORKGROUP_SIZE       16   // Optimal EU hardware thread workgroup size on Intel chips.
-#define NVIDIA_WARP_SIZE           32   // Optimal CUDA SIMT workgroup size on Nvidia chips.
-#define AMD_WAVEFRONT_SIZE         64   // Optimal AMD workgroup size on Radeon chips.
+#define NVIDIA_WARP_SIZE           16  // Optimal CUDA SIMT workgroup size on Nvidia chips.
+#define AMD_WAVEFRONT_SIZE         16   // Optimal AMD workgroup size on Radeon chips.
 
 #if defined(_DEBUG)
 #define RDEBUG_SET_VULKAN_NAME(obj, name) obj->SetName(name)

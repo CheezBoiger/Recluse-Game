@@ -42,12 +42,12 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 
 out FRAG_IN {
   vec3  position;
-  vec3  vpos;
   float lodBias;
   vec3  normal;
   float pad1;
   vec2  texcoord0;
   vec2  texcoord1;
+  vec4  vpos;
 } frag_in;
 
 
@@ -95,7 +95,7 @@ void main()
   frag_in.texcoord0 = temp_uv0;
   frag_in.texcoord1 = temp_uv1;
   frag_in.normal = normalize(objBuffer.normalMatrix * worldNormal).xyz;
-  frag_in.vpos = (gWorldBuffer.view * worldPosition).xyz;
+  frag_in.vpos = (gWorldBuffer.view * worldPosition).zzzz;
   
 #if !defined(RENDER_ENV_MAP)
   gl_Position = gWorldBuffer.viewProj * worldPosition;

@@ -10,12 +10,12 @@
 
 in FRAG_IN {
   vec3  position;
-  vec3  vpos;
   float lodBias;
   vec3  normal;
   float pad1;
   vec2  texcoord0;
   vec2  texcoord1;
+  vec4  vpos;
 } frag_in;
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
@@ -122,6 +122,7 @@ void main()
   gbuffer.roughness = fragRoughness;
   gbuffer.ao = fragAO;
   gbuffer.anisoSpec = matBuffer.anisoSpec;
+  gbuffer.anisoSpec.z = frag_in.vpos.z;
   
   WriteGBuffer(gbuffer, rt0, rt1, rt2, rt3);
 #else

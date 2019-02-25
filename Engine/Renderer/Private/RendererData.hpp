@@ -67,6 +67,7 @@ extern GraphicsPipeline* DynamicShadowMapPipelineKey;
 extern GraphicsPipeline*  shadowMap_dynamicMorphTargetPipeline;
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
+extern std::string ShadowMapFragOpaqueFileStr;
 extern std::string DynamicShadowMapVertFileStr;
 extern DescriptorSetLayout* LightViewDescriptorSetLayoutKey;
 extern DescriptorSetLayout* globalIllumination_DescLR;
@@ -261,7 +262,8 @@ public:
     , m_outputSampler(nullptr)
     , m_pipeline(nullptr)
     , m_descSet(nullptr)
-    , m_layout(nullptr) { }
+    , m_layout(nullptr)
+    , m_groupSz(16) { }
 
 
   void    Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
@@ -285,6 +287,7 @@ private:
   Sampler*                m_outputSampler;
   DescriptorSetLayout*    m_layout;
   DescriptorSet*          m_descSet;
+  u32                     m_groupSz;           
 };
 
 

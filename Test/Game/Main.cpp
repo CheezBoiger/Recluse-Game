@@ -224,7 +224,7 @@ public:
     GetRoot()->AddChild(monster);
     cube->Start();  //cube->GetTransform()->Scale = Vector3(100.0f, 100.0f, 100.0f);
     //acube->Start(); acube->GetTransform()->Position = Vector3(0.0f, -300.0f, 0.0f);
-   //cube->GetTransform()->Scale = Vector3(50.0f, 50.0f, 50.0f);
+    //cube->GetTransform()->Scale = Vector3(50.0f, 50.0f, 50.0f);
     lantern->Start();
     monster->Start();
 

@@ -3,6 +3,7 @@
 #extension GL_ARB_separate_shader_objects   : enable
 #extension GL_ARB_shading_language_420pack  : enable
 
+#ifndef SHADOW_MAP_OPAQUE
 
 layout (set = 1, binding = 0) uniform MaterialBuffer {
   vec4  color;
@@ -33,10 +34,12 @@ in FragIn {
   vec2 uv1;
 } fragIn;
 
+#endif
+
 void main()
 {
   // TODO(): We may also want to add in transparency map as well?
-  
+#ifndef SHADOW_MAP_OPAQUE  
   vec4 alb = matBuffer.color;
   if (matBuffer.hasAlbedo >= 1) {
     vec2 uv0 = fragIn.uv0 + matBuffer.offsetUV.xy;
@@ -46,5 +49,6 @@ void main()
   if (alb.a < 0.5) {
     discard;
   }
+#endif
   //gl_FragDepth = gl_FragCoord.z;  
 }

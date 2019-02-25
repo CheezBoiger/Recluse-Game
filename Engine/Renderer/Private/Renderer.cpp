@@ -1252,7 +1252,7 @@ void Renderer::SetUpFrameBuffers()
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
       gbuffer_Depth->Format(),
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
@@ -2191,16 +2191,19 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   pbr_RenderPassInfo.renderArea.extent = windowExtent;
   pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
 
+  ShadowMapSystem& shadow = m_pLights->PrimaryShadowMapSystem();
+
   const u32 dSetCount = 5;
 #if !COMPUTE_PBR
     cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     GraphicsPipeline* pbr_Pipeline = pPipeline;
     VkDescriptorSet sets[dSetCount] = {
-      m_pGlobal->Set()->Handle(),
+      m_pGlobal->Set(frameIndex)->Handle(),
       pbr_DescSetKey->Handle(),
-      m_pLights->Set()->Handle(),
-      m_pLights->ViewSet()->Handle(),
-      m_pGlobalIllumination->Handle()
+      m_pLights->Set(frameIndex)->Handle(),
+      shadow.ShadowMapViewDescriptor(frameIndex)->Handle(),
+      //shadow.StaticShadowMapViewDescriptor(frameIndex)->Handle(),
+      m_pGlobalIllumination->GetDescriptorSet()->Handle(),
     };
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
@@ -2242,13 +2245,12 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
     cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
-    ShadowMapSystem& shadow = m_pLights->PrimaryShadowMapSystem(); 
     VkDescriptorSet compSets[] = { 
       m_pGlobal->Set(frameIndex)->Handle(),
       pbr_DescSetKey->Handle(),
-      m_pLights->Set()->Handle(),
+      m_pLights->Set(frameIndex)->Handle(),
       shadow.ShadowMapViewDescriptor(frameIndex)->Handle(),
-      shadow.StaticShadowMapViewDescriptor(frameIndex)->Handle(),
+      //shadow.StaticShadowMapViewDescriptor(frameIndex)->Handle(),
       m_pGlobalIllumination->GetDescriptorSet()->Handle(),
       pbr_compSet->Handle()
     };
@@ -2266,7 +2268,7 @@ void Renderer::GeneratePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pCompPipeline->Layout(), 
-      0, 7, compSets, 0, nullptr);
+      0, 6, compSets, 0, nullptr);
     cmdBuffer->Dispatch((windowExtent.width / m_workGroupSize) + 1, (windowExtent.height / m_workGroupSize) + 1, 1);
 
     imageMemBarriers[0].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -3265,12 +3267,14 @@ void Renderer::AdjustHDRSettings(const ParamsHDR& hdrSettings)
 
 void Renderer::GenerateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   ShadowMapSystem& system = m_pLights->PrimaryShadowMapSystem();
   system.GenerateDynamicShadowCmds(cmdBuffer, m_dynamicCmdList, frameIndex);
-  if (system.StaticMapNeedsUpdate()) {
-    system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList, frameIndex);
-    SignalStaticUpdate();
-  }
+  //if (system.StaticMapNeedsUpdate()) {
+  //  system.GenerateStaticShadowCmds(cmdBuffer, m_staticCmdList, frameIndex);
+  //  SignalStaticUpdate();
+  //}
 #if 0 
   R_TIMED_PROFILE_RENDERER();
   if (!m_pLights) return;
@@ -3435,7 +3439,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
   
-  VkDescriptorSet DescriptorSets[8];
+  VkDescriptorSet DescriptorSets[7];
 
   cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
     for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
@@ -3488,11 +3492,11 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       ShadowMapSystem& shadow = m_pLights->PrimaryShadowMapSystem();
       DescriptorSets[0] = m_pGlobal->Set(frameIndex)->Handle();
       DescriptorSets[1] = pMeshDesc->CurrMeshSet(frameIndex)->Handle();
-      DescriptorSets[3] = m_pLights->Set()->Handle();
+      DescriptorSets[3] = m_pLights->Set(frameIndex)->Handle();
       DescriptorSets[4] = shadow.ShadowMapViewDescriptor(frameIndex)->Handle();
-      DescriptorSets[5] = shadow.StaticShadowMapViewDescriptor(frameIndex)->Handle();
-      DescriptorSets[6] = m_pGlobalIllumination->GetDescriptorSet()->Handle(); // Need global illumination data.
-      DescriptorSets[7] = (Skinned ? renderCmd._pJointDesc->CurrJointSet(frameIndex)->Handle() : nullptr);
+      //DescriptorSets[5] = shadow.StaticShadowMapViewDescriptor(frameIndex)->Handle();
+      DescriptorSets[5] = m_pGlobalIllumination->GetDescriptorSet()->Handle(); // Need global illumination data.
+      DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->CurrJointSet(frameIndex)->Handle() : nullptr);
 
       // Bind materials.
       Primitive* primitive = renderCmd._pPrimitive;
@@ -3500,7 +3504,7 @@ void Renderer::GenerateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
         Pipe->Layout(),
         0,
-        (Skinned ? 8 : 7),
+        (Skinned ? 7 : 6),
         DescriptorSets,
         0,
         nullptr
@@ -3582,7 +3586,7 @@ void Renderer::SetUpPBR()
     emission.sampler = pbr_Sampler->Handle();
 
     VkDescriptorImageInfo depth = { };
-    depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depth.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     depth.imageView = gbuffer_DepthAttachKey->View();
     depth.sampler = pbr_Sampler->Handle();
 

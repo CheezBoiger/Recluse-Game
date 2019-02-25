@@ -20,8 +20,8 @@ HDR::HDR()
   , m_pLayout(nullptr)
 {
   m_config._allowChromaticAberration.x = 1.0;
-  m_config._k.x = -0.05f;
-  m_config._kcube.x = 0.05f;
+  m_config._k.x = -0.02f;
+  m_config._kcube.x = 0.02f;
   m_config._interleavedVideo.x = 0.0f;
   m_config._interleavedVideo.y = 0.0f;
   m_config._interleavedVideoShakeInterval = 0.0f; // Every x seconds by default. This disables shaking.

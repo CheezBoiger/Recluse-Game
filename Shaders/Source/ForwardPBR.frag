@@ -22,12 +22,12 @@ layout (location = 5) out vec4 rt3;
 
 in FRAG_IN {
   vec3 position;
-  vec3 vpos;
   float lodBias;
   vec3 normal;
   float pad1;
   vec2 texcoord0;
   vec2 texcoord1;
+  vec4 vpos;
 } frag_in;
 
 
@@ -93,30 +93,31 @@ layout (set = 4, binding = 0) uniform DynamicLightSpace {
 } dynamicLightSpace;
 
 layout (set = 4, binding = 1) uniform sampler2DArray dynamicShadowMap;
-
+/*
 layout (set = 5, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
 } staticLightSpace;
 
 layout (set = 5, binding = 1) uniform sampler2D staticShadowMap;
+*/
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
 
-layout (set = 6, binding = 0) buffer GlobalMapInfo {
+layout (set = 5, binding = 0) buffer GlobalMapInfo {
   DiffuseSH sh;
 } globalMapInfo;
-layout (set = 6, binding = 1) uniform samplerCube specMap;
-layout (set = 6, binding = 2) uniform sampler2D brdfLut;
+layout (set = 5, binding = 1) uniform samplerCube specMap;
+layout (set = 5, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 6, binding = 3) buffer LocalMapInfo {
+layout (set = 5, binding = 3) buffer LocalMapInfo {
   vec4      positions[32];
   vec4      minAABB[32];
   vec4      maxAABB[32];
   DiffuseSH shs[32];
 } localMapInfo;
-layout (set = 6, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
-layout (set = 6, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
+layout (set = 5, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 5, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
 #if defined(ENABLE_DEBUG)
@@ -171,7 +172,7 @@ void main()
     fragEmissive = pow(texture(emissive, uv0, objBuffer.lod).rgb, vec3(2.2));
   } 
   
-  vec3 vpos = frag_in.vpos;
+  vec4 vpos = frag_in.vpos;
   vec3 N = normalize(fragNormal);
   vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
   vec3 F0 = vec3(0.04);
@@ -199,8 +200,8 @@ void main()
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
-    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, vpos,
-                                          staticLightSpace.lightSpace, staticShadowMap,
+    int cascadeIdx = gWorldBuffer.enableShadows >= 1 ? GetCascadeIndex(vpos, dynamicLightSpace.lightSpace) : 0;
+    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
                                           dynamicLightSpace.lightSpace, dynamicShadowMap,
                                           light.direction.xyz, pbrInfo.N);
     radiance *= shadowFactor;

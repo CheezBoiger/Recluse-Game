@@ -12,7 +12,7 @@
 
 #define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
 #define MAX_SPOTLIGHT_SHADOWMAPS 4
-#define MAX_CASCADING_SHADOWMAP_COUNT 3
+#define MAX_CASCADING_SHADOWMAP_COUNT 4
 
 struct LightSpace {
   mat4 viewProj;
@@ -24,7 +24,7 @@ struct LightSpace {
 
 struct LightSpaceCascade {
   mat4 viewProj[MAX_CASCADING_SHADOWMAP_COUNT];
-  vec4 split[MAX_CASCADING_SHADOWMAP_COUNT];
+  vec4 split;
   vec4 near;
   vec4 lightSz;
   vec4 shadowTechnique;
@@ -33,6 +33,22 @@ struct LightSpaceCascade {
 struct SpotLightSpace {
   mat4 viewProjs[MAX_SPOTLIGHT_SHADOWMAPS]; // Only 4 spotlights at a time.
 };
+
+
+vec4 GetCascadeColor(int idx)
+{
+  vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+  if (idx == 0) {
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+  } else if (idx == 1) {
+    color = vec4(0.0, 1.0, 0.0, 1.0);
+  } else if (idx == 2) {
+    color = vec4(0.0, 0.0, 1.0, 0.0);
+  } else if (idx == 3) {
+    color = vec4(1.0, 0.0, 1.0, 1.0);
+  }
+  return color;
+}
 
 
 vec2 poissonDisk[64] = {
@@ -184,7 +200,7 @@ float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3
   float currDepth = projC.z;
   
   float shadow = 0.0;
-  float range = 2.0;
+  float range = 1.0;
   vec2 texelSz = (1.0 / textureSize(shadowMap, 0).xy) * 0.5;
   
   normal = normalize(normal);
@@ -303,24 +319,38 @@ float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS,
 }
 
 
-float GetShadowFactorCascade(int enableShadows, vec3 wp, vec3 vpos, in LightSpace staticLS, 
-  in sampler2D staticSM, in LightSpaceCascade dynamicLS, in sampler2DArray dynamicSM, vec3 lightPos, vec3 normal)
+int GetCascadeIndex(vec4 vpos, in LightSpaceCascade dynamicLS)
+{
+  vec4 fComparison = vec4(greaterThan(vpos, dynamicLS.split));
+  float fIndex = dot( vec4(MAX_CASCADING_SHADOWMAP_COUNT > 0,
+                            MAX_CASCADING_SHADOWMAP_COUNT > 1,
+                            MAX_CASCADING_SHADOWMAP_COUNT > 2,
+                            MAX_CASCADING_SHADOWMAP_COUNT > 3), fComparison );
+  fIndex = min(fIndex, MAX_CASCADING_SHADOWMAP_COUNT);
+  int cascadeIdx = int(fIndex);
+  return cascadeIdx;
+}
+
+
+float GetShadowFactorCascade(int enableShadows, vec3 wp, int cascadeIdx, 
+  in LightSpaceCascade dynamicLS, in sampler2DArray dynamicSM, vec3 lightPos, vec3 normal)
 {   
-    vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
-    float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
-    float shadowFactor = staticShadowFactor;
+    //vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
+    //float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
+    float shadowFactor = 1.0;//staticShadowFactor;
     
     if (enableShadows >= 1) {
+    /*
       int cascadeIdx = 0;
       for (int i = 0; i < MAX_CASCADING_SHADOWMAP_COUNT; ++i) {
         if (vpos.z > dynamicLS.split[i].x) {
           cascadeIdx = i;
         }
       }
-      //return float(cascadeIdx);
+    */
       vec4 shadowClip = dynamicLS.viewProj[cascadeIdx] * vec4(wp, 1.0);
       float dynamicShadowFactor = FilterPCFCascade(dynamicSM, shadowClip, lightPos, normal, wp, cascadeIdx);
-      shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
+      shadowFactor = dynamicShadowFactor;
     }
     
     return shadowFactor;

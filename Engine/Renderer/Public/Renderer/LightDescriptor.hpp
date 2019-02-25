@@ -83,8 +83,8 @@ struct LightViewSpace {
 
 
 struct LightViewCascadeSpace {
-  Matrix4         _ViewProj[3]; // must correspond to kTotalCascades in ShadowMapSystem!
-  Vector4         _split[3];
+  Matrix4         _ViewProj[4]; // must correspond to kTotalCascades in ShadowMapSystem!
+  Vector4         _split;
   Vector4         _near;
   Vector4         _lightSz;
   Vector4         _shadowTechnique;
@@ -199,10 +199,20 @@ private:
   static std::vector<GraphicsPipeline*>  k_pStaticMorphPipeline;
   static std::vector<GraphicsPipeline*>  k_pStaticPipeline;
 
+  static std::vector<GraphicsPipeline*>  k_pSkinnedPipelineOpaque;
+  static std::vector<GraphicsPipeline*>  k_pSkinnedMorphPipelineOpaque;
+  static std::vector<GraphicsPipeline*>  k_pStaticMorphPipelineOpaque;
+  static std::vector<GraphicsPipeline*>  k_pStaticPipelineOpaque;
+
   static GraphicsPipeline*  k_pStaticSkinnedPipeline;
   static GraphicsPipeline*  k_pStaticSkinnedMorphPipeline;
   static GraphicsPipeline*  k_pStaticStaticPipeline;
   static GraphicsPipeline*  k_pStaticStaticMorphPipeline;
+
+  static GraphicsPipeline*  k_pStaticSkinnedPipelineOpaque;
+  static GraphicsPipeline*  k_pStaticSkinnedMorphPipelineOpaque;
+  static GraphicsPipeline*  k_pStaticStaticPipelineOpaque;
+  static GraphicsPipeline*  k_pStaticStaticMorphPipelineOpaque;
   
   
   static RenderPass*        k_pDynamicRenderPass;
@@ -275,7 +285,7 @@ public:
 
   LightBuffer*        Data() { return &m_Lights; }
 
-  DescriptorSet*      Set() { return m_pLightDescriptorSet; }
+  DescriptorSet*      Set(u32 frameIdx) { return m_pLightDescriptorSets[frameIdx]; }
 #if 0
   DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
 
@@ -301,12 +311,11 @@ private:
 #endif
   Vector3             m_vViewerPos;
   // Descriptor Set.
-  DescriptorSet*      m_pLightDescriptorSet;
+  std::vector<DescriptorSet*>      m_pLightDescriptorSets;
+  // Light list is this!
+  std::vector<Buffer*>             m_pLightBuffers; 
 
   ShadowMapSystem     m_primaryMapSystem;
-
-  // Light list is this!
-  Buffer*             m_pLightBuffer;
 
 #if 0
   DescriptorSet*      m_pLightViewDescriptorSet;

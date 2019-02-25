@@ -72,6 +72,7 @@ public:
     m_pRendererComponent->Initialize(this);
 #if 0
     m_pRendererComponent->EnableStatic(false);
+    m_pRendererComponent->ForceForward(false);
     m_pRendererComponent->AddMesh(mesh);
     m_pRendererComponent->EnableLod(false);
     mesh->GetPrimitive(0)->_pMat = material;
@@ -205,6 +206,9 @@ public:
     delete m_pCollider;
     delete m_particleSystem;
   }
+
+
+  PhysicsComponent* GetPhysicsComponent() { return m_pPhysicsComponent; }
 
 private:
   Vector3             m_vRandDir;

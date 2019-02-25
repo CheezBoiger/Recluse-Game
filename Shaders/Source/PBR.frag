@@ -35,28 +35,28 @@ layout (set = 3, binding = 0) uniform DynamicLightSpace {
 } dynamicLightSpace;
 
 layout (set = 3, binding = 1) uniform sampler2DArray dynamicShadowMap;
-
+/*
 layout (set = 4, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
 } staticLightSpace;
 
 layout (set = 4, binding = 1) uniform sampler2D staticShadowMap;
-
-layout (set = 5, binding = 0) buffer GlobalMapInfo {
+*/
+layout (set = 4, binding = 0) buffer GlobalMapInfo {
   DiffuseSH sh;
 } globalMapInfo;
-layout (set = 5, binding = 1) uniform samplerCube specMap;
-layout (set = 5, binding = 2) uniform sampler2D brdfLut;
+layout (set = 4, binding = 1) uniform samplerCube specMap;
+layout (set = 4, binding = 2) uniform sampler2D brdfLut;
 #if defined(LOCAL_REFLECTIONS)
-layout (set = 5, binding = 3) buffer LocalMapInfo {
+layout (set = 4, binding = 3) buffer LocalMapInfo {
   vec4      positions[ ];
   vec4      minAABB[ ];
   vec4      maxAABB[ ];
   DiffuseSH shs[ ];
   int size;
 } localMapInfo;
-layout (set = 5, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
-layout (set = 5, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
+layout (set = 4, binding = 4) uniform samplerCubeArray specMaps;   // Current set enviroment map (radiance).
+layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup tables corresponding to each env map.
 #endif
 
 
@@ -88,15 +88,18 @@ void main()
   if (gLightBuffer.primaryLight.enable > 0) {
     DirectionLight light = gLightBuffer.primaryLight;
     vec3 ambient = light.ambient.rgb * gbuffer.albedo;
-    outColor += ambient;
-    vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
-    vec4 vpos = gWorldBuffer.view * vec4(pbrInfo.WP, 1.0);
-    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, vpos.xyz,
-                                          staticLightSpace.lightSpace, staticShadowMap,
+    vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo);
+    float shadowFactor = 1.0;
+    if (gWorldBuffer.enableShadows >= 1.0) {
+      vec4 vpos = (gWorldBuffer.view * vec4(pbrInfo.WP, 1.0)).zzzz;
+      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace);
+      shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
                                           dynamicLightSpace.lightSpace, dynamicShadowMap,
                                           light.direction.xyz, pbrInfo.N);
-    radiance *= shadowFactor;
-    outColor += radiance;
+    }
+    //vec4 sc = GetCascadeColor(cascadeIdx);
+    outColor += ambient;//sc.rgb;
+    outColor += radiance * shadowFactor;
     outColor = max(outColor, ambient);
   }
   
@@ -120,11 +123,11 @@ void main()
   }
   
   outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);
-  vFragColor = vec4(outColor, 1.0);
   
   vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));
   vBrightColor = vec4(glow, 1.0);
+  vFragColor = vec4(outColor, 1.0);
 }

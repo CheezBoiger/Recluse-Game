@@ -9,6 +9,16 @@
 layout (set = 1, binding = 0) uniform sampler2D finalTexture;
 layout (set = 1, binding = 1, rgba8) uniform writeonly image2D resultImage;
 
+#ifndef LOCAL_SIZE
+  #if defined(NVIDIA)
+   #define LOCAL_SIZE           32
+  #elif defined(AMD)
+   #define LOCAL_SIZE           64
+  #else
+   #define LOCAL_SIZE           16
+  #endif
+#endif
+
 #define FXAA_PC 1
 #define FXAA_GLSL_130 1
 #define FXAA_QUALITY__PRESET 12
@@ -1036,7 +1046,7 @@ FxaaFloat4 FxaaPixelShader(
 //#version 100
 
 
-layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
   vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / vec2(gWorldBuffer.screenSize);

@@ -40,19 +40,19 @@ layout (set = 1, binding = 0) uniform ObjectBuffer {
 } objBuffer;
 
 
-layout (set = 7, binding = 0) uniform JointsBuffer {
+layout (set = 6, binding = 0) uniform JointsBuffer {
   mat4 joints[MAX_JOINTS];
 } jointsBuffer;
 
 
 out FRAG_IN {
   vec3  position;
-  vec3  vpos;
   float lodBias;
   vec3  normal;
   float pad1;
   vec2  uv0;
   vec2  uv1;
+  vec4  vpos;
 } frag_in;
 
 
@@ -112,7 +112,7 @@ void main()
   frag_in.uv0 = temp_uv0;
   frag_in.uv1 = temp_uv1;
   frag_in.normal = normalize(objBuffer.normalMatrix * skinNormal).xyz;
-  frag_in.vpos = (gWorldBuffer.view * worldPosition).xyz * 0.25;
+  frag_in.vpos = (gWorldBuffer.view * worldPosition).zzzz;
 #if !defined(RENDER_ENV_MAP)
   gl_Position = gWorldBuffer.viewProj * worldPosition;
 #else
