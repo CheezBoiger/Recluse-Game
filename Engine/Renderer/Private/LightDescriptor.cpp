@@ -174,12 +174,12 @@ void ShadowMapSystem::InitializeShadowPipelines(VulkanRHI* pRhi)
     }
 
     renderPass.pSubpasses = subpasses.data();
-    renderPass.subpassCount = subpasses.size();
-    renderPass.dependencyCount = dependencies.size();
+    renderPass.subpassCount = static_cast<u32>(subpasses.size());
+    renderPass.dependencyCount = static_cast<u32>(dependencies.size());
     renderPass.pDependencies = dependencies.data();
     renderPass.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPass.pAttachments = attachments.data();
-    renderPass.attachmentCount = attachments.size();
+    renderPass.attachmentCount = static_cast<u32>(attachments.size());
 
     k_pCascadeRenderPass = pRhi->CreateRenderPass();
     k_pCascadeRenderPass->Initialize(renderPass);
@@ -555,7 +555,7 @@ void ShadowMapSystem::InitializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
     }
 
     fCi.pAttachments = cascadeViews.data();
-    fCi.attachmentCount = cascadeViews.size();
+    fCi.attachmentCount = static_cast<u32>(cascadeViews.size());
     m_pCascadeFrameBuffers[i] = pRhi->CreateFrameBuffer();
     m_pCascadeFrameBuffers[i]->Finalize(fCi, k_pCascadeRenderPass);
   }
@@ -651,6 +651,7 @@ void ShadowMapSystem::Initialize(VulkanRHI* pRhi,
 void ShadowMapSystem::EnableDynamicMapSoftShadows(b32 enable)
 {
   m_viewSpace._shadowTechnique = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
+  m_cascadeViewSpace._shadowTechnique = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
 }
 
 void ShadowMapSystem::EnableStaticMapSoftShadows(b32 enable)
@@ -1297,8 +1298,8 @@ void ShadowMapSystem::Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
   );
   m_viewSpace._ViewProj = view * proj;
   r32 lightSz = 5.0f / m_rShadowViewportDim;
-  m_viewSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
-  m_viewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
+  m_cascadeViewSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
+  m_cascadeViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
   
   r32 cShadowDim = m_rShadowViewportDim;
   r32 rr = 5.0f;

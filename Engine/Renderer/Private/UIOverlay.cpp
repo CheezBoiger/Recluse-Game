@@ -321,13 +321,13 @@ NkObject* gNkDevice()
 }
 
 
-void UIOverlay::Render()
+void UIOverlay::Render(VulkanRHI* pRhi)
 {
   // Ignore if no reference to the rhi.
-  R_ASSERT(m_pRhi, "Null RHI for ui overlay!");
+  R_ASSERT(pRhi, "Null RHI for ui overlay!");
 
   // Render the overlay.
-  CommandBuffer* cmdBuffer = m_CmdBuffers[m_pRhi->CurrentImageIndex()];
+  CommandBuffer* cmdBuffer = m_CmdBuffers[pRhi->CurrentImageIndex()];
 
   
 }
@@ -335,22 +335,21 @@ void UIOverlay::Render()
 
 void UIOverlay::Initialize(VulkanRHI* rhi)
 {
-  m_pRhi = rhi;
   m_pSemaphores.resize(rhi->BufferingCount());
   m_CmdBuffers.resize(rhi->BufferingCount());
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
-    m_CmdBuffers[i] = m_pRhi->CreateCommandBuffer();
-    m_CmdBuffers[i]->Allocate(m_pRhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    m_pSemaphores[i] = m_pRhi->CreateVkSemaphore();
+    m_CmdBuffers[i] = rhi->CreateCommandBuffer();
+    m_CmdBuffers[i]->Allocate(rhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_pSemaphores[i] = rhi->CreateVkSemaphore();
     m_pSemaphores[i]->Initialize(semaCi);
   }
 
-  InitializeRenderPass();
-  CreateDescriptorSetLayout();
-  SetUpGraphicsPipeline();
-  CreateBuffers();
+  InitializeRenderPass(rhi);
+  CreateDescriptorSetLayout(rhi);
+  SetUpGraphicsPipeline(rhi);
+  CreateBuffers(rhi);
   // After initialization of our graphics gui pipeline, it's time to 
   // initialize nuklear.
   InitializeNkObject(gNkDevice(), rhi, this);
@@ -359,35 +358,35 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
 }
 
 
-void UIOverlay::CleanUp()
+void UIOverlay::CleanUp(VulkanRHI* pRhi)
 {
   // Allow us to clean up and release our nk context and object.
-  CleanUpNkObject(gNkDevice(), m_pRhi);  
-  CleanUpDescriptorSetLayout();
-  CleanUpBuffers();
+  CleanUpNkObject(gNkDevice(), pRhi);  
+  CleanUpDescriptorSetLayout(pRhi);
+  CleanUpBuffers(pRhi);
 
   for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
-    m_pRhi->FreeVkSemaphore(m_pSemaphores[i]);
+    pRhi->FreeVkSemaphore(m_pSemaphores[i]);
     m_pSemaphores[i] = nullptr;
 
     CommandBuffer* cmdBuf = m_CmdBuffers[i];
-    m_pRhi->FreeCommandBuffer(cmdBuf);
+    pRhi->FreeCommandBuffer(cmdBuf);
     m_CmdBuffers[i] = nullptr;
   }
 
   if (m_renderPass) {
-    m_pRhi->FreeRenderPass(m_renderPass);
+    pRhi->FreeRenderPass(m_renderPass);
     m_renderPass = nullptr;
   }
  
   if (m_pGraphicsPipeline) {
-    m_pRhi->FreeGraphicsPipeline(m_pGraphicsPipeline);
+    pRhi->FreeGraphicsPipeline(m_pGraphicsPipeline);
     m_pGraphicsPipeline = nullptr;
   }
 }
 
 
-void UIOverlay::InitializeRenderPass()
+void UIOverlay::InitializeRenderPass(VulkanRHI* pRhi)
 {
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
@@ -441,15 +440,15 @@ void UIOverlay::InitializeRenderPass()
     &subpass
   );
 
-  m_renderPass = m_pRhi->CreateRenderPass();
+  m_renderPass = pRhi->CreateRenderPass();
   m_renderPass->Initialize(renderpassCI);
 }
 
 
-void UIOverlay::SetUpGraphicsPipeline()
+void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
 {
   if (!m_pGraphicsPipeline) {
-    GraphicsPipeline* pipeline = m_pRhi->CreateGraphicsPipeline();
+    GraphicsPipeline* pipeline = pRhi->CreateGraphicsPipeline();
     m_pGraphicsPipeline = pipeline;
 
     VkPipelineInputAssemblyStateCreateInfo vertInputAssembly = { };
@@ -511,7 +510,7 @@ void UIOverlay::SetUpGraphicsPipeline()
     VkGraphicsPipelineCreateInfo pipeCI = {};
     VkPipelineLayoutCreateInfo layoutCI = {};
 
-    VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+    VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
   
     VkRect2D scissor;
     scissor.extent = extent;
@@ -550,8 +549,8 @@ void UIOverlay::SetUpGraphicsPipeline()
     colorBlendCI.attachmentCount = static_cast<u32>(blendAttachments.size());
     colorBlendCI.pAttachments = blendAttachments.data();
 
-    Shader* vert = m_pRhi->CreateShader();
-    Shader* frag = m_pRhi->CreateShader();
+    Shader* vert = pRhi->CreateShader();
+    Shader* frag = pRhi->CreateShader();
 
     RendererPass::LoadShader("UI.vert.spv", vert);
     RendererPass::LoadShader("UI.frag.spv", frag);
@@ -603,8 +602,8 @@ void UIOverlay::SetUpGraphicsPipeline()
    
     pipeline->Initialize(pipeCI, layoutCI);
 
-    m_pRhi->FreeShader(vert);
-    m_pRhi->FreeShader(frag);
+    pRhi->FreeShader(vert);
+    pRhi->FreeShader(frag);
   }
 }
 
@@ -677,20 +676,20 @@ void BufferUI::EndCanvas()
 }
 
 
-void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex)
+void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 frameIndex)
 {
   VkViewport viewport = {};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().height;
-  viewport.width = (r32)m_pRhi->SwapchainObject()->SwapchainExtent().width;
+  viewport.height = (r32)pRhi->SwapchainObject()->SwapchainExtent().height;
+  viewport.width = (r32)pRhi->SwapchainObject()->SwapchainExtent().width;
 
   // TODO(): This needs to be programmable now. Not hardcoded this way...
   NkObject* nk = gNkDevice();
 
-  CommandBuffer* cmdBuffer = m_CmdBuffers[m_pRhi->CurrentFrame()];
+  CommandBuffer* cmdBuffer = m_CmdBuffers[frameIndex];
   cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
   VkCommandBufferBeginInfo beginInfo = { };
@@ -699,7 +698,7 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex)
   VkClearValue clearValues[1];
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-  VkExtent2D extent = m_pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
   VkRenderPassBeginInfo renderPassBeginInfo = { };
   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassBeginInfo.framebuffer = final_frameBufferKey->Handle();
@@ -748,16 +747,16 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex)
     memRanges[1].offset = 0;
     memRanges[1].pNext = nullptr;
 
-    LogicalDevice* dev = m_pRhi->LogicDevice();
+    LogicalDevice* dev = pRhi->LogicDevice();
     dev->FlushMappedMemoryRanges(static_cast<u32>(memRanges.size()), memRanges.data());
   }
 
   // Stream buffers.
-  StreamBuffers();
+  StreamBuffers(pRhi, frameIndex);
 #endif
 
-  VkBuffer vert = m_vertBuffer->NativeBuffer();
-  VkBuffer indx = m_indicesBuffer->NativeBuffer();
+  VkBuffer vert = m_vertBuffers[frameIndex]->NativeBuffer();
+  VkBuffer indx = m_indicesBuffers[frameIndex]->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
   VkDescriptorSet sets[] = { global->Set(frameIndex)->Handle(), nk->_font_set->Handle() };
   // Unmap vertices and index buffers, then perform drawing here.
@@ -796,7 +795,7 @@ void UIOverlay::BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex)
 }
 
 
-void UIOverlay::CreateDescriptorSetLayout()
+void UIOverlay::CreateDescriptorSetLayout(VulkanRHI* pRhi)
 {
   std::array<VkDescriptorSetLayoutBinding, 1> bindings;
   bindings[0].binding = 0;
@@ -810,23 +809,47 @@ void UIOverlay::CreateDescriptorSetLayout()
   descLayoutCI.bindingCount = static_cast<u32>(bindings.size());
   descLayoutCI.pBindings = bindings.data();
 
-  m_pDescLayout = m_pRhi->CreateDescriptorSetLayout();
+  m_pDescLayout = pRhi->CreateDescriptorSetLayout();
   m_pDescLayout->Initialize(descLayoutCI);
 }
 
-void UIOverlay::CleanUpDescriptorSetLayout()
+void UIOverlay::CleanUpDescriptorSetLayout(VulkanRHI* pRhi)
 {
-  m_pRhi->FreeDescriptorSetLayout(m_pDescLayout);
+  pRhi->FreeDescriptorSetLayout(m_pDescLayout);
   m_pDescLayout = nullptr;
 }
 
 
-void UIOverlay::CreateBuffers()
+void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
 {
-  m_vertBuffer = m_pRhi->CreateBuffer();
-  m_vertStagingBuffer = m_pRhi->CreateBuffer();
-  m_indicesBuffer = m_pRhi->CreateBuffer();
-  m_indicesStagingBuffer = m_pRhi->CreateBuffer();
+  m_vertBuffers.resize(pRhi->BufferingCount());
+  m_indicesBuffers.resize(pRhi->BufferingCount());
+
+  for (u32 i = 0; i < m_vertBuffers.size(); ++i) {
+    m_vertBuffers[i] = pRhi->CreateBuffer();
+    m_indicesBuffers[i] = pRhi->CreateBuffer();
+
+    {
+      VkBufferCreateInfo vertBufferCi = {};
+      vertBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+      vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+      vertBufferCi.size = MAX_VERTEX_MEMORY;
+      vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+      m_vertBuffers[i]->Initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    }
+
+    {
+      VkBufferCreateInfo indicesBufferCi = {};
+      indicesBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+      indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+      indicesBufferCi.size = MAX_ELEMENT_MEMORY;
+      indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+      m_indicesBuffers[i]->Initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    }
+  }
+
+  m_vertStagingBuffer = pRhi->CreateBuffer();
+  m_indicesStagingBuffer = pRhi->CreateBuffer();
 
   {
     VkBufferCreateInfo stagingBufferCi = { };
@@ -839,15 +862,6 @@ void UIOverlay::CreateBuffers()
   }
 
   {
-    VkBufferCreateInfo vertBufferCi = { };
-    vertBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    vertBufferCi.size = MAX_VERTEX_MEMORY;
-    vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    m_vertBuffer->Initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  }
-
-  {
     VkBufferCreateInfo stagingBufferCi = { };
     stagingBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     stagingBufferCi.size = MAX_ELEMENT_MEMORY;
@@ -856,44 +870,39 @@ void UIOverlay::CreateBuffers()
     m_indicesStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     m_indicesStagingBuffer->Map();
   }
-
-  {
-    VkBufferCreateInfo indicesBufferCi = {};
-    indicesBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    indicesBufferCi.size = MAX_ELEMENT_MEMORY;
-    indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    m_indicesBuffer->Initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-  }
 }
 
 
-void UIOverlay::CleanUpBuffers()
+void UIOverlay::CleanUpBuffers(VulkanRHI* pRhi)
 {
   m_vertStagingBuffer->UnMap();
   m_indicesStagingBuffer->UnMap();
+  pRhi->FreeBuffer(m_vertStagingBuffer);
+  pRhi->FreeBuffer(m_indicesStagingBuffer);
+  m_indicesStagingBuffer = nullptr;
+  m_vertStagingBuffer = nullptr;
 
-  if (m_vertBuffer) {
-    m_pRhi->FreeBuffer(m_vertStagingBuffer);
-    m_pRhi->FreeBuffer(m_vertBuffer);
-    m_vertBuffer = nullptr;
-    m_vertStagingBuffer = nullptr;
-  }
 
-  if (m_indicesBuffer) {
-    m_pRhi->FreeBuffer(m_indicesStagingBuffer);
-    m_pRhi->FreeBuffer(m_indicesBuffer);
-    m_indicesBuffer = nullptr;
-    m_indicesStagingBuffer = nullptr;
+  for (u32 i = 0; i < m_vertBuffers.size(); ++i) {
+    if (m_vertBuffers[i]) {
+      pRhi->FreeBuffer(m_vertBuffers[i]);
+      m_vertBuffers[i] = nullptr;
+    }
+
+    if (m_indicesBuffers[i]) {
+      pRhi->FreeBuffer(m_indicesBuffers[i]);
+      m_indicesBuffers[i] = nullptr;
+
+    }
   }
 }
 
 
-void UIOverlay::StreamBuffers()
+void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
 {
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(m_pRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(m_pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(pRhi->LogicDevice()->Native());
+  cmdBuffer.Allocate(pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -905,7 +914,7 @@ void UIOverlay::StreamBuffers()
     region.srcOffset = 0;
     region.dstOffset = 0;
     cmdBuffer.CopyBuffer(m_vertStagingBuffer->NativeBuffer(),
-      m_vertBuffer->NativeBuffer(),
+      m_vertBuffers[frameIndex]->NativeBuffer(),
       1,
       &region);
     VkBufferCopy regionIndices = {};
@@ -913,7 +922,7 @@ void UIOverlay::StreamBuffers()
     regionIndices.srcOffset = 0;
     regionIndices.dstOffset = 0;
     cmdBuffer.CopyBuffer(m_indicesStagingBuffer->NativeBuffer(),
-      m_indicesBuffer->NativeBuffer(),
+      m_indicesBuffers[frameIndex]->NativeBuffer(),
       1,
       &regionIndices);
   cmdBuffer.End();
@@ -924,8 +933,8 @@ void UIOverlay::StreamBuffers()
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  m_pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
-  m_pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
 
   cmdBuffer.Free();
 }

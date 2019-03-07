@@ -200,10 +200,13 @@ void main()
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
-    int cascadeIdx = gWorldBuffer.enableShadows >= 1 ? GetCascadeIndex(vpos, dynamicLightSpace.lightSpace) : 0;
-    float shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
-                                          dynamicLightSpace.lightSpace, dynamicShadowMap,
-                                          light.direction.xyz, pbrInfo.N);
+    float shadowFactor = 1.0;
+    if (gWorldBuffer.enableShadows >= 1.0) {
+      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace);
+      shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
+                                            dynamicLightSpace.lightSpace, dynamicShadowMap,
+                                            light.direction.xyz, pbrInfo.N);
+    }
     radiance *= shadowFactor;
     outColor += radiance;
     outColor = max(outColor, ambient);

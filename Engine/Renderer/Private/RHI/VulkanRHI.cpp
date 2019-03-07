@@ -124,9 +124,16 @@ b32 VulkanRHI::CreateContext(const char* appName)
 }
 
 
-b32 VulkanRHI::FindPhysicalDevice()
+b32 VulkanRHI::FindPhysicalDevice(u32 rhiBits)
 {
   std::vector<VkPhysicalDevice>& devices = gContext.EnumerateGpus();
+#if VK_NVX_raytracing
+  if (rhiBits & R_RAYTRACING_BIT) Extensions.push_back(VK_NVX_RAYTRACING_EXTENSION_NAME);
+  if (rhiBits & R_MESHSHADER_BIT) Extensions.push_back(VK_NV_MESH_SHADER_EXTENSION_NAME);
+#else
+  if (rhiBits & R_RAYTRACING_BIT) R_DEBUG(rWarning, "Raytracing is not available for this version of vulkan. Consider updating.\n");
+  if (rhiBits & R_MESHSHADER_BIT) R_DEBUG(rWarning, "Mesh shading not avaiable for this version of vulkan. Consider updating.\n");
+#endif
   for (const auto& device : devices) {
     if (SuitableDevice(device)) {
       gPhysicalDevice.Initialize(device);

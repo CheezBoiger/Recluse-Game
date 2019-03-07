@@ -221,12 +221,6 @@ float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3
 }
 
 
-float FilterPCFArray(in sampler2DArray shadowMapArray, vec4 sc, uint layer)
-{
-  return 0.0;
-}
-
-
 float PenumbraSize(float zReceiver, float zBlocker)
 {
   return (zReceiver - zBlocker) / zBlocker;
@@ -259,6 +253,33 @@ void FindBlocker(in sampler2D shadowMap,
 }
 
 
+void FindBlockerCascade(in sampler2DArray shadowMap, 
+                  int cascadeIdx,
+                  in LightSpaceCascade lightSpace, 
+                  inout float avgBlockerDepth, 
+                  inout float numBlockers, 
+                  vec2 uv, 
+                  float zReceiver)
+{
+  float lightSz = lightSpace.lightSz.x;
+  float nearPlane = lightSpace.near.x;
+  float searchWidth = lightSz * (zReceiver - nearPlane) / (zReceiver * 0.5 + 0.5);
+  
+  float blockerSum = 0;
+  numBlockers = 0;
+  
+  for (int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; ++i) {
+    vec2 suv = uv + poissonDisk[i] * searchWidth;
+    float shadowMapDepth = texture(shadowMap, vec3(suv, cascadeIdx)).r;
+    if (shadowMapDepth < zReceiver) {
+      blockerSum += shadowMapDepth;
+      numBlockers++;
+    }
+  }
+  avgBlockerDepth = blockerSum / numBlockers;
+}
+
+
 float PCF_Filter(in sampler2D shadowMap, vec2 uv, float zReceiver, float filterRadiusUV)
 {
   float sum = 0.0;
@@ -267,6 +288,24 @@ float PCF_Filter(in sampler2D shadowMap, vec2 uv, float zReceiver, float filterR
     if (zReceiver <= 1.0) {
       vec2 offset = poissonDisk[i] * filterRadiusUV;
       float factor = texture(shadowMap, uv + offset).r;
+      if (factor < zReceiver) {
+        shadow = SHADOW_FACTOR;
+      }
+    }
+    sum += shadow;
+  }
+  return sum / PCF_NUM_SAMPLES;
+}
+
+
+float PCF_FilterCascade(in sampler2DArray shadowMap, int cascadeIdx, vec2 uv, float zReceiver, float filterRadiusUV)
+{
+  float sum = 0.0;
+  for (int i = 0; i < PCF_NUM_SAMPLES; ++i) {
+    float shadow = 1.0;
+    if (zReceiver <= 1.0) {
+      vec2 offset = poissonDisk[i] * filterRadiusUV;
+      float factor = texture(shadowMap, vec3(uv + offset, cascadeIdx)).r;
       if (factor < zReceiver) {
         shadow = SHADOW_FACTOR;
       }
@@ -302,6 +341,32 @@ float PCSS(in sampler2D shadowMap,
 }
 
 
+float PCSSCascade(in sampler2DArray shadowMap, 
+                  in LightSpaceCascade lightSpace,
+                  vec4 sc,
+                  int cascadeIdx)
+{
+  vec4 coords = sc / sc.w;
+  vec2 uv = coords.st * 0.5 + 0.5;
+  float zReceiver = coords.p;
+  
+  float avgBlockerDepth = 0;
+  float numBlockers = 0;
+  FindBlockerCascade(shadowMap, cascadeIdx, lightSpace, avgBlockerDepth, numBlockers, uv, zReceiver);
+  
+  if (numBlockers < 1) {
+    return 1.0;
+  }
+  
+  float penumbraRatio = PenumbraSize(zReceiver, avgBlockerDepth);
+  float lightSz = lightSpace.lightSz.x;
+  float near = lightSpace.near.x;
+  float filterRadiusUV = penumbraRatio * lightSz * near / coords.p;
+  
+  return PCF_FilterCascade(shadowMap, cascadeIdx, uv, zReceiver, filterRadiusUV);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS, 
   in sampler2D staticSM, in LightSpace dynamicLS, in sampler2D dynamicSM, vec3 lightPos, vec3 normal)
@@ -321,11 +386,13 @@ float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS,
 
 int GetCascadeIndex(vec4 vpos, in LightSpaceCascade dynamicLS)
 {
+  
   vec4 fComparison = vec4(greaterThan(vpos, dynamicLS.split));
-  float fIndex = dot( vec4(MAX_CASCADING_SHADOWMAP_COUNT > 0,
-                            MAX_CASCADING_SHADOWMAP_COUNT > 1,
-                            MAX_CASCADING_SHADOWMAP_COUNT > 2,
-                            MAX_CASCADING_SHADOWMAP_COUNT > 3), fComparison );
+  vec4 cc = vec4( MAX_CASCADING_SHADOWMAP_COUNT > 0,
+                  MAX_CASCADING_SHADOWMAP_COUNT > 1,
+                  MAX_CASCADING_SHADOWMAP_COUNT > 2,
+                  MAX_CASCADING_SHADOWMAP_COUNT > 3);
+  float fIndex = dot( cc, fComparison );
   fIndex = min(fIndex, MAX_CASCADING_SHADOWMAP_COUNT);
   int cascadeIdx = int(fIndex);
   return cascadeIdx;
@@ -338,20 +405,10 @@ float GetShadowFactorCascade(int enableShadows, vec3 wp, int cascadeIdx,
     //vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
     //float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
     float shadowFactor = 1.0;//staticShadowFactor;
-    
-    if (enableShadows >= 1) {
-    /*
-      int cascadeIdx = 0;
-      for (int i = 0; i < MAX_CASCADING_SHADOWMAP_COUNT; ++i) {
-        if (vpos.z > dynamicLS.split[i].x) {
-          cascadeIdx = i;
-        }
-      }
-    */
-      vec4 shadowClip = dynamicLS.viewProj[cascadeIdx] * vec4(wp, 1.0);
-      float dynamicShadowFactor = FilterPCFCascade(dynamicSM, shadowClip, lightPos, normal, wp, cascadeIdx);
-      shadowFactor = dynamicShadowFactor;
-    }
+    vec4 shadowClip = dynamicLS.viewProj[cascadeIdx] * vec4(wp, 1.0);
+    float dynamicShadowFactor = (dynamicLS.shadowTechnique.x < 1) ? FilterPCFCascade(dynamicSM, shadowClip, lightPos, normal, wp, cascadeIdx) :
+                                PCSSCascade(dynamicSM, dynamicLS, shadowClip, cascadeIdx);
+    shadowFactor = dynamicShadowFactor;
     
     return shadowFactor;
 }

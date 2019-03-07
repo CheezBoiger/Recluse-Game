@@ -1608,7 +1608,7 @@ void DebugManager::InitializeRenderPass(VulkanRHI* pRhi)
 
   VkRenderPassCreateInfo rpCi = { };
   rpCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  rpCi.attachmentCount = attachments.size();
+  rpCi.attachmentCount = static_cast<u32>(attachments.size());
   rpCi.pAttachments = attachments.data();
   rpCi.pSubpasses = &debugSubpass;
   rpCi.subpassCount = 1;

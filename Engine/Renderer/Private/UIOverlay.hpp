@@ -31,18 +31,16 @@ public:
     : m_pGraphicsPipeline(VK_NULL_HANDLE)
     , m_renderPass(nullptr)
     , m_pDescLayout(VK_NULL_HANDLE)
-    , m_vertBuffer(nullptr)
-    , m_indicesBuffer(nullptr)
     , m_vertStagingBuffer(nullptr)
     , m_indicesStagingBuffer(nullptr)
     , m_mainBuffer(0) { }
 
   void                        Initialize(VulkanRHI* rhi);
-  void                        CleanUp();
-  void                        Render();
+  void                        CleanUp(VulkanRHI* pRhi);
+  void                        Render(VulkanRHI* pRhi);
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(GlobalDescriptor* global, u32 frameIndex);
+  void                        BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 frameIndex);
 
   Semaphore*                  Signal(u32 idx) { return m_pSemaphores[idx]; }
 
@@ -57,21 +55,20 @@ public:
   void                        ClearUiBuffers();
 
 private:
-  void                        InitializeRenderPass();
-  void                        CreateBuffers();
-  void                        SetUpGraphicsPipeline();
-  void                        CreateDescriptorSetLayout();
-  void                        CleanUpDescriptorSetLayout();
-  void                        CleanUpBuffers();
-  void                        StreamBuffers();
+  void                        InitializeRenderPass(VulkanRHI* pRhi);
+  void                        CreateBuffers(VulkanRHI* pRhi);
+  void                        SetUpGraphicsPipeline(VulkanRHI* pRhi);
+  void                        CreateDescriptorSetLayout(VulkanRHI* pRhi);
+  void                        CleanUpDescriptorSetLayout(VulkanRHI* pRhi);
+  void                        CleanUpBuffers(VulkanRHI* pRhi);
+  void                        StreamBuffers(VulkanRHI* pRhi, u32 frameIndex);
 
-  VulkanRHI*                  m_pRhi;
   std::vector<Semaphore*>     m_pSemaphores;
   std::vector<CommandBuffer*> m_CmdBuffers;
+  std::vector<Buffer*>        m_vertBuffers;
+  std::vector<Buffer*>        m_indicesBuffers;
   Buffer*                     m_vertStagingBuffer;
   Buffer*                     m_indicesStagingBuffer;
-  Buffer*                     m_vertBuffer;
-  Buffer*                     m_indicesBuffer;
   RenderPass*                 m_renderPass;
   GraphicsPipeline*           m_pGraphicsPipeline;
   DescriptorSetLayout*        m_pDescLayout;

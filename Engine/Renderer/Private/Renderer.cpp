@@ -421,7 +421,7 @@ void Renderer::CleanUp()
   m_pSky = nullptr;
 
   if (m_pUI) {
-    m_pUI->CleanUp();
+    m_pUI->CleanUp(m_pRhi);
     delete m_pUI;
     m_pUI = nullptr;
   }
@@ -3852,7 +3852,7 @@ void Renderer::CheckCmdUpdate()
       shadowBuf->End();
     }
 
-    m_pUI->BuildCmdBuffers(m_pGlobal, frameIndex);
+    m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
     m_workers[0].join();
   } else {
     CommandBuffer* offscreenCmdList = m_Offscreen._cmdBuffers[frameIndex];
@@ -3875,7 +3875,7 @@ void Renderer::CheckCmdUpdate()
       GenerateShadowCmds(shadowBuf, frameIndex);
       shadowBuf->End();
     }
-    m_pUI->BuildCmdBuffers(m_pGlobal, frameIndex);
+    m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
   }
 
 #if 0
@@ -3975,7 +3975,7 @@ void Renderer::UpdateSceneDescriptors(u32 frameIndex)
 
 void Renderer::RenderOverlay()
 {
-  m_pUI->Render();
+  m_pUI->Render(m_pRhi);
 }
 
 
@@ -4064,7 +4064,7 @@ void Renderer::UpdateRendererConfigs(const GraphicsConfigParams* params)
     // Triple buffering atm, we will need to use user params to switch this.
     m_pRhi->ReConfigure(presentMode, m_pWindow->Width(), m_pWindow->Height(), bufferCount, 3);
 
-    m_pUI->CleanUp();
+    m_pUI->CleanUp(m_pRhi);
 
     CleanUpForwardPBR();
     CleanUpPBR();

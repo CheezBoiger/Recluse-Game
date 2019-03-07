@@ -80,7 +80,7 @@ public:
 
   // Context and physical device set up.
   static b32                  CreateContext(const char* appName);
-  static b32                  FindPhysicalDevice();
+  static b32                  FindPhysicalDevice(u32 rhiConfigBits = 0);
 
 private:
   static b32                  SuitableDevice(VkPhysicalDevice device);
