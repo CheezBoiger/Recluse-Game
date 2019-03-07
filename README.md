@@ -16,11 +16,11 @@ Recluse Engine requires the following SDK set up:
 
 - Vulkan API (Rendering)
 - Bullet3 (Physics)
-- AudioKinetic WWise (Audio)
+- FMOD (Audio)
 
 To Begin, define these enviroment variables in order to link to the project:
 
-- WWISESDK (For wwise directory)
+- FMODSDK (For fmod audio directory)
 - BULLETSDK (For Bullet, the root directory)
 
 Furthurmore, the following tools are needed for building the project:
