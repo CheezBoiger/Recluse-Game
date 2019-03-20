@@ -28,7 +28,7 @@ class Scene;
 // GameObject as it's hierarchial parent.
 #define R_GAME_OBJECT(cls)  \
   public: \
-    static game_uuid_t GlobalId() { return hash_bytes(#cls, strlen(#cls)); } 
+    static game_uuid_t globalId() { return hash_bytes(#cls, strlen(#cls)); } 
 
 // Game Object, used for the game itself. These objects are the fundamental data type
 // in our game, which hold important info regarding various data about transformation,
@@ -43,42 +43,42 @@ class GameObject : public ISerializable {
 
 public:
 
-  static u64 NumGameObjectsCreated() { return sGameObjectCount; }
-  static game_uuid_t GlobalId() { return hash_bytes("GameObject", strlen("GameObject")); }
+  static u64 numGameObjectsCreated() { return sGameObjectCount; }
+  static game_uuid_t globalId() { return hash_bytes("GameObject", strlen("GameObject")); }
 
   GameObject();
   ~GameObject();
   GameObject(GameObject&&);
   GameObject& operator=(GameObject&&);
 
-  virtual void                        Serialize(IArchive& archive) override;
-  virtual void                        Deserialize(IArchive& archive) override;
-  void                                SetParent(GameObject* parent) { m_pParent = parent; }
-  void                                SetName(std::string name) { m_name = name; }
-  void                                SetTag(std::string tag) { m_tag = tag; }
+  virtual void                        serialize(IArchive& archive) override;
+  virtual void                        deserialize(IArchive& archive) override;
+  void                                setParent(GameObject* parent) { m_pParent = parent; }
+  void                                setName(std::string name) { m_name = name; }
+  void                                setTag(std::string tag) { m_tag = tag; }
 
-  void AddChild(GameObject* child) { 
-    child->SetParent(this);
-    child->SetSceneOwner(m_pScene);
+  void addChild(GameObject* child) { 
+    child->setParent(this);
+    child->setSceneOwner(m_pScene);
     m_children.push_back(child);
   }
   
   // Update the object. Can be overridable from inherited classes.
-  virtual void                        Update(r32 tick) { }
+  virtual void                        update(r32 tick) { }
 
   // Dispatch an event for collision.
-  void                                DispatchCollisionEvent(Collision* collision) { OnCollision(collision); }
+  void                                dispatchCollisionEvent(Collision* collision) { onCollision(collision); }
 
 protected:
   // Wakes up the game object in the scene. First time initialization is done with this call.
-  virtual void                        OnStartUp() { }
+  virtual void                        onStartUp() { }
 
   //  Performs necessary clean up if Start() was called.
-  virtual void                        OnCleanUp() { }
+  virtual void                        onCleanUp() { }
 
   // On collision call. The can be overridden. 
   // other - Information of object colliding with this game object.
-  virtual void                        OnCollision(Collision* other) { }
+  virtual void                        onCollision(Collision* other) { }
 
 
 public:
@@ -86,33 +86,33 @@ public:
   virtual void                        Sleep() { }
 
   GameObject*                         GetParent() { return m_pParent; }
-  GameObject*                         GetChild(std::string id);
-  GameObject*                         GetChild(size_t idx) { if (m_children.size() > idx) return m_children[idx]; return nullptr; }
+  GameObject*                         getChild(std::string id);
+  GameObject*                         getChild(size_t idx) { if (m_children.size() > idx) return m_children[idx]; return nullptr; }
 
-  Transform*                          GetTransform() { return &m_transform; }
-  std::string                         GetName() const { return m_name; }
-  std::string                         GetTag() const { return m_tag; }
-  game_uuid_t                         GetId() const { return m_id; }
-  size_t                              GetChildrenCount() const { return m_children.size(); }
+  Transform*                          getTransform() { return &m_transform; }
+  std::string                         getName() const { return m_name; }
+  std::string                         getTag() const { return m_tag; }
+  game_uuid_t                         getId() const { return m_id; }
+  size_t                              getChildrenCount() const { return m_children.size(); }
 
-  Scene*                              GetSceneOwner() { return m_pScene; }
+  Scene*                              getSceneOwner() { return m_pScene; }
 
-  void                                SetSceneOwner(Scene* scene) { m_pScene = scene; }
+  void                                setSceneOwner(Scene* scene) { m_pScene = scene; }
 
   template<typename T>
-  T*  CastTo() {
+  T*  castTo() {
     return dynamic_cast<T*>(this);
   }
 
   template<typename T>
-  static T* Cast(GameObject* obj) {
+  static T* cast(GameObject* obj) {
     if (!obj) return nullptr;
-    return obj->CastTo<T>();
+    return obj->castTo<T>();
   }
 
-  b32                                 Started() { return m_bStarted; }
-  void                                CleanUp() { if (m_bStarted) { OnCleanUp(); m_bStarted = false; } }
-  void                                Start() { if (!m_bStarted) { OnStartUp(); m_bStarted = true; } }
+  b32                                 hasStarted() { return m_bStarted; }
+  void                                cleanUp() { if (m_bStarted) { onCleanUp(); m_bStarted = false; } }
+  void                                start() { if (!m_bStarted) { onStartUp(); m_bStarted = true; } }
 
 private:
 

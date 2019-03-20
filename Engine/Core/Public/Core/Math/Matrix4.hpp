@@ -24,14 +24,14 @@ class Log;
 struct Matrix4 {
   r32                       Data[4][4];
 
-  static Matrix4 Identity() {
+  static Matrix4 identity() {
     return Matrix4();
   }
 
   // Transformations of our matrix.
-  static Matrix4            Rotate(const Matrix4& begin, const r32 radians, const Vector3& axis);
-  static Matrix4            Translate(const Matrix4& mat, const Vector3& position);
-  static Matrix4            Scale(const Matrix4& mat, const Vector3& scale);
+  static Matrix4            rotate(const Matrix4& begin, const r32 radians, const Vector3& axis);
+  static Matrix4            translate(const Matrix4& mat, const Vector3& position);
+  static Matrix4            scale(const Matrix4& mat, const Vector3& scale);
 
   Matrix4(r32 a00 = 1.0f, r32 a01 = 0.0f, r32 a02 = 0.0f, r32 a03 = 0.0f,
           r32 a10 = 0.0f, r32 a11 = 1.0f, r32 a12 = 0.0f, r32 a13 = 0.0f,
@@ -69,13 +69,13 @@ struct Matrix4 {
   { }
 
   // Retrieve the Perspective matrix, which is in left hand coordinates.
-  static Matrix4          Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar);
+  static Matrix4          perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar);
 
   // Left hand Orthographic matrix.
-  static Matrix4          Ortho(r32 width, r32 height, r32 zNear, r32 zFar);
+  static Matrix4          ortho(r32 width, r32 height, r32 zNear, r32 zFar);
 
   // Retrieve the LookAt matrix, which is in left hand coordinates.
-  static Matrix4          LookAt(const Vector3& eye, const Vector3& center, const Vector3& up);
+  static Matrix4          lookAt(const Vector3& eye, const Vector3& center, const Vector3& up);
 
   Matrix4                 operator*(const Matrix4& other) const;
   Matrix4                 operator+(const Matrix4& other) const;
@@ -90,16 +90,16 @@ struct Matrix4 {
   b8                      operator==(const Matrix4& other) const;
   b8                      operator!=(const Matrix4& other) const;
 
-  r32                     Determinant() const;
-  Matrix4                 Adjugate() const;
-  Matrix4                 Inverse() const;
-  Matrix4                 Transpose() const;
-  Matrix3                 Minor(u32 row, u32 col) const;
+  r32                     determinant() const;
+  Matrix4                 adjugate() const;
+  Matrix4                 inverse() const;
+  Matrix4                 transpose() const;
+  Matrix3                 minor(u32 row, u32 col) const;
 
-  r32*                    Raw() { return Data[0]; }
+  r32*                    raw() { return Data[0]; }
   r32*                    operator[](const size_t i);
-  r32                     Get(const size_t row, const size_t col) const { return Data[row][col]; }
-  r32                     operator()(const size_t row, const size_t col) const { return Get(row, col); }
+  r32                     get(const size_t row, const size_t col) const { return Data[row][col]; }
+  r32                     operator()(const size_t row, const size_t col) const { return get(row, col); }
 };
 
 

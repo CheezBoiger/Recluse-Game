@@ -30,18 +30,18 @@ class Window {
 
 public:
   // Initialize the Window API before creating windows!
-  static b32                    Initialized();
-  static b32                    InitializeAPI();
-  static void                   PollEvents();
+  static b32                    isInitialized();
+  static b32                    initializeAPI();
+  static void                   pollEvents();
 
-  static void                   SetWindowResizeCallback(WindowResizeCallback callback);
-  static void                   SetKeyboardCallback(KeyboardCallback callback);
-  static void                   SetMouseButtonCallback(MouseButtonCallback callback);
-  static void                   SetMousePositionCallback(MousePositionCallback callback);
+  static void                   setWindowResizeCallback(WindowResizeCallback callback);
+  static void                   setKeyboardCallback(KeyboardCallback callback);
+  static void                   setMouseButtonCallback(MouseButtonCallback callback);
+  static void                   setMousePositionCallback(MousePositionCallback callback);
   static void                   SetWindowInactiveCallback(WindowInactiveCallack callback);
 
-  static u32                    FullscreenHeight() { return kFullscreenHeight; }
-  static u32                    FullscreenWidth() { return kFullscreenWidth; }
+  static u32                    getFullscreenHeight() { return kFullscreenHeight; }
+  static u32                    getFullscreenWidth() { return kFullscreenWidth; }
 
   Window()
     : mHandle(NULL)
@@ -54,36 +54,36 @@ public:
 
   ~Window();
 
-  b32            Create(std::string title, i32 width, i32 height);
+  b32            create(std::string title, i32 width, i32 height);
 
-  void          Show();
-  void          Hide();
-  void          Minimize();
-  void          Maximize();
-  void          SetToCenter();
-  void          Close();
+  void          show();
+  void          hide();
+  void          minimize();
+  void          maximize();
+  void          setToCenter();
+  void          close();
   // Setting to full screen, or windowed, or window borderless, you MUST explicitly
-  // call Show() AFTER, in order to update the window.
-  void          SetToFullScreen();
-  void          SetToWindowed(i32 width, i32 height, b32 borderless = false);
+  // call show() AFTER, in order to update the window.
+  void          setToFullScreen();
+  void          setToWindowed(i32 width, i32 height, b32 borderless = false);
   
-  i32           Width() const { return mWidth; }
-  i32           Height() const { return mHeight; }
-  i32           X() const { return m_PosX; }
-  i32           Y() const { return m_PosY; }
+  i32           getWidth() const { return mWidth; }
+  i32           getHeight() const { return mHeight; }
+  i32           getX() const { return m_PosX; }
+  i32           getY() const { return m_PosY; }
 
-  HWND          Handle() { return mHandle; }
+  HWND          getHandle() { return mHandle; }
 
   // Get the refresh rate (in hertz (Hz)) of currently displaying window.
-  static u32   GetRefreshRate();
+  static u32   getRefreshRate();
 
-  b32           ShouldClose() const { return mRequestClose; }
-  b32           FullScreen() const { return mFullScreen; }
-  b32           Showing() const { return mShowing; }
-  b32           Minimized() const { return mMinimized; }
+  b32           shouldClose() const { return mRequestClose; }
+  b32           isFullScreen() const { return mFullScreen; }
+  b32           isShowing() const { return mShowing; }
+  b32           isMinimized() const { return mMinimized; }
 private:
-  void          InputMousePos(i32 x, i32 y);
-  static LRESULT WindowProc(HWND hwnd, UINT, WPARAM, LPARAM);
+  void          inputMousePos(i32 x, i32 y);
+  static LRESULT windowProc(HWND hwnd, UINT, WPARAM, LPARAM);
 
   HWND          mHandle;
 

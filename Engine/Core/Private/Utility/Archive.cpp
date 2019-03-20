@@ -17,7 +17,7 @@ b8 Archive::Open(const std::string Filename)
 }
 
 
-b8 Archive::Close()
+b8 Archive::close()
 {
   if (!Opened()) {
     R_ASSERT(false, "Archive file was not open to begin with! Can not close anything!\n");
@@ -25,7 +25,7 @@ b8 Archive::Close()
   }
   
   m_File.close();
-  return IArchive::Close();
+  return IArchive::close();
 }
 
 

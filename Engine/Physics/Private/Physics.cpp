@@ -18,18 +18,18 @@ namespace Recluse {
 
 Physics& gPhysics()
 {
-  return EngineModule<BulletPhysics>::Instance();
+  return EngineModule<BulletPhysics>::instance();
 }
 
 
-void Physics::OnStartUp()
+void Physics::onStartUp()
 {
   BoxCollider::InitMeshDebugData();
   SphereCollider::InitMeshDebugData();
 }
 
 
-void Physics::OnShutDown()
+void Physics::onShutDown()
 {
   BoxCollider::CleanUpMeshDebugData();
   SphereCollider::CleanUpMeshDebugData();

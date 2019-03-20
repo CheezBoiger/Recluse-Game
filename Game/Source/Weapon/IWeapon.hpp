@@ -165,7 +165,7 @@ public:
 
   BulletTypeBits GetBulletType() const { return m_bulletType; }
 
-  virtual void Update(r32 tick) override { }
+  virtual void update(r32 tick) override { }
 
 private:
   BulletTypeBits  m_bulletType;
@@ -184,7 +184,7 @@ public:
 
   WeaponTypeBits GetWeaponType() const { return m_weaponType; }
 
-  virtual void Update(r32 tick) override { }
+  virtual void update(r32 tick) override { }
 
 private:  
   std::string           m_name;
@@ -207,7 +207,7 @@ public:
   ArmorMaterialBits GetArmorMaterial() const { return m_armorMaterial; }
   ArmorReduceBits GetArmorReductions() const { return m_armorReduce; }
 
-  virtual void Update(r32 tick) override { }
+  virtual void update(r32 tick) override { }
 
 private:
   std::string         m_name;

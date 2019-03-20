@@ -56,11 +56,11 @@ MaterialDescriptor::~MaterialDescriptor()
 }
 
 
-void MaterialDescriptor::Initialize(VulkanRHI* pRhi)
+void MaterialDescriptor::initialize(VulkanRHI* pRhi)
 {
   if (m_pBuffer) return;
 
-  m_pBuffer = pRhi->CreateBuffer();
+  m_pBuffer = pRhi->createBuffer();
   VkDeviceSize memSize = sizeof(MaterialBuffer);
   VkBufferCreateInfo bufferCi = { };
   bufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -68,20 +68,20 @@ void MaterialDescriptor::Initialize(VulkanRHI* pRhi)
   bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCi.size = memSize;
   
-  m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   m_pBuffer->Map();
 
-  m_materialSet = pRhi->CreateDescriptorSet();
+  m_materialSet = pRhi->createDescriptorSet();
 
   DescriptorSetLayout* MaterialLayout = MaterialSetLayoutKey;
 
-  m_materialSet->Allocate(pRhi->DescriptorPool(), MaterialLayout);
+  m_materialSet->allocate(pRhi->descriptorPool(), MaterialLayout);
 }
 
 
-void MaterialDescriptor::Update(VulkanRHI* pRhi)
+void MaterialDescriptor::update(VulkanRHI* pRhi)
 {
-#define CHECK_SAMPLER(pSampler) (pSampler) ? pSampler->Handle()->Handle() : DefaultSampler2DKey->Handle()
+#define CHECK_SAMPLER(pSampler) (pSampler) ? pSampler->getHandle()->getHandle() : DefaultSampler2DKey->getHandle()
   if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
 
@@ -89,51 +89,51 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     std::array<VkWriteDescriptorSet, 6> MaterialWriteSets;
     VkDescriptorImageInfo albedoInfo = {};
     albedoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (Albedo()) {
-      albedoInfo.imageView = Albedo()->Handle()->View();
+    if (getAlbedo()) {
+      albedoInfo.imageView = getAlbedo()->getHandle()->getView();
     }
     else {
-      albedoInfo.imageView = defaultTexture->View();
+      albedoInfo.imageView = defaultTexture->getView();
     }
     albedoInfo.sampler = CHECK_SAMPLER(m_pAlbedoSampler);
 
     VkDescriptorImageInfo roughMetalInfo = {};
     roughMetalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (RoughnessMetallic()) {
-      roughMetalInfo.imageView = RoughnessMetallic()->Handle()->View();
+    if (getRoughnessMetallic()) {
+      roughMetalInfo.imageView = getRoughnessMetallic()->getHandle()->getView();
     }
     else {
-      roughMetalInfo.imageView = defaultTexture->View();
+      roughMetalInfo.imageView = defaultTexture->getView();
     }
     roughMetalInfo.sampler = CHECK_SAMPLER(m_pRoughMetalSampler);
 
     VkDescriptorImageInfo normalInfo = {};
     normalInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (Normal()) {
-      normalInfo.imageView = Normal()->Handle()->View();
+    if (getNormal()) {
+      normalInfo.imageView = getNormal()->getHandle()->getView();
     }
     else {
-      normalInfo.imageView = defaultTexture->View();
+      normalInfo.imageView = defaultTexture->getView();
     }
     normalInfo.sampler = CHECK_SAMPLER(m_pNormalSampler);
 
     VkDescriptorImageInfo aoInfo = {};
     aoInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (Ao()) {
-      aoInfo.imageView = Ao()->Handle()->View();
+    if (getAo()) {
+      aoInfo.imageView = getAo()->getHandle()->getView();
     }
     else {
-      aoInfo.imageView = defaultTexture->View();
+      aoInfo.imageView = defaultTexture->getView();
     }
     aoInfo.sampler = CHECK_SAMPLER(m_pAoSampler);
 
     VkDescriptorImageInfo emissiveInfo = {};
     emissiveInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (Emissive()) {
-      emissiveInfo.imageView = Emissive()->Handle()->View();
+    if (getEmissive()) {
+      emissiveInfo.imageView = getEmissive()->getHandle()->getView();
     }
     else {
-      emissiveInfo.imageView = defaultTexture->View();
+      emissiveInfo.imageView = defaultTexture->getView();
     }
     emissiveInfo.sampler = CHECK_SAMPLER(m_pEmissiveSampler);
 
@@ -190,7 +190,7 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     MaterialWriteSets[5].pBufferInfo = &matBufferInfo;
     MaterialWriteSets[5].pNext = nullptr;
 
-    m_materialSet->Update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
+    m_materialSet->update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
     //SwapDescriptorSet();
   }
   
@@ -202,23 +202,23 @@ void MaterialDescriptor::Update(VulkanRHI* pRhi)
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pBuffer->Memory();
     range.size = VK_WHOLE_SIZE;
-    pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+    pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   m_bNeedsUpdate = 0;
 }
 
 
-void MaterialDescriptor::CleanUp(VulkanRHI* pRhi)
+void MaterialDescriptor::cleanUp(VulkanRHI* pRhi)
 {
 
   if (m_materialSet) {
-    pRhi->FreeDescriptorSet(m_materialSet);
+    pRhi->freeDescriptorSet(m_materialSet);
     m_materialSet = nullptr;
   }
   if (m_pBuffer)  {
     m_pBuffer->UnMap();
-    pRhi->FreeBuffer(m_pBuffer);
+    pRhi->freeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }
 }

@@ -3,7 +3,10 @@
 #include "Core/Exception.hpp"
 
 // This is win32 specific.
-std::vector<const char*> extensions = { VK_KHR_SURFACE_EXTENSION_NAME 
+std::vector<const char*> extensions = { VK_KHR_SURFACE_EXTENSION_NAME
+#if defined VK_KHR_get_physical_device_properties2
+  , VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
+#endif
 #if _WIN32
  , VK_KHR_WIN32_SURFACE_EXTENSION_NAME 
 #elif __linux__
@@ -77,7 +80,7 @@ b32 Context::CreateInstance(const char* appName)
 }
 
 
-void Context::CleanUp()
+void Context::cleanUp()
 {
   if (mInstance) {
     if (mDebugEnabled) CleanUpDebugCallback();

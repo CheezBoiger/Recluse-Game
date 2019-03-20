@@ -15,24 +15,24 @@ class Time : public EngineModule<Time> {
 public:
   // Override on start up. This is not really needed, but win32
   // is required to initialize the sucker.
-  void OnStartUp() override;
+  void onStartUp() override;
 
   // Get Time in seconds.
-  static r64  CurrentTime();
+  static r64  currentTime();
 
   // Update delta time.
-  static void Update();
+  static void update();
 
   // Scaled time, which is multiplied to our other times to scale.
-  static r64 ScaleTime;
+  static r64 scaleTime;
 
   // Delta time, in seconds, between frames.
-  static r64 DeltaTime;
+  static r64 deltaTime;
 
   // Fix time, in seconds, to which some engine modules rely on, such as physics.
-  static r64 FixTime;
+  static r64 fixTime;
 
   // Start up the time.
-  static void Start() { Time::Instance().StartUp(); }
+  static void start() { Time::instance().startUp(); }
 };
 } // Recluse

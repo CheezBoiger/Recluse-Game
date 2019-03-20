@@ -34,7 +34,7 @@ GlobalDescriptor::GlobalDescriptor()
 
   // Testing params.
   m_Global._vSunBrightness = 0.01f;
-  m_Global._vSunDir = Vector3(-1.0f, 0.0f, 0.0f).Normalize();
+  m_Global._vSunDir = Vector3(-1.0f, 0.0f, 0.0f).normalize();
   m_Global._Mie = 0.01f;
   m_Global._Rayleigh = 1.6f;
   m_Global._MieDist = 0.997f;
@@ -62,7 +62,7 @@ GlobalDescriptor::~GlobalDescriptor()
 }
 
 
-void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
+void GlobalDescriptor::initialize(VulkanRHI* pRhi)
 {
   R_ASSERT(pRhi, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
 
@@ -74,17 +74,17 @@ void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;
 
-  m_pGlobalBuffers.resize(pRhi->BufferingCount());
-  m_pDescriptorSets.resize(pRhi->BufferingCount());
+  m_pGlobalBuffers.resize(pRhi->bufferingCount());
+  m_pDescriptorSets.resize(pRhi->bufferingCount());
   for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
-    m_pGlobalBuffers[i] = pRhi->CreateBuffer();
+    m_pGlobalBuffers[i] = pRhi->createBuffer();
 
-    m_pGlobalBuffers[i]->Initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalBuffers[i]->initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
     m_pGlobalBuffers[i]->Map();
 
 
-    m_pDescriptorSets[i] = pRhi->CreateDescriptorSet();
-    m_pDescriptorSets[i]->Allocate(pRhi->DescriptorPool(), pbrLayout);
+    m_pDescriptorSets[i] = pRhi->createDescriptorSet();
+    m_pDescriptorSets[i]->allocate(pRhi->descriptorPool(), pbrLayout);
 
     VkDescriptorBufferInfo globalBufferInfo = {};
     globalBufferInfo.buffer = m_pGlobalBuffers[i]->NativeBuffer();
@@ -100,31 +100,31 @@ void GlobalDescriptor::Initialize(VulkanRHI* pRhi)
     writeSets[0].pNext = nullptr;
     writeSets[0].pBufferInfo = &globalBufferInfo;
 
-    m_pDescriptorSets[i]->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+    m_pDescriptorSets[i]->update(static_cast<u32>(writeSets.size()), writeSets.data());
   }
 }
 
 
-void GlobalDescriptor::CleanUp(VulkanRHI* pRhi)
+void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 {
   // TODO
   for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     if (m_pDescriptorSets[i]) {
 
-      pRhi->FreeDescriptorSet(m_pDescriptorSets[i]);
+      pRhi->freeDescriptorSet(m_pDescriptorSets[i]);
       m_pDescriptorSets[i] = nullptr;
     }
 
     if (m_pGlobalBuffers[i]) {
       m_pGlobalBuffers[i]->UnMap();
-      pRhi->FreeBuffer(m_pGlobalBuffers[i]);
+      pRhi->freeBuffer(m_pGlobalBuffers[i]);
       m_pGlobalBuffers[i] = nullptr;
     }
   }
 }
 
 
-void GlobalDescriptor::Update(VulkanRHI* pRhi, u32 frameIndex)
+void GlobalDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 {
   u32 currFrame = frameIndex;
   R_ASSERT(m_pGlobalBuffers[currFrame]->Mapped(), "Global data was not mapped!");
@@ -134,6 +134,6 @@ void GlobalDescriptor::Update(VulkanRHI* pRhi, u32 frameIndex)
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   range.memory = m_pGlobalBuffers[currFrame]->Memory();
   range.size = m_pGlobalBuffers[currFrame]->MemorySize();
-  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+  pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse

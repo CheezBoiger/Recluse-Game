@@ -16,13 +16,13 @@ GameObject::GameObject()
   , m_name("Default Name")
   , m_bStarted(false)
 {
-  m_transform.Initialize(this);
+  m_transform.initialize(this);
 }
 
 
 GameObject::~GameObject()
 {
-  m_transform.CleanUp();
+  m_transform.cleanUp();
 }
 
 
@@ -53,12 +53,12 @@ GameObject& GameObject::operator=(GameObject&& obj)
 }
 
 
-void GameObject::Serialize(IArchive& archive)
+void GameObject::serialize(IArchive& archive)
 {
 }
 
 
-void GameObject::Deserialize(IArchive& archive)
+void GameObject::deserialize(IArchive& archive)
 {
 
 }

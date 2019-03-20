@@ -7,38 +7,38 @@
 namespace Recluse {
 
 
-void Sky::SetSkyColor(const Vector3& color)
+void Sky::setSkyColor(const Vector3& color)
 {
-  gRenderer().GlobalData()->_vAirColor = color; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_vAirColor = color; gRenderer().updateSky();
 }
 
 
-void Sky::SetMie(const Vector3& bM)
+void Sky::setMie(const Vector3& bM)
 {
-  gRenderer().GlobalData()->_Mie = bM.x; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_Mie = bM.x; gRenderer().updateSky();
 }
 
 
-void Sky::SetRayleigh(const Vector3& bR)
+void Sky::setRayleigh(const Vector3& bR)
 {
-  gRenderer().GlobalData()->_Rayleigh = bR.x; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_Rayleigh = bR.x; gRenderer().updateSky();
 }
 
 
-void Sky::SetMieDistrib(r32 d)
+void Sky::setMieDistrib(r32 d)
 {
-  gRenderer().GlobalData()->_MieDist = d; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_MieDist = d; gRenderer().updateSky();
 }
 
 
-void Sky::SetScatterStrength(r32 s)
+void Sky::setScatterStrength(r32 s)
 {
-  gRenderer().GlobalData()->_fScatterStrength = s; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_fScatterStrength = s; gRenderer().updateSky();
 }
 
 
-void Sky::SetSkyIntensity(r32 i)
+void Sky::setSkyIntensity(r32 i)
 {
-  gRenderer().GlobalData()->_fIntensity = i; gRenderer().UpdateSky();
+  gRenderer().getGlobalData()->_fIntensity = i; gRenderer().updateSky();
 }
 } // Recluse

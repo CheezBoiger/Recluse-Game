@@ -15,8 +15,8 @@ public:
 
   virtual b8 Serializable() { return true; }
 
-  virtual void Serialize(IArchive& archive) { }
+  virtual void serialize(IArchive& archive) { }
 
-  virtual void Deserialize(IArchive& archive) { }
+  virtual void deserialize(IArchive& archive) { }
 };
 } // Recluse

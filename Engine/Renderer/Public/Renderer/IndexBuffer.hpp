@@ -20,10 +20,10 @@ public:
 
   ~IndexBuffer();
 
-  void        Initialize(VulkanRHI* pRhi, size_t indexCount, size_t sizeType, void* data);
-  void        CleanUp(VulkanRHI* pRhi);
+  void        initialize(VulkanRHI* pRhi, size_t indexCount, size_t sizeType, void* data);
+  void        cleanUp(VulkanRHI* pRhi);
 
-  Buffer*     Handle() { return mBuffer; }
+  Buffer*     getHandle() { return mBuffer; }
   u32         IndexCount() { return mIndexCount; }
 
   u32         GetSizeType() const { return m_sizeType; }

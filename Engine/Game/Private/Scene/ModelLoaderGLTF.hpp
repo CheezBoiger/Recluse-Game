@@ -26,12 +26,12 @@ namespace GLTF {
 // This will also store the model data in ModelCache, under the name of the file.
 // ex. path/to/Apple.gltf 
 // name = Apple
-ModelResultBits Load(const std::string filename);
-ModelResultBits FreeModel(Model** model);
+ModelResultBits load(const std::string filename);
+ModelResultBits freeModel(Model** model);
 
 // Create a new model from an existing one, with it's own resources.
 // Performs a deep copy of the original model object.
-ModelResultBits InstantiateModel(Model* dst, Model* src);
+ModelResultBits instantiateModel(Model* dst, Model* src);
 }
 }
 }

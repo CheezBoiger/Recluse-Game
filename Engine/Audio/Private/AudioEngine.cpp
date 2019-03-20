@@ -16,7 +16,7 @@ FMOD_VECTOR ToFMODVector(const Vector3& v3)
 }
 
 
-AudioResult FMODAudioEngine::Initialize()
+AudioResult FMODAudioEngine::initialize()
 {
   AudioResult result = Audio_Success;
   FMOD_RESULT nativeResult = FMOD::Studio::System::create(&m_pStudioSystem);
@@ -36,7 +36,7 @@ AudioResult FMODAudioEngine::Initialize()
 }
 
 
-void FMODAudioEngine::CleanUp()
+void FMODAudioEngine::cleanUp()
 {
   if (m_pStudioSystem) {
     m_pStudioSystem->unloadAll();
@@ -46,7 +46,7 @@ void FMODAudioEngine::CleanUp()
 }
 
 
-void FMODAudioEngine::UpdateState(r64 dt)
+void FMODAudioEngine::updateState(r64 dt)
 {
   static std::vector<ChannelMap::iterator> stoppedChannels(32);
   u32 top = 0;
@@ -77,13 +77,13 @@ void FMODAudioEngine::UpdateState(r64 dt)
   R_ASSERT(r == FMOD_OK, "FMOD update failed.");
 }
 
-AudioId FMODAudioEngine::CreateAudioObject()
+AudioId FMODAudioEngine::createAudioObject()
 {
   return ~0ul;
 }
 
 
-void FMODAudioEngine::LoadSound(const std::string& soundName, b32 is3D, b32 looping, b32 streaming) 
+void FMODAudioEngine::loadSound(const std::string& soundName, b32 is3D, b32 looping, b32 streaming) 
 {
   auto it = m_soundMap.find(soundName);
   if (it != m_soundMap.end()) { return; }
@@ -101,7 +101,7 @@ void FMODAudioEngine::LoadSound(const std::string& soundName, b32 is3D, b32 loop
 }
 
 
-void FMODAudioEngine::UnLoadSound(const std::string& soundName) 
+void FMODAudioEngine::unLoadSound(const std::string& soundName) 
 {
   auto it = m_soundMap.find(soundName);
   if (it == m_soundMap.end()) { return; }
@@ -112,12 +112,12 @@ void FMODAudioEngine::UnLoadSound(const std::string& soundName)
 }
 
 
-u32 FMODAudioEngine::InitiateSound(const std::string& soundName, const Vector3& pos, r32 volume) 
+u32 FMODAudioEngine::initiateSound(const std::string& soundName, const Vector3& pos, r32 volume) 
 { 
   u32 nChannelId = m_nextChannelId++;
   auto it = m_soundMap.find(soundName);
   if (it == m_soundMap.end()) {
-    LoadSound(soundName);
+    loadSound(soundName);
     it = m_soundMap.find(soundName);
     if (it == m_soundMap.end()) { 
       return nChannelId;
@@ -166,7 +166,7 @@ void FMODAudioEngine::SetChannelVolume(u32 nChannelId, r32 volume)
 }
 
 
-void FMODAudioEngine::SetListener3DOrientation(const Vector3& pos, const Vector3& forward, const Vector3& up)
+void FMODAudioEngine::setListener3DOrientation(const Vector3& pos, const Vector3& forward, const Vector3& up)
 {
   m_globalListenerPosition = pos;
   m_globalListenerForward = forward;

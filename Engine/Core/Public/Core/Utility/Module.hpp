@@ -16,32 +16,32 @@ class EngineModule {
 public:
   virtual ~EngineModule() { }
 
-  void StartUp() {
-    if (IsActive()) return;
+  void startUp() {
+    if (isActive()) return;
 
-    IsActive() = true; 
-    OnStartUp(); 
+    isActive() = true; 
+    onStartUp(); 
   }
 
-  void ShutDown() {
-    if (!IsActive()) return; 
-    OnShutDown(); 
-    IsActive() = false;
+  void shutDown() {
+    if (!isActive()) return; 
+    onShutDown(); 
+    isActive() = false;
   }
 
-  virtual void OnStartUp() { }
+  virtual void onStartUp() { }
 
-  virtual void OnShutDown() { }
+  virtual void onShutDown() { }
 
 
-  static b8& IsActive() {
+  static b8& isActive() {
     static b8 active = false;
     return active;
   }
 
-  static Type& Instance() {
-    static Type instance;
-    return instance; 
+  static Type& instance() {
+    static Type kInstance;
+    return kInstance; 
   }
 private:
 };

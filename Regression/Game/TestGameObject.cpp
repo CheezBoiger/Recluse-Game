@@ -17,31 +17,31 @@ class TestObject : public GameObject
 {
 public:
 
-  virtual void OnStartUp() override
+  virtual void onStartUp() override
   {
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     
-    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->initialize(this);
 
-    m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->AddMesh(nullptr);
+    m_pRendererComponent->initialize(this);
+    m_pRendererComponent->addMesh(nullptr);
   }
 
 
-  virtual void Update(r32 tick) override
+  virtual void update(r32 tick) override
   {
-    Transform* transform = GetTransform();
-    transform->Position += Vector3(1.0f, 0.0f, 0.0f) * tick;
+    Transform* transform = getTransform();
+    transform->_position += Vector3(1.0f, 0.0f, 0.0f) * tick;
 
-    Log() << "Position: " << transform->Position;
+    Log() << "Position: " << transform->_position;
   }
 
 
-  virtual void OnCleanUp() override 
+  virtual void onCleanUp() override 
   {
-    m_pMeshComponent->CleanUp();
-    m_pRendererComponent->CleanUp();
+    m_pMeshComponent->cleanUp();
+    m_pRendererComponent->cleanUp();
 
     delete m_pMeshComponent;
     delete m_pRendererComponent;

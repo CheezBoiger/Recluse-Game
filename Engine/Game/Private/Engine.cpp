@@ -24,7 +24,7 @@ namespace Recluse {
 
 void UpdateTransform(Engine* engine, GameObject* object, size_t currNum)
 { 
-  object->GetTransform()->Update();
+  object->getTransform()->update();
 }
 
 
@@ -32,15 +32,15 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
   Keyboard::keys[key] = (KeyAction)action;
   if (Keyboard::KeyPressed(KEY_CODE_2)) {
-    Mouse::Show(!Mouse::Showing());
-    Mouse::Enable(!Mouse::Enabled());
-    Mouse::Track(!Mouse::Tracking());
-    if (Mouse::Enabled()) {
-      Mouse::SetPosition( window->Width() * 0.5 + window->X(), 
-                          window->Height() * 0.5 + window->Y()
+    Mouse::show(!Mouse::isShowing());
+    Mouse::setEnable(!Mouse::isEnabled());
+    Mouse::setTrack(!Mouse::isTracking());
+    if (Mouse::isEnabled()) {
+      Mouse::setPosition( window->getWidth() * 0.5 + window->getX(), 
+                          window->getHeight() * 0.5 + window->getY()
       );
     } else {
-      Mouse::SetPosition( gEngine().GameMousePosX(), 
+      Mouse::setPosition( gEngine().GameMousePosX(), 
                           gEngine().GameMousePosY());
     }
   }
@@ -49,8 +49,8 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 
 void WindowResized(Window* window, i32 width, i32 height)
 {
-  if (gRenderer().IsActive() && gRenderer().Initialized()) {
-    gRenderer().UpdateRendererConfigs(nullptr);
+  if (gRenderer().isActive() && gRenderer().isInitialized()) {
+    gRenderer().updateRendererConfigs(nullptr);
     R_DEBUG(rVerbose, "Engine Renderer has been updated prior to resize.\n");
   }
   
@@ -59,8 +59,8 @@ void WindowResized(Window* window, i32 width, i32 height)
 
 void MousePositionMove(Window* window, r64 x, r64 y)
 {
-  Camera* camera = Camera::GetMain();
-  if (camera && !Mouse::Enabled()) {
+  Camera* camera = Camera::getMain();
+  if (camera && !Mouse::isEnabled()) {
     gEngine().SetGameMouseX(x);
     gEngine().SetGameMouseY(y);
   }
@@ -112,157 +112,157 @@ Engine::~Engine()
 }
 
 
-void Engine::StartUp(std::string appName, b32 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
+void Engine::startUp(std::string appName, b32 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
 {
   if (m_running) return;
 
   // NOTE(): Always start up the core first, before starting anything else up.
-  gCore().StartUp();
+  gCore().startUp();
   gCore().ThrPool().RunAll();
-  gFilesystem().StartUp();
+  gFilesystem().startUp();
 
-  Window::SetKeyboardCallback(KeyCallback);
-  Window::SetWindowResizeCallback(WindowResized);
-  Window::SetMousePositionCallback(MousePositionMove);
-  Window::SetMouseButtonCallback(MouseButtonClick);
+  Window::setKeyboardCallback(KeyCallback);
+  Window::setWindowResizeCallback(WindowResized);
+  Window::setMousePositionCallback(MousePositionMove);
+  Window::setMouseButtonCallback(MouseButtonClick);
 
-  m_window.Create(appName, width, height);
+  m_window.create(appName, width, height);
 
   if (fullscreen) {
-    m_window.SetToFullScreen();
+    m_window.setToFullScreen();
   }
   else {
-    m_window.SetToCenter();
+    m_window.setToCenter();
   }
 
   // For renderer, you want to send the name to the device that will be used for debugging and
   // information for vendors.
-  gRenderer().SetAppName(appName.c_str());
-  gRenderer().StartUp();
-  gRenderer().Initialize(&m_window, params);
+  gRenderer().setAppName(appName.c_str());
+  gRenderer().startUp();
+  gRenderer().initialize(&m_window, params);
 
-  Material::InitializeDefault(&gRenderer());
-  LightComponent::GlobalInitialize();
+  Material::initializeDefault(&gRenderer());
+  LightComponent::globalInitialize();
 
 
-  gAnimation().StartUp();
+  gAnimation().startUp();
 #if !defined FORCE_PHYSICS_OFF
-  gPhysics().StartUp();
+  gPhysics().startUp();
 #endif
 #if !defined FORCE_AUDIO_OFF
-  gAudio().StartUp();
+  gAudio().startUp();
 #endif
-  gUI().StartUp();
+  gUI().startUp();
 }
 
 
-void Engine::CleanUp()
+void Engine::cleanUp()
 {
   if (m_running) return;
   gCore().ThrPool().StopAll();
 
-  LightComponent::GlobalCleanUp();
-  Material::CleanUpDefault(&gRenderer());
+  LightComponent::globalCleanUp();
+  Material::cleanUpDefault(&gRenderer());
 
-  gUI().ShutDown();
+  gUI().shutDown();
 #if !defined FORCE_AUDIO_OFF
-  gAudio().ShutDown();
+  gAudio().shutDown();
 #endif
 #if !defined FORCE_PHYSICS_OFF
-  gPhysics().ShutDown();
+  gPhysics().shutDown();
 #endif
-  gAnimation().ShutDown();
-  gRenderer().ShutDown();
+  gAnimation().shutDown();
+  gRenderer().shutDown();
 
-  if (!m_window.ShouldClose()) {
-    m_window.Close();
-    Window::PollEvents();
+  if (!m_window.shouldClose()) {
+    m_window.close();
+    Window::pollEvents();
   }
 
-  gFilesystem().ShutDown();
-  gCore().ShutDown();
+  gFilesystem().shutDown();
+  gCore().shutDown();
   m_running = false;
 }
 
 
-void Engine::Run()
+void Engine::run()
 {
   if (m_running) return;
   // TODO(): Signal to continue thread works.
 
   // Start up the time as the engine begins running.
-  Time::Start();
-  gRenderer().Build();
+  Time::start();
+  gRenderer().build();
   m_running = true;
 
   // Update once.
-  Update();
+  update();
 }
 
 
-void Engine::Stop()
+void Engine::stop()
 {
   if (!m_running) return;
   // TODO(): Signal to stop thread works.
 
-  gRenderer().WaitIdle();
+  gRenderer().waitIdle();
   m_running = false;
 }
 
 
-void Engine::Update()
+void Engine::update()
 {
   // TODO(): Work on loop update step a little more...
 
-  if (m_window.ShouldClose() || m_stopping) {
-    Stop();
+  if (m_window.shouldClose() || m_stopping) {
+    stop();
     return;
   }
-  // Render out the scene.
-  r64 dt = Time::DeltaTime;
-  r64 tick = Time::FixTime;
-  m_dLag += Time::DeltaTime;
+  // render out the scene.
+  r64 dt = Time::deltaTime;
+  r64 tick = Time::fixTime;
+  m_dLag += Time::deltaTime;
 
 
 #if !defined FORCE_AUDIO_OFF
-  gAudio().UpdateState(dt);
+  gAudio().updateState(dt);
 #endif
 
   // Update using next frame input.
-  AnimationComponent::UpdateComponents();
-  gAnimation().UpdateState(dt);
+  AnimationComponent::updateComponents();
+  gAnimation().updateState(dt);
   
   PhysicsComponent::UpdateFromPreviousGameLogic();
-  TraverseScene(UpdateTransform);
-  UpdateSunLight();
+  traverseScene(UpdateTransform);
+  updateSunLight();
 
   m_workers[0] = std::thread([&] () -> void {
-    gPhysics().UpdateState(dt, tick);
-    PhysicsComponent::UpdateComponents();
+    gPhysics().updateState(dt, tick);
+    PhysicsComponent::updateComponents();
   });
 
   m_workers[1] = std::thread([&]() -> void {
-    PointLightComponent::UpdateComponents();
-    SpotLightComponent::UpdateComponents();
+    PointLightComponent::updateComponents();
+    SpotLightComponent::updateComponents();
   });
 
   m_workers[2] = std::thread([&]() -> void {
-    MeshComponent::UpdateComponents();
-    RendererComponent::UpdateComponents();
-    SkinnedRendererComponent::UpdateComponents();
+    MeshComponent::updateComponents();
+    AbstractRendererComponent::updateComponents();
+    //SkinnedRendererComponent::updateComponents();
   });
 
-  ParticleSystemComponent::UpdateComponents();
-  gUI().UpdateState(dt);
+  ParticleSystemComponent::updateComponents();
+  gUI().updateState(dt);
 
   m_workers[0].join();
   m_workers[1].join();
   m_workers[2].join();
 
   {
-    Camera* pMain = Camera::GetMain();
+    Camera* pMain = Camera::getMain();
     if (pMain) {
-      pMain->FlushToGpuBus();
+      pMain->flushToGpuBus();
     }
   }
 
@@ -272,31 +272,31 @@ void Engine::Update()
       static const char* probname = "Probe";
       for (size_t i = 0; i < m_envProbeTargets.size(); ++i) {
         Vector3 position = m_envProbeTargets[i];
-        TextureCube* cube = gRenderer().BakeEnvironmentMap(position);
+        TextureCube* cube = gRenderer().bakeEnvironmentMap(position);
         std::string name = std::string(probname) + std::to_string(i) + ".png";
         Log(rNotify) << "probe : " << name << " baking.";
         cube->Save(name.c_str());
         Log() << " Done!\n";
-        gRenderer().FreeTextureCube(cube);
+        gRenderer().freeTextureCube(cube);
       }
       break;
     }
     case EngineMode_Game:
     default:
     {
-      gRenderer().Render();
+      gRenderer().render();
       break;
     }
   }
 }
 
 
-void Engine::UpdateSunLight()
+void Engine::updateSunLight()
 {
   if (!m_pPushedScene) return;
-  Sky* pSky = m_pPushedScene->GetSky();
-  DirectionalLight* pPrimary = pSky->GetSunLight();
-  LightBuffer* pLights = gRenderer().LightData();
+  Sky* pSky = m_pPushedScene->getSky();
+  DirectionalLight* pPrimary = pSky->getSunLight();
+  LightBuffer* pLights = gRenderer().getLightData();
   pLights->_PrimaryLight._Ambient = pPrimary->_Ambient;
   pLights->_PrimaryLight._Color = pPrimary->_Color;
   pLights->_PrimaryLight._Direction = pPrimary->_Direction;
@@ -305,7 +305,7 @@ void Engine::UpdateSunLight()
 }
 
 
-void Engine::TraverseScene(GameObjectActionCallback callback)
+void Engine::traverseScene(GameObjectActionCallback callback)
 {
   if (!m_pPushedScene) {
     R_DEBUG(rWarning, "No scene to run, skipping scene graph traversal.");
@@ -317,9 +317,9 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
   static std::vector<GameObject*> nodes(1024);
   i32 top = -1;
   m_sceneObjectCount = 0;
-  SceneNode* root = m_pPushedScene->GetRoot();
-  for (size_t i = 0; i < root->GetChildrenCount(); ++i) {
-    nodes[++top] = root->GetChild(i);
+  SceneNode* root = m_pPushedScene->getRoot();
+  for (size_t i = 0; i < root->getChildrenCount(); ++i) {
+    nodes[++top] = root->getChild(i);
     if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
   }
   
@@ -330,9 +330,9 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
     m_sceneObjectCount++;
 
     // Now query its children.
-    size_t child_count = object->GetChildrenCount();
+    size_t child_count = object->getChildrenCount();
     for (size_t i = 0; i < child_count; ++i) {
-      GameObject* child = object->GetChild(i);
+      GameObject* child = object->getChild(i);
       nodes[++top] = child;
       if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
     }
@@ -340,10 +340,10 @@ void Engine::TraverseScene(GameObjectActionCallback callback)
 }
 
 
-void Engine::PushScene(Scene* scene)
+void Engine::pushScene(Scene* scene)
 {
   R_ASSERT(scene, "Attempting to push a null scene!");
   m_pPushedScene = scene;
-  gRenderer().AdjustHDRSettings(scene->GetHDRSettings());
+  gRenderer().adjustHDRSettings(scene->getHDRSettings());
 }
 } // Recluse

@@ -12,13 +12,13 @@
 namespace Recluse {
 
 
-Quaternion Quaternion::LookRotation(const Vector3& dir, const Vector3& upwards)
+Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
 {
   // Implementation from 
   // https://gist.github.com/aeroson/043001ca12fe29ee911e
   // modified for left hand coordinate systems that is Recluse.
-  Vector3 forward = dir.Normalize();
-  Vector3 right = upwards.Cross(forward).Normalize();
+  Vector3 forward = dir.normalize();
+  Vector3 right = upwards.Cross(forward).normalize();
   Vector3 up = forward.Cross(right);
 
   r32 m00 = right.x;
@@ -74,7 +74,7 @@ Quaternion Quaternion::LookRotation(const Vector3& dir, const Vector3& upwards)
 }
 
 
-r32 Quaternion::Norm() const
+r32 Quaternion::norm() const
 {
   return sqrtf(x*x + y*y + z*z + w*w);
 }
@@ -86,7 +86,7 @@ Quaternion Quaternion::Conjugate() const
 }
 
 
-Quaternion Quaternion::Inverse() const
+Quaternion Quaternion::inverse() const
 {
   Quaternion conjugate = Conjugate();
   r32 norm2 = (x*x + y*y + z*z + w*w);
@@ -183,14 +183,14 @@ void Quaternion::operator-=(const Quaternion& other)
 }
 
 
-Quaternion Quaternion::Normalize() const
+Quaternion Quaternion::normalize() const
 {
-  r32 norm = Norm();
-  return (*this / norm);
+  r32 n = norm();
+  return (*this / n);
 }
 
 
-Quaternion Quaternion::AngleAxis(const r32 radians, const Vector3& axis)
+Quaternion Quaternion::angleAxis(const r32 radians, const Vector3& axis)
 {
   r32 radHalf = radians * 0.5f;
   r32 sineHalf = sinf(radHalf);
@@ -203,7 +203,7 @@ Quaternion Quaternion::AngleAxis(const r32 radians, const Vector3& axis)
 }
 
 
-Quaternion Quaternion::EulerAnglesToQuaternion(const Vector3& euler)
+Quaternion Quaternion::eulerAnglesToQuaternion(const Vector3& euler)
 {
   Quaternion q;
   r32 t0 = cosf(euler.z * 0.5f);
@@ -222,7 +222,7 @@ Quaternion Quaternion::EulerAnglesToQuaternion(const Vector3& euler)
 }
 
 
-Vector3 Quaternion::ToEulerAngles() const
+Vector3 Quaternion::toEulerAngles() const
 {
   Vector3 eulerAngles;
   r32 ysqrt = y * y;
@@ -247,14 +247,14 @@ Vector3 Quaternion::ToEulerAngles() const
 }
 
 
-Quaternion Quaternion::Matrix4ToQuaternion(const Matrix4& rot)
+Quaternion Quaternion::matrix4ToQuaternion(const Matrix4& rot)
 {
   R_DEBUG(rError, __FUNCTION__ "Not implemented.\n");
   return Quaternion();
 }
 
 
-Matrix4 Quaternion::ToMatrix4() const
+Matrix4 Quaternion::toMatrix4() const
 {
   return Matrix4(
     1.0f - 2.0f*(y*y + z*z),  2.0f*(x*y + w*z),         2.0f*(x*z - w*y),         0.0f,
@@ -265,14 +265,14 @@ Matrix4 Quaternion::ToMatrix4() const
 }
 
 
-Quaternion Quaternion::Slerp(const Quaternion& q0, const Quaternion& q1, const r32 t)
+Quaternion Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, const r32 t)
 {
   r32 dot = q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
 
   const r32 kThreshold = 0.9995f;
   if (fabs(dot) > kThreshold) {
     Quaternion result = q0 + (q1 - q0) * t;
-    result = result.Normalize();
+    result = result.normalize();
     return result;
   }
   
@@ -286,7 +286,7 @@ Quaternion Quaternion::Slerp(const Quaternion& q0, const Quaternion& q1, const r
   r32 theta0 = acosf(dot);
   r32 theta = theta0 * t;
   Quaternion v2 = v1 - q0*dot;
-  v2 = v2.Normalize();
+  v2 = v2.normalize();
 
   return q0*cosf(theta) + v2*sinf(theta);
 }
@@ -311,7 +311,7 @@ Vector3 Quaternion::operator*(const Vector3& other) const
   Vector3 u(x, y, z);
   r32 s = w;
   
-  return u * u.Dot(other) * 2.0f + other * (s * s - u.Dot(u)) + u.Cross(other) * 2.0f * s;
+  return u * u.dot(other) * 2.0f + other * (s * s - u.dot(u)) + u.Cross(other) * 2.0f * s;
 }
 
 

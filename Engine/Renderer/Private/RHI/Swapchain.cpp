@@ -17,13 +17,13 @@ Swapchain::~Swapchain()
 }
 
 
-void Swapchain::Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
+void Swapchain::initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
       VkPresentModeKHR desiredPresent, u32 buffers, u32 desiredImages)
 {
 
-  std::vector<VkPresentModeKHR> presentModes = physical.QuerySwapchainPresentModes(surface);
-  std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.QuerySwapchainSurfaceFormats(surface);
-  VkSurfaceCapabilitiesKHR capabilities = physical.QuerySwapchainSurfaceCapabilities(surface);
+  std::vector<VkPresentModeKHR> presentModes = physical.querySwapchainPresentModes(surface);
+  std::vector<VkSurfaceFormatKHR> surfaceFormats = physical.querySwapchainSurfaceFormats(surface);
+  VkSurfaceCapabilitiesKHR capabilities = physical.querySwapchainSurfaceCapabilities(surface);
 
   VkPresentModeKHR desiredPresentMode = desiredPresent;
 
@@ -68,7 +68,7 @@ void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceF
   sInfo.clipped = VK_TRUE;
   sInfo.oldSwapchain = oldSwapChain;
   
-  if (vkCreateSwapchainKHR(device.Native(), &sInfo, nullptr, &mSwapchain) != VK_SUCCESS) {
+  if (vkCreateSwapchainKHR(device.getNative(), &sInfo, nullptr, &mSwapchain) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create swapchain!\n");
   }
 
@@ -81,7 +81,7 @@ void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceF
   mCurrentBufferCount = buffers;
 
   if (oldSwapChain) {
-    vkDestroySwapchainKHR(device.Native(), oldSwapChain, nullptr);
+    vkDestroySwapchainKHR(device.getNative(), oldSwapChain, nullptr);
   }
 
   QuerySwapchainImages(device);
@@ -89,21 +89,21 @@ void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceF
 }
 
 
-void Swapchain::CleanUp(LogicalDevice& device)
+void Swapchain::cleanUp(LogicalDevice& device)
 {
   for (size_t i = 0; i < SwapchainImages.size(); ++i) {
     SwapchainImage& image = SwapchainImages[i];
-    vkDestroyImageView(device.Native(), image.View, nullptr);
+    vkDestroyImageView(device.getNative(), image.getView, nullptr);
   }
 
   for (u32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
-    vkDestroySemaphore(device.Native(), m_imageAvailableSemas[i], nullptr);
-    vkDestroySemaphore(device.Native(), m_graphicsFinishedSemas[i], nullptr);
-    vkDestroyFence(device.Native(), m_inFlightFences[i], nullptr);
+    vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
+    vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
+    vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
   }
 
   if (mSwapchain) {
-    vkDestroySwapchainKHR(device.Native(), mSwapchain, nullptr);
+    vkDestroySwapchainKHR(device.getNative(), mSwapchain, nullptr);
     mSwapchain = VK_NULL_HANDLE;
   }
 }
@@ -112,14 +112,14 @@ void Swapchain::CleanUp(LogicalDevice& device)
 void Swapchain::QuerySwapchainImages(LogicalDevice& device)
 {
   u32 imageCount;
-  vkGetSwapchainImagesKHR(device.Native(), mSwapchain, &imageCount, nullptr);
+  vkGetSwapchainImagesKHR(device.getNative(), mSwapchain, &imageCount, nullptr);
 
   std::vector<VkImage> images(imageCount);
-  vkGetSwapchainImagesKHR(device.Native(), mSwapchain, &imageCount, images.data());
+  vkGetSwapchainImagesKHR(device.getNative(), mSwapchain, &imageCount, images.data());
 
   if (!SwapchainImages.empty()) {
     for (size_t i = 0; i < SwapchainImages.size(); ++i) {
-      vkDestroyImageView(device.Native(), SwapchainImages[i].View, nullptr);  
+      vkDestroyImageView(device.getNative(), SwapchainImages[i].getView, nullptr);  
     }
   }
 
@@ -140,7 +140,7 @@ void Swapchain::QuerySwapchainImages(LogicalDevice& device)
     ivInfo.subresourceRange.layerCount = 1;
     ivInfo.subresourceRange.levelCount = 1;
     
-    if (vkCreateImageView(device.Native(), &ivInfo, nullptr, &SwapchainImages[i].View) != VK_SUCCESS) {
+    if (vkCreateImageView(device.getNative(), &ivInfo, nullptr, &SwapchainImages[i].getView) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create swapchain image!\n");
       return;
     }
@@ -168,20 +168,20 @@ void Swapchain::CreateSemaphores(LogicalDevice& device, u32 count)
   }
 */
   for (u32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
-    vkDestroySemaphore(device.Native(), m_imageAvailableSemas[i], nullptr);
-    vkDestroySemaphore(device.Native(), m_graphicsFinishedSemas[i], nullptr);
-    vkDestroyFence(device.Native(), m_inFlightFences[i], nullptr);
+    vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
+    vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
+    vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
   }
 
   m_imageAvailableSemas.resize(count);
   m_graphicsFinishedSemas.resize(count);
   m_inFlightFences.resize(count);
   for (u32 i = 0; i < count; ++i) {
-    VkResult result = vkCreateSemaphore(device.Native(), &semaphoreCI, nullptr, &m_imageAvailableSemas[i]);
+    VkResult result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_imageAvailableSemas[i]);
     R_ASSERT(result == VK_SUCCESS, "");
-    result = vkCreateSemaphore(device.Native(), &semaphoreCI, nullptr, &m_graphicsFinishedSemas[i]);
+    result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_graphicsFinishedSemas[i]);
     R_ASSERT(result == VK_SUCCESS, "");
-    result = vkCreateFence(device.Native(), &fenceCi, nullptr, &m_inFlightFences[i]);
+    result = vkCreateFence(device.getNative(), &fenceCi, nullptr, &m_inFlightFences[i]);
     R_ASSERT(result == VK_SUCCESS, "");
   }
 }

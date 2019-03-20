@@ -35,9 +35,9 @@ public:
     , m_indicesStagingBuffer(nullptr)
     , m_mainBuffer(0) { }
 
-  void                        Initialize(VulkanRHI* rhi);
-  void                        CleanUp(VulkanRHI* pRhi);
-  void                        Render(VulkanRHI* pRhi);
+  void                        initialize(VulkanRHI* rhi);
+  void                        cleanUp(VulkanRHI* pRhi);
+  void                        render(VulkanRHI* pRhi);
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
   void                        BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 frameIndex);
@@ -55,7 +55,7 @@ public:
   void                        ClearUiBuffers();
 
 private:
-  void                        InitializeRenderPass(VulkanRHI* pRhi);
+  void                        initializeRenderPass(VulkanRHI* pRhi);
   void                        CreateBuffers(VulkanRHI* pRhi);
   void                        SetUpGraphicsPipeline(VulkanRHI* pRhi);
   void                        CreateDescriptorSetLayout(VulkanRHI* pRhi);

@@ -28,44 +28,44 @@ public:
   BulletPhysics()
     : m_pWorld(nullptr) { }
 
-  void                  Initialize();
-  void                  CleanUp();
+  void                  initialize();
+  void                  cleanUp();
 
-  void                  UpdateState(r64 dt, r64 fixedTime) override;
+  void                  updateState(r64 dt, r64 fixedTime) override;
   void                  SetWorld(btDynamicsWorld* world) { m_pWorld = world; }
 
-  void                  OnStartUp() override;
-  void                  OnShutDown() override;
+  void                  onStartUp() override;
+  void                  onShutDown() override;
 
   btDynamicsWorld*      GetCurrentWorld() { return m_pWorld; }
 
   void                  ClearWorld() { }
-  void                  Reset(RigidBody* body) override;
-  RigidBody*            CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
-  void                  FreeRigidBody(RigidBody* body) override;
-  BoxCollider*          CreateBoxCollider(const Vector3& scale) override;
-  SphereCollider*       CreateSphereCollider(r32 radius) override;
-  CompoundCollider*     CreateCompoundCollider() override;
-  void                  UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) override;
-  void                  UpdateRigidBody(RigidBody* body, physics_update_bits_t bits) override;
+  void                  reset(RigidBody* body) override;
+  RigidBody*            createRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0)) override;
+  void                  freeRigidBody(RigidBody* body) override;
+  BoxCollider*          createBoxCollider(const Vector3& scale) override;
+  SphereCollider*       createSphereCollider(r32 radius) override;
+  CompoundCollider*     createCompoundCollider() override;
+  void                  updateCompoundCollider(RigidBody* body, CompoundCollider* compound) override;
+  void                  updateRigidBody(RigidBody* body, physics_update_bits_t bits) override;
 
-  void                  ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
+  void                  applyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) override;
 
-  void                  FreeCollider(Collider* collider) override;
-  void                  SetMass(RigidBody* body, r32 mass) override;
-  void                  ActivateRigidBody(RigidBody* body) override;
-  void                  DeactivateRigidBody(RigidBody* body) override;
-  void                  SetFriction(RigidBody* body, r32 friction) override;
-  void                  SetRollingFriction(RigidBody* body, r32 friction) override;
-  void                  SetSpinningFriction(RigidBody* body, r32 friction) override;
+  void                  freeCollider(Collider* collider) override;
+  void                  setMass(RigidBody* body, r32 mass) override;
+  void                  activateRigidBody(RigidBody* body) override;
+  void                  deactivateRigidBody(RigidBody* body) override;
+  void                  setFriction(RigidBody* body, r32 friction) override;
+  void                  setRollingFriction(RigidBody* body, r32 friction) override;
+  void                  setSpinningFriction(RigidBody* body, r32 friction) override;
 
   void                  SetWorldGravity(const Vector3& gravity) override;
-  void                  ClearForces(RigidBody* body) override;
-  void                  AddCollider(RigidBody* body, Collider* collider) override;
+  void                  clearForces(RigidBody* body) override;
+  void                  addCollider(RigidBody* body, Collider* collider) override;
 
-  void                  SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
-  b32                   RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) override;
-  b32                   RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) override;
+  void                  setTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
+  b32                   rayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) override;
+  b32                   rayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) override;
 private:
   btDynamicsWorld*        m_pWorld;
 };

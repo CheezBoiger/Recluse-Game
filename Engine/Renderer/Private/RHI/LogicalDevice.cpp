@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
+b32 LogicalDevice::initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
   QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation)
 {
   VkResult Result = vkCreateDevice(physical, &info, nullptr, &handle);
@@ -42,14 +42,14 @@ b32 LogicalDevice::Initialize(const VkPhysicalDevice physical, const VkDeviceCre
 
   R_DEBUG(rNotify, "Queues created.\n");
 
-  CreateComputeFence();
+  createComputeFence();
   return true;
 }
 
 
-void LogicalDevice::CleanUp()
+void LogicalDevice::cleanUp()
 {
-  WaitOnQueues();
+  waitOnQueues();
   if (mImageAvailableSemaphore) {
     vkDestroySemaphore(handle, mImageAvailableSemaphore, nullptr);
     mImageAvailableSemaphore = VK_NULL_HANDLE;
@@ -78,7 +78,7 @@ VkResult LogicalDevice::FlushMappedMemoryRanges(u32 count, const VkMappedMemoryR
 }
 
 
-void LogicalDevice::WaitOnQueues()
+void LogicalDevice::waitOnQueues()
 {
   vkQueueWaitIdle(mPresentationQueue);
 
@@ -96,7 +96,7 @@ void LogicalDevice::WaitOnQueues()
 }
 
 
-void LogicalDevice::CreateComputeFence()
+void LogicalDevice::createComputeFence()
 {
   VkFenceCreateInfo fenceCI = {};
   fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;

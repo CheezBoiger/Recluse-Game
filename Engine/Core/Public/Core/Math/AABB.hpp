@@ -12,17 +12,17 @@ namespace Recluse {
 // as Lester Hedges implementation! Many thanks to them!
 struct AABB {
   // Compute the center of the  bounding box.
-  void      ComputeCentroid();
+  void      computeCentroid();
   
   // Compute the surface area of this box. Stored in sA.
-  void      ComputeSurfaceArea();
+  void      computeSurfaceArea();
 
-  b32       Overlaps(const AABB& other) const;
+  b32       overlaps(const AABB& other) const;
 
-  b32       Contains(const AABB& other) const;
+  b32       contains(const AABB& other) const;
   
   // Checks if a point is inside this bounding box.
-  b32       Inside(const Vector3& p) const;
+  b32       inside(const Vector3& p) const;
 
   // Minimum lower bound of the bounding box.
   Vector3     min;

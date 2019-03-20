@@ -17,8 +17,8 @@ protected:
 
   // Global Clean up and initialization of light data, since this data structure keeps
   // track of light key references. Determines which light keys to assign.
-  static void GlobalInitialize();
-  static void GlobalCleanUp();
+  static void globalInitialize();
+  static void globalCleanUp();
 
 public:
   enum LightType {
@@ -36,25 +36,25 @@ public:
   virtual ~LightComponent() { }
 
 protected:
-  virtual void              OnInitialize(GameObject* owner) override { }
-  virtual void              OnCleanUp() override { }
-  virtual void              Update() override { }
+  virtual void              onInitialize(GameObject* owner) override { }
+  virtual void              onCleanUp() override { }
+  virtual void              update() override { }
 public:
 
-  u32                       GetId() const { return m_Id; }
-  virtual void              SetIntensity(r32 intensity) { }
-  virtual void              SetColor(const Vector4& color) { }
+  u32                       getId() const { return m_Id; }
+  virtual void              setIntensity(r32 intensity) { }
+  virtual void              setColor(const Vector4& color) { }
 
-  virtual void              Serialize(IArchive& archive) override { }
-  virtual void              Deserialize(IArchive& archive) override { }
+  virtual void              serialize(IArchive& archive) override { }
+  virtual void              deserialize(IArchive& archive) override { }
 
-  b32                       Debugging() { return m_debug; }
+  b32                       isDebugging() { return m_debug; }
   
-  void               Debug(b32 enable) { m_debug = enable; OnDebug(); }
+  void               enableDebug(b32 enable) { m_debug = enable; onDebug(); }
 
 protected:
 
-  virtual void OnDebug() { }
+  virtual void onDebug() { }
 
   LightType                 m_Type;
   u32                       m_Id;

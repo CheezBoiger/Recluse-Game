@@ -112,8 +112,8 @@ void GeneratePrimitive(Primitive& handle, Material* mat, u32 firstIndex, u32 ind
 static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineModel)
 {
   for (tinygltf::Image& image : gltfModel->images) {
-    Texture2D* pTex = gRenderer().CreateTexture2D();
-    pTex->Initialize(RFORMAT_R8G8B8A8_UNORM, static_cast<u32>(image.width),
+    Texture2D* pTex = gRenderer().createTexture2D();
+    pTex->initialize(RFORMAT_R8G8B8A8_UNORM, static_cast<u32>(image.width),
                   static_cast<u32>(image.height), true);
     Image img;
 
@@ -142,7 +142,7 @@ static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineMod
   
     img._data = pImgBuffer;
 
-    pTex->Update(img);
+    pTex->update(img);
     
     if (bHeapAlloc) { delete pImgBuffer; }
 
@@ -153,7 +153,7 @@ static ModelResultBits LoadTextures(tinygltf::Model* gltfModel, Model* engineMod
       pTex->_Name += image.uri;
     }
 
-    TextureCache::Cache(pTex);
+    TextureCache::cache(pTex);
     engineModel->textures.push_back(pTex);
   }
 
@@ -237,8 +237,8 @@ static ModelResultBits LoadSamplers(tinygltf::Model* gltfModel, Model* engineMod
     samplerInfo._maxLod = 32.0f;
     samplerInfo._minLod = 0.0f;
     samplerInfo._unnnormalizedCoordinates = false;
-    TextureSampler* pSampler = gRenderer().CreateTextureSampler(samplerInfo);
-    SamplerCache::Cache(pSampler);
+    TextureSampler* pSampler = gRenderer().createTextureSampler(samplerInfo);
+    SamplerCache::cache(pSampler);
     engineModel->samplers.push_back(pSampler);
   }
   return Model_None;
@@ -250,56 +250,56 @@ static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineMo
   u32 count = 0;
   for (tinygltf::Material& mat : gltfModel->materials) {
     Material* engineMat = new Material();
-    engineMat->Initialize(&gRenderer());
-    engineMat->SetMetallicFactor(1.0f);
-    engineMat->SetRoughnessFactor(1.0f);
+    engineMat->initialize(&gRenderer());
+    engineMat->setMetallicFactor(1.0f);
+    engineMat->setRoughnessFactor(1.0f);
     if (mat.values.find("baseColorTexture") != mat.values.end()) { 
       tinygltf::Texture& texture = gltfModel->textures[mat.values["baseColorTexture"].TextureIndex()]; 
-      engineMat->SetAlbedo(engineModel->textures[mat.values["baseColorTexture"].TextureIndex()]);
-      if (texture.sampler != -1) engineMat->SetAlbedoSampler(engineModel->samplers[texture.sampler]);
-      engineMat->EnableAlbedo(true);
+      engineMat->setAlbedo(engineModel->textures[mat.values["baseColorTexture"].TextureIndex()]);
+      if (texture.sampler != -1) engineMat->setAlbedoSampler(engineModel->samplers[texture.sampler]);
+      engineMat->enableAlbedo(true);
     }
 
     if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
-      engineMat->SetNormal(engineModel->textures[mat.additionalValues["normalTexture"].TextureIndex()]);
+      engineMat->setNormal(engineModel->textures[mat.additionalValues["normalTexture"].TextureIndex()]);
       tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["normalTexture"].TextureIndex()];
-      if (texture.sampler != -1) engineMat->SetNormalSampler(engineModel->samplers[texture.sampler]);
-      engineMat->EnableNormal(true);
+      if (texture.sampler != -1) engineMat->setNormalSampler(engineModel->samplers[texture.sampler]);
+      engineMat->enableNormal(true);
     }
 
     if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {   
-      engineMat->SetRoughnessMetallic(engineModel->textures[mat.values["metallicRoughnessTexture"].TextureIndex()]);
+      engineMat->setRoughnessMetallic(engineModel->textures[mat.values["metallicRoughnessTexture"].TextureIndex()]);
       tinygltf::Texture& texture = gltfModel->textures[mat.values["metallicRoughnessTexture"].TextureIndex()]; 
-      if (texture.sampler != -1) engineMat->SetRoughMetalSampler(engineModel->samplers[texture.sampler]);
-      engineMat->EnableRoughness(true);
-      engineMat->EnableMetallic(true);
+      if (texture.sampler != -1) engineMat->setRoughMetalSampler(engineModel->samplers[texture.sampler]);
+      engineMat->enableRoughness(true);
+      engineMat->enableMetallic(true);
     }
 
     if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
-      engineMat->SetAo(engineModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()]);
+      engineMat->setAo(engineModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()]);
       tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["occlusionTexture"].TextureIndex()];
-      if (texture.sampler != -1) engineMat->SetAoSampler(engineModel->samplers[texture.sampler]);
-      engineMat->EnableAo(true);
+      if (texture.sampler != -1) engineMat->setAoSampler(engineModel->samplers[texture.sampler]);
+      engineMat->enableAo(true);
     }
 
     if (mat.values.find("roughnessFactor") != mat.values.end()) {
-      engineMat->SetRoughnessFactor(static_cast<r32>(mat.values["roughnessFactor"].Factor()));
+      engineMat->setRoughnessFactor(static_cast<r32>(mat.values["roughnessFactor"].Factor()));
     } 
 
     if (mat.values.find("metallicFactor") != mat.values.end()) {
-      engineMat->SetMetallicFactor(static_cast<r32>(mat.values["metallicFactor"].Factor()));
+      engineMat->setMetallicFactor(static_cast<r32>(mat.values["metallicFactor"].Factor()));
     }
 
     if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
-      engineMat->SetEmissive(engineModel->textures[mat.additionalValues["emissiveTexture"].TextureIndex()]);
+      engineMat->setEmissive(engineModel->textures[mat.additionalValues["emissiveTexture"].TextureIndex()]);
       tinygltf::Texture& texture = gltfModel->textures[mat.additionalValues["emissiveTexture"].TextureIndex()];
-      if (texture.sampler != -1) engineMat->SetEmissiveSampler(engineModel->samplers[texture.sampler]);
-      engineMat->EnableEmissive(true);
+      if (texture.sampler != -1) engineMat->setEmissiveSampler(engineModel->samplers[texture.sampler]);
+      engineMat->enableEmissive(true);
     }
 
     if (mat.values.find("baseColorFactor") != mat.values.end()) {
       tinygltf::ColorValue& value = mat.values["baseColorFactor"].ColorFactor();
-      engineMat->SetBaseColor(Vector4(static_cast<r32>(value[0]), 
+      engineMat->setBaseColor(Vector4(static_cast<r32>(value[0]), 
                                       static_cast<r32>(value[1]), 
                                       static_cast<r32>(value[2]), 
                                       static_cast<r32>(value[3])));
@@ -308,16 +308,16 @@ static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineMo
     if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
       tinygltf::Parameter parameter = mat.additionalValues["alphaMode"];
       if (parameter.string_value == "BLEND") {
-        engineMat->SetTransparent(true);
+        engineMat->setTransparent(true);
       }
       if (parameter.string_value == "MASK") {
-        engineMat->SetTransparent(true);
+        engineMat->setTransparent(true);
       }
     }
 
     if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) {
       r32 factor = static_cast<r32>(mat.additionalValues["alphaCutoff"].Factor());
-      engineMat->SetOpacity(factor);
+      engineMat->setOpacity(factor);
     }
 
     std::string name = engineModel->name + "_mat_";
@@ -328,7 +328,7 @@ static ModelResultBits LoadMaterials(tinygltf::Model* gltfModel, Model* engineMo
       name += mat.name;
     }
   
-    MaterialCache::Cache(name, engineMat);
+    MaterialCache::cache(name, engineMat);
     engineModel->materials.push_back(engineMat);
   }
 
@@ -464,7 +464,7 @@ static ModelResultBits LoadAnimations(tinygltf::Model* gltfModel, Model* engineM
     clip->_fFps = 60.0f;
     // TODO(): Need to figure out how to target the skeleton for this clip.
     engineModel->animations.push_back(clip);
-    AnimAssetManager::Cache(clip->_name, clip);
+    AnimAssetManager::cache(clip->_name, clip);
   }
 
   return Model_Animated;
@@ -538,17 +538,17 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).Normalize(), 0.0f);
+          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).normalize(), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
-          min = Vector3::Min(min, p);
-          max = Vector3::Max(max, p);
-          primData._aabb.min = Vector3::Min(primData._aabb.min, p);
-          primData._aabb.max = Vector3::Max(primData._aabb.max, p);
+          min = Vector3::minimum(min, p);
+          max = Vector3::maximum(max, p);
+          primData._aabb.min = Vector3::minimum(primData._aabb.min, p);
+          primData._aabb.max = Vector3::maximum(primData._aabb.max, p);
         }
       }
 
@@ -624,33 +624,33 @@ static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, 
 
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
 
-      primData._aabb.ComputeCentroid();;
+      primData._aabb.computeCentroid();;
 
       primData._localConfigs |= globalConfig;
-      if (engineModel->materials[primitive.material]->Native()->Transparent()) {
+      if (engineModel->materials[primitive.material]->getNative()->isTransparent()) {
         primData._localConfigs |= CMD_TRANSPARENT_BIT;  
       }
       primitives.push_back(primData);
     }
 
-    pMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
-    pMesh->SetMin(min);
-    pMesh->SetMax(max);
-    pMesh->UpdateAABB();
+    pMesh->initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
+    pMesh->setMin(min);
+    pMesh->setMax(max);
+    pMesh->updateAABB();
     std::string name = engineModel->name + "_mesh_" + mesh.name;
-    MeshCache::Cache(name, pMesh);
+    MeshCache::cache(name, pMesh);
     engineModel->meshes.push_back(pMesh);
     for (auto& prim : primitives) {
-      pMesh->PushPrimitive(prim);
+      pMesh->pushPrimitive(prim);
     }
-    pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
+    pMesh->sortPrimitives(Mesh::TRANSPARENCY_LAST);
 
 
     if (!morphVertices.empty()) {
-      pMesh->AllocateMorphTargetBuffer(morphVertices.size());
+      pMesh->allocateMorphTargetBuffer(morphVertices.size());
       for ( size_t i = 0; i < morphVertices.size(); ++i ) {
         auto& verts = morphVertices[i];
-        pMesh->InitializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex)); 
+        pMesh->initializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex)); 
       } 
     }
   }
@@ -738,7 +738,7 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           Vector3 p(&bufferPositions[value * 3]);
           vertex.position = Vector4(p, 1.0f) * localMatrix;
           vertex.position.w = 1.0f;
-          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).Normalize(), 0.0f);
+          vertex.normal = Vector4((Vector3(&bufferNormals[value * 3]) * Matrix3(localMatrix)).normalize(), 0.0f);
           vertex.texcoord0 = bufferTexCoords ? Vector2(&bufferTexCoords[value * 2]) : Vector2(0.0f, 0.0f);
           vertex.texcoord0.y = vertex.texcoord0.y > 1.0f ? vertex.texcoord0.y - 1.0f : vertex.texcoord0.y;
           vertex.texcoord1 = Vector2();
@@ -765,10 +765,10 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
           //vertex.position.y *= -1.0f;
           //vertex.normal.y *= -1.0f;
           vertices.push_back(vertex);
-          min = Vector3::Min(min, p);
-          max = Vector3::Max(max, p);
-          primData._aabb.min = Vector3::Min(primData._aabb.min, p);
-          primData._aabb.max = Vector3::Max(primData._aabb.max, p);
+          min = Vector3::minimum(min, p);
+          max = Vector3::maximum(max, p);
+          primData._aabb.min = Vector3::minimum(primData._aabb.min, p);
+          primData._aabb.max = Vector3::maximum(primData._aabb.max, p);
         }
       }
 
@@ -844,10 +844,10 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
 
       GeneratePrimitive(primData, engineModel->materials[primitive.material], indexStart, indexCount);
 
-      primData._aabb.ComputeCentroid();
+      primData._aabb.computeCentroid();
 
       primData._localConfigs |= globalConfig;
-      if (engineModel->materials[primitive.material]->Native()->Transparent()) {
+      if (engineModel->materials[primitive.material]->getNative()->isTransparent()) {
         primData._localConfigs |= CMD_TRANSPARENT_BIT;  
       }
       // TODO():
@@ -859,22 +859,22 @@ static Mesh* LoadSkinnedMesh(const tinygltf::Node& node, const tinygltf::Model& 
       auto target = mesh.targets[i];
     }
 
-    pMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::SKINNED, indices.size(), indices.data());
-    pMesh->SetMin(min);
-    pMesh->SetMax(max);
-    pMesh->UpdateAABB();
-    MeshCache::Cache(mesh.name, pMesh);
+    pMesh->initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::SKINNED, indices.size(), indices.data());
+    pMesh->setMin(min);
+    pMesh->setMax(max);
+    pMesh->updateAABB();
+    MeshCache::cache(mesh.name, pMesh);
     engineModel->meshes.push_back(pMesh);
     for (auto& primData : primitives) {
-      pMesh->PushPrimitive(primData);
+      pMesh->pushPrimitive(primData);
     }
-    pMesh->SortPrimitives(Mesh::TRANSPARENCY_LAST);
+    pMesh->sortPrimitives(Mesh::TRANSPARENCY_LAST);
 
     if (!morphVertices.empty()) {
-      pMesh->AllocateMorphTargetBuffer(morphVertices.size());
+      pMesh->allocateMorphTargetBuffer(morphVertices.size());
       for (size_t i = 0; i < morphVertices.size(); ++i) {
         auto& verts = morphVertices[i];
-        pMesh->InitializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex));
+        pMesh->initializeMorphTarget(&gRenderer(), i, verts.size(), verts.data(), sizeof(MorphVertex));
       }
     }
   }
@@ -919,13 +919,13 @@ static NodeTransform CalculateGlobalTransform(const tinygltf::Node& node, Matrix
       static_cast<r32>(sv[2]));
   }
 
-  Matrix4 localMatrix = Matrix4::Identity();
+  Matrix4 localMatrix = Matrix4::identity();
   if (node.matrix.size() == 16) {
     localMatrix = Matrix4(node.matrix.data());
   } else {
-    Matrix4 T = Matrix4::Translate(Matrix4::Identity(), t);
-    Matrix4 R = r.ToMatrix4();
-    Matrix4 S = Matrix4::Scale(Matrix4::Identity(), s);
+    Matrix4 T = Matrix4::translate(Matrix4::identity(), t);
+    Matrix4 R = r.toMatrix4();
+    Matrix4 S = Matrix4::scale(Matrix4::identity(), s);
     localMatrix = S * R * T;
   }
 
@@ -962,9 +962,9 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
 
   for (size_t i = 0; i < accessor.count; ++i) {
     Matrix4 invBindMat(&bindMatrices[i * 16]);
-    Matrix4 bindMat = invBindMat.Inverse();
+    Matrix4 bindMat = invBindMat.inverse();
     bindMat = bindMat * parentMatrix;
-    skeleton._joints[i]._invBindPose = bindMat.Inverse();
+    skeleton._joints[i]._invBindPose = bindMat.inverse();
   }
 
   struct NodeTag {
@@ -976,8 +976,8 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
   if (skin.skeleton != -1) {
     const tinygltf::Node& root = model.nodes[skin.skeleton];
     NodeTransform rootTransform = CalculateGlobalTransform(root, 
-      Matrix4::Scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
-    skeleton._rootInvTransform = rootTransform._globalMatrix.Inverse();
+      Matrix4::scale(Matrix4(), Vector3(-1.0f, 1.0f, 1.0f)));
+    skeleton._rootInvTransform = rootTransform._globalMatrix.inverse();
     NodeTag tag{ 0xff, Matrix4() };
     nodeMap[skin.skeleton] = tag;
     for (size_t i = 0; i < root.children.size(); ++i) {
@@ -1008,9 +1008,9 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
     }
   }
   
-  Skeleton::PushSkeleton(skeleton);
+  Skeleton::pushSkeleton(skeleton);
   
-  engineModel->skeletons.push_back(Skeleton::GetSkeleton(skeleton._uuid));
+  engineModel->skeletons.push_back(Skeleton::getSkeleton(skeleton._uuid));
   return skeleton._uuid;
 }
 
@@ -1027,7 +1027,7 @@ static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, M
   if (node.skin != -1) {
     skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
     Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
-    pMesh->SetSkeletonReference(skeleId);
+    pMesh->setSkeletonReference(skeleId);
   }
   else {
     LoadMesh(node, model, engineModel, transform._globalMatrix);
@@ -1054,7 +1054,7 @@ void GetFilenameAndType(const std::string& path, std::string& filenameOut, u32& 
 }
 
 
-ModelResultBits Load(const std::string path)
+ModelResultBits load(const std::string path)
 {
   ModelResultBits result = 0;
   Model*           model = nullptr;
@@ -1089,13 +1089,13 @@ ModelResultBits Load(const std::string path)
   tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene];
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
     tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
-    Matrix4 mat = Matrix4::Scale(Matrix4::Identity(), Vector3(-1.0f, 1.0f, 1.0f));
+    Matrix4 mat = Matrix4::scale(Matrix4::identity(), Vector3(-1.0f, 1.0f, 1.0f));
     LoadNode(node, gltfModel, model, mat, 1.0);
   }
 
   result |= LoadAnimations(&gltfModel, model);
 
-  ModelCache::Cache(model->name, model);
+  ModelCache::cache(model->name, model);
   result |= Model_Cached;
 
   result |= Model_Success;

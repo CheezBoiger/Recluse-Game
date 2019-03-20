@@ -7273,7 +7273,7 @@ The invariants are checked by member function assert_invariant().
 @note ObjectType trick from http://stackoverflow.com/a/9860911
 @endinternal
 
-@see [RFC 7159: The JavaScript Object Notation (JSON) Data Interchange
+@see [RFC 7159: The JavaScript Object Notation (JSON) getData Interchange
 Format](http://rfc7159.net/rfc7159)
 
 @since version 1.0.0

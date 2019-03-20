@@ -26,7 +26,7 @@ using namespace Recluse;
 struct CameraTransition {
   r32 interpolate;    // smoothness.
   r32 time;           // how long to remain in this position.
-  Vector3 position;   // Position of this transition.
+  Vector3 position;   // _position of this transition.
   Quaternion rotation;  // rotated face of this transition.
 };
 
@@ -49,94 +49,94 @@ public:
   {
   }
 
-  void OnStartUp() override
+  void onStartUp() override
   {
-    Window* pWindow = gEngine().GetWindow();
-    Transform* transform = GetTransform();
+    Window* pWindow = gEngine().getWindow();
+    Transform* transform = getTransform();
     // Camera set.
     pCam = new Camera(Camera::PERSPECTIVE, Radians(60.0f), 0.2f, 2000.0f);
-    pCam->Initialize(this);
-    pCam->EnableBloom(true);
-    Camera::SetMain(pCam);
+    pCam->initialize(this);
+    pCam->enableBloom(true);
+    Camera::setMain(pCam);
 
-    transform->Position = Vector3(10.0f, 10.0f, 10.0f);
-    Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
-    transform->Rotation = Quaternion::LookRotation(dir, Vector3::UP);
-    Vector3 euler = transform->Rotation.ToEulerAngles();
+    transform->_position = Vector3(10.0f, 10.0f, 10.0f);
+    Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->_position;
+    transform->_rotation = Quaternion::lookRotation(dir, Vector3::UP);
+    Vector3 euler = transform->_rotation.toEulerAngles();
     m_pitch = euler.x;
     m_yaw = euler.y;
     m_roll = euler.z;
 
     // Anything in contact with this flying camera will get pushed aside.
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
+    m_pCollider = gPhysics().createBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->AddCollider(m_pCollider);
+    m_pPhysicsComponent->initialize(this);
+    m_pPhysicsComponent->addCollider(m_pCollider);
 
     bFollow = false;
-    m_pPhysicsComponent->SetMass(0.0f);
+    m_pPhysicsComponent->setMass(0.0f);
 
     m_pSpotLight = new SpotLightComponent();
-    m_pSpotLight->Initialize(this);
-    m_pSpotLight->SetOuterCutoff(cosf(Radians(25.0f)));
-    m_pSpotLight->SetInnerCutoff(cosf(Radians(24.0f)));
-    m_pSpotLight->SetColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
-    m_pSpotLight->SetIntensity(2.0f);
-    m_pSpotLight->SetOffset(Vector3(0.5f, -0.5f, 0.0f));
+    m_pSpotLight->initialize(this);
+    m_pSpotLight->setOuterCutoff(cosf(Radians(25.0f)));
+    m_pSpotLight->setInnerCutoff(cosf(Radians(24.0f)));
+    m_pSpotLight->setColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
+    m_pSpotLight->setIntensity(2.0f);
+    m_pSpotLight->setOffset(Vector3(0.5f, -0.5f, 0.0f));
 
     m_pSpotLight2 = new SpotLightComponent();
-    m_pSpotLight2->Initialize(this);
-    m_pSpotLight2->SetOuterCutoff(cosf(Radians(25.0f)));
-    m_pSpotLight2->SetInnerCutoff(cosf(Radians(24.0f)));
-    m_pSpotLight2->SetColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-    m_pSpotLight2->SetIntensity(2.0f);
-    m_pSpotLight2->SetOffset(Vector3(-0.5f, -0.5f, 0.0f));
+    m_pSpotLight2->initialize(this);
+    m_pSpotLight2->setOuterCutoff(cosf(Radians(25.0f)));
+    m_pSpotLight2->setInnerCutoff(cosf(Radians(24.0f)));
+    m_pSpotLight2->setColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    m_pSpotLight2->setIntensity(2.0f);
+    m_pSpotLight2->setOffset(Vector3(-0.5f, -0.5f, 0.0f));
   }
 
   // Game object updating.
-  void Update(r32 tick) override
+  void update(r32 tick) override
   {
-    if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
-    Transform* transform = GetTransform();
+    if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
+    Transform* transform = getTransform();
 
     if (Keyboard::KeyPressed(KEY_CODE_0)) {
-     // pCam->SetFoV(pCam->FoV() + Radians(1.0f));
-     //pCam->SetExposure(pCam->Exposure() - 2.0f * Time::DeltaTime);
-      //gRenderer().TakeSnapshot("screenshot.png");
-      m_pSpotLight->Enable(false);
-      m_pSpotLight2->Enable(false);
+     // pCam->setFoV(pCam->getFoV() + Radians(1.0f));
+     //pCam->setExposure(pCam->getExposure() - 2.0f * Time::deltaTime);
+      //gRenderer().takeSnapshot("screenshot.png");
+      m_pSpotLight->setEnable(false);
+      m_pSpotLight2->setEnable(false);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_1)) {
-      //pCam->SetFoV(pCam->FoV() - Radians(1.0f));
-      //pCam->SetExposure(pCam->Exposure() + 2.0f * (r32)Time::DeltaTime);
-      m_pSpotLight->Enable(true);
-      m_pSpotLight2->Enable(true);
+      //pCam->setFoV(pCam->getFoV() - Radians(1.0f));
+      //pCam->setExposure(pCam->getExposure() + 2.0f * (r32)Time::deltaTime);
+      m_pSpotLight->setEnable(true);
+      m_pSpotLight2->setEnable(true);
     }
 
     if (!bFollow) {
       r32 speed = m_speed;
       if (Keyboard::KeyPressed(KEY_CODE_LSHIFT)) { speed *= 5.0f; }
-      if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->Position -= transform->Right() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->Position += transform->Right() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->Position += transform->Front() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->Position -= transform->Front() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->_position -= transform->right() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->_position += transform->right() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->_position += transform->front() * speed * tick; }
+      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->_position -= transform->front() * speed * tick; }
     }
 
     // Test window resizing.
     if (Keyboard::KeyPressed(KEY_CODE_N)) { 
-      gEngine().GetWindow()->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true); 
+      gEngine().getWindow()->setToWindowed(Window::getFullscreenWidth(), Window::getFullscreenHeight(), true); 
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_M)) { 
-      gEngine().GetWindow()->SetToWindowed(1200, 800); 
-      gEngine().GetWindow()->SetToCenter();
-      gEngine().GetWindow()->Show(); 
+      gEngine().getWindow()->setToWindowed(1200, 800); 
+      gEngine().getWindow()->setToCenter();
+      gEngine().getWindow()->show(); 
     }
 
     // Testing renderer configurations during runtime.
     if (Keyboard::KeyPressed(KEY_CODE_8)) {
-      GraphicsConfigParams params = gRenderer().CurrentGraphicsConfigs();
+      GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
       params._EnableBloom = false;
@@ -144,11 +144,11 @@ public:
       params._Shadows = GRAPHICS_QUALITY_NONE;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       params._EnableMultithreadedRendering = true;
-      gRenderer().UpdateRendererConfigs(&params);
+      gRenderer().updateRendererConfigs(&params);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_9)) {
-      GraphicsConfigParams params = gRenderer().CurrentGraphicsConfigs();
+      GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
       params._EnableBloom = true;
@@ -156,20 +156,20 @@ public:
       params._AA = AA_FXAA_2x;
       params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
-      gRenderer().UpdateRendererConfigs(&params);
+      gRenderer().updateRendererConfigs(&params);
     }
 
     if (bFirstLook) {
-      m_lastX = (r32)Mouse::X();
-      m_lastY = (r32)Mouse::Y();
+      m_lastX = (r32)Mouse::getX();
+      m_lastY = (r32)Mouse::getY();
       bFirstLook = false;
     }
 
-    if (Mouse::Tracking()) {
-      r32 xoffset = m_lastX - (r32)Mouse::X();
-      r32 yoffset = (r32)Mouse::Y() - m_lastY;
-      m_lastX = (r32)Mouse::X();
-      m_lastY = (r32)Mouse::Y();
+    if (Mouse::isTracking()) {
+      r32 xoffset = m_lastX - (r32)Mouse::getX();
+      r32 yoffset = (r32)Mouse::getY() - m_lastY;
+      m_lastX = (r32)Mouse::getX();
+      m_lastY = (r32)Mouse::getY();
 
       xoffset *= m_xSensitivity;
       yoffset *= m_ySensitivity;
@@ -179,43 +179,43 @@ public:
     }
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     if (!bFollow) {
-      transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
+      transform->_rotation = Quaternion::eulerAnglesToQuaternion(euler);
     }
 
     // Must update the camera manually, as it may need to be updated before other game logic.
     // Update before ray picking.
-    pCam->Update();
+    pCam->update();
 
 #if !defined FORCE_AUDIO_OFF
-    gAudio().SetListener3DOrientation(
-      transform->Position,
-      transform->Front(),
-      transform->Up());
+    gAudio().setListener3DOrientation(
+      transform->_position,
+      transform->front(),
+      transform->up());
 #endif
 
     // Testing ray cast.
-    if (Mouse::ButtonDown(Mouse::LEFT)) {
+    if (Mouse::buttonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
-      if (gPhysics().RayTest(transform->Position, transform->Front(), 50.0f, &hitOut)) {
+      if (gPhysics().rayTest(transform->_position, transform->front(), 50.0f, &hitOut)) {
         GameObject* obj = hitOut._rigidbody->_gameObj;
-        Item* item = obj->CastTo<Item>();
+        Item* item = obj->castTo<Item>();
         if (item) {
           _pHolding = item;
-          item->GetPhysicsComponent()->SetMass(0.0f);
+          item->GetPhysicsComponent()->setMass(0.0f);
         }
       }
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
-      _pHolding->GetPhysicsComponent()->SetMass(1.0f);
-      _pHolding->GetPhysicsComponent()->Reset();
+      _pHolding->GetPhysicsComponent()->setMass(1.0f);
+      _pHolding->GetPhysicsComponent()->reset();
       _pHolding = nullptr;
     }
 
     if (_pHolding) {
-      Transform* t = _pHolding->GetTransform();
-      t->Position = transform->Position + transform->Front() * 3.0f;
+      Transform* t = _pHolding->getTransform();
+      t->_position = transform->_position + transform->front() * 3.0f;
     }
 
 #define CAMERA_REVOLVE 0
@@ -223,17 +223,17 @@ public:
     t += tick * 0.2f;
     Vector3 xPos = Vector3(cosf(t) * 10.0f, 0.0f, 0.0f);
     Vector3 yPos = Vector3(0.0f, 0.0f, sinf(t) * 10.0f);
-    transform->Position = xPos + yPos + Vector3::UP * 10.0f;
-    Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->Position;
-    transform->Rotation = Quaternion::LookRotation(dir.Normalize(), Vector3::UP);
+    transform->_position = xPos + yPos + Vector3::UP * 10.0f;
+    Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->_position;
+    transform->_rotation = Quaternion::lookRotation(dir.normalize(), Vector3::UP);
 #endif
   }
 
-  void OnCleanUp() override 
+  void onCleanUp() override 
   {
-    m_pPhysicsComponent->CleanUp();
-    m_pSpotLight->CleanUp();
-    m_pSpotLight2->CleanUp();
+    m_pPhysicsComponent->cleanUp();
+    m_pSpotLight->cleanUp();
+    m_pSpotLight2->cleanUp();
     delete m_pPhysicsComponent;
     delete m_pCollider;
     delete m_pSpotLight;

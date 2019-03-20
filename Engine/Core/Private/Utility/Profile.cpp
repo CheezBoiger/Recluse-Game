@@ -11,7 +11,7 @@
 
 namespace Recluse {
 
-// Profile data stored by profile. Data is overwritten when tags are re entered.
+// Profile data stored by profile. getData is overwritten when tags are re entered.
 // Determined by profile type.
 std::unordered_map<ProfileTypes, 
   std::unordered_map<std::string, ProfileData > > kProfileDataMap;

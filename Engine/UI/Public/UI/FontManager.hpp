@@ -21,11 +21,11 @@ public:
     , mFreeType(nullptr)
     , mRenderer(nullptr) { }
 
-  void          OnStartUp() override;
-  void          OnShutDown() override;
+  void          onStartUp() override;
+  void          onShutDown() override;
 
   // Get the FreeType wrapper object reference.
-  FreeType*     Handle() { return mFreeType; }
+  FreeType*     getHandle() { return mFreeType; }
 
   // Import the font into the Font Manager, which will return the integer
   // key to the glyphs. This is used to determine which font to be used

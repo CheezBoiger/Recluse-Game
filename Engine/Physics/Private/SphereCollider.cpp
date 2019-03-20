@@ -13,15 +13,15 @@ MeshData* SphereCollider::kSphereMesh = nullptr;
 
 void SphereCollider::InitMeshDebugData()
 {
-  if (!gRenderer().IsActive()) {
+  if (!gRenderer().isActive()) {
     R_DEBUG(rWarning, "Sphere Collider mesh data can not be initialized, renderer is not active!\n");
     return;
   } 
 
   kSphereMesh = new MeshData();
-  auto vertices = UVSphere::MeshInstance(1.0f, 32, 32);
-  auto indices = UVSphere::IndicesInstance(vertices.size(), 32, 32);
-  kSphereMesh->Initialize(&gRenderer(), vertices.size(), 
+  auto vertices = UVSphere::meshInstance(1.0f, 32, 32);
+  auto indices = UVSphere::indicesInstance(vertices.size(), 32, 32);
+  kSphereMesh->initialize(&gRenderer(), vertices.size(), 
     vertices.data(), sizeof(StaticVertex), indices.size(), indices.data()); 
 }
 
@@ -29,7 +29,7 @@ void SphereCollider::InitMeshDebugData()
 void SphereCollider::CleanUpMeshDebugData()
 {
   if (kSphereMesh) {
-    kSphereMesh->CleanUp(&gRenderer());
+    kSphereMesh->cleanUp(&gRenderer());
     delete kSphereMesh;
     kSphereMesh = nullptr;
   }

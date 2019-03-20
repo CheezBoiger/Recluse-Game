@@ -40,10 +40,10 @@ b8 TestAllocators()
   void* DataBlock = malloc(DATA_BLOCK_SZ);
 
   FreeListAllocator FreeListAlloc(DATA_BLOCK_SZ, DataBlock);
-  float* d = (float* )FreeListAlloc.Allocate(sizeof(float), 8);
-  GameObject* obj = (GameObject* )FreeListAlloc.Allocate(sizeof(GameObject), 8);
+  float* d = (float* )FreeListAlloc.allocate(sizeof(float), 8);
+  GameObject* obj = (GameObject* )FreeListAlloc.allocate(sizeof(GameObject), 8);
   *d = 5.023f;
-  TestStruct* s = (TestStruct* )FreeListAlloc.Allocate(sizeof(TestStruct), 8);
+  TestStruct* s = (TestStruct* )FreeListAlloc.allocate(sizeof(TestStruct), 8);
   *s = std::move(TestStruct());
 
   FreeListAlloc.Deallocate(obj);

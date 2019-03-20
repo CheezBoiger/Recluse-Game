@@ -16,8 +16,8 @@ namespace Recluse {
 class MeshComponent : public Component {
   RCOMPONENT(MeshComponent);
 protected:
-  virtual void    OnInitialize(GameObject* owner) override;
-  virtual void    OnCleanUp() override;
+  virtual void    onInitialize(GameObject* owner) override;
+  virtual void    onCleanUp() override;
 public:
   MeshComponent();
 
@@ -26,14 +26,14 @@ public:
   Mesh*           MeshRef() { return m_pMeshRef; }
 
   // updates this mesh component instance frustum bit cull.
-  void            Update() override;
+  void            update() override;
 
   void            EnableCulling(b32 enable) { m_allowCulling = enable; }
 
   inline b32      AllowCulling() const { return m_allowCulling; }
 
   // Cull bit set map. Each bit represents a frustum, and when flipped, means this mesh is culled
-  // for that given frustum. Max 32 frustums can be supported.
+  // for that given frustum. maximum 32 frustums can be supported.
   b32             GetFrustumCullMap() const { return m_frustumCull; }
 
   // Set a frustum bit to 1.

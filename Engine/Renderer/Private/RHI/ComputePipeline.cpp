@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-void ComputePipeline::Initialize(VkComputePipelineCreateInfo& info,
+void ComputePipeline::initialize(VkComputePipelineCreateInfo& info,
     const VkPipelineLayoutCreateInfo& layout)
 {
   if (vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout) != VK_SUCCESS) {
@@ -34,7 +34,7 @@ ComputePipeline::~ComputePipeline()
 }
 
 
-void ComputePipeline::CleanUp()
+void ComputePipeline::cleanUp()
 {
   if (mLayout) {
     vkDestroyPipelineLayout(mOwner, mLayout, nullptr);

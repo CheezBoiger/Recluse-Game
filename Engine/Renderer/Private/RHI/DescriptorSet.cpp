@@ -7,7 +7,7 @@
 namespace Recluse {
 
 
-void DescriptorSetLayout::Initialize(const VkDescriptorSetLayoutCreateInfo& info)
+void DescriptorSetLayout::initialize(const VkDescriptorSetLayoutCreateInfo& info)
 {
   if (vkCreateDescriptorSetLayout(mOwner, &info, nullptr, &mLayout) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create descriptor layout! Aborting descriptor set allocation.\n");
@@ -32,7 +32,7 @@ DescriptorSet::~DescriptorSet()
 }
 
 
-void DescriptorSetLayout::CleanUp()
+void DescriptorSetLayout::cleanUp()
 {
   if (mLayout) {
     vkDestroyDescriptorSetLayout(mOwner, mLayout, nullptr);
@@ -41,10 +41,10 @@ void DescriptorSetLayout::CleanUp()
 }
 
 
-void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout)
+void DescriptorSet::allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout)
 {
   mPoolOwner = pool;
-  VkDescriptorSetLayout layoutRef = layout->Layout();
+  VkDescriptorSetLayout layoutRef = layout->getLayout();
   VkDescriptorSetAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = pool;
@@ -69,7 +69,7 @@ void DescriptorSet::Allocate(const VkDescriptorPool& pool, const DescriptorSetLa
 }
 
 
-void DescriptorSet::Free()
+void DescriptorSet::free()
 {
   if (mDescriptorSet) {
     vkFreeDescriptorSets(mOwner, mPoolOwner, 1, &mDescriptorSet);
@@ -78,10 +78,10 @@ void DescriptorSet::Free()
 }
 
 
-void DescriptorSet::Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets)
+void DescriptorSet::update(u32 count, VkWriteDescriptorSet* writeDescriptorSets)
 {
   for (u32 i = 0; i < count; ++i) {
-    writeDescriptorSets[i].dstSet = Handle();
+    writeDescriptorSets[i].dstSet = getHandle();
   }
   vkUpdateDescriptorSets(mOwner, count, writeDescriptorSets, 0, nullptr);
 }

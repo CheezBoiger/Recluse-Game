@@ -37,9 +37,14 @@ public:
 
   static const skeleton_uuid_t      kNoSkeletonId = -1;
 
-  static Skeleton*            GetSkeleton(skeleton_uuid_t id) { return &kSkeletons[id]; }
-  static void                 PushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
-  static void                 RemoveSkeleton(skeleton_uuid_t id) { 
+  static Skeleton* getSkeleton(skeleton_uuid_t id) {
+    if (id == kNoSkeletonId) return nullptr; 
+    return &kSkeletons[id]; 
+  }
+
+  static void pushSkeleton(const Skeleton& skele) { kSkeletons[skele._uuid] = skele; }
+
+  static void removeSkeleton(skeleton_uuid_t id) { 
     auto it = kSkeletons.find(id);
     if (it == kSkeletons.end()) return;
     kSkeletons.erase(it);
@@ -48,7 +53,7 @@ public:
   Skeleton()
     : _uuid(kCurrSkeleCount++) { }
 
-  size_t                      NumJoints() const { return _joints.size(); }
+  size_t                      numJoints() const { return _joints.size(); }
 
   // The name of this skeleton.
   std::string                 _name;

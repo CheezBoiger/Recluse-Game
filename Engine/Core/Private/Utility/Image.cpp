@@ -11,7 +11,7 @@ Image::~Image()
 }
 
 
-b8 Image::Load(const tchar* imgpath)
+b8 Image::load(const tchar* imgpath)
 {
   _data = stbi_load(imgpath, &_width, &_height, &_channels, STBI_rgb_alpha);
   if (!_data) return false;
@@ -38,7 +38,7 @@ b8 Image::SaveHDR(const tchar* imgPath)
 }
 
 
-b8 Image::CleanUp()
+b8 Image::cleanUp()
 {
   if (_data) {
     stbi_image_free(_data);

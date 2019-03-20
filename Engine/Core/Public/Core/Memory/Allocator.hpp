@@ -16,7 +16,7 @@ public:
     , m_Used(0)
     , m_NumAllocations(0) { }
   
-  virtual void* Allocate(size_t size, size_t align) { return nullptr; }
+  virtual void* allocate(size_t size, size_t align) { return nullptr; }
   virtual void  Deallocate(void* ptr) { }
   
   // Calculates address adjustment.

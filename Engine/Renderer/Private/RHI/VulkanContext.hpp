@@ -25,7 +25,7 @@ public:
 
   void                            DestroySurface(VkSurfaceKHR surface);
   void                            EnableDebugMode();
-  void                            CleanUp();
+  void                            cleanUp();
   
   // You get to find all gpus on this machine, how cool is that...
   std::vector<VkPhysicalDevice>&  EnumerateGpus();

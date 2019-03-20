@@ -22,19 +22,19 @@ MeshComponent::MeshComponent()
 {
 }
 
-void MeshComponent::OnInitialize(GameObject* owner)
+void MeshComponent::onInitialize(GameObject* owner)
 {
   REGISTER_COMPONENT(MeshComponent, this);
 }
 
 
-void MeshComponent::OnCleanUp()
+void MeshComponent::onCleanUp()
 {
   UNREGISTER_COMPONENT(MeshComponent);
 }
 
 
-void MeshComponent::Update()
+void MeshComponent::update()
 {
   R_TIMED_PROFILE_GAME();
 
@@ -47,22 +47,22 @@ void MeshComponent::UpdateFrustumCullBits()
 {
   if (!AllowCulling()) return;
 
-  size_t viewFrustumCount = gEngine().GetViewFrustumCount();
+  size_t viewFrustumCount = gEngine().getViewFrustumCount();
   if (viewFrustumCount == 0) return;
 
-  ViewFrustum** viewFrustums = gEngine().GetViewFrustums();
-  AABB aabb = m_pMeshRef->GetAABB();
-  Transform* transform = GetOwner()->GetTransform();
+  ViewFrustum** viewFrustums = gEngine().getViewFrustums();
+  AABB aabb = m_pMeshRef->getAABB();
+  Transform* transform = getOwner()->getTransform();
 
-  aabb.max = (aabb.max * transform->Scale) + transform->Position;
-  aabb.min = (aabb.min * transform->Scale) + transform->Position;
-  aabb.ComputeCentroid();
+  aabb.max = (aabb.max * transform->_scale) + transform->_position;
+  aabb.min = (aabb.min * transform->_scale) + transform->_position;
+  aabb.computeCentroid();
 
   ClearFrustumCullBits();
 
   for (size_t i = 0; i < viewFrustumCount; ++i) {
     ViewFrustum* viewFrustum = viewFrustums[i];
-    ViewFrustum::Result intersects = viewFrustum->Intersect(aabb);
+    ViewFrustum::Result intersects = viewFrustum->intersect(aabb);
     if (intersects != ViewFrustum::Result_Outside) {
       m_frustumCull = m_frustumCull | (1 << i);
     }

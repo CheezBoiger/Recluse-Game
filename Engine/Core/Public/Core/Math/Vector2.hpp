@@ -17,11 +17,11 @@ struct Vector2 {
   Vector2(const r32* rawDat)
     : Vector2(rawDat[0], rawDat[1]) { }
 
-  static Vector2 Lerp(const Vector2& a, const Vector2& b, r32 t);
-  static Vector2 Min(const Vector2& a, const Vector2& b);
-  static Vector2 Max(const Vector2& a, const Vector2& b);
+  static Vector2 lerp(const Vector2& a, const Vector2& b, r32 t);
+  static Vector2 minimum(const Vector2& a, const Vector2& b);
+  static Vector2 maximum(const Vector2& a, const Vector2& b);
 
-  Vector2 Normalize() const;
+  Vector2 normalize() const;
 
   Vector2 operator+(const Vector2& other) const;
   Vector2 operator-(const Vector2& other) const;
@@ -37,9 +37,9 @@ struct Vector2 {
   void    operator*=(const r32 scaler);
   void    operator/=(const r32 scaler);
 
-  r32     Length() const;
-  r32     LengthSqr() const;
-  r32     Dot(const Vector2& other) const;
+  r32     length() const;
+  r32     lengthSqr() const;
+  r32     dot(const Vector2& other) const;
   r32&    operator [] (const size_t idx) { return (&x)[ idx ]; }
 
   b8      operator==(const Vector2& other) const; 

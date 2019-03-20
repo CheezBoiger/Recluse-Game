@@ -7,49 +7,49 @@
 namespace Recluse {
 
 
-void  Material::InitializeDefault(Renderer* pRenderer) 
+void  Material::initializeDefault(Renderer* pRenderer) 
 {
-  _sDefault.Initialize(pRenderer);
-  _sDefault.Native()->PushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT | MATERIAL_BUFFER_UPDATE_BIT);
-  _sDefault.SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-  _sDefault.Native()->Update(gRenderer().RHI());
+  _sDefault.initialize(pRenderer);
+  _sDefault.getNative()->pushUpdate(MATERIAL_DESCRIPTOR_UPDATE_BIT | MATERIAL_BUFFER_UPDATE_BIT);
+  _sDefault.setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+  _sDefault.getNative()->update(gRenderer().getRHI());
 }
 
 
-void Material::Initialize(Renderer* pRenderer)
+void Material::initialize(Renderer* pRenderer)
 {
-  m_pDesc = pRenderer->CreateMaterialDescriptor();
-  m_pDesc->Initialize(gRenderer().RHI());
-  m_pDesc->PushUpdate(MATERIAL_BUFFER_UPDATE_BIT | MATERIAL_DESCRIPTOR_UPDATE_BIT);
+  m_pDesc = pRenderer->createMaterialDescriptor();
+  m_pDesc->initialize(gRenderer().getRHI());
+  m_pDesc->pushUpdate(MATERIAL_BUFFER_UPDATE_BIT | MATERIAL_DESCRIPTOR_UPDATE_BIT);
 }
 
 
-void Material::CleanUp(Renderer* pRenderer)
+void Material::cleanUp(Renderer* pRenderer)
 {
-  pRenderer->FreeMaterialDescriptor(m_pDesc);
+  pRenderer->freeMaterialDescriptor(m_pDesc);
   m_pDesc = nullptr;
 }
 
 
-void Material::EnableMaps(b32 bits)
+void Material::enableMaps(b32 bits)
 {
-  if (bits & MAT_ALBEDO_BIT) EnableAlbedo(true);
-  if (bits & MAT_NORMAL_BIT) EnableNormal(true);
-  if (bits & MAT_ROUGH_BIT) EnableRoughness(true);
-  if (bits & MAT_METAL_BIT) EnableMetallic(true);
-  if (bits & MAT_EMIT_BIT) EnableEmissive(true);
-  if (bits & MAT_AO_BIT) EnableAo(true);
+  if (bits & MAT_ALBEDO_BIT) enableAlbedo(true);
+  if (bits & MAT_NORMAL_BIT) enableNormal(true);
+  if (bits & MAT_ROUGH_BIT) enableRoughness(true);
+  if (bits & MAT_METAL_BIT) enableMetallic(true);
+  if (bits & MAT_EMIT_BIT) enableEmissive(true);
+  if (bits & MAT_AO_BIT) enableAo(true);
 }
 
 
-void Material::DisableMaps(b32 bits)
+void Material::disableMaps(b32 bits)
 {
-  if (bits & MAT_ALBEDO_BIT) EnableAlbedo(false);
-  if (bits & MAT_NORMAL_BIT) EnableNormal(false);
-  if (bits & MAT_ROUGH_BIT) EnableRoughness(false);
-  if (bits & MAT_METAL_BIT) EnableMetallic(false);
-  if (bits & MAT_EMIT_BIT) EnableEmissive(false);
-  if (bits & MAT_AO_BIT) EnableAo(false);
+  if (bits & MAT_ALBEDO_BIT) enableAlbedo(false);
+  if (bits & MAT_NORMAL_BIT) enableNormal(false);
+  if (bits & MAT_ROUGH_BIT) enableRoughness(false);
+  if (bits & MAT_METAL_BIT) enableMetallic(false);
+  if (bits & MAT_EMIT_BIT) enableEmissive(false);
+  if (bits & MAT_AO_BIT) enableAo(false);
 }
 
 

@@ -34,7 +34,7 @@ HDR::~HDR()
 }
 
 
-void HDR::Initialize(VulkanRHI* pRhi)
+void HDR::initialize(VulkanRHI* pRhi)
 {
   {
     std::array<VkDescriptorSetLayoutBinding, 1> bindings;
@@ -48,8 +48,8 @@ void HDR::Initialize(VulkanRHI* pRhi)
     layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCi.bindingCount = static_cast<u32>(bindings.size());
     layoutCi.pBindings = bindings.data();
-    m_pLayout = pRhi->CreateDescriptorSetLayout();
-    m_pLayout->Initialize(layoutCi);
+    m_pLayout = pRhi->createDescriptorSetLayout();
+    m_pLayout->initialize(layoutCi);
   }
 
   {
@@ -58,14 +58,14 @@ void HDR::Initialize(VulkanRHI* pRhi)
     bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bufferCi.size = VkDeviceSize(sizeof(ConfigHDR));
-    m_pBuffer = pRhi->CreateBuffer();
-    m_pBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pBuffer = pRhi->createBuffer();
+    m_pBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     m_pBuffer->Map();
   }
 
 
-  m_pSet = pRhi->CreateDescriptorSet();
-  m_pSet->Allocate(pRhi->DescriptorPool(), m_pLayout);
+  m_pSet = pRhi->createDescriptorSet();
+  m_pSet->allocate(pRhi->descriptorPool(), m_pLayout);
 
   VkDescriptorBufferInfo bufferInfo = { };
   bufferInfo.buffer = m_pBuffer->NativeBuffer();
@@ -81,24 +81,24 @@ void HDR::Initialize(VulkanRHI* pRhi)
   writeSets[0].pBufferInfo = &bufferInfo;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 
-  m_pSet->Update(static_cast<u32>(writeSets.size()), writeSets.data());
+  m_pSet->update(static_cast<u32>(writeSets.size()), writeSets.data());
 }
 
 
-void HDR::CleanUp(VulkanRHI* pRhi)
+void HDR::cleanUp(VulkanRHI* pRhi)
 {
   if (m_pBuffer) {
-    pRhi->FreeBuffer(m_pBuffer);
+    pRhi->freeBuffer(m_pBuffer);
     m_pBuffer = nullptr;
   }
 
   if (m_pSet) {
-    pRhi->FreeDescriptorSet(m_pSet);
+    pRhi->freeDescriptorSet(m_pSet);
     m_pSet = nullptr;
   }
 
   if (m_pLayout) {
-    pRhi->FreeDescriptorSetLayout(m_pLayout);
+    pRhi->freeDescriptorSetLayout(m_pLayout);
     m_pLayout = nullptr;
   }
 }
@@ -114,6 +114,6 @@ void HDR::UpdateToGPU(VulkanRHI* pRhi)
   memRange.offset = 0;
   memRange.size = VK_WHOLE_SIZE;
   memRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &memRange);
+  pRhi->logicDevice()->FlushMappedMemoryRanges(1, &memRange);
 }
 } // Recluse

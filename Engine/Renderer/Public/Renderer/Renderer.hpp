@@ -75,261 +75,261 @@ public:
   Renderer();
   ~Renderer();
 
-  b32                Initialize(Window* window, const GraphicsConfigParams* params = nullptr);
-  b32                Rendering() const { return m_Rendering; }
+  b32                initialize(Window* window, const GraphicsConfigParams* params = nullptr);
+  b32                isRendering() const { return m_Rendering; }
 
-  void              SetAppName(const char* name) { appName = name; }
+  void              setAppName(const char* name) { appName = name; }
 
-  void              TakeSnapshot(const std::string screenshotname);
+  void              takeSnapshot(const std::string screenshotname);
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
   // just plain recreate the renderer scene.
   // NOTE(): Only shadow disable/enable is allowed when changing shadow quality at runtime, otherwise you
   // need to restart the engine to change quality.
-  void              UpdateRendererConfigs(const GraphicsConfigParams* params);
+  void              updateRendererConfigs(const GraphicsConfigParams* params);
 
   // Clean up the renderer. This will "render" the renderer inactive.
-  void              CleanUp();
+  void              cleanUp();
 
   // Perform rendering of the display, you must call this function for each iteration in
   // the game loop!
-  void              Render();
+  void              render();
 
   // Callback used for EngineModule<> set up.
-  void              OnStartUp() override;
+  void              onStartUp() override;
 
   // Callback used for EngineModule<> set up.
-  void              OnShutDown() override;
+  void              onShutDown() override;
 
   // Full RenderRHI wait til idle. This should not be called in time critical rendering.
-  void              WaitIdle();
+  void              waitIdle();
 
   // Create a Mesh descriptor.
-  MeshDescriptor*           CreateMeshDescriptor();
+  MeshDescriptor*           createMeshDescriptor();
 
   // Create a joint descriptor for skinned meshes. This is used for skeletal animation.
-  JointDescriptor*    CreateJointDescriptor();
+  JointDescriptor*    createJointDescriptor();
 
   // Create a 1D texture.
-  Texture1D*        CreateTexture1D();
+  Texture1D*        createTexture1D();
 
   // Create a 2D Texture surface.
-  Texture2D*        CreateTexture2D();
+  Texture2D*        createTexture2D();
 
   // Create a 2D Array texture surface.
-  Texture2DArray*   CreateTexture2DArray();
+  Texture2DArray*   createTexture2DArray();
 
   TextureCubeArray* CreateTextureCubeArray();
 
   // Create a 3D texture surface.
-  Texture3D*        CreateTexture3D();
+  Texture3D*        createTexture3D();
 
   // Create a Texture Cube surface.
-  TextureCube*      CreateTextureCube();
+  TextureCube*      createTextureCube();
 
   // Create a Sampler.
-  TextureSampler*   CreateTextureSampler(const SamplerInfo& info);
+  TextureSampler*   createTextureSampler(const SamplerInfo& info);
 
   // Create a material descriptor.
-  MaterialDescriptor* CreateMaterialDescriptor();
+  MaterialDescriptor* createMaterialDescriptor();
 
-  ParticleSystem* CreateParticleSystem(u32 maxInitParticleCount = 100);
+  ParticleSystem* createParticleSystem(u32 maxInitParticleCount = 100);
 
   // Create a UI descriptor.
-  UIDescriptor*     CreateUIDescriptor();
+  UIDescriptor*     createUIDescriptor();
 
-  GlobalBuffer*     GlobalData() { return m_pGlobal->Data(); }
-  LightBuffer*      LightData() { return m_pLights->Data(); }
+  GlobalBuffer*     getGlobalData() { return m_pGlobal->getData(); }
+  LightBuffer*      getLightData() { return m_pLights->getData(); }
 
-  void              FreeParticleSystem(ParticleSystem* system);
+  void              freeParticleSystem(ParticleSystem* system);
 
   //  Frees up the allocated texture1d object.
-  void              FreeTexture1D(Texture1D* texture);
+  void              freeTexture1D(Texture1D* texture);
 
   // Frees up the allocated texture2d object.
-  void              FreeTexture2D(Texture2D* texture);
+  void              freeTexture2D(Texture2D* texture);
 
   // Frees up the allocated texture2darray object.
-  void              FreeTexture2DArray(Texture2DArray* texture);
+  void              freeTexture2DArray(Texture2DArray* texture);
 
-  void              FreeTextureCubeArray(TextureCubeArray* texture);
+  void              freeTextureCubeArray(TextureCubeArray* texture);
 
   // Frees up the allocated texture3d object.
-  void              FreeTexture3D(Texture3D* texture);
+  void              freeTexture3D(Texture3D* texture);
 
   // Frees up the cubemap texture object.
-  void              FreeTextureCube(TextureCube* texture);
+  void              freeTextureCube(TextureCube* texture);
 
   // Frees up the texture sampler object.
-  void              FreeTextureSampler(TextureSampler* sampler);
+  void              freeTextureSampler(TextureSampler* sampler);
 
   // Frees up the material descriptor object.
-  void              FreeMaterialDescriptor(MaterialDescriptor* descriptor);
+  void              freeMaterialDescriptor(MaterialDescriptor* descriptor);
 
   // Frees up mesh descriptor objects.
-  void              FreeMeshDescriptor(MeshDescriptor* descriptor);
+  void              freeMeshDescriptor(MeshDescriptor* descriptor);
 
   // Frees up joint descriptor objects.
-  void              FreeJointDescriptor(JointDescriptor* descriptor);
+  void              freeJointDescriptor(JointDescriptor* descriptor);
 
   // Frees up the UI descriptor object.
-  void              FreeUIDescriptor(UIDescriptor* descriptor);
+  void              freeUIDescriptor(UIDescriptor* descriptor);
 
   // Offline enviroment cube map baking. This is used for the surrounding 
   // scene around the mesh surface we are rendering.
   // Takes the position of where to bake the cubemap in, along with the texSize of the cubemap
   // dimensions for each texture surface. When Calling this function, will render all objects currently
   // in the render queue.
-  TextureCube*      BakeEnvironmentMap(const Vector3& position, u32 texSize = 512u);
+  TextureCube*      bakeEnvironmentMap(const Vector3& position, u32 texSize = 512u);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
   // to render our mesh object with fast global illumination. This generates an irradiance
   // mapped light probe.
-  LightProbe*       BakeLightProbe(const TextureCube* envmap);
+  LightProbe*       bakeLightProbe(const TextureCube* envmap);
 
   // Offline reflections probe baking. We can effectively use this probe in the scene to render 
   // our mesh object. Generates a specular image based prefilter map.
-  ReflectionProbe*  BakeReflectionProbe(const TextureCube* envmap);
+  ReflectionProbe*  bakeReflectionProbe(const TextureCube* envmap);
 
   // Generate a BRDF LUT with given lookup size. Defaults to 512x512.
-  Texture2D*        GenerateBRDFLUT(u32 x = 512u, u32 y = 512u);
+  Texture2D*        generateBRDFLUT(u32 x = 512u, u32 y = 512u);
 
   // Window reference.
-  Window*           WindowRef() { return m_pWindow; }
-  UIOverlay*        Overlay() { return m_pUI; }  
+  Window*           getWindowRef() { return m_pWindow; }
+  UIOverlay*        getOverlay() { return m_pUI; }  
 
   // Check if this renderer is initialized with the window reference given.
-  b32                Initialized() { return m_Initialized; }
-  b32                Antialiasing() { return m_AntiAliasing; }
+  b32                isInitialized() { return m_Initialized; }
+  b32                usingAntialiasing() { return m_AntiAliasing; }
 
   // Get the rendering hardware interface used in this renderer.
-  VulkanRHI*        RHI() { return m_pRhi; }
-  SkyRenderer*      SkyRendererNative() { return m_pSky; }
+  VulkanRHI*        getRHI() { return m_pRhi; }
+  SkyRenderer*      getSkyRendererNative() { return m_pSky; }
 
-  GlobalDescriptor* GlobalNative() { return m_pGlobal; }
+  GlobalDescriptor* getGlobalNative() { return m_pGlobal; }
 
   // Get current graphics configurations.
-  GraphicsConfigParams& CurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
+  GraphicsConfigParams& getCurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
 
-  // Enable HDR Post processing.
-  void              EnableHDR(b32 enable);
+  // setEnable HDR Post processing.
+  void              enableHDR(b32 enable);
 
   // Get this renderer's render quad.
-  RenderQuad*       GetRenderQuad() { return &m_RenderQuad; }
+  RenderQuad*       getRenderQuad() { return &m_RenderQuad; }
 
   // Push mesh to render.
-  void              PushMeshRender(MeshRenderCmd& cmd);
-  void              PushParticleSystem(ParticleSystem* system);
-  BufferUI*         GetUiBuffer() const;
+  void              pushMeshRender(MeshRenderCmd& cmd);
+  void              pushParticleSystem(ParticleSystem* system);
+  BufferUI*         getUiBuffer() const;
 
-  HDR*              GetHDR() { return m_pHDR; }
+  HDR*              getHDR() { return m_pHDR; }
 
   // Get the name of the device used for rendering graphics and compute.
-  const char*       GetDeviceName();
+  const char*       getDeviceName();
 
   // Adjusts bloom strength of the renderer.
-  void              AdjustHDRSettings(const ParamsHDR& hdrSettings);
+  void              adjustHDRSettings(const ParamsHDR& hdrSettings);
 
-  void              UpdateSky();
+  void              updateSky();
 
   // Set up and override Skybox cubemap for the renderer.
-  void              SetSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
-  void              SetGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
-  void              SetGlobalLightProbe(LightProbe* probe) { m_globalLightProbe = probe; }
+  void              setSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
+  void              setGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
+  void              setGlobalLightProbe(LightProbe* probe) { m_globalLightProbe = probe; }
 
   // NOTE(): If brdf, or envmap, was cleaned up before cleaning up the engine, be sure to 
   // call this first, before freeing the set maps!
-  void              UsePreRenderSkyboxMap(b32 enable);
+  void              usePreRenderSkyboxMap(b32 enable);
 
-  b32               UsingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }
+  b32               usingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
   // This will effectively stall the gpu if called too often. If you are adding/removing objects 
   // into a scene, use BuildAsync() instead.
-  void              Build();
+  void              build();
 
   // Builds the commandbuffers asyncronously, this will prevent stalling the gpu rendering process
   // by using temporary commandbuffers and building them instead. When done, they will replace old 
   // commandbuffers. Use only if you need to update the scene as a result of dynamic objects/materials being
   // added/removed to/from the scene. Do not use this call if there is a window change or 
   // application change, as it will result warnings from the renderer!
-  void              BuildAsync();
+  void              buildAsync();
 
   // Wipes out all currently pushed in meshes in this renderer.
-  void              ClearCmdLists();
+  void              clearCmdLists();
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
-  void              BeginFrame();
+  void              beginFrame();
 
   // Once frame rendering is done, call this function to submit back to the swapchain 
   // for presenting to the window.
-  void              EndFrame();
+  void              endFrame();
 
 private:
 
-  void              SetUpFrameBuffers();
-  void              SetUpGraphicsPipelines();
-  void              SetUpDescriptorSetLayouts();
-  void              CleanUpDescriptorSetLayouts();
-  void              CleanUpGraphicsPipelines();
-  void              CleanUpFrameBuffers();
-  void              CleanUpRenderTextures(b32 fullCleanup);
-  void              CleanUpOffscreen();
-  void              CleanUpFinalOutputs();
-  void              SetUpFinalOutputs();
-  void              SetUpForwardPBR();
-  void              SetUpRenderTextures(b32 fullSetup);
-  void              SetUpOffscreen();
-  void              SetUpDebugPass();
-  void              CleanUpDebugPass();
-  void              GenerateDebugCmds();
-  void              SetUpPBR();
-  void              SetUpSkybox(b32 justSemaphores);
-  void              GenerateOffScreenCmds(CommandBuffer* buf, u32 frameIndex);
-  void              GeneratePbrCmds(CommandBuffer* buf, u32 frameIndex);
-  void              GenerateShadowCmds(CommandBuffer* buf, u32 frameIndex);
-  void              GenerateHDRCmds(CommandBuffer* buf, u32 frameIndex);
-  void              GenerateSkyboxCmds(CommandBuffer* buf, u32 frameIndex);
-  void              GenerateFinalCmds(CommandBuffer* buf);
-  void              GenerateForwardPBRCmds(CommandBuffer* buf, u32 frameIndex);
+  void              setUpFrameBuffers();
+  void              setUpGraphicsPipelines();
+  void              setUpDescriptorSetLayouts();
+  void              cleanUpDescriptorSetLayouts();
+  void              cleanUpGraphicsPipelines();
+  void              cleanUpFrameBuffers();
+  void              cleanUpRenderTextures(b32 fullCleanup);
+  void              cleanUpOffscreen();
+  void              cleanUpFinalOutputs();
+  void              setUpFinalOutputs();
+  void              setUpForwardPBR();
+  void              setUpRenderTextures(b32 fullSetup);
+  void              setUpOffscreen();
+  void              setUpDebugPass();
+  void              cleanUpDebugPass();
+  void              generateDebugCmds();
+  void              setUpPBR();
+  void              setUpSkybox(b32 justSemaphores);
+  void              generateOffScreenCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generatePbrCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generateShadowCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generateHDRCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generateSkyboxCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generateFinalCmds(CommandBuffer* buf);
+  void              generateForwardPBRCmds(CommandBuffer* buf, u32 frameIndex);
 
-  void              BuildOffScreenCmdList();
-  void              BuildPbrCmdLists();
-  void              BuildShadowCmdList();
-  void              BuildHDRCmdList();
-  void              BuildSkyboxCmdLists();
-  void              BuildForwardPBRCmdList();
-  void              BuildFinalCmdLists();
-  void              UpdateGlobalIlluminationBuffer();
+  void              buildOffScreenCmdList();
+  void              buildPbrCmdLists();
+  void              buildShadowCmdList();
+  void              buildHDRCmdList();
+  void              buildSkyboxCmdLists();
+  void              buildForwardPBRCmdList();
+  void              buildFinalCmdLists();
+  void              updateGlobalIlluminationBuffer();
 
-  void              SetUpDownscale(b32 FullSetUp);
-  void              CleanUpDownscale(b32 FullCleanUp);
-  void              UpdateRuntimeConfigs(const GraphicsConfigParams* params);
-  void              SetUpHDR(b32 fullSetup);
-  void              CleanUpForwardPBR();
-  void              CleanUpHDR(b32 fullCleanup);
-  void              CleanUpPBR();
-  void              UpdateSkyboxCubeMap();
-  void              CleanUpSkybox(b32 justSemaphores);
-  void              UpdateSceneDescriptors(u32 frameIndex);
-  void              RenderOverlay();
-  void              RenderPrimaryShadows();
-  void              CheckCmdUpdate();
-  void              SetUpGlobalIlluminationBuffer();
-  void              CleanUpGlobalIlluminationBuffer();
+  void              setUpDownscale(b32 FullSetUp);
+  void              cleanUpDownscale(b32 FullCleanUp);
+  void              updateRuntimeConfigs(const GraphicsConfigParams* params);
+  void              setUpHDR(b32 fullSetup);
+  void              cleanUpForwardPBR();
+  void              cleanUpHDR(b32 fullCleanup);
+  void              cleanUpPBR();
+  void              updateSkyboxCubeMap();
+  void              cleanUpSkybox(b32 justSemaphores);
+  void              updateSceneDescriptors(u32 frameIndex);
+  void              renderOverlay();
+  void              renderPrimaryShadows();
+  void              checkCmdUpdate();
+  void              setUpGlobalIlluminationBuffer();
+  void              cleanUpGlobalIlluminationBuffer();
   
   // Signals that tell if renderer needs to update any static data. Is cleaned out every 
   // frame!
-  b32               StaticNeedsUpdate() { return m_staticUpdate; }
-  void              SignalStaticUpdate() { m_staticUpdate = true; }
-  void              CleanStaticUpdate() { m_staticUpdate = false; }
+  b32               staticNeedsUpdate() { return m_staticUpdate; }
+  void              signalStaticUpdate() { m_staticUpdate = true; }
+  void              cleanStaticUpdate() { m_staticUpdate = false; }
 
-  void              SortCmdLists();
-  void              WaitForCpuFence();
+  void              sortCmdLists();
+  void              waitForCpuFence();
 
   Window*           m_pWindow;
 

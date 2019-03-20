@@ -19,12 +19,12 @@ public:
   RenderQuad() { }
 
 
-  void            Initialize(VulkanRHI* rhi);
-  void            CleanUp(VulkanRHI* pRhi);
+  void            initialize(VulkanRHI* rhi);
+  void            cleanUp(VulkanRHI* pRhi);
 
 
-  VertexBuffer*   Quad() { return &quad; }
-  IndexBuffer*    Indices() { return &index; }
+  VertexBuffer*   getQuad() { return &quad; }
+  IndexBuffer*    getIndices() { return &index; }
 
 private:
   VertexBuffer    quad;

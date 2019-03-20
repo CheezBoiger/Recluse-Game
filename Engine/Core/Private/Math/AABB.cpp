@@ -5,7 +5,7 @@
 namespace Recluse {
 
 
-void AABB::ComputeCentroid()
+void AABB::computeCentroid()
 {
   centroid = Vector3(
     (min.x + max.x) * 0.5f,
@@ -14,7 +14,7 @@ void AABB::ComputeCentroid()
 }
 
 
-void AABB::ComputeSurfaceArea()
+void AABB::computeSurfaceArea()
 {
   r32 dx = max.x - min.x;
   r32 dy = max.y - min.y;
@@ -23,7 +23,7 @@ void AABB::ComputeSurfaceArea()
 }
 
 
-b32 AABB::Overlaps(const AABB& other) const
+b32 AABB::overlaps(const AABB& other) const
 {
   b32 x = (max.x >= other.min.x) && (min.x <= other.max.x);
   b32 y = (max.y >= other.min.y) && (min.y <= other.max.y);
@@ -32,13 +32,13 @@ b32 AABB::Overlaps(const AABB& other) const
 }
 
 
-b32 AABB::Contains(const AABB& other) const
+b32 AABB::contains(const AABB& other) const
 {
   return false;
 }
 
 
-b32 AABB::Inside(const Vector3& p) const
+b32 AABB::inside(const Vector3& p) const
 {
   return false;
 }

@@ -18,23 +18,23 @@ namespace Recluse {
 typedef u64 component_t;
 class Transform;
 
-#define RCOMPONENT(cls) private: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
+#define RCOMPONENT(cls) protected: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
     friend class GameObject; \
     static uuid64 kUID; \
-    static component_t UUID() { return std::hash<tchar*>()( #cls ); } \
-    static const tchar* GetName() { return #cls; } \
-    static uuid64 GenerateUID() { uuid64 uid = kUID++; return uid; } \
-    public: static void UpdateComponents() { \
+    static component_t getUUID() { return std::hash<tchar*>()( #cls ); } \
+    static const tchar* getName() { return #cls; } \
+    static uuid64 generateUID() { uuid64 uid = kUID++; return uid; } \
+    public: static void updateComponents() { \
               for (auto& it : _k##cls##s) { \
                 cls* comp = it.second; \
-                if (!comp->Enabled()) continue; \
-                comp->Update(); \
+                if (!comp->enabled()) continue; \
+                comp->update(); \
               } \
             } \
     private:
 
 #define REGISTER_COMPONENT(cls, pComp) { \
-          m_componentUID = GenerateUID(); \
+          m_componentUID = generateUID(); \
           auto it = _k##cls##s.find(m_componentUID); \
           if (it == _k##cls##s.end()) { \
             _k##cls##s[m_componentUID] = pComp; \
@@ -42,8 +42,8 @@ class Transform;
        }
 
 #define UNREGISTER_COMPONENT(cls) { \
-          if (GetOwner()) { \
-            uuid64 uuid = GetUID(); \
+          if (getOwner()) { \
+            uuid64 uuid = getUID(); \
             auto it = _k##cls##s.find(uuid); \
             if (it != _k##cls##s.end()) { \
             } \
@@ -71,10 +71,10 @@ public:
 
   virtual ~Component() { }
 
-  inline GameObject*   GetOwner() { return m_pGameObjectOwner; }
+  inline GameObject*   getOwner() { return m_pGameObjectOwner; }
 
-  virtual void  Serialize(IArchive& archive) { }
-  virtual void  Deserialize(IArchive& archive) { }
+  virtual void  serialize(IArchive& archive) { }
+  virtual void  deserialize(IArchive& archive) { }
 
 protected:
   Component()
@@ -82,47 +82,47 @@ protected:
     , m_bEnabled(true) { }
 
   template<typename T>
-  static APtr<Component> Create() {
+  static APtr<Component> create() {
     return APtr<Component>(T());
   }
 
 public:
-  // Perform early initialization of abstract component, then call OnInitialize() if any.
-  void          Initialize(GameObject* owner) {
+  // Perform early initialization of abstract component, then call onInitialize() if any.
+  void          initialize(GameObject* owner) {
     m_pGameObjectOwner = owner;
     if (!m_pGameObjectOwner) {
       return;
     }
 
-    OnInitialize(m_pGameObjectOwner);
-    Enable(true);
+    onInitialize(m_pGameObjectOwner);
+    setEnable(true);
   }
 
-  // Perform early clean up of abstract component, then call OnCleanUp() if any.
-  void          CleanUp() {
+  // Perform early clean up of abstract component, then call onCleanUp() if any.
+  void          cleanUp() {
     // Perform actions necessary for component clean up.
-    OnCleanUp();
+    onCleanUp();
   }
 
-  b32            Enabled() const { return m_bEnabled; }
+  b32            enabled() const { return m_bEnabled; }
 
-  void          Enable(b32 enable) { m_bEnabled = enable; OnEnable(); }
+  void          setEnable(b32 enable) { m_bEnabled = enable; onEnable(); }
 
-  Transform*    GetTransform();
+  Transform*    getTransform();
 
-  uuid64        GetUID() { return m_componentUID; }
+  uuid64        getUID() { return m_componentUID; }
 
 protected:
   // Mandatory that this update function is defined.
-  virtual void  Update() { }
+  virtual void  update() { }
 
-  virtual void  Awake() { }
+  virtual void  awake() { }
 
   // Overrideable callbacks, in case component needs to initialize additional 
   // objects.
-  virtual void  OnInitialize(GameObject* owner) { }
-  virtual void  OnCleanUp() { }
-  virtual void  OnEnable() { }
+  virtual void  onInitialize(GameObject* owner) { }
+  virtual void  onCleanUp() { }
+  virtual void  onEnable() { }
 
   uuid64        m_componentUID; 
 
@@ -139,91 +139,91 @@ class Transform : public Component {
 public:
 
   Transform() 
-    : m_Front(Vector3::FRONT)
-    , m_Up(Vector3::UP)
-    , m_Right(Vector3::RIGHT)
-    , LocalScale(Vector3(1.0, 1.0f, 1.0f))
-    , Rotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
-    , LocalRotation(Quaternion::AngleAxis(Radians(0.0f), Vector3::UP))
-    , Scale(Vector3(1.0f, 1.0f, 1.0f))
+    : m_front(Vector3::FRONT)
+    , m_up(Vector3::UP)
+    , m_right(Vector3::RIGHT)
+    , _localScale(Vector3(1.0, 1.0f, 1.0f))
+    , _rotation(Quaternion::angleAxis(Radians(0.0f), Vector3::UP))
+    , _localRotation(Quaternion::angleAxis(Radians(0.0f), Vector3::UP))
+    , _scale(Vector3(1.0f, 1.0f, 1.0f))
     { }
 
   Transform(const Transform& ob) {
-    LocalPosition = ob.LocalPosition;
-    Position = ob.Position;
-    Rotation = ob.Rotation;
-    LocalRotation = ob.LocalRotation;
-    Scale = ob.Scale;
-    LocalScale = ob.LocalScale;
-    m_LocalToWorldMatrix = ob.m_LocalToWorldMatrix;
-    m_WorldToLocalMatrix = ob.m_WorldToLocalMatrix;
-    m_Up = ob.m_Up;
-    m_Front = ob.m_Front;
-    m_Right = ob.m_Right;
+    _localPosition = ob._localPosition;
+    _position = ob._position;
+    _rotation = ob._rotation;
+    _localRotation = ob._localRotation;
+    _scale = ob._scale;
+    _localScale = ob._localScale;
+    m_localToWorldMatrix = ob.m_localToWorldMatrix;
+    m_worldToLocalMatrix = ob.m_worldToLocalMatrix;
+    m_up = ob.m_up;
+    m_front = ob.m_front;
+    m_right = ob.m_right;
   }
 
 
   Transform& operator=(const Transform& ob) {
-    LocalPosition = ob.LocalPosition;
-    Position = ob.Position;
-    Rotation = ob.Rotation;
-    LocalRotation = ob.LocalRotation;
-    Scale = ob.Scale;
-    LocalScale = ob.LocalScale;
-    m_LocalToWorldMatrix = ob.m_LocalToWorldMatrix;
-    m_WorldToLocalMatrix = ob.m_WorldToLocalMatrix;
-    m_Up = ob.m_Up;
-    m_Front = ob.m_Front;
-    m_Right = ob.m_Right;
+    _localPosition = ob._localPosition;
+    _position = ob._position;
+    _rotation = ob._rotation;
+    _localRotation = ob._localRotation;
+    _scale = ob._scale;
+    _localScale = ob._localScale;
+    m_localToWorldMatrix = ob.m_localToWorldMatrix;
+    m_worldToLocalMatrix = ob.m_worldToLocalMatrix;
+    m_up = ob.m_up;
+    m_front = ob.m_front;
+    m_right = ob.m_right;
     return (*this);
   }
 
-  // Front axis of the object in world space.
-  Vector3       Front() const { return m_Front; };
+  // front axis of the object in world space.
+  Vector3       front() const { return m_front; };
 
-  // Up axis of the object in world space.
-  Vector3       Up() const { return m_Up; }
+  // up axis of the object in world space.
+  Vector3       up() const { return m_up; }
 
-  // Right axis of the object in world space.
-  Vector3       Right() const { return m_Right; };
+  // right axis of the object in world space.
+  Vector3       right() const { return m_right; };
   
   // Local scale of this object. This should be relative to the parent.
-  Vector3       LocalScale;
+  Vector3       _localScale;
 
   // Local position, relative to the parent. If no parent is defined, this value is 
   // same as world space.
-  Vector3       LocalPosition;
+  Vector3       _localPosition;
 
-  // Scale of the transform in world space.
-  Vector3       Scale;
+  // _scale of the transform in world space.
+  Vector3       _scale;
   
-  // Position of the transform in world space.
-  Vector3       Position;
+  // _position of the transform in world space.
+  Vector3       _position;
 
   // Rotation of this transform in euler angles, this is in world coordinates.
-  Vector3       EulerAngles;
+  Vector3       _eulerAngles;
 
   // Rotation of the transform relative to the parent.
-  Quaternion    LocalRotation;
+  Quaternion    _localRotation;
 
   // Rotation of the transform in world space.
-  Quaternion    Rotation;
+  Quaternion    _rotation;
 
-  void          Serialize(IArchive& archive) override { }
-  void          Deserialize(IArchive& archive) override { }
+  void          serialize(IArchive& archive) override { }
+  void          deserialize(IArchive& archive) override { }
 
-  Matrix4       GetLocalToWorldMatrix() const { return m_LocalToWorldMatrix; }
-  Matrix4       GetWorldToLocalMatrix() const { return m_WorldToLocalMatrix; }
+  Matrix4       getLocalToWorldMatrix() const { return m_localToWorldMatrix; }
+  Matrix4       getWorldToLocalMatrix() const { return m_worldToLocalMatrix; }
 
   // Update transform that will be used by renderer. Called during scene graph traversal.
-  void          Update() override;
+  void          update() override;
 
 protected:
 
-  Matrix4       m_LocalToWorldMatrix;
-  Matrix4       m_WorldToLocalMatrix;
-  Vector3       m_Front;
-  Vector3       m_Up;
-  Vector3       m_Right;
+  Matrix4       m_localToWorldMatrix;
+  Matrix4       m_worldToLocalMatrix;
+  Vector3       m_front;
+  Vector3       m_up;
+  Vector3       m_right;
 };
 } // Recluse

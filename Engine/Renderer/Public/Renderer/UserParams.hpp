@@ -85,7 +85,7 @@ public:
   // Level of detail, by distance. The higher, the better the models in the world.
   r32             _Lod;
 
-  // Render scale determines the viewport surface to render onto.
+  // render scale determines the viewport surface to render onto.
   r32             _renderScale;
 
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
@@ -103,7 +103,7 @@ public:
   // Post processing affects. This includes HDR.
   b32             _EnablePostProcessing;
 
-  // Enable local reflections. Global illumination for local enviroments which adds some 
+  // setEnable local reflections. Global illumination for local enviroments which adds some 
   // quality to object surfaces. Disabling will improve performance, but reduce quality.
   b32             _EnableLocalReflections;
 

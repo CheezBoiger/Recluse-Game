@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhysicalDevice physical)
+std::vector<VkExtensionProperties> PhysicalDevice::getExtensionProperties(VkPhysicalDevice physical)
 {
   u32 extensionCount;
   vkEnumerateDeviceExtensionProperties(physical, nullptr, &extensionCount, nullptr);
@@ -16,17 +16,20 @@ std::vector<VkExtensionProperties> PhysicalDevice::GetExtensionProperties(VkPhys
 }
 
 
-b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
-    QueueFamily* presentation, QueueFamily* graphics, QueueFamily* transfer, QueueFamily* compute) const
+b32 PhysicalDevice::findQueueFamilies(VkSurfaceKHR surface,
+                                      QueueFamily* presentation, 
+                                      QueueFamily* graphics, 
+                                      QueueFamily* transfer, 
+                                      QueueFamily* compute) const
 {
-  if (!handle) {
+  if (!m_handle) {
     R_DEBUG(rError, "No handle is set to query queue families from!\n");
     return false;
   }
   u32 familyCount = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(handle, &familyCount, nullptr);
+  vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &familyCount, nullptr);
   std::vector<VkQueueFamilyProperties> queueFamilies(familyCount);
-  vkGetPhysicalDeviceQueueFamilyProperties(handle, &familyCount, queueFamilies.data());
+  vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &familyCount, queueFamilies.data());
 
   i32 i = 0;
   for (const auto& queueFamily : queueFamilies) {
@@ -36,7 +39,7 @@ b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
     }
 
     VkBool32 presentSupport = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(handle, i, surface, &presentSupport);
+    vkGetPhysicalDeviceSurfaceSupportKHR(m_handle, i, surface, &presentSupport);
     if (queueFamily.queueCount > 0 && presentSupport) {
       presentation->_idx = i;
       presentation->_queueCount = queueFamily.queueCount;
@@ -58,48 +61,48 @@ b32 PhysicalDevice::FindQueueFamilies(VkSurfaceKHR surface,
 }
 
 
-VkSurfaceCapabilitiesKHR PhysicalDevice::QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const
+VkSurfaceCapabilitiesKHR PhysicalDevice::querySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const
 {
   VkSurfaceCapabilitiesKHR capabilities;
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(handle, surface, &capabilities);
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_handle, surface, &capabilities);
   return capabilities;
 }
 
 
-std::vector<VkSurfaceFormatKHR> PhysicalDevice::QuerySwapchainSurfaceFormats(VkSurfaceKHR surface) const
+std::vector<VkSurfaceFormatKHR> PhysicalDevice::querySwapchainSurfaceFormats(VkSurfaceKHR surface) const
 {
   std::vector<VkSurfaceFormatKHR> formats;
   u32 formatCount;
-  vkGetPhysicalDeviceSurfaceFormatsKHR(handle, surface, &formatCount, nullptr);
+  vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &formatCount, nullptr);
   formats.resize(formatCount);
-  vkGetPhysicalDeviceSurfaceFormatsKHR(handle, surface, &formatCount, formats.data());
+  vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &formatCount, formats.data());
   return formats;
 }
 
 
-std::vector<VkPresentModeKHR> PhysicalDevice::QuerySwapchainPresentModes(VkSurfaceKHR surface) const
+std::vector<VkPresentModeKHR> PhysicalDevice::querySwapchainPresentModes(VkSurfaceKHR surface) const
 {
   std::vector<VkPresentModeKHR> presentModes;
   u32 presentCount;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(handle, surface, &presentCount, nullptr);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surface, &presentCount, nullptr);
   presentModes.resize(presentCount);
-  vkGetPhysicalDeviceSurfacePresentModesKHR(handle, surface, &presentCount, presentModes.data());
+  vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surface, &presentCount, presentModes.data());
   return presentModes;
 }
 
 
-VkPhysicalDeviceFeatures PhysicalDevice::GetFeatures() const
+VkPhysicalDeviceFeatures PhysicalDevice::getFeatures() const
 {
   VkPhysicalDeviceFeatures features;
-  vkGetPhysicalDeviceFeatures(handle, &features);
+  vkGetPhysicalDeviceFeatures(m_handle, &features);
   return features;
 }
 
 
-u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const
+u32 PhysicalDevice::findMemoryType(u32 filter, VkMemoryPropertyFlags flags) const
 { 
-  for (u32 i = 0; i < memoryProperties.memoryTypeCount; ++i) {
-    if ((filter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) {
+  for (u32 i = 0; i < m_memoryProperties.memoryTypeCount; ++i) {
+    if ((filter & (1 << i)) && (m_memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) {
       return i;
     }
   }
@@ -108,24 +111,28 @@ u32 PhysicalDevice::FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) cons
 }
 
 
-VkResult PhysicalDevice::GetImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, 
+VkResult PhysicalDevice::getImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, 
   VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) const
 {
-  return vkGetPhysicalDeviceImageFormatProperties(handle, format, type, tiling, usage, flags, pImageFormatProperties);
+  return vkGetPhysicalDeviceImageFormatProperties(m_handle, format, type, tiling, usage, flags, pImageFormatProperties);
 }
 
 
-void PhysicalDevice::Initialize(VkPhysicalDevice device)
+void PhysicalDevice::initialize(VkPhysicalDevice device)
 {
-  handle = device;
-  vkGetPhysicalDeviceMemoryProperties(handle, &memoryProperties);
-  vkGetPhysicalDeviceProperties(handle, &properties);
+  m_handle = device;
+  vkGetPhysicalDeviceMemoryProperties(m_handle, &m_memoryProperties);
+
+  m_maintenanceProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_3_PROPERTIES;
+  m_properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+  m_properties.pNext = &m_maintenanceProperties;
+  vkGetPhysicalDeviceProperties2(m_handle, &m_properties);
 }
 
 
-void PhysicalDevice::CleanUp()
+void PhysicalDevice::cleanUp()
 {
-  if (handle) {
+  if (m_handle) {
   }
 }
 } // Recluse

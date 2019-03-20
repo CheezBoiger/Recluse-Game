@@ -90,7 +90,7 @@ struct MeshRenderCmd {
   u32                     _instances;
   u32                     _primitiveCount;
   CmdConfigBits           _config;
-  DebugConfigBits         _debugConfig;       // Debug only if CMD_DEBUG_BIT is on.
+  DebugConfigBits         _debugConfig;       // isDebug only if CMD_DEBUG_BIT is on.
 };
 
 
@@ -174,13 +174,13 @@ public:
   BufferUI(u32 id)
     : m_id(id) { }
 
-  void Initialize();
+  void initialize();
   void BeginCanvas(const UiBeginCanvasInfo& begin);
   void EndCanvas();
   void EmitText(const UiText& text);
   void EmitImage(const UiImageInfo& imgInfo);
 
-  u32   GetId() const { return m_id; }
+  u32   getId() const { return m_id; }
 
 private:
   u32 m_id;

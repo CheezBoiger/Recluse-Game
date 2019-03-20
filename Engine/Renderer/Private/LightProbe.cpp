@@ -48,7 +48,7 @@ Vector3 GetWorldNormalFromCubeFace(u32 idx)
 }
 
 
-void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
+void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 {
   u32 width = envMap->WidthPerFace();
   u32 height = envMap->HeightPerFace();
@@ -58,12 +58,12 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
   {
     VkCommandBuffer cmdBuf;
     VkCommandBufferAllocateInfo allocInfo = {};
-    Texture* texture = envMap->Handle();
+    Texture* texture = envMap->getHandle();
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = rhi->GraphicsCmdPool(0);
+    allocInfo.commandPool = rhi->graphicsCmdPool(0);
     allocInfo.commandBufferCount = 1;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    vkAllocateCommandBuffers(rhi->LogicDevice()->Native(), &allocInfo, &cmdBuf);
+    vkAllocateCommandBuffers(rhi->logicDevice()->getNative(), &allocInfo, &cmdBuf);
     
     // Read image data through here.
     // TODO(): 
@@ -78,19 +78,19 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
         region.imageSubresource.baseArrayLayer = (u32)layer;
         region.imageSubresource.layerCount = 1;
         region.imageSubresource.mipLevel = (u32)level;
-        region.imageExtent.width = texture->Width();
-        region.imageExtent.height = texture->Height();
+        region.imageExtent.width = texture->getWidth();
+        region.imageExtent.height = texture->getHeight();
         region.imageExtent.depth = 1;
         region.bufferOffset = offset;
         imageCopyRegions.push_back(region);
-        offset += texture->Width() * texture->Height() * 4;
+        offset += texture->getWidth() * texture->getHeight() * 4;
       }
     }
 
     VkDeviceSize sizeInBytes = offset;
 
     Buffer stagingBuffer;
-    stagingBuffer.SetOwner(rhi->LogicDevice()->Native());
+    stagingBuffer.SetOwner(rhi->logicDevice()->getNative());
 
     VkBufferCreateInfo bufferci = {};
     bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -99,7 +99,7 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     bufferci.size = sizeInBytes;
     data = new u8[bufferci.size];
 
-    stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     stagingBuffer.Map();
 
     VkCommandBufferBeginInfo begin = {};
@@ -173,13 +173,13 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     submit.commandBufferCount = 1;
     VkCommandBuffer cmdB[] = { cmdBuf };
     submit.pCommandBuffers = cmdB;
-    rhi->GraphicsSubmit(0, 1, &submit);
-    rhi->GraphicsWaitIdle(0);
+    rhi->graphicsSubmit(0, 1, &submit);
+    rhi->graphicsWaitIdle(0);
 
     memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
 
-    vkFreeCommandBuffers(rhi->LogicDevice()->Native(), rhi->GraphicsCmdPool(0), 1, &cmdBuf);
-    stagingBuffer.CleanUp();
+    vkFreeCommandBuffers(rhi->logicDevice()->getNative(), rhi->graphicsCmdPool(0), 1, &cmdBuf);
+    stagingBuffer.cleanUp();
   }
   // Reference by Jian Ru's Laugh Engine implementation: https://github.com/jian-ru/laugh_engine
   // Research information though https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
@@ -191,10 +191,10 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
       for (u32 px = 0; px < width; ++px) {
         
         Vector3 wi = GetWorldDirection(fi, px, py, width, height);
-        r32 dist2 = wi.Dot(wi); 
-        wi = wi.Normalize();
+        r32 dist2 = wi.dot(wi); 
+        wi = wi.normalize();
         // Obtain our solid angle differential.
-        r32 dw = pixelA * n.Dot(-wi) / dist2;
+        r32 dw = pixelA * n.dot(-wi) / dist2;
         i32 offset = ho * width + py * width + px * 4;
         Vector3 L = Vector3(static_cast<r32>(data[offset + 0]) / 255.0f,
                             static_cast<r32>(data[offset + 1]) / 255.0f,
@@ -219,14 +219,14 @@ void LightProbe::GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 }
 
 
-b32 LightProbe::SaveToFile(const std::string& filename)
+b32 LightProbe::saveToFile(const std::string& filename)
 {
   // TODO(): 
   return false;
 }
 
 
-b32 LightProbe::LoadFromFile(const std::string& filename)
+b32 LightProbe::loadFromFile(const std::string& filename)
 {
   memset(_shcoeff, 0, sizeof(_shcoeff));
   _position = Vector3();
@@ -257,20 +257,20 @@ GlobalIllumination::~GlobalIllumination()
 }
 
 
-void GlobalIllumination::Initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
+void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
 {
-  m_pGlobalIllumination = pRhi->CreateDescriptorSet();
+  m_pGlobalIllumination = pRhi->createDescriptorSet();
   DescriptorSetLayout* layout = nullptr;
   if (enableLocalReflections) {
     layout = globalIllumination_DescLR;
     if (!m_pLocalGIBuffer) {
-      m_pLocalGIBuffer = pRhi->CreateBuffer();
+      m_pLocalGIBuffer = pRhi->createBuffer();
       VkBufferCreateInfo buffCi = { };
       buffCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
       buffCi.size = VkDeviceSize(sizeof(LocalInfoGI));
       buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
       buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-      m_pLocalGIBuffer->Initialize(buffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+      m_pLocalGIBuffer->initialize(buffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
       m_pLocalGIBuffer->Map();
     }
   }
@@ -279,40 +279,40 @@ void GlobalIllumination::Initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
   }
 
   if (!m_pGlobalGIBuffer) {
-    m_pGlobalGIBuffer = pRhi->CreateBuffer();
+    m_pGlobalGIBuffer = pRhi->createBuffer();
     VkBufferCreateInfo gBuffCi = {};
     gBuffCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     gBuffCi.size = VkDeviceSize(sizeof(DiffuseSH));
     gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_pGlobalGIBuffer->Initialize(gBuffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalGIBuffer->initialize(gBuffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
     m_pGlobalGIBuffer->Map();
   }
 
-  m_pGlobalIllumination->Allocate(pRhi->DescriptorPool(), layout);
+  m_pGlobalIllumination->allocate(pRhi->descriptorPool(), layout);
 }
 
 
-void GlobalIllumination::CleanUp(VulkanRHI* pRhi)
+void GlobalIllumination::cleanUp(VulkanRHI* pRhi)
 {
   if (m_pGlobalIllumination) {
-    pRhi->FreeDescriptorSet(m_pGlobalIllumination);
+    pRhi->freeDescriptorSet(m_pGlobalIllumination);
     m_pGlobalIllumination = nullptr;
   }
 
   if (m_pGlobalGIBuffer) {
-    pRhi->FreeBuffer(m_pGlobalGIBuffer);
+    pRhi->freeBuffer(m_pGlobalGIBuffer);
     m_pGlobalGIBuffer = nullptr;
   }
 
   if (m_pLocalGIBuffer) {
-    pRhi->FreeBuffer(m_pLocalGIBuffer);
+    pRhi->freeBuffer(m_pLocalGIBuffer);
     m_pLocalGIBuffer = nullptr;
   }
 }
 
 
-void GlobalIllumination::UpdateGlobalGI(VulkanRHI* pRhi)
+void GlobalIllumination::updateGlobalGI(VulkanRHI* pRhi)
 {
   R_ASSERT(m_pGlobalGIBuffer->Mapped(), "Unmapped global GI data.");
   memcpy(m_pGlobalGIBuffer->Mapped(), &m_globalDiffuseSH, sizeof(DiffuseSH));
@@ -321,15 +321,15 @@ void GlobalIllumination::UpdateGlobalGI(VulkanRHI* pRhi)
   range.memory = m_pGlobalGIBuffer->Memory();
   range.offset = 0;
   range.size = VK_WHOLE_SIZE;
-  pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+  pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 
 
-void GlobalIllumination::Update(Renderer* pRenderer)
+void GlobalIllumination::update(Renderer* pRenderer)
 {
   std::array<VkWriteDescriptorSet, 6> writeSets;
   u32 count = 3;
-  UpdateGlobalGI(pRenderer->RHI());
+  updateGlobalGI(pRenderer->getRHI());
 
   if (m_localReflectionsEnabled) {
     count = 6;
@@ -351,10 +351,10 @@ void GlobalIllumination::Update(Renderer* pRenderer)
   localIrrInfo.offset = 0;
   localIrrInfo.range = VkDeviceSize(sizeof(LocalInfoGI));
 
-  globalEnvMap.sampler = DefaultSampler2DKey->Handle();
-  globalBrdfLut.sampler = DefaultSampler2DKey->Handle();
-  localEnvMaps.sampler = DefaultSampler2DKey->Handle();
-  localBrdfLuts.sampler = DefaultSampler2DKey->Handle();
+  globalEnvMap.sampler = DefaultSampler2DKey->getHandle();
+  globalBrdfLut.sampler = DefaultSampler2DKey->getHandle();
+  localEnvMaps.sampler = DefaultSampler2DKey->getHandle();
+  localBrdfLuts.sampler = DefaultSampler2DKey->getHandle();
 
   globalEnvMap.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   globalBrdfLut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -363,14 +363,14 @@ void GlobalIllumination::Update(Renderer* pRenderer)
 
   Texture* pTexture = m_pGlobalEnvMap;
   Texture* pBRDF = DefaultTextureKey;
-  if (m_pGlobalBRDFLUT && m_pGlobalBRDFLUT->View()) { pBRDF = m_pGlobalBRDFLUT; }
+  if (m_pGlobalBRDFLUT && m_pGlobalBRDFLUT->getView()) { pBRDF = m_pGlobalBRDFLUT; }
 
-  globalEnvMap.imageView = pTexture->View();
-  globalBrdfLut.imageView = pBRDF->View();
+  globalEnvMap.imageView = pTexture->getView();
+  globalBrdfLut.imageView = pBRDF->getView();
   // TODO(): These are place holders, we don't have data for these yet!
   // Obtain env and irr maps from scene when building!
-  localEnvMaps.imageView = DefaultTextureKey->View();
-  localBrdfLuts.imageView = DefaultTextureKey->View();
+  localEnvMaps.imageView = DefaultTextureKey->getView();
+  localBrdfLuts.imageView = DefaultTextureKey->getView();
 
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   writeSets[0].descriptorCount = 1;
@@ -438,6 +438,6 @@ void GlobalIllumination::Update(Renderer* pRenderer)
   writeSets[5].pTexelBufferView = nullptr;
   writeSets[5].pNext = nullptr;
 
-  m_pGlobalIllumination->Update(count, writeSets.data());
+  m_pGlobalIllumination->update(count, writeSets.data());
 }
 } // Recluse

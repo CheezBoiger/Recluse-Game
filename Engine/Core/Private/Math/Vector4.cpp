@@ -12,13 +12,13 @@
 namespace Recluse {
 
 
-Vector4 Vector4::Lerp(const Vector4& A, const Vector4& B, const r32 T)
+Vector4 Vector4::lerp(const Vector4& A, const Vector4& B, const r32 T)
 {
   return A * (1.0f - T) + B * T;
 }
 
 
-Vector4 Vector4::Min(const Vector4& a, const Vector4& b)
+Vector4 Vector4::minimum(const Vector4& a, const Vector4& b)
 {
   return Vector4(
     b.x < a.x ? b.x : a.y,
@@ -29,7 +29,7 @@ Vector4 Vector4::Min(const Vector4& a, const Vector4& b)
 }
 
 
-Vector4 Vector4::Max(const Vector4& a, const Vector4& b)
+Vector4 Vector4::maximum(const Vector4& a, const Vector4& b)
 {
   return Vector4(
     a.x < b.x ? b.x : a.x,
@@ -148,27 +148,27 @@ void Vector4::operator/=(const r32 scaler)
 }
 
 
-r32 Vector4::Length() const
+r32 Vector4::length() const
 {
   return sqrtf( (x * x) + (y * y) + (z * z) + (w * w) );
 }
 
 
-r32 Vector4::LengthSqr() const
+r32 Vector4::lengthSqr() const
 {
   return (x * x) + (y * y) + (z * z) + (w * w);
 }
 
 
-r32 Vector4::Dot(const Vector4& other) const
+r32 Vector4::dot(const Vector4& other) const
 {
   return (x * other.x + y * other.y + z * other.z + w * other.w);
 }
 
 
-Vector4 Vector4::Normalize() const
+Vector4 Vector4::normalize() const
 {
-  r32 magnitude = Length();
+  r32 magnitude = length();
   return (*this) / magnitude;
 }
 

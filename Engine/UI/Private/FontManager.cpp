@@ -12,14 +12,14 @@ namespace Recluse {
 
 FontManager& gFontManager()
 {
-  return FontManager::Instance();
+  return FontManager::instance();
 }
 
 
-void FontManager::OnStartUp()
+void FontManager::onStartUp()
 {
   mFreeType = new FreeType();
-  if (!mFreeType->Initialize()) {
+  if (!mFreeType->initialize()) {
     R_DEBUG(rError, "Freetype not initialized. Stopping font manager initialization.\n");
     return;
   }
@@ -28,15 +28,15 @@ void FontManager::OnStartUp()
   mRenderer = &gRenderer();
   R_DEBUG(rNotify, "FreeType library successfully initialized.\n");
 
-  if (!mRenderer->IsActive()) {
+  if (!mRenderer->isActive()) {
     R_DEBUG(rWarning, "Global Renderer is not active! Be sure to start up the global renderer before using the FontManager!\n");
   }
 }
 
 
-void FontManager::OnShutDown()
+void FontManager::onShutDown()
 {
-  mFreeType->CleanUp();
+  mFreeType->cleanUp();
 
   delete mFreeType;
   mFreeType = nullptr;

@@ -28,30 +28,40 @@ class PhysicalDevice {
 public:
 
   PhysicalDevice()
-    : handle(VK_NULL_HANDLE) { }
+    : m_handle(VK_NULL_HANDLE) { }
 
-  static std::vector<VkExtensionProperties> GetExtensionProperties(VkPhysicalDevice device);
-  VkSurfaceCapabilitiesKHR                  QuerySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const;
-  std::vector<VkSurfaceFormatKHR>           QuerySwapchainSurfaceFormats(VkSurfaceKHR surface) const;
-  std::vector<VkPresentModeKHR>             QuerySwapchainPresentModes(VkSurfaceKHR surface) const;
+  static std::vector<VkExtensionProperties> getExtensionProperties(VkPhysicalDevice device);
+  VkSurfaceCapabilitiesKHR querySwapchainSurfaceCapabilities(VkSurfaceKHR surface) const;
+  std::vector<VkSurfaceFormatKHR> querySwapchainSurfaceFormats(VkSurfaceKHR surface) const;
+  std::vector<VkPresentModeKHR> querySwapchainPresentModes(VkSurfaceKHR surface) const;
 
-  b32                                       FindQueueFamilies(VkSurfaceKHR surface,
-                                              QueueFamily* presentation, QueueFamily* graphics, 
-                                              QueueFamily* transfer, QueueFamily* compute) const;
+  b32 findQueueFamilies(VkSurfaceKHR surface,
+                        QueueFamily* presentation, 
+                        QueueFamily* graphics, 
+                        QueueFamily* transfer, 
+                        QueueFamily* compute) const;
 
-  u32                                       FindMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
-  VkResult                                  GetImageFormatProperties(VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage,
-                                              VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) const;
-  VkPhysicalDeviceFeatures                  GetFeatures() const;
-  VkPhysicalDeviceProperties                GetDeviceProperties() const { return properties; }
-  VkPhysicalDeviceMemoryProperties          GetMemoryProperties() const { return memoryProperties; }
-  void                                      Initialize(VkPhysicalDevice device);
-  void                                      CleanUp();
+  u32 findMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
+
+  VkResult getImageFormatProperties(VkFormat format, 
+                                    VkImageType type, 
+                                    VkImageTiling tiling, 
+                                    VkImageUsageFlags usage,
+                                    VkImageCreateFlags flags, 
+                                    VkImageFormatProperties* pImageFormatProperties) const;
+
+  VkPhysicalDeviceFeatures getFeatures() const;
+  VkPhysicalDeviceProperties getDeviceProperties() const { return m_properties.properties; }
+  VkPhysicalDeviceMaintenance3Properties getMaintenanceProperties() const { return m_maintenanceProperties; }
+  VkPhysicalDeviceMemoryProperties getMemoryProperties() const { return m_memoryProperties; }
+  void initialize(VkPhysicalDevice device);
+  void cleanUp();
   
-  VkPhysicalDevice                          Handle() const { return handle; }
+  VkPhysicalDevice handle() const { return m_handle; }
 private:
-  VkPhysicalDevice                          handle;
-  VkPhysicalDeviceMemoryProperties          memoryProperties;
-  VkPhysicalDeviceProperties                properties;
+  VkPhysicalDevice m_handle;
+  VkPhysicalDeviceMemoryProperties m_memoryProperties;
+  VkPhysicalDeviceProperties2 m_properties;
+  VkPhysicalDeviceMaintenance3Properties m_maintenanceProperties;
 };
 } // Recluse

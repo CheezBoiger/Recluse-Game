@@ -10,13 +10,13 @@ std::string Scene::default_name = "Default Scene";
 Scene::Scene(std::string name)
   : m_SceneName(name) 
 {
-  m_Root.SetSceneOwner(this);
+  m_Root.setSceneOwner(this);
 }
 
 
-void SceneNode::AddChild(GameObject* child)
+void SceneNode::addChild(GameObject* child)
 {
-  child->SetSceneOwner(m_pScene);
+  child->setSceneOwner(m_pScene);
   m_GameObjects.push_back(child);
 }
 } // Recluse

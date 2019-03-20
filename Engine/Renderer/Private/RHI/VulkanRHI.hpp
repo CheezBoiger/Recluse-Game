@@ -8,6 +8,7 @@
 #include "PhysicalDevice.hpp"
 #include "LogicalDevice.hpp"
 
+#include "Memory/Allocator.hpp"
 #include "Renderer/UserParams.hpp"
 
 #include <functional>
@@ -44,13 +45,13 @@ public:
 
   ~Semaphore();
 
-  void          Initialize(const VkSemaphoreCreateInfo& info);
-  void          CleanUp();
+  void initialize(const VkSemaphoreCreateInfo& info);
+  void cleanUp();
 
-  VkSemaphore   Handle() { return mSema; }
+  VkSemaphore getHandle() { return mSema; }
 
 private:
-  VkSemaphore   mSema;
+  VkSemaphore mSema;
 };
 
 
@@ -61,29 +62,30 @@ public:
 
   ~Fence();
 
-  void Initialize(const VkFenceCreateInfo& info);
-  void  CleanUp();
+  void initialize(const VkFenceCreateInfo& info);
+  void cleanUp();
 
-  VkFence     Handle() { return mFence; }
+  VkFence getHandle() { return mFence; }
 
 private:
-  VkFence     mFence;
+  VkFence mFence;
 };
 
 
-// Render Hardware Interface for Vulkan.
+// render Hardware Interface for Vulkan.
 class VulkanRHI {
 public:
   // Global variables.
-  static Context              gContext;
-  static PhysicalDevice       gPhysicalDevice;
+  static Context gContext;
+  static PhysicalDevice gPhysicalDevice;
+  static VulkanMemoryAllocatorManager gAllocator;
 
   // Context and physical device set up.
-  static b32                  CreateContext(const char* appName);
-  static b32                  FindPhysicalDevice(u32 rhiConfigBits = 0);
+  static b32 createContext(const char* appName);
+  static b32 findPhysicalDevice(u32 rhiConfigBits = 0);
 
 private:
-  static b32                  SuitableDevice(VkPhysicalDevice device);
+  static b32 suitableDevice(VkPhysicalDevice device);
 public:
 
   VulkanRHI();
@@ -91,220 +93,223 @@ public:
 
   // Initialize this RHI object. Must be done before calling any function
   // in this object.
-  void                          Initialize(HWND windowHandle, const GraphicsConfigParams* params);
+  void initialize(HWND windowHandle, const GraphicsConfigParams* params);
 
   // Clean up this object. This must be called once done with this RHI
   // object. BE SURE TO FREE UP ANY OBJECTS CREATED FROM THIS RHI OBJECT BEFORE
   // CALLING THIS FUNCTION.
-  void                          CleanUp();
+  void cleanUp();
 
   // TODO(): We need to allocate on a custom allocator to save time with
   // memory management.
-  Buffer*                       CreateBuffer();
-  GraphicsPipeline*             CreateGraphicsPipeline();
-  ComputePipeline*              CreateComputePipeline();
-  FrameBuffer*                  CreateFrameBuffer();
-  Sampler*                      CreateSampler();
-  ImageView*                    CreateImageView(const VkImageViewCreateInfo& info);
-  Texture*                      CreateTexture();
-  Shader*                       CreateShader();
-  CommandBuffer*                CreateCommandBuffer();
-  DescriptorSet*                CreateDescriptorSet();
-  DescriptorSetLayout*          CreateDescriptorSetLayout();
-  Query*                        CreateQuery();
-  RenderPass*                   CreateRenderPass();
+  Buffer* createBuffer();
+  GraphicsPipeline* createGraphicsPipeline();
+  ComputePipeline* createComputePipeline();
+  FrameBuffer* createFrameBuffer();
+  Sampler* createSampler();
+  ImageView* createImageView(const VkImageViewCreateInfo& info);
+  Texture* createTexture();
+  Shader* createShader();
+  CommandBuffer* createCommandBuffer();
+  DescriptorSet* createDescriptorSet();
+  DescriptorSetLayout* createDescriptorSetLayout();
+  Query* createQuery();
+  RenderPass* createRenderPass();
 
-  void                          FreeImageView(ImageView* imgView);
-  void                          FreeBuffer(Buffer* buffer);
-  void                          FreeGraphicsPipeline(GraphicsPipeline* pipeline);
-  void                          FreeComputePipeline(ComputePipeline* pipeline);
-  void                          FreeFrameBuffer(FrameBuffer* buffer);
-  void                          FreeSampler(Sampler* sampler);
-  void                          FreeRenderPass(RenderPass* pass);
-  void                          FreeTexture(Texture* texture);
-  void                          FreeShader(Shader* shader);
-  void                          FreeCommandBuffer(CommandBuffer* buffer);
-  void                          FreeDescriptorSet(DescriptorSet* set);
-  void                          FreeDescriptorSetLayout(DescriptorSetLayout* layout);
-  void                          FreeQuery(Query* query);
+  void freeImageView(ImageView* imgView);
+  void freeBuffer(Buffer* buffer);
+  void freeGraphicsPipeline(GraphicsPipeline* pipeline);
+  void freeComputePipeline(ComputePipeline* pipeline);
+  void freeFrameBuffer(FrameBuffer* buffer);
+  void freeSampler(Sampler* sampler);
+  void freeRenderPass(RenderPass* pass);
+  void freeTexture(Texture* texture);
+  void freeShader(Shader* shader);
+  void freeCommandBuffer(CommandBuffer* buffer);
+  void freeDescriptorSet(DescriptorSet* set);
+  void freeDescriptorSetLayout(DescriptorSetLayout* layout);
+  void freeQuery(Query* query);
 
   // Set the default swapchain command buffers, which is defined by the programmer of the renderer.
-  void                          SetSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
+  void setSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
 
   // Rebuild the swapchain commandbuffers with using the function provided from SetSwapchainCmdBufferBuild.
   // This will build the swapchain command buffers.
-  void                          RebuildCommandBuffers(u32 set);
+  void rebuildCommandBuffers(u32 set);
 
-  size_t                        SwapchainImageCount() const { return mSwapchain.ImageCount(); }
+  size_t swapchainImageCount() const { return mSwapchain.ImageCount(); }
 
-  LogicalDevice*                LogicDevice() { return &mLogicalDevice; }
+  LogicalDevice* logicDevice() { return &mLogicalDevice; }
 
   // Get the Swapchain handle.
-  Swapchain*                    SwapchainObject() { return &mSwapchain; }
+  Swapchain* swapchainObject() { return &mSwapchain; }
 
   // Get the window surface that is used to render onto.
-  VkSurfaceKHR                  Surface() { return mSurface; }
+  VkSurfaceKHR surface() { return mSurface; }
 
   // Get the command pool on the graphics side.
-  VkCommandPool                 GraphicsCmdPool(size_t i) { return mGraphicsCmdPools[i]; }
+  VkCommandPool graphicsCmdPool(size_t i) { return mGraphicsCmdPools[i]; }
 
   // Get the number of graphics command pools this RHI is using.
-  size_t                           NumGraphicsCmdPools() { return mGraphicsCmdPools.size(); }
+  size_t numGraphicsCmdPools() { return mGraphicsCmdPools.size(); }
 
   // Get the command pool on the compute side.
-  VkCommandPool                 ComputeCmdPool() { return mComputeCmdPool; }
+  VkCommandPool computeCmdPool() { return mComputeCmdPool; }
 
-  VkCommandPool                 TransferCmdPool() { return m_TransferCmdPool; }
+  VkCommandPool transferCmdPool() { return m_TransferCmdPool; }
 
   // Get the descriptor pool that is used to create our descriptor sets.
-  VkDescriptorPool              DescriptorPool() { return mDescriptorPool; }
+  VkDescriptorPool descriptorPool() { return mDescriptorPool; }
 
   // Get the query pool that is used to create queries.
-  VkQueryPool                   OcclusionQueryPool() { return mOccQueryPool; }
+  VkQueryPool occlusionQueryPool() { return mOccQueryPool; }
 
   // Create a semaphore object.
-  Semaphore*                    CreateVkSemaphore();
+  Semaphore* createVkSemaphore();
 
-  Fence*                        CreateVkFence();
+  Fence* createVkFence();
 
-  u32                           NumDescriptorSets() { return mCurrDescSets; }
+  u32 numDescriptorSets() { return mCurrDescSets; }
 
   // Free a semaphore that was created by this RHI.
-  void                          FreeVkSemaphore(Semaphore* semaphore);
+  void freeVkSemaphore(Semaphore* semaphore);
 
-  void                          FreeVkFence(Fence* fence);
+  void freeVkFence(Fence* fence);
 
   // Flush out commands that are on hold.
-  void                          FlushCommands();
+  void flushCommands();
 
   // Returns the image index to the current swapchain surface to render onto.
-  void                          AcquireNextImage();
+  void acquireNextImage();
 
   // Submit a command buffer to the graphics queue.
-  void                          GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void graphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Submit a command buffer to the transfer queue.
-  void                          TransferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void transferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
   // Wait until transfer queue has completely finished all submittals.
-  void                          TransferWaitIdle(size_t queueIdx);
+  void transferWaitIdle(size_t queueIdx);
 
   // Wait until the graphics queue has completely finished all submittals.
-  void                          GraphicsWaitIdle(size_t queueIdx);
+  void graphicsWaitIdle(size_t queueIdx);
 
   // Wait until compute queue has completely finished all submittals.
-  void                          ComputeWaitIdle(size_t queueIdx);
+  void computeWaitIdle(size_t queueIdx);
 
-  void                          WaitAllGraphicsQueues();
+  void waitAllGraphicsQueues();
 
   // Wait until present queue has completely finished presenting onto the screen.
-  void                          PresentWaitIdle();
+  void presentWaitIdle();
 
   // Wait for the device to finished its submittals.
-  void                          DeviceWaitIdle();
+  void deviceWaitIdle();
 
   // Submit a command buffer to the compute queue.
-  void                          ComputeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
+  void computeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence = VK_NULL_HANDLE);
 
-  void                          WaitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout);
+  void waitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout);
 
-  void                          ResetFences(const u32 fenceCount, const VkFence* pFences);
+  void resetFences(const u32 fenceCount, const VkFence* pFences);
 
-  void                          WaitForFrameInFlightFence();
+  void waitForFrameInFlightFence();
 
-  VkFence                       CurrentInFlightFence() { return mSwapchain.InFlightFence(m_currentFrame); }
+  VkFence currentInFlightFence() { return mSwapchain.InFlightFence(m_currentFrame); }
 
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
   // If no signals are specified, or signalSemaphoreCount is equal to 0, cmdbuffer will default
   // to GraphicsFinished semaphore, which is used by the Present queue to present to the screen!
-  void                          SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores, 
-                                  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence = nullptr);
+  void submitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, 
+                                    VkSemaphore* waitSemaphores, 
+                                    u32 signalSemaphoreCount, 
+                                    VkSemaphore* signalSemaphores, 
+                                    VkFence fence = nullptr);
   
   // Present the rendered surface.
-  void                          Present();
+  void present();
 
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
   // requery their resources as they have been recreated!
-  void                          ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount = 0);
+  void reConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount = 0);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.
-  u32                           CurrentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
+  u32 currentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
 
   // Swap commandbuffer sets within this vulkan rhi. Be sure that the set is already built!
-  void                          SwapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
+  void swapCommandBufferSets(u32 set) { mSwapchainInfo.mCmdBufferSet = set; }
 
   // Obtain the Graphics Finished Semaphore from swapchain.
-  VkSemaphore                   CurrentGraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(m_currentFrame); }
-  VkSemaphore                   CurrentImageAvailableSemaphore() { return mSwapchain.ImageAvailableSemaphore(m_currentFrame); }
+  VkSemaphore currentGraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(m_currentFrame); }
+  VkSemaphore currentImageAvailableSemaphore() { return mSwapchain.ImageAvailableSemaphore(m_currentFrame); }
 
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!
-  u32                           CurrentSwapchainCmdBufferSet() const { return mSwapchainInfo.mCmdBufferSet; }
-  VkFramebuffer                 SwapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
-  size_t                        NumOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
-  VkRenderPass                  SwapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
-  VkPhysicalDeviceLimits        PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
-  u32                           VendorID() { return mPhysicalDeviceProperties.vendorID; }
-  b32                           DepthBoundsAllowed() const { return m_depthBoundsAllowed; }
+  u32 currentSwapchainCmdBufferSet() const { return mSwapchainInfo.mCmdBufferSet; }
+  VkFramebuffer swapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
+  size_t numOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
+  VkRenderPass swapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
+  VkPhysicalDeviceLimits PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
+  u32 vendorID() { return mPhysicalDeviceProperties.vendorID; }
+  b32 depthBoundsAllowed() const { return m_depthBoundsAllowed; }
   
-  VkFormat                      DepthFormat() const { return mSwapchainInfo.mDepthFormat; }
-  VkImageAspectFlags            DepthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
-  VkImageUsageFlags             DepthUsageFlags() const { return mSwapchainInfo.mDepthUsageFlags; }
-  b32                           CmdBuffersComplete() { return mSwapchainInfo.mComplete; }
-  u32                           GraphicsQueueCount() const { return mLogicalDevice.GraphicsQueueCount(); }
-  u32                           TransferQueueCount() const { return mLogicalDevice.TransferQueueCount(); }
-  u32                           ComputeQueueCount() const { return mLogicalDevice.ComputeQueueCount(); }
-  u32                           CurrentFrame() const { return m_currentFrame; }
-  u32                           BufferingCount() const { return mSwapchain.CurrentBufferCount(); }
-  const char*                   DeviceName() { return mPhysicalDeviceProperties.deviceName; }
+  VkFormat depthFormat() const { return mSwapchainInfo.mDepthFormat; }
+  VkImageAspectFlags depthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
+  VkImageUsageFlags depthUsageFlags() const { return mSwapchainInfo.mDepthUsageFlags; }
+  b32 cmdBuffersComplete() { return mSwapchainInfo.mComplete; }
+  u32 graphicsQueueCount() const { return mLogicalDevice.getGraphicsQueueCount(); }
+  u32 transferQueueCount() const { return mLogicalDevice.getTransferQueueCount(); }
+  u32 computeQueueCount() const { return mLogicalDevice.getComputeQueueCount(); }
+  u32 currentFrame() const { return m_currentFrame; }
+  u32 bufferingCount() const { return mSwapchain.CurrentBufferCount(); }
+  const char* deviceName() { return mPhysicalDeviceProperties.deviceName; }
 
 private:
-  void                          SetUpSwapchainRenderPass();
-  void                          QueryFromSwapchain();
-  void                          CreateDepthAttachment();
-  void                          CreateSwapchainCommandBuffers(u32 swapSet);  
-  void                          CreateOcclusionQueryPool(u32 queries);
+  void setUpSwapchainRenderPass();
+  void queryFromSwapchain();
+  void createDepthAttachment();
+  void createSwapchainCommandBuffers(u32 swapSet);  
+  void createOcclusionQueryPool(u32 queries);
 
   // Builds the descriptor pool for materials. WARNING: Recalling this function will
   // destroy old descriptor pool and replace with a new one, be sure to destroy all
   // descriptor sets previously allocated from old pool before recalling!
-  void                          BuildDescriptorPool(u32 maxCount, u32 maxSets);
+  void buildDescriptorPool(u32 maxCount, u32 maxSets);
 
-  HWND                          mWindow;
-  Swapchain                     mSwapchain;
-  b32                           m_depthBoundsAllowed;
-  LogicalDevice                 mLogicalDevice;
-  VkSurfaceKHR                  mSurface;
-  std::vector<VkCommandPool>    mGraphicsCmdPools;
-  VkCommandPool                 mComputeCmdPool;
-  VkCommandPool                 m_TransferCmdPool;
-  VkDescriptorPool              mDescriptorPool;
-  VkQueryPool                   mOccQueryPool;
-  VkPhysicalDeviceProperties    mPhysicalDeviceProperties;
-
+  HWND mWindow;
+  Swapchain mSwapchain;
+  b32 m_depthBoundsAllowed;
+  LogicalDevice mLogicalDevice;
+  VkSurfaceKHR mSurface;
+  std::vector<VkCommandPool> mGraphicsCmdPools;
+  VkCommandPool mComputeCmdPool;
+  VkCommandPool m_TransferCmdPool;
+  VkDescriptorPool mDescriptorPool;
+  VkQueryPool mOccQueryPool;
+  VkPhysicalDeviceProperties mPhysicalDeviceProperties;
+  VkPhysicalDeviceMaintenance3Properties m_maintenanceProperties;
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {
-    std::vector<VkFramebuffer>                mSwapchainFramebuffers;
+    std::vector<VkFramebuffer> mSwapchainFramebuffers;
     //std::vector<CommandBuffer>                mSwapchainCmdBuffers;
-    std::vector<std::vector<CommandBuffer> >  mCmdBufferSets;
-    b32                                       mComplete;
-    VkRenderPass                              mSwapchainRenderPass;
-    VkImage                                   mDepthAttachment;
-    VkImageView                               mDepthView;
-    VkDeviceMemory                            mDepthMemory;
-    VkFormat                                  mDepthFormat;
-    VkImageAspectFlags                        mDepthAspectFlags;
-    VkImageUsageFlags                         mDepthUsageFlags;
-    u32                                       mCurrentImageIndex;
-    i32                                       mCmdBufferSet;
+    std::vector<std::vector<CommandBuffer> > mCmdBufferSets;
+    b32 mComplete;
+    VkRenderPass mSwapchainRenderPass;
+    VkImage mDepthAttachment;
+    VkImageView mDepthView;
+    VkDeviceMemory mDepthMemory;
+    VkFormat mDepthFormat;
+    VkImageAspectFlags mDepthAspectFlags;
+    VkImageUsageFlags mDepthUsageFlags;
+    u32 mCurrentImageIndex;
+    i32 mCmdBufferSet;
   } mSwapchainInfo;
 
-  SwapchainCmdBufferBuildFunc   mSwapchainCmdBufferBuild;
-  u32                           mCurrDescSets;
-  u32                           m_currentFrame;
+  SwapchainCmdBufferBuildFunc mSwapchainCmdBufferBuild;
+  u32 mCurrDescSets;
+  u32 m_currentFrame;
 };
 } // Recluse

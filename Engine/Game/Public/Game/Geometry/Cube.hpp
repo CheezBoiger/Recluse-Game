@@ -13,9 +13,9 @@ namespace Recluse {
 class Cube {
 public:
 
-  static std::vector<StaticVertex> MeshInstance(r32 scale = 1.0f);
-  static std::vector<u32> IndicesInstance();
-  static const Vector3 Min;
-  static const Vector3 Max;
+  static std::vector<StaticVertex> meshInstance(r32 scale = 1.0f);
+  static std::vector<u32> indicesInstance();
+  static const Vector3 minimum;
+  static const Vector3 maximum;
 };
 } // Recluse

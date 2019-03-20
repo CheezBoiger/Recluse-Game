@@ -18,12 +18,12 @@ public:
 
   ~ComputePipeline();
 
-  void              Initialize(VkComputePipelineCreateInfo& info, 
+  void              initialize(VkComputePipelineCreateInfo& info, 
                       const VkPipelineLayoutCreateInfo& layout);
-  void              CleanUp();
+  void              cleanUp();
 
   VkPipeline        Pipeline() const { return mPipeline; }
-  VkPipelineLayout  Layout() const { return mLayout; }
+  VkPipelineLayout  getLayout() const { return mLayout; }
 
 
 private:

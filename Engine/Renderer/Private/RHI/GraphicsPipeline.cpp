@@ -20,7 +20,7 @@ GraphicsPipeline::~GraphicsPipeline()
 }
 
 
-void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
+void GraphicsPipeline::initialize(VkGraphicsPipelineCreateInfo& info,
   const VkPipelineLayoutCreateInfo& layout)
 {
   VkResult result = vkCreatePipelineLayout(mOwner, &layout, nullptr, &mLayout);
@@ -38,7 +38,7 @@ void GraphicsPipeline::Initialize(VkGraphicsPipelineCreateInfo& info,
 }
 
 
-void GraphicsPipeline::CleanUp()
+void GraphicsPipeline::cleanUp()
 {
   if (mPipeline) {
     vkDestroyPipeline(mOwner, mPipeline, nullptr);

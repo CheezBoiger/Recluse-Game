@@ -22,31 +22,31 @@ u32                       Window::kFullscreenWidth = 0;
 BYTE                      lpb[1 << 23];
 
 
-b32 Window::Initialized()
+b32 Window::isInitialized()
 {
   return bInitialized;
 }
 
 
-void Window::SetWindowResizeCallback(WindowResizeCallback callback)
+void Window::setWindowResizeCallback(WindowResizeCallback callback)
 {
   gWindowResizeCallback = callback;
 }
 
 
-void Window::SetKeyboardCallback(KeyboardCallback callback)
+void Window::setKeyboardCallback(KeyboardCallback callback)
 {
   gKeyboardCallback = callback;
 }
 
 
-void Window::SetMouseButtonCallback(MouseButtonCallback callback)
+void Window::setMouseButtonCallback(MouseButtonCallback callback)
 {
   gMouseButtonCallback = callback;
 }
 
 
-void Window::SetMousePositionCallback(MousePositionCallback callback)
+void Window::setMousePositionCallback(MousePositionCallback callback)
 {
   gMousePositionCallback = callback;
 }
@@ -90,7 +90,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 static void AdjustClientViewRect(HWND handle)
 {
-  if (!handle || !Mouse::Clamped()) return;
+  if (!handle || !Mouse::isClamped()) return;
   
   RECT rect;
   GetClientRect(handle, &rect);
@@ -100,13 +100,13 @@ static void AdjustClientViewRect(HWND handle)
 }
 
 
-LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
+LRESULT CALLBACK Window::windowProc(HWND   hwnd,
   UINT   uMsg, WPARAM wParam, LPARAM lParam)
 {
   Window* window = reinterpret_cast<Window*>(GetPropW(hwnd, RECLUSE_WINDOW_PROP_NAME));
-  if (gFullScreenAltTab && window->FullScreen() && !window->Minimized()) {
-    window->SetToWindowed(window->Width(), window->Height());
-    window->Minimize();
+  if (gFullScreenAltTab && window->isFullScreen() && !window->isMinimized()) {
+    window->setToWindowed(window->getWidth(), window->getHeight());
+    window->minimize();
   }
 
   switch (uMsg) {
@@ -120,7 +120,7 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   case WM_CLOSE:
   {
     if (!window->mHandle) break;
-    window->Close();
+    window->close();
   } break;
   case WM_SYSKEYDOWN:
   case WM_KEYDOWN:
@@ -182,8 +182,8 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
       switch (wParam) {
       case SIZE_RESTORED:
       {
-        if (window->Minimized() && gFullScreenAltTab && !window->FullScreen()) {
-          window->SetToFullScreen();
+        if (window->isMinimized() && gFullScreenAltTab && !window->isFullScreen()) {
+          window->setToFullScreen();
           gFullScreenAltTab = false;
         }
         window->mMinimized = false;
@@ -205,12 +205,12 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_MOUSEMOVE:
   {
-    if (window && Mouse::Enabled() && Mouse::Tracking()) {
+    if (window && Mouse::isEnabled() && Mouse::isTracking()) {
       AdjustClientViewRect(window->mHandle);
 
       const int x = GET_X_LPARAM(lParam);
       const int y = GET_Y_LPARAM(lParam);
-      window->InputMousePos(x, y);
+      window->inputMousePos(x, y);
       
     }
   } break;
@@ -254,7 +254,7 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
   } break;
   case WM_INPUT:
   {
-    if (window && !Mouse::Enabled() && Mouse::Tracking()) {
+    if (window && !Mouse::isEnabled() && Mouse::isTracking()) {
       i32 dx, dy;
       UINT dwSize;
 
@@ -271,18 +271,18 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
       RAWINPUT* raw = (RAWINPUT*)lpb;
       if (raw->header.dwType == RIM_TYPEMOUSE) {
         if (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) {
-          dx = raw->data.mouse.lLastX - (i32)Mouse::LastXPos;
-          dy = raw->data.mouse.lLastY - (i32)Mouse::LastYPos;
+          dx = raw->data.mouse.lLastX - (i32)Mouse::lastXPos;
+          dy = raw->data.mouse.lLastY - (i32)Mouse::lastYPos;
         } else {
           dx = raw->data.mouse.lLastX;
           dy = raw->data.mouse.lLastY;
         }
       }
 
-      window->InputMousePos((i32)Mouse::XPos + dx, (i32)Mouse::YPos + dy);
+      window->inputMousePos((i32)Mouse::xPos + dx, (i32)Mouse::yPos + dy);
 
-      Mouse::LastXPos += (r64)dx;
-      Mouse::LastYPos += (r64)dy;
+      Mouse::lastXPos += (r64)dx;
+      Mouse::lastYPos += (r64)dy;
     }
   } break;
   default: break;
@@ -292,13 +292,13 @@ LRESULT CALLBACK Window::WindowProc(HWND   hwnd,
 }
 
 
-b32 Window::InitializeAPI()
+b32 Window::initializeAPI()
 {
   if (bInitialized) return true;
 
   WNDCLASSEXW winclass = { };
   winclass.cbSize = sizeof(WNDCLASSEXW);
-  winclass.lpfnWndProc = WindowProc;
+  winclass.lpfnWndProc = windowProc;
   winclass.hInstance = GetModuleHandle(NULL);
   winclass.lpszClassName = RECLUSE_WINDOW_CLASS_NAME;
   winclass.hIcon = LoadIcon(GetModuleHandle(NULL), IDI_APPLICATION);
@@ -322,7 +322,7 @@ b32 Window::InitializeAPI()
 }
 
 
-void Window::PollEvents()
+void Window::pollEvents()
 {
   for (size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i) {
     if (Mouse::buttonActions[i] == Mouse::RELEASED) {
@@ -340,13 +340,13 @@ void Window::PollEvents()
 
 Window::~Window()
 {
-  if (mHandle != NULL && !ShouldClose()) {
-    Close();
+  if (mHandle != NULL && !shouldClose()) {
+    close();
   }
 }
 
 
-b32 Window::Create(std::string title, i32 width, i32 height)
+b32 Window::create(std::string title, i32 width, i32 height)
 {
   m_PosX = 0;
   m_PosY = 0;
@@ -392,21 +392,21 @@ b32 Window::Create(std::string title, i32 width, i32 height)
 }
 
 
-void Window::Show()
+void Window::show()
 {
   ShowWindow(mHandle, SW_SHOW);
   mShowing = true;
 }
 
 
-void Window::Hide()
+void Window::hide()
 {
   ShowWindow(mHandle, SW_HIDE);
   mShowing = false;
 }
 
 
-void Window::Maximize()
+void Window::maximize()
 {
   ShowWindow(mHandle, SW_MAXIMIZE);
   mShowing = true;
@@ -414,7 +414,7 @@ void Window::Maximize()
 }
 
 
-void Window::Minimize()
+void Window::minimize()
 {
   mShowing = false;
   mMinimized = true;
@@ -422,7 +422,7 @@ void Window::Minimize()
 }
 
 
-void Window::SetToCenter()
+void Window::setToCenter()
 {
   RECT rect;
   GetWindowRect(mHandle, &rect);
@@ -435,7 +435,7 @@ void Window::SetToCenter()
 }
 
 
-void Window::SetToFullScreen()
+void Window::setToFullScreen()
 {
   if (!mFullScreen) {
     MONITORINFO mi = { sizeof(mi) };
@@ -465,7 +465,7 @@ void Window::SetToFullScreen()
 }
 
 
-void Window::SetToWindowed(i32 width, i32 height, b32 borderless)
+void Window::setToWindowed(i32 width, i32 height, b32 borderless)
 {
   if (mFullScreen && gHooked) { 
     UnhookWindowsHookEx(gFullScreenHook);
@@ -489,7 +489,7 @@ void Window::SetToWindowed(i32 width, i32 height, b32 borderless)
 }
 
 
-void Window::Close()
+void Window::close()
 {
   mRequestClose = true;
 
@@ -503,12 +503,12 @@ void Window::Close()
 }
 
 
-void Window::InputMousePos(i32 x, i32 y)
+void Window::inputMousePos(i32 x, i32 y)
 {
-  if (Mouse::XPos == x && Mouse::YPos == y) return;
+  if (Mouse::xPos == x && Mouse::yPos == y) return;
 
-  Mouse::XPos = (r64)x;
-  Mouse::YPos = (r64)y;
+  Mouse::xPos = (r64)x;
+  Mouse::yPos = (r64)y;
 
   if (gMousePositionCallback) {
     gMousePositionCallback(this, (r64)x, (r64)y);
@@ -516,7 +516,7 @@ void Window::InputMousePos(i32 x, i32 y)
 }
 
 
-u32 Window::GetRefreshRate()
+u32 Window::getRefreshRate()
 {
   DEVMODEA lDevMode;
   EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &lDevMode);

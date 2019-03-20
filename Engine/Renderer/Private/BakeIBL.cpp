@@ -35,9 +35,9 @@ BakeIBL::~BakeIBL()
 }
 
 
-void BakeIBL::Initialize(VulkanRHI* pRhi)
+void BakeIBL::initialize(VulkanRHI* pRhi)
 {
-  SetUpDescriptorSetLayouts(pRhi);
+  setUpDescriptorSetLayouts(pRhi);
   SetUpComputePipelines(pRhi);
 }
 
@@ -45,14 +45,14 @@ void BakeIBL::Initialize(VulkanRHI* pRhi)
 void BakeIBL::SetUpComputePipelines(VulkanRHI* pRhi)
 {
   {
-    m_pPipeGenBRDF = pRhi->CreateComputePipeline();
-    Shader shader; shader.SetOwner(pRhi->LogicDevice()->Native());
+    m_pPipeGenBRDF = pRhi->createComputePipeline();
+    Shader shader; shader.SetOwner(pRhi->logicDevice()->getNative());
     RendererPass::LoadShader("GenerateBRDFLUT.comp.spv", &shader);
 
     VkPipelineShaderStageCreateInfo shaderCi = { };
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-    shaderCi.module = shader.Handle();
+    shaderCi.module = shader.getHandle();
     shaderCi.pName = kDefaultShaderEntryPointStr;
 
     VkComputePipelineCreateInfo computeInfo = { };
@@ -61,21 +61,21 @@ void BakeIBL::SetUpComputePipelines(VulkanRHI* pRhi)
     computeInfo.stage = shaderCi;
 
     VkPipelineLayoutCreateInfo layoutInfo = { };
-    VkDescriptorSetLayout layouts[] = { GlobalSetLayoutKey->Layout(), m_pLayoutBRDF->Layout() };
+    VkDescriptorSetLayout layouts[] = { GlobalSetLayoutKey->getLayout(), m_pLayoutBRDF->getLayout() };
     layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     layoutInfo.setLayoutCount = 2;
     layoutInfo.pSetLayouts = layouts;
     
-    m_pPipeGenBRDF->Initialize(computeInfo, layoutInfo);
-    shader.CleanUp();
+    m_pPipeGenBRDF->initialize(computeInfo, layoutInfo);
+    shader.cleanUp();
   }
 }
 
 
-void BakeIBL::SetUpDescriptorSetLayouts(VulkanRHI* pRhi)
+void BakeIBL::setUpDescriptorSetLayouts(VulkanRHI* pRhi)
 {
   {
-    m_pLayoutBRDF = pRhi->CreateDescriptorSetLayout();
+    m_pLayoutBRDF = pRhi->createDescriptorSetLayout();
     VkDescriptorSetLayoutBinding bind = { };
     bind.binding = 0;
     bind.descriptorCount = 1;
@@ -86,30 +86,30 @@ void BakeIBL::SetUpDescriptorSetLayouts(VulkanRHI* pRhi)
     layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCi.bindingCount = 1;
     layoutCi.pBindings = &bind;
-    m_pLayoutBRDF->Initialize(layoutCi);
+    m_pLayoutBRDF->initialize(layoutCi);
 
-    m_pBRDFSet = pRhi->CreateDescriptorSet();
-    m_pBRDFSet->Allocate(pRhi->DescriptorPool(), m_pLayoutBRDF);
+    m_pBRDFSet = pRhi->createDescriptorSet();
+    m_pBRDFSet->allocate(pRhi->descriptorPool(), m_pLayoutBRDF);
   }
 }
 
 
-void BakeIBL::CleanUp(VulkanRHI* pRhi)
+void BakeIBL::cleanUp(VulkanRHI* pRhi)
 {
-  CleanUpDescriptorSetLayouts(pRhi);
+  cleanUpDescriptorSetLayouts(pRhi);
   CleanUpComputePipelines(pRhi);
 }
 
 
-void BakeIBL::CleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
+void BakeIBL::cleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
 {
   if (m_pLayoutBRDF) {
-    pRhi->FreeDescriptorSetLayout(m_pLayoutBRDF);
+    pRhi->freeDescriptorSetLayout(m_pLayoutBRDF);
     m_pLayoutBRDF = nullptr;
   }
 
   if (m_pBRDFSet) {
-    pRhi->FreeDescriptorSet(m_pBRDFSet);
+    pRhi->freeDescriptorSet(m_pBRDFSet);
     m_pBRDFSet = nullptr;
   }
 }
@@ -118,7 +118,7 @@ void BakeIBL::CleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
 void BakeIBL::CleanUpComputePipelines(VulkanRHI* pRhi)
 {
   if (m_pPipeGenBRDF) {
-    pRhi->FreeComputePipeline(m_pPipeGenBRDF);
+    pRhi->freeComputePipeline(m_pPipeGenBRDF);
     m_pPipeGenBRDF = nullptr;
   }
 }
@@ -128,11 +128,11 @@ void BakeIBL::RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Text
 {
   if (!pCmd || !target) return;
 
-  VkDescriptorSet sets[] = { pGlobal->Set(frameIndex)->Handle(), m_pBRDFSet->Handle() };
+  VkDescriptorSet sets[] = { pGlobal->getDescriptorSet(frameIndex)->getHandle(), m_pBRDFSet->getHandle() };
   pCmd->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->Pipeline());
-  pCmd->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->Layout(),
+  pCmd->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->getLayout(),
     0, 2, sets, 0, nullptr);
-  pCmd->Dispatch((target->Width() / 16) + 1, (target->Height() / 16) + 1, 1);
+  pCmd->Dispatch((target->getWidth() / 16) + 1, (target->getHeight() / 16) + 1, 1);
 }
 
 
@@ -142,7 +142,7 @@ void BakeIBL::UpdateTargetBRDF(Texture* target)
   std::array<VkWriteDescriptorSet, 1> writes;
   VkDescriptorImageInfo imgInfo = { };
   imgInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-  imgInfo.imageView = target->View();
+  imgInfo.imageView = target->getView();
   imgInfo.sampler = nullptr;
 
   writes[0] = { };
@@ -152,6 +152,6 @@ void BakeIBL::UpdateTargetBRDF(Texture* target)
   writes[0].dstBinding = 0;
   writes[0].dstArrayElement = 0;
   writes[0].pImageInfo = &imgInfo;
-  m_pBRDFSet->Update(static_cast<u32>(writes.size()), writes.data());
+  m_pBRDFSet->update(static_cast<u32>(writes.size()), writes.data());
 }
 } // Recluse

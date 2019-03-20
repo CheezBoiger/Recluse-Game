@@ -54,7 +54,7 @@ extern Texture* DefaultTextureKey;
 extern Sampler* DefaultSampler2DKey;
 extern VkImageView DefaultTexture2DArrayView;
 
-// Debug pipeline, for debugging purposes.
+// enableDebug pipeline, for debugging purposes.
 // This allows drawing lines, shapes, or anything that 
 // may be needed to debug the renderer.
 extern GraphicsPipeline*  debug_linePipeline;
@@ -217,7 +217,7 @@ void LoadShader(const std::string& Filename, Shader* S);
 // Set up the downscale pass.
 void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-// Set up the HDR Gamma pass.
+// Set up the HDR getGamma pass.
 void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, HDR* pHDR);
 
 void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
@@ -232,7 +232,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
 
 void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
-void SetUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultInfo);
+void setUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultInfo);
 
 void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
@@ -266,8 +266,8 @@ public:
     , m_groupSz(16) { }
 
 
-  void    Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
-  void    CleanUp(VulkanRHI* pRhi);
+  void    initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
+  void    cleanUp(VulkanRHI* pRhi);
 
   void    GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOut, GlobalDescriptor* pDescriptor, u32 frameIndex);
   void    UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
@@ -298,15 +298,15 @@ public:
     , m_staticWireframePipeline(nullptr)
     , m_dynamicWireframePipeline(nullptr) { }
 
-  void                Initialize(VulkanRHI* pRhi);
-  void                CleanUp(VulkanRHI* pRhi);
+  void                initialize(VulkanRHI* pRhi);
+  void                cleanUp(VulkanRHI* pRhi);
 
   RenderPass*         GetRenderPass() { return m_renderPass; }
   GraphicsPipeline*   GetWireFrameStaticPipeline() { }
   GraphicsPipeline*   GetWireFrameDynamicPipeline() { }
 
 private:
-  void                InitializeRenderPass(VulkanRHI* pRhi);
+  void                initializeRenderPass(VulkanRHI* pRhi);
   // Simple renderer pipeline requires no material information, 
   // is not shaded with shadow, and has no ibl. For debugging purposes.
   GraphicsPipeline*  m_staticWireframePipeline;

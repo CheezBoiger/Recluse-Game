@@ -25,8 +25,8 @@ public:
   BakeIBL();
   ~BakeIBL();
 
-  void                  Initialize(VulkanRHI* pRhi);
-  void                  CleanUp(VulkanRHI* pRhi);
+  void                  initialize(VulkanRHI* pRhi);
+  void                  cleanUp(VulkanRHI* pRhi);
 
   void                  RenderPrefilterSpec(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
   void                  RenderIrrDiff(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
@@ -35,10 +35,10 @@ public:
 private:
 
 
-  void                  SetUpDescriptorSetLayouts(VulkanRHI* pRhi);
+  void                  setUpDescriptorSetLayouts(VulkanRHI* pRhi);
   void                  SetUpComputePipelines(VulkanRHI* pRhi);
 
-  void                  CleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
+  void                  cleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
   void                  CleanUpComputePipelines(VulkanRHI* pRhi);
 
   ComputePipeline*      m_pPipePrefilterSpecIBL;

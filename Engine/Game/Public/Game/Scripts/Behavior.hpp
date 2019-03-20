@@ -20,9 +20,9 @@ struct IBehavior : public Component {
 
 protected:
   // Mandatory that this update function is defined.
-  virtual void  Update() override { }
+  virtual void  update() override { }
 
-  virtual void Awake() override { }
+  virtual void awake() override { }
 };
 
 
@@ -31,19 +31,19 @@ public:
   virtual ~IScript() { }
 
   // Default start up of this behavior.
-  virtual void  StartUp() { }
+  virtual void  startUp() { }
 
   // Default shut down of this behavior.
-  virtual void  ShutDown() { }
+  virtual void  shutDown() { }
 
   // Called when object is being initialized.
-  virtual void  Awake() override { }
+  virtual void  awake() override { }
 
   // Mandatory that this update function is defined.
-  virtual void  Update() override { }
+  virtual void  update() override { }
 
   // when object is enabled, perform necessary actions.
-  virtual void  OnEnable() { }
+  virtual void  onEnable() { }
 
   // When object is disabled, perform necessary actions.
   virtual void  OnDisable() { }
@@ -54,7 +54,7 @@ public:
   virtual void OnCollisionExit() { }
 
   // Enables this behavior on a game object.  
-  void          Enable() { }
+  void          setEnable() { }
 
   // Disables this behavior on a game object.
   void          Disable() { }

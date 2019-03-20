@@ -13,27 +13,27 @@ namespace Recluse {
 
 UI& gUI()
 {
-  return UI::Instance();
+  return UI::instance();
 }
 
 
-void UI::OnStartUp()
+void UI::onStartUp()
 {
-  gFontManager().StartUp();
-  if (gRenderer().IsActive()) {
-    m_currUiBuffer = gRenderer().GetUiBuffer();
+  gFontManager().startUp();
+  if (gRenderer().isActive()) {
+    m_currUiBuffer = gRenderer().getUiBuffer();
   }
 }
 
 
-void UI::OnShutDown()
+void UI::onShutDown()
 {
-  gFontManager().ShutDown();
+  gFontManager().shutDown();
   
 }
 
 
-void UI::UpdateState(r64 dt)
+void UI::updateState(r64 dt)
 {
 }
 

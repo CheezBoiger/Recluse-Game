@@ -50,8 +50,8 @@ public:
 
   ~SkyRenderer();
 
-  void                    Initialize();
-  void                    CleanUp();
+  void                    initialize();
+  void                    cleanUp();
   void                    MarkDirty() { m_bDirty = true; }
   void                    MarkClean() { m_bDirty = false; }
 

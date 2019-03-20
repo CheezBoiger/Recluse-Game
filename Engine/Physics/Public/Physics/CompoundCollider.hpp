@@ -18,7 +18,7 @@ public:
     : Collider(PHYSICS_COLLIDER_TYPE_COMPOUND) { }
   ~CompoundCollider() { }
 
-  void AddCollider(Collider* collider);
+  void addCollider(Collider* collider);
   Collider* RemoveCollider(Collider* collider);
 
   std::list<Collider*>& GetColliders() { return m_colliders; }

@@ -40,8 +40,8 @@ public:
 
   static u32 GetMaxDecalCount() { return kMaxDecalCount; }
 
-  void        Initialize(VulkanRHI* rhi);
-  void        CleanUp(VulkanRHI* rhi);
+  void        initialize(VulkanRHI* rhi);
+  void        cleanUp(VulkanRHI* rhi);
 
   // Get decal data information.
   DecalPerInstanceInfo&      GetDecalInfo(size_t idx) { return m_decals[idx]; }
@@ -51,7 +51,7 @@ public:
   // Decals are set as the next subpass within the offscreen cmdbuffer;
   void        BuildDecals(CommandBuffer* offscreenCmdBuffer);
   
-  void        ClearDecalBuffer() { m_decalCmds.Clear(); }
+  void        ClearDecalBuffer() { m_decalCmds.clear(); }
   void        PushDecal(const DecalRenderCmd& cmd);
   
 private:

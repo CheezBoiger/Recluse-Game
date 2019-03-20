@@ -27,42 +27,42 @@ public:
   } 
 
   // Add an animation clip to the component to playback in the future.
-  void AddClip(AnimClip* clip, const std::string& name);
+  void addClip(AnimClip* clip, const std::string& name);
 
   // Blend an animation to target weight over time in seconds.
-  void BlendPlayback(const std::string& name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
+  void blendPlayback(const std::string& name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
   
   // Signal to play back an animation clip with given name.
   // May also optionally specify at what time to play the animation [0,1] as the normalized time.
-  void Playback(const std::string& name, r32 rate = 1.0f, r32 atTime = 0.0f);
+  void playback(const std::string& name, r32 rate = 1.0f, r32 atTime = 0.0f);
   
   // Check if component is playing back a clip.
-  b32    PlayingBack(const std::string& name);
+  b32    isPlayingBack(const std::string& name);
 
   // TODO():
-  virtual void              OnInitialize(GameObject* owner) override;
+  virtual void              onInitialize(GameObject* owner) override;
 
   // TODO():
-  virtual void              OnCleanUp() override;
+  virtual void              onCleanUp() override;
 
   // TODO():
-  virtual void              Serialize(IArchive& archive) override { }
+  virtual void              serialize(IArchive& archive) override { }
 
   // TODO():
-  virtual void              Deserialize(IArchive& archive) override { }
+  virtual void              deserialize(IArchive& archive) override { }
 
   // TODO():
-  virtual void              Update() override;
+  virtual void              update() override;
 
 
-  AnimHandle*               GetAnimHandle() { return m_handle; }
+  AnimHandle*               getAnimHandle() { return m_handle; }
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      SetPlaybackRate(r32 rate);
+  void                      setPlaybackRate(r32 rate);
 
   // Get the current playback rate.
-  r32                       GetPlaybackRate() const;
+  r32                       getPlaybackRate() const;
 
 private:
   std::map<std::string, AnimClip*>    m_clips;

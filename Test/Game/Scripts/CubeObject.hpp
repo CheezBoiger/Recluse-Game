@@ -35,10 +35,10 @@ public:
   CubeObject(b32 enableUI)
       : m_enableUI(enableUI)
   {
-    SetName("CubeObject :3");
+    setName("CubeObject :3");
   }
 
-  void OnStartUp() override
+  void onStartUp() override
   {
     m_health = 0.f;
     m_healthRegen = 1.0f;
@@ -46,93 +46,93 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(15.0f, 1.0f, 15.0f));
+    m_pCollider = gPhysics().createBoxCollider(Vector3(15.0f, 1.0f, 15.0f));
 #if 1
     m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
 #endif
-    m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->AddCollider(m_pCollider);
-    m_pPhysicsComponent->SetMass(0.0f);
-    m_pPhysicsComponent->SetFriction(1.0f);
+    m_pPhysicsComponent->initialize(this);
+    m_pPhysicsComponent->addCollider(m_pCollider);
+    m_pPhysicsComponent->setMass(0.0f);
+    m_pPhysicsComponent->setFriction(1.0f);
 
     Mesh* mesh = nullptr;
-    MeshCache::Get("NativeCube", &mesh);
-    m_pMeshComponent->Initialize(this);
+    MeshCache::get("NativeCube", &mesh);
+    m_pMeshComponent->initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = nullptr;
-    MaterialCache::Get(
+    MaterialCache::get(
 #if 0
       "GrassySample"
 #else
       "RustedSample"
 #endif
       , &material);
-    Transform* trans = GetTransform();
-    m_pRendererComponent->Initialize(this);
+    Transform* trans = getTransform();
+    m_pRendererComponent->initialize(this);
 #if 0
-    m_pRendererComponent->EnableStatic(false);
-    m_pRendererComponent->ForceForward(false);
-    m_pRendererComponent->AddMesh(mesh);
-    m_pRendererComponent->EnableLod(false);
-    mesh->GetPrimitive(0)->_pMat = material;
-    trans->Scale = Vector3(15.0f, 15.0f, 15.0f);
+    m_pRendererComponent->enableStatic(false);
+    m_pRendererComponent->forceForward(false);
+    m_pRendererComponent->addMesh(mesh);
+    m_pRendererComponent->enableLod(false);
+    mesh->getPrimitive(0)->_pMat = material;
+    trans->_scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
-    m_pRendererComponent->ForceForward(false);
-    m_pRendererComponent->EnableStatic(false);
+    m_pRendererComponent->forceForward(false);
+    m_pRendererComponent->enableStatic(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("Sponza", &model);
+    ModelCache::get("Sponza", &model);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
-      m_pRendererComponent->AddMesh(model->meshes[i]);
+      m_pRendererComponent->addMesh(model->meshes[i]);
     }
-    trans->Scale = Vector3(1.0f, 1.0f, 1.0f);
-    m_pRendererComponent->EnableDebug(false);
-    m_pRendererComponent->SetDebugBits(DEBUG_CONFIG_ALBEDO_BIT);
+    trans->_scale = Vector3(1.0f, 1.0f, 1.0f);
+    m_pRendererComponent->enableDebug(false);
+    m_pRendererComponent->setDebugBits(DEBUG_CONFIG_ALBEDO_BIT);
 #endif
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
-    //trans->Rotation = Quaternion::AngleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
-    trans->Position = Vector3(0.0f, -15.0f, 0.0f);
-    //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+    //trans->_rotation = Quaternion::angleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
+    trans->_position = Vector3(0.0f, -15.0f, 0.0f);
+    //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).normalize();
 
     m_particleSystem = new ParticleSystemComponent();
-    m_particleSystem->Initialize(this);
+    m_particleSystem->initialize(this);
     m_particleSystem->SetMaxParticleCount(3000);
     m_particleSystem->SetMaxLife(200.0f);
     m_particleSystem->SetAcceleration(Vector3(1.0f, -0.8f, 0.8f));
     m_particleSystem->SetAngleRate(1.0f);
-    m_particleSystem->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+    m_particleSystem->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
-  void Update(r32 tick) override
+  void update(r32 tick) override
   {
     if (!m_enableUI) { return; }
-    Transform* transform = GetTransform();
-    //transform->Position += m_vRandDir * tick;
-    //Quaternion q = Quaternion::AngleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
-    //transform->Rotation = transform->Rotation * q;
+    Transform* transform = getTransform();
+    //transform->_position += m_vRandDir * tick;
+    //Quaternion q = Quaternion::angleAxis(-Radians(0.1f), Vector3(0.0f, 0.0, 1.0f));
+    //transform->_rotation = transform->_rotation * q;
     // Test sun rendering. This is not mandatory for running the engine!
 #define ALLOW_SUN_MOVEMENT 1
 #if ALLOW_SUN_MOVEMENT >= 1
     static r32 tt = 0.0f;
     if (Keyboard::KeyPressed(KEY_CODE_Q)) {
-      Scene* scene = gEngine().GetScene();
-      DirectionalLight* light = scene->GetSky()->GetSunLight();
+      Scene* scene = gEngine().getScene();
+      DirectionalLight* light = scene->getSky()->getSunLight();
       light->_Direction = Vector3(
         0.0f, 
         sinf(static_cast<r32>(tt * 0.01f)) * 0.5f,
-        cosf(static_cast<r32>(tt * 0.01f)) * 0.5f).Normalize();
+        cosf(static_cast<r32>(tt * 0.01f)) * 0.5f).normalize();
       tt += 1.0f;
     }
 #endif
-    AABB aabb = m_pMeshComponent->MeshRef()->GetAABB();
-    aabb.min = (aabb.min * transform->Scale) + transform->Position;
-    aabb.max = (aabb.max * transform->Scale) + transform->Position;
-    ViewFrustum::Result result = Camera::GetMain()->GetViewFrustum().Intersect(aabb);
+    AABB aabb = m_pMeshComponent->MeshRef()->getAABB();
+    aabb.min = (aabb.min * transform->_scale) + transform->_position;
+    aabb.max = (aabb.max * transform->_scale) + transform->_position;
+    ViewFrustum::Result result = Camera::getMain()->getViewFrustum().intersect(aabb);
 
     std::string frustumResult = "Frustum result: ";
-    ViewFrustum frustum = Camera::GetMain()->GetViewFrustum();
+    ViewFrustum frustum = Camera::getMain()->getViewFrustum();
     Plane farPlane = frustum[ViewFrustum::PFAR];
     Plane nearPlane = frustum[ViewFrustum::PNEAR];
     Plane topPlane = frustum[ViewFrustum::PTOP];
@@ -155,18 +155,18 @@ public:
     m_health += m_healthRegen * tick;
     if (m_health > m_maxHealth) m_health = m_maxHealth;
  
-    Vector3 spos = Camera::GetMain()->GetWorldToScreenProjection(transform->Position);
+    Vector3 spos = Camera::getMain()->getWorldToScreenProjection(transform->_position);
 
-    std::string lol = GetName() + " " + std::to_string(static_cast<u32>(m_health)) + " hp";
+    std::string lol = getName() + " " + std::to_string(static_cast<u32>(m_health)) + " hp";
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
-    std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::DeltaTime)) + " fps       ";
+    std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::deltaTime)) + " fps       ";
     std::string engine = RTEXT("Recluse Engine v0.0.3");
-    std::string device = gRenderer().GetDeviceName();
-    std::string globalTime = "time: " + std::to_string(Time::CurrentTime()) + " s";
-    Window* window = gEngine().GetWindow();
+    std::string device = gRenderer().getDeviceName();
+    std::string globalTime = "time: " + std::to_string(Time::currentTime()) + " s";
+    Window* window = gEngine().getWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";
-    gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->Height() - 300.0f, 800.0f, 500.0f);
+    gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->getHeight() - 300.0f, 800.0f, 500.0f);
       gUI().EmitText(str, 6.0f, 100.0f, 150.0f, 20.0f);
       gUI().EmitText(engine, 6.0f, 40.0f, 350.0f, 20.0f);
       gUI().EmitText(device, 6.0f, 60.0f, 300.0f, 20.0f);
@@ -193,12 +193,12 @@ public:
     gUI().EndCanvas();
   }
 
-  void OnCleanUp() override
+  void onCleanUp() override
   {
-    m_pMeshComponent->CleanUp();
-    m_pRendererComponent->CleanUp();
-    m_pPhysicsComponent->CleanUp();
-    m_particleSystem->CleanUp();
+    m_pMeshComponent->cleanUp();
+    m_pRendererComponent->cleanUp();
+    m_pPhysicsComponent->cleanUp();
+    m_particleSystem->cleanUp();
 
     delete m_pMeshComponent;
     delete m_pRendererComponent;

@@ -22,7 +22,7 @@ public:
   ~FreeListAllocator();
 
   
-  void* Allocate(size_t Size, size_t Align) override;
+  void* allocate(size_t Size, size_t Align) override;
   void Deallocate(void* Ptr) override;
 
 private:

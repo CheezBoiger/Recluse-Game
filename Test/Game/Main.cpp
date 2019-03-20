@@ -188,7 +188,7 @@ class TestScene : public Scene {
 public:
 
   // Used to set up the scene. Call before updating.
-  void SetUp() override {
+  void setUp() override {
     cubemap1 = nullptr;
     cubemap0 = nullptr;
     brdfLUT = nullptr;
@@ -198,14 +198,14 @@ public:
     monster = new Monster();
     mainCam = new MainCamera();
 
-    GetRoot()->AddChild(mainCam);
-    GetRoot()->AddChild(acube);
-    mainCam->Start();
+    getRoot()->addChild(mainCam);
+    getRoot()->addChild(acube);
+    mainCam->start();
 
     for (u32 i = 0; i < kMaxCount; ++i) {
       helmets.push_back(new HelmetObject());
-      GetRoot()->AddChild(helmets[i]);
-      helmets[i]->Start();
+      getRoot()->addChild(helmets[i]);
+      helmets[i]->start();
     }
 
     std::random_device dev;
@@ -214,27 +214,27 @@ public:
     std::uniform_real_distribution<r32> above(0.0f, 20.0f);
     for (u32 i = 0; i < kNumberOfMonsters; ++i) {
       monsters[i] = new Monster();
-      monsters[i]->Start();
-      monsters[i]->SetPosition(Vector3(uni(twist), above(twist), uni(twist)));
-      GetRoot()->AddChild(monsters[i]);
+      monsters[i]->start();
+      monsters[i]->setPosition(Vector3(uni(twist), above(twist), uni(twist)));
+      getRoot()->addChild(monsters[i]);
     }
 
-    GetRoot()->AddChild(cube);
-    GetRoot()->AddChild(lantern);
-    GetRoot()->AddChild(monster);
-    cube->Start();  //cube->GetTransform()->Scale = Vector3(100.0f, 100.0f, 100.0f);
-    //acube->Start(); acube->GetTransform()->Position = Vector3(0.0f, -300.0f, 0.0f);
-    //cube->GetTransform()->Scale = Vector3(50.0f, 50.0f, 50.0f);
-    lantern->Start();
-    monster->Start();
+    getRoot()->addChild(cube);
+    getRoot()->addChild(lantern);
+    getRoot()->addChild(monster);
+    cube->start();  //cube->getTransform()->_scale = Vector3(100.0f, 100.0f, 100.0f);
+    //acube->Start(); acube->getTransform()->_position = Vector3(0.0f, -300.0f, 0.0f);
+    //cube->getTransform()->_scale = Vector3(50.0f, 50.0f, 50.0f);
+    lantern->start();
+    monster->start();
 
     // Set primary light.
     {
-      Sky* pSky = GetSky();
-      DirectionalLight* pPrimary = pSky->GetSunLight();
+      Sky* pSky = getSky();
+      DirectionalLight* pPrimary = pSky->getSunLight();
       pPrimary->_Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-      pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).Normalize();
+      pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).normalize();
       pPrimary->_Enable = true;
       pPrimary->_Intensity = 5.0f;
       //pSky->SetSkyColor(Vector3(0.0f, 0.0f, 0.0f));
@@ -246,99 +246,99 @@ public:
     m_hdrSettings._bloomStrength = 1.0f;
 
 #if 1
-    cubemap0 = gRenderer().CreateTextureCube();
-    cubemap1 = gRenderer().CreateTextureCube();
-    brdfLUT = gRenderer().CreateTexture2D();
-    cubemap0->Initialize(512);
-    cubemap1->Initialize(512);
-    brdfLUT->Initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
+    cubemap0 = gRenderer().createTextureCube();
+    cubemap1 = gRenderer().createTextureCube();
+    brdfLUT = gRenderer().createTexture2D();
+    cubemap0->initialize(512);
+    cubemap1->initialize(512);
+    brdfLUT->initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
       Image img;
-      img.Load("Assets/World/testcubemap.png");
-      cubemap0->Update(img);
-      img.CleanUp();
-      img.Load("Assets/World/Probe0.png");
-      cubemap1->Update(img);
-      img.CleanUp();
-      img.Load("Assets/World/brdf.png");
-      brdfLUT->Update(img);
-      img.CleanUp();
-      lightprobe.GenerateSHCoefficients(gRenderer().RHI(), cubemap0);
+      img.load("Assets/World/testcubemap.png");
+      cubemap0->update(img);
+      img.cleanUp();
+      img.load("Assets/World/Probe0.png");
+      cubemap1->update(img);
+      img.cleanUp();
+      img.load("Assets/World/brdf.png");
+      brdfLUT->update(img);
+      img.cleanUp();
+      lightprobe.generateSHCoefficients(gRenderer().getRHI(), cubemap0);
       lightprobe._bias = 0.55f;
-      otherLightProbe.GenerateSHCoefficients(gRenderer().RHI(), cubemap1);
+      otherLightProbe.generateSHCoefficients(gRenderer().getRHI(), cubemap1);
       otherLightProbe._bias = 1.0f;
-      gRenderer().SetGlobalLightProbe(&lightprobe);
-      gRenderer().SetSkyboxCubeMap(cubemap0);
-      gRenderer().SetGlobalBRDFLUT(brdfLUT);
-      gRenderer().UsePreRenderSkyboxMap(true);
+      gRenderer().setGlobalLightProbe(&lightprobe);
+      gRenderer().setSkyboxCubeMap(cubemap0);
+      gRenderer().setGlobalBRDFLUT(brdfLUT);
+      gRenderer().usePreRenderSkyboxMap(true);
     }
 #endif
   }
 
   // Start up function call, optional if no game object was called.
-  void StartUp() override {
+  void startUp() override {
   }
 
   // Update function call. Called very loop iteration.
-  void Update(r32 tick) override {
-    mainCam->Update(tick);
-    lantern->Update(tick);
-    cube->Update(tick);
-    monster->Update(tick);
+  void update(r32 tick) override {
+    mainCam->update(tick);
+    lantern->update(tick);
+    cube->update(tick);
+    monster->update(tick);
     for (size_t i = 0; i < kMaxCount; ++i) {
-      helmets[i]->Update(tick);
+      helmets[i]->update(tick);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {
-      //Camera::GetMain()->EnableInterleavedVideo(true);
-      gRenderer().SetSkyboxCubeMap(cubemap0);
-      gRenderer().SetGlobalLightProbe(&lightprobe);
-      gRenderer().UsePreRenderSkyboxMap(true);
+      //Camera::getMain()->enableInterleavedVideo(true);
+      gRenderer().setSkyboxCubeMap(cubemap0);
+      gRenderer().setGlobalLightProbe(&lightprobe);
+      gRenderer().usePreRenderSkyboxMap(true);
     }
     if (Keyboard::KeyPressed(KEY_CODE_K)) {
-      //Camera::GetMain()->EnableInterleavedVideo(false);
+      //Camera::getMain()->enableInterleavedVideo(false);
       //gRenderer().SetSkyboxCubeMap(cubemap1);
-      //gRenderer().UsePreRenderSkyboxMap(true);
-      //gRenderer().SetGlobalLightProbe(&otherLightProbe);
-      gRenderer().SetGlobalLightProbe(nullptr);
-      gRenderer().UsePreRenderSkyboxMap(false);
+      //gRenderer().usePreRenderSkyboxMap(true);
+      //gRenderer().setGlobalLightProbe(&otherLightProbe);
+      gRenderer().setGlobalLightProbe(nullptr);
+      gRenderer().usePreRenderSkyboxMap(false);
     }
   }
 
 
   // Clean up function call.
-  void CleanUp() override {
+  void cleanUp() override {
     // Clean up all game objects with done.
     for (u32 i = 0; i < kMaxCount; ++i) {
-      helmets[i]->CleanUp();
+      helmets[i]->cleanUp();
       delete helmets[i];
     }
 
     for (u32 i = 0; i < kNumberOfMonsters; ++i) {
-      monsters[i]->CleanUp();
+      monsters[i]->cleanUp();
       delete monsters[i];
     }
 
-    cube->CleanUp();
+    cube->cleanUp();
     delete cube;
 
-    lantern->CleanUp();
+    lantern->cleanUp();
     delete lantern;
 
-    monster->CleanUp();
+    monster->cleanUp();
     delete monster;
 
-    mainCam->CleanUp();
+    mainCam->cleanUp();
     delete mainCam;
 
-    acube->CleanUp();
+    acube->cleanUp();
     delete acube;
 
 #if 1
-    gRenderer().UsePreRenderSkyboxMap(false);
-    gRenderer().FreeTextureCube(cubemap0);
-    gRenderer().FreeTextureCube(cubemap1);
-    gRenderer().FreeTexture2D(brdfLUT);
+    gRenderer().usePreRenderSkyboxMap(false);
+    gRenderer().freeTextureCube(cubemap0);
+    gRenderer().freeTextureCube(cubemap1);
+    gRenderer().freeTexture2D(brdfLUT);
     cubemap0 = nullptr;
     cubemap1 = nullptr;
     brdfLUT = nullptr;
@@ -359,9 +359,9 @@ private:
 
 int main(int c, char* argv[])
 {
-  Log::DisplayToConsole(true);
-  Mouse::Enable(false);
-  Mouse::Show(false);
+  Log::displayToConsole(true);
+  Mouse::setEnable(false);
+  Mouse::show(false);
 
   // Setting the renderer to vsync double buffering when starting up the engine,
   // Inputting gpu params is optional, and can pass nullptr if you prefer default.
@@ -369,35 +369,35 @@ int main(int c, char* argv[])
     u32 w = 800, h = 600;
     GraphicsConfigParams params = ReadGraphicsConfig(w, h);
     // Start up the engine and set the input controller.
-    gEngine().StartUp(RTEXT("Recluse Test Game"), false, w, h, &params);
-    gEngine().Run();
-    Window* pWindow = gEngine().GetWindow();
+    gEngine().startUp(RTEXT("Recluse Test Game"), false, w, h, &params);
+    gEngine().run();
+    Window* pWindow = gEngine().getWindow();
     switch (params._WindowType) {
     case WindowType_Borderless:
     {
-      pWindow->SetToWindowed(w, h, true);
-      pWindow->SetToCenter();
+      pWindow->setToWindowed(w, h, true);
+      pWindow->setToCenter();
     } break;
     case WindowType_Border:
     {
-      pWindow->SetToWindowed(w, h);
-      pWindow->SetToCenter();
+      pWindow->setToWindowed(w, h);
+      pWindow->setToCenter();
     } break;
     case WindowType_Fullscreen:
     default:
-      pWindow->SetToFullScreen();
+      pWindow->setToFullScreen();
     }
-    pWindow->Show();
+    pWindow->show();
   }
 
   // One may also adjust the renderer settings during runtime as well, using the call
-  // gRenderer().UpdateRendererConfigs().
+  // gRenderer().updateRendererConfigs().
 
   //Window* window = gEngine().GetWindow();
   // Need to show the window in order to see something.
-  //window->Show();
-  //window->SetToFullScreen();
-  //window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
+  //window->show();
+  //window->setToFullScreen();
+  //window->setToWindowed(Window::getFullscreenWidth(), Window::getFullscreenHeight(), true);
 
   ///////////////////////////////////////////////////////////////////////////////////
   // Everything within initialization will normally be handled by Managers, for now
@@ -411,19 +411,19 @@ int main(int c, char* argv[])
   // Mesh Loading.
   {
     Mesh* mesh = new Mesh();
-    auto boxVerts = Cube::MeshInstance(); 
-    auto boxIndic = Cube::IndicesInstance();
-    mesh->Initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
-    mesh->SetMin(Cube::Min);
-    mesh->SetMax(Cube::Max);
-    mesh->UpdateAABB();
-    MeshCache::Cache(RTEXT("NativeCube"), mesh);    
+    auto boxVerts = Cube::meshInstance(); 
+    auto boxIndic = Cube::indicesInstance();
+    mesh->initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
+    mesh->setMin(Cube::minimum);
+    mesh->setMax(Cube::maximum);
+    mesh->updateAABB();
+    MeshCache::cache(RTEXT("NativeCube"), mesh);    
     Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
-    prim._pMat = Material::Default();
+    prim._indexCount = mesh->getMeshData()->getIndexData()->IndexCount();
+    prim._pMat = Material::getDefault();
     prim._localConfigs = 0;
-    mesh->PushPrimitive(prim);
+    mesh->pushPrimitive(prim);
   }
 
   {
@@ -431,65 +431,66 @@ int main(int c, char* argv[])
     i32 stckCnt = 32;
     i32 minus = 32 / 5;
     //for (i32 lod = 0; lod < 5; ++lod) {
-      auto sphereVerts = UVSphere::MeshInstance(1.0f, stckCnt, stckCnt);
-      auto sphereInd = UVSphere::IndicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
-      mesh->Initialize(&gRenderer(), sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
+      auto sphereVerts = UVSphere::meshInstance(1.0f, stckCnt, stckCnt);
+      auto sphereInd = UVSphere::indicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
+      mesh->initialize(&gRenderer(), sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
     //  stckCnt -= minus;
     //}
     Primitive prim;
     prim._firstIndex = 0;
-    prim._indexCount = mesh->GetMeshData()->IndexData()->IndexCount();
-    prim._pMat = Material::Default();
+    prim._indexCount = mesh->getMeshData()->getIndexData()->IndexCount();
+    prim._pMat = Material::getDefault();
     prim._localConfigs = 0;
-    mesh->PushPrimitive(prim);
-    MeshCache::Cache(RTEXT("NativeSphere"), mesh);
+    mesh->pushPrimitive(prim);
+    MeshCache::cache(RTEXT("NativeSphere"), mesh);
   }
 
   // Model Loading.
-  ModelLoader::Load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/Lantern/lantern.gltf"));
-  ModelLoader::Load(RTEXT("Assets/Lantern2/Lantern.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
-  ModelLoader::Load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/Monster/Monster.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/CesiumMan.glb"));
-  //ModelLoader::Load(RTEXT("Assets/RiggedFigure.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/RiggedSimple.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
- // ModelLoader::Load(RTEXT("Assets/BoxAnimated.glb"));
-  ModelLoader::Load(RTEXT("Assets/sponza/Sponza.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/WaterBottle.glb"));
-  //ModelLoader::Load(RTEXT("Assets/AnimatedMorphCube.gltf"));
-  //ModelLoader::Load(RTEXT("Assets/Wolf.glb"));
-  //ModelLoader::Load(RTEXT("Assets/AnimatedMorphSphere.glb"));
-  //ModelLoader::Load(RTEXT("Assets/Wolf/Wolf.glb"));
-  //ModelLoader::Load(RTEXT("Assets/Tree/tree.gltf"));
+  ModelLoader::load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  //ModelLoader::load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
+  //ModelLoader::load(RTEXT("Assets/Lantern/lantern.gltf"));
+  ModelLoader::load(RTEXT("Assets/Lantern2/Lantern.gltf"));
+  //ModelLoader::load(RTEXT("Assets/SciFiHelmet/SciFiHelmet.gltf"));
+  ModelLoader::load(RTEXT("Assets/BrainStem/BrainStem.gltf"));
+  //ModelLoader::load(RTEXT("Assets/Monster/Monster.gltf"));
+  //ModelLoader::load(RTEXT("Assets/CesiumMan.glb"));
+  //ModelLoader::load(RTEXT("Assets/RiggedFigure.gltf"));
+  //ModelLoader::load(RTEXT("Assets/RiggedSimple.gltf"));
+  //ModelLoader::load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+ // ModelLoader::load(RTEXT("Assets/BoxAnimated.glb"));
+  ModelLoader::load(RTEXT("Assets/sponza/Sponza.gltf"));
+  ModelLoader::load(RTEXT("Assets/buster_drone/buster.gltf"));
+  //ModelLoader::load(RTEXT("Assets/WaterBottle.glb"));
+  //ModelLoader::load(RTEXT("Assets/AnimatedMorphCube.gltf"));
+  //ModelLoader::load(RTEXT("Assets/Wolf.glb"));
+  //ModelLoader::load(RTEXT("Assets/AnimatedMorphSphere.glb"));
+  //ModelLoader::load(RTEXT("Assets/Wolf/Wolf.glb"));
+  //ModelLoader::load(RTEXT("Assets/Tree/tree.gltf"));
 
   // Create and set up scene.
 
   // Create scene.
   TestScene scene;
-  scene.SetUp();
+  scene.setUp();
 
   // Run engine, and push the scene to reference.
-  gEngine().PushScene(&scene);
+  gEngine().pushScene(&scene);
 
   // Optional startup call.
-  scene.StartUp();
+  scene.startUp();
 
   ///////////////////////////////////////////////////////////////////////////////////
 
   // Game loop.
 #if 1
-  while (gEngine().Running()) {
-    Time::Update();
-    gEngine().ProcessInput();
-    scene.Update((r32)Time::DeltaTime);
-    gEngine().Update();
+  while (gEngine().isRunning()) {
+    Time::update();
+    gEngine().processInput();
+    scene.update((r32)Time::deltaTime);
+    gEngine().update();
   }
 #else
-  gEngine().SetEngineMode(EngineMode_Bake);
+  gEngine().setEngineMode(EngineMode_Bake);
   // Testing enviroment probe map baking.
   std::array<Vector3, 5> positions = {
       Vector3(  0.0f,   -10.0f,     0.0f),
@@ -498,20 +499,20 @@ int main(int c, char* argv[])
       Vector3(  10.0f,    0.0f,     0.0f),
       Vector3(  0.0f,   -14.0f,     3.0f)
   };
-  gEngine().SetEnvProbeTargets(positions.data(), positions.size());
-  gEngine().Update();
-  Texture2D* g = gRenderer().GenerateBRDFLUT();
+  gEngine().setEnvProbeTargets(positions.data(), positions.size());
+  gEngine().update();
+  Texture2D* g = gRenderer().generateBRDFLUT();
   g->Save("brdf.png");
-  gRenderer().FreeTexture2D(g);
-  gEngine().SignalStop();
-  gEngine().Update();
+  gRenderer().freeTexture2D(g);
+  gEngine().signalStop();
+  gEngine().update();
 #endif
   // Once done using the scene, clean it up.
-  scene.CleanUp();
+  scene.cleanUp();
   // Finish.
-  AssetManager::CleanUpAssets();
+  AssetManager::cleanUpAssets();
   // Clean up engine
-  gEngine().CleanUp();
+  gEngine().cleanUp();
 #if (_DEBUG)
   Log() << RTEXT("Game is cleaned up. Press Enter to continue...\n");
   std::cin.ignore();

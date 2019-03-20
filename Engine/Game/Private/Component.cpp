@@ -10,41 +10,41 @@
 namespace Recluse {
 
 
-Transform* Component::GetTransform()
+Transform* Component::getTransform()
 {
-  if (!GetOwner()) return nullptr;
-  return GetOwner()->GetTransform();
+  if (!getOwner()) return nullptr;
+  return getOwner()->getTransform();
 }
 
 
-void Transform::Update()
+void Transform::update()
 {
-  GameObject* parent = GetOwner()->GetParent();
+  GameObject* parent = getOwner()->GetParent();
   if (parent) {
-    Transform* parentTransform = parent->GetTransform();
-    Matrix4 _T = Matrix4::Translate(Matrix4::Identity(), LocalPosition);
-    Matrix4 _R = LocalRotation.ToMatrix4();
-    Matrix4 _S = Matrix4::Scale(Matrix4::Identity(), LocalScale);
+    Transform* parentTransform = parent->getTransform();
+    Matrix4 _T = Matrix4::translate(Matrix4::identity(), _localPosition);
+    Matrix4 _R = _localRotation.toMatrix4();
+    Matrix4 _S = Matrix4::scale(Matrix4::identity(), _localScale);
     Matrix4 localToWorldMatrix = _S * _R * _T;
-    m_LocalToWorldMatrix = localToWorldMatrix * parentTransform->GetLocalToWorldMatrix();
+    m_localToWorldMatrix = localToWorldMatrix * parentTransform->getLocalToWorldMatrix();
 
-    Position = Vector3(m_LocalToWorldMatrix[3][0], m_LocalToWorldMatrix[3][1], m_LocalToWorldMatrix[3][2]);
-    Rotation = LocalRotation * parentTransform->Rotation;
+    _position = Vector3(m_localToWorldMatrix[3][0], m_localToWorldMatrix[3][1], m_localToWorldMatrix[3][2]);
+    _rotation = _localRotation * parentTransform->_rotation;
   } else {
-    Matrix4 _T = Matrix4::Translate(Matrix4::Identity(), Position);
-    Matrix4 _R = Rotation.ToMatrix4();
-    Matrix4 _S = Matrix4::Scale(Matrix4::Identity(), Scale);
+    Matrix4 _T = Matrix4::translate(Matrix4::identity(), _position);
+    Matrix4 _R = _rotation.toMatrix4();
+    Matrix4 _S = Matrix4::scale(Matrix4::identity(), _scale);
     Matrix4 localToWorldMatrix = _S * _R * _T;
-    m_LocalToWorldMatrix = localToWorldMatrix;
+    m_localToWorldMatrix = localToWorldMatrix;
   }
 
   // Update local coordinates.
-  Vector3 u = Vector3(Rotation.x, Rotation.y, Rotation.z);
-  r32 s = Rotation.w;
-  m_Front = u * (u.Dot(Vector3::FRONT) * 2.0f)  + (Vector3::FRONT * (s*s - u.Dot(u))) + ((u ^ Vector3::FRONT) * s * 2.0f);
-  m_Right = u * (u.Dot(Vector3::RIGHT) * 2.0f)  + (Vector3::RIGHT * (s*s - u.Dot(u))) + ((u ^ Vector3::RIGHT) * s * 2.0f);
-  m_Up =    u * (u.Dot(Vector3::UP) * 2.0f)     + (Vector3::UP * (s*s - u.Dot(u)))    + ((u ^ Vector3::UP) * s * 2.0f);
+  Vector3 u = Vector3(_rotation.x, _rotation.y, _rotation.z);
+  r32 s = _rotation.w;
+  m_front = u * (u.dot(Vector3::FRONT) * 2.0f)  + (Vector3::FRONT * (s*s - u.dot(u))) + ((u ^ Vector3::FRONT) * s * 2.0f);
+  m_right = u * (u.dot(Vector3::RIGHT) * 2.0f)  + (Vector3::RIGHT * (s*s - u.dot(u))) + ((u ^ Vector3::RIGHT) * s * 2.0f);
+  m_up =    u * (u.dot(Vector3::UP) * 2.0f)     + (Vector3::UP * (s*s - u.dot(u)))    + ((u ^ Vector3::UP) * s * 2.0f);
 
-  m_WorldToLocalMatrix = m_LocalToWorldMatrix.Inverse();
+  m_worldToLocalMatrix = m_localToWorldMatrix.inverse();
 }
 } // Recluse

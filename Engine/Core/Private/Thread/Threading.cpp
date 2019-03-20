@@ -13,7 +13,7 @@ thread_id_t Thread::currentId = 0;
 std::atomic_uint32_t a_BusyThreadCount = 0;
 
 
-void Thread::Run(thread_func_t entry, thread_id_t id)
+void Thread::run(thread_func_t entry, thread_id_t id)
 {
   m_Id = id;
   mThread = std::thread(entry, id);
@@ -24,7 +24,7 @@ void ThreadPool::RunAll()
 {
   m_SignalStop = false;
   for (size_t i = 0; i < m_ThreadWorkers.size(); ++i) {
-    m_ThreadWorkers[i].Run([&] (thread_id_t id) -> void {
+    m_ThreadWorkers[i].run([&] (thread_id_t id) -> void {
       R_DEBUG(rNotify, "Thread " + std::to_string(i) + " starting...\n");
       while (!m_SignalStop) {
         {

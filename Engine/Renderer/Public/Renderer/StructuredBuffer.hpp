@@ -21,15 +21,15 @@ public:
   StructuredBuffer();
   ~StructuredBuffer();
 
-  void    Initialize(VulkanRHI* rhi, size_t elementCount, size_t sizeType, void* data);
-  void    CleanUp();
+  void    initialize(VulkanRHI* rhi, size_t elementCount, size_t sizeType, void* data);
+  void    cleanUp();
 
   // TODO(): Structured buffer is not currently host visible! We may want this if we
   // intend to perform writes to the shader storage.
   void*   Map();
   void    UnMap();
 
-  Buffer* Handle() { return mBuffer; }
+  Buffer* getHandle() { return mBuffer; }
 
 private:
   VulkanRHI*  mRhi;

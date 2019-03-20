@@ -15,7 +15,7 @@ struct Vector3;
 struct Matrix3 {
   r32         Data[3][3];
 
-  static Matrix3 Identity() {
+  static Matrix3 identity() {
     return Matrix3();
   }
 
@@ -33,10 +33,10 @@ struct Matrix3 {
 
   static Matrix3 ToMatrix3(const Matrix4& other);
 
-  r32         Determinant() const;
-  Matrix3     Transpose() const;
-  Matrix3     Inverse() const;
-  Matrix3     Adjugate() const;
+  r32         determinant() const;
+  Matrix3     transpose() const;
+  Matrix3     inverse() const;
+  Matrix3     adjugate() const;
   
   Matrix3     operator*(const Matrix3& other) const;
   Matrix3     operator+(const Matrix3& other) const;
@@ -44,10 +44,10 @@ struct Matrix3 {
 
   Matrix3     operator*(const r32 scaler) const;
 
-  r32*        Raw() { return Data[0]; }
+  r32*        raw() { return Data[0]; }
   r32*        operator[](const size_t i);
-  r32         Get(const size_t row, const size_t col) const { return Data[row][col]; }
-  r32         operator()(const size_t row, const size_t col) const { return Get(row, col); }
+  r32         get(const size_t row, const size_t col) const { return Data[row][col]; }
+  r32         operator()(const size_t row, const size_t col) const { return get(row, col); }
 
   b8          operator==(const Matrix3& other) const;
   b8          operator!=(const Matrix3& other) const;

@@ -13,19 +13,19 @@ namespace Recluse {
 Camera* Camera::s_pMainCamera = nullptr;
 
 
-Camera* Camera::GetMain()
+Camera* Camera::getMain()
 {
   return s_pMainCamera;
 }
 
 
-void Camera::SetMain(Camera* pCam)
+void Camera::setMain(Camera* pCam)
 {
   if (!pCam) return;
   s_pMainCamera = pCam;
 
   // TODO(): Need to remove previous frustum from engine list.
-  gEngine().AddFrustum(&pCam->m_viewFrustum);
+  gEngine().addFrustum(&pCam->m_viewFrustum);
 }
 
 
@@ -47,59 +47,59 @@ Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
 }
 
 
-void Camera::ResetAspect()
+void Camera::resetAspect()
 {
   m_Aspect = m_PixelWidth / m_PixelHeight;
 }
 
 
-void Camera::Update()
+void Camera::update()
 {
-  if (!GetOwner()) return;
+  if (!getOwner()) return;
 
-  Transform* transform = GetOwner()->GetTransform();
+  Transform* transform = getOwner()->getTransform();
   // NOTE(): This will effectively cause the game object transform to update twice! 
   // One here, and the other during Scene traversal in Engine object!
-  transform->Update(); 
-  Vector3 pos = transform->Position;
+  transform->update(); 
+  Vector3 pos = transform->_position;
 
 // Testing how to go about water rendering.
 /*
   if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
   float dist = 2.0f * pos.y;
   pos.y = pos.y - dist;
-  Vector3 euler = transform->Rotation.ToEulerAngles();
+  Vector3 euler = transform->_rotation.toEulerAngles();
   euler.x *= -1.0f;
-  transform->Rotation = Quaternion::EulerAnglesToQuaternion(euler);
+  transform->_rotation = Quaternion::eulerAnglesToQuaternion(euler);
   transform->Update();
   }
 */
-  Vector3 right = transform->Right();
-  Vector3 up = transform->Up();
-  Vector3 front = transform->Front();
+  Vector3 right = transform->right();
+  Vector3 up = transform->up();
+  Vector3 front = transform->front();
 
   // Update camera and screen info.
-  Window* pWindow = gEngine().GetWindow();
+  Window* pWindow = gEngine().getWindow();
 
   m_viewMatrix = Matrix4(
      right.x,          up.x,         front.x,        0.0f,
      right.y,          up.y,         front.y,        0.0f,
      right.z,          up.z,         front.z,        0.0f,
-    -right.Dot(pos),  -up.Dot(pos), -front.Dot(pos), 1.0f
+    -right.dot(pos),  -up.dot(pos), -front.dot(pos), 1.0f
   );
 
   m_projectionMatrix = Matrix4();
   if (m_ProjType == ORTHO) {
-    m_projectionMatrix = Matrix4::Ortho((m_PixelWidth * 0.01f) * m_OrthoScale,
+    m_projectionMatrix = Matrix4::ortho((m_PixelWidth * 0.01f) * m_OrthoScale,
       (m_PixelHeight * 0.01f) * m_OrthoScale,
       m_ZNear,
       m_ZFar);
   } else {
-    m_projectionMatrix = Matrix4::Perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
+    m_projectionMatrix = Matrix4::perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
   }
 
-  r32 winPixWidth = r32(pWindow->Width());
-  r32 winPixHeight = r32(pWindow->Height());
+  r32 winPixWidth = r32(pWindow->getWidth());
+  r32 winPixHeight = r32(pWindow->getHeight());
   if (m_PixelHeight != winPixHeight || m_PixelWidth != winPixWidth) {
     m_PixelWidth = winPixWidth;
     m_PixelHeight = winPixHeight;
@@ -108,38 +108,38 @@ void Camera::Update()
 }
 
 
-void Camera::FlushToGpuBus()
+void Camera::flushToGpuBus()
 {
-  GlobalBuffer* gGlobalBuffer = gRenderer().GlobalData();
-  ConfigHDR* hdr = gRenderer().GetHDR()->GetRealtimeConfiguration();
-  Window* pWindow = gEngine().GetWindow();
+  GlobalBuffer* gGlobalBuffer = gRenderer().getGlobalData();
+  ConfigHDR* hdr = gRenderer().getHDR()->getRealtimeConfiguration();
+  Window* pWindow = gEngine().getWindow();
 
-  Transform* transform = GetOwner()->GetTransform();
-  Vector3 pos = transform->Position;
-  Vector3 right = transform->Right();
-  Vector3 up = transform->Up();
-  Vector3 front = transform->Front();
+  Transform* transform = getOwner()->getTransform();
+  Vector3 pos = transform->_position;
+  Vector3 right = transform->right();
+  Vector3 up = transform->up();
+  Vector3 front = transform->front();
 
   gGlobalBuffer->_CameraPos = Vector4(pos, 1.0f);
   gGlobalBuffer->_Proj = m_projectionMatrix;
   gGlobalBuffer->_View = m_viewMatrix;
   gGlobalBuffer->_ViewProj = gGlobalBuffer->_View * gGlobalBuffer->_Proj;
-  gGlobalBuffer->_InvViewProj = gGlobalBuffer->_ViewProj.Inverse();
-  gGlobalBuffer->_InvView = gGlobalBuffer->_View.Inverse();
-  gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.Inverse();
+  gGlobalBuffer->_InvViewProj = gGlobalBuffer->_ViewProj.inverse();
+  gGlobalBuffer->_InvView = gGlobalBuffer->_View.inverse();
+  gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.inverse();
   gGlobalBuffer->_zFar = m_ZFar;
   gGlobalBuffer->_zNear = m_ZNear;
-  gGlobalBuffer->_ScreenSize[0] = pWindow->Width();
-  gGlobalBuffer->_ScreenSize[1] = pWindow->Height();
-  gGlobalBuffer->_BloomEnabled = Bloom();
-  gGlobalBuffer->_Exposure = Exposure();
-  gGlobalBuffer->_Gamma = Gamma();
-  gGlobalBuffer->_MousePos = Vector2((r32)Mouse::X(), (r32)Mouse::Y());
-  gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::CurrentTime());
-  gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::DeltaTime);
+  gGlobalBuffer->_ScreenSize[0] = pWindow->getWidth();
+  gGlobalBuffer->_ScreenSize[1] = pWindow->getHeight();
+  gGlobalBuffer->_BloomEnabled = getBloom();
+  gGlobalBuffer->_Exposure = getExposure();
+  gGlobalBuffer->_Gamma = getGamma();
+  gGlobalBuffer->_MousePos = Vector2((r32)Mouse::getX(), (r32)Mouse::getY());
+  gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::currentTime());
+  gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::deltaTime);
 
   // TODO(): Move cam frustum to camera.
-  m_viewFrustum.Update(gGlobalBuffer->_ViewProj);
+  m_viewFrustum.update(gGlobalBuffer->_ViewProj);
   gGlobalBuffer->_LPlane = m_viewFrustum[ViewFrustum::PLEFT];
   gGlobalBuffer->_RPlane = m_viewFrustum[ViewFrustum::PRIGHT];
   gGlobalBuffer->_BPlane = m_viewFrustum[ViewFrustum::PBOTTOM];
@@ -148,11 +148,11 @@ void Camera::FlushToGpuBus()
   gGlobalBuffer->_FPlane = m_viewFrustum[ViewFrustum::PFAR];
 
   // HDR settings.
-  hdr->_interleavedVideo.x = r32(InterleavedVideo());
+  hdr->_interleavedVideo.x = r32(getInterleavedVideo());
 }
 
 
-Vector3 Camera::GetWorldToScreenProjection(const Vector3& position)
+Vector3 Camera::getWorldToScreenProjection(const Vector3& position)
 {
   Vector4 sPos = Vector4(position, 1.0f) * m_viewMatrix;
   if (sPos.z < 0.0f) return Vector3(-1.0f, -1.0f, 0.0f);
@@ -185,7 +185,7 @@ FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight,
 }
 
 
-Matrix4 FlyViewCamera::View()
+Matrix4 FlyViewCamera::getView()
 {
   return Matrix4();
 }
@@ -196,7 +196,7 @@ void FlyViewCamera::Move(Movement movement, r64 dt)
 }
 
 
-void FlyViewCamera::Update()
+void FlyViewCamera::update()
 {
 }
 

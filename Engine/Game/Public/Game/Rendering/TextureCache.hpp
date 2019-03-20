@@ -27,18 +27,18 @@ public:
   };
 
   // Cache the texture2D into this data structure.
-  static CacheResult                Cache(Texture2D* texture);
+  static CacheResult                cache(Texture2D* texture);
 
 #if 0
   // Get the specified texture 2d from cache.
-  static CacheResult                Get(std::string texname, Texture2D** out);
+  static CacheResult                get(std::string texname, Texture2D** out);
 
   // Uncache a texture value from this structure.
   static CacheResult                UnCache(std::string texname, Texture2D** out);
 #endif
   // Clean up all texture from this cache. Note that this will also free texture handles
   // back to renderer memory!
-  static void                       CleanUpAll();
+  static void                       cleanUpAll();
 
   // Get the number of textures in cache.
   static size_t                     CacheCount() { return sCache.size(); }
@@ -50,12 +50,12 @@ private:
 
 class SamplerCache {
 public:
-  static void Cache(TextureSampler* pSampler);
+  static void cache(TextureSampler* pSampler);
 #if 0
-  static void Get(std::string& name, TextureSampler** out);
+  static void get(std::string& name, TextureSampler** out);
   static void UnCache(std::string& name, TextureSampler** out);
 #endif
-  static void           CleanUpAll();
+  static void           cleanUpAll();
   static size_t         CacheCount() { return sCache.size(); }
 
 private:

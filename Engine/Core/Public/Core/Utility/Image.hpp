@@ -17,18 +17,18 @@ struct Image {
 
   ~Image();
 
-  b8            Load(const tchar* imgpath);
+  b8            load(const tchar* imgpath);
   b8            SaveHDR(const tchar* imgpath);
   b8            SavePNG(const tchar* imgpath);
 
   // Clean up image data. Returns true if image was cleaned up. Returns false if
   // no image data was cleaned up (which could mean there was no data to begin with.)
-  b8            CleanUp();
+  b8            cleanUp();
   b8            ContainsData() const { if (_data) return true; return false; }
 
-  i32           Height() const { return _height; }
-  i32           Width() const { return _width; }
-  const u8*     Data() const { return _data; }
+  i32           getHeight() const { return _height; }
+  i32           getWidth() const { return _width; }
+  const u8*     getData() const { return _data; }
   u64           MemorySize() const { return _memorySize; }         
 
   u64           _memorySize;

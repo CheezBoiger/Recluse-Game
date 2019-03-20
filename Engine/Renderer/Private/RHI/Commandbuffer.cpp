@@ -8,7 +8,7 @@ namespace Recluse {
 
 
 
-void CommandBuffer::Allocate(const VkCommandPool& pool, VkCommandBufferLevel level)
+void CommandBuffer::allocate(const VkCommandPool& pool, VkCommandBufferLevel level)
 {
   mPoolOwner = pool;
   VkCommandBufferAllocateInfo info = { };
@@ -24,7 +24,7 @@ void CommandBuffer::Allocate(const VkCommandPool& pool, VkCommandBufferLevel lev
 }
 
 
-void CommandBuffer::Free()
+void CommandBuffer::free()
 {
   if (mHandle) {
     vkFreeCommandBuffers(mOwner, mPoolOwner, 1, &mHandle);
@@ -33,7 +33,7 @@ void CommandBuffer::Free()
 }
 
 
-void CommandBuffer::Reset(const VkCommandBufferResetFlags flags)
+void CommandBuffer::reset(const VkCommandBufferResetFlags flags)
 {
   if (vkResetCommandBuffer(mHandle, flags) != VK_SUCCESS) {
     R_DEBUG(rWarning, "Unsuccessful command buffer reset.\n");
@@ -167,10 +167,10 @@ void CommandBuffer::EndQuery(VkQueryPool queryPool, u32 query)
 }
 
 
-void CommandBuffer::PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values)
+void CommandBuffer::PushConstants(VkPipelineLayout getLayout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values)
 {
   ASSERT_RECORDING();
-  vkCmdPushConstants(mHandle, Layout, StageFlags, Offset, Size, p_Values);
+  vkCmdPushConstants(mHandle, getLayout, StageFlags, Offset, Size, p_Values);
 }
 
 

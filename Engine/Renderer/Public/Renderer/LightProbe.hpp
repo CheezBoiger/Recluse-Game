@@ -25,7 +25,7 @@ struct Image;
 // Diffuse light probe, used for global illumination lighting in the scene.
 struct LightProbe {
   Vector3 _shcoeff[9];   // Spherical harmonic coefficients.
-  Vector3 _position;  // Position of where the this probe is, in 3D space.
+  Vector3 _position;  // _position of where the this probe is, in 3D space.
   AABB    _aabb;    // AABB bounds.
   r32     _bias;      // bias.
 
@@ -33,16 +33,16 @@ struct LightProbe {
     : _bias(1.0f) { }
 
   // Generate SH coefficients from texture enviroment cube data.
-  void    GenerateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap);
+  void    generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap);
 
   // Generate coefficients through image data that is not stored in gpu memory.
-  void    GenerateSHCoefficients(const Image* img);
+  void    generateSHCoefficients(const Image* img);
 
   // Save SH data to a file.
-  b32     SaveToFile(const std::string& filename);
+  b32     saveToFile(const std::string& filename);
 
   // Load up spherical harmonic data from a file.
-  b32     LoadFromFile(const std::string& filename);
+  b32     loadFromFile(const std::string& filename);
 };
 
 
@@ -50,7 +50,7 @@ class LightProbeManager {
 public:
   static const u32 kMaxAllowedProbes = 128;
 
-  std::vector<LightProbe> GenerateProbes(u32 count = kMaxAllowedProbes);
+  std::vector<LightProbe> generateProbes(u32 count = kMaxAllowedProbes);
 };
 
 
@@ -73,16 +73,16 @@ public:
   GlobalIllumination();
   ~GlobalIllumination();
 
-  void              Initialize(VulkanRHI* pRhi, b32 enableLocalReflections);
+  void initialize(VulkanRHI* pRhi, b32 enableLocalReflections);
 
-  void              Update(Renderer* pRenderer);
+  void update(Renderer* pRenderer);
 
-  void              CleanUp(VulkanRHI* pRhi);
+  void cleanUp(VulkanRHI* pRhi);
 
-  void              SetGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
+  void setGlobalEnvMap(Texture* pCube) { m_pGlobalEnvMap = pCube; }
   
-  void              SetGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
-  void              SetGlobalProbe(LightProbe* probe) { 
+  void setGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
+  void setGlobalProbe(LightProbe* probe) { 
     if (!probe) {
       for (u32 i = 0; i < 9; ++i) {
         m_globalDiffuseSH._c[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -97,12 +97,12 @@ public:
   }
 
   // Set up enviroment maps for this renderer to use for look up.
-  void              SetEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
+  void setEnvMaps(TextureCubeArray* maps) { m_pEnvMaps = maps; }
 
-  DescriptorSet*   GetDescriptorSet() { return m_pGlobalIllumination; }
+  DescriptorSet* getDescriptorSet() { return m_pGlobalIllumination; }
 
 private:
-  void              UpdateGlobalGI(VulkanRHI* pRhi);
+  void updateGlobalGI(VulkanRHI* pRhi);
 
   Texture*              m_pGlobalEnvMap;
   Texture*              m_pGlobalBRDFLUT;

@@ -27,11 +27,11 @@ public:
     , m_currX(0.0f)
     , m_currY(0.0f) { }
 
-  void                      OnStartUp() override;
-  void                      OnShutDown() override;
+  void                      onStartUp() override;
+  void                      onShutDown() override;
 
   // Update the state of the manager.
-  void                      UpdateState(r64 dt);
+  void                      updateState(r64 dt);
 
 
   // TODO(): Needs to be more object oriented in the API level, instead of this way.

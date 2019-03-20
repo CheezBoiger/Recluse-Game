@@ -32,7 +32,7 @@ class TextureSampler;
 // particle during its lifetime. This is strictly gpu only information, stored into an SSBO 
 // (Shader Storage Buffer Object.)
 struct Particle {
-  Vector4 _position;  // Position of the particle.
+  Vector4 _position;  // _position of the particle.
   Vector4 _offsetPosition; // initial offset.
   Vector4 _velocity;
   Vector4 _initVelocity;
@@ -105,41 +105,41 @@ struct ParticleSystem {
   typedef std::function<b32(const Particle&, const Particle&)> ParticleSortFunct;
 
   // Must initialize for compute pipeline as well!
-  void                  Initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
-  void                  CleanUp(VulkanRHI* pRhi);
-  void                  PushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
-  void                  Update(VulkanRHI* pRhi);
+  void                  initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
+  void                  cleanUp(VulkanRHI* pRhi);
+  void                  pushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
+  void                  update(VulkanRHI* pRhi);
 
   // Get the current state of the particle buffer. Size is the current max particle count of this particle system.
-  void                  GetParticleState(Particle* output);
+  void                  getParticleState(Particle* output);
   
-  void                  SetSortFunct(ParticleSortFunct sortFunct) { m_sortFunct = sortFunct; }
-  void                  SetUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
+  void                  setSortFunct(ParticleSortFunct sortFunct) { m_sortFunct = sortFunct; }
+  void                  setUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
 
-  void                  SetParticleMaxCount(u32 maxCount) { 
+  void                  setParticleMaxCount(u32 maxCount) { 
     if (maxCount == _particleConfig._maxParticles) return; 
     _particleConfig._maxParticles = r32(maxCount);
-    PushUpdate(PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
+    pushUpdate(PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
   }
 
-  void                  SetParticleMaxLife(r32 maxLife);
+  void                  setParticleMaxLife(r32 maxLife);
 
   Texture2DArray*       _texture;
   TextureSampler*       _sampler;
   ParticleSystemConfig  _particleConfig;
 
-  DescriptorSet*        GetSet() const { return m_pDescriptorSet; }
-  Buffer*               GetParticleBuffer() const { return m_particleBuffer; }
-  ParticleType          GetParticleType() const { return m_particleType; }
+  DescriptorSet*        getSet() const { return m_pDescriptorSet; }
+  Buffer*               getParticleBuffer() const { return m_particleBuffer; }
+  ParticleType          getParticleType() const { return m_particleType; }
 
 private:
-  void                  CPUBoundSort(std::vector<Particle>& particles);
-  void                  CleanUpGpuBuffer(VulkanRHI* pRhi);
-  void                  SetUpGpuBuffer(VulkanRHI* pRhi);
+  void                  cpuBoundSort(std::vector<Particle>& particles);
+  void                  cleanUpGpuBuffer(VulkanRHI* pRhi);
+  void                  setUpGpuBuffer(VulkanRHI* pRhi);
 
-  void                  UpdateDescriptor();
-  void                  UpdateGpuParticles(VulkanRHI* pRhi);
-  void                  ClearUpdateBits() { m_updateBits = 0x0; }
+  void                  updateDescriptor();
+  void                  updateGpuParticles(VulkanRHI* pRhi);
+  void                  clearUpdateBits() { m_updateBits = 0x0; }
   DescriptorSet*        m_pDescriptorSet;
 
   // GPU based particle buffer. 
@@ -176,24 +176,24 @@ public:
 
   ~ParticleEngine();
 
-  void                Initialize(VulkanRHI* pRhi);
-  void                CleanUp(VulkanRHI* pRhi);
+  void                initialize(VulkanRHI* pRhi);
+  void                cleanUp(VulkanRHI* pRhi);
 
 
-  void                CleanUpPipeline(VulkanRHI* pRhi);
-  void                InitializePipeline(VulkanRHI* pRhi);
+  void                cleanUpPipeline(VulkanRHI* pRhi);
+  void                initializePipeline(VulkanRHI* pRhi);
 
   // Generate render commands for the given particles.
-  void                GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
+  void                generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
 
   // Generate commands to compute particle positions and life. This will generate particle
   // computation commands for the given particle system.
-  void                GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
+  void                generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
 
-  DescriptorSetLayout* GetParticleSystemDescriptorLayout() { return m_pParticleDescriptorSetLayout; }
+  DescriptorSetLayout* getParticleSystemDescriptorLayout() { return m_pParticleDescriptorSetLayout; }
 private:
 
-  void                InitializeRenderPass(VulkanRHI* pRhi);
+  void                initializeRenderPass(VulkanRHI* pRhi);
 
   // Compute pipeline for particle calculations.
   ComputePipeline*      m_pParticleCompute;
@@ -210,7 +210,7 @@ private:
   // Framebuffer to the particle renderer.
   FrameBuffer*          m_pFrameBuffer;
 
-  // Render pass for the particle renderer.
+  // render pass for the particle renderer.
   RenderPass*           m_pRenderPass;
 };
 } // Recluse

@@ -15,7 +15,7 @@ struct Sphere {
   Sphere(Vector3 center = Vector3(), r32 radius = 1.0f)
     : center(center), radius(radius) { }
 
-  b8  IntersectsLine(const Vector3& p0, const Vector3& p1) const;
-  b8  IntersectsPoint(const Vector3& p) const;
+  b8  intersectsLine(const Vector3& p0, const Vector3& p1) const;
+  b8  intersectsPoint(const Vector3& p) const;
 };
 } // Recluse

@@ -23,6 +23,6 @@ public:
   DualQuaternion operator*(const DualQuaternion& other) const;
   DualQuaternion operator*(const r32 scaler) const;
   
-  DualQuaternion Normalize() const;
+  DualQuaternion normalize() const;
 };
 } // Recluse

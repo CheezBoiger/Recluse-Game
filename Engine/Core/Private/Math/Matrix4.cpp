@@ -89,15 +89,15 @@ Matrix4 Matrix4::operator*(const Matrix4& other) const
   // as we are updating matrices every frame, for any matrix that may need 
   // to be updated.
   Matrix4 ans;
-  __m128 row1 = _mm_load_ps(&(*other.Data)[0]);
-  __m128 row2 = _mm_load_ps(&(*other.Data)[4]);
-  __m128 row3 = _mm_load_ps(&(*other.Data)[8]);
-  __m128 row4 = _mm_load_ps(&(*other.Data)[12]);
+  __m128 row1 = _mm_load_ps(&(*other.getData)[0]);
+  __m128 row2 = _mm_load_ps(&(*other.getData)[4]);
+  __m128 row3 = _mm_load_ps(&(*other.getData)[8]);
+  __m128 row4 = _mm_load_ps(&(*other.getData)[12]);
   for (i32 i = 0; i < 4; ++i) {
-    __m128 brod1 = _mm_set1_ps((*Data)[4 * i + 0]);
-    __m128 brod2 = _mm_set1_ps((*Data)[4 * i + 1]);
-    __m128 brod3 = _mm_set1_ps((*Data)[4 * i + 2]);
-    __m128 brod4 = _mm_set1_ps((*Data)[4 * i + 3]);
+    __m128 brod1 = _mm_set1_ps((*getData)[4 * i + 0]);
+    __m128 brod2 = _mm_set1_ps((*getData)[4 * i + 1]);
+    __m128 brod3 = _mm_set1_ps((*getData)[4 * i + 2]);
+    __m128 brod4 = _mm_set1_ps((*getData)[4 * i + 3]);
     __m128 row = _mm_add_ps(
                   _mm_add_ps(
                     _mm_mul_ps(brod1, row1),
@@ -105,7 +105,7 @@ Matrix4 Matrix4::operator*(const Matrix4& other) const
                   _mm_add_ps(
                     _mm_mul_ps(brod3, row3),
                     _mm_mul_ps(brod4, row4)));
-    _mm_store_ps(&(*ans.Data)[4 * i], row);
+    _mm_store_ps(&(*ans.getData)[4 * i], row);
   }
   return ans;
 #endif
@@ -207,7 +207,7 @@ b8 Matrix4::operator!=(const Matrix4& other) const
 }
 
 
-r32 Matrix4::Determinant() const
+r32 Matrix4::determinant() const
 {
   return  Data[0][0] * (Data[1][1] * (Data[2][2] * Data[3][3] - Data[2][3] * Data[3][2]) -
                         Data[1][2] * (Data[2][1] * Data[3][3] - Data[2][3] * Data[3][1]) +
@@ -227,7 +227,7 @@ r32 Matrix4::Determinant() const
 }
 
 
-Matrix4 Matrix4::Adjugate() const
+Matrix4 Matrix4::adjugate() const
 {
   // Calculating our adjugate using the transpose of the cofactor of our
   // matrix.
@@ -237,15 +237,15 @@ Matrix4 Matrix4::Adjugate() const
     sign = -sign;
     for (u32 col = 0; col < 4; ++col) {
       sign = -sign;
-      CofactorMatrix[row][col] = Minor(row, col).Determinant() * sign;
+      CofactorMatrix[row][col] = minor(row, col).determinant() * sign;
     }
   }
   // Transpose this CofactorMatrix to get the adjugate.
-  return CofactorMatrix.Transpose();
+  return CofactorMatrix.transpose();
 }
 
 
-Matrix3 Matrix4::Minor(u32 row, u32 col) const
+Matrix3 Matrix4::minor(u32 row, u32 col) const
 {
   Matrix3 minor;
   u32 r = 0, c;
@@ -263,7 +263,7 @@ Matrix3 Matrix4::Minor(u32 row, u32 col) const
 }
 
 
-Matrix4 Matrix4::Transpose() const
+Matrix4 Matrix4::transpose() const
 {
   return Matrix4(
     Data[0][0], Data[1][0], Data[2][0], Data[3][0],
@@ -274,21 +274,21 @@ Matrix4 Matrix4::Transpose() const
 }
 
 
-Matrix4 Matrix4::Inverse() const
+Matrix4 Matrix4::inverse() const
 {
-  r32 detA = Determinant();
+  r32 detA = determinant();
   if (detA == 0.0f) {
-    return Matrix4::Identity();
+    return Matrix4::identity();
   }
-  Matrix4 inverse = Adjugate() * (1.0f / detA);
+  Matrix4 inverse = adjugate() * (1.0f / detA);
   return inverse;
 }
 
 
-Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
+Matrix4 Matrix4::perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
 {
   r32 tanHalfFov = tanf(fovy * 0.5f);
-  Matrix4 perspective = Matrix4::Identity();
+  Matrix4 perspective = Matrix4::identity();
   perspective[3][3] = 0.0f;
   perspective[0][0] = 1.0f / (aspect * tanHalfFov);
   perspective[1][1] = -(1.0f / tanHalfFov);
@@ -300,23 +300,23 @@ Matrix4 Matrix4::Perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
 }
 
 
-Matrix4 Matrix4::LookAt(const Vector3& eye, const Vector3& center, const Vector3& up)
+Matrix4 Matrix4::lookAt(const Vector3& eye, const Vector3& center, const Vector3& up)
 {
-  Vector3 front((center - eye).Normalize());
-  Vector3 right(up.Cross(front).Normalize());
+  Vector3 front((center - eye).normalize());
+  Vector3 right(up.Cross(front).normalize());
   Vector3 u(front.Cross(right));
   return Matrix4(
     right.x,          u.x,          front.x,        0.0f,
     right.y,          u.y,          front.y,        0.0f,
     right.z,          u.z,          front.z,        0.0f,
-   -right.Dot(eye),  -u.Dot(eye),  -front.Dot(eye), 1.0f
+   -right.dot(eye),  -u.dot(eye),  -front.dot(eye), 1.0f
   );
 }
 
 
-Matrix4 Matrix4::Ortho(r32 width, r32 height, r32 zNear, r32 zFar)
+Matrix4 Matrix4::ortho(r32 width, r32 height, r32 zNear, r32 zFar)
 {
-  Matrix4 ortho = Matrix4::Identity();
+  Matrix4 ortho = Matrix4::identity();
   ortho[0][0] =  2.0f / width;
   ortho[1][1] = -2.0f / height;
   ortho[2][2] =  1.0f / (zFar - zNear);
@@ -325,7 +325,7 @@ Matrix4 Matrix4::Ortho(r32 width, r32 height, r32 zNear, r32 zFar)
 }
 
 
-Matrix4 Matrix4::Translate(const Matrix4& mat, const Vector3& position)
+Matrix4 Matrix4::translate(const Matrix4& mat, const Vector3& position)
 {
   Matrix4 matrix = mat;
   matrix[3][0] += matrix[0][0] * position.x;
@@ -335,13 +335,13 @@ Matrix4 Matrix4::Translate(const Matrix4& mat, const Vector3& position)
 }
 
 
-Matrix4 Matrix4::Rotate(const Matrix4& begin, const r32 radians, const Vector3& ax)
+Matrix4 Matrix4::rotate(const Matrix4& begin, const r32 radians, const Vector3& ax)
 {
   r32 oneMinusCosine = 1.0f - cosf(radians);
   r32 cosine = cosf(radians);
   r32 sine = sinf(radians);
 
-  Vector3 axis = ax.Normalize();
+  Vector3 axis = ax.normalize();
 
   Matrix4 rotator(
     cosine + (axis.x * axis.x) * oneMinusCosine,      oneMinusCosine * axis.y * axis.x + axis.z * sine, axis.z * axis.x * oneMinusCosine - axis.y * sine, 0,
@@ -354,7 +354,7 @@ Matrix4 Matrix4::Rotate(const Matrix4& begin, const r32 radians, const Vector3& 
 }
 
 
-Matrix4 Matrix4::Scale(const Matrix4& begin, const Vector3& scale)
+Matrix4 Matrix4::scale(const Matrix4& begin, const Vector3& scale)
 {
   Matrix4 scaler(
     scale.x,  0.0f,     0.0f,     0.0f,

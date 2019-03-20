@@ -10,6 +10,10 @@
 
 #include "Skeleton.hpp"
 
+#if defined _DEBUG
+#include "Core/Logging/Log.hpp"
+#endif
+
 
 namespace Recluse {
 
@@ -26,6 +30,13 @@ struct JointPose {
     : _scale(Vector3(1.0f, 1.0f, 1.0f))
     , _rot(Quaternion())
     , _trans(Vector3()) { }
+
+#if defined _DEBUG
+  friend Log& operator<<(Log& l, JointPose& p) {
+    l << "Node ID: " << p._id; 
+    return l;
+  }
+#endif
 };
 
 

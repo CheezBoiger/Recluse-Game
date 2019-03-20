@@ -52,13 +52,13 @@ public:
 class ProfileObject {
 public:
   ProfileObject(ProfileTypes type = PROFILE_TYPES_NORMAL, const std::string& tag = "")
-    : m_time(static_cast<r32>(Time::CurrentTime()))
+    : m_time(static_cast<r32>(Time::currentTime()))
     , m_type(type)
     , m_tag(tag) { }
 
   ~ProfileObject()
   {
-    r32 _end = static_cast<r32>(Time::CurrentTime());
+    r32 _end = static_cast<r32>(Time::currentTime());
     ProfileData data;
     data._start = m_time;
     data._end = _end;

@@ -14,8 +14,8 @@ class Texture2DArray;
 
 class ParticleSystemComponent : public Component {
 protected:
-  virtual void    OnInitialize(GameObject* owner) override;
-  virtual void    OnCleanUp() override;
+  virtual void    onInitialize(GameObject* owner) override;
+  virtual void    onCleanUp() override;
   RCOMPONENT(ParticleSystemComponent);
 
 public:
@@ -23,7 +23,7 @@ public:
     : m_pParticleSystem(nullptr)
     , m_shouldSort(false) { }
 
-  void Update() override;  
+  void update() override;  
   
   void EnableWorldSpace(b32 enable);
   void SetMaxParticleCount(u32 maxCount);
@@ -39,7 +39,7 @@ public:
   void SetAngleRate(r32 rate);
   void SetAnimationScale(r32 scale, r32 max = 16.0f, r32 offset = 0.0f);
   void SetAcceleration(const Vector3& acc) { m_acceleration = acc; }
-  void SetColor(const Vector4& color) { m_color = color; }
+  void setColor(const Vector4& color) { m_color = color; }
 
   void UseAtlas(b32 enable);
 

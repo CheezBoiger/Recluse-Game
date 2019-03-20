@@ -48,9 +48,9 @@ public:
 
   virtual ~IActor() = 0 { }
 
-  virtual void Update(r32 tick) override { }
-  virtual void OnStartUp() override { }
-  virtual void OnCleanUp() override { }
+  virtual void update(r32 tick) override { }
+  virtual void onStartUp() override { }
+  virtual void onCleanUp() override { }
 
 
   DamageEffectsBits GetActiveDamageEffects() const { return m_damageEffects; }

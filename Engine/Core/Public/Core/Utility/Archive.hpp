@@ -21,7 +21,7 @@ public:
     return true; 
   }
 
-  virtual b8        Close() { m_Opened = false;  return true; }
+  virtual b8        close() { m_Opened = false;  return true; }
 
   virtual IArchive& operator<<(u8 Val) = 0;
   virtual IArchive& operator<<(i8 Val) = 0;
@@ -44,7 +44,7 @@ public:
   virtual IArchive& operator>>(std::string& Val) = 0;
 
   b8                Opened() const { return m_Opened; }
-  std::string       Name() const { return m_Name; }
+  std::string       getName() const { return m_Name; }
 
 protected:
   std::string m_Name;
@@ -58,7 +58,7 @@ protected:
 class Archive : public IArchive {
 public:
   virtual b8          Open(const std::string Filename) override;
-  virtual b8          Close() override;
+  virtual b8          close() override;
 
   IArchive&           operator<<(u8 Val) override;
   IArchive&           operator<<(i8 Val) override;

@@ -48,7 +48,7 @@ std::string GetFilenameExt(const std::string& path)
 }
 
 
-ModelResultBits Load(const std::string filename)
+ModelResultBits load(const std::string filename)
 {
   FileType type = FILETYPE_UNKNOWN;
   std::string ext = GetFilenameExt(filename);
@@ -78,12 +78,12 @@ ModelResultBits Load(const std::string filename)
   switch (type) {
 #if INCLUDE_FBX
     case FILETYPE_FBX:
-      result = FBX::Load(filename);
+      result = FBX::load(filename);
       break;
 #endif
     case FILETYPE_GLTF:
     default:
-      result = GLTF::Load(filename);
+      result = GLTF::load(filename);
   }
   return result;
 }

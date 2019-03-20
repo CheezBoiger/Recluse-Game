@@ -16,19 +16,19 @@ namespace Recluse {
 
 class AnimAssetManager {
 public:
-  static void          CleanUpAll() {
+  static void          cleanUpAll() {
     for (auto& clip : kClips) {
       delete clip.second;
     }
     kClips.clear();
   }
   
-  static void           Cache(std::string name, AnimClip* clip) {
+  static void           cache(std::string name, AnimClip* clip) {
     if (!clip) return;
     kClips[name] = clip;
   }
 
-  static AnimClip*           Uncache(std::string name) {
+  static AnimClip*           uncache(std::string name) {
     AnimClip* clip = nullptr;
     auto it = kClips.find(name);
     if (it != kClips.end()) {
@@ -38,7 +38,7 @@ public:
     return clip;
   }
 
-  static AnimClip*      Get(std::string name) {
+  static AnimClip*      get(std::string name) {
     AnimClip* clip = nullptr;
     auto it = kClips.find(name);
     if (it != kClips.end()) {
@@ -53,13 +53,13 @@ private:
 
 class AssetManager {
 public:
-  static void CleanUpAssets() {
-    ModelCache::CleanUpAll();
-    AnimAssetManager::CleanUpAll();
-    MaterialCache::CleanUpAll();
-    MeshCache::CleanUpAll();
-    TextureCache::CleanUpAll();
-    SamplerCache::CleanUpAll();
+  static void cleanUpAssets() {
+    ModelCache::cleanUpAll();
+    AnimAssetManager::cleanUpAll();
+    MaterialCache::cleanUpAll();
+    MeshCache::cleanUpAll();
+    TextureCache::cleanUpAll();
+    SamplerCache::cleanUpAll();
   }
 };
 } // Recluse

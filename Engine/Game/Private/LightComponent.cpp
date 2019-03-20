@@ -24,11 +24,11 @@ DEFINE_COMPONENT_MAP(PointLightComponent);
 DEFINE_COMPONENT_MAP(SpotLightComponent);
 
 
-void LightComponent::GlobalInitialize()
+void LightComponent::globalInitialize()
 {
-  u32 pointLightCount = LightBuffer::MaxNumPointLights();
-  u32 dirLightCount = LightBuffer::MaxNumDirectionalLights();
-  u32 spotLightCount = LightBuffer::MaxNumSpotLights();
+  u32 pointLightCount = LightBuffer::maxNumPointLights();
+  u32 dirLightCount = LightBuffer::maxNumDirectionalLights();
+  u32 spotLightCount = LightBuffer::maxNumSpotLights();
 
   for (u32 i = 0; i < pointLightCount; ++i) {
     PointLightComponent::sAvailablePointLightIds.push(i);
@@ -46,13 +46,13 @@ void LightComponent::GlobalInitialize()
 }
 
 
-void LightComponent::GlobalCleanUp()
+void LightComponent::globalCleanUp()
 {
   PointLightComponent::CleanUpMeshDebug();
 }
 
 
-void PointLightComponent::OnInitialize(GameObject* owner)
+void PointLightComponent::onInitialize(GameObject* owner)
 {
   if (sAvailablePointLightIds.empty()) {
     R_DEBUG(rError, "Point light can not be assigned a point light! Max exceeded!\n");
@@ -61,7 +61,7 @@ void PointLightComponent::OnInitialize(GameObject* owner)
   m_Id = sAvailablePointLightIds.front();
   sAvailablePointLightIds.pop();
 
-  LightBuffer* lights = gRenderer().LightData();
+  LightBuffer* lights = gRenderer().getLightData();
   m_NativeLight = &lights->_PointLights[m_Id];
   m_NativeLight->_Enable = true;
   m_NativeLight->_Range = 1.0f;
@@ -72,9 +72,9 @@ void PointLightComponent::OnInitialize(GameObject* owner)
 }
 
 
-void PointLightComponent::OnCleanUp()
+void PointLightComponent::onCleanUp()
 {
-  if (m_Id >= LightBuffer::MaxNumPointLights()) {
+  if (m_Id >= LightBuffer::maxNumPointLights()) {
     return;
   }
   
@@ -83,7 +83,7 @@ void PointLightComponent::OnCleanUp()
   m_NativeLight->_Enable = false;
 
   if (m_descriptor) {
-    gRenderer().FreeMeshDescriptor(m_descriptor);
+    gRenderer().freeMeshDescriptor(m_descriptor);
     m_descriptor = nullptr;
   }
 
@@ -91,41 +91,41 @@ void PointLightComponent::OnCleanUp()
 }
 
 
-void PointLightComponent::Update()
+void PointLightComponent::update()
 {
-  Transform* transform = GetOwner()->GetTransform();
+  Transform* transform = getOwner()->getTransform();
   if (!transform) {
     return;
   }
   // Rotate about the same area of where the position should be.
-  Vector3 rel = transform->Rotation * m_offset;
-  m_NativeLight->_Position = transform->Position + rel;
+  Vector3 rel = transform->_rotation * m_offset;
+  m_NativeLight->_Position = transform->_position + rel;
 
-  if (Debugging()) {
+  if (isDebugging()) {
     MeshRenderCmd cmd;
     cmd._config = CMD_RENDERABLE_BIT;
     cmd._pMeshDesc = m_descriptor;
-    cmd._pMeshData = kPointLightMesh->GetMeshData();
-    cmd._pPrimitives = kPointLightMesh->GetPrimitiveData();
-    cmd._primitiveCount = kPointLightMesh->GetPrimitiveCount();
+    cmd._pMeshData = kPointLightMesh->getMeshData();
+    cmd._pPrimitives = kPointLightMesh->getPrimitiveData();
+    cmd._primitiveCount = kPointLightMesh->getPrimitiveCount();
 
-    ObjectBuffer* buffer = m_descriptor->ObjectData();
-    buffer->_Model = Matrix4(
+    ObjectBuffer* buffer = m_descriptor->getObjectData();
+    buffer->_model = Matrix4(
       Vector4(1.0f, 0.0f, 0.0f, 0.0f),
       Vector4(0.0f, 1.0f, 0.0f, 0.0f),
       Vector4(0.0f, 0.0f, 1.0f, 0.0f),
       m_NativeLight->_Position);
-    buffer->_Model[3][3] = 1.0f;
-    buffer->_Model = Matrix4::Scale(buffer->_Model, Vector3(0.3f, 0.3f, 0.3f));
+    buffer->_model[3][3] = 1.0f;
+    buffer->_model = Matrix4::scale(buffer->_model, Vector3(0.3f, 0.3f, 0.3f));
 
-    Matrix4 N = buffer->_Model;
+    Matrix4 N = buffer->_model;
     N[3][0] = 0.0f;
     N[3][1] = 0.0f;
     N[3][2] = 0.0f;
     N[3][3] = 1.0f;
-    buffer->_NormalMatrix = N.Inverse().Transpose();
-    m_descriptor->PushUpdate(MESH_BUFFER_UPDATE_BIT);
-    gRenderer().PushMeshRender(cmd);
+    buffer->_normalMatrix = N.inverse().transpose();
+    m_descriptor->pushUpdate(MESH_BUFFER_UPDATE_BIT);
+    gRenderer().pushMeshRender(cmd);
   }
 }
 
@@ -134,39 +134,39 @@ void PointLightComponent::InitializeMeshDebug()
 {
   kPointLightMesh = new Mesh();
   u32 g = 48;
-  auto vertices = UVSphere::MeshInstance(1.0f, g, g);
-  auto indices = UVSphere::IndicesInstance(static_cast<u32>(vertices.size()), g, g);
-  kPointLightMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
+  auto vertices = UVSphere::meshInstance(1.0f, g, g);
+  auto indices = UVSphere::indicesInstance(static_cast<u32>(vertices.size()), g, g);
+  kPointLightMesh->initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
   pointLightPrim._firstIndex = 0;
   pointLightPrim._indexCount = 
-    kPointLightMesh->GetMeshData()->IndexData()->IndexCount();
-  pointLightPrim._pMat = Material::Default();
+    kPointLightMesh->getMeshData()->getIndexData()->IndexCount();
+  pointLightPrim._pMat = Material::getDefault();
 }
 
 
 void PointLightComponent::CleanUpMeshDebug()
 {
-  kPointLightMesh->CleanUp(&gRenderer());
+  kPointLightMesh->cleanUp(&gRenderer());
   delete kPointLightMesh;
 }
 
 
-void PointLightComponent::OnDebug()
+void PointLightComponent::onDebug()
 {
   if (m_debug && !m_descriptor) {
-    m_descriptor = gRenderer().CreateMeshDescriptor();
-    m_descriptor->Initialize(gRenderer().RHI());
-    m_descriptor->PushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
+    m_descriptor = gRenderer().createMeshDescriptor();
+    m_descriptor->initialize(gRenderer().getRHI());
+    m_descriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
   } else if (!m_debug && m_descriptor) {
-    gRenderer().FreeMeshDescriptor(m_descriptor);
+    gRenderer().freeMeshDescriptor(m_descriptor);
     m_descriptor = nullptr;
   }
 }
 
 
-void SpotLightComponent::OnCleanUp()
+void SpotLightComponent::onCleanUp()
 {
-  if (m_Id >= LightBuffer::MaxNumSpotLights()) {
+  if (m_Id >= LightBuffer::maxNumSpotLights()) {
     return;
   }
   
@@ -178,7 +178,7 @@ void SpotLightComponent::OnCleanUp()
 }
 
 
-void SpotLightComponent::OnInitialize(GameObject* owner)
+void SpotLightComponent::onInitialize(GameObject* owner)
 {
   if (sAvailableSpotLightIds.empty()) {
     R_DEBUG(rError, "Spot light can not be assigned a spot light! Max exceeded!\n");
@@ -187,7 +187,7 @@ void SpotLightComponent::OnInitialize(GameObject* owner)
   m_Id = sAvailableSpotLightIds.front();
   sAvailableSpotLightIds.pop();
 
-  LightBuffer* lights = gRenderer().LightData();
+  LightBuffer* lights = gRenderer().getLightData();
   m_NativeLight = &lights->_SpotLights[m_Id];
   m_NativeLight->_Enable = true;
   m_NativeLight->_Range = 10.0f;
@@ -199,9 +199,9 @@ void SpotLightComponent::OnInitialize(GameObject* owner)
 }
 
 
-void SpotLightComponent::Update()
+void SpotLightComponent::update()
 {
-  Transform* transform = GetOwner()->GetTransform();
+  Transform* transform = getOwner()->getTransform();
   if (!transform) {
     return;
   }
@@ -209,13 +209,13 @@ void SpotLightComponent::Update()
   if (!m_fixed) {
     // Rotate about the same area of where the position should be.
     if (m_syncGameObject) {
-      Vector3 rel = transform->Rotation * m_offset;
-      m_NativeLight->_Position = transform->Position + rel;
-      m_NativeLight->_Direction = transform->Front() * m_rotQuat;
+      Vector3 rel = transform->_rotation * m_offset;
+      m_NativeLight->_Position = transform->_position + rel;
+      m_NativeLight->_Direction = transform->front() * m_rotQuat;
     }
   } else {
     // Fixed transformation. No Relative rotation to the parent mesh.
-    m_NativeLight->_Position = transform->Position + m_offset;
+    m_NativeLight->_Position = transform->_position + m_offset;
     m_NativeLight->_Direction = Vector3::FRONT * m_rotQuat;
   }
 }

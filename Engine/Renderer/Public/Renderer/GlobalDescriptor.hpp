@@ -72,14 +72,14 @@ public:
   GlobalDescriptor();
   ~GlobalDescriptor();
 
-  void              Update(VulkanRHI* pRhi, u32 frameIndex);
-  void              Initialize(VulkanRHI* pRhi);
-  void              CleanUp(VulkanRHI* pRhi);
+  void              update(VulkanRHI* pRhi, u32 frameIndex);
+  void              initialize(VulkanRHI* pRhi);
+  void              cleanUp(VulkanRHI* pRhi);
 
-  DescriptorSet*    Set(u32 idx) { return m_pDescriptorSets[idx]; }
+  DescriptorSet*    getDescriptorSet(u32 idx) { return m_pDescriptorSets[idx]; }
 
-  GlobalBuffer*     Data() { return &m_Global; }
-  Buffer*           Handle(u32 idx) { return m_pGlobalBuffers[idx]; }
+  GlobalBuffer*     getData() { return &m_Global; }
+  Buffer*           getHandle(u32 idx) { return m_pGlobalBuffers[idx]; }
 
 private:
   std::vector<DescriptorSet*>    m_pDescriptorSets;

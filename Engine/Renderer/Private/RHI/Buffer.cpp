@@ -12,7 +12,7 @@
 namespace Recluse {
 
 
-void Buffer::Initialize(const VkBufferCreateInfo& info, 
+void Buffer::initialize(const VkBufferCreateInfo& info, 
   VkMemoryPropertyFlags memFlags)
 {
   if (vkCreateBuffer(mOwner, &info, nullptr, &mBuffer) != VK_SUCCESS) {
@@ -26,24 +26,27 @@ void Buffer::Initialize(const VkBufferCreateInfo& info,
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memoryRequirements.size;
-  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.FindMemoryType(memoryRequirements.memoryTypeBits, memFlags);
+  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, memFlags);
   
-  if (vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory) != VK_SUCCESS) {
+  VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory);
+  if (rslt != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to allocate memory for buffer!\n");
+    R_ASSERT(false, "");
     return;
   }
 
+  VulkanMemoryAllocatorManager::numberOfAllocations++;
   vkBindBufferMemory(mOwner, mBuffer, mMemory, 0);
   mMemSize = info.size;
 }
 
 
-void Buffer::CleanUp()
+void Buffer::cleanUp()
 {
   if (mBuffer) {
     vkDestroyBuffer(mOwner, mBuffer, nullptr);
     vkFreeMemory(mOwner, mMemory, nullptr);
-
+    VulkanMemoryAllocatorManager::numberOfAllocations--;
     mBuffer = VK_NULL_HANDLE;
     mMemory = VK_NULL_HANDLE;
     mMemSize = 0;

@@ -11,7 +11,7 @@
 
 namespace Recluse {
 
-std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32 stackCount)
+std::vector<StaticVertex> UVSphere::meshInstance(r32 radius, u32 sliceCount, u32 stackCount)
 {
   //subdivisions = (std::min)(subdivisions, 5u);
   std::vector<StaticVertex> vertices;
@@ -64,7 +64,7 @@ std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32
       v.position.w = 1.0f;
 
       Vector3 p = Vector3(v.position.x, v.position.y, v.position.z);
-      v.normal = Vector4(p.Normalize(), 1.0f);
+      v.normal = Vector4(p.normalize(), 1.0f);
   
       v.texcoord0.x = theta / r32(CONST_2_PI);
       v.texcoord0.y = phi / r32(CONST_PI);
@@ -82,7 +82,7 @@ std::vector<StaticVertex> UVSphere::MeshInstance(r32 radius, u32 sliceCount, u32
 }
 
 
-std::vector<u32> UVSphere::IndicesInstance(u32 verticesCnt, u32 sliceCount, u32 stackCount)
+std::vector<u32> UVSphere::indicesInstance(u32 verticesCnt, u32 sliceCount, u32 stackCount)
 {
   std::vector<u32> indices;
   //

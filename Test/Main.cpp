@@ -16,32 +16,32 @@ bool noAlbedo = false;
 // say, moving a character and such. Be advised, THIS IS ONLY USED for overriding 
 // engine input. It would be wise to create you own game object that controls the
 // camera instead.
-void ProcessInput()
+void processInput()
 {
-  Camera* camera = Camera::GetMain();;
-  Window* window = gEngine().GetWindow();
+  Camera* camera = Camera::getMain();;
+  Window* window = gEngine().getWindow();
 
-  // Test Gamma correction
-  if (Keyboard::KeyPressed(KEY_CODE_G)) { camera->SetGamma(camera->Gamma() + (r32)(5.0 * Time::DeltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_H)) { camera->SetGamma(camera->Gamma() <= 0.0f ? 0.1f : camera->Gamma() - (r32)(5.0 * Time::DeltaTime)); }
+  // Test getGamma correction
+  if (Keyboard::KeyPressed(KEY_CODE_G)) { camera->setGamma(camera->getGamma() + (r32)(5.0 * Time::deltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_H)) { camera->setGamma(camera->getGamma() <= 0.0f ? 0.1f : camera->getGamma() - (r32)(5.0 * Time::deltaTime)); }
   // Test HDR Reinhard exposure.
-  if (Keyboard::KeyPressed(KEY_CODE_E)) { camera->SetExposure(camera->Exposure() + (r32)(2.0 * Time::DeltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_R)) { camera->SetExposure(camera->Exposure() <= 0.0f ? 0.1f : camera->Exposure() - (r32)(2.0 * Time::DeltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_E)) { camera->setExposure(camera->getExposure() + (r32)(2.0 * Time::deltaTime)); }
+  if (Keyboard::KeyPressed(KEY_CODE_R)) { camera->setExposure(camera->getExposure() <= 0.0f ? 0.1f : camera->getExposure() - (r32)(2.0 * Time::deltaTime)); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->EnableBloom(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->EnableBloom(true); }
+  if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->enableBloom(false); }
+  if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->enableBloom(true); }
 
   // Camera projection changing.
-  if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->SetProjection(Camera::ORTHO); }
-  if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->SetProjection(Camera::PERSPECTIVE); }
-  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::ScaleTime -= 0.5f * Time::DeltaTime;  }
-  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::ScaleTime += 0.5f * Time::DeltaTime; }
+  if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->setProjection(Camera::ORTHO); }
+  if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->setProjection(Camera::PERSPECTIVE); }
+  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::scaleTime -= 0.5f * Time::deltaTime;  }
+  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::scaleTime += 0.5f * Time::deltaTime; }
 
   // Window changing sets.
-  if (Keyboard::KeyPressed(KEY_CODE_M)) { window->SetToFullScreen(); }
-  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->SetToWindowed(1200, 800); window->SetToCenter(); window->Show(); }
+  if (Keyboard::KeyPressed(KEY_CODE_M)) { window->setToFullScreen(); }
+  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->setToWindowed(1200, 800); window->setToCenter(); window->show(); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().SignalStop(); }
+  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
 }
 
 #define SPHERE_SEGS 64
@@ -50,31 +50,31 @@ void ProcessInput()
 // Simple Hello Cube example.
 int main(int c, char* argv[])
 {
-  Log::DisplayToConsole(true);
-  Mouse::Enable(false);
-  Mouse::Show(false);
+  Log::displayToConsole(true);
+  Mouse::setEnable(false);
+  Mouse::show(false);
 
-  gEngine().StartUp(RTEXT("Recluse"), false, 1200, 800);
+  gEngine().startUp(RTEXT("Recluse"), false, 1200, 800);
   // Optional: You may add an input callback to override the engine update.
-  gEngine().SetControlInput(ProcessInput);
+  gEngine().setControlInput(processInput);
 
   {
     // In order to update the renderer during runtime, you can pass gpu configs to the
     // renderer directly.
     GraphicsConfigParams params;
     params._Buffering = DOUBLE_BUFFER;
-    params._EnableVsync = Window::GetRefreshRate() <= 60 ? true : false;
+    params._EnableVsync = Window::getRefreshRate() <= 60 ? true : false;
     params._AA = AA_None;
     params._Shadows = GRAPHICS_QUALITY_NONE;
-    gRenderer().UpdateRendererConfigs(&params);
+    gRenderer().updateRendererConfigs(&params);
   }
 
-  Window* window = gEngine().GetWindow();    
-  window->Show();
-  window->SetToWindowed(Window::FullscreenWidth(), Window::FullscreenHeight(), true);
+  Window* window = gEngine().getWindow();    
+  window->show();
+  window->setToWindowed(Window::getFullscreenWidth(), Window::getFullscreenHeight(), true);
 
   printf(RTEXT("App directory: %s\n"), gFilesystem().CurrentAppDirectory());
-  Log() << Window::GetRefreshRate() << "\n";
+  Log() << Window::getRefreshRate() << "\n";
 
   // Create a game object.
   // Create the scene.
@@ -82,22 +82,22 @@ int main(int c, char* argv[])
 
   Mesh mesh;
   {
-    auto boxVerts = Cube::MeshInstance();
-    auto boxIndic = Cube::IndicesInstance();
-    mesh.Initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
+    auto boxVerts = Cube::meshInstance();
+    auto boxIndic = Cube::indicesInstance();
+    mesh.initialize(&gRenderer(), boxVerts.size(), boxVerts.data(), Mesh::STATIC, boxIndic.size(), boxIndic.data());
   }
 
-  gEngine().Run();
-  gEngine().PushScene(&scene);
+  gEngine().run();
+  gEngine().pushScene(&scene);
 
-  while (gEngine().Running()) {
-    Time::Update();
-    gEngine().Update();
-    gEngine().ProcessInput();
+  while (gEngine().isRunning()) {
+    Time::update();
+    gEngine().update();
+    gEngine().processInput();
   }
 
-  mesh.CleanUp(&gRenderer());
-  gEngine().CleanUp();
+  mesh.cleanUp(&gRenderer());
+  gEngine().cleanUp();
 #if (_DEBUG)
   Log() << RTEXT("Engine modules cleaned up, press enter to continue...\n");
   std::cin.ignore();

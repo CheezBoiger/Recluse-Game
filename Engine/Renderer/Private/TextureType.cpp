@@ -31,11 +31,11 @@ VkFormat GetNativeFormat(RFormat format)
 }
 
 
-void Texture2D::Initialize(RFormat format, u32 width, u32 height, b32 genMips)
+void Texture2D::initialize(RFormat format, u32 width, u32 height, b32 genMips)
 {
   if (texture) return;
 
-  texture = mRhi->CreateTexture();
+  texture = mRhi->createTexture();
   m_bGenMips = genMips;
 
   VkImageCreateInfo imgCI = { };
@@ -70,14 +70,14 @@ void Texture2D::Initialize(RFormat format, u32 width, u32 height, b32 genMips)
   imgViewCI.components = { };
   imgViewCI.format = GetNativeFormat(format);
   
-  texture->Initialize(imgCI, imgViewCI);
+  texture->initialize(imgCI, imgViewCI);
 }
 
 
-void Texture2D::CleanUp()
+void Texture2D::cleanUp()
 {
   if (texture) {
-    mRhi->FreeTexture(texture);
+    mRhi->freeTexture(texture);
     texture = nullptr;
   }
 }
@@ -87,7 +87,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
 {
   {
     VkFormatProperties properties;
-    vkGetPhysicalDeviceFormatProperties(VulkanRHI::gPhysicalDevice.Handle(), format, &properties);
+    vkGetPhysicalDeviceFormatProperties(VulkanRHI::gPhysicalDevice.handle(), format, &properties);
     if (!(properties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
       R_DEBUG(rError, "Texture image format on this GPU does not support linear blitting. Skipping mipmap gen.\n");
       return;
@@ -95,8 +95,8 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
   }
 
   CommandBuffer cmdBuffer; 
-  cmdBuffer.SetOwner(gRenderer().RHI()->LogicDevice()->Native());
-  cmdBuffer.Allocate(gRenderer().RHI()->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(gRenderer().getRHI()->logicDevice()->getNative());
+  cmdBuffer.allocate(gRenderer().getRHI()->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   
   {
     VkCommandBufferBeginInfo begin = { };
@@ -179,21 +179,21 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
   cmdBuffer.End();
   
   VkSubmitInfo submit = { };
-  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = cmd;
   
-  gRenderer().RHI()->GraphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
-  gRenderer().RHI()->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
+  gRenderer().getRHI()->graphicsSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  gRenderer().getRHI()->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
 }
 
 
-void Texture2D::Update(Image const& Image)
+void Texture2D::update(Image const& Image)
 {
   VkDeviceSize imageSize = Image.MemorySize();
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner( mRhi->LogicDevice()->Native() );
+  stagingBuffer.SetOwner( mRhi->logicDevice()->getNative() );
 
   VkBufferCreateInfo stagingCI = {};
   stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -201,21 +201,21 @@ void Texture2D::Update(Image const& Image)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
   VkResult result = stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), Image.Data(), imageSize);
+  memcpy(stagingBuffer.Mapped(), Image.getData(), imageSize);
   stagingBuffer.UnMap();
 
   CommandBuffer buffer;
-  buffer.SetOwner(mRhi->LogicDevice()->Native());
-  buffer.Allocate(mRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.SetOwner(mRhi->logicDevice()->getNative());
+  buffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  // Max barriers.
+  // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(1);
   size_t offset = 0;
   for (u32 mipLevel = 0; mipLevel < 1; ++mipLevel) {
@@ -227,8 +227,8 @@ void Texture2D::Update(Image const& Image)
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
     region.imageSubresource.mipLevel = mipLevel;
-    region.imageExtent.width = texture->Width();
-    region.imageExtent.height = texture->Height();
+    region.imageExtent.width = texture->getWidth();
+    region.imageExtent.height = texture->getHeight();
     region.imageExtent.depth = 1;
     region.imageOffset = { 0, 0, 0 };
     bufferCopies[mipLevel] = region;
@@ -286,61 +286,61 @@ void Texture2D::Update(Image const& Image)
   buffer.End();
 
   // TODO(): Submit it to graphics queue!
-  VkCommandBuffer commandbuffers[] = { buffer.Handle() };
+  VkCommandBuffer commandbuffers[] = { buffer.getHandle() };
 
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  mRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
-  mRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  mRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  mRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  buffer.Free();
-  stagingBuffer.CleanUp();
+  buffer.free();
+  stagingBuffer.cleanUp();
 
   if (m_bGenMips) {
     GenerateMipMaps(texture->Image(), 
       texture->Format(), 
-      texture->Width(), 
-      texture->Height(), 
+      texture->getWidth(), 
+      texture->getHeight(), 
       texture->MipLevels());
   } 
 }
 
 
-u32 Texture2D::Width() const 
+u32 Texture2D::getWidth() const 
 {
   if (!texture) return 0; 
-  return texture->Width();
+  return texture->getWidth();
 }
 
 
-u32 Texture2D::Height() const
+u32 Texture2D::getHeight() const
 {
   if (!texture) return 0;
-  return texture->Height();
+  return texture->getHeight();
 }
 
 
 void Texture2D::Save(const std::string filename) 
 {
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(mRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-  bufferci.size = VkDeviceSize(texture->Width() * texture->Height() * 4);
+  bufferci.size = VkDeviceSize(texture->getWidth() * texture->getHeight() * 4);
   u8* data = new u8[bufferci.size];
 
 
-  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   stagingBuffer.Map();
 
   // Stream out the image info.
@@ -350,7 +350,7 @@ void Texture2D::Save(const std::string filename)
 
   cmdBuffer.Begin(beginInfo);
 
-  // Max barriers.
+  // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
   size_t offset = 0;
   for (u32 mipLevel = 0; mipLevel < texture->MipLevels(); ++mipLevel) {
@@ -362,8 +362,8 @@ void Texture2D::Save(const std::string filename)
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
     region.imageSubresource.mipLevel = mipLevel;
-    region.imageExtent.width = texture->Width();
-    region.imageExtent.height = texture->Height();
+    region.imageExtent.width = texture->getWidth();
+    region.imageExtent.height = texture->getHeight();
     region.imageExtent.depth = 1;
     region.imageOffset = { 0, 0, 0 };
     bufferCopies[mipLevel] = region;
@@ -421,28 +421,28 @@ void Texture2D::Save(const std::string filename)
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
-  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   submit.pCommandBuffers = cmd;
 
-  mRhi->TransferSubmit(0, 1, &submit);
-  mRhi->TransferWaitIdle(0);
+  mRhi->transferSubmit(0, 1, &submit);
+  mRhi->transferWaitIdle(0);
 
   memcpy(data, stagingBuffer.Mapped(), bufferci.size);
   Image img;
   img._data = data;
-  img._height = texture->Height();
-  img._width = texture->Width();
+  img._height = texture->getHeight();
+  img._width = texture->getWidth();
   img._channels = 4;
-  img._memorySize = texture->Width() * texture->Height() * 4;
+  img._memorySize = texture->getWidth() * texture->getHeight() * 4;
   img.SavePNG(filename.c_str());
 
   stagingBuffer.UnMap();
-  stagingBuffer.CleanUp();
+  stagingBuffer.cleanUp();
   delete[] data;
 }
 
 
-void TextureCube::Initialize(u32 dim)
+void TextureCube::initialize(u32 dim)
 {
   if (texture) return;
 
@@ -473,28 +473,28 @@ void TextureCube::Initialize(u32 dim)
   viewCi.subresourceRange.layerCount = 6;
   viewCi.subresourceRange.levelCount = 1;
 
-  texture = mRhi->CreateTexture();
-  texture->Initialize(imageCi, viewCi);
+  texture = mRhi->createTexture();
+  texture->initialize(imageCi, viewCi);
 }
 
 
 u32 TextureCube::WidthPerFace() const
 {
-  return texture->Width();
+  return texture->getWidth();
 }
 
 
 u32 TextureCube::HeightPerFace() const
 {
-  return texture->Height();
+  return texture->getHeight();
 }
 
 
-void TextureCube::CleanUp()
+void TextureCube::cleanUp()
 {
   // TODO(): 
   if ( texture ) {
-    mRhi->FreeTexture( texture );
+    mRhi->freeTexture( texture );
     texture = nullptr;
   }
 }
@@ -503,8 +503,8 @@ void TextureCube::CleanUp()
 void TextureCube::Save(const std::string filename)
 {
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(mRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(mRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   // 6 textures.
   std::vector<VkBufferImageCopy> imageCopyRegions;
@@ -517,19 +517,19 @@ void TextureCube::Save(const std::string filename)
       region.imageSubresource.baseArrayLayer = (u32)layer;
       region.imageSubresource.layerCount = 1;
       region.imageSubresource.mipLevel = (u32)level;
-      region.imageExtent.width = texture->Width();
-      region.imageExtent.height = texture->Height();
+      region.imageExtent.width = texture->getWidth();
+      region.imageExtent.height = texture->getHeight();
       region.imageExtent.depth = 1;
       region.bufferOffset = offset;
       imageCopyRegions.push_back(region);
-      offset += texture->Width() * texture->Height() * 4;
+      offset += texture->getWidth() * texture->getHeight() * 4;
     }
   }
 
   VkDeviceSize sizeInBytes = offset;
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -538,14 +538,14 @@ void TextureCube::Save(const std::string filename)
   bufferci.size = sizeInBytes;
   u8* data = new u8[bufferci.size];
 
-  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   stagingBuffer.Map();
 
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   cmdBuffer.Begin(begin);
 
   VkImageSubresourceRange subRange = {};
@@ -604,27 +604,27 @@ void TextureCube::Save(const std::string filename)
 
   cmdBuffer.End();
 
-  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   VkSubmitInfo submit = { };
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = cmd;
 
-  mRhi->GraphicsSubmit(0, 1, &submit);
-  mRhi->GraphicsWaitIdle(0);
+  mRhi->graphicsSubmit(0, 1, &submit);
+  mRhi->graphicsWaitIdle(0);
 
   memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
 
   Image img;
   img._data = data;
-  img._height = texture->Height() * 6;
-  img._width = texture->Width();
+  img._height = texture->getHeight() * 6;
+  img._width = texture->getWidth();
   img._channels = 4;
   img._memorySize = u32(sizeInBytes);
   img.SavePNG(filename.c_str());
 
   stagingBuffer.UnMap();
-  stagingBuffer.CleanUp();
+  stagingBuffer.cleanUp();
   delete[] data;
 }
 
@@ -673,7 +673,7 @@ VkBorderColor GetNativeSamplerBorderColor(SamplerBorderColor color)
 }
 
 
-void TextureSampler::Initialize(VulkanRHI* pRhi, const SamplerInfo& info)
+void TextureSampler::initialize(VulkanRHI* pRhi, const SamplerInfo& info)
 {
   mInfo = info;
   VkSamplerCreateInfo samplerCi = { };
@@ -694,28 +694,28 @@ void TextureSampler::Initialize(VulkanRHI* pRhi, const SamplerInfo& info)
   samplerCi.maxLod = info._maxLod;
   samplerCi.maxAnisotropy = info._maxAniso;
 
-  mSampler = pRhi->CreateSampler();
-  mSampler->Initialize(samplerCi);
+  mSampler = pRhi->createSampler();
+  mSampler->initialize(samplerCi);
 }
 
 
-void TextureSampler::CleanUp(VulkanRHI* pRhi)
+void TextureSampler::cleanUp(VulkanRHI* pRhi)
 {
   if (mSampler) {
-    pRhi->FreeSampler(mSampler);
+    pRhi->freeSampler(mSampler);
     mSampler = nullptr;
   }
 }
 
 
-void TextureCube::Update(Image const& image)
+void TextureCube::update(Image const& image)
 {
-  u32 width = image.Width();
-  u32 heightOffset = image.Height() / 6;
+  u32 width = image.getWidth();
+  u32 heightOffset = image.getHeight() / 6;
 
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(mRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(mRhi->GraphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(mRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   // 6 textures.
   std::vector<VkBufferImageCopy> imageCopyRegions;
@@ -728,19 +728,19 @@ void TextureCube::Update(Image const& image)
       region.imageSubresource.baseArrayLayer = (u32)layer;
       region.imageSubresource.layerCount = 1;
       region.imageSubresource.mipLevel = (u32)level;
-      region.imageExtent.width = texture->Width();
+      region.imageExtent.width = texture->getWidth();
       region.imageExtent.height = heightOffset;
       region.imageExtent.depth = 1;
       region.bufferOffset = offset;
       imageCopyRegions.push_back(region);
-      offset += texture->Width() * heightOffset * 4;
+      offset += texture->getWidth() * heightOffset * 4;
     }
   }
 
   VkDeviceSize sizeInBytes = offset;
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -748,15 +748,15 @@ void TextureCube::Update(Image const& image)
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   bufferci.size = sizeInBytes;
 
-  stagingBuffer.Initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), image.Data(), sizeInBytes);
+  memcpy(stagingBuffer.Mapped(), image.getData(), sizeInBytes);
 
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
   cmdBuffer.Begin(begin);
 
   VkImageSubresourceRange subRange = {};
@@ -815,21 +815,21 @@ void TextureCube::Update(Image const& image)
 
   cmdBuffer.End();
 
-  VkCommandBuffer cmd[] = { cmdBuffer.Handle() };
+  VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = cmd;
 
-  mRhi->GraphicsSubmit(0, 1, &submit);
-  mRhi->GraphicsWaitIdle(0);
+  mRhi->graphicsSubmit(0, 1, &submit);
+  mRhi->graphicsWaitIdle(0);
 
   stagingBuffer.UnMap();
-  stagingBuffer.CleanUp();
+  stagingBuffer.cleanUp();
 }
 
 
-void TextureCubeArray::Initialize(u32 dim, u32 cubeLayers)
+void TextureCubeArray::initialize(u32 dim, u32 cubeLayers)
 {
   VkImageCreateInfo imgCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;  
@@ -858,25 +858,25 @@ void TextureCubeArray::Initialize(u32 dim, u32 cubeLayers)
   viewCi.viewType = VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;;
   viewCi.components = { };
 
-  texture = mRhi->CreateTexture();
-  texture->Initialize(imgCi, viewCi);  
+  texture = mRhi->createTexture();
+  texture->initialize(imgCi, viewCi);  
 }
 
 
-void TextureCubeArray::CleanUp()
+void TextureCubeArray::cleanUp()
 {
   if (texture) {
-    mRhi->FreeTexture(texture);
+    mRhi->freeTexture(texture);
     texture = nullptr;
   }
 }
 
 
-void Texture2DArray::Initialize(RFormat format, u32 width, u32 height, u32 layers)
+void Texture2DArray::initialize(RFormat format, u32 width, u32 height, u32 layers)
 {
   if (texture) return;
 
-  texture = mRhi->CreateTexture();
+  texture = mRhi->createTexture();
 
   VkImageCreateInfo imgCI = {};
   VkImageViewCreateInfo imgViewCI = {};
@@ -907,20 +907,20 @@ void Texture2DArray::Initialize(RFormat format, u32 width, u32 height, u32 layer
   imgViewCI.components = {};
   imgViewCI.format = GetNativeFormat(format);
 
-  texture->Initialize(imgCI, imgViewCI);
+  texture->initialize(imgCI, imgViewCI);
 }
 
 
-void Texture2DArray::Update(const Image& img, u32 x, u32 y)
+void Texture2DArray::update(const Image& img, u32 x, u32 y)
 {
   // tODO(): NEed to figure out why image is not being read properly,
   // Only reading the first 4 slices and repeating!
   VkDeviceSize imageSize = img.MemorySize();
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->LogicDevice()->Native());
+  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
   
-  u32 widthOffset = img.Width() / x;
-  u32 heightOffset = img.Height() / y;
+  u32 widthOffset = img.getWidth() / x;
+  u32 heightOffset = img.getHeight() / y;
 
   VkBufferCreateInfo stagingCI = {};
   stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -928,38 +928,38 @@ void Texture2DArray::Update(const Image& img, u32 x, u32 y)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
   VkResult result = stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), img.Data(), imageSize);
+  memcpy(stagingBuffer.Mapped(), img.getData(), imageSize);
   stagingBuffer.UnMap();
 
   CommandBuffer buffer;
-  buffer.SetOwner(mRhi->LogicDevice()->Native());
-  buffer.Allocate(mRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.SetOwner(mRhi->logicDevice()->getNative());
+  buffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  // Max barriers.
+  // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(texture->ArrayLayers());
   size_t offset = 0;
   u32 layer = 0;
 
   for (u32 yi = 0; yi < y; ++yi) {
-    offset = heightOffset * img.Width() * 4 * yi;
+    offset = heightOffset * img.getWidth() * 4 * yi;
     for (u32 xi = 0; xi < x; ++xi) {
       VkBufferImageCopy region = {};
       region.bufferOffset = offset;
       region.bufferImageHeight = 0;
-      region.bufferRowLength = img.Width();
+      region.bufferRowLength = img.getWidth();
       region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       region.imageSubresource.baseArrayLayer = layer;
       region.imageSubresource.layerCount = 1;
       region.imageSubresource.mipLevel = 0;
-      region.imageExtent.width =  texture->Width();
-      region.imageExtent.height = texture->Height();
+      region.imageExtent.width =  texture->getWidth();
+      region.imageExtent.height = texture->getHeight();
       region.imageExtent.depth = 1;
       region.imageOffset = { 0, 0, 0 };
       bufferCopies[layer++] = region;
@@ -1017,25 +1017,25 @@ void Texture2DArray::Update(const Image& img, u32 x, u32 y)
   buffer.End();
 
   // TODO(): Submit it to graphics queue!
-  VkCommandBuffer commandbuffers[] = { buffer.Handle() };
+  VkCommandBuffer commandbuffers[] = { buffer.getHandle() };
 
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  mRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
-  mRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  mRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  mRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  buffer.Free();
-  stagingBuffer.CleanUp();
+  buffer.free();
+  stagingBuffer.cleanUp();
 }
 
 
-void Texture2DArray::CleanUp()
+void Texture2DArray::cleanUp()
 {
   if (texture) {
-    mRhi->FreeTexture(texture);
+    mRhi->freeTexture(texture);
     texture = nullptr;
   }
 }

@@ -39,14 +39,14 @@ public:
 
   ~HDR();
 
-  void                    Initialize(VulkanRHI* pRhi);
-  void                    CleanUp(VulkanRHI* pRhi);
+  void                    initialize(VulkanRHI* pRhi);
+  void                    cleanUp(VulkanRHI* pRhi);
 
   void                    UpdateToGPU(VulkanRHI* pRhi);
 
-  ConfigHDR*              GetRealtimeConfiguration() { return &m_config; }
-  DescriptorSet*          GetSet() const { return m_pSet; };
-  DescriptorSetLayout*    GetSetLayout() const { return m_pLayout; }
+  ConfigHDR*              getRealtimeConfiguration() { return &m_config; }
+  DescriptorSet*          getSet() const { return m_pSet; };
+  DescriptorSetLayout*    getSetLayout() const { return m_pLayout; }
 
 private:
 

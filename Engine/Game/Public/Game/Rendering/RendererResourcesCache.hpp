@@ -19,17 +19,17 @@ namespace Recluse {
 
 class MeshCache {
 public:
-  static void       CleanUpAll() {
+  static void       cleanUpAll() {
     // TODO(): Automate cleaning up all materials within this cache.
     for (auto& it : m_Cache) {
       Mesh* mesh = it.second;
-      mesh->CleanUp(&gRenderer());
+      mesh->cleanUp(&gRenderer());
       delete mesh;
     }
     m_Cache.clear();
   }
 
-  static b32         Cache(std::string name, Mesh* mesh) {
+  static b32         cache(std::string name, Mesh* mesh) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -49,7 +49,7 @@ public:
     return false;
   }
 
-  static b32         Get(std::string name, Mesh** out) {
+  static b32         get(std::string name, Mesh** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;
@@ -66,17 +66,17 @@ private:
 
 class MaterialCache {
 public:
-  static void       CleanUpAll() {
+  static void       cleanUpAll() {
     // TODO(): Automate cleaning up all materials within this cache.
     for (auto& it : m_Cache) {
       Material* material = it.second;
-      material->CleanUp(&gRenderer());
+      material->cleanUp(&gRenderer());
       delete material;
     }
     m_Cache.clear();
   }
 
-  static b32         Cache(std::string name, Material* mat) {
+  static b32         cache(std::string name, Material* mat) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -96,7 +96,7 @@ public:
     return false;
   }
 
-  static b32         Get(std::string name, Material** out) {
+  static b32         get(std::string name, Material** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;
@@ -113,7 +113,7 @@ private:
 
 class ModelCache {
 public:
-  static void       CleanUpAll() {
+  static void       cleanUpAll() {
     // TODO(): Automate cleaning up all materials within this cache.
     for (auto& it : m_Cache) {
       ModelLoader::Model* model = it.second;
@@ -122,7 +122,7 @@ public:
     m_Cache.clear();
   }
 
-  static b32         Cache(std::string name, ModelLoader::Model* model) {
+  static b32         cache(std::string name, ModelLoader::Model* model) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -142,7 +142,7 @@ public:
     return false;
   }
 
-  static b32         Get(std::string name, ModelLoader::Model** out) {
+  static b32         get(std::string name, ModelLoader::Model** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;

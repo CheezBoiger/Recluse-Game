@@ -18,7 +18,7 @@ b8 BasicMatrixMath()
     0.0f, 0.0f, 0.0f, 1.0f
   );
 
-  Matrix4 identity = Matrix4::Identity();
+  Matrix4 identity = Matrix4::identity();
   Matrix4 multId = identity * mat;
 
   Log(rNotify) << "\n" << mat << "\n";
@@ -44,7 +44,7 @@ b8 BasicMatrixMath()
   TASSERT_E(ans, sol);
 
 
-  Matrix4 scaleTest = Matrix4::Scale(Matrix4::Identity(), Vector3(0.5f, 0.5f, 0.5f));
+  Matrix4 scaleTest = Matrix4::scale(Matrix4::identity(), Vector3(0.5f, 0.5f, 0.5f));
   Matrix4 scaleDst = Matrix4(
     0.5f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.5f, 0.0f, 0.0f,

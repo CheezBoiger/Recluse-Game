@@ -29,13 +29,13 @@ public:
 
   ~APtr() 
   {
-    CleanUp();
+    cleanUp();
     R_ASSERT(!mObject, "Object did not destroy prior to APtr destruction! Memory Leak!\n");
   }
 
   APtr&   operator=(APtr&& ptr)
   {
-    CleanUp();
+    cleanUp();
 
     mObject = ptr.mObject;
     ptr.mObject = nullptr;
@@ -45,7 +45,7 @@ public:
   template<typename I>
   APtr&   operator=(I&& obj) 
   {
-    CleanUp();
+    cleanUp();
 
     mObject = new I(std::move(obj));
     return (*this);
@@ -66,7 +66,7 @@ public:
     return mObject; 
   }
 
-  void    CleanUp() 
+  void    cleanUp() 
   { 
     if (mObject) 
     {
@@ -77,13 +77,13 @@ public:
 
   void    Refresh(T&& obj) 
   {
-    CleanUp();
+    cleanUp();
     mObject = new T(obj);
   }
 
 
   void DeepCopy(const APtr& ptr) {
-    CleanUp();
+    cleanUp();
     mObject = new T(ptr.mObject);
   }
 

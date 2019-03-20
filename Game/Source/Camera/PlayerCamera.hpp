@@ -15,17 +15,17 @@ class PlayerCamera {
 public:
 
   void SetTargetActor(IActor* actor) { m_actorTarget = actor; }
-  void Initialize(GameObject* obj) { 
-    m_pCamera->Initialize(obj);
+  void initialize(GameObject* obj) { 
+    m_pCamera->initialize(obj);
     m_lastX = (r32)Mouse::X();
     m_lastY = (r32)Mouse::Y();
   }
 
   void UpdateCamera()
   {
-    Transform* transform = m_pCamera->GetTransform();
-    Quaternion rot = transform->Rotation;
-    Vector3 euler = rot.ToEulerAngles();
+    Transform* transform = m_pCamera->getTransform();
+    Quaternion rot = transform->_rotation;
+    Vector3 euler = rot.toEulerAngles();
     m_yaw = euler.x;
     m_pitch = euler.y;
 
@@ -43,23 +43,23 @@ public:
     m_yaw += xoffset;
     m_pitch += yoffset;
 
-    m_pCamera->Update();
+    m_pCamera->update();
   }
 
 
   void SetThisCamera()
   {
-    Camera::SetMain(m_pCamera);
+    Camera::setMain(m_pCamera);
   }
 
   Vector3 GetFront() const
   {
-    return m_pCamera->GetTransform()->Front();
+    return m_pCamera->getTransform()->front();
   }
 
-  Vector3 GetPosition() const 
+  Vector3 getPosition() const 
   {
-    return m_pCamera->GetTransform()->Position;
+    return m_pCamera->getTransform()->_position;
   }
 
 private:

@@ -25,8 +25,8 @@ public:
   static b8     DisplayingToConsole();
   static b8     Storing() { return store; }
   static b8     Disable(Verbosity verbose);
-  static b8     Enable(Verbosity verbose);
-  static void   DisplayToConsole(b8 enable);
+  static b8     setEnable(Verbosity verbose);
+  static void   displayToConsole(b8 enable);
   static void   StoreLogs(b8 enable);
 
   Log(Verbosity verbosity = rNormal) : Type(verbosity) { }

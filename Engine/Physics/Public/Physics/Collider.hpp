@@ -33,7 +33,7 @@ public:
   // Center point of this collider.
 
   void        SetCenter(const Vector3& center) { m_center = center; }
-  virtual void Update() { }
+  virtual void update() { }
   ColliderType GetColliderType() const { return m_colliderType; }
 
   b32         NeedsUpdate() const { return m_needsUpdate; }

@@ -102,9 +102,9 @@ struct LightGridBuffer {
 
 
 struct LightBuffer {
-  static u32        MaxNumDirectionalLights();
-  static u32        MaxNumPointLights();
-  static u32        MaxNumSpotLights();
+  static u32        maxNumDirectionalLights();
+  static u32        maxNumPointLights();
+  static u32        maxNumSpotLights();
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  _PrimaryLight;
   DirectionalLight  _DirectionalLights [MAX_DIRECTIONAL_LIGHTS];
@@ -130,58 +130,58 @@ public:
                             ShadowMapSystem();
                             ~ShadowMapSystem();
 
-  void                      Initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail, 
+  void                      initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail, 
                               b32 staticSoftShadows = true, b32 dynamicSoftShadows = true);
   
-  void                      CleanUp(VulkanRHI* pRhi);
+  void                      cleanUp(VulkanRHI* pRhi);
 
-  Texture*                  StaticMap() { return m_pStaticMap; }
+  Texture*                  getStaticMap() { return m_pStaticMap; }
   //Texture*                  DynamicMap() { return m_pDynamicMap; }
 
-  LightViewSpace&           ViewSpace() { return m_viewSpace; }
-  LightViewSpace&           StaticViewSpace() { return m_staticViewSpace; }
+  LightViewSpace&           getViewSpace() { return m_viewSpace; }
+  LightViewSpace&           getStaticViewSpace() { return m_staticViewSpace; }
 
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
-  void                      Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1, u32 frameIndex = 0);
+  void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1, u32 frameIndex = 0);
 
-  void                      SetViewportDim(r32 dim) { m_rShadowViewportDim = dim; }
+  void                      setViewportDim(r32 dim) { m_rShadowViewportDim = dim; }
 
-  void                      GenerateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, u32 frameIndex);
-  void                      GenerateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, u32 frameIndex);
+  void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, u32 frameIndex);
+  void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, u32 frameIndex);
 
-  void                      SignalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
+  void                      signalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
-  DescriptorSet*            ShadowMapViewDescriptor(u32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
-  DescriptorSet*            StaticShadowMapViewDescriptor(u32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            getShadowMapViewDescriptor(u32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            getStaticShadowMapViewDescriptor(u32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
 
   Sampler*                  _pSampler;
-  b32                       StaticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
+  b32                       staticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
 
-  void                      SetStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
-  void                      SetStaticShadowMapDim(r32 dim) { m_staticShadowViewportDim = dim; }
+  void                      setStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
+  void                      setStaticShadowMapDim(r32 dim) { m_staticShadowViewportDim = dim; }
 
-  void                      EnableStaticMapSoftShadows(b32 enable);
-  void                      EnableDynamicMapSoftShadows(b32 enable);
+  void                      enableStaticMapSoftShadows(b32 enable);
+  void                      enableDynamicMapSoftShadows(b32 enable);
 
-  r32                       GetStaticShadowMapDim() const { return m_staticShadowViewportDim; }
+  r32                       getStaticShadowMapDim() const { return m_staticShadowViewportDim; }
 
-  Texture*                  GetSpotLightShadowMapArray() { return m_pSpotLightMapArray; }
-  Texture*                  GetOmniLightShadowMapArray() { return m_pOmniMapArray; }
+  Texture*                  getSpotLightShadowMapArray() { return m_pSpotLightMapArray; }
+  Texture*                  getOmniLightShadowMapArray() { return m_pOmniMapArray; }
 
-  LightViewSpace&           GetSpotLightSpace(u32 idx) { return m_spotLightShadowMaps[idx]._space; }
+  LightViewSpace&           getSpotLightSpace(u32 idx) { return m_spotLightShadowMaps[idx]._space; }
 
-  static void               InitializeShadowPipelines(VulkanRHI* pRhi);
-  static void               CleanUpShadowPipelines(VulkanRHI* pRhi);
+  static void               initializeShadowPipelines(VulkanRHI* pRhi);
+  static void               cleanUpShadowPipelines(VulkanRHI* pRhi);
 
 private:
 
-  void                      InitializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
-  void                      InitializeShadowMapDescriptors(VulkanRHI* pRhi);
-  void                      InitializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
-  void                      InitializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail);
+  void                      initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
+  void                      initializeShadowMapDescriptors(VulkanRHI* pRhi);
+  void                      initializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
+  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail);
 
-  void                      CleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
-  void                      CleanUpShadowMapCascades(VulkanRHI* pRhi);
+  void                      cleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
+  void                      cleanUpShadowMapCascades(VulkanRHI* pRhi);
 
   Vector3                   m_staticViewerPos;
   r32                       m_staticShadowViewportDim;
@@ -275,47 +275,46 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void                Update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIndex);
+  void update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIndex);
 
   // Initialize. 
-  void                Initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows = true);
+  void initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows = true);
 
   // Cleanup.
-  void                CleanUp(VulkanRHI* pRhi);
+  void cleanUp(VulkanRHI* pRhi);
 
-  LightBuffer*        Data() { return &m_Lights; }
+  LightBuffer* getData() { return &m_Lights; }
 
-  DescriptorSet*      Set(u32 frameIdx) { return m_pLightDescriptorSets[frameIdx]; }
+  DescriptorSet* getDescriptorSet(u32 frameIdx) { return m_pLightDescriptorSets[frameIdx]; }
 #if 0
   DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
 
   Texture*            PrimaryShadowMap() { return m_pOpaqueShadowMap; }
 #endif
-  Sampler*            ShadowSampler() { return m_pShadowSampler; }
-  void                SetViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
-  Vector3             ViewerPos() const { return m_vViewerPos; }
+  Sampler* getShadowSampler() { return m_pShadowSampler; }
+  void setViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
+  Vector3 getViewerPos() const { return m_vViewerPos; }
 
-  void                SetShadowViewport(r32 width, r32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
-  
-  void                EnablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
+  void setShadowViewport(r32 width, r32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
+  void enablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
 
-  b32                  PrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
+  b32 isPrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
-  ShadowMapSystem&    PrimaryShadowMapSystem() { return m_primaryMapSystem; }
+  ShadowMapSystem& getPrimaryShadowMapSystem() { return m_primaryMapSystem; }
 
 private:
-  void                InitializeNativeLights(VulkanRHI* pRhi);
+  void initializeNativeLights(VulkanRHI* pRhi);
 
 #if 0
   void                InitializePrimaryShadow(VulkanRHI* pRhi);
 #endif
-  Vector3             m_vViewerPos;
+  Vector3 m_vViewerPos;
   // Descriptor Set.
-  std::vector<DescriptorSet*>      m_pLightDescriptorSets;
+  std::vector<DescriptorSet*> m_pLightDescriptorSets;
   // Light list is this!
-  std::vector<Buffer*>             m_pLightBuffers; 
+  std::vector<Buffer*> m_pLightBuffers; 
 
-  ShadowMapSystem     m_primaryMapSystem;
+  ShadowMapSystem m_primaryMapSystem;
 
 #if 0
   DescriptorSet*      m_pLightViewDescriptorSet;
@@ -347,13 +346,11 @@ w
   LightViewSpace      m_PrimaryLightSpace;
 #endif
   // Shadow map sampler.
-  Sampler*            m_pShadowSampler;
-  LightBuffer         m_Lights;
-
-  r32                 m_rShadowViewportWidth;
-  r32                 m_rShadowViewportHeight;
-
-  b32                  m_PrimaryShadowEnable;
+  Sampler* m_pShadowSampler;
+  LightBuffer m_Lights;
+  r32 m_rShadowViewportWidth;
+  r32 m_rShadowViewportHeight;
+  b32 m_PrimaryShadowEnable;
 
   friend class Renderer;
 };

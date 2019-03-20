@@ -14,7 +14,7 @@
 namespace Recluse {
 
 
-void RenderQuad::Initialize(VulkanRHI* rhi)
+void RenderQuad::initialize(VulkanRHI* rhi)
 {
   std::array<QuadVertex, 4> vertices;
   vertices[0] = { { -1.0f, -1.0f }, { 0.0f, 0.0f } };
@@ -26,14 +26,14 @@ void RenderQuad::Initialize(VulkanRHI* rhi)
     0, 1, 2, 2, 3, 0
   };
 
-  quad.Initialize(rhi, vertices.size(), sizeof(QuadVertex), vertices.data());
-  index.Initialize(rhi, indices.size(), sizeof(u16), indices.data());
+  quad.initialize(rhi, vertices.size(), sizeof(QuadVertex), vertices.data());
+  index.initialize(rhi, indices.size(), sizeof(u16), indices.data());
 }
 
 
-void RenderQuad::CleanUp(VulkanRHI* pRhi)
+void RenderQuad::cleanUp(VulkanRHI* pRhi)
 {
-  quad.CleanUp(pRhi);
-  index.CleanUp(pRhi);
+  quad.cleanUp(pRhi);
+  index.cleanUp(pRhi);
 }
 } // Recluse

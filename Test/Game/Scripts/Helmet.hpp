@@ -33,48 +33,48 @@ public:
   }
 
   // Testing collision callbacking.
-  void OnCollision(Collision* collision) override
+  void onCollision(Collision* collision) override
   {
     GameObject* other = collision->_gameObject;
-    CubeObject* cube = other->CastTo<CubeObject>();
+    CubeObject* cube = other->castTo<CubeObject>();
     if (cube) {
-      //m_pPhysicsComponent->ApplyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3());  
+      //m_pPhysicsComponent->applyImpulse(Vector3(0.0f, 1.0f, 0.0f), Vector3());  
     }
   }
 
 
-  void OnStartUp() override
+  void onStartUp() override
   {
-    SetName("Mister helmet");
+    setName("Mister helmet");
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new SkinnedRendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
     m_pAnim = new AnimationComponent();
     m_pParticles = new ParticleSystemComponent();
-    //m_pParticles->Initialize(this);
+    //m_pParticles->initialize(this);
     m_pParticles->EnableWorldSpace(true);
 
-    m_pCollider = gPhysics().CreateBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
+    m_pCollider = gPhysics().createBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
-    m_pPhysicsComponent->Initialize(this);
-    m_pPhysicsComponent->SetAngleFactor(Vector3(0.0f, 0.0f, 1.0f));
+    m_pPhysicsComponent->initialize(this);
+    m_pPhysicsComponent->setAngleFactor(Vector3(0.0f, 0.0f, 1.0f));
     m_pCollider->SetCenter(Vector3(0.0f, 0.5f, 0.0f));
-    m_pPhysicsComponent->AddCollider(m_pCollider);
-    m_pPhysicsComponent->Enable(false);
+    m_pPhysicsComponent->addCollider(m_pCollider);
+    m_pPhysicsComponent->setEnable(false);
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("BrainStem", &model);
+    ModelCache::get("BrainStem", &model);
     if (!model) Log() << "No model was found with the name: " << "DamagedHelmet!" << "\n";
 
     Mesh* mesh = model->meshes[0];
     //MeshCache::Get("BoomBox", &mesh);
 
     //MeshCache::Get("mesh_helmet_LP_13930damagedHelmet", &mesh);
-    m_pMeshComponent->Initialize(this);
+    m_pMeshComponent->initialize(this);
     m_pMeshComponent->SetMeshRef(mesh);
 
     Material* material = model->materials[0];
 #if 0
-    MaterialCache::Get(
+    MaterialCache::get(
 #if 0
       "BoomBox_Mat"
 #else
@@ -82,19 +82,19 @@ public:
 #endif
       , &material);
 #endif
-    //material->SetEmissiveFactor(0.01f);
+    //material->setEmissiveFactor(0.01f);
 
-    //material->SetRoughnessFactor(0.3f);
-    //material->SetMetallicFactor(1.0f);
-    //material->SetEmissiveFactor(1.0f);
+    //material->setRoughnessFactor(0.3f);
+    //material->setMetallicFactor(1.0f);
+    //material->setEmissiveFactor(1.0f);
 
-    m_pRendererComponent->EnableLod(false);
-    m_pRendererComponent->Initialize(this);
-    m_pRendererComponent->ForceForward(false);
+    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->initialize(this);
+    m_pRendererComponent->forceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
-      m_pRendererComponent->AddMesh(model->meshes[i]);
-      for (u32 j = 0; j < model->meshes[i]->GetPrimitiveCount(); ++j) {
-        model->meshes[i]->GetPrimitive(j)->_pMat->EnableEmissive(false);
+      m_pRendererComponent->addMesh(model->meshes[i]);
+      for (u32 j = 0; j < model->meshes[i]->getPrimitiveCount(); ++j) {
+        model->meshes[i]->getPrimitive(j)->_pMat->enableEmissive(false);
       }
     }
 
@@ -102,82 +102,82 @@ public:
     // For busterDrone model work.
     for (size_t i = 0; i < model->primitives.size(); ++i) {
       ModelLoader::PrimitiveHandle& handle = model->primitives[i];
-      handle.GetMaterial()->EnableEmissive(true);
-      handle.GetMaterial()->SetEmissiveFactor(1.0f);
+      handle.GetMaterial()->enableEmissive(true);
+      handle.GetMaterial()->setEmissiveFactor(1.0f);
     }
 #endif
    
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
-    Transform* trans = GetTransform();
-    trans->Scale = Vector3(2.0f, 2.0f, 2.0f);
-    trans->Position = Vector3(dist(twist), dist(twist), dist(twist));
-    //trans->Rotation = Quaternion::AngleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
-    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).Normalize();
+    Transform* trans = getTransform();
+    trans->_scale = Vector3(2.0f, 2.0f, 2.0f);
+    trans->_position = Vector3(dist(twist), dist(twist), dist(twist));
+    //trans->_rotation = Quaternion::angleAxis(Radians(180.0f), Vector3(1.0f, 0.0f, 0.0f));
+    m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).normalize();
     m_factor = 0.01f;
 
-    m_pAnim->Initialize(this);
-    m_pRendererComponent->SetAnimationHandler(m_pAnim->GetAnimHandle());
+    m_pAnim->initialize(this);
+    m_pRendererComponent->setAnimationHandler(m_pAnim->getAnimHandle());
     AnimClip* clip = model->animations[0];
-    clip->_skeletonId = m_pMeshComponent->MeshRef()->GetSkeletonReference();
+    clip->_skeletonId = m_pMeshComponent->MeshRef()->getSkeletonReference();
     
-    m_pAnim->AddClip(clip, "InitialPose");
-    m_pAnim->Playback("InitialPose");
-    m_pAnim->SetPlaybackRate(0.0f);
+    m_pAnim->addClip(clip, "InitialPose");
+    m_pAnim->playback("InitialPose");
+    m_pAnim->setPlaybackRate(0.0f);
   }
 
   // Updating game logic...
-  void Update(r32 tick) override
+  void update(r32 tick) override
   {
 #define FOLLOW_CAMERA_FORWARD 0
-    Transform* transform = GetTransform();
-    // transform->Position += m_vRandDir * tick;
-    //Quaternion q = Quaternion::AngleAxis(Radians(45.0f) * tick, Vector3(1.0f, 0.0, 0.0f));
-    //transform->Rotation = transform->Rotation * q;
+    Transform* transform = getTransform();
+    // transform->_position += m_vRandDir * tick;
+    //Quaternion q = Quaternion::angleAxis(Radians(45.0f) * tick, Vector3(1.0f, 0.0, 0.0f));
+    //transform->_rotation = transform->_rotation * q;
 #if FOLLOW_CAMERA_FORWARD
     // Have helmet rotate with camera look around.
-    Quaternion targ = Camera::GetMain()->GetTransform()->Rotation;
-    transform->Rotation = targ;
+    Quaternion targ = Camera::getMain()->getTransform()->_rotation;
+    transform->_rotation = targ;
 #endif
     if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
-      transform->Position += transform->Front() * 1.0f * tick;
+      transform->_position += transform->front() * 1.0f * tick;
     }
     if (Keyboard::KeyPressed(KEY_CODE_DOWN_ARROW)) {
-      transform->Position -= transform->Front() * 1.0f * tick;
+      transform->_position -= transform->front() * 1.0f * tick;
     }
     if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) {
-      transform->Rotation = transform->Rotation * 
-        Quaternion::AngleAxis(Radians(45.0f) * tick, Vector3::UP);
+      transform->_rotation = transform->_rotation * 
+        Quaternion::angleAxis(Radians(45.0f) * tick, Vector3::UP);
     }
     if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
-      transform->Rotation = transform->Rotation * 
-        Quaternion::AngleAxis(Radians(-45.0f) * tick, Vector3::UP);
+      transform->_rotation = transform->_rotation * 
+        Quaternion::angleAxis(Radians(-45.0f) * tick, Vector3::UP);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
-      m_pPhysicsComponent->Enable(true);
+      m_pPhysicsComponent->setEnable(true);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_3)) {
-      m_pAnim->SetPlaybackRate(m_pAnim->GetPlaybackRate() - tick * 0.3f);
+      m_pAnim->setPlaybackRate(m_pAnim->getPlaybackRate() - tick * 0.3f);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_4)) {
-      m_pAnim->SetPlaybackRate(m_pAnim->GetPlaybackRate() + tick * 0.3f);
+      m_pAnim->setPlaybackRate(m_pAnim->getPlaybackRate() + tick * 0.3f);
     }
 
     // Make emission glow.
-    m_factor = Absf(sinf(static_cast<r32>(Time::CurrentTime())));
+    m_factor = Absf(sinf(static_cast<r32>(Time::currentTime())));
   }
 
-  void OnCleanUp() override
+  void onCleanUp() override
   {
-    m_pMeshComponent->CleanUp();
-    m_pRendererComponent->CleanUp();
-    m_pPhysicsComponent->CleanUp();
-    m_pAnim->CleanUp();
-    m_pParticles->CleanUp();
+    m_pMeshComponent->cleanUp();
+    m_pRendererComponent->cleanUp();
+    m_pPhysicsComponent->cleanUp();
+    m_pAnim->cleanUp();
+    m_pParticles->cleanUp();
 
     delete m_pMeshComponent;
     delete m_pRendererComponent;
@@ -198,59 +198,59 @@ private:
 #define SPHERE 1
 #define DRONE 2
 #define MONSTER 3
-#define ENABLE_PARTICLE_TEXTURE_TEST 1
+#define ENABLE_PARTICLE_TEXTURE_TEST 0
 #define MODEL_TYPE DRONE
 class Monster : public Item {
   R_GAME_OBJECT(Monster)
 public:
   Monster() { }
 
-  void OnStartUp() override 
+  void onStartUp() override 
   {
     m_pParticleSystem = nullptr;
     m_pParticleSystem = new ParticleSystemComponent();
-    m_rendererComponent.Initialize(this);
-    m_pParticleSystem->Initialize(this);
-    m_meshComponent.Initialize(this);
-    m_animationComponent.Initialize(this);
-    m_physicsComponent.Initialize(this);
-    m_spotLightComponent.Initialize(this);
+    m_rendererComponent.initialize(this);
+    m_pParticleSystem->initialize(this);
+    m_meshComponent.initialize(this);
+    m_animationComponent.initialize(this);
+    m_physicsComponent.initialize(this);
+    m_spotLightComponent.initialize(this);
 
-    Transform* transform = GetTransform();
+    Transform* transform = getTransform();
     m_pPhysicsComponent = &m_physicsComponent;
     m_pMeshComponent = &m_meshComponent;
-    m_pRendererComponent = &m_rendererComponent;
-    m_sphereCollider = gPhysics().CreateSphereCollider(1.0f);
+    //m_pRendererComponent = &m_rendererComponent;
+    m_sphereCollider = gPhysics().createSphereCollider(1.0f);
     //m_sphereCollider->SetCenter(Vector3(0.0f, 1.0f, 0.0f));
-    m_physicsComponent.AddCollider(m_sphereCollider);
-    m_physicsComponent.SetMass(0.5f);
-    m_physicsComponent.SetFriction(1.0f);
-    m_physicsComponent.SetRollingFriction(0.1f);
-    m_physicsComponent.SetSpinningFriction(0.1f);
+    m_physicsComponent.addCollider(m_sphereCollider);
+    m_physicsComponent.setMass(0.5f);
+    m_physicsComponent.setFriction(1.0f);
+    m_physicsComponent.setRollingFriction(0.1f);
+    m_physicsComponent.setSpinningFriction(0.1f);
 
-    m_spotLightComponent.SetOuterCutoff(cosf(Radians(25.0f)));
-    m_spotLightComponent.SetInnerCutoff(cosf(Radians(20.0f)));
-    m_spotLightComponent.SetColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
-    m_spotLightComponent.SetIntensity(5.0f);
-    m_spotLightComponent.SetOffset(Vector3(0.0f, 7.0f, 0.0f));
-    m_spotLightComponent.SetRotationOffset(Quaternion::AngleAxis(Radians(90.0f), Vector3::RIGHT));
-    m_spotLightComponent.EnableFixed(true);
-    m_spotLightComponent.Enable(false);
+    m_spotLightComponent.setOuterCutoff(cosf(Radians(25.0f)));
+    m_spotLightComponent.setInnerCutoff(cosf(Radians(20.0f)));
+    m_spotLightComponent.setColor(Vector4(135.0f/255.0f, 206.0f/255.0f, 250.0f/255.0f, 1.0f));
+    m_spotLightComponent.setIntensity(5.0f);
+    m_spotLightComponent.setOffset(Vector3(0.0f, 7.0f, 0.0f));
+    m_spotLightComponent.setRotationOffset(Quaternion::angleAxis(Radians(90.0f), Vector3::RIGHT));
+    m_spotLightComponent.enableFixed(true);
+    m_spotLightComponent.setEnable(false);
 
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
-    gAudio().LoadSound("wave.mp3", true, true, false);
-    m_audioChannel = gAudio().InitiateSound("wave.mp3", transform->Position, 0.1f);
+    gAudio().loadSound("wave.mp3", true, true, false);
+    m_audioChannel = gAudio().initiateSound("wave.mp3", transform->_position, 0.1f);
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
     {
-      m_particleTexture = gRenderer().CreateTexture2DArray();
-      m_particleTexture->Initialize(RFORMAT_R8G8B8A8_UNORM, 128, 128, 64);
+      m_particleTexture = gRenderer().createTexture2DArray();
+      m_particleTexture->initialize(RFORMAT_R8G8B8A8_UNORM, 128, 128, 64);
       Image img;
-      img.Load("Assets/World/ParticleAtlas.png");
-      m_particleTexture->Update(img, 8, 8);
-      img.CleanUp();
+      img.load("Assets/World/ParticleAtlas.png");
+      m_particleTexture->update(img, 8, 8);
+      img.cleanUp();
       m_pParticleSystem->SetMaxParticleCount(50);
       m_pParticleSystem->SetTextureArray(m_particleTexture);
       m_pParticleSystem->SetGlobalScale(1.0f);
@@ -262,104 +262,109 @@ public:
       m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
       m_pParticleSystem->UseAtlas(true);
       m_pParticleSystem->EnableSorting(false);
-      m_pParticleSystem->Enable(true);
+      m_pParticleSystem->setEnable(true);
     }
 #endif
 #if MODEL_TYPE == MONSTER
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("Monster", &model);
+    ModelCache::get("Monster", &model);
     ModelLoader::AnimModel* animModel = static_cast<ModelLoader::AnimModel*>(model);
 
     m_meshComponent.SetMeshRef(animModel->meshes[0]);
  
     // Clips don't have a skeleton to refer to, so be sure to know which skeleton to refer the clip to.
     AnimClip* clip = animModel->animations[0];
-    clip->_skeletonId = m_meshComponent.MeshRef()->GetSkeletonReference();
-    m_animationComponent.AddClip(clip, "WalkPose");
-    m_animationComponent.Playback("WalkPose");  
+    clip->_skeletonId = m_meshComponent.MeshRef()->getSkeletonReference();
+    m_animationComponent.addClip(clip, "WalkPose");
+    m_animationComponent.playback("WalkPose");  
 
-    m_rendererComponent.AddMesh(model->meshes[0]);
-    m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
+    m_rendererComponent.addMesh(model->meshes[0]);
+    m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
 
     Material* rusted = nullptr;
-    MaterialCache::Get("RustedSample", &rusted);
-    transform->Scale = Vector3(0.002f, 0.002f, 0.002f);
+    MaterialCache::get("RustedSample", &rusted);
+    transform->_scale = Vector3(0.002f, 0.002f, 0.002f);
 #elif MODEL_TYPE == SPHERE
     Mesh* mesh = nullptr;
-    MeshCache::Get("NativeSphere", &mesh);
+    MeshCache::get("NativeSphere", &mesh);
     m_meshComponent.SetMeshRef(mesh);
     Material* mat = nullptr;
-    MaterialCache::Get("RustedSample", &mat);
-    m_rendererComponent.AddMesh(mesh);
-    mat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-    m_rendererComponent.EnableDebug(false);
-    m_rendererComponent.SetDebugBits(DEBUG_CONFIG_IBL_BIT);
+    MaterialCache::get("RustedSample", &mat);
+    m_rendererComponent.addMesh(mesh);
+    mat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+    m_rendererComponent.enableDebug(false);
+    m_rendererComponent.setDebugBits(DEBUG_CONFIG_IBL_BIT);
     for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
-      mesh->GetPrimitive(0)->_pMat = mat;
+      mesh->getPrimitive(0)->_pMat = mat;
     }
     
-    m_rendererComponent.ForceForward(false);
-    transform->Scale = Vector3(1.0f, 1.0f, 1.0f);
+    m_rendererComponent.forceForward(false);
+    transform->_scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::Get("DamagedHelmet", &model);
+    ModelCache::get("buster", &model);
 
     for (size_t i = 0; i < model->meshes.size(); ++i) {
-      m_rendererComponent.AddMesh(model->meshes[i]);
-      for (size_t p = 0; p < model->meshes[i]->GetPrimitiveCount(); ++p) {
-        Primitive* prim = model->meshes[i]->GetPrimitive(p);
-        prim->_pMat->SetEmissiveFactor(0.2f);
-        //prim->_pMat->DisableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
-        prim->_pMat->SetBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-        //prim->_pMat->SetRoughnessFactor(1.0f);
-        //prim->_pMat->SetMetallicFactor(0.04f);
+      m_rendererComponent.addMesh(model->meshes[i]);
+      for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
+        Primitive* prim = model->meshes[i]->getPrimitive(p);
+        prim->_pMat->setEmissiveFactor(0.2f);
+        //prim->_pMat->disableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
+        prim->_pMat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+        //prim->_pMat->setRoughnessFactor(1.0f);
+        //prim->_pMat->setMetallicFactor(0.04f);
       }
     }
-    //m_rendererComponent.EnableMorphTargets(true);
-    m_rendererComponent.ForceForward(false);
-    //m_rendererComponent.SetMorphIndex0(0);
-    //m_rendererComponent.SetMorphIndex1(1);
     
-    //m_animationComponent.AddClip(model->animations[0], "Dance");
-    //m_rendererComponent.SetAnimationHandler(m_animationComponent.GetAnimHandle());
-    //m_animationComponent.Playback("Dance");
-    //m_animationComponent.SetPlaybackRate(1.0f);
-    transform->Scale = Vector3(1.5f, 1.5f, 1.5f);
+    AnimClip* pClip = model->animations[0];
+    m_animationComponent.addClip(pClip, "StartUp");
+    m_animationComponent.playback("StartUp");
+    m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
+    //m_rendererComponent.enableMorphTargets(true);
+    m_rendererComponent.forceForward(false);
+    //m_rendererComponent.setMorphIndex0(0);
+    //m_rendererComponent.setMorphIndex1(1);
+    
+    //m_animationComponent.addClip(model->animations[0], "Dance");
+    //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
+    //m_animationComponent.playback("Dance");
+    //m_animationComponent.setPlaybackRate(1.0f);
+    transform->_scale = Vector3(1.5f, 1.5f, 1.5f);
  #endif
 
-    transform->Position = Vector3(2.0f, 5.0f, 0.0f);
+    transform->_position = Vector3(2.0f, 5.0f, 0.0f);
     m_pParticleSystem->EnableWorldSpace(true);
   }
 
-  void Update(r32 tick) override
+  void update(r32 tick) override
   { 
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
       m_pParticleSystem->SetMaxParticleCount(100);
     }
     
 #if !defined FORCE_AUDIO_OFF
-    gAudio().SetChannel3DPosition(m_audioChannel, GetTransform()->Position, m_physicsComponent.GetRigidBody()->_velocity);
+    gAudio().SetChannel3DPosition(m_audioChannel, getTransform()->_position, m_physicsComponent.getRigidBody()->_velocity);
 #endif
   }
 
-  void SetPosition(const Vector3& newPos)
+  void setPosition(const Vector3& newPos)
   {
-    GetTransform()->Position = newPos;
+    getTransform()->_position = newPos;
   }
 
-  void OnCleanUp() override 
+  void onCleanUp() override 
   {
-    m_rendererComponent.CleanUp();
-    m_meshComponent.CleanUp();
-    m_animationComponent.CleanUp();
-    m_physicsComponent.CleanUp();
-    m_pParticleSystem->CleanUp();
-    m_spotLightComponent.CleanUp();
+    m_rendererComponent.cleanUp();
+    m_meshComponent.cleanUp();
+    m_animationComponent.cleanUp();
+    m_physicsComponent.cleanUp();
+    m_pParticleSystem->cleanUp();
+    m_spotLightComponent.cleanUp();
 
-    gPhysics().FreeCollider(m_sphereCollider);
+    gPhysics().freeCollider(m_sphereCollider);
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
-    gRenderer().FreeTexture2DArray(m_particleTexture);
+    gRenderer().freeTexture2DArray(m_particleTexture);
     m_particleTexture = nullptr;
 #endif
   }
@@ -368,7 +373,7 @@ private:
 #if MODEL_TYPE == MONSTER
   SkinnedRendererComponent  m_rendererComponent;
 #else
-  RendererComponent m_rendererComponent;
+  BatchRendererComponent m_rendererComponent;
 #endif
   MeshComponent             m_meshComponent;
   AnimationComponent        m_animationComponent;

@@ -27,11 +27,11 @@ struct Vector4 {
     : Vector4(rawDat[0], rawDat[1], rawDat[2], rawDat[3]) 
   { }
 
-  static Vector4  Lerp(const Vector4& p0, const Vector4& p1, const r32 t);
-  static Vector4 Min(const Vector4& a, const Vector4& b);
-  static Vector4 Max(const Vector4& a, const Vector4& b);
+  static Vector4  lerp(const Vector4& p0, const Vector4& p1, const r32 t);
+  static Vector4 minimum(const Vector4& a, const Vector4& b);
+  static Vector4 maximum(const Vector4& a, const Vector4& b);
 
-  Vector4         Normalize() const;
+  Vector4         normalize() const;
 
   Vector4         operator+(const Vector4& other) const;
   Vector4         operator-(const Vector4& other) const;
@@ -51,9 +51,9 @@ struct Vector4 {
   // Vector4 to Matrix4 multiplication in row major order.
   Vector4         operator*(const Matrix4& other) const;
 
-  r32             Length() const;
-  r32             LengthSqr() const;
-  r32             Dot(const Vector4& other) const;
+  r32             length() const;
+  r32             lengthSqr() const;
+  r32             dot(const Vector4& other) const;
 
   b8              operator==(const Vector4& other) const;
   b8              operator!=(const Vector4& other) const;

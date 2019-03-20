@@ -25,7 +25,7 @@ TextureCache::~TextureCache()
 
 
 
-TextureCache::CacheResult TextureCache::Cache(Texture2D* texture)
+TextureCache::CacheResult TextureCache::cache(Texture2D* texture)
 {
   if (!texture) return Cache_Null_Pointer;
   auto it = sCache.find(texture->UUID());
@@ -38,7 +38,7 @@ TextureCache::CacheResult TextureCache::Cache(Texture2D* texture)
 }
 
 #if 0
-TextureCache::CacheResult TextureCache::Get(std::string texname, Texture2D** out)
+TextureCache::CacheResult TextureCache::get(std::string texname, Texture2D** out)
 {
   tcache_t v = std::hash<std::string>()(texname);
   auto it = sCache.find(v);
@@ -65,25 +65,25 @@ TextureCache::CacheResult TextureCache::UnCache(std::string texname, Texture2D**
 }
 #endif
 
-void TextureCache::CleanUpAll()
+void TextureCache::cleanUpAll()
 {
   for (auto& it : sCache) {
     switch (it.second->TexType()) {
       case TextureBase::TEXTURE_2D:
       {
-        gRenderer().FreeTexture2D(reinterpret_cast<Texture2D*>(it.second));
+        gRenderer().freeTexture2D(reinterpret_cast<Texture2D*>(it.second));
       } break;
       case TextureBase::TEXTURE_1D:
       {
-        gRenderer().FreeTexture1D(reinterpret_cast<Texture1D*>(it.second));
+        gRenderer().freeTexture1D(reinterpret_cast<Texture1D*>(it.second));
       } break;
       case TextureBase::TEXTURE_CUBE:
       {
-        gRenderer().FreeTextureCube(reinterpret_cast<TextureCube*>(it.second));
+        gRenderer().freeTextureCube(reinterpret_cast<TextureCube*>(it.second));
       } break;
       case TextureBase::TEXTURE_2D_ARRAY:
       {
-        gRenderer().FreeTexture2DArray(reinterpret_cast<Texture2DArray*>(it.second));
+        gRenderer().freeTexture2DArray(reinterpret_cast<Texture2DArray*>(it.second));
       } break;
       default:
       {
@@ -96,7 +96,7 @@ void TextureCache::CleanUpAll()
 }
 
 
-void SamplerCache::Cache(TextureSampler* pSampler)
+void SamplerCache::cache(TextureSampler* pSampler)
 {
   auto& it = sCache.find(pSampler->UUID());
   if (it != sCache.end()) {
@@ -107,7 +107,7 @@ void SamplerCache::Cache(TextureSampler* pSampler)
 }
 
 #if 0
-void SamplerCache::Get(std::string& name, TextureSampler** out)
+void SamplerCache::get(std::string& name, TextureSampler** out)
 {
   auto& it = sCache.find(name);
   if (it != sCache.end()) {
@@ -126,10 +126,10 @@ void SamplerCache::UnCache(std::string& name, TextureSampler** out)
 }
 #endif
 
-void SamplerCache::CleanUpAll()
+void SamplerCache::cleanUpAll()
 {
   for (auto& sampler : sCache) {
-    gRenderer().FreeTextureSampler(sampler.second);
+    gRenderer().freeTextureSampler(sampler.second);
   }
   sCache.clear();
 }

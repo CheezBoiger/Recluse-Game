@@ -19,8 +19,8 @@ public:
 
   ~CommandBuffer() { }
   
-  void            Allocate(const VkCommandPool& pool, VkCommandBufferLevel level);
-  void            Free();
+  void            allocate(const VkCommandPool& pool, VkCommandBufferLevel level);
+  void            free();
 
   void            Begin(const VkCommandBufferBeginInfo& beginInfo);
   void            End();
@@ -52,17 +52,17 @@ public:
   void            BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags);
   void            EndQuery(VkQueryPool queryPool, u32 query);
 
-  void            PushConstants(VkPipelineLayout Layout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values);
+  void            PushConstants(VkPipelineLayout getLayout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values);
   void            Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ);
 
   void            ClearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges);
   void            ClearAttachments(u32 attachmentCount, const VkClearAttachment* pAttachments, u32 rectCount, const VkClearRect* pRects);
-  void            Reset(const VkCommandBufferResetFlags flags);
+  void            reset(const VkCommandBufferResetFlags flags);
   void            NextSubpass(VkSubpassContents contents);
   void            ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageBlit* pRegions, VkFilter filter);
 
-  VkCommandBuffer Handle() { return mHandle; }
-  VkCommandPool   PoolOwner() { return mPoolOwner; }
+  VkCommandBuffer getHandle() { return mHandle; }
+  VkCommandPool   getPoolOwner() { return mPoolOwner; }
   b32             Recording() { return mRecording; }
 
 private:

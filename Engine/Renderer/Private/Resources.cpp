@@ -180,7 +180,7 @@ DescriptorSetLayout* Resources::GetDescriptorSetLayout(u64 id)
 }
 
 
-DescriptorSet* Resources::GetDescriptorSet(u64 id)
+DescriptorSet* Resources::getDescriptorSet(u64 id)
 {
   if (DescriptorSetMap.find(id) != DescriptorSetMap.end()) {
     return DescriptorSetMap[id];

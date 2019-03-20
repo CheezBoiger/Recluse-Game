@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-void Mesh::Initialize(Renderer* pRenderer ,size_t elementCount, void* data, VertexType type, 
+void Mesh::initialize(Renderer* pRenderer ,size_t elementCount, void* data, VertexType type, 
   size_t indexCount, void* indices)
 {
   R_ASSERT(!m_pMeshData, "Mesh data at specified lod is already initialized.");
@@ -20,20 +20,20 @@ void Mesh::Initialize(Renderer* pRenderer ,size_t elementCount, void* data, Vert
     default: size = sizeof(StaticVertex); break;
   }
   m_pMeshData = new MeshData();
-  m_pMeshData->Initialize(pRenderer, elementCount, data, size, indexCount, indices);
+  m_pMeshData->initialize(pRenderer, elementCount, data, size, indexCount, indices);
   if (type == VertexType::SKINNED) m_bSkinned = true;
 }
 
 
-void Mesh::CleanUp(Renderer* pRenderer)
+void Mesh::cleanUp(Renderer* pRenderer)
 {
-  m_pMeshData->CleanUp(pRenderer);
+  m_pMeshData->cleanUp(pRenderer);
   delete m_pMeshData;
 
-  ClearMorphTargets(pRenderer);
+  clearMorphTargets(pRenderer);
 }
 
-void Mesh::SortPrimitives(Mesh::SortType type)
+void Mesh::sortPrimitives(Mesh::SortType type)
 {
   switch (type) {
     case SortType::TRANSPARENCY_LAST:
@@ -41,7 +41,7 @@ void Mesh::SortPrimitives(Mesh::SortType type)
       std::vector<Primitive> transparencies;
       std::vector<Primitive> opaques;
       for ( Primitive& primitive : m_primitives ) { 
-        if ( primitive._pMat->Native()->Transparent() ) {
+        if ( primitive._pMat->getNative()->isTransparent() ) {
           transparencies.push_back(primitive);
         } else {
           opaques.push_back(primitive);
@@ -60,7 +60,7 @@ void Mesh::SortPrimitives(Mesh::SortType type)
       std::vector<Primitive> transparencies;
       std::vector<Primitive> opaques;
       for (Primitive& primitive : m_primitives) {
-        if (primitive._pMat->Native()->Transparent()) {
+        if (primitive._pMat->getNative()->isTransparent()) {
           transparencies.push_back(primitive);
         }
         else {
@@ -80,7 +80,7 @@ void Mesh::SortPrimitives(Mesh::SortType type)
 }
 
 
-void Mesh::AllocateMorphTargetBuffer(size_t newSize)
+void Mesh::allocateMorphTargetBuffer(size_t newSize)
 {
   m_morphTargets.resize(newSize);
   for (size_t i = 0; i < m_morphTargets.size(); ++i) {
@@ -89,19 +89,19 @@ void Mesh::AllocateMorphTargetBuffer(size_t newSize)
 }
 
 
-void Mesh::InitializeMorphTarget(Renderer* pRenderer ,size_t idx, size_t elementCount, void* data, size_t vertexSize)
+void Mesh::initializeMorphTarget(Renderer* pRenderer ,size_t idx, size_t elementCount, void* data, size_t vertexSize)
 {
   m_morphTargets[idx] = new MorphTarget();
-  m_morphTargets[idx]->Initialize(pRenderer, elementCount, data, vertexSize);
+  m_morphTargets[idx]->initialize(pRenderer, elementCount, data, vertexSize);
 }
 
 
-void Mesh::ClearMorphTargets(Renderer* pRenderer)
+void Mesh::clearMorphTargets(Renderer* pRenderer)
 {
   for (size_t i = 0; i < m_morphTargets.size(); ++i) {
     MorphTarget* target = m_morphTargets[i];
     if ( target ) {
-      target->CleanUp(pRenderer);
+      target->cleanUp(pRenderer);
       delete target;
       m_morphTargets[i] = nullptr;
     }

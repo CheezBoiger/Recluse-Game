@@ -11,15 +11,15 @@ namespace Recluse {
 
 DEFINE_COMPONENT_MAP(ParticleSystemComponent);
 
-void ParticleSystemComponent::OnInitialize(GameObject* owner)
+void ParticleSystemComponent::onInitialize(GameObject* owner)
 {
   if (m_pParticleSystem) {
     return;
   }
 
-  m_pParticleSystem = gRenderer().CreateParticleSystem();
+  m_pParticleSystem = gRenderer().createParticleSystem();
 
-  m_pParticleSystem->SetUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
+  m_pParticleSystem->setUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
     std::random_device dev;
     std::mt19937 twist(dev());
     std::uniform_real_distribution<r32> uni(-0.2f, 0.2f);
@@ -41,43 +41,43 @@ void ParticleSystemComponent::OnInitialize(GameObject* owner)
     }
   });
 
-  m_pParticleSystem->SetSortFunct([=] (const Particle& p0, const Particle& p1) -> b32 {
+  m_pParticleSystem->setSortFunct([=] (const Particle& p0, const Particle& p1) -> b32 {
     return p0._camDist.x > p1._camDist.x;
   });
   REGISTER_COMPONENT(ParticleSystemComponent, this);
 }
 
 
-void ParticleSystemComponent::OnCleanUp()
+void ParticleSystemComponent::onCleanUp()
 {
   if (!m_pParticleSystem) return;
-  gRenderer().FreeParticleSystem(m_pParticleSystem);
+  gRenderer().freeParticleSystem(m_pParticleSystem);
   m_pParticleSystem = nullptr;
   UNREGISTER_COMPONENT(ParticleSystemComponent);
 }
 
 
-void ParticleSystemComponent::Update()
+void ParticleSystemComponent::update()
 {
-  if (!Enabled() || !m_pParticleSystem) return;
+  if (!enabled() || !m_pParticleSystem) return;
 
-  Transform* transform = GetTransform();
+  Transform* transform = getTransform();
   ParticleSystemConfig* data = &m_pParticleSystem->_particleConfig;
-  data->_model = transform->GetLocalToWorldMatrix();
+  data->_model = transform->getLocalToWorldMatrix();
 
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
   if (m_shouldSort) {
-    m_pParticleSystem->PushUpdate(PARTICLE_SORT_BUFFER_UPDATE_BIT);
+    m_pParticleSystem->pushUpdate(PARTICLE_SORT_BUFFER_UPDATE_BIT);
   }
 
-  gRenderer().PushParticleSystem(m_pParticleSystem);
+  gRenderer().pushParticleSystem(m_pParticleSystem);
 }
 
 
 void ParticleSystemComponent::SetMaxParticleCount(u32 maxCount)
 {
   if (!m_pParticleSystem) return;
-  m_pParticleSystem->SetParticleMaxCount(maxCount);
+  m_pParticleSystem->setParticleMaxCount(maxCount);
 }
 
 
@@ -98,7 +98,7 @@ void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_texture = texture;
   m_pParticleSystem->_particleConfig._hasAtlas = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  m_pParticleSystem->PushUpdate(PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_DESCRIPTOR_UPDATE_BIT | PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -106,7 +106,7 @@ void ParticleSystemComponent::UseAtlas(b32 enable)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._hasAtlas = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -114,7 +114,7 @@ void ParticleSystemComponent::SetMaxLife(r32 maxLife)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._particleMaxAlive = maxLife;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -122,7 +122,7 @@ void ParticleSystemComponent::SetLifetimeScale(r32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lifeTimeScale = scale;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -130,7 +130,7 @@ void ParticleSystemComponent::SetGlobalScale(r32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._globalScale = scale;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -138,7 +138,7 @@ void ParticleSystemComponent::SetBrightnessFactor(r32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lightFactor = scale;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -146,7 +146,7 @@ void ParticleSystemComponent::SetFadeOut(r32 fadeOut)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._fadeAt = fadeOut;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -154,7 +154,7 @@ void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._fadeIn = fadeIn;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -162,7 +162,7 @@ void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max, r32 offset)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._animScale = Vector3(scale, max, offset);
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -170,7 +170,7 @@ void ParticleSystemComponent::SetAngleRate(r32 rate)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._angleRate = rate;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
@@ -178,6 +178,6 @@ void ParticleSystemComponent::SetRate(r32 rate)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._rate = rate;
-  m_pParticleSystem->PushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 } // Recluse

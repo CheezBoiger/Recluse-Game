@@ -47,7 +47,7 @@ FreeListAllocator::~FreeListAllocator()
 }
 
 
-void* FreeListAllocator::Allocate(size_t Sz, size_t Align)
+void* FreeListAllocator::allocate(size_t Sz, size_t Align)
 {
   R_ASSERT(Sz != 0 && Align != 0, "Size, or align, parameter passed as 0 !\n");
   MemBlock* PrevBlock = nullptr;

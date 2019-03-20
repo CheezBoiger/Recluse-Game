@@ -25,22 +25,22 @@ public:
   MeshData();
   ~MeshData();
 
-  void            Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize,
+  void            initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize,
     size_t indexCount = 0, void* indices = nullptr);
-  void            CleanUp(Renderer* pRenderer);
+  void            cleanUp(Renderer* pRenderer);
 
-  VertexBuffer*   VertexData() { return &m_vertexBuffer; }
+  VertexBuffer*   getVertexData() { return &m_vertexBuffer; }
   
-  IndexBuffer*    IndexData() { 
+  IndexBuffer*    getIndexData() { 
     if (m_indexBuffer.IndexCount() > 0) return &m_indexBuffer; 
     else return nullptr; 
   }
 
   // Optimize the mesh to a certain specification.
-  void                    Optimize();
+  void                    optimize();
 
   // Compress mesh data to become optimal by lod.
-  void                    CompressByLod(u32 lod);
+  void                    getCompressByLod(u32 lod);
 
 private:
   VertexBuffer                        m_vertexBuffer;
@@ -55,10 +55,10 @@ public:
   MorphTarget();
   ~MorphTarget();
 
-  void Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize);
-  void CleanUp(Renderer* pRenderer);
+  void initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize);
+  void cleanUp(Renderer* pRenderer);
 
-  VertexBuffer* VertexData() { return &m_vertexBuffer; }
+  VertexBuffer* getVertexData() { return &m_vertexBuffer; }
 
 private:
   VertexBuffer m_vertexBuffer;

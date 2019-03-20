@@ -20,22 +20,22 @@ MeshData::~MeshData()
 }
 
 
-void MeshData::Initialize(Renderer* pRenderer, 
+void MeshData::initialize(Renderer* pRenderer, 
   size_t elementCount, void* data, size_t vertexSize, size_t indexCount, void* indices)
 {
   
-  m_vertexBuffer.Initialize(pRenderer->RHI(), elementCount, vertexSize, data);
+  m_vertexBuffer.initialize(pRenderer->getRHI(), elementCount, vertexSize, data);
 
   if (indexCount) {
-    m_indexBuffer.Initialize(pRenderer->RHI(), indexCount, sizeof(u32), indices);
+    m_indexBuffer.initialize(pRenderer->getRHI(), indexCount, sizeof(u32), indices);
   }
 }
 
 
-void MeshData::CleanUp(Renderer* pRenderer)
+void MeshData::cleanUp(Renderer* pRenderer)
 {
-  m_vertexBuffer.CleanUp(pRenderer->RHI());
-  m_indexBuffer.CleanUp(pRenderer->RHI());
+  m_vertexBuffer.cleanUp(pRenderer->getRHI());
+  m_indexBuffer.cleanUp(pRenderer->getRHI());
 }
 
 
@@ -49,13 +49,13 @@ MorphTarget::~MorphTarget()
 }
 
 
-void MorphTarget::Initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize)
+void MorphTarget::initialize(Renderer* pRenderer, size_t elementCount, void* data, size_t vertexSize)
 {
-  m_vertexBuffer.Initialize(pRenderer->RHI(), elementCount, vertexSize, data);
+  m_vertexBuffer.initialize(pRenderer->getRHI(), elementCount, vertexSize, data);
 }
 
-void MorphTarget::CleanUp(Renderer* pRenderer)
+void MorphTarget::cleanUp(Renderer* pRenderer)
 {
-  m_vertexBuffer.CleanUp(pRenderer->RHI());
+  m_vertexBuffer.cleanUp(pRenderer->getRHI());
 }
 } // Recluse

@@ -19,7 +19,7 @@ class GameObjectManager {
 public:
   GameObjectManager() { }
 
-  GameObject* Allocate() {
+  GameObject* allocate() {
     m_GameObjects.push_back(std::move(GameObject()));
     m_GameObjects.back().m_id = 
       std::hash<game_uuid_t>()(gGameObjectNumber++);
@@ -33,7 +33,7 @@ public:
   size_t    NumOccupied() const { return m_GameObjects.size(); }
 
 
-  void        Clear() {
+  void        clear() {
     m_GameObjects.clear();
   }
 

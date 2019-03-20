@@ -33,7 +33,7 @@ public:
   Texture*              GetRenderTexture(u64 id);
   Sampler*              GetSampler(u64 id);
   DescriptorSetLayout*  GetDescriptorSetLayout(u64 id);
-  DescriptorSet*        GetDescriptorSet(u64 id);
+  DescriptorSet*        getDescriptorSet(u64 id);
 
   b32                   RegisterGraphicsPipeline(GraphicsPipeline* pipeline);
   b32                   RegisterComputePipeline(ComputePipeline* pipeline);

@@ -13,9 +13,9 @@ namespace Recluse {
 struct SwapchainImage {
   SwapchainImage() 
     : Image(VK_NULL_HANDLE)
-    , View(VK_NULL_HANDLE) { }
+    , getView(VK_NULL_HANDLE) { }
   VkImage                       Image;
-  VkImageView                   View;
+  VkImageView                   getView;
 };
 
 
@@ -26,17 +26,17 @@ public:
   Swapchain();
   ~Swapchain();
 
-  void                          Initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent, 
+  void                          initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent, 
                                     u32 buffers = 1, u32 desiredImages = 2);
 
-  void                          CleanUp(LogicalDevice& device);
+  void                          cleanUp(LogicalDevice& device);
 
-  VkSwapchainKHR                Handle() { return mSwapchain; }
+  VkSwapchainKHR                getHandle() { return mSwapchain; }
 
   // Current number of images available in the swapchain.
   u32                        ImageCount() const { return static_cast<u32>(SwapchainImages.size()); }
 
-  SwapchainImage&               Get(const size_t index) { return SwapchainImages[index]; }
+  SwapchainImage&               get(const size_t index) { return SwapchainImages[index]; }
   SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }
   
   // Recreate the swapchain. desiredBuffers specifies how many swapchain images to use for displaying.

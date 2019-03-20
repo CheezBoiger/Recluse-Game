@@ -11,15 +11,15 @@ Plane::Plane(const Vector3& a, const Vector3& b, const Vector3& c)
   aux1 = a - b;
   aux2 = c - b;
 
-  Vector3 Normal = aux2 ^ aux1;
-  Normal = Normal.Normalize();
+  Vector3 getNormal = aux2 ^ aux1;
+  getNormal = getNormal.normalize();
 
-  x = Normal.x;
-  y = Normal.y;
-  z = Normal.z;
+  x = getNormal.x;
+  y = getNormal.y;
+  z = getNormal.z;
   
   Vector3 Point = b;
-  w = -(Normal.Dot(Point));
+  w = -(getNormal.dot(Point));
 }
 
 

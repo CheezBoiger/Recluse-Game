@@ -86,18 +86,18 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.size = w * h * 4;
     range.memory = obj->_cache->Memory();
-    rhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+    rhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
   
   // Submit command buffer to stream over the cache data to gpu texture.
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(rhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(rhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(rhi->logicDevice()->getNative());
+  cmdBuffer.allocate(rhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   VkCommandBufferBeginInfo begin = { };
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
   
-  // Max barriers.
+  // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(obj->_texture->MipLevels());
   size_t offset = 0;
   for (u32 mipLevel = 0; mipLevel < obj->_texture->MipLevels(); ++mipLevel) {
@@ -109,8 +109,8 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
     region.imageSubresource.mipLevel = mipLevel;
-    region.imageExtent.width = obj->_texture->Width();
-    region.imageExtent.height = obj->_texture->Height();
+    region.imageExtent.width = obj->_texture->getWidth();
+    region.imageExtent.height = obj->_texture->getHeight();
     region.imageExtent.depth = 1;
     region.imageOffset = { 0, 0, 0 };
     bufferCopies[mipLevel] = region;
@@ -167,27 +167,27 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   cmdBuffer.End();
 
   // TODO(): Submit it to graphics queue!
-  VkCommandBuffer commandbuffers[] = { cmdBuffer.Handle() };
+  VkCommandBuffer commandbuffers[] = { cmdBuffer.getHandle() };
 
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = commandbuffers;
 
-  rhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
-  rhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  rhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submit);
+  rhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
   // The buffer after use.
-  cmdBuffer.Free();
+  cmdBuffer.free();
 }
 
 
 void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* overlay)
 {
-  obj->_cache = rhi->CreateBuffer();
-  obj->_texture = rhi->CreateTexture();
-  obj->_sampler = rhi->CreateSampler();
-  obj->_font_set = rhi->CreateDescriptorSet();
+  obj->_cache = rhi->createBuffer();
+  obj->_texture = rhi->createTexture();
+  obj->_sampler = rhi->createSampler();
+  obj->_font_set = rhi->createDescriptorSet();
   VkImageCreateInfo imgCi = {};
   VkSamplerCreateInfo samplerCi = {};
   VkImageViewCreateInfo viewCi = {};
@@ -239,15 +239,15 @@ void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* ov
   bufferCi.size = w * h * 4; // 4 component * width * height.
   bufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-  obj->_texture->Initialize(imgCi, viewCi);
-  obj->_sampler->Initialize(samplerCi);
-  obj->_cache->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  obj->_texture->initialize(imgCi, viewCi);
+  obj->_sampler->initialize(samplerCi);
+  obj->_cache->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
   obj->_cache->Map();
 
-  obj->_font_set->Allocate(rhi->DescriptorPool(), overlay->GetMaterialLayout());
+  obj->_font_set->allocate(rhi->descriptorPool(), overlay->GetMaterialLayout());
   VkDescriptorImageInfo img = { };
-  img.sampler = obj->_sampler->Handle();
-  img.imageView = obj->_texture->View();
+  img.sampler = obj->_sampler->getHandle();
+  img.imageView = obj->_texture->getView();
   img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkWriteDescriptorSet writeSet = { };
@@ -259,18 +259,18 @@ void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* ov
   writeSet.dstSet = 0;
   writeSet.pImageInfo = &img;
 
-  obj->_font_set->Update(1, &writeSet);
+  obj->_font_set->update(1, &writeSet);
 }
 
 
 void DestroyImageBuffers(NkObject* obj, VulkanRHI* rhi)
 {
-  rhi->GraphicsWaitIdle(DEFAULT_QUEUE_IDX);
-  rhi->FreeTexture(obj->_texture);
-  rhi->FreeDescriptorSet(obj->_font_set);
+  rhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
+  rhi->freeTexture(obj->_texture);
+  rhi->freeDescriptorSet(obj->_font_set);
   obj->_cache->UnMap();
-  rhi->FreeBuffer(obj->_cache);
-  rhi->FreeSampler(obj->_sampler);
+  rhi->freeBuffer(obj->_cache);
+  rhi->freeSampler(obj->_sampler);
 }
 
 
@@ -321,32 +321,32 @@ NkObject* gNkDevice()
 }
 
 
-void UIOverlay::Render(VulkanRHI* pRhi)
+void UIOverlay::render(VulkanRHI* pRhi)
 {
   // Ignore if no reference to the rhi.
   R_ASSERT(pRhi, "Null RHI for ui overlay!");
 
-  // Render the overlay.
-  CommandBuffer* cmdBuffer = m_CmdBuffers[pRhi->CurrentImageIndex()];
+  // render the overlay.
+  CommandBuffer* cmdBuffer = m_CmdBuffers[pRhi->currentImageIndex()];
 
   
 }
 
 
-void UIOverlay::Initialize(VulkanRHI* rhi)
+void UIOverlay::initialize(VulkanRHI* rhi)
 {
-  m_pSemaphores.resize(rhi->BufferingCount());
-  m_CmdBuffers.resize(rhi->BufferingCount());
+  m_pSemaphores.resize(rhi->bufferingCount());
+  m_CmdBuffers.resize(rhi->bufferingCount());
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
-    m_CmdBuffers[i] = rhi->CreateCommandBuffer();
-    m_CmdBuffers[i]->Allocate(rhi->GraphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    m_pSemaphores[i] = rhi->CreateVkSemaphore();
-    m_pSemaphores[i]->Initialize(semaCi);
+    m_CmdBuffers[i] = rhi->createCommandBuffer();
+    m_CmdBuffers[i]->allocate(rhi->graphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_pSemaphores[i] = rhi->createVkSemaphore();
+    m_pSemaphores[i]->initialize(semaCi);
   }
 
-  InitializeRenderPass(rhi);
+  initializeRenderPass(rhi);
   CreateDescriptorSetLayout(rhi);
   SetUpGraphicsPipeline(rhi);
   CreateBuffers(rhi);
@@ -358,7 +358,7 @@ void UIOverlay::Initialize(VulkanRHI* rhi)
 }
 
 
-void UIOverlay::CleanUp(VulkanRHI* pRhi)
+void UIOverlay::cleanUp(VulkanRHI* pRhi)
 {
   // Allow us to clean up and release our nk context and object.
   CleanUpNkObject(gNkDevice(), pRhi);  
@@ -366,27 +366,27 @@ void UIOverlay::CleanUp(VulkanRHI* pRhi)
   CleanUpBuffers(pRhi);
 
   for (u32 i = 0; i < m_CmdBuffers.size(); ++i) {
-    pRhi->FreeVkSemaphore(m_pSemaphores[i]);
+    pRhi->freeVkSemaphore(m_pSemaphores[i]);
     m_pSemaphores[i] = nullptr;
 
     CommandBuffer* cmdBuf = m_CmdBuffers[i];
-    pRhi->FreeCommandBuffer(cmdBuf);
+    pRhi->freeCommandBuffer(cmdBuf);
     m_CmdBuffers[i] = nullptr;
   }
 
   if (m_renderPass) {
-    pRhi->FreeRenderPass(m_renderPass);
+    pRhi->freeRenderPass(m_renderPass);
     m_renderPass = nullptr;
   }
  
   if (m_pGraphicsPipeline) {
-    pRhi->FreeGraphicsPipeline(m_pGraphicsPipeline);
+    pRhi->freeGraphicsPipeline(m_pGraphicsPipeline);
     m_pGraphicsPipeline = nullptr;
   }
 }
 
 
-void UIOverlay::InitializeRenderPass(VulkanRHI* pRhi)
+void UIOverlay::initializeRenderPass(VulkanRHI* pRhi)
 {
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
@@ -440,15 +440,15 @@ void UIOverlay::InitializeRenderPass(VulkanRHI* pRhi)
     &subpass
   );
 
-  m_renderPass = pRhi->CreateRenderPass();
-  m_renderPass->Initialize(renderpassCI);
+  m_renderPass = pRhi->createRenderPass();
+  m_renderPass->initialize(renderpassCI);
 }
 
 
 void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
 {
   if (!m_pGraphicsPipeline) {
-    GraphicsPipeline* pipeline = pRhi->CreateGraphicsPipeline();
+    GraphicsPipeline* pipeline = pRhi->createGraphicsPipeline();
     m_pGraphicsPipeline = pipeline;
 
     VkPipelineInputAssemblyStateCreateInfo vertInputAssembly = { };
@@ -510,7 +510,7 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     VkGraphicsPipelineCreateInfo pipeCI = {};
     VkPipelineLayoutCreateInfo layoutCI = {};
 
-    VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+    VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   
     VkRect2D scissor;
     scissor.extent = extent;
@@ -549,8 +549,8 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     colorBlendCI.attachmentCount = static_cast<u32>(blendAttachments.size());
     colorBlendCI.pAttachments = blendAttachments.data();
 
-    Shader* vert = pRhi->CreateShader();
-    Shader* frag = pRhi->CreateShader();
+    Shader* vert = pRhi->createShader();
+    Shader* frag = pRhi->createShader();
 
     RendererPass::LoadShader("UI.vert.spv", vert);
     RendererPass::LoadShader("UI.frag.spv", frag);
@@ -560,7 +560,7 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
     shaderStages[0].pName = kDefaultShaderEntryPointStr;
     shaderStages[0].pSpecializationInfo = nullptr;
-    shaderStages[0].module = vert->Handle();
+    shaderStages[0].module = vert->getHandle();
     shaderStages[0].flags = 0;
     shaderStages[0].pNext = nullptr;
 
@@ -568,7 +568,7 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     shaderStages[1].pName = kDefaultShaderEntryPointStr;
     shaderStages[1].pSpecializationInfo = nullptr;
-    shaderStages[1].module = frag->Handle();
+    shaderStages[1].module = frag->getHandle();
     shaderStages[1].flags = 0;
     shaderStages[1].pNext = nullptr;
 
@@ -585,13 +585,13 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     pipeCI.pColorBlendState = &colorBlendCI;
     pipeCI.pStages = shaderStages.data();
     pipeCI.stageCount = static_cast<u32>(shaderStages.size());
-    pipeCI.renderPass = m_renderPass->Handle();
+    pipeCI.renderPass = m_renderPass->getHandle();
     pipeCI.subpass = 0;
     pipeCI.basePipelineHandle = VK_NULL_HANDLE;
 
     VkDescriptorSetLayout dSetLayouts[2] = {
-      GlobalSetLayoutKey->Layout(),
-      m_pDescLayout->Layout()
+      GlobalSetLayoutKey->getLayout(),
+      m_pDescLayout->getLayout()
     };
 
     layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -600,10 +600,10 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     layoutCI.setLayoutCount = 2;
     layoutCI.pSetLayouts = dSetLayouts;
    
-    pipeline->Initialize(pipeCI, layoutCI);
+    pipeline->initialize(pipeCI, layoutCI);
 
-    pRhi->FreeShader(vert);
-    pRhi->FreeShader(frag);
+    pRhi->freeShader(vert);
+    pRhi->freeShader(frag);
   }
 }
 
@@ -657,13 +657,13 @@ void BufferUI::EmitImage(const UiImageInfo& imgInfo)
   struct nk_image img;
   
   Texture2D* pTex = imgInfo._descriptor->GetImage();
-  img.handle = nk_handle_ptr(imgInfo._descriptor->GetDescriptorSet());
+  img.handle = nk_handle_ptr(imgInfo._descriptor->getDescriptorSet());
   img.region[0] = imgInfo._region[0];
   img.region[1] = imgInfo._region[1];
   img.region[2] = imgInfo._region[2];
   img.region[3] = imgInfo._region[3];
-  img.w = static_cast<u16>(pTex->Width());
-  img.h = static_cast<u16>(pTex->Height());
+  img.w = static_cast<u16>(pTex->getWidth());
+  img.h = static_cast<u16>(pTex->getHeight());
   nk_draw_image(nk->_cmdBuffer, nk_rect(imgInfo._x, imgInfo._y, imgInfo._width, imgInfo._height),
     &img, nk_color{0, 0, 0, 0});
 }
@@ -683,14 +683,14 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = (r32)pRhi->SwapchainObject()->SwapchainExtent().height;
-  viewport.width = (r32)pRhi->SwapchainObject()->SwapchainExtent().width;
+  viewport.height = (r32)pRhi->swapchainObject()->SwapchainExtent().height;
+  viewport.width = (r32)pRhi->swapchainObject()->SwapchainExtent().width;
 
   // TODO(): This needs to be programmable now. Not hardcoded this way...
   NkObject* nk = gNkDevice();
 
   CommandBuffer* cmdBuffer = m_CmdBuffers[frameIndex];
-  cmdBuffer->Reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  cmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
   VkCommandBufferBeginInfo beginInfo = { };
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -698,11 +698,11 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   VkClearValue clearValues[1];
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   VkRenderPassBeginInfo renderPassBeginInfo = { };
   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassBeginInfo.framebuffer = final_frameBufferKey->Handle();
-  renderPassBeginInfo.renderPass = m_renderPass->Handle();
+  renderPassBeginInfo.framebuffer = final_frameBufferKey->getHandle();
+  renderPassBeginInfo.renderPass = m_renderPass->getHandle();
   renderPassBeginInfo.renderArea.extent = extent;
   renderPassBeginInfo.renderArea.offset = { 0, 0 };
   renderPassBeginInfo.clearValueCount = 1;
@@ -747,7 +747,7 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
     memRanges[1].offset = 0;
     memRanges[1].pNext = nullptr;
 
-    LogicalDevice* dev = pRhi->LogicDevice();
+    LogicalDevice* dev = pRhi->logicDevice();
     dev->FlushMappedMemoryRanges(static_cast<u32>(memRanges.size()), memRanges.data());
   }
 
@@ -758,14 +758,14 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   VkBuffer vert = m_vertBuffers[frameIndex]->NativeBuffer();
   VkBuffer indx = m_indicesBuffers[frameIndex]->NativeBuffer();
   VkDeviceSize offsets[] = { 0 };
-  VkDescriptorSet sets[] = { global->Set(frameIndex)->Handle(), nk->_font_set->Handle() };
+  VkDescriptorSet sets[] = { global->getDescriptorSet(frameIndex)->getHandle(), nk->_font_set->getHandle() };
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->Begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
     cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->SetViewPorts(0, 1, &viewport);
       cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
+      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
       cmdBuffer->BindVertexBuffers(0, 1, &vert, offsets);
       cmdBuffer->BindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);
       const struct nk_draw_command* cmd;
@@ -782,8 +782,8 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
 
         if (cmd->texture.ptr) {
           DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
-          sets[1] = set->Handle();
-          cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Layout(), 0, 2, sets, 0, nullptr);
+          sets[1] = set->getHandle();
+          cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
         }
         cmdBuffer->DrawIndexed(cmd->elem_count, 1, vertOffset, 0, 0);
         vertOffset += cmd->elem_count;
@@ -809,25 +809,25 @@ void UIOverlay::CreateDescriptorSetLayout(VulkanRHI* pRhi)
   descLayoutCI.bindingCount = static_cast<u32>(bindings.size());
   descLayoutCI.pBindings = bindings.data();
 
-  m_pDescLayout = pRhi->CreateDescriptorSetLayout();
-  m_pDescLayout->Initialize(descLayoutCI);
+  m_pDescLayout = pRhi->createDescriptorSetLayout();
+  m_pDescLayout->initialize(descLayoutCI);
 }
 
 void UIOverlay::CleanUpDescriptorSetLayout(VulkanRHI* pRhi)
 {
-  pRhi->FreeDescriptorSetLayout(m_pDescLayout);
+  pRhi->freeDescriptorSetLayout(m_pDescLayout);
   m_pDescLayout = nullptr;
 }
 
 
 void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
 {
-  m_vertBuffers.resize(pRhi->BufferingCount());
-  m_indicesBuffers.resize(pRhi->BufferingCount());
+  m_vertBuffers.resize(pRhi->bufferingCount());
+  m_indicesBuffers.resize(pRhi->bufferingCount());
 
   for (u32 i = 0; i < m_vertBuffers.size(); ++i) {
-    m_vertBuffers[i] = pRhi->CreateBuffer();
-    m_indicesBuffers[i] = pRhi->CreateBuffer();
+    m_vertBuffers[i] = pRhi->createBuffer();
+    m_indicesBuffers[i] = pRhi->createBuffer();
 
     {
       VkBufferCreateInfo vertBufferCi = {};
@@ -835,7 +835,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
       vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       vertBufferCi.size = MAX_VERTEX_MEMORY;
       vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-      m_vertBuffers[i]->Initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      m_vertBuffers[i]->initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
 
     {
@@ -844,12 +844,12 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
       indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       indicesBufferCi.size = MAX_ELEMENT_MEMORY;
       indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-      m_indicesBuffers[i]->Initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      m_indicesBuffers[i]->initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     }
   }
 
-  m_vertStagingBuffer = pRhi->CreateBuffer();
-  m_indicesStagingBuffer = pRhi->CreateBuffer();
+  m_vertStagingBuffer = pRhi->createBuffer();
+  m_indicesStagingBuffer = pRhi->createBuffer();
 
   {
     VkBufferCreateInfo stagingBufferCi = { };
@@ -857,7 +857,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.size = MAX_VERTEX_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_vertStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_vertStagingBuffer->initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     m_vertStagingBuffer->Map();
   }
 
@@ -867,7 +867,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.size = MAX_ELEMENT_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_indicesStagingBuffer->Initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_indicesStagingBuffer->initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     m_indicesStagingBuffer->Map();
   }
 }
@@ -877,20 +877,20 @@ void UIOverlay::CleanUpBuffers(VulkanRHI* pRhi)
 {
   m_vertStagingBuffer->UnMap();
   m_indicesStagingBuffer->UnMap();
-  pRhi->FreeBuffer(m_vertStagingBuffer);
-  pRhi->FreeBuffer(m_indicesStagingBuffer);
+  pRhi->freeBuffer(m_vertStagingBuffer);
+  pRhi->freeBuffer(m_indicesStagingBuffer);
   m_indicesStagingBuffer = nullptr;
   m_vertStagingBuffer = nullptr;
 
 
   for (u32 i = 0; i < m_vertBuffers.size(); ++i) {
     if (m_vertBuffers[i]) {
-      pRhi->FreeBuffer(m_vertBuffers[i]);
+      pRhi->freeBuffer(m_vertBuffers[i]);
       m_vertBuffers[i] = nullptr;
     }
 
     if (m_indicesBuffers[i]) {
-      pRhi->FreeBuffer(m_indicesBuffers[i]);
+      pRhi->freeBuffer(m_indicesBuffers[i]);
       m_indicesBuffers[i] = nullptr;
 
     }
@@ -901,8 +901,8 @@ void UIOverlay::CleanUpBuffers(VulkanRHI* pRhi)
 void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
 {
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(pRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -927,16 +927,16 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
       &regionIndices);
   cmdBuffer.End();
 
-  VkCommandBuffer cmd = cmdBuffer.Handle();
+  VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
-  pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  pRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  cmdBuffer.Free();
+  cmdBuffer.free();
 }
 
 

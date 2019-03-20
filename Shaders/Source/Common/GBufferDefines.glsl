@@ -67,4 +67,13 @@ void WriteGBuffer(GBuffer gbuffer,
   rt3 = vec4(gbuffer.emission, 0.0);
 }
 
+
+float linearizeDepth(in sampler2D depthTex, vec2 vTexCoord, float zNear, float zFar)
+{
+  float zB = texture(depthTex, vTexCoord).z;
+  float zN = 2.0 * zB - 1.0;
+  float zE = 2.0 * zNear * zFar / (zFar + zNear - zN * (zFar - zNear));
+  return zE;
+}
+
 #endif // GBUFFERDEFINES_H

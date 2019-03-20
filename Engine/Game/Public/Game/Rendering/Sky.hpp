@@ -30,19 +30,19 @@ public:
 
   // Get information of the sun light, this will effect how to light works
   // for objects in the scene.
-  DirectionalLight* GetSunLight() { return &m_PrimaryLight; }
+  DirectionalLight* getSunLight() { return &m_PrimaryLight; }
 
-  void              SetSkyColor(const Vector3& color);
+  void              setSkyColor(const Vector3& color);
 
-  void              SetMie(const Vector3& bM);
+  void              setMie(const Vector3& bM);
 
-  void              SetRayleigh(const Vector3& bR);
+  void              setRayleigh(const Vector3& bR);
 
-  void              SetMieDistrib(r32 d);
+  void              setMieDistrib(r32 d);
 
-  void              SetScatterStrength(r32 s);
+  void              setScatterStrength(r32 s);
 
-  void              SetSkyIntensity(r32 i);
+  void              setSkyIntensity(r32 i);
 
 private:
   DirectionalLight  m_PrimaryLight;

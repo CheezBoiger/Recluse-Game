@@ -12,13 +12,13 @@ namespace Recluse {
 
 Filesystem& gFilesystem() 
 {
-  return Filesystem::Instance();
+  return Filesystem::instance();
 }
 
 
-void Filesystem::OnStartUp()
+void Filesystem::onStartUp()
 {
-  if (!gCore().IsActive()) {
+  if (!gCore().isActive()) {
     R_DEBUG(rError, "Core is not active! Activate first!\n");
     return;
   }
@@ -31,7 +31,7 @@ void Filesystem::OnStartUp()
 }
 
 
-void Filesystem::OnShutDown()
+void Filesystem::onShutDown()
 {
 }
 

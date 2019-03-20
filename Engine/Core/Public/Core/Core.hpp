@@ -27,8 +27,8 @@ public:
     : m_Pool(2) { }
 
 
-  void OnStartUp() override;
-  void OnShutDown() override;
+  void onStartUp() override;
+  void onShutDown() override;
 
   ThreadPool&     ThrPool() { return m_Pool; }
 

@@ -49,14 +49,14 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 {
   u32 offset = 0;
   std::vector<VkVertexInputAttributeDescription> description(8);
-  // Position
+  // _position
   description[0] = { };
   description[0].binding = 0;
   description[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   description[0].location = 0;
   description[0].offset = offset;
   offset += sizeof(Vector4);
-  // Position offset
+  // _position offset
   description[1] = {};
   description[1].binding = 0;
   description[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -114,9 +114,9 @@ std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 }
 
 
-void ParticleSystem::SetUpGpuBuffer(VulkanRHI* pRhi)
+void ParticleSystem::setUpGpuBuffer(VulkanRHI* pRhi)
 {
-  m_particleBuffer = pRhi->CreateBuffer();
+  m_particleBuffer = pRhi->createBuffer();
   VkBufferCreateInfo gpuBufferCi = {};
   gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -125,20 +125,20 @@ void ParticleSystem::SetUpGpuBuffer(VulkanRHI* pRhi)
     | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
     | VK_BUFFER_USAGE_TRANSFER_DST_BIT
     | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-  m_particleBuffer->Initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  m_particleBuffer->initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 }
 
 
-void ParticleSystem::CleanUpGpuBuffer(VulkanRHI* pRhi)
+void ParticleSystem::cleanUpGpuBuffer(VulkanRHI* pRhi)
 {
   if (m_particleBuffer) {
-    pRhi->FreeBuffer(m_particleBuffer);
+    pRhi->freeBuffer(m_particleBuffer);
     m_particleBuffer = nullptr;
   }
 }
 
 
-void ParticleSystem::Initialize(VulkanRHI* pRhi, 
+void ParticleSystem::initialize(VulkanRHI* pRhi, 
   DescriptorSetLayout* particleLayout, u32 initialParticleCount)
 {
   _particleConfig._maxParticles = static_cast<r32>(initialParticleCount);
@@ -157,9 +157,9 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
   _particleConfig._hasAtlas = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
   _particleConfig._lightFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-  m_particleConfigBuffer = pRhi->CreateBuffer();
+  m_particleConfigBuffer = pRhi->createBuffer();
 
-  SetUpGpuBuffer(pRhi);
+  setUpGpuBuffer(pRhi);
 
   {
     VkBufferCreateInfo bufferCi = { };
@@ -167,21 +167,21 @@ void ParticleSystem::Initialize(VulkanRHI* pRhi,
     bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    m_particleConfigBuffer->Initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_particleConfigBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     m_particleConfigBuffer->Map();
   }
 
-  m_pDescriptorSet = pRhi->CreateDescriptorSet();
-  m_pDescriptorSet->Allocate(pRhi->DescriptorPool(), particleLayout);
+  m_pDescriptorSet = pRhi->createDescriptorSet();
+  m_pDescriptorSet->allocate(pRhi->descriptorPool(), particleLayout);
 }
 
 
-void ParticleSystem::GetParticleState(Particle* output)
+void ParticleSystem::getParticleState(Particle* output)
 {
   if (!output) return;
-  VulkanRHI* pRhi = gRenderer().RHI();
+  VulkanRHI* pRhi = gRenderer().getRHI();
   Buffer staging;
-  staging.SetOwner(pRhi->LogicDevice()->Native());
+  staging.SetOwner(pRhi->logicDevice()->getNative());
 
   {
     VkBufferCreateInfo stagingCI = {};
@@ -189,14 +189,14 @@ void ParticleSystem::GetParticleState(Particle* output)
     stagingCI.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    staging.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
     staging.Map();
   }
 
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(pRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -214,14 +214,14 @@ void ParticleSystem::GetParticleState(Particle* output)
     &region);
   cmdBuffer.End();
 
-  VkCommandBuffer cmd = cmdBuffer.Handle();
+  VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
-  pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  pRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
   Particle* particles = (Particle* )staging.Mapped();
   for (u32 i = 0; i < _particleConfig._maxParticles; ++i) {
@@ -229,20 +229,20 @@ void ParticleSystem::GetParticleState(Particle* output)
   }
 
   staging.UnMap();
-  staging.CleanUp();
+  staging.cleanUp();
 }
 
 
-void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
+void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
 {
   Buffer staging;
-  staging.SetOwner(pRhi->LogicDevice()->Native());
+  staging.SetOwner(pRhi->logicDevice()->getNative());
 
   // TODO(): Randomizing stuff, so we need to figure out how to check when a particle is dead,
   // and reupdate after.
   std::vector<Particle> particles((size_t)_particleConfig._maxParticles);
   if (m_updateBits & PARTICLE_SORT_BUFFER_UPDATE_BIT) {
-    CPUBoundSort(particles);
+    cpuBoundSort(particles);
   } 
 
   if ((m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) && m_updateFunct) {
@@ -255,7 +255,7 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
     stagingCI.size = sizeof(Particle) * particles.size();
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.Initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    staging.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
 
     staging.Map();
     memcpy(staging.Mapped(), particles.data(), (size_t)stagingCI.size);
@@ -263,8 +263,8 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
   }
 
   CommandBuffer cmdBuffer;
-  cmdBuffer.SetOwner(pRhi->LogicDevice()->Native());
-  cmdBuffer.Allocate(pRhi->TransferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
+  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -281,20 +281,20 @@ void ParticleSystem::UpdateGpuParticles(VulkanRHI* pRhi)
     &region);
   cmdBuffer.End();
 
-  VkCommandBuffer cmd = cmdBuffer.Handle();
+  VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &cmd;
 
-  pRhi->TransferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
-  pRhi->TransferWaitIdle(DEFAULT_QUEUE_IDX);
+  pRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
+  pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  staging.CleanUp();
+  staging.cleanUp();
 }
 
 
-void ParticleSystem::UpdateDescriptor()
+void ParticleSystem::updateDescriptor()
 {
   VkDescriptorBufferInfo bufferInfo = {};
   bufferInfo.buffer = m_particleConfigBuffer->NativeBuffer();
@@ -308,12 +308,12 @@ void ParticleSystem::UpdateDescriptor()
 
   VkImageView textureView = DefaultTexture2DArrayView;
   Sampler* sampler = DefaultSampler2DKey;
-  if (_texture) textureView = _texture->Handle()->View();
-  if (_sampler) sampler = _sampler->Handle();
+  if (_texture) textureView = _texture->getHandle()->getView();
+  if (_sampler) sampler = _sampler->getHandle();
   VkDescriptorImageInfo imgInfo = {};
   imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imgInfo.imageView = textureView;
-  imgInfo.sampler = sampler->Handle();
+  imgInfo.sampler = sampler->getHandle();
 
   // TODO():
   std::array<VkWriteDescriptorSet, 3> writes;
@@ -338,34 +338,34 @@ void ParticleSystem::UpdateDescriptor()
   writes[2].descriptorCount = 1;
   writes[2].dstBinding = 2;
 
-  m_pDescriptorSet->Update(static_cast<u32>(writes.size()), writes.data());
+  m_pDescriptorSet->update(static_cast<u32>(writes.size()), writes.data());
 }
 
 
-void ParticleSystem::CPUBoundSort(std::vector<Particle>& currentState)
+void ParticleSystem::cpuBoundSort(std::vector<Particle>& currentState)
 {
   if (m_sortFunct) {
-    GetParticleState(currentState.data());
+    getParticleState(currentState.data());
     std::sort(currentState.begin(), currentState.end(), m_sortFunct);
   }
 }
 
 
-void ParticleSystem::Update(VulkanRHI* pRhi)
+void ParticleSystem::update(VulkanRHI* pRhi)
 {
 
   if (m_updateBits & (PARTICLE_VERTEX_BUFFER_UPDATE_BIT | PARTICLE_SORT_BUFFER_UPDATE_BIT)) {
     VkDeviceSize sz = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     if (sz != m_particleBuffer->MemorySize()) {
-      CleanUpGpuBuffer(pRhi);
-      SetUpGpuBuffer(pRhi);
+      cleanUpGpuBuffer(pRhi);
+      setUpGpuBuffer(pRhi);
       m_updateBits |= PARTICLE_DESCRIPTOR_UPDATE_BIT;
     }
-    UpdateGpuParticles(pRhi);
+    updateGpuParticles(pRhi);
   }
 
   if (m_updateBits & PARTICLE_DESCRIPTOR_UPDATE_BIT) {
-    UpdateDescriptor();
+    updateDescriptor();
   }
 
   if (m_updateBits & PARTICLE_CONFIG_BUFFER_UPDATE_BIT) {
@@ -376,24 +376,24 @@ void ParticleSystem::Update(VulkanRHI* pRhi)
     range.offset = 0;
     range.memory = m_particleConfigBuffer->Memory();
     range.size = m_particleConfigBuffer->MemorySize();
-    pRhi->LogicDevice()->FlushMappedMemoryRanges(1, &range);
+    pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
   m_updateBits = 0;
 }
 
 
-void ParticleSystem::CleanUp(VulkanRHI* pRhi)
+void ParticleSystem::cleanUp(VulkanRHI* pRhi)
 {
-  CleanUpGpuBuffer(pRhi);
+  cleanUpGpuBuffer(pRhi);
 
   if ( m_particleConfigBuffer ) {
-    pRhi->FreeBuffer( m_particleConfigBuffer );
+    pRhi->freeBuffer( m_particleConfigBuffer );
     m_particleConfigBuffer = nullptr;
   }
 
   if ( m_pDescriptorSet ) {
-    pRhi->FreeDescriptorSet( m_pDescriptorSet );
+    pRhi->freeDescriptorSet( m_pDescriptorSet );
     m_pDescriptorSet = nullptr;
   }
 }
@@ -402,10 +402,10 @@ void ParticleSystem::CleanUp(VulkanRHI* pRhi)
 GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi, 
   DescriptorSetLayout* pParticleConfigSetLayout, RenderPass* pRenderPass)
 {
-  GraphicsPipeline* pipeline = pRhi->CreateGraphicsPipeline();
-  Shader vertShader; vertShader.SetOwner(pRhi->LogicDevice()->Native());
-  Shader fragShader; fragShader.SetOwner(pRhi->LogicDevice()->Native());
-  Shader geomShader; geomShader.SetOwner(pRhi->LogicDevice()->Native());
+  GraphicsPipeline* pipeline = pRhi->createGraphicsPipeline();
+  Shader vertShader; vertShader.SetOwner(pRhi->logicDevice()->getNative());
+  Shader fragShader; fragShader.SetOwner(pRhi->logicDevice()->getNative());
+  Shader geomShader; geomShader.SetOwner(pRhi->logicDevice()->getNative());
   RendererPass::LoadShader("Particles.vert.spv", &vertShader);
   RendererPass::LoadShader("Particles.frag.spv", &fragShader);
   RendererPass::LoadShader("Particles.geom.spv", &geomShader);
@@ -540,7 +540,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   VkPipelineViewportStateCreateInfo viewportCi = { };
   viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO; 
   VkViewport viewport = { };
-  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   viewport.width = static_cast<r32>(extent.width);
   viewport.height = static_cast<r32>(extent.height);
   viewport.x = 0.0f;
@@ -559,19 +559,19 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   std::array<VkPipelineShaderStageCreateInfo, 3> shaderStages;
   shaderStages[0] = { };
   shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  shaderStages[0].module = vertShader.Handle();
+  shaderStages[0].module = vertShader.getHandle();
   shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
   shaderStages[0].pName = kDefaultShaderEntryPointStr;
   
   shaderStages[1] = { };
   shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  shaderStages[1].module = fragShader.Handle();
+  shaderStages[1].module = fragShader.getHandle();
   shaderStages[1].pName = kDefaultShaderEntryPointStr;
   shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   shaderStages[2] = { };
   shaderStages[2].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  shaderStages[2].module = geomShader.Handle();
+  shaderStages[2].module = geomShader.getHandle();
   shaderStages[2].pName = kDefaultShaderEntryPointStr;
   shaderStages[2].stage = VK_SHADER_STAGE_GEOMETRY_BIT;
 
@@ -585,7 +585,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   graphicsCi.pVertexInputState = &vertexCi;
   graphicsCi.pTessellationState = nullptr;
   graphicsCi.pViewportState = &viewportCi;
-  graphicsCi.renderPass = pRenderPass->Handle();
+  graphicsCi.renderPass = pRenderPass->getHandle();
   graphicsCi.basePipelineHandle = VK_NULL_HANDLE;
   graphicsCi.basePipelineIndex = -1;
   graphicsCi.stageCount = static_cast<u32>(shaderStages.size());
@@ -595,24 +595,24 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   pipelineLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutCi.setLayoutCount = 2;
   VkDescriptorSetLayout layouts[] = { 
-    GlobalSetLayoutKey->Layout(),
-    pParticleConfigSetLayout->Layout()
+    GlobalSetLayoutKey->getLayout(),
+    pParticleConfigSetLayout->getLayout()
   };
   pipelineLayoutCi.pSetLayouts = layouts;
   
-  pipeline->Initialize(graphicsCi, pipelineLayoutCi);
+  pipeline->initialize(graphicsCi, pipelineLayoutCi);
 
-  vertShader.CleanUp();
-  fragShader.CleanUp();
-  geomShader.CleanUp();
+  vertShader.cleanUp();
+  fragShader.cleanUp();
+  geomShader.cleanUp();
   return pipeline;
 }
 
 
-void ParticleEngine::Initialize(VulkanRHI* pRhi)
+void ParticleEngine::initialize(VulkanRHI* pRhi)
 { 
   {
-    m_pParticleDescriptorSetLayout = pRhi->CreateDescriptorSetLayout();
+    m_pParticleDescriptorSetLayout = pRhi->createDescriptorSetLayout();
     VkDescriptorSetLayoutCreateInfo dsLayoutCi = { };
     dsLayoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     std::array<VkDescriptorSetLayoutBinding, 3> bindings;
@@ -641,22 +641,22 @@ void ParticleEngine::Initialize(VulkanRHI* pRhi)
     dsLayoutCi.bindingCount = static_cast<u32>( bindings.size() );
     dsLayoutCi.pBindings = bindings.data();
 
-    m_pParticleDescriptorSetLayout->Initialize( dsLayoutCi );
+    m_pParticleDescriptorSetLayout->initialize( dsLayoutCi );
   }
 
-  InitializeRenderPass(pRhi);
+  initializeRenderPass(pRhi);
 
   // Particle Renderer Pipeline.
   m_pParticleRender = GenerateParticleRendererPipeline(pRhi, m_pParticleDescriptorSetLayout, m_pRenderPass);
 
   // Particle Compute Pipeline.
   {
-    Shader* compShader = pRhi->CreateShader();
+    Shader* compShader = pRhi->createShader();
     RendererPass::LoadShader("Particles.comp.spv", compShader);
-    m_pParticleCompute = pRhi->CreateComputePipeline();
+    m_pParticleCompute = pRhi->createComputePipeline();
     VkPipelineShaderStageCreateInfo shaderCi = { };
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderCi.module = compShader->Handle();
+    shaderCi.module = compShader->getHandle();
     shaderCi.pName = kDefaultShaderEntryPointStr;
     shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
 
@@ -668,20 +668,20 @@ void ParticleEngine::Initialize(VulkanRHI* pRhi)
     VkPipelineLayoutCreateInfo layoutCi = { };
     layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     VkDescriptorSetLayout layouts[] = {
-      GlobalSetLayoutKey->Layout(),
-      m_pParticleDescriptorSetLayout->Layout()
+      GlobalSetLayoutKey->getLayout(),
+      m_pParticleDescriptorSetLayout->getLayout()
     };
     layoutCi.setLayoutCount = 2;
     layoutCi.pSetLayouts = layouts;
     
-    m_pParticleCompute->Initialize(pipeCi, layoutCi);
-    pRhi->FreeShader(compShader);
+    m_pParticleCompute->initialize(pipeCi, layoutCi);
+    pRhi->freeShader(compShader);
   }
   R_DEBUG(rNotify, "Particle engine initialized.\n");
 }
 
 
-void ParticleEngine::InitializeRenderPass(VulkanRHI* pRhi)
+void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
 {
   std::array<VkAttachmentDescription, 7> attachmentDescriptions;
   // final color.
@@ -819,51 +819,51 @@ void ParticleEngine::InitializeRenderPass(VulkanRHI* pRhi)
   renderPassCi.pSubpasses = &subpassDescription;
   renderPassCi.subpassCount = 1u;
 
-  m_pRenderPass = pRhi->CreateRenderPass();
-  m_pRenderPass->Initialize(renderPassCi);
+  m_pRenderPass = pRhi->createRenderPass();
+  m_pRenderPass->initialize(renderPassCi);
 }
 
 
-void ParticleEngine::CleanUp(VulkanRHI* pRhi)
+void ParticleEngine::cleanUp(VulkanRHI* pRhi)
 {
   if ( m_pParticleDescriptorSetLayout ) {
-    pRhi->FreeDescriptorSetLayout( m_pParticleDescriptorSetLayout );
+    pRhi->freeDescriptorSetLayout( m_pParticleDescriptorSetLayout );
     m_pParticleDescriptorSetLayout = nullptr;
   }
 
   if ( m_pParticleCompute ) {
-    pRhi->FreeComputePipeline( m_pParticleCompute );
+    pRhi->freeComputePipeline( m_pParticleCompute );
     m_pParticleCompute = nullptr;
   }
 
   if ( m_pFrameBuffer ) {
-    pRhi->FreeFrameBuffer( m_pFrameBuffer );
+    pRhi->freeFrameBuffer( m_pFrameBuffer );
     m_pFrameBuffer = nullptr;
   }
 
-  CleanUpPipeline(pRhi);
+  cleanUpPipeline(pRhi);
 
   R_DEBUG(rNotify, "Particle engine cleaned up.\n");
 }
 
 
-void ParticleEngine::CleanUpPipeline(VulkanRHI* pRhi)
+void ParticleEngine::cleanUpPipeline(VulkanRHI* pRhi)
 {
   if (m_pParticleRender) {
-    pRhi->FreeGraphicsPipeline(m_pParticleRender);
+    pRhi->freeGraphicsPipeline(m_pParticleRender);
     m_pParticleRender = nullptr;
   }
 
   if (m_pRenderPass) {
-    pRhi->FreeRenderPass(m_pRenderPass);
+    pRhi->freeRenderPass(m_pRenderPass);
     m_pRenderPass = nullptr;
   }
 }
 
 
-void ParticleEngine::InitializePipeline(VulkanRHI* pRhi)
+void ParticleEngine::initializePipeline(VulkanRHI* pRhi)
 {
-  InitializeRenderPass(pRhi);
+  initializeRenderPass(pRhi);
   m_pParticleRender = GenerateParticleRendererPipeline(pRhi, m_pParticleDescriptorSetLayout, m_pRenderPass);
 
 }
@@ -878,7 +878,7 @@ ParticleEngine::~ParticleEngine()
 }
 
 
-void ParticleEngine::GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, 
+void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, 
   CmdList<ParticleSystem*>& particleList, u32 frameIndex)
 {
   if (particleList.Size() == 0) return;
@@ -888,25 +888,25 @@ void ParticleEngine::GenerateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
     VkDescriptorSet sets[] = {
-      global->Set(frameIndex)->Handle(),
-      system->GetSet()->Handle()
+      global->getDescriptorSet(frameIndex)->getHandle(),
+      system->getSet()->getHandle()
     };
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->Layout(),
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->getLayout(),
     0, 2, sets, 0, nullptr);
     cmdBuffer->Dispatch(1, 1, 1);
   }
 }
 
 
-void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, 
+void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, 
   GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex)
 {
   if (particleList.Size() == 0) return;
-  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   VkRenderPassBeginInfo renderPassInfo = { };
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.framebuffer = pbr_forwardFrameBuffer->Handle();
-  renderPassInfo.renderPass = m_pRenderPass->Handle();
+  renderPassInfo.framebuffer = pbr_forwardFrameBuffer->getHandle();
+  renderPassInfo.renderPass = m_pRenderPass->getHandle();
   renderPassInfo.renderArea.extent = extent;
   renderPassInfo.renderArea.offset = { 0, 0 };
   std::array<VkClearValue, 7> clearValues;
@@ -932,7 +932,7 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
     GraphicsPipeline* pRenderPipe = nullptr;
-    switch (system->GetParticleType()) {
+    switch (system->getParticleType()) {
       case PARTICLE_TYPE_POINT:
       {
         pRenderPipe = m_pParticleRender;
@@ -949,12 +949,12 @@ void ParticleEngine::GenerateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
     }
     VkDeviceSize offset[] = { 0 };
     VkDescriptorSet sets[] = { 
-      global->Set(frameIndex)->Handle(),
-      system->GetSet()->Handle()
+      global->getDescriptorSet(frameIndex)->getHandle(),
+      system->getSet()->getHandle()
     };
-    VkBuffer nativeBuffer = system->GetParticleBuffer()->NativeBuffer();
+    VkBuffer nativeBuffer = system->getParticleBuffer()->NativeBuffer();
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->Layout(),
+    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
       0, 2, sets, 0, nullptr);
     cmdBuffer->BindVertexBuffers(0, 1, &nativeBuffer, offset);
     cmdBuffer->Draw((u32)system->_particleConfig._maxParticles, 1, 0, 0);

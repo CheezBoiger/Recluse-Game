@@ -12,16 +12,16 @@ MeshData* BoxCollider::kBoxMesh = nullptr;
 
 void BoxCollider::InitMeshDebugData()
 {
-  if (!gRenderer().IsActive()) {
+  if (!gRenderer().isActive()) {
     R_DEBUG(rWarning, "Sphere Collider mesh data can not be initialized, renderer is not active!\n");
     return;
   }
 
-  auto vertices = Cube::MeshInstance(1.0f);
-  auto indices = Cube::IndicesInstance();
+  auto vertices = Cube::meshInstance(1.0f);
+  auto indices = Cube::indicesInstance();
 
   kBoxMesh = new MeshData();
-  kBoxMesh->Initialize(&gRenderer(), vertices.size(), vertices.data(), sizeof(StaticVertex), 
+  kBoxMesh->initialize(&gRenderer(), vertices.size(), vertices.data(), sizeof(StaticVertex), 
     indices.size(), indices.data());
 }
 
@@ -29,7 +29,7 @@ void BoxCollider::InitMeshDebugData()
 void BoxCollider::CleanUpMeshDebugData()
 {
   if (kBoxMesh) {
-    kBoxMesh->CleanUp(&gRenderer());
+    kBoxMesh->cleanUp(&gRenderer());
     delete kBoxMesh;
     kBoxMesh = nullptr;
   }

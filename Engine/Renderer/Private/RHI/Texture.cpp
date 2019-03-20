@@ -14,7 +14,7 @@ namespace Recluse {
 
 
 
-void Sampler::Initialize(VkSamplerCreateInfo& info)
+void Sampler::initialize(VkSamplerCreateInfo& info)
 {
   if (vkCreateSampler(mOwner, &info, nullptr, &mSampler) != VK_SUCCESS) {
     R_DEBUG(rError, "Sampler failed to initialize!\n");
@@ -22,7 +22,7 @@ void Sampler::Initialize(VkSamplerCreateInfo& info)
 }
 
 
-void Sampler::CleanUp()
+void Sampler::cleanUp()
 {
   if (mSampler) {
     vkDestroySampler(mOwner, mSampler, nullptr);
@@ -31,7 +31,7 @@ void Sampler::CleanUp()
 }
 
 
-void Texture::Initialize(const VkImageCreateInfo& imageInfo, 
+void Texture::initialize(const VkImageCreateInfo& imageInfo, 
   VkImageViewCreateInfo& viewInfo, b8 stream)
 {
   if (vkCreateImage(mOwner, &imageInfo, nullptr, &mImage) != VK_SUCCESS) {
@@ -44,14 +44,16 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memoryRequirements.size;
-  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.FindMemoryType(memoryRequirements.memoryTypeBits, 
+  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, 
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   
-  if (vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory) != VK_SUCCESS) {
+  VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory);
+  if (rslt != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to allocate host memory for image!\n");
+    R_ASSERT(false, "");
     return;
   }
-
+  VulkanMemoryAllocatorManager::numberOfAllocations++;
   if (vkBindImageMemory(mOwner, mImage, mMemory, 0) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to bind memory to image!\n");
     return;
@@ -82,7 +84,7 @@ void Texture::Initialize(const VkImageCreateInfo& imageInfo,
 }
 
 
-void Texture::CleanUp()
+void Texture::cleanUp()
 {
   R_DEBUG(rNotify, "Freeing Texture: ");
   R_DEBUG(rNormal, m_name);
@@ -106,6 +108,7 @@ void Texture::CleanUp()
     vkFreeMemory(mOwner, mMemory, nullptr);
     mMemory = VK_NULL_HANDLE;
   }
+  VulkanMemoryAllocatorManager::numberOfAllocations--;
 }
 
 
@@ -114,7 +117,7 @@ ImageView::~ImageView()
 }
 
 
-void ImageView::Initialize(VkDevice device, const VkImageViewCreateInfo& info)
+void ImageView::initialize(VkDevice device, const VkImageViewCreateInfo& info)
 {
   VkResult result = vkCreateImageView(device, &info, nullptr, &m_view);
   DEBUG_OP(if (result != VK_SUCCESS) {
@@ -123,7 +126,7 @@ void ImageView::Initialize(VkDevice device, const VkImageViewCreateInfo& info)
 }
 
 
-void ImageView::CleanUp(VkDevice device)
+void ImageView::cleanUp(VkDevice device)
 {
   if (m_view) {
     vkDestroyImageView(device, m_view, nullptr);

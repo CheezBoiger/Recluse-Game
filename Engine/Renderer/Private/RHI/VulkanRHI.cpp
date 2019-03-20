@@ -21,6 +21,7 @@ namespace Recluse {
 
 Context                       VulkanRHI::gContext;
 PhysicalDevice                VulkanRHI::gPhysicalDevice;
+VulkanMemoryAllocatorManager  VulkanRHI::gAllocator;
 std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
@@ -48,7 +49,7 @@ Semaphore::~Semaphore()
 }
 
 
-void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
+void Semaphore::initialize(const VkSemaphoreCreateInfo& info)
 {
   VkResult result = vkCreateSemaphore(mOwner, &info, nullptr, &mSema);
   R_ASSERT(result == VK_SUCCESS, "Failed to init semaphore.\n");
@@ -56,7 +57,7 @@ void Semaphore::Initialize(const VkSemaphoreCreateInfo& info)
 }
 
 
-void Semaphore::CleanUp()
+void Semaphore::cleanUp()
 {
   if (mSema) {
     R_DEBUG(rNotify, "Semphore object " << mSema << " destroyed successfully.\n");
@@ -66,14 +67,14 @@ void Semaphore::CleanUp()
 }
 
 
-void Fence::Initialize(const VkFenceCreateInfo& info)
+void Fence::initialize(const VkFenceCreateInfo& info)
 {
   VkResult result = vkCreateFence(mOwner, &info, nullptr, &mFence);
   R_ASSERT(result == VK_SUCCESS, "Failed to init fence.\n");
 }
 
 
-void Fence::CleanUp()
+void Fence::cleanUp()
 {
   if (mFence) {
     vkDestroyFence(mOwner, mFence, nullptr);
@@ -114,9 +115,9 @@ VulkanRHI::~VulkanRHI()
 }
 
 
-b32 VulkanRHI::CreateContext(const char* appName)
+b32 VulkanRHI::createContext(const char* appName)
 {
-// Enable debug mode, should we decide to enable validation layers.
+// setEnable debug mode, should we decide to enable validation layers.
 #if defined(_DEBUG) || defined(_NDEBUG)
   gContext.EnableDebugMode();
 #endif
@@ -124,7 +125,7 @@ b32 VulkanRHI::CreateContext(const char* appName)
 }
 
 
-b32 VulkanRHI::FindPhysicalDevice(u32 rhiBits)
+b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 {
   std::vector<VkPhysicalDevice>& devices = gContext.EnumerateGpus();
 #if VK_NVX_raytracing
@@ -135,14 +136,14 @@ b32 VulkanRHI::FindPhysicalDevice(u32 rhiBits)
   if (rhiBits & R_MESHSHADER_BIT) R_DEBUG(rWarning, "Mesh shading not avaiable for this version of vulkan. Consider updating.\n");
 #endif
   for (const auto& device : devices) {
-    if (SuitableDevice(device)) {
-      gPhysicalDevice.Initialize(device);
-      VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
+    if (suitableDevice(device)) {
+      gPhysicalDevice.initialize(device);
+      VkPhysicalDeviceProperties props = gPhysicalDevice.getDeviceProperties();
       break;
     }
   }
 
-  if (gPhysicalDevice.Handle() == VK_NULL_HANDLE) {
+  if (gPhysicalDevice.handle() == VK_NULL_HANDLE) {
     R_DEBUG(rError, "Failed to find suitable vulkan device!\n");
     return false;
   }
@@ -152,9 +153,9 @@ b32 VulkanRHI::FindPhysicalDevice(u32 rhiBits)
 }
 
 
-b32 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
+b32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
 {
-  std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::GetExtensionProperties(device);
+  std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::getExtensionProperties(device);
   std::set<std::string> requiredExtensions(Extensions.begin(), Extensions.end());
   for (const auto& extension : availableExtensions) {
     requiredExtensions.erase(extension.extensionName);
@@ -163,7 +164,7 @@ b32 VulkanRHI::SuitableDevice(VkPhysicalDevice device)
 }
 
 
-void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params)
+void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params)
 { 
   if (!windowHandle) {
     R_DEBUG(rError, "Renderer can not initialize with a null window handle!\n");
@@ -183,7 +184,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   QueueFamily computeQueueFamily;
   QueueFamily transferQueueFamily;
 
-  b8 result = gPhysicalDevice.FindQueueFamilies(mSurface, 
+  b8 result = gPhysicalDevice.findQueueFamilies(mSurface, 
     &presentationQueueFamily, &graphicsQueueFamily, &transferQueueFamily, &computeQueueFamily);
   
   if (!result) {
@@ -213,7 +214,7 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
     deviceQueueCreateInfos.push_back(qInfo);
   }
 
-  VkPhysicalDeviceFeatures features = gPhysicalDevice.GetFeatures();
+  VkPhysicalDeviceFeatures features = gPhysicalDevice.getFeatures();
   features.samplerAnisotropy = VK_TRUE;
   features.multiViewport = VK_TRUE;
   features.geometryShader = VK_TRUE;
@@ -229,117 +230,122 @@ void VulkanRHI::Initialize(HWND windowHandle, const GraphicsConfigParams* params
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
-  if (!mLogicalDevice.Initialize(gPhysicalDevice.Handle(), deviceCreate,
+  if (!mLogicalDevice.initialize(gPhysicalDevice.handle(), deviceCreate,
       &graphicsQueueFamily, &computeQueueFamily, &transferQueueFamily, &presentationQueueFamily)) {
     R_DEBUG(rError, "Vulkan logical device failed to create.\n");
     return;
   }
 
   VkPresentModeKHR presentMode = GetPresentMode(params);
-  mSwapchain.Initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, params->_Buffering, 3);
+  mSwapchain.initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, params->_Buffering, 3);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.GraphicsQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getGraphicsQueueFamily()._idx);
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
   for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
-    if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mGraphicsCmdPools[i]) != VK_SUCCESS) {
+    if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &mGraphicsCmdPools[i]) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create primary command pool!\n");
     } 
   }
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.ComputeQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getComputeQueueFamily()._idx);
 
-  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
+  if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.TransferQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getTransferQueueFamily()._idx);
 
-  if (vkCreateCommandPool(mLogicalDevice.Native(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
+  if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
-  VkPhysicalDeviceProperties props = gPhysicalDevice.GetDeviceProperties();
+  VkPhysicalDeviceProperties props = gPhysicalDevice.getDeviceProperties();
+  VkPhysicalDeviceMaintenance3Properties mp = gPhysicalDevice.getMaintenanceProperties();
   mPhysicalDeviceProperties = props;
 
-  // Descriptor pool maxes.
-  BuildDescriptorPool(UINT16_MAX << 1, UINT16_MAX << 1);
-  CreateOcclusionQueryPool(UINT8_MAX);
+  VkPhysicalDeviceMemoryProperties memProps = gPhysicalDevice.getMemoryProperties();
 
-  CreateDepthAttachment();
-  SetUpSwapchainRenderPass();
-  QueryFromSwapchain();
+  // Descriptor pool maxes.
+  buildDescriptorPool(UINT16_MAX << 1, UINT16_MAX << 1);
+  createOcclusionQueryPool(UINT8_MAX);
+
+  createDepthAttachment();
+  setUpSwapchainRenderPass();
+  queryFromSwapchain();
+  
+  gAllocator.init(logicDevice()->getNative(), &memProps);
 }
 
 
-void VulkanRHI::CleanUp()
+void VulkanRHI::cleanUp()
 {
-  mLogicalDevice.WaitOnQueues();
-
+  mLogicalDevice.waitOnQueues();
+  gAllocator.cleanUp(logicDevice()->getNative());
   // Clean up all cmd buffers used for swapchain rendering.
   for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
     auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[i];
     for (size_t j = 0; j < cmdBufferSet.size(); ++j) {
       CommandBuffer& cmdBuffer = cmdBufferSet[i];
-      cmdBuffer.Free();
+      cmdBuffer.free();
     }
   }
 
   for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
     if (mGraphicsCmdPools[i]) {
-      vkDestroyCommandPool(mLogicalDevice.Native(), mGraphicsCmdPools[i], nullptr);
+      vkDestroyCommandPool(mLogicalDevice.getNative(), mGraphicsCmdPools[i], nullptr);
       mGraphicsCmdPools[i] = VK_NULL_HANDLE;
     }
   }
 
   if (mComputeCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Native(), mComputeCmdPool, nullptr);
+    vkDestroyCommandPool(mLogicalDevice.getNative(), mComputeCmdPool, nullptr);
     mComputeCmdPool = VK_NULL_HANDLE;
   }
 
   if (m_TransferCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.Native(), m_TransferCmdPool, nullptr);
+    vkDestroyCommandPool(mLogicalDevice.getNative(), m_TransferCmdPool, nullptr);
     m_TransferCmdPool = VK_NULL_HANDLE;
   }
 
   if (mDescriptorPool) {
-    vkDestroyDescriptorPool(mLogicalDevice.Native(), mDescriptorPool, nullptr);
+    vkDestroyDescriptorPool(mLogicalDevice.getNative(), mDescriptorPool, nullptr);
     mDescriptorPool = VK_NULL_HANDLE;
   }
 
   if (mOccQueryPool) {
-    vkDestroyQueryPool(mLogicalDevice.Native(), mOccQueryPool, nullptr);
+    vkDestroyQueryPool(mLogicalDevice.getNative(), mOccQueryPool, nullptr);
     mOccQueryPool = VK_NULL_HANDLE;
   }
 
   for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
-    vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
+    vkDestroyFramebuffer(mLogicalDevice.getNative(), framebuffer, nullptr);
     framebuffer = VK_NULL_HANDLE;
   } 
 
-  vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
+  vkDestroyRenderPass(mLogicalDevice.getNative(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
     
-  vkDestroyImageView(mLogicalDevice.Native(), mSwapchainInfo.mDepthView, nullptr);
-  vkDestroyImage(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, nullptr);
-  vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
+  vkDestroyImageView(mLogicalDevice.getNative(), mSwapchainInfo.mDepthView, nullptr);
+  vkDestroyImage(mLogicalDevice.getNative(), mSwapchainInfo.mDepthAttachment, nullptr);
+  vkFreeMemory(mLogicalDevice.getNative(), mSwapchainInfo.mDepthMemory, nullptr);
 
   // NOTE(): Clean up any vulkan modules before destroying the logical device!
-  mSwapchain.CleanUp(mLogicalDevice);
+  mSwapchain.cleanUp(mLogicalDevice);
 
   if (mSurface != VK_NULL_HANDLE) {
     gContext.DestroySurface(mSurface);
     mSurface = VK_NULL_HANDLE;
   }
 
-  mLogicalDevice.CleanUp();
+  mLogicalDevice.cleanUp();
 }
 
 
-void VulkanRHI::QueryFromSwapchain()
+void VulkanRHI::queryFromSwapchain()
 {
-  if (!mSwapchain.Handle()) {
+  if (!mSwapchain.getHandle()) {
     R_DEBUG(rError, "Swapchain failed to initialize! Cannot query images!\n");
     return;
   }
@@ -348,7 +354,7 @@ void VulkanRHI::QueryFromSwapchain()
 
   for (size_t i = 0; i < mSwapchain.ImageCount(); ++i) {
     VkFramebufferCreateInfo framebufferCI = { };
-    std::array<VkImageView, 2> attachments = { mSwapchain[i].View, mSwapchainInfo.mDepthView };
+    std::array<VkImageView, 2> attachments = { mSwapchain[i].getView, mSwapchainInfo.mDepthView };
     VkExtent2D& extent = mSwapchain.SwapchainExtent();
 
     framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -360,7 +366,7 @@ void VulkanRHI::QueryFromSwapchain()
     framebufferCI.layers = 1;
     framebufferCI.flags = 0;
     
-    if (vkCreateFramebuffer(mLogicalDevice.Native(), &framebufferCI, nullptr, 
+    if (vkCreateFramebuffer(mLogicalDevice.getNative(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create framebuffer on swapchain image " 
         + std::to_string(u32(i)) + "!\n");
@@ -369,7 +375,7 @@ void VulkanRHI::QueryFromSwapchain()
 }
 
 
-void VulkanRHI::CreateDepthAttachment()
+void VulkanRHI::createDepthAttachment()
 {
   // TODO(): Set up D32_SFLOAT_S8_UINT as well.
   mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
@@ -386,43 +392,44 @@ void VulkanRHI::CreateDepthAttachment()
   imageCI.arrayLayers = 1;
   imageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
   imageCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  imageCI.usage = DepthUsageFlags();
-  imageCI.format = DepthFormat();
+  imageCI.usage = depthUsageFlags();
+  imageCI.format = depthFormat();
   imageCI.imageType = VK_IMAGE_TYPE_2D;
   imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-  if (vkCreateImage(mLogicalDevice.Native(), &imageCI, nullptr, &mSwapchainInfo.mDepthAttachment) != VK_SUCCESS) {
+  if (vkCreateImage(mLogicalDevice.getNative(), &imageCI, nullptr, &mSwapchainInfo.mDepthAttachment) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create depth image!\n");
     return;
   }
 
   VkMemoryRequirements mem;
-  vkGetImageMemoryRequirements(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, &mem);
+  vkGetImageMemoryRequirements(mLogicalDevice.getNative(), mSwapchainInfo.mDepthAttachment, &mem);
  
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = mem.size;
-  allocInfo.memoryTypeIndex = gPhysicalDevice.FindMemoryType(mem.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  allocInfo.memoryTypeIndex = gPhysicalDevice.findMemoryType(mem.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
   
-  if (vkAllocateMemory(mLogicalDevice.Native(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
+  if (vkAllocateMemory(mLogicalDevice.getNative(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
     R_DEBUG(rError, "Depth memory was not allocated!\n");
     return;
   }
-  vkBindImageMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, mSwapchainInfo.mDepthMemory, 0);
+  VulkanMemoryAllocatorManager::numberOfAllocations++;
+  vkBindImageMemory(mLogicalDevice.getNative(), mSwapchainInfo.mDepthAttachment, mSwapchainInfo.mDepthMemory, 0);
   
   // Now create the depth view.
   VkImageViewCreateInfo ivCI = {};
   ivCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  ivCI.format = DepthFormat();
+  ivCI.format = depthFormat();
   ivCI.image = mSwapchainInfo.mDepthAttachment;
   ivCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
-  ivCI.subresourceRange.aspectMask = DepthAspectFlags();
+  ivCI.subresourceRange.aspectMask = depthAspectFlags();
   ivCI.subresourceRange.baseArrayLayer = 0;
   ivCI.subresourceRange.baseMipLevel = 0;
   ivCI.subresourceRange.layerCount = 1;
   ivCI.subresourceRange.levelCount = 1;
   
-  if (vkCreateImageView(mLogicalDevice.Native(), &ivCI, nullptr, &mSwapchainInfo.mDepthView) != VK_SUCCESS) {
+  if (vkCreateImageView(mLogicalDevice.getNative(), &ivCI, nullptr, &mSwapchainInfo.mDepthView) != VK_SUCCESS) {
     R_DEBUG(rError, "Depth view not created!\n");
   }
  
@@ -430,7 +437,7 @@ void VulkanRHI::CreateDepthAttachment()
 }
 
 
-void VulkanRHI::SetUpSwapchainRenderPass()
+void VulkanRHI::setUpSwapchainRenderPass()
 {
   std::array<VkAttachmentDescription, 2> aDs;
   
@@ -449,7 +456,7 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   // Depth description.
   aDs[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   aDs[1].samples = VK_SAMPLE_COUNT_1_BIT;
-  aDs[1].format = DepthFormat();
+  aDs[1].format = depthFormat();
   aDs[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   aDs[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;  
   aDs[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -502,17 +509,17 @@ void VulkanRHI::SetUpSwapchainRenderPass()
   renderpassCI.dependencyCount = static_cast<u32>(dependencies.size());
   renderpassCI.pDependencies = dependencies.data();
 
-  if (vkCreateRenderPass(mLogicalDevice.Native(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
+  if (vkCreateRenderPass(mLogicalDevice.getNative(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create swapchain renderpass!\n");
   }
 }
 
 
-void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::graphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkResult result = vkQueueSubmit(mLogicalDevice.GraphicsQueue(queueIdx), 
+  VkResult result = vkQueueSubmit(mLogicalDevice.getGraphicsQueue(queueIdx), 
     count, submitInfo, fence);
 
   DEBUG_OP(
@@ -527,54 +534,54 @@ void VulkanRHI::GraphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitI
 }
 
 
-void VulkanRHI::WaitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout)
+void VulkanRHI::waitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout)
 {
-  vkWaitForFences(mLogicalDevice.Native(), fenceCount, pFences, waitAll, timeout); 
+  vkWaitForFences(mLogicalDevice.getNative(), fenceCount, pFences, waitAll, timeout); 
 }
 
 
-void VulkanRHI::ResetFences(const u32 fenceCount, const VkFence* pFences)
+void VulkanRHI::resetFences(const u32 fenceCount, const VkFence* pFences)
 {
-  vkResetFences(mLogicalDevice.Native(), fenceCount, pFences);
+  vkResetFences(mLogicalDevice.getNative(), fenceCount, pFences);
 }
 
 
-Fence* VulkanRHI::CreateVkFence()
+Fence* VulkanRHI::createVkFence()
 {
   Fence* fence = new Fence();
-  fence->SetOwner(mLogicalDevice.Native());
+  fence->SetOwner(mLogicalDevice.getNative());
   return fence;
 }
 
 
-void VulkanRHI::FreeVkFence(Fence* fence)
+void VulkanRHI::freeVkFence(Fence* fence)
 {
   if (!fence) return;
-  fence->CleanUp();
+  fence->cleanUp();
   delete fence;
 }
 
 
-void VulkanRHI::AcquireNextImage()
+void VulkanRHI::acquireNextImage()
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkResult result = vkAcquireNextImageKHR(mLogicalDevice.Native(), mSwapchain.Handle(), UINT64_MAX,
+  VkResult result = vkAcquireNextImageKHR(mLogicalDevice.getNative(), mSwapchain.getHandle(), UINT64_MAX,
     mSwapchain.ImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
 }
 
 
-void VulkanRHI::WaitForFrameInFlightFence()
+void VulkanRHI::waitForFrameInFlightFence()
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkFence inflight = CurrentInFlightFence();
-  WaitForFences(1, &inflight, VK_TRUE, UINT64_MAX);
-  ResetFences(1, &inflight);
+  VkFence inflight = currentInFlightFence();
+  waitForFences(1, &inflight, VK_TRUE, UINT64_MAX);
+  resetFences(1, &inflight);
 }
 
 
-void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
+void VulkanRHI::submitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
   u32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence)
 {
   if (!signalSemaphores || !signalSemaphoreCount) {
@@ -585,7 +592,7 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
   
   VkCommandBuffer cmdBuffer[] = { 
-    mSwapchainInfo.mCmdBufferSets[CurrentSwapchainCmdBufferSet()][mSwapchainInfo.mCurrentImageIndex].Handle() 
+    mSwapchainInfo.mCmdBufferSets[currentSwapchainCmdBufferSet()][mSwapchainInfo.mCurrentImageIndex].getHandle() 
   };
 
   VkSubmitInfo submitInfo = {};
@@ -598,14 +605,14 @@ void VulkanRHI::SubmitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
 
-  GraphicsSubmit(0, 1, &submitInfo, fence);
+  graphicsSubmit(0, 1, &submitInfo, fence);
 }
 
 
-void VulkanRHI::Present()
+void VulkanRHI::present()
 {
-  VkSemaphore signalSemaphores[] = { CurrentGraphicsFinishedSemaphore() };
-  VkSwapchainKHR swapchains[] = { mSwapchain.Handle() };
+  VkSemaphore signalSemaphores[] = { currentGraphicsFinishedSemaphore() };
+  VkSwapchainKHR swapchains[] = { mSwapchain.getHandle() };
 
   VkPresentInfoKHR presentInfo = { };
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -616,10 +623,10 @@ void VulkanRHI::Present()
   presentInfo.pWaitSemaphores = signalSemaphores;
   presentInfo.pImageIndices = &mSwapchainInfo.mCurrentImageIndex;
 
-  VkResult result = vkQueuePresentKHR(mLogicalDevice.PresentQueue(), &presentInfo);
+  VkResult result = vkQueuePresentKHR(mLogicalDevice.getPresentQueue(), &presentInfo);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
     VkExtent2D windowExtent = mSwapchain.SwapchainExtent();
-    ReConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width,
+    reConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width,
       windowExtent.height, mSwapchain.CurrentBufferCount(), mSwapchain.ImageCount());
   }
   //R_ASSERT(result == VK_SUCCESS, "Failed to present!\n");
@@ -629,69 +636,69 @@ void VulkanRHI::Present()
 }
 
 
-void VulkanRHI::ComputeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence)
+void VulkanRHI::computeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, const VkFence fence)
 {
-  if (vkQueueSubmit(mLogicalDevice.ComputeQueue(queueIdx), 1, &submitInfo, fence) != VK_SUCCESS) {
+  if (vkQueueSubmit(mLogicalDevice.getComputeQueue(queueIdx), 1, &submitInfo, fence) != VK_SUCCESS) {
     R_DEBUG(rError, "Compute failed to submit task!\n");
   }
 }
 
 
-void VulkanRHI::TransferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::transferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
-  VkResult result = vkQueueSubmit(mLogicalDevice.TransferQueue(queueIdx), count, submitInfo, fence);
+  VkResult result = vkQueueSubmit(mLogicalDevice.getTransferQueue(queueIdx), count, submitInfo, fence);
   if (result != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to submit to transfer queue!\n");
   }
 }
 
 
-void VulkanRHI::TransferWaitIdle(size_t queueIdx)
+void VulkanRHI::transferWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mLogicalDevice.TransferQueue(queueIdx));
+  vkQueueWaitIdle(mLogicalDevice.getTransferQueue(queueIdx));
 }
 
 
-void VulkanRHI::GraphicsWaitIdle(size_t queueIdx)
+void VulkanRHI::graphicsWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mLogicalDevice.GraphicsQueue(queueIdx));
+  vkQueueWaitIdle(mLogicalDevice.getGraphicsQueue(queueIdx));
 }
 
 
-void VulkanRHI::ComputeWaitIdle(size_t queueIdx)
+void VulkanRHI::computeWaitIdle(size_t queueIdx)
 {
-  vkQueueWaitIdle(mLogicalDevice.ComputeQueue(queueIdx));
+  vkQueueWaitIdle(mLogicalDevice.getComputeQueue(queueIdx));
 }
 
 
-void VulkanRHI::PresentWaitIdle()
+void VulkanRHI::presentWaitIdle()
 {
-  vkQueueWaitIdle(mLogicalDevice.PresentQueue());
+  vkQueueWaitIdle(mLogicalDevice.getPresentQueue());
 }
 
 
-void VulkanRHI::DeviceWaitIdle()
+void VulkanRHI::deviceWaitIdle()
 {
-  vkDeviceWaitIdle(mLogicalDevice.Native());
+  vkDeviceWaitIdle(mLogicalDevice.getNative());
 }
 
-void VulkanRHI::WaitAllGraphicsQueues()
+void VulkanRHI::waitAllGraphicsQueues()
 {
-  for (size_t i = 0; i < LogicDevice()->GraphicsQueueFamily()._queueCount; ++i) {
-    GraphicsWaitIdle(i);
+  for (size_t i = 0; i < logicDevice()->getGraphicsQueueFamily()._queueCount; ++i) {
+    graphicsWaitIdle(i);
   }
 }
 
 
-void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
+void VulkanRHI::createSwapchainCommandBuffers(u32 set)
 {
   auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
   cmdBufferSet.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
 
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
     CommandBuffer& cmdBuffer = cmdBufferSet[i];
-    cmdBuffer.SetOwner(mLogicalDevice.Native());
-    cmdBuffer.Allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    cmdBuffer.SetOwner(mLogicalDevice.getNative());
+    cmdBuffer.allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     
     VkCommandBufferBeginInfo cmdBufferBI = { };
     cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -721,303 +728,303 @@ void VulkanRHI::CreateSwapchainCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::RebuildCommandBuffers(u32 set)
+void VulkanRHI::rebuildCommandBuffers(u32 set)
 {
   auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
     CommandBuffer& cmdBuffer = cmdBufferSet[i];
-    cmdBuffer.Free();
+    cmdBuffer.free();
   }
   mSwapchainInfo.mComplete = false;
-  CreateSwapchainCommandBuffers(set);
+  createSwapchainCommandBuffers(set);
 }
 
 
-void VulkanRHI::ReConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount)
+void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount)
 {
   if (width <= 0 || height <= 0) return;
 
   for (size_t i = 0; i < mSwapchainInfo.mSwapchainFramebuffers.size(); ++i) {
     VkFramebuffer framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
-    vkDestroyFramebuffer(mLogicalDevice.Native(), framebuffer, nullptr);
+    vkDestroyFramebuffer(mLogicalDevice.getNative(), framebuffer, nullptr);
   }
 
-  vkDestroyRenderPass(mLogicalDevice.Native(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
+  vkDestroyRenderPass(mLogicalDevice.getNative(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
 
-  vkDestroyImageView(mLogicalDevice.Native(), mSwapchainInfo.mDepthView, nullptr);
-  vkDestroyImage(mLogicalDevice.Native(), mSwapchainInfo.mDepthAttachment, nullptr);
-  vkFreeMemory(mLogicalDevice.Native(), mSwapchainInfo.mDepthMemory, nullptr);
+  vkDestroyImageView(mLogicalDevice.getNative(), mSwapchainInfo.mDepthView, nullptr);
+  vkDestroyImage(mLogicalDevice.getNative(), mSwapchainInfo.mDepthAttachment, nullptr);
+  vkFreeMemory(mLogicalDevice.getNative(), mSwapchainInfo.mDepthMemory, nullptr);
 
-  std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.QuerySwapchainSurfaceFormats(mSurface);
-  VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.QuerySwapchainSurfaceCapabilities(mSurface);
+  std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.querySwapchainSurfaceFormats(mSurface);
+  VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.querySwapchainSurfaceCapabilities(mSurface);
 
   mSwapchain.ReCreate(mLogicalDevice, mSurface, surfaceFormats[0], presentMode, capabilities, buffers, desiredImageCount);
   
-  CreateDepthAttachment();
-  SetUpSwapchainRenderPass();
-  QueryFromSwapchain();
+  createDepthAttachment();
+  setUpSwapchainRenderPass();
+  queryFromSwapchain();
   
   // Readjust frame count since we are now changing swapchain frame resource count.
   m_currentFrame = m_currentFrame % mSwapchain.CurrentBufferCount();
 }
 
 
-Buffer* VulkanRHI::CreateBuffer()
+Buffer* VulkanRHI::createBuffer()
 { 
   Buffer* buffer = new Buffer();
-  buffer->SetOwner(mLogicalDevice.Native());
+  buffer->SetOwner(mLogicalDevice.getNative());
 
   return buffer;
 }
 
 
-void VulkanRHI::FreeBuffer(Buffer* buffer)
+void VulkanRHI::freeBuffer(Buffer* buffer)
 {
   if (!buffer) return;
 
-  if (buffer->Owner() != mLogicalDevice.Native()) {
+  if (buffer->Owner() != mLogicalDevice.getNative()) {
     R_DEBUG(rNotify, "Unable to free buffer. Device is not same as this vulkan rhi!\n");
     return;
   }
 
-  buffer->CleanUp();
+  buffer->cleanUp();
 
   delete buffer;
 }
 
 
-GraphicsPipeline* VulkanRHI::CreateGraphicsPipeline()
+GraphicsPipeline* VulkanRHI::createGraphicsPipeline()
 {
   GraphicsPipeline* pipeline = new GraphicsPipeline();
-  pipeline->SetOwner(mLogicalDevice.Native());
+  pipeline->SetOwner(mLogicalDevice.getNative());
   return pipeline;
 }
 
 
-void VulkanRHI::FreeGraphicsPipeline(GraphicsPipeline* pipeline)
+void VulkanRHI::freeGraphicsPipeline(GraphicsPipeline* pipeline)
 {
   if (!pipeline) return ;
 
-  if (pipeline->Owner() != mLogicalDevice.Native()) {
+  if (pipeline->Owner() != mLogicalDevice.getNative()) {
     R_DEBUG(rNotify, "Unable to free pipeline. Device is not same as this vulkan rhi!\n");
     return;
   }
-  pipeline->CleanUp();
+  pipeline->cleanUp();
  
   delete pipeline;
 }
 
 
 
-Shader* VulkanRHI::CreateShader()
+Shader* VulkanRHI::createShader()
 {
   Shader* shader = new Shader();
-  shader->SetOwner(mLogicalDevice.Native());
+  shader->SetOwner(mLogicalDevice.getNative());
   
   return shader;
 }
 
 
-void VulkanRHI::FreeShader(Shader* shader)
+void VulkanRHI::freeShader(Shader* shader)
 {
   if (!shader) return;
 
-  if (shader->Owner() != mLogicalDevice.Native()) {
+  if (shader->Owner() != mLogicalDevice.getNative()) {
     R_DEBUG(rNotify, "Unable to free shader. Device is not same as this vulkan rhi!\n");
     return;
   }
 
-  shader->CleanUp();
+  shader->cleanUp();
   
   delete shader;
 }
 
 
-ImageView* VulkanRHI::CreateImageView(const VkImageViewCreateInfo& viewCi)
+ImageView* VulkanRHI::createImageView(const VkImageViewCreateInfo& viewCi)
 {
   ImageView* pView = new ImageView();
-  pView->Initialize(mLogicalDevice.Native(), viewCi);
+  pView->initialize(mLogicalDevice.getNative(), viewCi);
   return pView;
 }
 
 
-void VulkanRHI::FreeImageView(ImageView* pView)
+void VulkanRHI::freeImageView(ImageView* pView)
 {
   if ( !pView ) return;
-  pView->CleanUp(mLogicalDevice.Native());
+  pView->cleanUp(mLogicalDevice.getNative());
   delete pView;
 }
 
 
-DescriptorSet* VulkanRHI::CreateDescriptorSet()
+DescriptorSet* VulkanRHI::createDescriptorSet()
 {
   DescriptorSet* dset = new DescriptorSet();
-  dset->SetOwner(mLogicalDevice.Native());
+  dset->SetOwner(mLogicalDevice.getNative());
   mCurrDescSets += 1;
   return dset;
 }
 
 
-void VulkanRHI::FreeDescriptorSet(DescriptorSet* dset)
+void VulkanRHI::freeDescriptorSet(DescriptorSet* dset)
 {
   if (!dset) return;
 
-  dset->Free();
+  dset->free();
   
   delete dset;
   mCurrDescSets -= 1;
 }
 
 
-Sampler* VulkanRHI::CreateSampler()
+Sampler* VulkanRHI::createSampler()
 {
   Sampler* sampler = new Sampler();
-  sampler->SetOwner(mLogicalDevice.Native());
+  sampler->SetOwner(mLogicalDevice.getNative());
   
   return sampler;
 }
 
 
-void VulkanRHI::FreeSampler(Sampler* sampler)
+void VulkanRHI::freeSampler(Sampler* sampler)
 {
   if (!sampler) return;
 
-  sampler->CleanUp();
+  sampler->cleanUp();
   
   delete sampler;
 }
 
 
-Texture* VulkanRHI::CreateTexture()
+Texture* VulkanRHI::createTexture()
 {
   Texture* texture = new Texture();
-  texture->SetOwner(mLogicalDevice.Native());
+  texture->SetOwner(mLogicalDevice.getNative());
   return texture;
 }
 
 
-void VulkanRHI::FreeTexture(Texture* texture)
+void VulkanRHI::freeTexture(Texture* texture)
 {
   if (!texture) return;
-  texture->CleanUp();
+  texture->cleanUp();
   
   delete texture;
 }
 
 
-FrameBuffer* VulkanRHI::CreateFrameBuffer()
+FrameBuffer* VulkanRHI::createFrameBuffer()
 {
   FrameBuffer* framebuffer = new FrameBuffer();
-  framebuffer->SetOwner(mLogicalDevice.Native());
+  framebuffer->SetOwner(mLogicalDevice.getNative());
 
   return framebuffer;
 }
 
 
-void VulkanRHI::FreeFrameBuffer(FrameBuffer* framebuffer)
+void VulkanRHI::freeFrameBuffer(FrameBuffer* framebuffer)
 {
   if (!framebuffer) return;
 
-  framebuffer->CleanUp();
+  framebuffer->cleanUp();
   
   delete framebuffer;
 }
 
 
-CommandBuffer* VulkanRHI::CreateCommandBuffer()
+CommandBuffer* VulkanRHI::createCommandBuffer()
 {
   CommandBuffer* buffer = new CommandBuffer();
-  buffer->SetOwner(mLogicalDevice.Native());
+  buffer->SetOwner(mLogicalDevice.getNative());
   
   return buffer;
 }
 
 
-void VulkanRHI::FreeCommandBuffer(CommandBuffer* buffer)
+void VulkanRHI::freeCommandBuffer(CommandBuffer* buffer)
 {
   if (!buffer) return;
 
-  buffer->Free();
+  buffer->free();
   delete buffer;
 }
 
 
-DescriptorSetLayout* VulkanRHI::CreateDescriptorSetLayout()
+DescriptorSetLayout* VulkanRHI::createDescriptorSetLayout()
 {
   DescriptorSetLayout* layout = new DescriptorSetLayout();
-  layout->SetOwner(mLogicalDevice.Native());
+  layout->SetOwner(mLogicalDevice.getNative());
   return layout;
 }
 
 
-void VulkanRHI::FreeDescriptorSetLayout(DescriptorSetLayout* layout)
+void VulkanRHI::freeDescriptorSetLayout(DescriptorSetLayout* layout)
 {
   if (!layout) return;
 
-  layout->CleanUp();
+  layout->cleanUp();
 
   delete layout;
 }
 
 
-ComputePipeline* VulkanRHI::CreateComputePipeline()
+ComputePipeline* VulkanRHI::createComputePipeline()
 {
   ComputePipeline* pipeline = new ComputePipeline();
-  pipeline->SetOwner(mLogicalDevice.Native());
+  pipeline->SetOwner(mLogicalDevice.getNative());
 
   return pipeline;
 }
 
 
-void VulkanRHI::FreeComputePipeline(ComputePipeline* pipeline)
+void VulkanRHI::freeComputePipeline(ComputePipeline* pipeline)
 {
   if (!pipeline) return;
 
-  pipeline->CleanUp();
+  pipeline->cleanUp();
 
   delete pipeline;
 }
 
 
-Semaphore* VulkanRHI::CreateVkSemaphore()
+Semaphore* VulkanRHI::createVkSemaphore()
 {
   Semaphore* semaphore = new Semaphore();
-  semaphore->SetOwner(mLogicalDevice.Native());
+  semaphore->SetOwner(mLogicalDevice.getNative());
   
   return semaphore;
 }
 
 
-void  VulkanRHI::FreeVkSemaphore(Semaphore* semaphore)
+void  VulkanRHI::freeVkSemaphore(Semaphore* semaphore)
 {
   if (!semaphore) return;
 
-  semaphore->CleanUp();
+  semaphore->cleanUp();
     
   delete semaphore;
 }
 
 
-RenderPass* VulkanRHI::CreateRenderPass()
+RenderPass* VulkanRHI::createRenderPass()
 {
   RenderPass* renderPass = new RenderPass();
-  renderPass->SetOwner(mLogicalDevice.Native());
+  renderPass->SetOwner(mLogicalDevice.getNative());
   return renderPass;
 }
 
 
-void VulkanRHI::FreeRenderPass(RenderPass* renderPass)
+void VulkanRHI::freeRenderPass(RenderPass* renderPass)
 {
   if (!renderPass) return;
-  renderPass->CleanUp();
+  renderPass->cleanUp();
   delete renderPass;
 }
 
 
-void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
+void VulkanRHI::buildDescriptorPool(u32 maxCount, u32 maxSets)
 {
   if (mDescriptorPool) {
-    vkDestroyDescriptorPool(mLogicalDevice.Native(), mDescriptorPool, nullptr);
+    vkDestroyDescriptorPool(mLogicalDevice.getNative(), mDescriptorPool, nullptr);
     mDescriptorPool = VK_NULL_HANDLE;
   }
 
@@ -1029,10 +1036,10 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   poolSizes[1].descriptorCount = maxCount;
 
   poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-  poolSizes[2].descriptorCount = 16;
+  poolSizes[2].descriptorCount = maxCount;
 
   poolSizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-  poolSizes[3].descriptorCount = 16;
+  poolSizes[3].descriptorCount = 64;
 
   VkDescriptorPoolCreateInfo descriptorPoolCI = { };
   descriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1042,20 +1049,20 @@ void VulkanRHI::BuildDescriptorPool(u32 maxCount, u32 maxSets)
   descriptorPoolCI.pNext = nullptr;
   descriptorPoolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-  if (vkCreateDescriptorPool(mLogicalDevice.Native(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(mLogicalDevice.getNative(), &descriptorPoolCI, nullptr, &mDescriptorPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to created descriptor pool!\n");
   }
 }
 
 
-void VulkanRHI::CreateOcclusionQueryPool(u32 queries)
+void VulkanRHI::createOcclusionQueryPool(u32 queries)
 {
   VkQueryPoolCreateInfo queryCi = { };
   queryCi.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
   queryCi.queryCount = queries;
   queryCi.queryType = VK_QUERY_TYPE_OCCLUSION;
   
-  if (vkCreateQueryPool(mLogicalDevice.Native(), &queryCi, nullptr, &mOccQueryPool) != VK_SUCCESS) {
+  if (vkCreateQueryPool(mLogicalDevice.getNative(), &queryCi, nullptr, &mOccQueryPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create occlusion query pool!\n");
   } 
 }

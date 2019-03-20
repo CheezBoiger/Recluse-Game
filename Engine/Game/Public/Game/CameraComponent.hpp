@@ -15,7 +15,7 @@ public:
   // Get the main camera being rendered through.
   static Camera&  GetMainCamera();
 
-  void Update() override;
+  void update() override;
 private:
   Camera*          m_pCamera;
 };

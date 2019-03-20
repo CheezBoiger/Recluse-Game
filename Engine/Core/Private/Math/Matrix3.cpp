@@ -9,7 +9,7 @@
 namespace Recluse {
 
 
-r32 Matrix3::Determinant() const
+r32 Matrix3::determinant() const
 {
   return  Data[0][0] * (Data[1][1] * Data[2][2] - Data[1][2] * Data[2][1]) -
           Data[0][1] * (Data[1][0] * Data[2][2] - Data[1][2] * Data[2][0]) +
@@ -17,7 +17,7 @@ r32 Matrix3::Determinant() const
 }
 
 
-Matrix3 Matrix3::Transpose() const
+Matrix3 Matrix3::transpose() const
 {
   return Matrix3(
     Data[0][0], Data[1][0], Data[2][0],
@@ -27,11 +27,11 @@ Matrix3 Matrix3::Transpose() const
 }
 
 
-Matrix3 Matrix3::Inverse() const
+Matrix3 Matrix3::inverse() const
 {
   // Calculate similar to 4x4 matrix.
   // Get 1 / determinant
-  // Calculate cofactor matrix -> Adjugate
+  // Calculate cofactor matrix -> adjugate
   //  Multiply Adjugate * 1/determinant
   Matrix3 inverse;
   R_ASSERT(false, "Not implemented.");
@@ -39,11 +39,11 @@ Matrix3 Matrix3::Inverse() const
 }
 
 
-Matrix3 Matrix3::Adjugate() const
+Matrix3 Matrix3::adjugate() const
 {
   Matrix3 cofactor;
   R_ASSERT(false, "Not implemented.");
-  return  cofactor.Transpose();
+  return  cofactor.transpose();
 }
 
 

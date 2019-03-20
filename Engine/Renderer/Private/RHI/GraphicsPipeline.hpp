@@ -20,14 +20,14 @@ public:
 
   // Graphics Pipeline initialization call. This will effectively 
   // initialize the pipeline, along with setting the pipeline layout.
-  void              Initialize(VkGraphicsPipelineCreateInfo& info,
+  void              initialize(VkGraphicsPipelineCreateInfo& info,
                       const VkPipelineLayoutCreateInfo& layout);
 
   // Clean up the pipeline object, as well as layout.
-  void              CleanUp();
+  void              cleanUp();
 
   VkPipeline        Pipeline() { return mPipeline; }
-  VkPipelineLayout  Layout() { return mLayout; }
+  VkPipelineLayout  getLayout() { return mLayout; }
 
 private:
   VkPipeline        mPipeline;

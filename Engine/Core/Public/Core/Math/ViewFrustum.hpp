@@ -41,13 +41,13 @@ struct ViewFrustum {
   Plane       _planes      [6];
   
   // Function to calculate view frustum. Takes in 
-  // a matrix = M * P (View-Projection) matrix to calculate
+  // a matrix = M * P (View-getProjection) matrix to calculate
   // the frustum.
-  void        Update(Matrix4& vp);
+  void        update(Matrix4& vp);
 
-  Result          Intersect(const AABB& aabb) const;
+  Result          intersect(const AABB& aabb) const;
 
   // Check if AABB object is inside this frustum.
-  b32          InsideFrustum(const AABB& aabb) { return false; }
+  b32          insideFrustum(const AABB& aabb) { return false; }
 };
 } // Recluse

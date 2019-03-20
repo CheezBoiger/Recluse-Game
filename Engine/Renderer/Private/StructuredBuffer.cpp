@@ -28,7 +28,7 @@ StructuredBuffer::~StructuredBuffer()
 }
 
 
-void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t SizeType, void* Data)
+void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t SizeType, void* getData)
 { 
   if (!Rhi) {
     R_DEBUG(rWarning, "RHI was null. Avoiding structured buffer initialization.\n");
@@ -38,7 +38,7 @@ void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   mRhi = Rhi;
   
   VkDeviceSize MemSize = ElementCount * SizeType;
-  Buffer* StagingBuffer = mRhi->CreateBuffer();
+  Buffer* StagingBuffer = mRhi->createBuffer();
   {
     VkBufferCreateInfo sInfo = { };
     sInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -47,26 +47,26 @@ void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
     sInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     sInfo.flags = 0;
 
-    StagingBuffer->Initialize(sInfo,
+    StagingBuffer->initialize(sInfo,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     StagingBuffer->Map();
-      memcpy(StagingBuffer->Mapped(), Data, (size_t)MemSize);
+      memcpy(StagingBuffer->Mapped(), getData, (size_t)MemSize);
     StagingBuffer->UnMap();
   }
 
   // Device local buffer.
-  mBuffer = mRhi->CreateBuffer();
+  mBuffer = mRhi->createBuffer();
   VkBufferCreateInfo bInfo = { };
   bInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO; 
   bInfo.size = MemSize;
   bInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |  
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-  mBuffer->Initialize(bInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  mBuffer->initialize(bInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-  CommandBuffer* CmdBuffer = mRhi->CreateCommandBuffer();
-  CmdBuffer->Allocate(mRhi->ComputeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  CommandBuffer* CmdBuffer = mRhi->createCommandBuffer();
+  CmdBuffer->allocate(mRhi->computeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   VkCommandBufferBeginInfo CmdBi = { };
   CmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   CmdBi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -82,24 +82,24 @@ void StructuredBuffer::Initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
                           &region);
   CmdBuffer->End();
 
-  VkCommandBuffer native = CmdBuffer->Handle();
+  VkCommandBuffer native = CmdBuffer->getHandle();
   VkSubmitInfo submit = { };
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
   submit.pCommandBuffers = &native;
   
-  mRhi->ComputeSubmit(DEFAULT_QUEUE_IDX, submit);
-  mRhi->ComputeWaitIdle(DEFAULT_QUEUE_IDX);
+  mRhi->computeSubmit(DEFAULT_QUEUE_IDX, submit);
+  mRhi->computeWaitIdle(DEFAULT_QUEUE_IDX);
   
-  mRhi->FreeBuffer(StagingBuffer);
-  mRhi->FreeCommandBuffer(CmdBuffer);
+  mRhi->freeBuffer(StagingBuffer);
+  mRhi->freeCommandBuffer(CmdBuffer);
 }
 
 
-void StructuredBuffer::CleanUp()
+void StructuredBuffer::cleanUp()
 {
   if (mBuffer) {
-    mRhi->FreeBuffer(mBuffer);
+    mRhi->freeBuffer(mBuffer);
     mBuffer = nullptr;
   }
 }

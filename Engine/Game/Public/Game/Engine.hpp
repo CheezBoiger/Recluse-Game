@@ -78,29 +78,29 @@ public:
   ~Engine();
 
   // Start up the engine with an initial window size. As the window is initialized 
-  // along with the start up, be sure to manually call the Show() function from the 
+  // along with the start up, be sure to manually call the show() function from the 
   // window in order to see something!
   // GpuConfigParams is an optional setting for initial start up of the renderer, you may pass nullptr for default settings.
-  void                          StartUp(std::string appName, b32 fullscreen, i32 width = 800, i32 height = 600, const GraphicsConfigParams* params = nullptr);
-  void                          CleanUp();
+  void                          startUp(std::string appName, b32 fullscreen, i32 width = 800, i32 height = 600, const GraphicsConfigParams* params = nullptr);
+  void                          cleanUp();
   
   // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.
-  void                          SetControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
-  void                          ProcessInput() { Window::PollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
+  void                          setControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
+  void                          processInput() { Window::pollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
 
-  void                          Run();
-  void                          SignalStop() { m_stopping = true; }
-  Window*                       GetWindow() { return &m_window; }
+  void                          run();
+  void                          signalStop() { m_stopping = true; }
+  Window*                       getWindow() { return &m_window; }
 
-  void                          Update();
+  void                          update();
 
   // Push the new scene to into this engine for extraction.
-  void                          PushScene(Scene* scene);
+  void                          pushScene(Scene* scene);
 
   // Transitions from one scene to another if needed. This is optional.
-  void                          SignalLoadSceneTransition() { m_bSignalLoadScene = true; }
+  void                          signalLoadSceneTransition() { m_bSignalLoadScene = true; }
 
-  Scene*                        GetScene() { return m_pPushedScene; } 
+  Scene*                        getScene() { return m_pPushedScene; } 
 
   r64                           GameMousePosX() const { return m_gameMouseX; }
   r64                           GameMousePosY() const { return m_gameMouseY; }
@@ -112,44 +112,44 @@ public:
   // TODO(): When new scene changes, we need to rebuild our commandbuffers in the 
   // renderer. This will need to be done by swapping old light material with new and 
   // rebuilding...
-  b32                           Running() { return m_running; }
-  b32                           MultiThreading() const { return m_multiThreading; }
+  b32                           isRunning() { return m_running; }
+  b32                           isMultiThreading() const { return m_multiThreading; }
 
   // Get array of view frustum references.
-  ViewFrustum**                 GetViewFrustums() { return m_frustums; }  
+  ViewFrustum**                 getViewFrustums() { return m_frustums; }  
 
   // Add a frustum to the engine for culling, returns the index of which the frustum was stored in the 
   // engine's reference array.
-  i32 AddFrustum(ViewFrustum* frustum) { 
+  i32 addFrustum(ViewFrustum* frustum) { 
     i32 c = m_currFrustumCount; 
     m_frustums[m_currFrustumCount++] = frustum; 
     return c; 
   } 
 
-  size_t                        GetViewFrustumCount() const { return m_currFrustumCount; }
+  size_t                        getViewFrustumCount() const { return m_currFrustumCount; }
   
-  static size_t                 GetMaxViewFrustumCount() { return kMaxViewFrustums; }
+  static size_t                 getMaxViewFrustumCount() { return kMaxViewFrustums; }
 
-  void                          SetEngineMode(EngineMode newMode) { m_engineMode = newMode; }
+  void                          setEngineMode(EngineMode newMode) { m_engineMode = newMode; }
 
-  EngineMode                    GetEngineMode() const { return m_engineMode; }
+  EngineMode                    getEngineMode() const { return m_engineMode; }
 
   // Set Probe target positions to begin baking texture cubemaps, which will be stored into the 
   // set scene.
-  void                          SetEnvProbeTargets(Vector3* positions, u32 count) {
+  void                          setEnvProbeTargets(Vector3* positions, u32 count) {
     m_envProbeTargets.resize(count);
     for (size_t i = 0; i < count; ++i) {
       m_envProbeTargets[i] = positions[i];
     }
   };
 
-  void                          ClearProbeTargets() { m_envProbeTargets.clear(); }
+  void                          clearProbeTargets() { m_envProbeTargets.clear(); }
 
 private:
 
-  void                          Stop();
-  void                          TraverseScene(GameObjectActionCallback callback);
-  void                          UpdateSunLight();
+  void                          stop();
+  void                          traverseScene(GameObjectActionCallback callback);
+  void                          updateSunLight();
 
   Scene*                        m_pPushedScene;
   ControlInputCallback          m_pControlInputFunc;

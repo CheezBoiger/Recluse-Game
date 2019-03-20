@@ -23,127 +23,127 @@ void LoadMaterials()
   Texture2D* grassRough = nullptr;
 /*
   {
-    img.Load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
-    albedo = gRenderer().CreateTexture2D();
-    albedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("Box/albedo.jpg"));
+    albedo = gRenderer().createTexture2D();
+    albedo->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     albedo->_Name = "BoxAlbedo";
     albedo->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(albedo);
+    img.cleanUp();
+    TextureCache::cache(albedo);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Box/normal.jpg"));
-    normal = gRenderer().CreateTexture2D();
-    normal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("Box/normal.jpg"));
+    normal = gRenderer().createTexture2D();
+    normal->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     normal->_Name = "BoxNormal";
     normal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(normal);
+    img.cleanUp();
+    TextureCache::cache(normal);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Box/emissive.jpg"));
-    emissive = gRenderer().CreateTexture2D();
-    emissive->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("Box/emissive.jpg"));
+    emissive = gRenderer().createTexture2D();
+    emissive->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     emissive->_Name = "BoxEmissive";
     emissive->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(emissive);
+    img.cleanUp();
+    TextureCache::cache(emissive);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("grass1-albedo3.png"));
-    grassBase = gRenderer().CreateTexture2D();
-    grassBase->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("grass1-albedo3.png"));
+    grassBase = gRenderer().createTexture2D();
+    grassBase->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     grassBase->_Name = "GrassyAlbedo";
     grassBase->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(grassBase);
+    img.cleanUp();
+    TextureCache::cache(grassBase);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("grass1-normal2.png"));
-    grassNormal = gRenderer().CreateTexture2D();
-    grassNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("grass1-normal2.png"));
+    grassNormal = gRenderer().createTexture2D();
+    grassNormal->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     grassNormal->_Name = "GrassyNormal";
     grassNormal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(grassNormal);
+    img.cleanUp();
+    TextureCache::cache(grassNormal);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("grass1-rough.png"));
-    grassRough = gRenderer().CreateTexture2D();
-    grassRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height());
+    img.load(FROM_TEXTURES_DIR("grass1-rough.png"));
+    grassRough = gRenderer().createTexture2D();
+    grassRough->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight());
     grassRough->_Name = "GrassyRough";
     grassRough->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(grassRough);
+    img.cleanUp();
+    TextureCache::cache(grassRough);
   }
 */
   {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
-    rustAlbedo = gRenderer().CreateTexture2D();
-    rustAlbedo->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
+    img.load(FROM_TEXTURES_DIR("Sphere/rustediron2_basecolor.png"));
+    rustAlbedo = gRenderer().createTexture2D();
+    rustAlbedo->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight(), true);
     rustAlbedo->_Name = "RustedAlbedo";
-    rustAlbedo->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustAlbedo);
+    rustAlbedo->update(img);
+    img.cleanUp();
+    TextureCache::cache(rustAlbedo);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
-    rustRough = gRenderer().CreateTexture2D();
-    rustRough->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
+    img.load(FROM_TEXTURES_DIR("Sphere/rustediron2_roughness.png"));
+    rustRough = gRenderer().createTexture2D();
+    rustRough->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight(), true);
     rustRough->_Name = "RustedRough";
-    rustRough->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustRough);
+    rustRough->update(img);
+    img.cleanUp();
+    TextureCache::cache(rustRough);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
-    rustNormal = gRenderer().CreateTexture2D();
-    rustNormal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
+    img.load(FROM_TEXTURES_DIR("Sphere/rustediron2_normal.png"));
+    rustNormal = gRenderer().createTexture2D();
+    rustNormal->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight(), true);
     rustNormal->_Name = "RustedNormal";
-    rustNormal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustNormal);
+    rustNormal->update(img);
+    img.cleanUp();
+    TextureCache::cache(rustNormal);
   }
   {
-    img.Load(FROM_TEXTURES_DIR("Sphere/rustediron2_metallic.png"));
-    Texture2D* rustMetal = gRenderer().CreateTexture2D();
-    rustMetal->Initialize(RFORMAT_R8G8B8A8_UNORM, img.Width(), img.Height(), true);
+    img.load(FROM_TEXTURES_DIR("Sphere/rustediron2_metallic.png"));
+    Texture2D* rustMetal = gRenderer().createTexture2D();
+    rustMetal->initialize(RFORMAT_R8G8B8A8_UNORM, img.getWidth(), img.getHeight(), true);
     rustMetal->_Name = "RustedMetal";
-    rustMetal->Update(img);
-    img.CleanUp();
-    TextureCache::Cache(rustMetal);
+    rustMetal->update(img);
+    img.cleanUp();
+    TextureCache::cache(rustMetal);
   }
 /*
   {
     Material* material = new Material();
-    material->Initialize(&gRenderer());
-    material->SetAlbedo(grassBase);
-    material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-    material->EnableAlbedo(true);
-    material->SetRoughnessFactor(1.0f);
-    material->SetMetallicFactor(1.0f);
-    material->SetNormal(grassNormal);
-    material->EnableNormal(true);
+    material->initialize(&gRenderer());
+    material->setAlbedo(grassBase);
+    material->setBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    material->enableAlbedo(true);
+    material->setRoughnessFactor(1.0f);
+    material->setMetallicFactor(1.0f);
+    material->setNormal(grassNormal);
+    material->enableNormal(true);
 
-    material->SetRoughnessMetallic(grassRough);
-    material->EnableRoughness(true);
-    MaterialCache::Cache(TEXT("GrassySample"), material);
+    material->setRoughnessMetallic(grassRough);
+    material->enableRoughness(true);
+    MaterialCache::cache(TEXT("GrassySample"), material);
   }
 */
   {
     Material* material = new Material();
-    material->Initialize(&gRenderer());
+    material->initialize(&gRenderer());
 
-    material->SetAlbedo(rustAlbedo);
-    material->SetBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-    material->EnableAlbedo(true);
-    material->SetRoughnessFactor(1.0f);
-    material->SetMetallicFactor(1.0f);
-    material->SetNormal(rustNormal);
-    material->EnableNormal(true);
+    material->setAlbedo(rustAlbedo);
+    material->setBaseColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+    material->enableAlbedo(true);
+    material->setRoughnessFactor(1.0f);
+    material->setMetallicFactor(1.0f);
+    material->setNormal(rustNormal);
+    material->enableNormal(true);
 
-    material->SetRoughnessMetallic(rustRough);
-    material->EnableRoughness(true);
-    MaterialCache::Cache(TEXT("RustedSample"), material);  
+    material->setRoughnessMetallic(rustRough);
+    material->enableRoughness(true);
+    MaterialCache::cache(TEXT("RustedSample"), material);  
   }
 }

@@ -9,7 +9,7 @@ b8 Log::display = false;
 b8 Log::store = false;
 
 
-void Log::DisplayToConsole(b8 enable)
+void Log::displayToConsole(b8 enable)
 {
   display = enable;
 }

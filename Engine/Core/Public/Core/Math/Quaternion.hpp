@@ -21,12 +21,12 @@ struct Quaternion {
   Quaternion(const r32* raw)
     : x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { }
 
-  static Quaternion AngleAxis(const r32 radians, const Vector3& axis);
-  static Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);
-  static Quaternion EulerAnglesToQuaternion(const Vector3& euler);
-  static Quaternion Matrix4ToQuaternion(const Matrix4& rot);  
-  static Quaternion LookRotation(const Vector3&dir, const Vector3& up);
-  static Quaternion Identity() { return Quaternion(); }
+  static Quaternion angleAxis(const r32 radians, const Vector3& axis);
+  static Quaternion slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);
+  static Quaternion eulerAnglesToQuaternion(const Vector3& euler);
+  static Quaternion matrix4ToQuaternion(const Matrix4& rot);  
+  static Quaternion lookRotation(const Vector3&dir, const Vector3& up);
+  static Quaternion identity() { return Quaternion(); }
   
   Quaternion        operator+(const Quaternion& other) const;
   Quaternion        operator-(const Quaternion& other) const;
@@ -48,21 +48,21 @@ struct Quaternion {
   b8                operator!=(const Quaternion& other) const;
 
   Quaternion        Conjugate() const;
-  Quaternion        Inverse() const;
-  Quaternion        Normalize() const;
+  Quaternion        inverse() const;
+  Quaternion        normalize() const;
 
   // Converts quaternion components to euler angles with components:
   // x -> pitch
   // y -> yaw
   // z -> roll
-  Vector3           ToEulerAngles() const;
+  Vector3           toEulerAngles() const;
 
   // Rotates a point (other) about this quaternion.
   Vector3           operator*(const Vector3& other) const;
 
-  Matrix4           ToMatrix4() const;
+  Matrix4           toMatrix4() const;
 
-  r32               Norm() const;
+  r32               norm() const;
 };
 
 

@@ -54,8 +54,8 @@ public:
   Filesystem() { }
 
 
-  void                      OnStartUp() override;
-  void                      OnShutDown() override;
+  void                      onStartUp() override;
+  void                      onShutDown() override;
   void                      SetCurrentAppDirectory(tchar* ApplicationPath);
   void                      AppendSearchPath(tchar* path);
   FilesystemResult          ReadFrom(const tchar* filepath, FileHandle* Buf);

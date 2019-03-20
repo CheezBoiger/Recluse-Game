@@ -8,19 +8,19 @@ namespace Recluse {
 
 Core& gCore()
 {
-  return Core::Instance();
+  return Core::instance();
 }
 
 
-void Core::OnStartUp()
+void Core::onStartUp()
 {
-  Window::InitializeAPI();
+  Window::initializeAPI();
 }
 
 
-void Core::OnShutDown()
+void Core::onShutDown()
 {
-  Time::Instance().ShutDown();
+  Time::instance().shutDown();
 }
 
 

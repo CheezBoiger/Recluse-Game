@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-void CompoundCollider::AddCollider(Collider* collider)
+void CompoundCollider::addCollider(Collider* collider)
 {
   SetDirty();
   m_colliders.push_back(collider);

@@ -25,13 +25,13 @@ Vector3 Vector3::ZERO = Vector3(0.0f, 0.0f, 0.0f);
 Vector3 Vector3::ONE = Vector3(1.0f, 1.0f, 1.0f);
 
 
-Vector3 Vector3::Lerp(const Vector3& a, const Vector3& b, const r32 t)
+Vector3 Vector3::lerp(const Vector3& a, const Vector3& b, const r32 t)
 {
   return a * (1.0f - t) + b * t;
 }
 
 
-Vector3 Vector3::Min(const Vector3& a, const Vector3& b)
+Vector3 Vector3::minimum(const Vector3& a, const Vector3& b)
 {
   return Vector3( b.x < a.x ? b.x : a.y,
                   b.y < a.y ? b.y : a.y,
@@ -39,7 +39,7 @@ Vector3 Vector3::Min(const Vector3& a, const Vector3& b)
 }
 
 
-Vector3 Vector3::Max(const Vector3& a, const Vector3& b)
+Vector3 Vector3::maximum(const Vector3& a, const Vector3& b)
 {
   return Vector3( a.x < b.x ? b.x : a.x,
                   a.y < b.y ? b.y : a.y,
@@ -47,7 +47,7 @@ Vector3 Vector3::Max(const Vector3& a, const Vector3& b)
 }
 
 
-r32 Vector3::Dot(const Vector3& other) const
+r32 Vector3::dot(const Vector3& other) const
 {
   return (x * other.x + y * other.y + z * other.z);
 }
@@ -66,20 +66,20 @@ Vector3 Vector3::Cross(const Vector3& other) const
 }
 
 
-Vector3 Vector3::Normalize() const
+Vector3 Vector3::normalize() const
 {
-  r32 magnitude = Length();
+  r32 magnitude = length();
   return (*this) / magnitude;
 }
 
 
-r32 Vector3::Length() const
+r32 Vector3::length() const
 {
   return sqrtf(x * x + y * y + z * z);
 }
 
 
-r32 Vector3::LengthSqr() const
+r32 Vector3::lengthSqr() const
 {
   return (x * x) + (y * y) + (z * z);
 }
@@ -253,6 +253,6 @@ Vector3 Vector3::operator*(const Quaternion& other) const
   const Vector3 u(other.x, other.y, other.z);
   const Vector3& v = (*this);
   r32 s = other.w;
-  return (u * u.Dot(v) * 2.0f) + (v * (s * s - u.Dot(u))) + (u.Cross(v) * s * 2.0f);
+  return (u * u.dot(v) * 2.0f) + (v * (s * s - u.dot(u))) + (u.Cross(v) * s * 2.0f);
 }
 } // Recluse

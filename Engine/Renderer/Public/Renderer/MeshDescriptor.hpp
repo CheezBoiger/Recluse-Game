@@ -27,10 +27,10 @@ enum MeshUpdatBits {
 
 
 struct ObjectBuffer {
-  Matrix4 _Model;          // Model matrix
-  Matrix4 _NormalMatrix;   // Normal matrix.
-  r32     _LoD;            // Level of Detail.
-  u32     _HasJoints;      // does object have joints?
+  Matrix4 _model;          // Model matrix
+  Matrix4 _normalMatrix;   // Normal matrix.
+  r32     _lod;            // Level of Detail.
+  u32     _hasJoints;      // does object have joints?
   r32     _w0;              // Morph Target 0 weight.
   r32     _w1;              // Morph Target 1 weight.
 };
@@ -60,21 +60,21 @@ public:
   MeshDescriptor();
   ~MeshDescriptor();
 
-  void  Initialize(VulkanRHI* pRhi);
-  void  CleanUp(VulkanRHI* pRhi);
+  void  initialize(VulkanRHI* pRhi);
+  void  cleanUp(VulkanRHI* pRhi);
 
-  void  Update(VulkanRHI* pRhi, u32 frameIndex);
+  void  update(VulkanRHI* pRhi, u32 frameIndex);
 
-  void          SetVisible(b32 enable) { m_Visible = enable; }
-  void          PushUpdate(b32 updateBits = MESH_BUFFER_UPDATE_BIT) 
+  void          setVisible(b32 enable) { m_Visible = enable; }
+  void          pushUpdate(b32 updateBits = MESH_BUFFER_UPDATE_BIT) 
    { for (u32 i = 0; i < m_pGpuHandles.size(); ++i) { m_pGpuHandles[i]._updates |= updateBits; } }
 
-  ObjectBuffer* ObjectData() { return &m_ObjectData; }
-  DescriptorSet*          CurrMeshSet(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pSet; }
+  ObjectBuffer* getObjectData() { return &m_ObjectData; }
+  DescriptorSet*          getCurrMeshSet(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pSet; }
 
-  b32           Visible() const { return m_Visible; }
-  b32           Static() const { return m_Static; }
-  Buffer*       NativeObjectBuffer(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pBuf; }
+  b32           isVisible() const { return m_Visible; }
+  b32           isStatic() const { return m_Static; }
+  Buffer*       getNativeObjectBuffer(u32 frameIndex) { return m_pGpuHandles[frameIndex]._pBuf; }
 
 protected:
 
@@ -98,19 +98,19 @@ public:
   JointDescriptor();
   ~JointDescriptor();
   
-  void  Initialize(VulkanRHI* pRhi);
-  void  CleanUp(VulkanRHI* pRhi);
-  void  Update(VulkanRHI* pRhi, u32 frameIndex);  
+  void  initialize(VulkanRHI* pRhi);
+  void  cleanUp(VulkanRHI* pRhi);
+  void  update(VulkanRHI* pRhi, u32 frameIndex);  
 
-  JointBuffer*  JointData() { return &m_jointsData; }
-  Buffer*       NativeJointBuffer(u32 frameIndex) { return m_pJointHandles[frameIndex]._pBuf; }
-  DescriptorSet*  CurrJointSet(u32 frameIndex) { return m_pJointHandles[frameIndex]._pSet; }
-  void          PushUpdate(b32 bits = JOINT_BUFFER_UPDATE_BIT) 
+  JointBuffer*  getJointData() { return &m_jointsData; }
+  Buffer*       getNativeJointBuffer(u32 frameIndex) { return m_pJointHandles[frameIndex]._pBuf; }
+  DescriptorSet*  getCurrJointSet(u32 frameIndex) { return m_pJointHandles[frameIndex]._pSet; }
+  void          pushUpdate(b32 bits = JOINT_BUFFER_UPDATE_BIT) 
     { for(u32 i = 0; i < m_pJointHandles.size(); ++i)  m_pJointHandles[i]._updates |= bits; }
 
-  void          UpdateJointSets(u32 frameIndex);
+  void          updateJointSets(u32 frameIndex);
 
-  u32   NumJoints() { return JointBuffer::kMaxNumberOfJointMatrices; }
+  u32   numJoints() { return JointBuffer::kMaxNumberOfJointMatrices; }
 
 private:
   std::vector<UpdateManager> m_pJointHandles;

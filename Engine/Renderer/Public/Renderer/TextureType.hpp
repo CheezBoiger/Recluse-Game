@@ -32,14 +32,14 @@ public:
     TEXTURE_CUBE_ARRAY
   };
 
-  Texture* Handle() { return texture; }
+  Texture* getHandle() { return texture; }
   VulkanRHI* GetRhi() { return mRhi; }
   
   Type TexType() const { return m_TexType; }
 
   // Stores texture image in a separate file. This varies on what the texture type is.
   virtual void  CacheToFile(std::string path) { }
-  virtual void CleanUp() { }
+  virtual void cleanUp() { }
 
   // Save this texture into a file for use in another life.
   virtual void Save(const std::string pathName) { }
@@ -73,9 +73,9 @@ class Texture1D : public TextureBase {
 public:
   Texture1D() : TextureBase(TEXTURE_1D) { }
 
-  void        Initialize(u32 width);
-  u32         Width();
-  void        CleanUp() override { }
+  void        initialize(u32 width);
+  u32         getWidth();
+  void        cleanUp() override { }
 private:
   friend class Renderer;
 
@@ -92,15 +92,15 @@ public:
   // All images that are uploaded to this texture must then be the 
   // same width and height in order to render properly. To write 
   // texture over to this object, call Update() after this call.
-  void        Initialize(RFormat format, u32 width, u32 height, b32 genMips = false);
+  void        initialize(RFormat format, u32 width, u32 height, b32 genMips = false);
   
   void        Save(const std::string filename) override;
   // Update texture with a new image to be written over.
-  void        Update(Image const& image);
-  void        CleanUp() override;
+  void        update(Image const& image);
+  void        cleanUp() override;
   
-  u32         Width() const;
-  u32         Height() const;
+  u32         getWidth() const;
+  u32         getHeight() const;
 private:
   b32         m_bGenMips;
   friend class Renderer;
@@ -113,13 +113,13 @@ public:
   Texture2DArray() : TextureBase(TEXTURE_2D_ARRAY) { }
 
   // width, and height must be the same size for every layer!
-  void            Initialize(RFormat format, u32 width, u32 height, u32 layers);
+  void            initialize(RFormat format, u32 width, u32 height, u32 layers);
 
   // Image to update the texture array, will be sliced and distributed according to
   // each layer.
-  void            Update(const Image& img, u32 x, u32 y);
+  void            update(const Image& img, u32 x, u32 y);
 
-  void            CleanUp() override;
+  void            cleanUp() override;
   friend class Renderer;
 };
 
@@ -134,9 +134,9 @@ class TextureCube : public TextureBase {
 public:
   TextureCube() : TextureBase(TEXTURE_CUBE) { }
 
-  void Initialize(u32 dim);
-  void Update(Image const& image);
-  void CleanUp() override;
+  void initialize(u32 dim);
+  void update(Image const& image);
+  void cleanUp() override;
   void Save(const std::string filename) override;
   u32   WidthPerFace() const;
   u32   HeightPerFace() const;
@@ -150,10 +150,10 @@ class TextureCubeArray : public TextureBase {
 public:
   TextureCubeArray() : TextureBase(TEXTURE_CUBE_ARRAY) { }
 
-  void Initialize(u32 dim = 512, u32 cubeLayers = 1);
-  void CleanUp() override;
-  void Update(const Image& arrayimage);
-  void Update(const TextureCube* pCubeMaps, u32 count);
+  void initialize(u32 dim = 512, u32 cubeLayers = 1);
+  void cleanUp() override;
+  void update(const Image& arrayimage);
+  void update(const TextureCube* pCubeMaps, u32 count);
   //void Update(const Image& imgCubeMap, u32 count); 
   void Save(const std::string filename) override;
   u32 LayerCount() const;
@@ -213,10 +213,10 @@ public:
   TextureSampler() : mSampler(nullptr) 
                     , m_uuid(sIteration++) { }
 
-  void          Initialize(VulkanRHI* pRhi, const SamplerInfo& info);
-  void          CleanUp(VulkanRHI* pRhi);
+  void          initialize(VulkanRHI* pRhi, const SamplerInfo& info);
+  void          cleanUp(VulkanRHI* pRhi);
 
-  Sampler*      Handle() { return mSampler; }
+  Sampler*      getHandle() { return mSampler; }
   uuid64 UUID() const { return m_uuid; }
 
 private:

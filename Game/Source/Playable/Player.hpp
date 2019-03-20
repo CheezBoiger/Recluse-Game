@@ -21,7 +21,7 @@ class Player : public IActor {
   R_GAME_OBJECT(Player)
 public:
 
-  virtual void OnStartUp() override
+  virtual void onStartUp() override
   {
     m_playerCamera = new PlayerCamera();
     if (m_playerCamera) {
@@ -29,9 +29,9 @@ public:
     }
   }
 
-  virtual void Update(r32 tick) override
+  virtual void update(r32 tick) override
   {
-    Transform* transform = GetTransform();
+    Transform* transform = getTransform();
 
     r32 speed = m_currentMoveSpeed;
 
@@ -40,24 +40,24 @@ public:
     }
 
     if (Keyboard::KeyPressed(m_moveForward)) {
-      transform->Position += transform->Front() * speed * tick;
+      transform->_position += transform->front() * speed * tick;
     }
 
     if (Keyboard::KeyPressed(m_moveBackward)) {
-      transform->Position -= transform->Front() * speed * tick;
+      transform->_position -= transform->front() * speed * tick;
     }
 
     if (Keyboard::KeyPressed(m_strafeLeft)) {
-      transform->Position -= transform->Right() * speed * tick;
+      transform->_position -= transform->right() * speed * tick;
     }
 
     if (Keyboard::KeyPressed(m_strafeRight)) {
-      transform->Position += transform->Right() * speed * tick;
+      transform->_position += transform->right() * speed * tick;
     }
 
     if (Keyboard::KeyPressed(m_jump) && !(m_activity & Activity_Jumping)) {
       m_activity |= Activity_Jumping;
-      m_physicsComponent.ApplyImpulse(transform->Up() * m_jumpStrength, Vector3());
+      m_physicsComponent.applyImpulse(transform->up() * m_jumpStrength, Vector3());
     }
 
 
@@ -70,7 +70,7 @@ public:
   }
 
 
-  virtual void OnCleanUp() override
+  virtual void onCleanUp() override
   {
     delete m_playerCamera;
     m_playerCamera = nullptr;
@@ -81,7 +81,7 @@ public:
     return m_playerCamera;
   }
   
-  virtual void OnCollision(Collision* collision) override
+  virtual void onCollision(Collision* collision) override
   {
   }
 

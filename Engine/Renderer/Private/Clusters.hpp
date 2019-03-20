@@ -19,8 +19,8 @@ struct LightBVH;
 // in the scene.
 class Clusterer {
 public:
-  void                  Initialize(VulkanRHI* pRhi);
-  void                  CleanUp(VulkanRHI* pRhi);
+  void                  initialize(VulkanRHI* pRhi);
+  void                  cleanUp(VulkanRHI* pRhi);
   void                  GenerateComputeBuildBVHCommands(CommandBuffer* pCmdBuffer, LightBVH* pBvH);
   Buffer*               GetClusterIds() { return m_clusterIds; }
   Buffer*               GetClusterIndices() { return m_clusterIndices; }

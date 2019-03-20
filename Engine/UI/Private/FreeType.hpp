@@ -16,9 +16,9 @@ class FreeType {
 public:
   FreeType() { }
 
-  b8              Initialize();
-  void            CleanUp();
-  FT_Library&     Handle() { return mLibrary; }
+  b8              initialize();
+  void            cleanUp();
+  FT_Library&     getHandle() { return mLibrary; }
 
   
   FT_Face         CreateFace(const std::string ttf_path); 

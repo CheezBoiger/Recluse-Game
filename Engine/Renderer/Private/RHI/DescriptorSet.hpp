@@ -14,10 +14,10 @@ public:
     : mLayout(VK_NULL_HANDLE) { }
 
   ~DescriptorSetLayout();
-  void                      Initialize(const VkDescriptorSetLayoutCreateInfo& info);
-  void                      CleanUp();
+  void                      initialize(const VkDescriptorSetLayoutCreateInfo& info);
+  void                      cleanUp();
 
-  VkDescriptorSetLayout     Layout() const { return mLayout; }
+  VkDescriptorSetLayout     getLayout() const { return mLayout; }
 private:
   VkDescriptorSetLayout     mLayout;
 };
@@ -30,15 +30,15 @@ public:
     , mPoolOwner(VK_NULL_HANDLE) { }
 
   ~DescriptorSet();
-  void                  Allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout);
-  void                  Free();
+  void                  allocate(const VkDescriptorPool& pool, const DescriptorSetLayout* layout);
+  void                  free();
 
   // Updates the descriptor set with the given info. This also automatically sets the
   // dstSet parameter with each decriptor set write info.
-  void                  Update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
+  void                  update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
  
-  VkDescriptorSet       Handle() const { return mDescriptorSet; }
-  VkDescriptorPool      PoolOwner() const { return mPoolOwner; }
+  VkDescriptorSet       getHandle() const { return mDescriptorSet; }
+  VkDescriptorPool      getPoolOwner() const { return mPoolOwner; }
 
 private:
   VkDescriptorSet       mDescriptorSet;

@@ -34,11 +34,11 @@ class Thread {
 public:
   Thread() { }
 
-  void                            Run(thread_func_t func, thread_id_t id);
+  void                            run(thread_func_t func, thread_id_t id);
 
   void                            Join() { mThread.join(); }
   void                            Detach() { mThread.detach(); }
-  thread_id_t                     GetId() { return m_Id; }
+  thread_id_t                     getId() { return m_Id; }
 
 private:
   std::thread                     mThread;

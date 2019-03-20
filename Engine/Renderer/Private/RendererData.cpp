@@ -203,12 +203,12 @@ char const* kDefaultShaderEntryPointStr = "main";
 void SetUpRenderData()
 {
   kViewMatrices = {
-    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
-    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
-    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(-90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
-    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
-    Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::BACK),
-    Matrix4::Rotate(Matrix4::Rotate(Matrix4::Identity(), Radians(180.0f), Vector3::UP), Radians(180.0f), Vector3::FRONT)
+    Matrix4::rotate(Matrix4::rotate(Matrix4::identity(), Radians(90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
+    Matrix4::rotate(Matrix4::rotate(Matrix4::identity(), Radians(-90.0f), Vector3::UP), Radians(180.0f), Vector3::RIGHT),
+    Matrix4::rotate(Matrix4::rotate(Matrix4::identity(), Radians(-90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
+    Matrix4::rotate(Matrix4::rotate(Matrix4::identity(), Radians(90.0f), Vector3::RIGHT), Radians(180.0f), Vector3::UP),
+    Matrix4::rotate(Matrix4::identity(), Radians(180.0f), Vector3::BACK),
+    Matrix4::rotate(Matrix4::rotate(Matrix4::identity(), Radians(180.0f), Vector3::UP), Radians(180.0f), Vector3::FRONT)
   };
 }
 
@@ -226,7 +226,7 @@ void LoadShader(const std::string& Filename, Shader* S)
 {
   if (!S) { Log(rError) << "Shader module is null! Can not load a shader!\n"; }
   std::string Filepath = gFilesystem().CurrentAppDirectory();
-  if (!S->Initialize(Filepath
+  if (!S->initialize(Filepath
       + "/" + ShadersPath + "/" + Filename)) {
     Log(rError) << "Could not find " + Filename + "!";
   }
@@ -237,23 +237,23 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 {
   // PbrForward Pipeline Creation.
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* GBufferPipeline = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* GBufferStaticPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* GBufferPipeline = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* GBufferStaticPipeline = Rhi->createGraphicsPipeline();
   FrameBuffer* GBufferFrameBuffer = gbuffer_FrameBufferKey;
-  Shader* VertGBuffer = Rhi->CreateShader();
-  Shader* FragGBuffer = Rhi->CreateShader();
+  Shader* VertGBuffer = Rhi->createShader();
+  Shader* FragGBuffer = Rhi->createShader();
 
   gbuffer_PipelineKey = GBufferPipeline;
   gbuffer_StaticPipelineKey = GBufferStaticPipeline;
-  gbuffer_morphTargetPipeline = Rhi->CreateGraphicsPipeline();
-  gbuffer_staticMorphTargetPipeline = Rhi->CreateGraphicsPipeline();
+  gbuffer_morphTargetPipeline = Rhi->createGraphicsPipeline();
+  gbuffer_staticMorphTargetPipeline = Rhi->createGraphicsPipeline();
 
   LoadShader(gbuffer_VertFileStr, VertGBuffer);
   LoadShader(gbuffer_FragFileStr, FragGBuffer);
 
   VkPipelineShaderStageCreateInfo PbrShaders[2];
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[0].module = VertGBuffer->Handle();
+  PbrShaders[0].module = VertGBuffer->getHandle();
   PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
   PbrShaders[0].pName = kDefaultShaderEntryPointStr;
   PbrShaders[0].pNext = nullptr;
@@ -261,22 +261,22 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   PbrShaders[0].flags = 0;
 
   PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[1].module = FragGBuffer->Handle();
+  PbrShaders[1].module = FragGBuffer->getHandle();
   PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
   PbrShaders[1].pName = kDefaultShaderEntryPointStr;
   PbrShaders[1].pNext = nullptr;
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = GBufferFrameBuffer->RenderPassRef()->Handle();
+  GraphicsInfo.renderPass = GBufferFrameBuffer->RenderPassRef()->getHandle();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
   std::array<VkDescriptorSetLayout, 4> DLayouts;
-  DLayouts[0] = GlobalSetLayoutKey->Layout();
-  DLayouts[1] = MeshSetLayoutKey->Layout();
-  DLayouts[2] = MaterialSetLayoutKey->Layout();
-  DLayouts[3] = BonesSetLayoutKey->Layout();
+  DLayouts[0] = GlobalSetLayoutKey->getLayout();
+  DLayouts[1] = MeshSetLayoutKey->getLayout();
+  DLayouts[2] = MaterialSetLayoutKey->getLayout();
+  DLayouts[3] = BonesSetLayoutKey->getLayout();
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -286,7 +286,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   PipelineLayout.pushConstantRangeCount = 0;
 
   // Initialize pbr forward pipeline.
-  GBufferPipeline->Initialize(GraphicsInfo, PipelineLayout);
+  GBufferPipeline->initialize(GraphicsInfo, PipelineLayout);
 
   {
     VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
@@ -301,15 +301,15 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
     // Initialize pbr forward morph target pipeline.
-    Rhi->FreeShader(VertGBuffer);
-    VertGBuffer = Rhi->CreateShader();
+    Rhi->freeShader(VertGBuffer);
+    VertGBuffer = Rhi->createShader();
     LoadShader("GBuffer_MorphTargets.vert.spv", VertGBuffer);
-    PbrShaders[0].module = VertGBuffer->Handle();
-    gbuffer_morphTargetPipeline->Initialize(ginfo, PipelineLayout);
-    Rhi->FreeShader(VertGBuffer);
+    PbrShaders[0].module = VertGBuffer->getHandle();
+    gbuffer_morphTargetPipeline->initialize(ginfo, PipelineLayout);
+    Rhi->freeShader(VertGBuffer);
     VertGBuffer = nullptr;
   }
-  // Static pipeline creation.
+  // isStatic pipeline creation.
   auto Bindings = StaticVertexDescription::GetBindingDescription();
   auto VertexAttribs = StaticVertexDescription::GetVertexAttributes();
   VkPipelineVertexInputStateCreateInfo Input = { };
@@ -322,17 +322,17 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
 
-  Rhi->FreeShader(VertGBuffer);
-  VertGBuffer = Rhi->CreateShader();
+  Rhi->freeShader(VertGBuffer);
+  VertGBuffer = Rhi->createShader();
   LoadShader(gbuffer_StaticVertFileStr, VertGBuffer);
   
-  PbrShaders[0].module = VertGBuffer->Handle();
+  PbrShaders[0].module = VertGBuffer->getHandle();
   PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size() - 1); // We don't need bone buffer.
-  GBufferStaticPipeline->Initialize(GraphicsInfo, PipelineLayout);
+  GBufferStaticPipeline->initialize(GraphicsInfo, PipelineLayout);
   
-  Rhi->FreeShader(VertGBuffer);
+  Rhi->freeShader(VertGBuffer);
   VertGBuffer = nullptr;
-  // Static Morph Target gbuffer pipeline.
+  // isStatic Morph Target gbuffer pipeline.
   {
     VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
     VkPipelineVertexInputStateCreateInfo input = {};
@@ -346,40 +346,40 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
     // Initialize pbr forward morph target pipeline.
-    Rhi->FreeShader(VertGBuffer);
-    VertGBuffer = Rhi->CreateShader();
+    Rhi->freeShader(VertGBuffer);
+    VertGBuffer = Rhi->createShader();
     LoadShader("StaticGBuffer_MorphTargets.vert.spv", VertGBuffer);
-    PbrShaders[0].module = VertGBuffer->Handle();
-    gbuffer_staticMorphTargetPipeline->Initialize(ginfo, PipelineLayout);
-    Rhi->FreeShader(VertGBuffer);
+    PbrShaders[0].module = VertGBuffer->getHandle();
+    gbuffer_staticMorphTargetPipeline->initialize(ginfo, PipelineLayout);
+    Rhi->freeShader(VertGBuffer);
     VertGBuffer = nullptr;
   }
-  Rhi->FreeShader(FragGBuffer);
+  Rhi->freeShader(FragGBuffer);
 }
 
 
 void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, HDR* pHDR)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* hdrPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* hdrPipeline = Rhi->createGraphicsPipeline();
   VkPipelineLayoutCreateInfo hdrLayout = {};
   std::array<VkDescriptorSetLayout, 3> hdrSetLayout; 
-  hdrSetLayout[0] = GlobalSetLayoutKey->Layout();
-  hdrSetLayout[1] = hdr_gamma_descSetLayoutKey->Layout();
-  hdrSetLayout[2] = pHDR->GetSetLayout()->Layout();
+  hdrSetLayout[0] = GlobalSetLayoutKey->getLayout();
+  hdrSetLayout[1] = hdr_gamma_descSetLayoutKey->getLayout();
+  hdrSetLayout[2] = pHDR->getSetLayout()->getLayout();
 
-  Shader* HdrFrag = Rhi->CreateShader();
-  Shader* HdrVert = Rhi->CreateShader();
+  Shader* HdrFrag = Rhi->createShader();
+  Shader* HdrVert = Rhi->createShader();
 
   LoadShader(hdr_gamma_vertFileStr, HdrVert);
   LoadShader(hdr_gamma_fragFileStr, HdrFrag);
 
   FrameBuffer* hdrBuffer = hdr_gamma_frameBufferKey;
-  GraphicsInfo.renderPass = hdrBuffer->RenderPassRef()->Handle();
+  GraphicsInfo.renderPass = hdrBuffer->RenderPassRef()->getHandle();
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
-  ShaderModules[0].module = HdrVert->Handle();
+  ShaderModules[0].module = HdrVert->getHandle();
   ShaderModules[0].pName = kDefaultShaderEntryPointStr;
   ShaderModules[0].pNext = nullptr;
   ShaderModules[0].pSpecializationInfo = nullptr;
@@ -387,7 +387,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   ShaderModules[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
   ShaderModules[1].flags = 0;
-  ShaderModules[1].module = HdrFrag->Handle();
+  ShaderModules[1].module = HdrFrag->getHandle();
   ShaderModules[1].pName = kDefaultShaderEntryPointStr;
   ShaderModules[1].pNext = nullptr;
   ShaderModules[1].pSpecializationInfo = nullptr;
@@ -409,10 +409,10 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   hdrLayout.pPushConstantRanges = &pushConstantRange;
   hdrLayout.pushConstantRangeCount = 1;
 
-  hdrPipeline->Initialize(GraphicsInfo, hdrLayout);
+  hdrPipeline->initialize(GraphicsInfo, hdrLayout);
 
-  Rhi->FreeShader(HdrFrag);
-  Rhi->FreeShader(HdrVert);
+  Rhi->freeShader(HdrFrag);
+  Rhi->freeShader(HdrVert);
   hdr_gamma_pipelineKey = hdrPipeline;
 
 }
@@ -422,21 +422,21 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 {
   {
     VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-    GraphicsPipeline* pbrPipeline_LR = Rhi->CreateGraphicsPipeline();
+    GraphicsPipeline* pbrPipeline_LR = Rhi->createGraphicsPipeline();
     pbr_Pipeline_LR = pbrPipeline_LR;
-    pbr_Pipeline_NoLR = Rhi->CreateGraphicsPipeline();
+    pbr_Pipeline_NoLR = Rhi->createGraphicsPipeline();
 
     FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;  
 
-    Shader* VertPBR = Rhi->CreateShader();
-    Shader* FragPBR = Rhi->CreateShader();
+    Shader* VertPBR = Rhi->createShader();
+    Shader* FragPBR = Rhi->createShader();
 
     LoadShader(pbr_VertStr, VertPBR);
     LoadShader(pbr_FragStrLR, FragPBR);
 
     VkPipelineShaderStageCreateInfo PbrShaders[2];
     PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    PbrShaders[0].module = VertPBR->Handle();
+    PbrShaders[0].module = VertPBR->getHandle();
     PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
     PbrShaders[0].pName = kDefaultShaderEntryPointStr;
     PbrShaders[0].pNext = nullptr;
@@ -444,14 +444,14 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PbrShaders[0].flags = 0;
 
     PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    PbrShaders[1].module = FragPBR->Handle();
+    PbrShaders[1].module = FragPBR->getHandle();
     PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     PbrShaders[1].pName = kDefaultShaderEntryPointStr;
     PbrShaders[1].pNext = nullptr;
     PbrShaders[1].flags = 0;
     PbrShaders[1].pSpecializationInfo = nullptr;
 
-    GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPassRef()->Handle();
+    GraphicsInfo.renderPass = pbr_FrameBuffer->RenderPassRef()->getHandle();
     GraphicsInfo.stageCount = 2;
     GraphicsInfo.pStages = PbrShaders;
 
@@ -488,12 +488,12 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     GraphicsInfo.pColorBlendState = &colorBlendCI;
 
     std::array<VkDescriptorSetLayout, 5> layouts;
-    layouts[0] = GlobalSetLayoutKey->Layout();
-    layouts[1] = pbr_DescLayoutKey->Layout();
-    layouts[2] = LightSetLayoutKey->Layout();
-    layouts[3] = LightViewDescriptorSetLayoutKey->Layout();
-    //layouts[4] = LightViewDescriptorSetLayoutKey->Layout();
-    layouts[4] = globalIllumination_DescLR->Layout();
+    layouts[0] = GlobalSetLayoutKey->getLayout();
+    layouts[1] = pbr_DescLayoutKey->getLayout();
+    layouts[2] = LightSetLayoutKey->getLayout();
+    layouts[3] = LightViewDescriptorSetLayoutKey->getLayout();
+    //layouts[4] = LightViewDescriptorSetLayoutKey->getLayout();
+    layouts[4] = globalIllumination_DescLR->getLayout();
 
     VkPipelineLayoutCreateInfo PipelineLayout = {};
     PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -502,15 +502,15 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PipelineLayout.pPushConstantRanges = 0;
     PipelineLayout.pushConstantRangeCount = 0;
 
-    pbrPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
+    pbrPipeline_LR->initialize(GraphicsInfo, PipelineLayout);
 
-    Rhi->FreeShader(FragPBR);
+    Rhi->freeShader(FragPBR);
 
-    FragPBR = Rhi->CreateShader();
+    FragPBR = Rhi->createShader();
     LoadShader(pbr_FragStrNoLR, FragPBR);
 
     PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    PbrShaders[0].module = VertPBR->Handle();
+    PbrShaders[0].module = VertPBR->getHandle();
     PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
     PbrShaders[0].pName = kDefaultShaderEntryPointStr;
     PbrShaders[0].pNext = nullptr;
@@ -518,21 +518,21 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PbrShaders[0].flags = 0;
 
     PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    PbrShaders[1].module = FragPBR->Handle();
+    PbrShaders[1].module = FragPBR->getHandle();
     PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
     PbrShaders[1].pName = kDefaultShaderEntryPointStr;
     PbrShaders[1].pNext = nullptr;
     PbrShaders[1].flags = 0;
     PbrShaders[1].pSpecializationInfo = nullptr;
 
-    layouts[4] = globalIllumination_DescNoLR->Layout();
-    pbr_Pipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
+    layouts[4] = globalIllumination_DescNoLR->getLayout();
+    pbr_Pipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
 
-    Rhi->FreeShader(VertPBR);
-    Rhi->FreeShader(FragPBR);
+    Rhi->freeShader(VertPBR);
+    Rhi->freeShader(FragPBR);
   }
 
-  u32 vendorId = Rhi->VendorID();
+  u32 vendorId = Rhi->vendorID();
 
   // PBR compute bound.
   {
@@ -556,20 +556,20 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
         lr = "PBR_LR_Intel.comp.spv";
       } break;
     }
-    Shader* compShader = Rhi->CreateShader();
+    Shader* compShader = Rhi->createShader();
     LoadShader(noLr, compShader);
 
     VkDescriptorSetLayout layouts[6] = { 
-      GlobalSetLayoutKey->Layout(),
-      pbr_DescLayoutKey->Layout(),
-      LightSetLayoutKey->Layout(),
-      LightViewDescriptorSetLayoutKey->Layout(),
-      //LightViewDescriptorSetLayoutKey->Layout(),
-      globalIllumination_DescNoLR->Layout(),
-      pbr_compDescLayout->Layout()
+      GlobalSetLayoutKey->getLayout(),
+      pbr_DescLayoutKey->getLayout(),
+      LightSetLayoutKey->getLayout(),
+      LightViewDescriptorSetLayoutKey->getLayout(),
+      //LightViewDescriptorSetLayoutKey->getLayout(),
+      globalIllumination_DescNoLR->getLayout(),
+      pbr_compDescLayout->getLayout()
     };    
 
-    pbr_computePipeline_NoLR = Rhi->CreateComputePipeline();
+    pbr_computePipeline_NoLR = Rhi->createComputePipeline();
     VkComputePipelineCreateInfo computeCi = { };
     VkPipelineLayoutCreateInfo compLayoutCi = { };
     compLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -578,7 +578,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 
     VkPipelineShaderStageCreateInfo shaderCi = { };
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderCi.module = compShader->Handle();
+    shaderCi.module = compShader->getHandle();
     shaderCi.pName = kDefaultShaderEntryPointStr;
     shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     computeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -586,15 +586,15 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     computeCi.basePipelineIndex = -1;
     computeCi.stage = shaderCi;
     
-    pbr_computePipeline_NoLR->Initialize(computeCi, compLayoutCi);
-    Rhi->FreeShader(compShader);
-    pbr_computePipeline_LR = Rhi->CreateComputePipeline();
-    compShader = Rhi->CreateShader();
+    pbr_computePipeline_NoLR->initialize(computeCi, compLayoutCi);
+    Rhi->freeShader(compShader);
+    pbr_computePipeline_LR = Rhi->createComputePipeline();
+    compShader = Rhi->createShader();
     LoadShader(lr, compShader);
 
-    layouts[4] = globalIllumination_DescLR->Layout();
+    layouts[4] = globalIllumination_DescLR->getLayout();
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderCi.module = compShader->Handle();
+    shaderCi.module = compShader->getHandle();
     shaderCi.pName = kDefaultShaderEntryPointStr;
     shaderCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     computeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
@@ -603,8 +603,8 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     computeCi.basePipelineIndex = -1;
     computeCi.stage = shaderCi;
 
-    pbr_computePipeline_LR->Initialize(computeCi, compLayoutCi);
-    Rhi->FreeShader(compShader);
+    pbr_computePipeline_LR->initialize(computeCi, compLayoutCi);
+    Rhi->freeShader(compShader);
   }
 }
 
@@ -612,34 +612,34 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* pbr_Pipeline = Rhi->CreateGraphicsPipeline();
-  pbr_staticForwardPipeline_LR = Rhi->CreateGraphicsPipeline();
-  pbr_staticForwardPipeline_NoLR = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* pbr_Pipeline = Rhi->createGraphicsPipeline();
+  pbr_staticForwardPipeline_LR = Rhi->createGraphicsPipeline();
+  pbr_staticForwardPipeline_NoLR = Rhi->createGraphicsPipeline();
   pbr_forwardPipeline_LR = pbr_Pipeline;
-  pbr_forwardPipeline_NoLR = Rhi->CreateGraphicsPipeline();
-  pbr_staticForwardPipelineMorphTargets_LR = Rhi->CreateGraphicsPipeline();
-  pbr_staticForwardPipelineMorphTargets_NoLR = Rhi->CreateGraphicsPipeline();
-  pbr_forwardPipelineMorphTargets_LR =  Rhi->CreateGraphicsPipeline();
-  pbr_forwardPipelineMorphTargets_NoLR = Rhi->CreateGraphicsPipeline();
-  pbr_static_LR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_static_NoLR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_dynamic_LR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_dynamic_NoLR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_static_mt_LR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_static_mt_NoLR_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_dynamic_LR_mt_Debug = Rhi->CreateGraphicsPipeline();
-  pbr_dynamic_NoLR_mt_Debug = Rhi->CreateGraphicsPipeline();
+  pbr_forwardPipeline_NoLR = Rhi->createGraphicsPipeline();
+  pbr_staticForwardPipelineMorphTargets_LR = Rhi->createGraphicsPipeline();
+  pbr_staticForwardPipelineMorphTargets_NoLR = Rhi->createGraphicsPipeline();
+  pbr_forwardPipelineMorphTargets_LR =  Rhi->createGraphicsPipeline();
+  pbr_forwardPipelineMorphTargets_NoLR = Rhi->createGraphicsPipeline();
+  pbr_static_LR_Debug = Rhi->createGraphicsPipeline();
+  pbr_static_NoLR_Debug = Rhi->createGraphicsPipeline();
+  pbr_dynamic_LR_Debug = Rhi->createGraphicsPipeline();
+  pbr_dynamic_NoLR_Debug = Rhi->createGraphicsPipeline();
+  pbr_static_mt_LR_Debug = Rhi->createGraphicsPipeline();
+  pbr_static_mt_NoLR_Debug = Rhi->createGraphicsPipeline();
+  pbr_dynamic_LR_mt_Debug = Rhi->createGraphicsPipeline();
+  pbr_dynamic_NoLR_mt_Debug = Rhi->createGraphicsPipeline();
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
-  Shader* VertPBRStatic = Rhi->CreateShader();
-  Shader* VertPBRLR = Rhi->CreateShader();
-  Shader* FragPBRLR = Rhi->CreateShader();
-  Shader* FragPBRNoLR = Rhi->CreateShader();
-  Shader* FragPBRLRDebug = Rhi->CreateShader();
-  Shader* FragPBRNoLRDebug = Rhi->CreateShader();
-  Shader* VertMorphSkin = Rhi->CreateShader();
-  Shader* VertMorphStatic = Rhi->CreateShader();
+  Shader* VertPBRStatic = Rhi->createShader();
+  Shader* VertPBRLR = Rhi->createShader();
+  Shader* FragPBRLR = Rhi->createShader();
+  Shader* FragPBRNoLR = Rhi->createShader();
+  Shader* FragPBRLRDebug = Rhi->createShader();
+  Shader* FragPBRNoLRDebug = Rhi->createShader();
+  Shader* VertMorphSkin = Rhi->createShader();
+  Shader* VertMorphStatic = Rhi->createShader();
 
   LoadShader(pbr_forwardVertStrLR, VertPBRLR);
   LoadShader(gbuffer_StaticVertFileStr, VertPBRStatic);
@@ -652,7 +652,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   
   VkPipelineShaderStageCreateInfo PbrShaders[2];
   PbrShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[0].module = VertPBRLR->Handle();
+  PbrShaders[0].module = VertPBRLR->getHandle();
   PbrShaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
   PbrShaders[0].pName = kDefaultShaderEntryPointStr;
   PbrShaders[0].pNext = nullptr;
@@ -660,14 +660,14 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[0].flags = 0;
 
   PbrShaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  PbrShaders[1].module = FragPBRLR->Handle();
+  PbrShaders[1].module = FragPBRLR->getHandle();
   PbrShaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
   PbrShaders[1].pName = kDefaultShaderEntryPointStr;
   PbrShaders[1].pNext = nullptr;
   PbrShaders[1].flags = 0;
   PbrShaders[1].pSpecializationInfo = nullptr;
 
-  GraphicsInfo.renderPass = pbr_forwardRenderPass->Handle();
+  GraphicsInfo.renderPass = pbr_forwardRenderPass->getHandle();
   GraphicsInfo.stageCount = 2;
   GraphicsInfo.pStages = PbrShaders;
 
@@ -748,14 +748,14 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   GraphicsInfo.pColorBlendState = &colorBlendCI;
 
   std::array<VkDescriptorSetLayout, 7> layouts;
-  layouts[0] = GlobalSetLayoutKey->Layout();
-  layouts[1] = MeshSetLayoutKey->Layout();
-  layouts[2] = MaterialSetLayoutKey->Layout();
-  layouts[3] = LightSetLayoutKey->Layout();
-  layouts[4] = LightViewDescriptorSetLayoutKey->Layout();
-  //layouts[5] = LightViewDescriptorSetLayoutKey->Layout();
-  layouts[5] = globalIllumination_DescLR->Layout();
-  layouts[6] = BonesSetLayoutKey->Layout();
+  layouts[0] = GlobalSetLayoutKey->getLayout();
+  layouts[1] = MeshSetLayoutKey->getLayout();
+  layouts[2] = MaterialSetLayoutKey->getLayout();
+  layouts[3] = LightSetLayoutKey->getLayout();
+  layouts[4] = LightViewDescriptorSetLayoutKey->getLayout();
+  //layouts[5] = LightViewDescriptorSetLayoutKey->getLayout();
+  layouts[5] = globalIllumination_DescLR->getLayout();
+  layouts[6] = BonesSetLayoutKey->getLayout();
 
   struct ivec4 {
     i32 v[4];
@@ -773,11 +773,11 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PipelineLayout.pPushConstantRanges = &range;
   PipelineLayout.pushConstantRangeCount = 0;
 
-  pbr_forwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_forwardPipeline_LR->initialize(GraphicsInfo, PipelineLayout);
 
-  PbrShaders[1].module = FragPBRLRDebug->Handle();
+  PbrShaders[1].module = FragPBRLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
-  pbr_dynamic_LR_Debug->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_dynamic_LR_Debug->initialize(GraphicsInfo, PipelineLayout);
   PipelineLayout.pushConstantRangeCount = 0;
 
   {
@@ -792,25 +792,25 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
-    PbrShaders[0].module = VertMorphSkin->Handle();
-    PbrShaders[1].module = FragPBRLR->Handle();
-    pbr_forwardPipelineMorphTargets_LR->Initialize(ginfo, PipelineLayout);
+    PbrShaders[0].module = VertMorphSkin->getHandle();
+    PbrShaders[1].module = FragPBRLR->getHandle();
+    pbr_forwardPipelineMorphTargets_LR->initialize(ginfo, PipelineLayout);
 
-    PbrShaders[1].module = FragPBRLRDebug->Handle();  
+    PbrShaders[1].module = FragPBRLRDebug->getHandle();  
     PipelineLayout.pushConstantRangeCount = 1;
-    pbr_dynamic_LR_mt_Debug->Initialize(ginfo, PipelineLayout);
+    pbr_dynamic_LR_mt_Debug->initialize(ginfo, PipelineLayout);
     PipelineLayout.pushConstantRangeCount = 0;
   }
 
-  PbrShaders[0].module = VertPBRLR->Handle();
-  PbrShaders[1].module = FragPBRNoLR->Handle();
-  layouts[5] = globalIllumination_DescNoLR->Layout();
+  PbrShaders[0].module = VertPBRLR->getHandle();
+  PbrShaders[1].module = FragPBRNoLR->getHandle();
+  layouts[5] = globalIllumination_DescNoLR->getLayout();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
-  pbr_forwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_forwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
 
-  PbrShaders[1].module = FragPBRNoLRDebug->Handle();
+  PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
-  pbr_dynamic_NoLR_Debug->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_dynamic_NoLR_Debug->initialize(GraphicsInfo, PipelineLayout);
   PipelineLayout.pushConstantRangeCount = 0;
 
   {
@@ -825,21 +825,21 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
-    PbrShaders[0].module = VertMorphSkin->Handle();
-    PbrShaders[1].module = FragPBRNoLR->Handle();
-    pbr_forwardPipelineMorphTargets_NoLR->Initialize(ginfo, PipelineLayout);
+    PbrShaders[0].module = VertMorphSkin->getHandle();
+    PbrShaders[1].module = FragPBRNoLR->getHandle();
+    pbr_forwardPipelineMorphTargets_NoLR->initialize(ginfo, PipelineLayout);
 
-    PbrShaders[1].module = FragPBRNoLRDebug->Handle();
+    PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
-    pbr_dynamic_NoLR_mt_Debug->Initialize(ginfo, PipelineLayout);
+    pbr_dynamic_NoLR_mt_Debug->initialize(ginfo, PipelineLayout);
     PipelineLayout.pushConstantRangeCount = 0;
   }
 
-  PbrShaders[0].module = VertPBRStatic->Handle();
-  PbrShaders[1].module = FragPBRLR->Handle();
+  PbrShaders[0].module = VertPBRStatic->getHandle();
+  PbrShaders[1].module = FragPBRLR->getHandle();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
 
-  // Static pipeline creation.
+  // isStatic pipeline creation.
   auto StaticBindings = StaticVertexDescription::GetBindingDescription();
   auto StaticVertexAttribs = StaticVertexDescription::GetVertexAttributes();
   VkPipelineVertexInputStateCreateInfo Input = {};
@@ -851,12 +851,12 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   Input.pVertexAttributeDescriptions = StaticVertexAttribs.data();
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
-  layouts[5] = globalIllumination_DescLR->Layout();
-  pbr_staticForwardPipeline_LR->Initialize(GraphicsInfo, PipelineLayout);
+  layouts[5] = globalIllumination_DescLR->getLayout();
+  pbr_staticForwardPipeline_LR->initialize(GraphicsInfo, PipelineLayout);
 
-  PbrShaders[1].module = FragPBRLRDebug->Handle();
+  PbrShaders[1].module = FragPBRLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
-  pbr_static_LR_Debug->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_static_LR_Debug->initialize(GraphicsInfo, PipelineLayout);
   PipelineLayout.pushConstantRangeCount = 0;
 
   {
@@ -871,27 +871,27 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
-    PbrShaders[0].module = VertMorphStatic->Handle();
-    PbrShaders[1].module = FragPBRLR->Handle();
-    pbr_staticForwardPipelineMorphTargets_LR->Initialize(ginfo, PipelineLayout);
+    PbrShaders[0].module = VertMorphStatic->getHandle();
+    PbrShaders[1].module = FragPBRLR->getHandle();
+    pbr_staticForwardPipelineMorphTargets_LR->initialize(ginfo, PipelineLayout);
 
-    PbrShaders[1].module = FragPBRLRDebug->Handle();
+    PbrShaders[1].module = FragPBRLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
-    pbr_static_mt_LR_Debug->Initialize(ginfo, PipelineLayout);
+    pbr_static_mt_LR_Debug->initialize(ginfo, PipelineLayout);
     PipelineLayout.pushConstantRangeCount = 0;
   }
 
 
   // No Local Reflections pipelines.
-  PbrShaders[0].module = VertPBRStatic->Handle();
-  PbrShaders[1].module = FragPBRNoLR->Handle();
-  layouts[5] = globalIllumination_DescNoLR->Layout();
+  PbrShaders[0].module = VertPBRStatic->getHandle();
+  PbrShaders[1].module = FragPBRNoLR->getHandle();
+  layouts[5] = globalIllumination_DescNoLR->getLayout();
   PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
-  pbr_staticForwardPipeline_NoLR->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_staticForwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
 
-  PbrShaders[1].module = FragPBRNoLRDebug->Handle();
+  PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
-  pbr_static_NoLR_Debug->Initialize(GraphicsInfo, PipelineLayout);
+  pbr_static_NoLR_Debug->initialize(GraphicsInfo, PipelineLayout);
   PipelineLayout.pushConstantRangeCount = 0;
 
   {
@@ -906,24 +906,24 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
     input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
 
-    PbrShaders[0].module = VertMorphStatic->Handle();
-    PbrShaders[1].module = FragPBRNoLR->Handle();
-    pbr_staticForwardPipelineMorphTargets_NoLR->Initialize(ginfo, PipelineLayout);
+    PbrShaders[0].module = VertMorphStatic->getHandle();
+    PbrShaders[1].module = FragPBRNoLR->getHandle();
+    pbr_staticForwardPipelineMorphTargets_NoLR->initialize(ginfo, PipelineLayout);
 
-    PbrShaders[1].module = FragPBRNoLRDebug->Handle();
+    PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
-    pbr_static_mt_NoLR_Debug->Initialize(ginfo, PipelineLayout);
+    pbr_static_mt_NoLR_Debug->initialize(ginfo, PipelineLayout);
     PipelineLayout.pushConstantRangeCount = 0;
   }
 
-  Rhi->FreeShader(VertPBRStatic);
-  Rhi->FreeShader(VertPBRLR);
-  Rhi->FreeShader(FragPBRLR);
-  Rhi->FreeShader(FragPBRNoLR);
-  Rhi->FreeShader(VertMorphSkin);
-  Rhi->FreeShader(VertMorphStatic);
-  Rhi->FreeShader(FragPBRLRDebug);
-  Rhi->FreeShader(FragPBRNoLRDebug);
+  Rhi->freeShader(VertPBRStatic);
+  Rhi->freeShader(VertPBRLR);
+  Rhi->freeShader(FragPBRLR);
+  Rhi->freeShader(FragPBRNoLR);
+  Rhi->freeShader(VertMorphSkin);
+  Rhi->freeShader(VertMorphStatic);
+  Rhi->freeShader(FragPBRLRDebug);
+  Rhi->freeShader(FragPBRNoLRDebug);
 }
 
 
@@ -939,11 +939,11 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   n.primitiveRestartEnable = VK_FALSE;
   GraphicsInfo.pInputAssemblyState = &n;
 
-  GraphicsPipeline* Downscale2x = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* Downscale4x = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* Downscale8x = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* Downscale16x = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* GlowPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* Downscale2x = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* Downscale4x = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* Downscale8x = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* Downscale16x = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* GlowPipeline = Rhi->createGraphicsPipeline();
   // Scaled and Final framebuffers have the same renderpass, so we can just use 
   // one of their renderpasses.
   FrameBuffer*      FrameBuffer2x = FrameBuffer2xHorizKey;
@@ -959,8 +959,8 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   DescriptorSetLayout* DownscaleDescLayout = DownscaleBlurLayoutKey;
   DescriptorSetLayout* GlowDescLayout = GlowDescriptorSetLayoutKey;
 
-  Shader* DbVert = Rhi->CreateShader();
-  Shader* DbFrag = Rhi->CreateShader();
+  Shader* DbVert = Rhi->createShader();
+  Shader* DbFrag = Rhi->createShader();
 
   LoadShader(DownscaleBlurVertFileStr, DbVert);
   LoadShader(DownscaleBlurFragFileStr, DbFrag);
@@ -970,7 +970,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   PushConst.size = 12;
   PushConst.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-  VkDescriptorSetLayout DwnsclLayout[] = { DownscaleDescLayout->Layout() };
+  VkDescriptorSetLayout DwnsclLayout[] = { DownscaleDescLayout->getLayout() };
   VkPipelineLayoutCreateInfo DownscaleLayout = {};
   DownscaleLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   DownscaleLayout.pushConstantRangeCount = 1;
@@ -980,7 +980,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
 
   VkPipelineShaderStageCreateInfo ShaderModules[2];
   ShaderModules[0].flags = 0;
-  ShaderModules[0].module = DbVert->Handle();
+  ShaderModules[0].module = DbVert->getHandle();
   ShaderModules[0].pName = kDefaultShaderEntryPointStr;
   ShaderModules[0].pNext = nullptr;
   ShaderModules[0].pSpecializationInfo = nullptr;
@@ -988,7 +988,7 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   ShaderModules[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
   ShaderModules[1].flags = 0;
-  ShaderModules[1].module = DbFrag->Handle();
+  ShaderModules[1].module = DbFrag->getHandle();
   ShaderModules[1].pName = kDefaultShaderEntryPointStr;
   ShaderModules[1].pNext = nullptr;
   ShaderModules[1].pSpecializationInfo = nullptr;
@@ -998,57 +998,57 @@ void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GraphicsInfo.pStages = ShaderModules;
   GraphicsInfo.stageCount = 2;
 
-  GraphicsInfo.renderPass = FrameBuffer2x->RenderPassRef()->Handle();
-  Downscale2x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer4x->RenderPassRef()->Handle();
-  Downscale4x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer8x->RenderPassRef()->Handle();
-  Downscale8x->Initialize(GraphicsInfo, DownscaleLayout);
-  GraphicsInfo.renderPass = FrameBuffer16x->RenderPassRef()->Handle();
-  Downscale16x->Initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer2x->RenderPassRef()->getHandle();
+  Downscale2x->initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer4x->RenderPassRef()->getHandle();
+  Downscale4x->initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer8x->RenderPassRef()->getHandle();
+  Downscale8x->initialize(GraphicsInfo, DownscaleLayout);
+  GraphicsInfo.renderPass = FrameBuffer16x->RenderPassRef()->getHandle();
+  Downscale16x->initialize(GraphicsInfo, DownscaleLayout);
 
-  Rhi->FreeShader(DbFrag);
-  DbFrag = Rhi->CreateShader();
+  Rhi->freeShader(DbFrag);
+  DbFrag = Rhi->createShader();
 
   LoadShader(GlowFragFileStr, DbFrag);
 
-  ShaderModules[1].module = DbFrag->Handle();
+  ShaderModules[1].module = DbFrag->getHandle();
   VkPipelineLayoutCreateInfo GlowPipelineLayout = { };
-  VkDescriptorSetLayout GlowDescSetLayout = GlowDescLayout->Layout();
+  VkDescriptorSetLayout GlowDescSetLayout = GlowDescLayout->getLayout();
   GlowPipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   GlowPipelineLayout.pSetLayouts = &GlowDescSetLayout;
   GlowPipelineLayout.setLayoutCount = 1;
   GlowPipelineLayout.pPushConstantRanges = nullptr;
   GlowPipelineLayout.pushConstantRangeCount = 0;
 
-  GraphicsInfo.renderPass = GlowFrameBuffer->RenderPassRef()->Handle();
-  GlowPipeline->Initialize(GraphicsInfo, GlowPipelineLayout);
+  GraphicsInfo.renderPass = GlowFrameBuffer->RenderPassRef()->getHandle();
+  GlowPipeline->initialize(GraphicsInfo, GlowPipelineLayout);
 
-  Rhi->FreeShader(DbVert);
-  Rhi->FreeShader(DbFrag);
+  Rhi->freeShader(DbVert);
+  Rhi->freeShader(DbFrag);
 }
 
 
 void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  Shader* quadVert = Rhi->CreateShader();
-  Shader* quadFrag = Rhi->CreateShader();
+  Shader* quadVert = Rhi->createShader();
+  Shader* quadFrag = Rhi->createShader();
   // TODO(): Need to structure all of this into more manageable modules.
   //
   VkPipelineInputAssemblyStateCreateInfo n = { };
 
-  GraphicsPipeline* quadPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* quadPipeline = Rhi->createGraphicsPipeline();
   final_PipelineKey = quadPipeline;
 
   LoadShader(final_VertFileStr, quadVert);
   LoadShader(final_FragFileStr, quadFrag);
 
-  GraphicsInfo.renderPass = final_frameBufferKey->RenderPassRef()->Handle();
+  GraphicsInfo.renderPass = final_frameBufferKey->RenderPassRef()->getHandle();
 
   VkPipelineShaderStageCreateInfo FinalShaders[2];
   FinalShaders[0].flags = 0;
-  FinalShaders[0].module = quadVert->Handle();
+  FinalShaders[0].module = quadVert->getHandle();
   FinalShaders[0].pName = kDefaultShaderEntryPointStr;
   FinalShaders[0].pNext = nullptr;
   FinalShaders[0].pSpecializationInfo = nullptr;
@@ -1056,7 +1056,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   FinalShaders[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
   FinalShaders[1].flags = 0;
-  FinalShaders[1].module = quadFrag->Handle();
+  FinalShaders[1].module = quadFrag->getHandle();
   FinalShaders[1].pName = kDefaultShaderEntryPointStr;
   FinalShaders[1].pNext = nullptr;
   FinalShaders[1].pSpecializationInfo = nullptr;
@@ -1069,38 +1069,38 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   VkPipelineLayoutCreateInfo finalLayout = {};
   finalLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   finalLayout.setLayoutCount = 1;
-  VkDescriptorSetLayout finalL = final_DescSetLayoutKey->Layout();
+  VkDescriptorSetLayout finalL = final_DescSetLayoutKey->getLayout();
   finalLayout.pSetLayouts = &finalL;
   finalLayout.pushConstantRangeCount = 0;
   finalLayout.pPushConstantRanges = nullptr;
 
-  quadPipeline->Initialize(GraphicsInfo, finalLayout);
+  quadPipeline->initialize(GraphicsInfo, finalLayout);
 
   // Now create the output pipeline.
-  output_pipelineKey = Rhi->CreateGraphicsPipeline();
-  GraphicsInfo.renderPass = Rhi->SwapchainRenderPass();
-  output_pipelineKey->Initialize(GraphicsInfo, finalLayout);
+  output_pipelineKey = Rhi->createGraphicsPipeline();
+  GraphicsInfo.renderPass = Rhi->swapchainRenderPass();
+  output_pipelineKey->initialize(GraphicsInfo, finalLayout);
 
-  Rhi->FreeShader(quadVert);
-  Rhi->FreeShader(quadFrag);
+  Rhi->freeShader(quadVert);
+  Rhi->freeShader(quadFrag);
 }
 
 
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
-  GraphicsPipeline* ShadowMapPipeline = Rhi->CreateGraphicsPipeline();
-  GraphicsPipeline* DynamicShadowMapPipeline = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* ShadowMapPipeline = Rhi->createGraphicsPipeline();
+  GraphicsPipeline* DynamicShadowMapPipeline = Rhi->createGraphicsPipeline();
   ShadowMapPipelineKey = ShadowMapPipeline;
   DynamicShadowMapPipelineKey = DynamicShadowMapPipeline;
 
   // TODO(): Initialize shadow map pipeline.
   VkPipelineLayoutCreateInfo PipeLayout = {};
   std::array<VkDescriptorSetLayout, 4> DescLayouts;
-  DescLayouts[0] = MeshSetLayoutKey->Layout();
-  DescLayouts[1] = LightViewDescriptorSetLayoutKey->Layout();
-  DescLayouts[2] = MaterialSetLayoutKey->Layout();
-  DescLayouts[3] = BonesSetLayoutKey->Layout();
+  DescLayouts[0] = MeshSetLayoutKey->getLayout();
+  DescLayouts[1] = LightViewDescriptorSetLayoutKey->getLayout();
+  DescLayouts[2] = MaterialSetLayoutKey->getLayout();
+  DescLayouts[3] = BonesSetLayoutKey->getLayout();
 
   auto Bindings = StaticVertexDescription::GetBindingDescription();
   auto Attribs = StaticVertexDescription::GetVertexAttributes();
@@ -1120,8 +1120,8 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   // ShadowMapping shader.
   // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
   // This will prevent blurry shadows. It must be combined in the forward render pass (maybe?)
-  Shader* SmVert = Rhi->CreateShader();
-  Shader* SmFrag = Rhi->CreateShader();
+  Shader* SmVert = Rhi->createShader();
+  Shader* SmFrag = Rhi->createShader();
 
   RendererPass::LoadShader(ShadowMapVertFileStr, SmVert);
   RendererPass::LoadShader(ShadowMapFragFileStr, SmFrag);
@@ -1133,7 +1133,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   Shaders[0].pNext = nullptr;
   Shaders[0].pSpecializationInfo = nullptr;
   Shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  Shaders[0].module = SmVert->Handle();
+  Shaders[0].module = SmVert->getHandle();
 
   Shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   Shaders[1].flags = 0;
@@ -1141,7 +1141,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   Shaders[1].pNext = nullptr;
   Shaders[1].pSpecializationInfo = nullptr;
   Shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  Shaders[1].module = SmFrag->Handle();
+  Shaders[1].module = SmFrag->getHandle();
 
   GraphicsPipelineInfo.pStages = Shaders.data();
   GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
@@ -1158,7 +1158,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   );
 
   GraphicsPipelineInfo.pRasterizationState = &rasterizerCI;
-  ShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
+  ShadowMapPipeline->initialize(GraphicsPipelineInfo, PipeLayout);
 
   Bindings = SkinnedVertexDescription::GetBindingDescription();
   Attribs = SkinnedVertexDescription::GetVertexAttributes();
@@ -1172,16 +1172,16 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   // Create the dynamic shadow map pipeline.
 
   
-  Rhi->FreeShader(SmVert);
-  SmVert = Rhi->CreateShader();
+  Rhi->freeShader(SmVert);
+  SmVert = Rhi->createShader();
   LoadShader(DynamicShadowMapVertFileStr, SmVert);
  
-  Shaders[0].module = SmVert->Handle();
+  Shaders[0].module = SmVert->getHandle();
 
-  DynamicShadowMapPipeline->Initialize(GraphicsPipelineInfo, PipeLayout);
+  DynamicShadowMapPipeline->initialize(GraphicsPipelineInfo, PipeLayout);
 
-  Rhi->FreeShader(SmVert);
-  Rhi->FreeShader(SmFrag);
+  Rhi->freeShader(SmVert);
+  Rhi->freeShader(SmFrag);
 
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
 }
@@ -1189,8 +1189,8 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
 
 void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
-  Shader* vert = Rhi->CreateShader();
-  Shader* frag = Rhi->CreateShader();
+  Shader* vert = Rhi->createShader();
+  Shader* frag = Rhi->createShader();
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = DefaultInfo;
 
   VkVertexInputBindingDescription vertInput = { };
@@ -1212,15 +1212,15 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   inputState.pVertexAttributeDescriptions = &attrib;
   GraphicsPipelineInfo.pVertexInputState = &inputState;
 
-  GraphicsPipeline* sky = Rhi->CreateGraphicsPipeline();
+  GraphicsPipeline* sky = Rhi->createGraphicsPipeline();
   skybox_pipelineKey = sky;
   
   DescriptorSetLayout* global = GlobalSetLayoutKey;
   DescriptorSetLayout* skybox = skybox_setLayoutKey;
 
   VkDescriptorSetLayout layouts[] = { 
-    global->Layout(),
-    skybox->Layout()
+    global->getLayout(),
+    skybox->getLayout()
   };
 
   VkPipelineRasterizationStateCreateInfo raster = CreateRasterInfo(
@@ -1295,7 +1295,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   shaders[0].pNext = nullptr;
   shaders[0].pSpecializationInfo = nullptr;
   shaders[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-  shaders[0].module = vert->Handle();
+  shaders[0].module = vert->getHandle();
 
   shaders[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaders[1].flags = 0;
@@ -1303,16 +1303,16 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   shaders[1].pNext = nullptr;
   shaders[1].pSpecializationInfo = nullptr;
   shaders[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-  shaders[1].module = frag->Handle();
+  shaders[1].module = frag->getHandle();
 
   GraphicsPipelineInfo.stageCount = 2;
   GraphicsPipelineInfo.pStages = shaders.data();
   
-  GraphicsPipelineInfo.renderPass = gRenderer().SkyRendererNative()->GetSkyboxRenderPass()->Handle();
-  sky->Initialize(GraphicsPipelineInfo, pipelineLayout);
+  GraphicsPipelineInfo.renderPass = gRenderer().getSkyRendererNative()->GetSkyboxRenderPass()->getHandle();
+  sky->initialize(GraphicsPipelineInfo, pipelineLayout);
 
-  Rhi->FreeShader(vert);
-  Rhi->FreeShader(frag);
+  Rhi->freeShader(vert);
+  Rhi->freeShader(frag);
 }
 
 
@@ -1322,7 +1322,7 @@ void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
 } // RendererPass
 
 
-void AntiAliasingFXAA::Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
+void AntiAliasingFXAA::initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
 {
   
   CreateTexture(pRhi);
@@ -1335,15 +1335,15 @@ void AntiAliasingFXAA::Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
   layoutCi.pPushConstantRanges = nullptr;
 
   VkDescriptorSetLayout setlayouts[] = {
-    GlobalSetLayoutKey->Layout(),
-    m_layout->Layout()
+    GlobalSetLayoutKey->getLayout(),
+    m_layout->getLayout()
   };
 
   layoutCi.setLayoutCount = 2;
   layoutCi.pSetLayouts = setlayouts;
 
-  Shader* shader = pRhi->CreateShader();
-  switch (pRhi->VendorID()) {
+  Shader* shader = pRhi->createShader();
+  switch (pRhi->vendorID()) {
     case NVIDIA_VENDOR_ID:
     {
       RendererPass::LoadShader("FXAA.comp.spv", shader);
@@ -1357,7 +1357,7 @@ void AntiAliasingFXAA::Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
 
   VkPipelineShaderStageCreateInfo shaderStageCi{};
   shaderStageCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-  shaderStageCi.module = shader->Handle();
+  shaderStageCi.module = shader->getHandle();
   shaderStageCi.pName = kDefaultShaderEntryPointStr;
   shaderStageCi.stage = VK_SHADER_STAGE_COMPUTE_BIT;
   shaderStageCi.flags = 0;
@@ -1367,36 +1367,36 @@ void AntiAliasingFXAA::Initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
   compCi.stage = shaderStageCi;
   compCi.basePipelineHandle = VK_NULL_HANDLE;
 
-  m_pipeline = pRhi->CreateComputePipeline();
-  m_pipeline->Initialize(compCi, layoutCi);
-  pRhi->FreeShader(shader);
+  m_pipeline = pRhi->createComputePipeline();
+  m_pipeline->initialize(compCi, layoutCi);
+  pRhi->freeShader(shader);
 }
 
 
-void AntiAliasingFXAA::CleanUp(VulkanRHI* pRhi)
+void AntiAliasingFXAA::cleanUp(VulkanRHI* pRhi)
 {
   if ( m_output ) {
-    pRhi->FreeTexture(m_output);
+    pRhi->freeTexture(m_output);
     m_output = nullptr;
   }
 
   if ( m_outputSampler ) {
-    pRhi->FreeSampler(m_outputSampler);
+    pRhi->freeSampler(m_outputSampler);
     m_outputSampler = nullptr;
   }
 
   if ( m_layout ) {
-    pRhi->FreeDescriptorSetLayout(m_layout);
+    pRhi->freeDescriptorSetLayout(m_layout);
     m_layout = nullptr;
   }
 
   if ( m_descSet ) {
-    pRhi->FreeDescriptorSet(m_descSet);
+    pRhi->freeDescriptorSet(m_descSet);
     m_descSet = nullptr;
   }
 
   if ( m_pipeline ) {
-    pRhi->FreeComputePipeline(m_pipeline);
+    pRhi->freeComputePipeline(m_pipeline);
     m_pipeline = nullptr;
   }
 }
@@ -1404,8 +1404,8 @@ void AntiAliasingFXAA::CleanUp(VulkanRHI* pRhi)
 
 void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
 {
-  m_output = pRhi->CreateTexture();
-  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  m_output = pRhi->createTexture();
+  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   VkImageCreateInfo imgCi = { };
   VkImageViewCreateInfo imgViewCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1432,14 +1432,14 @@ void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
   imgViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
   RDEBUG_SET_VULKAN_NAME(m_output, "FXAA");
-  m_output->Initialize(imgCi, imgViewCi);
+  m_output->initialize(imgCi, imgViewCi);
 }
 
 
 void AntiAliasingFXAA::CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
 {
-  m_descSet = pRhi->CreateDescriptorSet();
-  m_descSet->Allocate(pRhi->DescriptorPool(), m_layout);
+  m_descSet = pRhi->createDescriptorSet();
+  m_descSet->allocate(pRhi->descriptorPool(), m_layout);
 
   UpdateSets(pRhi, pDescriptor);
 }
@@ -1447,23 +1447,23 @@ void AntiAliasingFXAA::CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pD
 
 void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
 {
-  pRhi->FreeTexture(m_output);
+  pRhi->freeTexture(m_output);
 
   CreateTexture(pRhi);
 
   VkDescriptorBufferInfo worldInfo = {};
-  worldInfo.buffer = pDescriptor->Handle(pRhi->CurrentFrame())->NativeBuffer();
+  worldInfo.buffer = pDescriptor->getHandle(pRhi->currentFrame())->NativeBuffer();
   worldInfo.offset = 0;
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 
   VkDescriptorImageInfo inputInfo = {};
   inputInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  inputInfo.imageView = pbr_FinalTextureKey->View();
-  inputInfo.sampler = gbuffer_SamplerKey->Handle();
+  inputInfo.imageView = pbr_FinalTextureKey->getView();
+  inputInfo.sampler = gbuffer_SamplerKey->getHandle();
 
   VkDescriptorImageInfo outputInfo = {};
   outputInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-  outputInfo.imageView = m_output->View();
+  outputInfo.imageView = m_output->getView();
   outputInfo.sampler = nullptr;
 
   std::array<VkWriteDescriptorSet, 2> writes;
@@ -1483,7 +1483,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   writes[1].dstBinding = 1;
   writes[1].pImageInfo = &outputInfo;
 
-  m_descSet->Update(static_cast<u32>(writes.size()), writes.data());
+  m_descSet->update(static_cast<u32>(writes.size()), writes.data());
 }
 
 
@@ -1508,8 +1508,8 @@ void AntiAliasingFXAA::CreateDescriptorSetLayout(VulkanRHI* pRhi)
   layoutCi.bindingCount = static_cast<u32>(binds.size());
   layoutCi.pBindings = binds.data();
 
-  m_layout = pRhi->CreateDescriptorSetLayout();
-  m_layout->Initialize(layoutCi);
+  m_layout = pRhi->createDescriptorSetLayout();
+  m_layout->initialize(layoutCi);
 }
 
 
@@ -1535,13 +1535,13 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
 
   VkDescriptorSet sets[] = {
-    pGlobal->Set(frameIndex)->Handle(),
-    m_descSet->Handle()
+    pGlobal->getDescriptorSet(frameIndex)->getHandle(),
+    m_descSet->getHandle()
   };
 
-  VkExtent2D extent = pRhi->SwapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
   pOutput->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
-  pOutput->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Layout(), 0, 2, sets, 0, nullptr);
+  pOutput->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
   pOutput->Dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
 
   imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -1556,7 +1556,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
 
 void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
 {
-  m_outputSampler = pRhi->CreateSampler();
+  m_outputSampler = pRhi->createSampler();
   VkSamplerCreateInfo  samplerCi = { };
   samplerCi.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   samplerCi.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
@@ -1574,11 +1574,11 @@ void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
   samplerCi.mipLodBias = 0.0f;
   samplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
   samplerCi.unnormalizedCoordinates = VK_FALSE;
-  m_outputSampler->Initialize(samplerCi);
+  m_outputSampler->initialize(samplerCi);
 }
 
 
-void DebugManager::InitializeRenderPass(VulkanRHI* pRhi)
+void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 {
   Texture* pbrFinal = pbr_FinalTextureKey;
   std::array<VkAttachmentDescription, 1> attachments;
@@ -1613,22 +1613,22 @@ void DebugManager::InitializeRenderPass(VulkanRHI* pRhi)
   rpCi.pSubpasses = &debugSubpass;
   rpCi.subpassCount = 1;
 
-  m_renderPass = pRhi->CreateRenderPass();
-  m_renderPass->Initialize(rpCi);
+  m_renderPass = pRhi->createRenderPass();
+  m_renderPass->initialize(rpCi);
 }
 
 
-void DebugManager::Initialize(VulkanRHI* pRhi)
+void DebugManager::initialize(VulkanRHI* pRhi)
 {
-  InitializeRenderPass(pRhi);
+  initializeRenderPass(pRhi);
 
 }
 
 
-void DebugManager::CleanUp(VulkanRHI* pRhi)
+void DebugManager::cleanUp(VulkanRHI* pRhi)
 {
   if (m_renderPass) {
-    pRhi->FreeRenderPass(m_renderPass);
+    pRhi->freeRenderPass(m_renderPass);
     m_renderPass = nullptr;
   }
 }

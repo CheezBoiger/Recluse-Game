@@ -26,19 +26,19 @@ public:
 
   size_t                  Size() const { return m_currIdx; }
   Cmd&                    operator[](size_t i) { return mCmdList[i]; }
-  Cmd&                    Get(size_t i) { return mCmdList[i]; }
+  Cmd&                    get(size_t i) { return mCmdList[i]; }
 
-  void                    Resize(size_t newSize) { mCmdList.resize(newSize); }
-  void                    SetSortFunc(CmdCompareFunc compare) { mCompare = compare; }
+  void                    resize(size_t newSize) { mCmdList.resize(newSize); }
+  void                    setSortFunc(CmdCompareFunc compare) { mCompare = compare; }
 
   // Push back an object. Returns the index of the object stored in this structure.
-  size_t                  PushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { Resize(mCmdList.size() << 1); } mCmdList[m_currIdx] = cmd; return m_currIdx++; }
-  void                    Erase(u32 i) { mCmdList.erase(mRenderList.begin() + i); }
+  size_t                  pushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { resize(mCmdList.size() << 1); } mCmdList[m_currIdx] = cmd; return m_currIdx++; }
+  void                    erase(u32 i) { mCmdList.erase(mRenderList.begin() + i); }
   // Sort using alg.
-  void                    Sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx), mCompare); }
-  void                    Clear() { m_currIdx = 0; }
+  void                    sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx), mCompare); }
+  void                    clear() { m_currIdx = 0; }
 
-  const Cmd*              Data() { return mCmdList.data(); }
+  const Cmd*              getData() { return mCmdList.data(); }
 private:
   std::vector<Cmd>        mCmdList;
   CmdCompareFunc         mCompare;

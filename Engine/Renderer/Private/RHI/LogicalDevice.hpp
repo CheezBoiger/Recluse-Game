@@ -24,53 +24,57 @@ public:
     , mGraphicsFinishedSemaphore(VK_NULL_HANDLE) { }
 
 
-  b32                   Initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
-                          QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation);
-  void                  CleanUp();
+  b32 initialize(const VkPhysicalDevice physical, 
+                  const VkDeviceCreateInfo& info,
+                  QueueFamily* graphics, 
+                  QueueFamily* compute, 
+                  QueueFamily* transfer, 
+                  QueueFamily* presentation);
+  void cleanUp();
 
   // Performs a manual flush of mapped memory writes to make them visible to the host. This
   // should be used if memory written is not coherent between cpu and gpu.
-  VkResult              FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges);
+  VkResult FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges);
 
-  VkMemoryRequirements          GetImageMemoryRequirements(const VkImage& image);
-  VkMemoryRequirements          GetBufferMemoryRequirements(const VkBuffer& buffer);
-  VkDevice                      Native() const { return handle; }
+  VkMemoryRequirements getImageMemoryRequirements(const VkImage& image);
+  VkMemoryRequirements getBufferMemoryRequirements(const VkBuffer& buffer);
+  VkDevice getNative() const { return handle; }
 
-  void                          WaitOnQueues();
+  void                          waitOnQueues();
 
-  VkQueue                       PresentQueue() { return mPresentationQueue; }
-  VkQueue                       GraphicsQueue(size_t i) { return mGraphicsQueues[i]; }
-  VkQueue                       ComputeQueue(size_t i) { return mComputeQueues[i]; }
-  VkQueue                       TransferQueue(size_t i) { return mTransferQueues[i]; }
+  VkQueue getPresentQueue() { return mPresentationQueue; }
+  VkQueue getGraphicsQueue(size_t i) { return mGraphicsQueues[i]; }
+  VkQueue getComputeQueue(size_t i) { return mComputeQueues[i]; }
+  VkQueue getTransferQueue(size_t i) { return mTransferQueues[i]; }
 
-  QueueFamily&                  PresentQueueFamily() { return mPresentationQueueFamily; }
-  QueueFamily&                  GraphicsQueueFamily() { return mGraphicsQueueFamily; }
-  QueueFamily&                  ComputeQueueFamily() { return mComputeQueueFamily; }
-  QueueFamily&                  TransferQueueFamily() { return mTransferQueueFamily; }
+  QueueFamily& getPresentQueueFamily() { return mPresentationQueueFamily; }
+  QueueFamily& getGraphicsQueueFamily() { return mGraphicsQueueFamily; }
+  QueueFamily& getComputeQueueFamily() { return mComputeQueueFamily; }
+  QueueFamily& getTransferQueueFamily() { return mTransferQueueFamily; }
 
-  VkFence                       DefaultComputeFence() { return mDefaultComputeFence; }
+  VkFence getDefaultComputeFence() { return mDefaultComputeFence; }
 
-  u32                           GraphicsQueueCount() const { return static_cast<u32>(mGraphicsQueues.size()); }
-  u32                           TransferQueueCount() const { return static_cast<u32>(mTransferQueues.size()); }
-  u32                           ComputeQueueCount() const { return static_cast<u32>(mComputeQueues.size()); }
+  u32 getGraphicsQueueCount() const { return static_cast<u32>(mGraphicsQueues.size()); }
+  u32 getTransferQueueCount() const { return static_cast<u32>(mTransferQueues.size()); }
+  u32 getComputeQueueCount() const { return static_cast<u32>(mComputeQueues.size()); }
 
 private:
-  VkDevice              handle;
+  VkDevice handle;
 
-  VkQueue                       mPresentationQueue;
-  std::vector<VkQueue>          mGraphicsQueues;
-  std::vector<VkQueue>          mComputeQueues;
-  std::vector<VkQueue>          mTransferQueues;
+  VkQueue mPresentationQueue;
+  std::vector<VkQueue> mGraphicsQueues;
+  std::vector<VkQueue> mComputeQueues;
+  std::vector<VkQueue> mTransferQueues;
 
-  QueueFamily                   mPresentationQueueFamily;
-  QueueFamily                   mGraphicsQueueFamily;
-  QueueFamily                   mComputeQueueFamily;
-  QueueFamily                   mTransferQueueFamily;
+  QueueFamily mPresentationQueueFamily;
+  QueueFamily mGraphicsQueueFamily;
+  QueueFamily mComputeQueueFamily;
+  QueueFamily mTransferQueueFamily;
 
-  VkSemaphore                   mImageAvailableSemaphore;
-  VkSemaphore                   mGraphicsFinishedSemaphore;
-  VkFence                       mDefaultComputeFence;
+  VkSemaphore mImageAvailableSemaphore;
+  VkSemaphore mGraphicsFinishedSemaphore;
+  VkFence mDefaultComputeFence;
 
-  void                          CreateComputeFence();
+  void createComputeFence();
 };
 } // Recluse

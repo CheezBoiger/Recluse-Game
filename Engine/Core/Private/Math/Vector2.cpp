@@ -6,13 +6,13 @@
 namespace Recluse {
 
 
-Vector2 Vector2::Lerp(const Vector2& a, const Vector2& b, r32 t)
+Vector2 Vector2::lerp(const Vector2& a, const Vector2& b, r32 t)
 {
   return a * (1.0f - t) + b * t;
 }
 
 
-Vector2 Vector2::Min(const Vector2& a, const Vector2& b)
+Vector2 Vector2::minimum(const Vector2& a, const Vector2& b)
 {
   return Vector2(
     b.x < a.x ? b.x : a.y,
@@ -21,7 +21,7 @@ Vector2 Vector2::Min(const Vector2& a, const Vector2& b)
 }
 
 
-Vector2 Vector2::Max(const Vector2& a, const Vector2& b)
+Vector2 Vector2::maximum(const Vector2& a, const Vector2& b)
 {
   return Vector2(
     a.x < b.x ? b.x : a.x,
@@ -30,9 +30,9 @@ Vector2 Vector2::Max(const Vector2& a, const Vector2& b)
 }
 
 
-Vector2 Vector2::Normalize() const
+Vector2 Vector2::normalize() const
 {
-  return (*this / Length());
+  return (*this / length());
 }
 
 
@@ -116,19 +116,19 @@ void Vector2::operator/=(const r32 scaler)
 }
 
 
-r32 Vector2::Length() const
+r32 Vector2::length() const
 {
   return sqrtf((x*x) + (y*y));
 }
 
 
-r32 Vector2::LengthSqr() const
+r32 Vector2::lengthSqr() const
 {
   return (x * x) + (y * y);
 }
 
 
-r32 Vector2::Dot(const Vector2& other) const
+r32 Vector2::dot(const Vector2& other) const
 {
   return ((x*other.x) + (y*other.y));
 }

@@ -14,28 +14,28 @@ namespace Recluse {
 DEFINE_COMPONENT_MAP(AnimationComponent);
 
 
-void AnimationComponent::OnCleanUp()
+void AnimationComponent::onCleanUp()
 {
-  gAnimation().FreeAnimHandle(m_handle);
+  gAnimation().freeAnimHandle(m_handle);
   m_handle = nullptr;
   UNREGISTER_COMPONENT(AnimationComponent);
 }
 
 
-void AnimationComponent::OnInitialize(GameObject* owner)
+void AnimationComponent::onInitialize(GameObject* owner)
 {
-  m_handle = gAnimation().CreateAnimHandle(owner->GetId());
+  m_handle = gAnimation().createAnimHandle(owner->getId());
   REGISTER_COMPONENT(AnimationComponent, this);
 }
 
 
-void AnimationComponent::AddClip(AnimClip* clip, const std::string& name)
+void AnimationComponent::addClip(AnimClip* clip, const std::string& name)
 {
   m_clips[name] = clip;
 }
 
 
-void AnimationComponent::Playback(const std::string& name,  r32 rate, r32 atTime)
+void AnimationComponent::playback(const std::string& name,  r32 rate, r32 atTime)
 {
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
@@ -47,7 +47,7 @@ void AnimationComponent::Playback(const std::string& name,  r32 rate, r32 atTime
 }
 
 
-void AnimationComponent::Update()
+void AnimationComponent::update()
 {
   if ( m_currClip ) {
     AnimClip* clip = m_currClip;
@@ -55,24 +55,24 @@ void AnimationComponent::Update()
     submit._type = ANIM_JOB_TYPE_SAMPLE;
     submit._pBaseClip = clip;
     submit._output = m_handle;
-    gAnimation().SubmitJob(submit);
+    gAnimation().submitJob(submit);
   }
 }
 
 
-void AnimationComponent::BlendPlayback(const std::string& name, r32 targetWeight, r32 fadeLen)
+void AnimationComponent::blendPlayback(const std::string& name, r32 targetWeight, r32 fadeLen)
 {
   AnimJobSubmitInfo info{}; 
 }
 
 
-void AnimationComponent::SetPlaybackRate(r32 rate)
+void AnimationComponent::setPlaybackRate(r32 rate)
 {
   m_handle->_currState._fPlaybackRate = rate;
 }
 
 
-r32 AnimationComponent::GetPlaybackRate() const
+r32 AnimationComponent::getPlaybackRate() const
 {
   return m_handle->_currState._fPlaybackRate;
 }

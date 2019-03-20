@@ -17,8 +17,8 @@ public:
     , mMemory(nullptr)
     , mMemSize(0) { }
 
-  void              CleanUp();
-  void              Initialize(const VkBufferCreateInfo& info, 
+  void              cleanUp();
+  void              initialize(const VkBufferCreateInfo& info, 
                       VkMemoryPropertyFlags memFlags);
 
   // Map call which will map out the buffer in memory. Returns the pointer of the mapped

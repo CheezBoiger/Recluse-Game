@@ -183,36 +183,36 @@ int main(int c, char* argv[])
     u32 width = 800;
     u32 height = 600;
     GraphicsConfigParams params = ReadGraphicsConfig(width, height);
-    gEngine().StartUp("Recluse", false, width, height, &params);
-    gEngine().Run();
-    Window* pWindow = gEngine().GetWindow();
+    gEngine().startUp("Recluse", false, width, height, &params);
+    gEngine().run();
+    Window* pWindow = gEngine().getWindow();
     switch (params._WindowType) {
     case WindowType_Borderless:
     {
-      pWindow->SetToWindowed(width, height, true);
-      pWindow->SetToCenter();
+      pWindow->setToWindowed(width, height, true);
+      pWindow->setToCenter();
     } break;
     case WindowType_Border:
     {
-      pWindow->SetToWindowed(width, height);
-      pWindow->SetToCenter();
+      pWindow->setToWindowed(width, height);
+      pWindow->setToCenter();
     } break;
     case WindowType_Fullscreen:
     default:
-      pWindow->SetToFullScreen();
+      pWindow->setToFullScreen();
     }
-    pWindow->Show();
+    pWindow->show();
   }
   
-  while (gEngine().Running()) {
-    Time::Update();
-    gEngine().ProcessInput();
+  while (gEngine().isRunning()) {
+    Time::update();
+    gEngine().processInput();
     // Scene updating goes here.
 
-    gEngine().Update();
+    gEngine().update();
   }
 
-  AssetManager::CleanUpAssets();
-  gEngine().CleanUp();
+  AssetManager::cleanUpAssets();
+  gEngine().cleanUp();
   return 0;
 }

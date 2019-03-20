@@ -10,11 +10,11 @@
 namespace Recluse {
 
 
-const Vector3 Cube::Min = Vector3(-1.0f, -1.0f, -1.0f);
-const Vector3 Cube::Max = Vector3( 1.0f,  1.0f,  1.0f);
+const Vector3 Cube::minimum = Vector3(-1.0f, -1.0f, -1.0f);
+const Vector3 Cube::maximum = Vector3( 1.0f,  1.0f,  1.0f);
 
 std::array<Vector4, 36> positions = {
-  // Front
+  // front
   Vector4(-1.0f, -1.0f, 1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, 1.0f, 1.0f),
   Vector4( 1.0f,  1.0f, 1.0f, 1.0f),
@@ -28,7 +28,7 @@ std::array<Vector4, 36> positions = {
   Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
   Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
-  // Up
+  // up
   Vector4( 1.0f,  1.0f,  1.0f, 1.0f),
   Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
   Vector4(-1.0f,  1.0f, -1.0f, 1.0f),
@@ -42,7 +42,7 @@ std::array<Vector4, 36> positions = {
   Vector4(-1.0f, -1.0f, -1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
   Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
-  // Right
+  // right
   Vector4( 1.0f, -1.0f,  1.0f, 1.0f),
   Vector4( 1.0f, -1.0f, -1.0f, 1.0f),
   Vector4( 1.0f,  1.0f, -1.0f, 1.0f),
@@ -60,7 +60,7 @@ std::array<Vector4, 36> positions = {
 
 
 std::array<Vector4, 36> normals = {
-  // Front 
+  // front 
   Vector4(0.0f, 0.0f, 1.0f, 0.0f),
   Vector4(0.0f, 0.0f, 1.0f, 0.0f),
   Vector4(0.0f, 0.0f, 1.0f, 0.0f),
@@ -74,7 +74,7 @@ std::array<Vector4, 36> normals = {
   Vector4(0.0f, 0.0f, -1.0f, 0.0f),
   Vector4(0.0f, 0.0f, -1.0f, 0.0f),
   Vector4(0.0f, 0.0f, -1.0f, 0.0f),
-  // Up
+  // up
   Vector4(0.0f, 1.0f, 0.0f, 0.0f),
   Vector4(0.0f, 1.0f, 0.0f, 0.0f),
   Vector4(0.0f, 1.0f, 0.0f, 0.0f),
@@ -88,7 +88,7 @@ std::array<Vector4, 36> normals = {
   Vector4(0.0f, -1.0f, 0.0f, 0.0f),
   Vector4(0.0f, -1.0f, 0.0f, 0.0f),
   Vector4(0.0f, -1.0f, 0.0f, 0.0f),
-  // Right
+  // right
   Vector4(1.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 0.0f, 0.0f),
@@ -106,7 +106,7 @@ std::array<Vector4, 36> normals = {
 
 
 std::array<Vector4, 36> texcoords = {
-  // Front
+  // front
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 1.0f, 0.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -135,7 +135,7 @@ std::array<Vector4, 36> texcoords = {
   Vector4(0.0f, 1.0f, 0.0f, 1.0f),
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
 
-  // Right
+  // right
   Vector4(0.0f, 0.0f, 0.0f, 0.0f),
   Vector4(1.0f, 0.0f, 1.0f, 0.0f),
   Vector4(1.0f, 1.0f, 1.0f, 1.0f),
@@ -214,7 +214,7 @@ std::array<u32, 36> indices = {
 };
 
 
-std::vector<StaticVertex> Cube::MeshInstance(r32 scale)
+std::vector<StaticVertex> Cube::meshInstance(r32 scale)
 {
   std::vector<StaticVertex> cube(36);
   for (size_t i = 0; i < cube.size(); ++i) {
@@ -231,7 +231,7 @@ std::vector<StaticVertex> Cube::MeshInstance(r32 scale)
 }
 
 
-std::vector<u32> Cube::IndicesInstance()
+std::vector<u32> Cube::indicesInstance()
 {
   std::vector<u32> cubeIs(36);
   for (size_t i = 0; i < indices.size(); ++i) {

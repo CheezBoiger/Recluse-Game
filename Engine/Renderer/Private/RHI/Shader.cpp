@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-b32 Shader::Initialize(const std::string& binaryPath)
+b32 Shader::initialize(const std::string& binaryPath)
 {
   if (binaryPath.empty()) return false;
   
@@ -47,7 +47,7 @@ Shader::~Shader()
 }
 
 
-void Shader::CleanUp()
+void Shader::cleanUp()
 {
   if (mModule) {
     vkDestroyShaderModule(mOwner, mModule, nullptr);

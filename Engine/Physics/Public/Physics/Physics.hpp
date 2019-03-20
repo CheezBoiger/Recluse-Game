@@ -74,39 +74,39 @@ public:
   virtual ~Physics() { }
   Physics() { }
 
-  virtual void                            OnStartUp() override;
-  virtual void                            OnShutDown() override;
+  virtual void                            onStartUp() override;
+  virtual void                            onShutDown() override;
 
 
-  virtual RigidBody*                      CreateRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
+  virtual RigidBody*                      createRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
 
-  virtual BoxCollider*                    CreateBoxCollider(const Vector3& scale) { return nullptr; }
-  virtual SphereCollider*                 CreateSphereCollider(r32 radius) { return nullptr; }
-  virtual CompoundCollider*               CreateCompoundCollider() { return nullptr; }
-  virtual void                            UpdateCompoundCollider(RigidBody* body, CompoundCollider* compound) { }
-  virtual void                            FreeRigidBody(RigidBody* body) { }
+  virtual BoxCollider*                    createBoxCollider(const Vector3& scale) { return nullptr; }
+  virtual SphereCollider*                 createSphereCollider(r32 radius) { return nullptr; }
+  virtual CompoundCollider*               createCompoundCollider() { return nullptr; }
+  virtual void                            updateCompoundCollider(RigidBody* body, CompoundCollider* compound) { }
+  virtual void                            freeRigidBody(RigidBody* body) { }
 
-  virtual void                            Reset(RigidBody* body) { }
-  virtual void                            FreeCollider(Collider* collider) { }
-  virtual void                            UpdateRigidBody(RigidBody* body, physics_update_bits_t bits) { }
+  virtual void                            reset(RigidBody* body) { }
+  virtual void                            freeCollider(Collider* collider) { }
+  virtual void                            updateRigidBody(RigidBody* body, physics_update_bits_t bits) { }
   virtual void                            SetWorldGravity(const Vector3& gravity) { }
 
-  virtual void                            SetMass(RigidBody* body, r32 mass) { }
-  virtual void                            ApplyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) { }
-  virtual void                            ApplyForce(RigidBody* body, const Vector3& force) { }
-  virtual void                            ActivateRigidBody(RigidBody* body) { } 
-  virtual void                            DeactivateRigidBody(RigidBody* body) { }
-  virtual void                            SetTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
+  virtual void                            setMass(RigidBody* body, r32 mass) { }
+  virtual void                            applyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) { }
+  virtual void                            applyForce(RigidBody* body, const Vector3& force) { }
+  virtual void                            activateRigidBody(RigidBody* body) { } 
+  virtual void                            deactivateRigidBody(RigidBody* body) { }
+  virtual void                            setTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
 
-  virtual void                            SetFriction(RigidBody* body, r32 friction) { }
-  virtual void                            SetRollingFriction(RigidBody* body, r32 friction) { }
-  virtual void                            SetSpinningFriction(RigidBody* body, r32 friction) { }
-  virtual void                            ClearForces(RigidBody* body) { }
-  virtual void                            UpdateState(r64 dt, r64 fixedTime) { }
-  virtual void                            AddCollider(RigidBody* body, Collider* collider) { }
-  virtual b32                             RayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
-  virtual b32                             RayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) { return false; }
-  virtual void                            UpdateCollider(Collider* collider) { }
+  virtual void                            setFriction(RigidBody* body, r32 friction) { }
+  virtual void                            setRollingFriction(RigidBody* body, r32 friction) { }
+  virtual void                            setSpinningFriction(RigidBody* body, r32 friction) { }
+  virtual void                            clearForces(RigidBody* body) { }
+  virtual void                            updateState(r64 dt, r64 fixedTime) { }
+  virtual void                            addCollider(RigidBody* body, Collider* collider) { }
+  virtual b32                             rayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
+  virtual b32                             rayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) { return false; }
+  virtual void                            updateCollider(Collider* collider) { }
 private:
 };
 

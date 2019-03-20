@@ -56,41 +56,41 @@ public:
   ~MaterialDescriptor();
 
   // Always initialize the Material.
-  void            Initialize(VulkanRHI* pRhi);
-  void            Update(VulkanRHI* pRhi);
-  void            CleanUp(VulkanRHI* pRhi);
+  void            initialize(VulkanRHI* pRhi);
+  void            update(VulkanRHI* pRhi);
+  void            cleanUp(VulkanRHI* pRhi);
 
-  void            SetAlbedoSampler(TextureSampler* sampler) { m_pAlbedoSampler = sampler; }
-  void            SetNormalSampler(TextureSampler* sampler) { m_pNormalSampler = sampler; }
-  void            SetRoughMetalSampler(TextureSampler* sampler) { m_pRoughMetalSampler = sampler; }
-  void            SetAoSampler(TextureSampler* sampler) { m_pAoSampler = sampler; }
-  void            SetEmissiveSampler(TextureSampler* sampler) { m_pEmissiveSampler = sampler; }
-  void            SetAlbedo(Texture2D* albedo) { m_pAlbedo = albedo; }
-  void            SetRoughnessMetallic(Texture2D* roughMetal) { m_pRoughnessMetallic = roughMetal; }
-  void            SetNormal(Texture2D* normal) { m_pNormal = normal; }
-  void            SetAo(Texture2D* ao) { m_pAo = ao; }
-  void            SetEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
-  void            SetTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
+  void            setAlbedoSampler(TextureSampler* sampler) { m_pAlbedoSampler = sampler; }
+  void            setNormalSampler(TextureSampler* sampler) { m_pNormalSampler = sampler; }
+  void            setRoughMetalSampler(TextureSampler* sampler) { m_pRoughMetalSampler = sampler; }
+  void            setAoSampler(TextureSampler* sampler) { m_pAoSampler = sampler; }
+  void            setEmissiveSampler(TextureSampler* sampler) { m_pEmissiveSampler = sampler; }
+  void            setAlbedo(Texture2D* albedo) { m_pAlbedo = albedo; }
+  void            setRoughnessMetallic(Texture2D* roughMetal) { m_pRoughnessMetallic = roughMetal; }
+  void            setNormal(Texture2D* normal) { m_pNormal = normal; }
+  void            setAo(Texture2D* ao) { m_pAo = ao; }
+  void            setEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
+  void            setTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
 
-  void            PushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE_BIT) { m_bNeedsUpdate |= updateBits; }
+  void            pushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE_BIT) { m_bNeedsUpdate |= updateBits; }
   DescriptorSet*          CurrMaterialSet() { return m_materialSet; }
 
-  MaterialBuffer* Data() { return &m_MaterialData; }
-  Buffer*         Native() { return m_pBuffer; }
+  MaterialBuffer* getData() { return &m_MaterialData; }
+  Buffer*         getNative() { return m_pBuffer; }
 
-  b32              Transparent() const { return m_MaterialData._IsTransparent; }
+  b32              isTransparent() const { return m_MaterialData._IsTransparent; }
 
-  Texture2D*      Albedo() { return m_pAlbedo; }
-  Texture2D*      RoughnessMetallic() { return m_pRoughnessMetallic; }
-  Texture2D*      Normal() { return m_pNormal; }
-  Texture2D*      Ao() { return m_pAo; }
-  Texture2D*      Emissive() { return m_pEmissive; }
+  Texture2D*      getAlbedo() { return m_pAlbedo; }
+  Texture2D*      getRoughnessMetallic() { return m_pRoughnessMetallic; }
+  Texture2D*      getNormal() { return m_pNormal; }
+  Texture2D*      getAo() { return m_pAo; }
+  Texture2D*      getEmissive() { return m_pEmissive; }
 
-  TextureSampler* GetAlbedoSampler() { return m_pAlbedoSampler; }
-  TextureSampler* GetNormalSampler() { return m_pNormalSampler; }
-  TextureSampler* GetRoughMetalSampler() { return m_pRoughMetalSampler; }
-  TextureSampler* GetAoSampler() { return m_pAoSampler; }
-  TextureSampler* GetEmissiveSampler() { return m_pEmissiveSampler; }
+  TextureSampler* getAlbedoSampler() { return m_pAlbedoSampler; }
+  TextureSampler* getNormalSampler() { return m_pNormalSampler; }
+  TextureSampler* getRoughMetalSampler() { return m_pRoughMetalSampler; }
+  TextureSampler* getAoSampler() { return m_pAoSampler; }
+  TextureSampler* getEmissiveSampler() { return m_pEmissiveSampler; }
 
 private:
 

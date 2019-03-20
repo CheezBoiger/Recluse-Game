@@ -21,7 +21,7 @@
 #define R_MESHSHADER_BIT           (1<<1)
 
 #if defined(_DEBUG)
-#define RDEBUG_SET_VULKAN_NAME(obj, name) obj->SetName(name)
+#define RDEBUG_SET_VULKAN_NAME(obj, name) obj->setName(name)
 #else
 #define RDEBUG_SET_VULKAN_NAME(obj, name)
 #endif
@@ -45,8 +45,8 @@ public:
   graphics_uuid_t GetUUID() const { return m_uuid; }
 
   DEBUG_OP(
-  void      SetName(const char* name) { m_name = name; }
-  const char*      GetName() { return m_name; }
+  void      setName(const char* name) { m_name = name; }
+  const char*      getName() { return m_name; }
   )
 
 protected:
@@ -202,6 +202,23 @@ inline VkIndexType GetNativeIndexType(u32 sizeType)
   default:  indexType = VK_INDEX_TYPE_UINT32; break;
   }
   return indexType;
+}
+
+
+u32 findMemoryProperties(const VkPhysicalDeviceMemoryProperties* pMemProperties, 
+                          u32 memoryTypeBitsRequirement)
+{
+  const u32 memoryCount = pMemProperties->memoryTypeCount;
+  for (u32 memoryIndex = 0; memoryIndex < memoryCount; ++memoryIndex) {
+    u32 memoryTypeBits = (1 << memoryIndex);
+    b32 isRequiredMemoryType = memoryTypeBitsRequirement & memoryTypeBits;
+    const VkMemoryPropertyFlags properties = pMemProperties->memoryTypes[memoryIndex].propertyFlags;
+    if (isRequiredMemoryType) {
+      return static_cast<u32>(memoryIndex);
+    }
+  }
+  // fail.
+  return -1;
 }
 }
 } // Recluse

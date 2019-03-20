@@ -15,30 +15,30 @@
 namespace Recluse {
 
 
-void UIDescriptor::Initialize(VulkanRHI* pRhi)
+void UIDescriptor::initialize(VulkanRHI* pRhi)
 {
-  DescriptorSetLayout* layout = gRenderer().Overlay()->GetMaterialLayout();
+  DescriptorSetLayout* layout = gRenderer().getOverlay()->GetMaterialLayout();
   
-  m_pSet = pRhi->CreateDescriptorSet();
-  m_pSet->Allocate(pRhi->DescriptorPool(), layout);
-  Update(pRhi);
+  m_pSet = pRhi->createDescriptorSet();
+  m_pSet->allocate(pRhi->descriptorPool(), layout);
+  update(pRhi);
 }
 
 
-void UIDescriptor::Update(VulkanRHI* pRhi)
+void UIDescriptor::update(VulkanRHI* pRhi)
 {
   VkDescriptorImageInfo imgInfo = { };
   Texture* pT = DefaultTextureKey;
   Sampler* pS = DefaultSampler2DKey;
   if (m_image) {
-    pT = m_image->Handle();
+    pT = m_image->getHandle();
   }
   if (m_sampler) {
     pS = m_sampler;
   }
   imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  imgInfo.imageView = pT->View();
-  imgInfo.sampler = pS->Handle();
+  imgInfo.imageView = pT->getView();
+  imgInfo.sampler = pS->getHandle();
 
   std::array<VkWriteDescriptorSet, 1> writes;
   writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -50,14 +50,14 @@ void UIDescriptor::Update(VulkanRHI* pRhi)
   writes[0].pBufferInfo = nullptr;
   writes[0].pImageInfo = &imgInfo;
 
-  m_pSet->Update(1, writes.data());
+  m_pSet->update(1, writes.data());
 }
 
 
-void UIDescriptor::CleanUp(VulkanRHI* pRhi)
+void UIDescriptor::cleanUp(VulkanRHI* pRhi)
 {
   if (m_pSet) {
-    pRhi->FreeDescriptorSet(m_pSet);
+    pRhi->freeDescriptorSet(m_pSet);
   }
 }
 } // Recluse

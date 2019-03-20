@@ -14,12 +14,12 @@ using namespace Recluse;
 class TestScene : public Scene {
 public:
 
-  void SetUp() override 
+  void setUp() override 
   {
   }
 
 
-  void Update(r32 tick) override
+  void update(r32 tick) override
   {
   }
   

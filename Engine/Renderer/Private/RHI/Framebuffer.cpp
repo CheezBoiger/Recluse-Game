@@ -10,7 +10,7 @@ void FrameBuffer::Finalize(VkFramebufferCreateInfo& info,
   const RenderPass* renderpass)
 {
   R_ASSERT(renderpass, "RenderPass is null for this frame buffer.");
-  info.renderPass = renderpass->Handle();
+  info.renderPass = renderpass->getHandle();
   m_Width = info.width;
   m_Height = info.height;
 
@@ -24,7 +24,7 @@ void FrameBuffer::Finalize(VkFramebufferCreateInfo& info,
 }
 
 
-void FrameBuffer::CleanUp()
+void FrameBuffer::cleanUp()
 {
   if (mHandle) {
     vkDestroyFramebuffer(mOwner, mHandle, nullptr);
@@ -35,14 +35,14 @@ void FrameBuffer::CleanUp()
 }
 
 
-void RenderPass::Initialize(const VkRenderPassCreateInfo& info)
+void RenderPass::initialize(const VkRenderPassCreateInfo& info)
 {
   VkResult result = vkCreateRenderPass(mOwner, &info, nullptr, &m_renderPass);
   R_ASSERT(result == VK_SUCCESS, "Failed to create a renderpass!");
 }
 
 
-void RenderPass::CleanUp()
+void RenderPass::cleanUp()
 {
   if (m_renderPass) {
     vkDestroyRenderPass(mOwner, m_renderPass, nullptr);

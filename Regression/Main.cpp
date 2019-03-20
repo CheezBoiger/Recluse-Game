@@ -23,15 +23,15 @@ std::vector<Tester::TestFunc> test = {
 
 int main()
 {
-  Log::DisplayToConsole(true);
+  Log::displayToConsole(true);
   Log() << "Initial testing of Recluse Engine Software Libraries.\n"
               << "Initializing testing data cache...\n";
-  gEngine().StartUp("Test Engine.", false);
+  gEngine().startUp("Test Engine.", false);
 
   // TODO(): Add more regressions.
   Tester::RunAllTests(test);
   
-  gEngine().CleanUp();
+  gEngine().cleanUp();
 
   Log() << "Tests Passed: " <<  std::setw(10)
         << Tester::GetTestsPassed() << "\n"

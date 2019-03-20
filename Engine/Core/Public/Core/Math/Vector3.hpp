@@ -35,12 +35,12 @@ struct Vector3 {
     : Vector3(rawDat[0], rawDat[1], rawDat[2]) 
   { }
 
-  static Vector3  Lerp(const Vector3& a, const Vector3& b, const r32 t);
-  static Vector3  Min(const Vector3& a, const Vector3& b);
-  static Vector3  Max(const Vector3& a, const Vector3& b);
+  static Vector3  lerp(const Vector3& a, const Vector3& b, const r32 t);
+  static Vector3  minimum(const Vector3& a, const Vector3& b);
+  static Vector3  maximum(const Vector3& a, const Vector3& b);
   
-  Vector3         Normalize() const;
-  r32             Dot(const Vector3& other) const;
+  Vector3         normalize() const;
+  r32             dot(const Vector3& other) const;
   Vector3         Cross(const Vector3& other) const;
 
   Vector3         operator+(const Vector3& other) const;
@@ -67,10 +67,10 @@ struct Vector3 {
   Vector3         operator^(const Vector3& other) const { return Cross(other); }
 
   // Dot producted denoted as bitwise OR.
-  r32             operator|(const Vector3& other) const { return Dot(other); }
+  r32             operator|(const Vector3& other) const { return dot(other); }
 
-  r32             Length() const;
-  r32             LengthSqr() const;
+  r32             length() const;
+  r32             lengthSqr() const;
   r32&            operator [] (const size_t idx) { return (&x)[ idx ]; }
 
   b8              operator==(const Vector3& other) const;

@@ -26,36 +26,36 @@ public:
     MIDDLE = 2,
   };
 
-  static void Enable(b32 enable);
-  static void Track(b32 enable) { mouseTrack = enable; }
-  static void Show(b32 enable);
-  static void ClampWithinWindow(b32 enable) { mouseClamped = enable; }
+  static void setEnable(b32 enable);
+  static void setTrack(b32 enable) { mouseTrack = enable; }
+  static void show(b32 enable);
+  static void clampWithinWindow(b32 enable) { mouseClamped = enable; }
 
-  static b32 Enabled() { return mouseEnabled; }
-  static b32 Showing() { return mouseShow; }
-  static b32 Tracking() { return mouseTrack; }
-  static b32 Clamped() { return mouseClamped; }
-  static void SetPosition(r64 x, r64 y);
-  static void SetCursorImage(const std::string& imgPath);
+  static b32 isEnabled() { return mouseEnabled; }
+  static b32 isShowing() { return mouseShow; }
+  static b32 isTracking() { return mouseTrack; }
+  static b32 isClamped() { return mouseClamped; }
+  static void setPosition(r64 x, r64 y);
+  static void setCursorImage(const std::string& imgPath);
 
-  static r64 X() { return XPos; }
-  static r64 Y() { return YPos; }
-  static r64 LastX() { return LastXPos; }
-  static r64 LastY() { return LastYPos; }
+  static r64 getX() { return xPos; }
+  static r64 getY() { return yPos; }
+  static r64 lastX() { return lastXPos; }
+  static r64 lastY() { return lastYPos; }
 
-  static b32 ButtonDown(ButtonType type);
-  static b32 ButtonUp(ButtonType type);
+  static b32 buttonDown(ButtonType type);
+  static b32 buttonUp(ButtonType type);
 
 private:
   static b32       mouseClamped;
   static b32       mouseTrack;
   static b32       mouseEnabled;
   static b32       mouseShow;
-  static r64      XPos;
-  static r64      YPos;
+  static r64      xPos;
+  static r64      yPos;
 
-  static r64      LastXPos;
-  static r64      LastYPos;
+  static r64      lastXPos;
+  static r64      lastYPos;
   static HCURSOR  cursor;
 
   // TODO(): Other buttons on the mouse should be supported too...

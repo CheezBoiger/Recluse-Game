@@ -21,10 +21,10 @@ public:
     : mSampler(VK_NULL_HANDLE) { }
 
 
-  void        Initialize(VkSamplerCreateInfo& info);
-  void        CleanUp();
+  void        initialize(VkSamplerCreateInfo& info);
+  void        cleanUp();
 
-  VkSampler   Handle() { return mSampler; }
+  VkSampler   getHandle() { return mSampler; }
 private:
   VkSampler   mSampler;
 };
@@ -37,9 +37,9 @@ public:
 
   ~ImageView();
 
-  void        Initialize(VkDevice device, const VkImageViewCreateInfo& info);
-  void        CleanUp(VkDevice device);
-  VkImageView Handle() { return m_view; }
+  void        initialize(VkDevice device, const VkImageViewCreateInfo& info);
+  void        cleanUp(VkDevice device);
+  VkImageView getHandle() { return m_view; }
 private:
   VkImageView m_view;
 };
@@ -60,17 +60,17 @@ public:
     , mSamples(VK_SAMPLE_COUNT_1_BIT) { }
 
   
-  void                  Initialize(const VkImageCreateInfo& imageInfo, 
+  void                  initialize(const VkImageCreateInfo& imageInfo, 
                           VkImageViewCreateInfo& viewInfo, b8 stream = false);
 
-  void                  CleanUp();
+  void                  cleanUp();
 
-  VkImageView           View() { return mView; }
+  VkImageView           getView() { return mView; }
   VkImage               Image() { return mImage; }
   VkDeviceMemory        Memory() { return mMemory; }
   VkFormat              Format() const { return mFormat; }
-  u32                   Width() const { return mWidth; }
-  u32                   Height() const { return mHeight; }
+  u32                   getWidth() const { return mWidth; }
+  u32                   getHeight() const { return mHeight; }
   u32                   MipLevels() const { return mMipLevels; }
   u32                   ArrayLayers() const { return mArrayLayers; }
   VkSampleCountFlagBits Samples() const { return mSamples; }

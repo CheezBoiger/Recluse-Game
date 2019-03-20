@@ -14,7 +14,7 @@ u32 ViewFrustum::PNEAR = 4;
 u32 ViewFrustum::PFAR = 5;
 
 
-void ViewFrustum::Update(Matrix4& vp)
+void ViewFrustum::update(Matrix4& vp)
 { 
   _planes[PLEFT] = Plane(  -vp[0][0] - vp[0][3],
                            -vp[1][0] - vp[1][3],
@@ -48,7 +48,7 @@ void ViewFrustum::Update(Matrix4& vp)
 }
 
 
-ViewFrustum::Result ViewFrustum::Intersect(const AABB& aabb) const
+ViewFrustum::Result ViewFrustum::intersect(const AABB& aabb) const
 {
   // TODO(): Needs fixing as it is not properly culling.
 
@@ -82,11 +82,11 @@ ViewFrustum::Result ViewFrustum::Intersect(const AABB& aabb) const
       vmin.z = aabb.max.z;
       vmax.z = aabb.min.z;
     }
-    if (normal.Dot(vmin) + _planes[i].w > 0.0f) {
+    if (normal.dot(vmin) + _planes[i].w > 0.0f) {
       result = Result_Outside; 
       break;
     }
-    if (normal.Dot(vmax) + _planes[i].w >= 0.0f) {
+    if (normal.dot(vmax) + _planes[i].w >= 0.0f) {
       result = Result_Intersect;
       break;
     }
