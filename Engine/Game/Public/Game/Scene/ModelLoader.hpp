@@ -36,13 +36,16 @@ enum ModelResult {
 
 using ModelResultBits = u32;
 using ModelConfigBits = u32;
-
+using NodeId = u32;
+using NodeChildren = std::vector<NodeId>;
 
 
 // Model is a container of meshes that correspond to materials.
 struct Model {
   // Name of the model
   std::string                   name;
+  std::map<NodeId, 
+           NodeChildren> nodeHierarchy;
   std::vector<Mesh*>            meshes;
   std::vector<Material*>        materials;
   std::vector<Texture2D*>       textures;

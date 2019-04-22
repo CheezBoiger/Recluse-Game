@@ -79,7 +79,7 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
   for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     m_pGlobalBuffers[i] = pRhi->createBuffer();
 
-    m_pGlobalBuffers[i]->initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pGlobalBuffers[i]->Map();
 
 

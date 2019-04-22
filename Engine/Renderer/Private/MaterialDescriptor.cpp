@@ -68,7 +68,7 @@ void MaterialDescriptor::initialize(VulkanRHI* pRhi)
   bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCi.size = memSize;
   
-  m_pBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   m_pBuffer->Map();
 
   m_materialSet = pRhi->createDescriptorSet();

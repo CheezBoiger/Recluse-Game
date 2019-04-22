@@ -71,6 +71,7 @@ Renderer::Renderer()
   , m_pGlobalIllumination(nullptr)
   , m_decalEngine(nullptr)
   , m_workGroupSize(0)
+  , m_rhiBits(0)
   , m_globalLightProbe(nullptr)
   , m_pClusterer(nullptr)
   , m_particleEngine(nullptr)
@@ -121,14 +122,15 @@ Renderer::Renderer()
     MeshDescriptor* mesh2 = cmd2._pMeshDesc;
     if (!mesh1 || !mesh2) return false;
     Vector3 p1 = cmd1._pPrimitive->_aabb.centroid * mesh1->getObjectData()->_model;
-    Vector3 p2 = cmd1._pPrimitive->_aabb.centroid *  mesh2->getObjectData()->_model;
+    Vector3 p2 = cmd2._pPrimitive->_aabb.centroid *  mesh2->getObjectData()->_model;
     Vector4 native_pos = m_pGlobal->getData()->_CameraPos;
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
     Vector3 v1 = p1 - cam_pos;
     Vector3 v2 = p2 - cam_pos;
-    r32 l1 = v1.length();
-    r32 l2 = v2.length();
+    r32 l1 = v1.lengthSqr();
+    r32 l2 = v2.lengthSqr();
     R_ASSERT(!isnan(l1) && !isnan(l2), "");
+    //Log() << p1 << " l1: " << l1 << "\n" << p2 << " l2: " << l2 << "\n";
     return (l2 < l1);
   });
 }
@@ -146,7 +148,7 @@ void Renderer::onStartUp()
   }
 
   VulkanRHI::createContext(Renderer::appName);
-  VulkanRHI::findPhysicalDevice();
+  VulkanRHI::findPhysicalDevice(m_rhiBits);
   if (!m_pRhi) m_pRhi = new VulkanRHI();
   SetUpRenderData();
 }
@@ -4674,8 +4676,8 @@ Texture2D* Renderer::generateBRDFLUT(u32 x, u32 y)
   g->_ScreenSize[0] = x;
   g->_ScreenSize[1] = y;
   m_pGlobal->update(m_pRhi, 0);
-  m_pBakeIbl->UpdateTargetBRDF(texture);
-  m_pBakeIbl->RenderGenBRDF(&cmd, m_pGlobal, texture, 0);
+  m_pBakeIbl->updateTargetBRDF(texture);
+  m_pBakeIbl->renderGenBRDF(&cmd, m_pGlobal, texture, 0);
 
   cmd.End();
 

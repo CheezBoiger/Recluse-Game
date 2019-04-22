@@ -138,6 +138,7 @@ void Engine::startUp(std::string appName, b32 fullscreen, i32 width, i32 height,
   // For renderer, you want to send the name to the device that will be used for debugging and
   // information for vendors.
   gRenderer().setAppName(appName.c_str());
+  //gRenderer().setHardwareHints(R_RAYTRACING_BIT | R_MESHSHADER_BIT);
   gRenderer().startUp();
   gRenderer().initialize(&m_window, params);
 

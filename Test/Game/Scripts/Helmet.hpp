@@ -303,7 +303,7 @@ public:
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
     ModelCache::get("buster", &model);
-
+    
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.addMesh(model->meshes[i]);
       for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
@@ -329,7 +329,7 @@ public:
     //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
     //m_animationComponent.playback("Dance");
     //m_animationComponent.setPlaybackRate(1.0f);
-    transform->_scale = Vector3(1.5f, 1.5f, 1.5f);
+    transform->_scale = Vector3(0.1f, 0.1f, 0.1f);
  #endif
 
     transform->_position = Vector3(2.0f, 5.0f, 0.0f);

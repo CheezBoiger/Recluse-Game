@@ -78,7 +78,7 @@ public:
   Vector3 getPosition() const { return hasId() ? Vector3((r32*)&(m_NativeLight->_Position)) : Vector3(); }
   Vector3 getDirection() const { return hasId() ? Vector3((r32*)&(m_NativeLight->_Direction)) : Vector3(); }
 
-  b32 hasId() const { return (b32)(m_NativeLight); }
+  b32 hasId() const { return reinterpret_cast<b32>(m_NativeLight); }
 
   // Allows override of position and direction of spotlight, if SyncWithParent is disabled.
   // If SyncWithParent is enabled, these functions do not work, otherwise you need to manually

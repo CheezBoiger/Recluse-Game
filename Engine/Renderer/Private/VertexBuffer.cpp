@@ -36,7 +36,7 @@ void VertexBuffer::initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
     stagingCI.size = sizeType * vertexCount;
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    stagingBuffer->initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    stagingBuffer->initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
     stagingBuffer->Map();
       memcpy(stagingBuffer->Mapped(), data, (size_t)stagingCI.size);
@@ -48,7 +48,7 @@ void VertexBuffer::initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCI.size = sizeType * vertexCount;
   bufferCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-  mBuffer->initialize(bufferCI, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  mBuffer->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
   CommandBuffer* cmdBuffer = rhi->createCommandBuffer();
   cmdBuffer->allocate(rhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);

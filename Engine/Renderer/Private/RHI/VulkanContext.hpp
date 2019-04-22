@@ -19,20 +19,20 @@ public:
     , mDebugEnabled(false) { }
 
 
-  b32                              CreateInstance(const char* appName);
-  VkInstance                      CurrentInstance() { return mInstance; }
-  VkSurfaceKHR                    CreateSurface(void* handle);
+  b32                              createInstance(const char* appName);
+  VkInstance                      currentInstance() { return mInstance; }
+  VkSurfaceKHR                    createSurface(void* handle);
 
-  void                            DestroySurface(VkSurfaceKHR surface);
-  void                            EnableDebugMode();
+  void                            destroySurface(VkSurfaceKHR surface);
+  void                            enableDebugMode();
   void                            cleanUp();
   
   // You get to find all gpus on this machine, how cool is that...
-  std::vector<VkPhysicalDevice>&  EnumerateGpus();
+  std::vector<VkPhysicalDevice>&  enumerateGpus();
 
 private:
-  void                            SetUpDebugCallback();
-  void                            CleanUpDebugCallback();
+  void                            setUpDebugCallback();
+  void                            cleanUpDebugCallback();
   VkInstance                      mInstance;
   std::vector<VkPhysicalDevice>   mGpus;
   VkDebugReportCallbackEXT        mDebugReportCallback;

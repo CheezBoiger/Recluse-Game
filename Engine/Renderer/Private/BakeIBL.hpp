@@ -28,18 +28,18 @@ public:
   void                  initialize(VulkanRHI* pRhi);
   void                  cleanUp(VulkanRHI* pRhi);
 
-  void                  RenderPrefilterSpec(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
-  void                  RenderIrrDiff(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
-  void                  RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex);
-  void                  UpdateTargetBRDF(Texture* target);
+  void                  renderPrefilterSpec(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
+  void                  renderIrrDiff(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
+  void                  renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex);
+  void                  updateTargetBRDF(Texture* target);
 private:
 
 
   void                  setUpDescriptorSetLayouts(VulkanRHI* pRhi);
-  void                  SetUpComputePipelines(VulkanRHI* pRhi);
+  void                  setUpComputePipelines(VulkanRHI* pRhi);
 
   void                  cleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
-  void                  CleanUpComputePipelines(VulkanRHI* pRhi);
+  void                  cleanUpComputePipelines(VulkanRHI* pRhi);
 
   ComputePipeline*      m_pPipePrefilterSpecIBL;
   ComputePipeline*      m_pPipeGenBRDF;

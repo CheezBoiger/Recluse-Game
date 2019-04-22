@@ -71,7 +71,7 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
   // Create the render buffer for the object.
   for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
     m_pGpuHandles[i]._pBuf = pRhi->createBuffer();
-    m_pGpuHandles[i]._pBuf->initialize(objectCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pGpuHandles[i]._pBuf->initialize(objectCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pGpuHandles[i]._pBuf->Map();
     m_pGpuHandles[i]._pSet = pRhi->createDescriptorSet();
     m_pGpuHandles[i]._pSet->allocate(pRhi->descriptorPool(), MeshLayout);
@@ -168,7 +168,7 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
 
   for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
     m_pJointHandles[i]._pBuf = pRhi->createBuffer();
-    m_pJointHandles[i]._pBuf->initialize(jointCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pJointHandles[i]._pBuf->initialize(jointCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pJointHandles[i]._pBuf->Map();
 
     DescriptorSetLayout* jointLayout = BonesSetLayoutKey;

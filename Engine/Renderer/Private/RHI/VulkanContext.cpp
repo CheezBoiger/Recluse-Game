@@ -40,7 +40,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 
-b32 Context::CreateInstance(const char* appName)
+b32 Context::createInstance(const char* appName)
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -73,7 +73,7 @@ b32 Context::CreateInstance(const char* appName)
     return false;
   }
 
-  if (mDebugEnabled) SetUpDebugCallback();
+  if (mDebugEnabled) setUpDebugCallback();
 
   R_DEBUG(rNotify, "Vulkan Instance created...\n");
   return true;
@@ -83,13 +83,13 @@ b32 Context::CreateInstance(const char* appName)
 void Context::cleanUp()
 {
   if (mInstance) {
-    if (mDebugEnabled) CleanUpDebugCallback();
+    if (mDebugEnabled) cleanUpDebugCallback();
     vkDestroyInstance(mInstance, nullptr);
   }
 }
 
 
-std::vector<VkPhysicalDevice>& Context::EnumerateGpus()
+std::vector<VkPhysicalDevice>& Context::enumerateGpus()
 {
   u32 deviceCount = 0;
   vkEnumeratePhysicalDevices(mInstance, &deviceCount, nullptr);
@@ -101,7 +101,7 @@ std::vector<VkPhysicalDevice>& Context::EnumerateGpus()
 }
 
 
-VkSurfaceKHR Context::CreateSurface(void* handle)
+VkSurfaceKHR Context::createSurface(void* handle)
 {
   VkSurfaceKHR surface;
   // Windows specific.
@@ -134,13 +134,13 @@ VkSurfaceKHR Context::CreateSurface(void* handle)
 }
 
 
-void Context::DestroySurface(VkSurfaceKHR surface)
+void Context::destroySurface(VkSurfaceKHR surface)
 {
   vkDestroySurfaceKHR(mInstance, surface, nullptr);
 }
 
 
-void Context::EnableDebugMode()
+void Context::enableDebugMode()
 {
   u32 count;
   vkEnumerateInstanceLayerProperties(&count, nullptr);
@@ -163,7 +163,7 @@ void Context::EnableDebugMode()
 }
 
 
-void Context::SetUpDebugCallback()
+void Context::setUpDebugCallback()
 {
   VkDebugReportCallbackCreateInfoEXT ci = { };
   ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
@@ -188,7 +188,7 @@ void Context::SetUpDebugCallback()
 }
 
 
-void Context::CleanUpDebugCallback()
+void Context::cleanUpDebugCallback()
 {
   auto vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)
     vkGetInstanceProcAddr(mInstance, "vkDestroyDebugReportCallbackEXT");

@@ -241,7 +241,7 @@ void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* ov
 
   obj->_texture->initialize(imgCi, viewCi);
   obj->_sampler->initialize(samplerCi);
-  obj->_cache->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+  obj->_cache->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   obj->_cache->Map();
 
   obj->_font_set->allocate(rhi->descriptorPool(), overlay->GetMaterialLayout());
@@ -835,7 +835,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
       vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       vertBufferCi.size = MAX_VERTEX_MEMORY;
       vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-      m_vertBuffers[i]->initialize(vertBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      m_vertBuffers[i]->initialize(vertBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
     }
 
     {
@@ -844,7 +844,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
       indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       indicesBufferCi.size = MAX_ELEMENT_MEMORY;
       indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-      m_indicesBuffers[i]->initialize(indicesBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      m_indicesBuffers[i]->initialize(indicesBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
     }
   }
 
@@ -857,7 +857,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.size = MAX_VERTEX_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_vertStagingBuffer->initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_vertStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_vertStagingBuffer->Map();
   }
 
@@ -867,7 +867,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.size = MAX_ELEMENT_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_indicesStagingBuffer->initialize(stagingBufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_indicesStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_indicesStagingBuffer->Map();
   }
 }

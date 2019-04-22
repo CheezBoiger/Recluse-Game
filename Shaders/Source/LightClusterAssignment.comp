@@ -29,26 +29,36 @@ layout (set = 1, binding = 4) uniform sampler2D inDepth;
 
 
 struct ClusterData {
-  ivec2  param; // [ offset (32) | light count (8) | decal count (8) | probe count (8) ]
+  // Offset points to the first light source in the tile, followed by other counts for decals and probes.
+  //
+  //               |-----32------|--------------------------32--------------------------|    
+  //               |             |                                                      |    
+  //               |             |                                                      |    
+  //               |             |                                                      |
+  ivec2  param; // [ offset (32) | light count (16) | decal count (8) | probe count (8) ]
 };
 
 struct ClusterIndex {
   uint index;
 };
 
-// buffer containing the light index offset, and a list of light data indices that correspond to that cluster.
+// buffer containing the light index offset, and a list of light data indices that correspond to that cluster (3D array).
 // clusters contain [ offset (32b) | light count (8b) | decal count (8b) | probe count (8b) ].
 // offset determines the offset when reading the indices buffer, where as the counts determine the overall size of the 
 // sublist after offsetting the indices list, to read off of.
+// Computing the size of the this data must be a size of (GRID_X * GRID_Y * GRID_Z) * 64bits, with count = (GRID_X * GRID_Y * GRID_Z).
+// TODO(): Would this make sense to make it a texture?
 layout (set = 2, binding = 0) writeonly buffer Cluster {
-  ClusterData     clusterPointers[];
-};
+  vec4            count;
+  ClusterData     grid[];
+} clusters;
 
 // indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
 // to that source.
 layout (set = 2, binding = 1) writeonly buffer indices {
-  uint      clusterIndices[];
-};
+  uint      count;
+  uint      indices[];
+} lightIndices;
 
 
 layout (set = 2, binding = 2) buffer LightBVH {
@@ -61,10 +71,6 @@ layout (set = 2, binding = 2) buffer LightBVH {
   uvec4 nodeIndices[128];
 } lightBVH;
 
-
-layout (set = 2, binding = 3) uniform LightGridData {
-  ivec4 gridDim;
-} lightGridData;
 
 // Light data.
 layout (set = 3, binding = 0) uniform LightBuffer {
@@ -141,7 +147,7 @@ void SetRoot(vec4 rootMin, vec4 rootMax)
 ///////////////////////////////////////////////////////////////////////////
 
 
-void BuildClusters(int numLights)
+void buildClusters(int numLights)
 {
   uint gridDimY = lightGridData.gridDim.y;
   uint grid2dDimY = (gWorldBuffer.screenSize.y + gridDimY - 1) / gridDimY; 
@@ -179,7 +185,7 @@ bool Overlaps(const vec4 aaMin, const vec4 aaMax, const vec4 abMin, const vec4 a
 
 PointLight GetLightRange(uint idx)
 {
-  if (idx < MAX_POINT_LIGHTS) {
+  if (idx >= MAX_POINT_LIGHTS) {
     PointLight l;
     l.position = vec4(NAN, NAN, NAN, NAN);
     return l;
@@ -188,21 +194,39 @@ PointLight GetLightRange(uint idx)
 }
 
 
-void LightHierarchyMakeKeys()
+void lightHierarchyMakeKeys()
 {
   uint index = gl_GlobalInvocationID.x;
-  if (index < MAX_POINT_LIGHTS) return;
+  if (index >= MAX_POINT_LIGHTS) return;
   const uint kCoordBits = 8;
   const uint kCoordScale = (1u<<kCoordBits) - 1u; 
   
   PointLight sphere = GetLightRange(index);
   if (sphere.position.x == NAN) return;
-  
+}
+
+
+void assignLights()
+{
+  if (lightBVH.numLights == 0) {
+    // Clear buffers if no lights exist.
+    for (uint i = 0; (gl_GlobalInvocationID.x + i) < clusters.count; i+=WORKGROUP_SIZE) {
+      uint idx = gl_GlobalInvocationID.x + i;
+      clusters.grid[idx] = 0;
+    }
+    barrier();
+    for (uint i = 0; (gl_GlobalInvocationID.x + i) < lightIndices.count; i+=WORKGROUP_SIZE) {
+      uint idx = gl_GlobalInvocationID.x + i;
+      lightIndices.indices[idx];
+    }
+  } else {
+    
+  }
 }
 
 
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
-  LightHierarchyMakeKeys();  
+  assignLights();
 }

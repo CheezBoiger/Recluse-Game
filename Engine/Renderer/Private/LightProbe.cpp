@@ -99,7 +99,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     bufferci.size = sizeInBytes;
     data = new u8[bufferci.size];
 
-    stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
     stagingBuffer.Map();
 
     VkCommandBufferBeginInfo begin = {};
@@ -270,7 +270,7 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
       buffCi.size = VkDeviceSize(sizeof(LocalInfoGI));
       buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
       buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-      m_pLocalGIBuffer->initialize(buffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+      m_pLocalGIBuffer->initialize(buffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
       m_pLocalGIBuffer->Map();
     }
   }
@@ -285,7 +285,7 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
     gBuffCi.size = VkDeviceSize(sizeof(DiffuseSH));
     gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_pGlobalGIBuffer->initialize(gBuffCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+    m_pGlobalGIBuffer->initialize(gBuffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
     m_pGlobalGIBuffer->Map();
   }
 

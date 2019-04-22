@@ -81,6 +81,7 @@ public:
   void              setAppName(const char* name) { appName = name; }
 
   void              takeSnapshot(const std::string screenshotname);
+  void              setHardwareHints(const u32 rhiBits) { m_rhiBits = rhiBits; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
@@ -409,7 +410,7 @@ private:
   TextureCube*          m_preRenderSkybox;
   LightProbe*           m_globalLightProbe;
   u32                   m_workGroupSize;
-
+  u32                   m_rhiBits;
   b32                   m_staticUpdate;
   b32                   m_Rendering           : 1;
   b32                   m_Initialized         : 1;

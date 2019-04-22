@@ -7,8 +7,10 @@
 #include "FrameBuffer.hpp"
 #include "Texture.hpp"
 #include "Shader.hpp"
+#include "UserParams.hpp"
 #include "DescriptorSet.hpp"
 
+#include "Core/Logging/Log.hpp"
 #include "Core/Utility/Vector.hpp"
 #include "Core/Utility/Profile.hpp"
 #include "Core/Exception.hpp"
@@ -119,15 +121,15 @@ b32 VulkanRHI::createContext(const char* appName)
 {
 // setEnable debug mode, should we decide to enable validation layers.
 #if defined(_DEBUG) || defined(_NDEBUG)
-  gContext.EnableDebugMode();
+  gContext.enableDebugMode();
 #endif
-  return gContext.CreateInstance(appName);
+  return gContext.createInstance(appName);
 }
 
 
 b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 {
-  std::vector<VkPhysicalDevice>& devices = gContext.EnumerateGpus();
+  std::vector<VkPhysicalDevice>& devices = gContext.enumerateGpus();
 #if VK_NVX_raytracing
   if (rhiBits & R_RAYTRACING_BIT) Extensions.push_back(VK_NVX_RAYTRACING_EXTENSION_NAME);
   if (rhiBits & R_MESHSHADER_BIT) Extensions.push_back(VK_NV_MESH_SHADER_EXTENSION_NAME);
@@ -135,12 +137,25 @@ b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
   if (rhiBits & R_RAYTRACING_BIT) R_DEBUG(rWarning, "Raytracing is not available for this version of vulkan. Consider updating.\n");
   if (rhiBits & R_MESHSHADER_BIT) R_DEBUG(rWarning, "Mesh shading not avaiable for this version of vulkan. Consider updating.\n");
 #endif
-  for (const auto& device : devices) {
-    if (suitableDevice(device)) {
-      gPhysicalDevice.initialize(device);
-      VkPhysicalDeviceProperties props = gPhysicalDevice.getDeviceProperties();
-      break;
+#if VK_NV_fragment_shader_barycentric
+  if (rhiBits & R_PIXELBARECENTRIC_BIT) Extensions.push_back(VK_NV_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
+#else
+  if (rhiBits & R_PIXELBARECENTRIC_BIT) R_DEBUG(rWarning, "Fragment shader barycentric extension not available for this version of vulkan. Consider updating.\n");
+#endif
+  VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
+  {
+    b32 bestScore = 0;
+    for (const auto& device : devices) {
+      b32 score = suitableDevice(device);
+      if (score > bestScore) {
+        bestDevice = device;
+      }
     }
+  }
+
+  if (bestDevice) {
+    gPhysicalDevice.initialize(bestDevice);
+    VkPhysicalDeviceProperties props = gPhysicalDevice.getDeviceProperties();
   }
 
   if (gPhysicalDevice.handle() == VK_NULL_HANDLE) {
@@ -155,12 +170,27 @@ b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 
 b32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
 {
+  VkPhysicalDeviceFeatures features = {};
+  VkPhysicalDeviceProperties props = {};
+  u32 score = 0;
   std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::getExtensionProperties(device);
   std::set<std::string> requiredExtensions(Extensions.begin(), Extensions.end());
+  Log(rDebug) << "Supported extensions: \n";
   for (const auto& extension : availableExtensions) {
+    Log(rDebug) << extension.extensionName << "\n";
     requiredExtensions.erase(extension.extensionName);
+    score += 1;
   }
-  return requiredExtensions.empty();
+
+  vkGetPhysicalDeviceFeatures(device, &features);
+  vkGetPhysicalDeviceProperties(device, &props);
+
+  if (!requiredExtensions.empty()) return 0;
+
+  if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+    score += 100;
+  }
+  return score;
 }
 
 
@@ -173,7 +203,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   // Keep track of the window handle.
   mWindow = windowHandle;
 
-  mSurface = gContext.CreateSurface(windowHandle);
+  mSurface = gContext.createSurface(windowHandle);
 
   // TODO(): Instead of just querying queue family indices, have the physical
   // device output queue family indices and the number of queues you can create 
@@ -276,14 +306,14 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   setUpSwapchainRenderPass();
   queryFromSwapchain();
   
-  gAllocator.init(logicDevice()->getNative(), &memProps);
+  gAllocator.init(this, &props, &memProps);
 }
 
 
 void VulkanRHI::cleanUp()
 {
   mLogicalDevice.waitOnQueues();
-  gAllocator.cleanUp(logicDevice()->getNative());
+  gAllocator.cleanUp(this);
   // Clean up all cmd buffers used for swapchain rendering.
   for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
     auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[i];
@@ -335,7 +365,7 @@ void VulkanRHI::cleanUp()
   mSwapchain.cleanUp(mLogicalDevice);
 
   if (mSurface != VK_NULL_HANDLE) {
-    gContext.DestroySurface(mSurface);
+    gContext.destroySurface(mSurface);
     mSurface = VK_NULL_HANDLE;
   }
 
@@ -408,7 +438,7 @@ void VulkanRHI::createDepthAttachment()
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = mem.size;
-  allocInfo.memoryTypeIndex = gPhysicalDevice.findMemoryType(mem.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  allocInfo.memoryTypeIndex = gPhysicalDevice.findMemoryType(mem.memoryTypeBits, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
   
   if (vkAllocateMemory(mLogicalDevice.getNative(), &allocInfo, nullptr, &mSwapchainInfo.mDepthMemory) != VK_SUCCESS) {
     R_DEBUG(rError, "Depth memory was not allocated!\n");
@@ -763,6 +793,9 @@ void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, i32 width, i32 height,
   createDepthAttachment();
   setUpSwapchainRenderPass();
   queryFromSwapchain();
+
+  // Reupdate the allocator.
+  gAllocator.update(this);
   
   // Readjust frame count since we are now changing swapchain frame resource count.
   m_currentFrame = m_currentFrame % mSwapchain.CurrentBufferCount();

@@ -59,7 +59,7 @@ void HDR::initialize(VulkanRHI* pRhi)
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bufferCi.size = VkDeviceSize(sizeof(ConfigHDR));
     m_pBuffer = pRhi->createBuffer();
-    m_pBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pBuffer->Map();
   }
 

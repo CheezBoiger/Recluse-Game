@@ -607,8 +607,8 @@ void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
   for (u32 i = 0; i < m_pLightViewBuffers.size(); ++i) {
     m_pLightViewBuffers[i] = pRhi->createBuffer();
     m_pStaticLightViewBuffers[i] = pRhi->createBuffer();
-    m_pLightViewBuffers[i]->initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-    m_pStaticLightViewBuffers[i]->initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
+    m_pStaticLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pLightViewBuffers[i]->Map();
     m_pStaticLightViewBuffers[i]->Map();
   }
@@ -1555,7 +1555,7 @@ void LightDescriptor::initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, 
     bufferCI.size = dSize;
     bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-    m_pLightBuffers[i]->initialize(bufferCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_pLightBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pLightBuffers[i]->Map();
   }
 #if 0
@@ -1613,12 +1613,12 @@ void LightDescriptor::initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, 
     SamplerCi.anisotropyEnable = VK_FALSE;
     SamplerCi.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     SamplerCi.compareEnable = VK_FALSE;
-    SamplerCi.magFilter = VK_FILTER_LINEAR;
-    SamplerCi.minFilter = VK_FILTER_LINEAR;
+    SamplerCi.magFilter = VK_FILTER_NEAREST;
+    SamplerCi.minFilter = VK_FILTER_NEAREST;
     SamplerCi.maxAnisotropy = 1.0f;
     SamplerCi.maxLod = 1.0f;
     SamplerCi.minLod = 0.0f;
-    SamplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    SamplerCi.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
     SamplerCi.unnormalizedCoordinates = VK_FALSE;
 
     m_pShadowSampler->initialize(SamplerCi);

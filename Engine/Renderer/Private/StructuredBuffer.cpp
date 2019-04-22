@@ -48,7 +48,7 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
     sInfo.flags = 0;
 
     StagingBuffer->initialize(sInfo,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                              PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
     StagingBuffer->Map();
       memcpy(StagingBuffer->Mapped(), getData, (size_t)MemSize);
@@ -63,7 +63,7 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   bInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |  
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-  mBuffer->initialize(bInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  mBuffer->initialize(bInfo, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
   CommandBuffer* CmdBuffer = mRhi->createCommandBuffer();
   CmdBuffer->allocate(mRhi->computeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);

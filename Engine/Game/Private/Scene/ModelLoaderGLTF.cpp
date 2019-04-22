@@ -1015,12 +1015,15 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
 }
 
 
-static void LoadNode(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+static void LoadNode(const u32 nodeId, const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
 {
   NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
+  engineModel->nodeHierarchy[nodeId] = {};
   if (!node.children.empty()) {
+    engineModel->nodeHierarchy[nodeId].resize(node.children.size());
     for (size_t i = 0; i < node.children.size(); ++i) {
-      LoadNode(model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
+      engineModel->nodeHierarchy[nodeId][i] = node.children[i];
+      LoadNode(node.children[i], model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
     }
   }
 
@@ -1061,7 +1064,7 @@ ModelResultBits load(const std::string path)
   static u64 copy = 0;
   tinygltf::Model gltfModel;
   tinygltf::TinyGLTF loader;
-  std::string err;
+  std::string err;  
   std::string modelName = "Unknown" + std::to_string(copy++);
   u32 type = 0;
   GetFilenameAndType(path, modelName, type);
@@ -1090,7 +1093,7 @@ ModelResultBits load(const std::string path)
   for (size_t i = 0; i < scene.nodes.size(); ++i) {
     tinygltf::Node& node = gltfModel.nodes[scene.nodes[i]];
     Matrix4 mat = Matrix4::scale(Matrix4::identity(), Vector3(-1.0f, 1.0f, 1.0f));
-    LoadNode(node, gltfModel, model, mat, 1.0);
+    LoadNode(scene.nodes[i], node, gltfModel, model, mat, 1.0);
   }
 
   result |= LoadAnimations(&gltfModel, model);

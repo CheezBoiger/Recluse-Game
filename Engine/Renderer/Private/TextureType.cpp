@@ -201,7 +201,7 @@ void Texture2D::update(Image const& Image)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
   VkResult result = stagingBuffer.Map();
   memcpy(stagingBuffer.Mapped(), Image.getData(), imageSize);
@@ -340,7 +340,7 @@ void Texture2D::Save(const std::string filename)
   u8* data = new u8[bufferci.size];
 
 
-  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   stagingBuffer.Map();
 
   // Stream out the image info.
@@ -538,7 +538,7 @@ void TextureCube::Save(const std::string filename)
   bufferci.size = sizeInBytes;
   u8* data = new u8[bufferci.size];
 
-  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   stagingBuffer.Map();
 
   VkCommandBufferBeginInfo begin = {};
@@ -748,7 +748,7 @@ void TextureCube::update(Image const& image)
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   bufferci.size = sizeInBytes;
 
-  stagingBuffer.initialize(bufferci, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   stagingBuffer.Map();
   memcpy(stagingBuffer.Mapped(), image.getData(), sizeInBytes);
 
@@ -928,7 +928,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
   VkResult result = stagingBuffer.Map();
   memcpy(stagingBuffer.Mapped(), img.getData(), imageSize);

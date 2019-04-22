@@ -38,11 +38,11 @@ BakeIBL::~BakeIBL()
 void BakeIBL::initialize(VulkanRHI* pRhi)
 {
   setUpDescriptorSetLayouts(pRhi);
-  SetUpComputePipelines(pRhi);
+  setUpComputePipelines(pRhi);
 }
 
 
-void BakeIBL::SetUpComputePipelines(VulkanRHI* pRhi)
+void BakeIBL::setUpComputePipelines(VulkanRHI* pRhi)
 {
   {
     m_pPipeGenBRDF = pRhi->createComputePipeline();
@@ -97,7 +97,7 @@ void BakeIBL::setUpDescriptorSetLayouts(VulkanRHI* pRhi)
 void BakeIBL::cleanUp(VulkanRHI* pRhi)
 {
   cleanUpDescriptorSetLayouts(pRhi);
-  CleanUpComputePipelines(pRhi);
+  cleanUpComputePipelines(pRhi);
 }
 
 
@@ -115,7 +115,7 @@ void BakeIBL::cleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
 }
 
 
-void BakeIBL::CleanUpComputePipelines(VulkanRHI* pRhi)
+void BakeIBL::cleanUpComputePipelines(VulkanRHI* pRhi)
 {
   if (m_pPipeGenBRDF) {
     pRhi->freeComputePipeline(m_pPipeGenBRDF);
@@ -124,7 +124,7 @@ void BakeIBL::CleanUpComputePipelines(VulkanRHI* pRhi)
 }
 
 
-void BakeIBL::RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex)
+void BakeIBL::renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex)
 {
   if (!pCmd || !target) return;
 
@@ -136,7 +136,7 @@ void BakeIBL::RenderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Text
 }
 
 
-void BakeIBL::UpdateTargetBRDF(Texture* target)
+void BakeIBL::updateTargetBRDF(Texture* target)
 {
   if (!target) { return; }
   std::array<VkWriteDescriptorSet, 1> writes;

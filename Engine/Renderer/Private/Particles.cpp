@@ -125,7 +125,7 @@ void ParticleSystem::setUpGpuBuffer(VulkanRHI* pRhi)
     | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
     | VK_BUFFER_USAGE_TRANSFER_DST_BIT
     | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-  m_particleBuffer->initialize(gpuBufferCi, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  m_particleBuffer->initialize(gpuBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 }
 
 
@@ -167,7 +167,7 @@ void ParticleSystem::initialize(VulkanRHI* pRhi,
     bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    m_particleConfigBuffer->initialize(bufferCi, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    m_particleConfigBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_particleConfigBuffer->Map();
   }
 
@@ -189,7 +189,7 @@ void ParticleSystem::getParticleState(Particle* output)
     stagingCI.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
     staging.Map();
   }
@@ -255,7 +255,7 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
     stagingCI.size = sizeof(Particle) * particles.size();
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.initialize(stagingCI, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+    staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
     staging.Map();
     memcpy(staging.Mapped(), particles.data(), (size_t)stagingCI.size);

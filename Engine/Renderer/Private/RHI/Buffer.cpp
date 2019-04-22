@@ -13,7 +13,7 @@ namespace Recluse {
 
 
 void Buffer::initialize(const VkBufferCreateInfo& info, 
-  VkMemoryPropertyFlags memFlags)
+  PhysicalDeviceMemoryUsage usage)
 {
   if (vkCreateBuffer(mOwner, &info, nullptr, &mBuffer) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create buffer object.\n");
@@ -26,7 +26,7 @@ void Buffer::initialize(const VkBufferCreateInfo& info,
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memoryRequirements.size;
-  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, memFlags);
+  allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, usage);
   
   VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory);
   if (rslt != VK_SUCCESS) {

@@ -114,9 +114,10 @@ void main()
       shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
                                           dynamicLightSpace.lightSpace, dynamicShadowMap,
                                           light.direction.xyz, pbrInfo.N);
+      //vec4 sc = GetCascadeColor(cascadeIdx);
+      //outColor += sc.rgb;
     }
-    //vec4 sc = GetCascadeColor(cascadeIdx);
-    outColor += ambient;//sc.rgb;
+    outColor += ambient;
     outColor += radiance * shadowFactor;
     outColor = max(outColor, ambient);
   }

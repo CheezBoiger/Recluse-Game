@@ -99,15 +99,48 @@ VkPhysicalDeviceFeatures PhysicalDevice::getFeatures() const
 }
 
 
-u32 PhysicalDevice::findMemoryType(u32 filter, VkMemoryPropertyFlags flags) const
+u32 PhysicalDevice::findMemoryType(u32 filter, PhysicalDeviceMemoryUsage usage) const
 { 
+  VkMemoryPropertyFlags required = 0;
+  VkMemoryPropertyFlags preferred = 0;
+  u32 index = 0xffffffff;
+
+  switch (usage) {
+    case PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY:
+    {
+      required |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+      preferred |= VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    } break;
+    case PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY:
+    {
+      preferred |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    } break;
+    case PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU:
+    {
+      required |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+      preferred |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    } break;
+    case PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU:
+    {
+      required |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+      preferred |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    } break;
+    default:
+      break;
+  };
+
   for (u32 i = 0; i < m_memoryProperties.memoryTypeCount; ++i) {
-    if ((filter & (1 << i)) && (m_memoryProperties.memoryTypes[i].propertyFlags & flags) == flags) {
-      return i;
+    const VkMemoryPropertyFlags propFlags = m_memoryProperties.memoryTypes[i].propertyFlags;
+    if ((filter & (1 << i))) {
+      if ((propFlags & required) == required && ((propFlags & preferred) == preferred)) {
+        index = i;
+      } else if ((propFlags & required) == required) {
+        index = i;
+      }
     }
   }
 
-  return -1;
+  return index;
 }
 
 

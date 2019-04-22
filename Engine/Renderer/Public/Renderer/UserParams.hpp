@@ -5,6 +5,10 @@
 
 #include "Core/Utility/Vector.hpp"
 
+#define R_RAYTRACING_BIT           (1<<0)
+#define R_MESHSHADER_BIT           (1<<1)
+#define R_PIXELBARECENTRIC_BIT     (1<<2)
+
 namespace Recluse {
 
 

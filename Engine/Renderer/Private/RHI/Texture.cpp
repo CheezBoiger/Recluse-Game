@@ -45,7 +45,7 @@ void Texture::initialize(const VkImageCreateInfo& imageInfo,
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memoryRequirements.size;
   allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, 
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+                                                                        PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
   
   VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory);
   if (rslt != VK_SUCCESS) {

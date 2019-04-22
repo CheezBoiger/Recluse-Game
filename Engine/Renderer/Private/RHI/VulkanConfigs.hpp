@@ -17,8 +17,6 @@
 #define INTEL_WORKGROUP_SIZE       16   // Optimal EU hardware thread workgroup size on Intel chips.
 #define NVIDIA_WARP_SIZE           16  // Optimal CUDA SIMT workgroup size on Nvidia chips.
 #define AMD_WAVEFRONT_SIZE         16   // Optimal AMD workgroup size on Radeon chips.
-#define R_RAYTRACING_BIT           (1<<0)
-#define R_MESHSHADER_BIT           (1<<1)
 
 #if defined(_DEBUG)
 #define RDEBUG_SET_VULKAN_NAME(obj, name) obj->setName(name)
@@ -58,8 +56,17 @@ protected:
 };
 
 
+enum PhysicalDeviceMemoryUsage {
+  PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY,
+  PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY,
+  PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU,
+  PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU
+};
+
+
 namespace Recluse {
 namespace {
+
 
 VkSubpassDependency CreateSubPassDependency(u32 srcSubpass, VkAccessFlags srcAccessMask,
   VkPipelineStageFlags srcStageMask, u32 dstSubpass, VkAccessFlags dstAccessMask,

@@ -41,7 +41,7 @@ public:
                         QueueFamily* transfer, 
                         QueueFamily* compute) const;
 
-  u32 findMemoryType(u32 filter, VkMemoryPropertyFlags flags) const;
+  u32 findMemoryType(u32 filter, PhysicalDeviceMemoryUsage usage) const;
 
   VkResult getImageFormatProperties(VkFormat format, 
                                     VkImageType type, 
