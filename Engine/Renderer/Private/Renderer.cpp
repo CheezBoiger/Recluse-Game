@@ -475,12 +475,15 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pWindow = window;
   m_pRhi->initialize(window->getHandle(), params);
-
+  {
+    std::set<std::string> missing = VulkanRHI::getMissingExtensions(VulkanRHI::gPhysicalDevice.handle());
+    
+  }
 
   setUpRenderTextures(true);
   setUpFrameBuffers();
   setUpDescriptorSetLayouts();
-  m_RenderQuad.initialize(m_pRhi);
+  m_RenderQuad.initialize(m_pRhi); 
 
   GlobalDescriptor* gMat = new GlobalDescriptor();
   gMat->initialize(m_pRhi);
@@ -1100,7 +1103,7 @@ void Renderer::setUpFrameBuffers()
     gbuffer_Albedo->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -1111,7 +1114,7 @@ void Renderer::setUpFrameBuffers()
     gbuffer_Normal->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -1122,7 +1125,7 @@ void Renderer::setUpFrameBuffers()
     gbuffer_Position->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -1133,7 +1136,7 @@ void Renderer::setUpFrameBuffers()
     gbuffer_Emission->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -1146,8 +1149,8 @@ void Renderer::setUpFrameBuffers()
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
-    VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-    VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    VK_ATTACHMENT_LOAD_OP_CLEAR,
+    VK_ATTACHMENT_STORE_OP_STORE,
     gbuffer_Depth->Samples()
   );
 
@@ -1255,12 +1258,12 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
       gbuffer_Depth->Format(),
-      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
-      VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-      VK_ATTACHMENT_STORE_OP_DONT_CARE,
+      VK_ATTACHMENT_LOAD_OP_LOAD,
+      VK_ATTACHMENT_STORE_OP_STORE,
       gbuffer_Depth->Samples()
     );
 
@@ -2184,6 +2187,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValuesPBR[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValuesPBR[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValuesPBR[2].depthStencil = { 1.0f, 0 };
+
 
   VkRenderPassBeginInfo pbr_RenderPassInfo = {};
   pbr_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -3589,7 +3593,7 @@ void Renderer::setUpPBR()
     emission.sampler = pbr_Sampler->getHandle();
 
     VkDescriptorImageInfo depth = { };
-    depth.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     depth.imageView = gbuffer_DepthAttachKey->getView();
     depth.sampler = pbr_Sampler->getHandle();
 
@@ -3920,6 +3924,46 @@ void Renderer::updateSky()
 }
 
 
+void Renderer::updateLightBuffer(u32 frameIndex)
+{
+  //R_TIMED_PROFILE_RENDERER();
+
+  LightBuffer* pLights = m_pLights->getData();
+  i32 usedPointLights = 0;
+  i32 usedSpotLights = 0;
+  i32 usedDirectionLights = 0;
+  for (; usedPointLights < m_pointLights.Size() && usedPointLights < MAX_POINT_LIGHTS; ++usedPointLights) {
+    pLights->_PointLights[usedPointLights] = m_pointLights[usedPointLights];
+  }
+  
+  for (; usedSpotLights < m_spotLights.Size() && usedSpotLights < MAX_SPOT_LIGHTS; ++usedSpotLights) {
+    pLights->_SpotLights[usedSpotLights] = m_spotLights[usedSpotLights];
+  }
+
+  for (; usedDirectionLights < m_directionalLights.Size() 
+          && usedDirectionLights < MAX_DIRECTIONAL_LIGHTS; ++usedDirectionLights) {
+    
+    pLights->_DirectionalLights[usedDirectionLights] = m_directionalLights[usedDirectionLights];
+  }
+
+  while (usedPointLights < LightBuffer::maxNumPointLights()) {
+    pLights->_PointLights[usedPointLights] = PointLight();
+    ++usedPointLights;
+  }
+
+  while (usedSpotLights < LightBuffer::maxNumSpotLights()) {
+    pLights->_SpotLights[usedSpotLights] = SpotLight();
+    ++usedSpotLights;
+  }
+
+  while (usedDirectionLights < LightBuffer::maxNumDirectionalLights()) {
+    pLights->_DirectionalLights[usedDirectionLights] = DirectionalLight();
+    ++usedDirectionLights;
+  }
+  m_pLights->update(m_pRhi, m_pGlobal->getData(), frameIndex);
+}
+
+
 void Renderer::updateSceneDescriptors(u32 frameIndex)
 {
   // Update global data.
@@ -3945,7 +3989,7 @@ void Renderer::updateSceneDescriptors(u32 frameIndex)
   Vector4 vViewerPos = m_pGlobal->getData()->_CameraPos;
   m_pLights->setViewerPosition(Vector3(vViewerPos.x, vViewerPos.y, vViewerPos.z));
 #endif
-  m_pLights->update(m_pRhi, m_pGlobal->getData(), frameIndex);
+  updateLightBuffer(frameIndex);
 
   // Update mesh descriptors.
   for (size_t i = 0; i < m_meshDescriptors.Size(); ++i) {
@@ -4297,6 +4341,9 @@ void Renderer::clearCmdLists()
   m_jointDescriptors.clear();
   m_materialDescriptors.clear();
   m_particleSystems.clear();
+  m_spotLights.clear();
+  m_pointLights.clear();
+  m_directionalLights.clear();
 }
 
 
@@ -4735,5 +4782,23 @@ void Renderer::freeUIDescriptor(UIDescriptor* pDesc)
   if (!pDesc) return;
   pDesc->cleanUp(m_pRhi);
   delete pDesc;
+}
+
+
+void Renderer::pushDirectionLight(const DirectionalLight& lightInfo)
+{
+  m_directionalLights.pushBack(lightInfo);
+}
+
+
+void Renderer::pushPointLight(const PointLight& lightInfo) 
+{
+  m_pointLights.pushBack(lightInfo);
+} 
+
+
+void Renderer::pushSpotLight(const SpotLight& lightInfo)
+{
+  m_spotLights.pushBack(lightInfo);
 }
 } // Recluse

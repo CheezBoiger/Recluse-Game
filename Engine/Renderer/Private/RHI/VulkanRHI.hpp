@@ -12,6 +12,7 @@
 #include "Renderer/UserParams.hpp"
 
 #include <functional>
+#include <set>
 
 #define DEFAULT_QUEUE_IDX 0
 
@@ -83,6 +84,7 @@ public:
   // Context and physical device set up.
   static b32 createContext(const char* appName);
   static b32 findPhysicalDevice(u32 rhiConfigBits = 0);
+  static std::set<std::string> getMissingExtensions(VkPhysicalDevice device);
 
 private:
   static b32 suitableDevice(VkPhysicalDevice device);
@@ -254,6 +256,7 @@ public:
   VkPhysicalDeviceLimits PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
   u32 vendorID() { return mPhysicalDeviceProperties.vendorID; }
   b32 depthBoundsAllowed() const { return m_depthBoundsAllowed; }
+  b32 stencilTestAllowed() const { return m_bStencilTestAllowed; }
   
   VkFormat depthFormat() const { return mSwapchainInfo.mDepthFormat; }
   VkImageAspectFlags depthAspectFlags() const { return mSwapchainInfo.mDepthAspectFlags; }
@@ -281,6 +284,7 @@ private:
   HWND mWindow;
   Swapchain mSwapchain;
   b32 m_depthBoundsAllowed;
+  b32 m_bStencilTestAllowed;
   LogicalDevice mLogicalDevice;
   VkSurfaceKHR mSurface;
   std::vector<VkCommandPool> mGraphicsCmdPools;

@@ -237,6 +237,32 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 {
   // PbrForward Pipeline Creation.
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+
+  VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
+  depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencilCI.depthTestEnable = VK_TRUE;
+  depthStencilCI.depthWriteEnable = VK_TRUE;
+  depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
+  depthStencilCI.depthBoundsTestEnable = Rhi->depthBoundsAllowed();
+  depthStencilCI.minDepthBounds = 0.0f;
+  depthStencilCI.maxDepthBounds = 1.0f;
+  depthStencilCI.stencilTestEnable = VK_FALSE;
+  depthStencilCI.back = {};
+  depthStencilCI.front = {};
+  if (Rhi->stencilTestAllowed()) {
+    depthStencilCI.stencilTestEnable = VK_TRUE;
+    depthStencilCI.back.compareMask = 0xff;
+    depthStencilCI.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    depthStencilCI.back.depthFailOp = VK_STENCIL_OP_REPLACE;
+    depthStencilCI.back.passOp = VK_STENCIL_OP_REPLACE;
+    depthStencilCI.back.failOp = VK_STENCIL_OP_ZERO;
+    depthStencilCI.back.writeMask = 0xff;
+    depthStencilCI.back.reference = 1;
+    depthStencilCI.front = depthStencilCI.back;
+  }
+
+  GraphicsInfo.pDepthStencilState = &depthStencilCI;
+
   GraphicsPipeline* GBufferPipeline = Rhi->createGraphicsPipeline();
   GraphicsPipeline* GBufferStaticPipeline = Rhi->createGraphicsPipeline();
   FrameBuffer* GBufferFrameBuffer = gbuffer_FrameBufferKey;
@@ -422,6 +448,30 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 {
   {
     VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
+    VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
+    depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencilCI.depthTestEnable = VK_FALSE;
+    depthStencilCI.depthWriteEnable = VK_FALSE;
+    depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilCI.depthBoundsTestEnable = Rhi->depthBoundsAllowed();
+    depthStencilCI.minDepthBounds = 0.0f;
+    depthStencilCI.maxDepthBounds = 1.0f;
+    depthStencilCI.stencilTestEnable = VK_FALSE;
+    depthStencilCI.back = {};
+    depthStencilCI.front = {};
+    if (Rhi->stencilTestAllowed()) {
+      depthStencilCI.stencilTestEnable = VK_TRUE;
+      depthStencilCI.back.compareMask = 0xff;
+      depthStencilCI.back.compareOp = VK_COMPARE_OP_EQUAL;
+      depthStencilCI.back.depthFailOp = VK_STENCIL_OP_KEEP;
+      depthStencilCI.back.passOp = VK_STENCIL_OP_KEEP;
+      depthStencilCI.back.failOp = VK_STENCIL_OP_KEEP;
+      depthStencilCI.back.writeMask = 0xff;
+      depthStencilCI.back.reference = 1;
+      depthStencilCI.front = depthStencilCI.back;
+    }
+
+    GraphicsInfo.pDepthStencilState = &depthStencilCI;
     GraphicsPipeline* pbrPipeline_LR = Rhi->createGraphicsPipeline();
     pbr_Pipeline_LR = pbrPipeline_LR;
     pbr_Pipeline_NoLR = Rhi->createGraphicsPipeline();

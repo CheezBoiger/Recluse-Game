@@ -13,7 +13,7 @@ const float PI = 3.14159265359;
 
 #define MAX_DIRECTION_LIGHTS    4
 #define MAX_SPOT_LIGHTS         16
-#define MAX_POINT_LIGHTS        64
+#define MAX_POINT_LIGHTS        32
 
 struct PBRInfo {
   vec3 WP;      // world position.

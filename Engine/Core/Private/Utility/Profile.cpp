@@ -22,6 +22,7 @@ std::mutex      kProfileMapMutex;
 
 void Profiler::StoreTimed(ProfileData& obj, const std::string& tag)
 {
+  std::lock_guard<std::mutex> lck(kProfileMapMutex);
   kProfileDataMap[obj._type][tag] = std::move(obj);
 }
 

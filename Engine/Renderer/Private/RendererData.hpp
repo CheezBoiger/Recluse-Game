@@ -20,7 +20,7 @@
 #define GBUFFER_WINDING_ORDER             VK_FRONT_FACE_CLOCKWISE
 #define GBUFFER_CULL_MODE                 VK_CULL_MODE_FRONT_BIT
 
-#define COMPUTE_PBR                       1
+#define COMPUTE_PBR                       0
 
 
 namespace Recluse {

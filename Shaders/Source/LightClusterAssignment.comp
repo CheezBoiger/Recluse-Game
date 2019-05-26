@@ -48,14 +48,14 @@ struct ClusterIndex {
 // sublist after offsetting the indices list, to read off of.
 // Computing the size of the this data must be a size of (GRID_X * GRID_Y * GRID_Z) * 64bits, with count = (GRID_X * GRID_Y * GRID_Z).
 // TODO(): Would this make sense to make it a texture?
-layout (set = 2, binding = 0) writeonly buffer Cluster {
+layout (set = 2, binding = 0) buffer Cluster {
   vec4            count;
   ClusterData     grid[];
 } clusters;
 
 // indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
 // to that source.
-layout (set = 2, binding = 1) writeonly buffer indices {
+layout (set = 2, binding = 1) buffer indices {
   uint      count;
   uint      indices[];
 } lightIndices;
@@ -149,7 +149,7 @@ void SetRoot(vec4 rootMin, vec4 rootMax)
 
 void buildClusters(int numLights)
 {
-  uint gridDimY = lightGridData.gridDim.y;
+  uint gridDimY = 0;
   uint grid2dDimY = (gWorldBuffer.screenSize.y + gridDimY - 1) / gridDimY; 
 }
 
@@ -208,14 +208,16 @@ void lightHierarchyMakeKeys()
 
 void assignLights()
 {
-  if (lightBVH.numLights == 0) {
+  if (lightBVH.numMaxLights == 0) {
     // Clear buffers if no lights exist.
-    for (uint i = 0; (gl_GlobalInvocationID.x + i) < clusters.count; i+=WORKGROUP_SIZE) {
+    uint cc = uint(clusters.count);
+    for (uint i = 0; (gl_GlobalInvocationID.x + i) < cc; i+=WORKGROUP_SIZE) {
       uint idx = gl_GlobalInvocationID.x + i;
-      clusters.grid[idx] = 0;
+      clusters.grid[idx].param = ivec2(0);
     }
     barrier();
-    for (uint i = 0; (gl_GlobalInvocationID.x + i) < lightIndices.count; i+=WORKGROUP_SIZE) {
+    cc = uint(lightIndices.count.x);
+    for (uint i = 0; (gl_GlobalInvocationID.x + i) < cc; i+=WORKGROUP_SIZE) {
       uint idx = gl_GlobalInvocationID.x + i;
       lightIndices.indices[idx];
     }

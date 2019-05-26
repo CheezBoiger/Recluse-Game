@@ -24,7 +24,7 @@ namespace Recluse {
 Context                       VulkanRHI::gContext;
 PhysicalDevice                VulkanRHI::gPhysicalDevice;
 VulkanMemoryAllocatorManager  VulkanRHI::gAllocator;
-std::vector<const tchar*>     Extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+std::vector<const tchar*>     gExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
 VkPresentModeKHR GetPresentMode(const GraphicsConfigParams* params)
@@ -101,6 +101,7 @@ VulkanRHI::VulkanRHI()
   , mSwapchainCmdBufferBuild(nullptr)
   , mCurrDescSets(0)
   , m_depthBoundsAllowed(VK_FALSE)
+  , m_bStencilTestAllowed(VK_FALSE)
   , m_currentFrame(0)
 {
   mSwapchainInfo.mComplete = false;
@@ -127,18 +128,31 @@ b32 VulkanRHI::createContext(const char* appName)
 }
 
 
+std::set<std::string> VulkanRHI::getMissingExtensions(VkPhysicalDevice device)
+{
+  std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::getExtensionProperties(device);
+  std::set<std::string> requiredExtensions(gExtensions.begin(), gExtensions.end());
+  Log(rDebug) << "Supported extensions: \n";
+  for (const auto& extension : availableExtensions) {
+    Log(rDebug) << extension.extensionName << "\n";
+    requiredExtensions.erase(extension.extensionName);
+  }
+  return requiredExtensions;
+}
+
+
 b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 {
   std::vector<VkPhysicalDevice>& devices = gContext.enumerateGpus();
 #if VK_NVX_raytracing
-  if (rhiBits & R_RAYTRACING_BIT) Extensions.push_back(VK_NVX_RAYTRACING_EXTENSION_NAME);
-  if (rhiBits & R_MESHSHADER_BIT) Extensions.push_back(VK_NV_MESH_SHADER_EXTENSION_NAME);
+  if (rhiBits & R_RAYTRACING_BIT) gExtensions.push_back(VK_NVX_RAYTRACING_EXTENSION_NAME);
+  if (rhiBits & R_MESHSHADER_BIT) gExtensions.push_back(VK_NV_MESH_SHADER_EXTENSION_NAME);
 #else
   if (rhiBits & R_RAYTRACING_BIT) R_DEBUG(rWarning, "Raytracing is not available for this version of vulkan. Consider updating.\n");
   if (rhiBits & R_MESHSHADER_BIT) R_DEBUG(rWarning, "Mesh shading not avaiable for this version of vulkan. Consider updating.\n");
 #endif
 #if VK_NV_fragment_shader_barycentric
-  if (rhiBits & R_PIXELBARECENTRIC_BIT) Extensions.push_back(VK_NV_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
+  if (rhiBits & R_PIXELBARECENTRIC_BIT) gExtensions.push_back(VK_NV_FRAGMENT_SHADER_BARYCENTRIC_EXTENSION_NAME);
 #else
   if (rhiBits & R_PIXELBARECENTRIC_BIT) R_DEBUG(rWarning, "Fragment shader barycentric extension not available for this version of vulkan. Consider updating.\n");
 #endif
@@ -174,13 +188,7 @@ b32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
   VkPhysicalDeviceProperties props = {};
   u32 score = 0;
   std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::getExtensionProperties(device);
-  std::set<std::string> requiredExtensions(Extensions.begin(), Extensions.end());
-  Log(rDebug) << "Supported extensions: \n";
-  for (const auto& extension : availableExtensions) {
-    Log(rDebug) << extension.extensionName << "\n";
-    requiredExtensions.erase(extension.extensionName);
-    score += 1;
-  }
+  std::set<std::string> requiredExtensions = getMissingExtensions(device);
 
   vkGetPhysicalDeviceFeatures(device, &features);
   vkGetPhysicalDeviceProperties(device, &props);
@@ -200,6 +208,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
     R_DEBUG(rError, "Renderer can not initialize with a null window handle!\n");
     return;
   }
+
   // Keep track of the window handle.
   mWindow = windowHandle;
 
@@ -255,8 +264,8 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   deviceCreate.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   deviceCreate.queueCreateInfoCount = static_cast<u32>(deviceQueueCreateInfos.size());
   deviceCreate.pQueueCreateInfos = deviceQueueCreateInfos.data();
-  deviceCreate.enabledExtensionCount = static_cast<u32>(Extensions.size());
-  deviceCreate.ppEnabledExtensionNames = Extensions.data();
+  deviceCreate.enabledExtensionCount = static_cast<u32>(gExtensions.size());
+  deviceCreate.ppEnabledExtensionNames = gExtensions.data();
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
   deviceCreate.pEnabledFeatures = &features;
@@ -408,9 +417,23 @@ void VulkanRHI::queryFromSwapchain()
 void VulkanRHI::createDepthAttachment()
 {
   // TODO(): Set up D32_SFLOAT_S8_UINT as well.
-  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
+  mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT_S8_UINT;
   mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
   mSwapchainInfo.mDepthUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  m_bStencilTestAllowed = VK_TRUE;
+
+  VkImageFormatProperties imageFormatProps = { };
+  if (gPhysicalDevice.getImageFormatProperties(VK_FORMAT_D32_SFLOAT_S8_UINT, 
+                                           VK_IMAGE_TYPE_2D, 
+                                           VK_IMAGE_TILING_OPTIMAL, 
+                                           VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+                                           VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 
+                                           &imageFormatProps) != VK_SUCCESS) {
+    mSwapchainInfo.mDepthFormat = VK_FORMAT_D32_SFLOAT;
+    mSwapchainInfo.mDepthAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+    mSwapchainInfo.mDepthUsageFlags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    m_bStencilTestAllowed = VK_FALSE;
+  }
 
   VkImageCreateInfo imageCI = { };
   imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

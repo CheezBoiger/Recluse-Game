@@ -214,20 +214,17 @@ void main()
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
     DirectionLight light = gLightBuffer.directionLights[i];
-    if (light.enable <= 0) { continue; }
     outColor += light.ambient.rgb * fragAlbedo;
     outColor += CookTorrBRDFDirectional(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
     PointLight light = gLightBuffer.pointLights[i];
-    if (light.enable <= 0) { continue; }
     outColor += CookTorrBRDFPoint(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_SPOT_LIGHTS; ++i) {
     SpotLight light = gLightBuffer.spotLights[i];
-    if (light.enable <= 0) { continue; }
     outColor += CookTorrBRDFSpot(light, pbrInfo);
   }
   

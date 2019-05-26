@@ -201,12 +201,12 @@ public:
   UIOverlay*        getOverlay() { return m_pUI; }  
 
   // Check if this renderer is initialized with the window reference given.
-  b32                isInitialized() { return m_Initialized; }
-  b32                usingAntialiasing() { return m_AntiAliasing; }
+  b32  isInitialized() { return m_Initialized; }
+  b32  usingAntialiasing() { return m_AntiAliasing; }
 
   // Get the rendering hardware interface used in this renderer.
-  VulkanRHI*        getRHI() { return m_pRhi; }
-  SkyRenderer*      getSkyRendererNative() { return m_pSky; }
+  VulkanRHI* getRHI() { return m_pRhi; }
+  SkyRenderer* getSkyRendererNative() { return m_pSky; }
 
   GlobalDescriptor* getGlobalNative() { return m_pGlobal; }
 
@@ -214,30 +214,33 @@ public:
   GraphicsConfigParams& getCurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
 
   // setEnable HDR Post processing.
-  void              enableHDR(b32 enable);
+  void enableHDR(b32 enable);
 
   // Get this renderer's render quad.
-  RenderQuad*       getRenderQuad() { return &m_RenderQuad; }
+  RenderQuad* getRenderQuad() { return &m_RenderQuad; }
 
   // Push mesh to render.
-  void              pushMeshRender(MeshRenderCmd& cmd);
-  void              pushParticleSystem(ParticleSystem* system);
-  BufferUI*         getUiBuffer() const;
+  void pushMeshRender(MeshRenderCmd& cmd);
+  void pushParticleSystem(ParticleSystem* system);
+  void pushPointLight(const PointLight& lightInfo);
+  void pushSpotLight(const SpotLight& lightInfo);
+  void pushDirectionLight(const DirectionalLight& lightInfo);
+  BufferUI* getUiBuffer() const;
 
-  HDR*              getHDR() { return m_pHDR; }
+  HDR* getHDR() { return m_pHDR; }
 
   // Get the name of the device used for rendering graphics and compute.
-  const char*       getDeviceName();
+  const char* getDeviceName();
 
   // Adjusts bloom strength of the renderer.
-  void              adjustHDRSettings(const ParamsHDR& hdrSettings);
+  void adjustHDRSettings(const ParamsHDR& hdrSettings);
 
-  void              updateSky();
+  void updateSky();
 
   // Set up and override Skybox cubemap for the renderer.
-  void              setSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
-  void              setGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
-  void              setGlobalLightProbe(LightProbe* probe) { m_globalLightProbe = probe; }
+  void setSkyboxCubeMap(TextureCube* cubemap) { m_preRenderSkybox = cubemap; }
+  void setGlobalBRDFLUT(Texture2D* brdflut) { m_skybox._brdfLUT = brdflut;}
+  void setGlobalLightProbe(LightProbe* probe) { m_globalLightProbe = probe; }
 
   // NOTE(): If brdf, or envmap, was cleaned up before cleaning up the engine, be sure to 
   // call this first, before freeing the set maps!
@@ -306,6 +309,7 @@ private:
   void              buildForwardPBRCmdList();
   void              buildFinalCmdLists();
   void              updateGlobalIlluminationBuffer();
+  void updateLightBuffer(u32 frameIndex);
 
   void              setUpDownscale(b32 FullSetUp);
   void              cleanUpDownscale(b32 FullCleanUp);
@@ -344,6 +348,9 @@ private:
   CmdList<MeshDescriptor*>          m_meshDescriptors;
   CmdList<MaterialDescriptor*>      m_materialDescriptors;
   CmdList<ParticleSystem*>          m_particleSystems;
+  CmdList<PointLight>               m_pointLights;
+  CmdList<SpotLight>                m_spotLights;
+  CmdList<DirectionalLight>         m_directionalLights;
 
   // Number of workers in this renderer instance. Used to enable multithreading.
   std::vector<std::thread>          m_workers;

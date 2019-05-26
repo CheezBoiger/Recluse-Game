@@ -30,8 +30,8 @@ public:
 
   LightComponent(LightType type = UNKNOWN_LIGHT)
     : m_Type(type)
-    , m_Id(UINT_MAX)
-    , m_debug(false) { }
+    , m_debug(false)
+    , m_enable(true) { }
 
   virtual ~LightComponent() { }
 
@@ -41,9 +41,9 @@ protected:
   virtual void              update() override { }
 public:
 
-  u32                       getId() const { return m_Id; }
   virtual void              setIntensity(r32 intensity) { }
   virtual void              setColor(const Vector4& color) { }
+  void                      enable(b32 e) { m_enable = e; }
 
   virtual void              serialize(IArchive& archive) override { }
   virtual void              deserialize(IArchive& archive) override { }
@@ -57,7 +57,7 @@ protected:
   virtual void onDebug() { }
 
   LightType                 m_Type;
-  u32                       m_Id;
-  b32                       m_debug;
+  b32                       m_debug : 1,
+                            m_enable : 1;
 };
 } // Recluse
