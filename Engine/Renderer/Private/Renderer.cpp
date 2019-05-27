@@ -1425,6 +1425,8 @@ void Renderer::setUpFrameBuffers()
   framebufferCI.attachmentCount = 1;
   attachmentDescriptions[0].format = hdrColor->Format();
   attachmentDescriptions[0].samples = hdrColor->Samples();
+  attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   renderpassCI.attachmentCount = 1;
   subpass.colorAttachmentCount = 1;
   hdr_renderPass = m_pRhi->createRenderPass();

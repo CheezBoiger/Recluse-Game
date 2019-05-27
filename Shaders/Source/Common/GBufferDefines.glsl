@@ -39,18 +39,15 @@ GBuffer ReadGBuffer(ivec2 uv,
   gbuffer.ao                = albedo.a;
   gbuffer.anisoSpec         = vec4(normal.a, erm.a, 0.0, 0.0);
   
-  if (emit.a > 0.0) {
-    gbuffer.pos = vec3(NAN, NAN, NAN);
-  } else {
-    vec2 resolution = vec2(gWorldBuffer.screenSize);
-    float z = texelFetch(inDepth, uv, 0).r;
-    float x = float((uv.x / resolution.x) * 2 - 1);
-    float y = float((uv.y / resolution.y) * 2 - 1);
-    vec4 clipPos = vec4(x, y, z, 1.0);
-    vec4 worldPos = gWorldBuffer.invViewProj * clipPos;
-    worldPos /= worldPos.w;
-    gbuffer.pos = worldPos.xyz;
-  }
+  vec2 resolution = vec2(gWorldBuffer.screenSize);
+  float z = texelFetch(inDepth, uv, 0).r;
+  float x = float((uv.x / resolution.x) * 2 - 1);
+  float y = float((uv.y / resolution.y) * 2 - 1);
+  vec4 clipPos = vec4(x, y, z, 1.0);
+  vec4 worldPos = gWorldBuffer.invViewProj * clipPos;
+  worldPos /= worldPos.w;
+  gbuffer.pos = worldPos.xyz;
+
   return gbuffer;
 }
 
