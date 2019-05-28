@@ -184,7 +184,8 @@ VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
                                                         u32 align,
                                                         u32 memoryTypeBits,
                                                         PhysicalDeviceMemoryUsage usage,
-                                                        VulkanAllocationType allocType)
+                                                        VulkanAllocationType allocType,
+                                                        u32 memoryBankIdx)
 {
   VulkanAllocation allocation;
   u32 memoryIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryTypeBits, usage);

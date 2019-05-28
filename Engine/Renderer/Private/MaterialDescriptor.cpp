@@ -69,7 +69,7 @@ void MaterialDescriptor::initialize(VulkanRHI* pRhi)
   bufferCi.size = memSize;
   
   m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-  m_pBuffer->Map();
+  m_pBuffer->map();
 
   m_materialSet = pRhi->createDescriptorSet();
 
@@ -138,7 +138,7 @@ void MaterialDescriptor::update(VulkanRHI* pRhi)
     emissiveInfo.sampler = CHECK_SAMPLER(m_pEmissiveSampler);
 
     VkDescriptorBufferInfo matBufferInfo = { };
-    matBufferInfo.buffer = m_pBuffer->NativeBuffer();
+    matBufferInfo.buffer = m_pBuffer->getNativeBuffer();
     matBufferInfo.offset = 0;
     matBufferInfo.range = sizeof(MaterialBuffer);
 
@@ -195,12 +195,12 @@ void MaterialDescriptor::update(VulkanRHI* pRhi)
   }
   
   if ((m_bNeedsUpdate & MATERIAL_BUFFER_UPDATE_BIT)) {
-    R_ASSERT(m_pBuffer->Mapped(), "Material buffer was not mapped!");
-    memcpy(m_pBuffer->Mapped(), &m_MaterialData, sizeof(MaterialBuffer));
+    R_ASSERT(m_pBuffer->getMapped(), "Material buffer was not mapped!");
+    memcpy(m_pBuffer->getMapped(), &m_MaterialData, sizeof(MaterialBuffer));
 
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = m_pBuffer->Memory();
+    range.memory = m_pBuffer->getMemory();
     range.size = VK_WHOLE_SIZE;
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
@@ -217,7 +217,7 @@ void MaterialDescriptor::cleanUp(VulkanRHI* pRhi)
     m_materialSet = nullptr;
   }
   if (m_pBuffer)  {
-    m_pBuffer->UnMap();
+    m_pBuffer->unmap();
     pRhi->freeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }

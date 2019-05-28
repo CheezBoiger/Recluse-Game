@@ -105,7 +105,7 @@ void FMODAudioEngine::unLoadSound(const std::string& soundName)
 {
   auto it = m_soundMap.find(soundName);
   if (it == m_soundMap.end()) { return; }
-  
+
   FMOD_RESULT result = it->second->release(); 
   R_ASSERT(result == FMOD_OK, "");
   m_soundMap.erase(it);
@@ -171,5 +171,10 @@ void FMODAudioEngine::setListener3DOrientation(const Vector3& pos, const Vector3
   m_globalListenerPosition = pos;
   m_globalListenerForward = forward;
   m_globalListenerUp = up;
+}
+
+
+void FMODAudioEngine::loadEventBank(const std::string& bankPath)
+{
 }
 } // Recluse

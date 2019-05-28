@@ -80,12 +80,12 @@ struct NkObject
 void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
 {
   // Copy over to host visible cache buffer.
-  memcpy(obj->_cache->Mapped(), image, w * h * 4);
+  memcpy(obj->_cache->getMapped(), image, w * h * 4);
   {
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.size = w * h * 4;
-    range.memory = obj->_cache->Memory();
+    range.memory = obj->_cache->getMemory();
     rhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
   
@@ -144,7 +144,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
 
   // Send buffer image copy cmd.
   cmdBuffer.CopyBufferToImage(
-    obj->_cache->NativeBuffer(),
+    obj->_cache->getNativeBuffer(),
     obj->_texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),
@@ -242,7 +242,7 @@ void InitImageBuffers(NkObject* obj, i32 w, i32 h, VulkanRHI* rhi, UIOverlay* ov
   obj->_texture->initialize(imgCi, viewCi);
   obj->_sampler->initialize(samplerCi);
   obj->_cache->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-  obj->_cache->Map();
+  obj->_cache->map();
 
   obj->_font_set->allocate(rhi->descriptorPool(), overlay->GetMaterialLayout());
   VkDescriptorImageInfo img = { };
@@ -268,7 +268,7 @@ void DestroyImageBuffers(NkObject* obj, VulkanRHI* rhi)
   rhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
   rhi->freeTexture(obj->_texture);
   rhi->freeDescriptorSet(obj->_font_set);
-  obj->_cache->UnMap();
+  obj->_cache->unmap();
   rhi->freeBuffer(obj->_cache);
   rhi->freeSampler(obj->_sampler);
 }
@@ -725,8 +725,8 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
 
     {
       struct nk_buffer vbuf, ebuf;
-      nk_buffer_init_fixed(&vbuf, m_vertStagingBuffer->Mapped(), MAX_VERTEX_MEMORY);
-      nk_buffer_init_fixed(&ebuf, m_indicesStagingBuffer->Mapped(), MAX_ELEMENT_MEMORY);
+      nk_buffer_init_fixed(&vbuf, m_vertStagingBuffer->getMapped(), MAX_VERTEX_MEMORY);
+      nk_buffer_init_fixed(&ebuf, m_indicesStagingBuffer->getMapped(), MAX_ELEMENT_MEMORY);
       // TODO(): canvas needs to be defined by the ui instead.
       nk_convert(&nk->_ctx, &nk->_cmds, &vbuf, &ebuf, &cfg);
     }
@@ -736,14 +736,14 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   {
     std::array<VkMappedMemoryRange, 2> memRanges;
     memRanges[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    memRanges[0].memory = m_vertStagingBuffer->Memory();
-    memRanges[0].size = m_vertStagingBuffer->MemorySize();
+    memRanges[0].memory = m_vertStagingBuffer->getMemory();
+    memRanges[0].size = m_vertStagingBuffer->getMemorySize();
     memRanges[0].offset = 0;
     memRanges[0].pNext = nullptr;
 
     memRanges[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    memRanges[1].memory = m_indicesStagingBuffer->Memory();
-    memRanges[1].size = m_indicesStagingBuffer->MemorySize();
+    memRanges[1].memory = m_indicesStagingBuffer->getMemory();
+    memRanges[1].size = m_indicesStagingBuffer->getMemorySize();
     memRanges[1].offset = 0;
     memRanges[1].pNext = nullptr;
 
@@ -755,8 +755,8 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   StreamBuffers(pRhi, frameIndex);
 #endif
 
-  VkBuffer vert = m_vertBuffers[frameIndex]->NativeBuffer();
-  VkBuffer indx = m_indicesBuffers[frameIndex]->NativeBuffer();
+  VkBuffer vert = m_vertBuffers[frameIndex]->getNativeBuffer();
+  VkBuffer indx = m_indicesBuffers[frameIndex]->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
   VkDescriptorSet sets[] = { global->getDescriptorSet(frameIndex)->getHandle(), nk->_font_set->getHandle() };
   // Unmap vertices and index buffers, then perform drawing here.
@@ -858,7 +858,7 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     m_vertStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_vertStagingBuffer->Map();
+    m_vertStagingBuffer->map();
   }
 
   {
@@ -868,15 +868,15 @@ void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     m_indicesStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_indicesStagingBuffer->Map();
+    m_indicesStagingBuffer->map();
   }
 }
 
 
 void UIOverlay::CleanUpBuffers(VulkanRHI* pRhi)
 {
-  m_vertStagingBuffer->UnMap();
-  m_indicesStagingBuffer->UnMap();
+  m_vertStagingBuffer->unmap();
+  m_indicesStagingBuffer->unmap();
   pRhi->freeBuffer(m_vertStagingBuffer);
   pRhi->freeBuffer(m_indicesStagingBuffer);
   m_indicesStagingBuffer = nullptr;
@@ -913,16 +913,16 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
     region.size = MAX_VERTEX_MEMORY;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    cmdBuffer.CopyBuffer(m_vertStagingBuffer->NativeBuffer(),
-      m_vertBuffers[frameIndex]->NativeBuffer(),
+    cmdBuffer.CopyBuffer(m_vertStagingBuffer->getNativeBuffer(),
+      m_vertBuffers[frameIndex]->getNativeBuffer(),
       1,
       &region);
     VkBufferCopy regionIndices = {};
     regionIndices.size = MAX_ELEMENT_MEMORY;
     regionIndices.srcOffset = 0;
     regionIndices.dstOffset = 0;
-    cmdBuffer.CopyBuffer(m_indicesStagingBuffer->NativeBuffer(),
-      m_indicesBuffers[frameIndex]->NativeBuffer(),
+    cmdBuffer.CopyBuffer(m_indicesStagingBuffer->getNativeBuffer(),
+      m_indicesBuffers[frameIndex]->getNativeBuffer(),
       1,
       &regionIndices);
   cmdBuffer.End();

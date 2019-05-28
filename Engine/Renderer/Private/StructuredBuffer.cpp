@@ -50,9 +50,9 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
     StagingBuffer->initialize(sInfo,
                               PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-    StagingBuffer->Map();
-      memcpy(StagingBuffer->Mapped(), getData, (size_t)MemSize);
-    StagingBuffer->UnMap();
+    StagingBuffer->map();
+      memcpy(StagingBuffer->getMapped(), getData, (size_t)MemSize);
+    StagingBuffer->unmap();
   }
 
   // Device local buffer.
@@ -76,8 +76,8 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
     region.size = MemSize;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    CmdBuffer->CopyBuffer(StagingBuffer->NativeBuffer(),
-                          mBuffer->NativeBuffer(),
+    CmdBuffer->CopyBuffer(StagingBuffer->getNativeBuffer(),
+                          mBuffer->getNativeBuffer(),
                           1,
                           &region);
   CmdBuffer->End();

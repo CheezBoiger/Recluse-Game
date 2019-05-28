@@ -168,7 +168,7 @@ void ParticleSystem::initialize(VulkanRHI* pRhi,
     bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     m_particleConfigBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_particleConfigBuffer->Map();
+    m_particleConfigBuffer->map();
   }
 
   m_pDescriptorSet = pRhi->createDescriptorSet();
@@ -191,7 +191,7 @@ void ParticleSystem::getParticleState(Particle* output)
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-    staging.Map();
+    staging.map();
   }
 
   CommandBuffer cmdBuffer;
@@ -208,8 +208,8 @@ void ParticleSystem::getParticleState(Particle* output)
   region.srcOffset = 0;
   region.dstOffset = 0;
   cmdBuffer.CopyBuffer(
-    m_particleBuffer->NativeBuffer(),
-    staging.NativeBuffer(),
+    m_particleBuffer->getNativeBuffer(),
+    staging.getNativeBuffer(),
     1,
     &region);
   cmdBuffer.End();
@@ -223,12 +223,12 @@ void ParticleSystem::getParticleState(Particle* output)
   pRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
   pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  Particle* particles = (Particle* )staging.Mapped();
+  Particle* particles = (Particle* )staging.getMapped();
   for (u32 i = 0; i < _particleConfig._maxParticles; ++i) {
     output[i] = particles[i];
   }
 
-  staging.UnMap();
+  staging.unmap();
   staging.cleanUp();
 }
 
@@ -257,9 +257,9 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-    staging.Map();
-    memcpy(staging.Mapped(), particles.data(), (size_t)stagingCI.size);
-    staging.UnMap();
+    staging.map();
+    memcpy(staging.getMapped(), particles.data(), (size_t)stagingCI.size);
+    staging.unmap();
   }
 
   CommandBuffer cmdBuffer;
@@ -275,8 +275,8 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
   region.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
   region.srcOffset = 0;
   region.dstOffset = 0;
-  cmdBuffer.CopyBuffer(staging.NativeBuffer(),
-    m_particleBuffer->NativeBuffer(),
+  cmdBuffer.CopyBuffer(staging.getNativeBuffer(),
+    m_particleBuffer->getNativeBuffer(),
     1,
     &region);
   cmdBuffer.End();
@@ -297,12 +297,12 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
 void ParticleSystem::updateDescriptor()
 {
   VkDescriptorBufferInfo bufferInfo = {};
-  bufferInfo.buffer = m_particleConfigBuffer->NativeBuffer();
+  bufferInfo.buffer = m_particleConfigBuffer->getNativeBuffer();
   bufferInfo.offset = 0;
   bufferInfo.range = sizeof(ParticleSystemConfig);
 
   VkDescriptorBufferInfo storage = { };
-  storage.buffer = m_particleBuffer->NativeBuffer();
+  storage.buffer = m_particleBuffer->getNativeBuffer();
   storage.offset = 0;
   storage.range = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
 
@@ -356,7 +356,7 @@ void ParticleSystem::update(VulkanRHI* pRhi)
 
   if (m_updateBits & (PARTICLE_VERTEX_BUFFER_UPDATE_BIT | PARTICLE_SORT_BUFFER_UPDATE_BIT)) {
     VkDeviceSize sz = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
-    if (sz != m_particleBuffer->MemorySize()) {
+    if (sz != m_particleBuffer->getMemorySize()) {
       cleanUpGpuBuffer(pRhi);
       setUpGpuBuffer(pRhi);
       m_updateBits |= PARTICLE_DESCRIPTOR_UPDATE_BIT;
@@ -370,12 +370,12 @@ void ParticleSystem::update(VulkanRHI* pRhi)
 
   if (m_updateBits & PARTICLE_CONFIG_BUFFER_UPDATE_BIT) {
     R_ASSERT(m_particleConfigBuffer, "Particle config not mapped.");
-    memcpy(m_particleConfigBuffer->Mapped(), &_particleConfig, sizeof(ParticleSystemConfig));
+    memcpy(m_particleConfigBuffer->getMapped(), &_particleConfig, sizeof(ParticleSystemConfig));
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.offset = 0;
-    range.memory = m_particleConfigBuffer->Memory();
-    range.size = m_particleConfigBuffer->MemorySize();
+    range.memory = m_particleConfigBuffer->getMemory();
+    range.size = m_particleConfigBuffer->getMemorySize();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
@@ -952,7 +952,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
       global->getDescriptorSet(frameIndex)->getHandle(),
       system->getSet()->getHandle()
     };
-    VkBuffer nativeBuffer = system->getParticleBuffer()->NativeBuffer();
+    VkBuffer nativeBuffer = system->getParticleBuffer()->getNativeBuffer();
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
       0, 2, sets, 0, nullptr);

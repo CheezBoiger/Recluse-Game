@@ -563,8 +563,8 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     RenderQuad*       quad = gRenderer().getRenderQuad();
 
     VkDescriptorSet globalDesc = global->getDescriptorSet(frameIndex)->getHandle();
-    VkBuffer vertexbuf = quad->getQuad()->getHandle()->NativeBuffer();
-    VkBuffer indexbuf = quad->getIndices()->getHandle()->NativeBuffer();
+    VkBuffer vertexbuf = quad->getQuad()->getHandle()->getNativeBuffer();
+    VkBuffer indexbuf = quad->getIndices()->getHandle()->getNativeBuffer();
     VkIndexType indexType = GetNativeIndexType(quad->getIndices()->GetSizeType());
     u32 indexCount = quad->getIndices()->IndexCount();
   

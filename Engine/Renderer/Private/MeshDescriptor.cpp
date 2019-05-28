@@ -72,7 +72,7 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
   for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
     m_pGpuHandles[i]._pBuf = pRhi->createBuffer();
     m_pGpuHandles[i]._pBuf->initialize(objectCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pGpuHandles[i]._pBuf->Map();
+    m_pGpuHandles[i]._pBuf->map();
     m_pGpuHandles[i]._pSet = pRhi->createDescriptorSet();
     m_pGpuHandles[i]._pSet->allocate(pRhi->descriptorPool(), MeshLayout);
     m_pGpuHandles[i]._updates = MESH_BUFFER_UPDATE_BIT | MESH_DESCRIPTOR_UPDATE_BIT;
@@ -89,7 +89,7 @@ void MeshDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 
   if ((updates & MESH_DESCRIPTOR_UPDATE_BIT)) {
     VkDescriptorBufferInfo objBufferInfo = {};
-    objBufferInfo.buffer = pBuf->NativeBuffer();
+    objBufferInfo.buffer = pBuf->getNativeBuffer();
     objBufferInfo.offset = 0;
     objBufferInfo.range = sizeof(ObjectBuffer);
     VkWriteDescriptorSet MeshWriteSet = {};
@@ -105,12 +105,12 @@ void MeshDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
   }
 
   if ((updates & MESH_BUFFER_UPDATE_BIT)) {
-    R_ASSERT(pBuf->Mapped(), "Object buffer was not mapped.");
-    memcpy(pBuf->Mapped(), &m_ObjectData, sizeof(ObjectBuffer));
+    R_ASSERT(pBuf->getMapped(), "Object buffer was not mapped.");
+    memcpy(pBuf->getMapped(), &m_ObjectData, sizeof(ObjectBuffer));
 
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = pBuf->Memory();
+    range.memory = pBuf->getMemory();
     range.size = VK_WHOLE_SIZE;
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
@@ -131,7 +131,7 @@ void MeshDescriptor::cleanUp(VulkanRHI* pRhi)
     }
 
     if (m_pGpuHandles[i]._pBuf) {
-      m_pGpuHandles[i]._pBuf->UnMap();
+      m_pGpuHandles[i]._pBuf->unmap();
       pRhi->freeBuffer(m_pGpuHandles[i]._pBuf);
       m_pGpuHandles[i]._pBuf = nullptr;
     }
@@ -169,7 +169,7 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
   for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
     m_pJointHandles[i]._pBuf = pRhi->createBuffer();
     m_pJointHandles[i]._pBuf->initialize(jointCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pJointHandles[i]._pBuf->Map();
+    m_pJointHandles[i]._pBuf->map();
 
     DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
 
@@ -192,12 +192,12 @@ void JointDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
   }
 
   if ((updates & JOINT_BUFFER_UPDATE_BIT)) {
-    R_ASSERT(pBuf->Mapped(), "Joint buffer was not mapped.!");
-    memcpy(pBuf->Mapped(), &m_jointsData, sizeof(JointBuffer));
+    R_ASSERT(pBuf->getMapped(), "Joint buffer was not mapped.!");
+    memcpy(pBuf->getMapped(), &m_jointsData, sizeof(JointBuffer));
 
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = pBuf->Memory();
+    range.memory = pBuf->getMemory();
     range.size = VK_WHOLE_SIZE;
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
@@ -225,7 +225,7 @@ void JointDescriptor::updateJointSets(u32 frameIndex)
   // Bones
   R_DEBUG(rNotify, "Updating bone descriptor set.\n");
   VkDescriptorBufferInfo boneBufferInfo = {};
-  boneBufferInfo.buffer = m_pJointHandles[frameIndex]._pBuf->NativeBuffer();
+  boneBufferInfo.buffer = m_pJointHandles[frameIndex]._pBuf->getNativeBuffer();
   boneBufferInfo.offset = 0;
   boneBufferInfo.range = sizeof(JointBuffer);
   VkWriteDescriptorSet BoneWriteSet = {};

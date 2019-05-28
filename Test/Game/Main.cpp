@@ -180,7 +180,7 @@ GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
   static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 0;
+  static const u32 kNumberOfMonsters = 1;
   TextureCube* cubemap1;
   TextureCube* cubemap0;
   Texture2D* brdfLUT;
@@ -287,6 +287,10 @@ public:
     monster->update(tick);
     for (size_t i = 0; i < kMaxCount; ++i) {
       helmets[i]->update(tick);
+    }
+
+    for (size_t i = 0; i < kNumberOfMonsters; ++i) {
+      monsters[i]->update(tick);
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_J)) {

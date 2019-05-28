@@ -609,8 +609,8 @@ void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
     m_pStaticLightViewBuffers[i] = pRhi->createBuffer();
     m_pLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pStaticLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pLightViewBuffers[i]->Map();
-    m_pStaticLightViewBuffers[i]->Map();
+    m_pLightViewBuffers[i]->map();
+    m_pStaticLightViewBuffers[i]->map();
   }
 /*
   if (!m_pDynamicMap) {
@@ -972,12 +972,12 @@ void ShadowMapSystem::initializeShadowMapDescriptors(VulkanRHI* pRhi)
     }
 
     VkDescriptorBufferInfo viewBuf = {};
-    viewBuf.buffer = m_pLightViewBuffers[i]->NativeBuffer();
+    viewBuf.buffer = m_pLightViewBuffers[i]->getNativeBuffer();
     viewBuf.offset = 0;
     viewBuf.range = sizeof(LightViewCascadeSpace);
 
     VkDescriptorBufferInfo staticViewBuf = {};
-    staticViewBuf.buffer = m_pStaticLightViewBuffers[i]->NativeBuffer();
+    staticViewBuf.buffer = m_pStaticLightViewBuffers[i]->getNativeBuffer();
     staticViewBuf.offset = 0;
     staticViewBuf.range = sizeof(LightViewSpace);
 
@@ -1094,7 +1094,7 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
     MeshData* mesh = renderCmd._pMeshData;
     VertexBuffer* vertex = mesh->getVertexData();
     IndexBuffer* index = mesh->getIndexData();
-    VkBuffer buf = vertex->getHandle()->NativeBuffer();
+    VkBuffer buf = vertex->getHandle()->getNativeBuffer();
     VkDeviceSize offset[] = { 0 };
     pCmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
     if ( renderCmd._config & CMD_MORPH_BIT ) {
@@ -1103,8 +1103,8 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
         (opaque ? staticMorphPipeline[subpassIdx] : staticMorphPipeline[subpassIdx]);
       R_ASSERT(renderCmd._pMorph0, "morph0 is null");
       R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-      VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->NativeBuffer();
-      VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->NativeBuffer();
+      VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+      VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
       pCmdBuffer->BindVertexBuffers(1, 1, &morph0, offset);
       pCmdBuffer->BindVertexBuffers(2, 1, &morph1, offset);
     }
@@ -1115,7 +1115,7 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
     pCmdBuffer->SetScissor(0, 1, &scissor);
 
     if (index) {
-      VkBuffer ind = index->getHandle()->NativeBuffer();
+      VkBuffer ind = index->getHandle()->getNativeBuffer();
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
@@ -1210,15 +1210,15 @@ void ShadowMapSystem::generateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
     MeshData* mesh = renderCmd._pMeshData;
     VertexBuffer* vertex = mesh->getVertexData();
     IndexBuffer* index = mesh->getIndexData();
-    VkBuffer buf = vertex->getHandle()->NativeBuffer();
+    VkBuffer buf = vertex->getHandle()->getNativeBuffer();
     VkDeviceSize offset[] = { 0 };
     pCmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
     if (renderCmd._config & CMD_MORPH_BIT) {
       pipeline = skinned ? dynamicMorphPipeline : staticMorphPipeline;
       R_ASSERT(renderCmd._pMorph0, "morph0 is null");
       R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-      VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->NativeBuffer();
-      VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->NativeBuffer();
+      VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+      VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
       pCmdBuffer->BindVertexBuffers(1, 1, &morph0, offset);
       pCmdBuffer->BindVertexBuffers(2, 1, &morph1, offset);
     }
@@ -1229,7 +1229,7 @@ void ShadowMapSystem::generateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
     pCmdBuffer->SetScissor(0, 1, &scissor);
 
     if (index) {
-      VkBuffer ind = index->getHandle()->NativeBuffer();
+      VkBuffer ind = index->getHandle()->getNativeBuffer();
       pCmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
     }
 
@@ -1324,12 +1324,12 @@ void ShadowMapSystem::update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
   }
 
   {
-    R_ASSERT(m_pLightViewBuffers[frameIndex]->Mapped(), "Light view buffer was not mapped!");
-    memcpy(m_pLightViewBuffers[frameIndex]->Mapped(), &m_cascadeViewSpace, sizeof(LightViewCascadeSpace));
+    R_ASSERT(m_pLightViewBuffers[frameIndex]->getMapped(), "Light view buffer was not mapped!");
+    memcpy(m_pLightViewBuffers[frameIndex]->getMapped(), &m_cascadeViewSpace, sizeof(LightViewCascadeSpace));
 
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = m_pLightViewBuffers[frameIndex]->Memory();
+    range.memory = m_pLightViewBuffers[frameIndex]->getMemory();
     range.size = VK_WHOLE_SIZE;
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
@@ -1355,12 +1355,12 @@ void ShadowMapSystem::update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer
     m_staticViewSpace._ViewProj = view * proj;
     m_staticViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
     m_staticViewSpace._lightSz.x = 5.0f / m_staticShadowViewportDim;//15.0f / m_staticShadowViewportHeight;
-    R_ASSERT(m_pStaticLightViewBuffers[frameIndex]->Mapped(), "Light view buffer was not mapped!");
-    memcpy(m_pStaticLightViewBuffers[frameIndex]->Mapped(), &m_staticViewSpace, sizeof(LightViewSpace));
+    R_ASSERT(m_pStaticLightViewBuffers[frameIndex]->getMapped(), "Light view buffer was not mapped!");
+    memcpy(m_pStaticLightViewBuffers[frameIndex]->getMapped(), &m_staticViewSpace, sizeof(LightViewSpace));
 
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.memory = m_pStaticLightViewBuffers[frameIndex]->Memory();
+    range.memory = m_pStaticLightViewBuffers[frameIndex]->getMemory();
     range.size = VK_WHOLE_SIZE;
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
@@ -1556,7 +1556,7 @@ void LightDescriptor::initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, 
     bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
     m_pLightBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pLightBuffers[i]->Map();
+    m_pLightBuffers[i]->map();
   }
 #if 0
   // Light view buffer creation.
@@ -1684,7 +1684,7 @@ void LightDescriptor::cleanUp(VulkanRHI* pRhi)
     }
 
     if (m_pLightBuffers[i]) {
-      m_pLightBuffers[i]->UnMap();
+      m_pLightBuffers[i]->unmap();
       pRhi->freeBuffer(m_pLightBuffers[i]);
       m_pLightBuffers[i] = nullptr;
     }
@@ -1739,12 +1739,12 @@ void LightDescriptor::update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIn
 #endif
   }
 
-  R_ASSERT(m_pLightBuffers[frameIndex]->Mapped(), "Light buffer was not mapped!");
-  memcpy(m_pLightBuffers[frameIndex]->Mapped(), &m_Lights, sizeof(LightBuffer));
+  R_ASSERT(m_pLightBuffers[frameIndex]->getMapped(), "Light buffer was not mapped!");
+  memcpy(m_pLightBuffers[frameIndex]->getMapped(), &m_Lights, sizeof(LightBuffer));
 
   VkMappedMemoryRange lightRange = { };
   lightRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  lightRange.memory = m_pLightBuffers[frameIndex]->Memory();
+  lightRange.memory = m_pLightBuffers[frameIndex]->getMemory();
   lightRange.size = VK_WHOLE_SIZE;
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &lightRange);
 }
@@ -1760,7 +1760,7 @@ void LightDescriptor::initializeNativeLights(VulkanRHI* pRhi)
     m_pLightDescriptorSets[i]->allocate(pRhi->descriptorPool(), pbrLayout);
 
     VkDescriptorBufferInfo lightBufferInfo = {};
-    lightBufferInfo.buffer = m_pLightBuffers[i]->NativeBuffer();
+    lightBufferInfo.buffer = m_pLightBuffers[i]->getNativeBuffer();
     lightBufferInfo.offset = 0;
     lightBufferInfo.range = sizeof(LightBuffer);
 

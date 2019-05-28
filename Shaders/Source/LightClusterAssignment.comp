@@ -38,9 +38,6 @@ struct ClusterData {
   ivec2  param; // [ offset (32) | light count (16) | decal count (8) | probe count (8) ]
 };
 
-struct ClusterIndex {
-  uint index;
-};
 
 // buffer containing the light index offset, and a list of light data indices that correspond to that cluster (3D array).
 // clusters contain [ offset (32b) | light count (8b) | decal count (8b) | probe count (8b) ].
@@ -56,7 +53,7 @@ layout (set = 2, binding = 0) buffer Cluster {
 // indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
 // to that source.
 layout (set = 2, binding = 1) buffer indices {
-  uint      count;
+  ivec4     count;
   uint      indices[];
 } lightIndices;
 
@@ -66,6 +63,7 @@ layout (set = 2, binding = 2) buffer LightBVH {
   uint  numNodes;
   uint  numMaxNodes;
   uint  numMaxLights;
+  vec4  zGridLocFar;
   vec4  nodesMin[128];
   vec4  nodesMax[128];
   uvec4 nodeIndices[128];

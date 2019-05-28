@@ -100,7 +100,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     data = new u8[bufferci.size];
 
     stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-    stagingBuffer.Map();
+    stagingBuffer.map();
 
     VkCommandBufferBeginInfo begin = {};
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -140,7 +140,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     ////////////////////////////
     vkCmdCopyImageToBuffer(cmdBuf, texture->Image(),
       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-      stagingBuffer.NativeBuffer(),
+      stagingBuffer.getNativeBuffer(),
       static_cast<u32>(imageCopyRegions.size()),
       imageCopyRegions.data());
 
@@ -176,7 +176,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     rhi->graphicsSubmit(0, 1, &submit);
     rhi->graphicsWaitIdle(0);
 
-    memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
+    memcpy(data, stagingBuffer.getMapped(), sizeInBytes);
 
     vkFreeCommandBuffers(rhi->logicDevice()->getNative(), rhi->graphicsCmdPool(0), 1, &cmdBuf);
     stagingBuffer.cleanUp();
@@ -271,7 +271,7 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
       buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
       buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       m_pLocalGIBuffer->initialize(buffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
-      m_pLocalGIBuffer->Map();
+      m_pLocalGIBuffer->map();
     }
   }
   else {
@@ -286,7 +286,7 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
     gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     m_pGlobalGIBuffer->initialize(gBuffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
-    m_pGlobalGIBuffer->Map();
+    m_pGlobalGIBuffer->map();
   }
 
   m_pGlobalIllumination->allocate(pRhi->descriptorPool(), layout);
@@ -314,11 +314,11 @@ void GlobalIllumination::cleanUp(VulkanRHI* pRhi)
 
 void GlobalIllumination::updateGlobalGI(VulkanRHI* pRhi)
 {
-  R_ASSERT(m_pGlobalGIBuffer->Mapped(), "Unmapped global GI data.");
-  memcpy(m_pGlobalGIBuffer->Mapped(), &m_globalDiffuseSH, sizeof(DiffuseSH));
+  R_ASSERT(m_pGlobalGIBuffer->getMapped(), "Unmapped global GI data.");
+  memcpy(m_pGlobalGIBuffer->getMapped(), &m_globalDiffuseSH, sizeof(DiffuseSH));
   VkMappedMemoryRange range = { };
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  range.memory = m_pGlobalGIBuffer->Memory();
+  range.memory = m_pGlobalGIBuffer->getMemory();
   range.offset = 0;
   range.size = VK_WHOLE_SIZE;
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
@@ -343,11 +343,11 @@ void GlobalIllumination::update(Renderer* pRenderer)
   VkDescriptorImageInfo localEnvMaps = {};
   VkDescriptorImageInfo localBrdfLuts = {};
 
-  globalIrrInfo.buffer = m_pGlobalGIBuffer->NativeBuffer();
+  globalIrrInfo.buffer = m_pGlobalGIBuffer->getNativeBuffer();
   globalIrrInfo.offset = 0;
   globalIrrInfo.range = VkDeviceSize(sizeof(DiffuseSH));
 
-  localIrrInfo.buffer = m_pLocalGIBuffer->NativeBuffer();
+  localIrrInfo.buffer = m_pLocalGIBuffer->getNativeBuffer();
   localIrrInfo.offset = 0;
   localIrrInfo.range = VkDeviceSize(sizeof(LocalInfoGI));
 

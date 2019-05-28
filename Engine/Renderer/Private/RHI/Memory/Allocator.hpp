@@ -100,7 +100,8 @@ public:
                             u32 align, 
                             u32 memoryTypeBits,
                             PhysicalDeviceMemoryUsage usage,
-                            VulkanAllocationType allocType);
+                            VulkanAllocationType allocType,
+                            u32 memoryBankIdx = 0);
   void free(const VulkanAllocation& alloc);
 
   void emptyGarbage(VulkanRHI* pRhi);

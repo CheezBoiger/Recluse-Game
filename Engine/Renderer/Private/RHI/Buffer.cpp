@@ -54,13 +54,13 @@ void Buffer::cleanUp()
 }
 
 
-VkResult Buffer::Map(VkDeviceSize size, VkDeviceSize offset)
+VkResult Buffer::map(VkDeviceSize size, VkDeviceSize offset)
 {
   return vkMapMemory(mOwner, mMemory, offset, size, 0, &mMapped);
 }
 
 
-void Buffer::UnMap()
+void Buffer::unmap()
 {
   if (mMapped) { 
     vkUnmapMemory(mOwner, mMemory);

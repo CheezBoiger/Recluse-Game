@@ -1502,7 +1502,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   CreateTexture(pRhi);
 
   VkDescriptorBufferInfo worldInfo = {};
-  worldInfo.buffer = pDescriptor->getHandle(pRhi->currentFrame())->NativeBuffer();
+  worldInfo.buffer = pDescriptor->getHandle(pRhi->currentFrame())->getNativeBuffer();
   worldInfo.offset = 0;
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 

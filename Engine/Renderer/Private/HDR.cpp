@@ -60,7 +60,7 @@ void HDR::initialize(VulkanRHI* pRhi)
     bufferCi.size = VkDeviceSize(sizeof(ConfigHDR));
     m_pBuffer = pRhi->createBuffer();
     m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pBuffer->Map();
+    m_pBuffer->map();
   }
 
 
@@ -68,7 +68,7 @@ void HDR::initialize(VulkanRHI* pRhi)
   m_pSet->allocate(pRhi->descriptorPool(), m_pLayout);
 
   VkDescriptorBufferInfo bufferInfo = { };
-  bufferInfo.buffer = m_pBuffer->NativeBuffer();
+  bufferInfo.buffer = m_pBuffer->getNativeBuffer();
   bufferInfo.offset = 0;
   bufferInfo.range = sizeof(ConfigHDR);
   
@@ -106,11 +106,11 @@ void HDR::cleanUp(VulkanRHI* pRhi)
 
 void HDR::UpdateToGPU(VulkanRHI* pRhi)
 {
-  R_ASSERT(m_pBuffer->Mapped(), "HDR Realtime settings are not mapped.");
-  memcpy(m_pBuffer->Mapped(), &m_config, sizeof(ConfigHDR));
+  R_ASSERT(m_pBuffer->getMapped(), "HDR Realtime settings are not mapped.");
+  memcpy(m_pBuffer->getMapped(), &m_config, sizeof(ConfigHDR));
 
   VkMappedMemoryRange memRange = { };
-  memRange.memory = m_pBuffer->Memory();
+  memRange.memory = m_pBuffer->getMemory();
   memRange.offset = 0;
   memRange.size = VK_WHOLE_SIZE;
   memRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;

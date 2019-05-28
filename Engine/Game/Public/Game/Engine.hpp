@@ -21,6 +21,7 @@
 #include "AnimationComponent.hpp"
 #include "PhysicsComponent.hpp"
 #include "MeshComponent.hpp"
+#include "AudioComponent.hpp"
 #include "RendererComponent.hpp"
 #include "PointLightComponent.hpp"
 #include "Rendering/RendererResourcesCache.hpp"

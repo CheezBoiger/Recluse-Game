@@ -203,9 +203,9 @@ void Texture2D::update(Image const& Image)
 
   stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-  VkResult result = stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), Image.getData(), imageSize);
-  stagingBuffer.UnMap();
+  VkResult result = stagingBuffer.map();
+  memcpy(stagingBuffer.getMapped(), Image.getData(), imageSize);
+  stagingBuffer.unmap();
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -262,7 +262,7 @@ void Texture2D::update(Image const& Image)
 
   // Send buffer image copy cmd.
   buffer.CopyBufferToImage(
-    stagingBuffer.NativeBuffer(),
+    stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),
@@ -341,7 +341,7 @@ void Texture2D::Save(const std::string filename)
 
 
   stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.Map();
+  stagingBuffer.map();
 
   // Stream out the image info.
   VkCommandBufferBeginInfo beginInfo = {};
@@ -398,7 +398,7 @@ void Texture2D::Save(const std::string filename)
   cmdBuffer.CopyImageToBuffer(
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    stagingBuffer.NativeBuffer(),
+    stagingBuffer.getNativeBuffer(),
     static_cast<u32>(bufferCopies.size()),
     bufferCopies.data()
   );
@@ -427,7 +427,7 @@ void Texture2D::Save(const std::string filename)
   mRhi->transferSubmit(0, 1, &submit);
   mRhi->transferWaitIdle(0);
 
-  memcpy(data, stagingBuffer.Mapped(), bufferci.size);
+  memcpy(data, stagingBuffer.getMapped(), bufferci.size);
   Image img;
   img._data = data;
   img._height = texture->getHeight();
@@ -436,7 +436,7 @@ void Texture2D::Save(const std::string filename)
   img._memorySize = texture->getWidth() * texture->getHeight() * 4;
   img.SavePNG(filename.c_str());
 
-  stagingBuffer.UnMap();
+  stagingBuffer.unmap();
   stagingBuffer.cleanUp();
   delete[] data;
 }
@@ -539,7 +539,7 @@ void TextureCube::Save(const std::string filename)
   u8* data = new u8[bufferci.size];
 
   stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.Map();
+  stagingBuffer.map();
 
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -577,7 +577,7 @@ void TextureCube::Save(const std::string filename)
 ////////////////////////////
   cmdBuffer.CopyImageToBuffer(texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    stagingBuffer.NativeBuffer(),
+    stagingBuffer.getNativeBuffer(),
     static_cast<u32>(imageCopyRegions.size()),
     imageCopyRegions.data());
 
@@ -613,7 +613,7 @@ void TextureCube::Save(const std::string filename)
   mRhi->graphicsSubmit(0, 1, &submit);
   mRhi->graphicsWaitIdle(0);
 
-  memcpy(data, stagingBuffer.Mapped(), sizeInBytes);
+  memcpy(data, stagingBuffer.getMapped(), sizeInBytes);
 
   Image img;
   img._data = data;
@@ -623,7 +623,7 @@ void TextureCube::Save(const std::string filename)
   img._memorySize = u32(sizeInBytes);
   img.SavePNG(filename.c_str());
 
-  stagingBuffer.UnMap();
+  stagingBuffer.unmap();
   stagingBuffer.cleanUp();
   delete[] data;
 }
@@ -749,8 +749,8 @@ void TextureCube::update(Image const& image)
   bufferci.size = sizeInBytes;
 
   stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), image.getData(), sizeInBytes);
+  stagingBuffer.map();
+  memcpy(stagingBuffer.getMapped(), image.getData(), sizeInBytes);
 
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -786,7 +786,7 @@ void TextureCube::update(Image const& image)
   );
 
   ////////////////////////////
-  cmdBuffer.CopyBufferToImage(stagingBuffer.NativeBuffer(),
+  cmdBuffer.CopyBufferToImage(stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(imageCopyRegions.size()),
@@ -824,7 +824,7 @@ void TextureCube::update(Image const& image)
   mRhi->graphicsSubmit(0, 1, &submit);
   mRhi->graphicsWaitIdle(0);
 
-  stagingBuffer.UnMap();
+  stagingBuffer.unmap();
   stagingBuffer.cleanUp();
 }
 
@@ -930,9 +930,9 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
 
   stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-  VkResult result = stagingBuffer.Map();
-  memcpy(stagingBuffer.Mapped(), img.getData(), imageSize);
-  stagingBuffer.UnMap();
+  VkResult result = stagingBuffer.map();
+  memcpy(stagingBuffer.getMapped(), img.getData(), imageSize);
+  stagingBuffer.unmap();
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -994,7 +994,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
 
   // Send buffer image copy cmd.
   buffer.CopyBufferToImage(
-    stagingBuffer.NativeBuffer(),
+    stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),

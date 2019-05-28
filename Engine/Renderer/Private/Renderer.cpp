@@ -570,8 +570,8 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
       VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };    
 
       cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
-      VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->NativeBuffer();
-      VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->NativeBuffer();
+      VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
+      VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
       cmdBuffer.BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
@@ -2217,8 +2217,8 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     cmdBuffer->SetViewPorts(0, 1, &viewport);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->getLayout(), 0, dSetCount, sets, 0, nullptr);
-    VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->NativeBuffer();
-    VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->NativeBuffer();
+    VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
+    VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
     cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
@@ -2844,8 +2844,8 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     IndexBuffer* idxBuffer = m_pSky->GetSkyboxIndexBuffer();
 
     VkDeviceSize offsets[] =  { 0 };
-    VkBuffer vert = vertexbuffer->getHandle()->NativeBuffer();
-    VkBuffer ind = idxBuffer->getHandle()->NativeBuffer();
+    VkBuffer vert = vertexbuffer->getHandle()->getNativeBuffer();
+    VkBuffer ind = idxBuffer->getHandle()->getNativeBuffer();
     buf->BindVertexBuffers(0 , 1, &vert, offsets);  
     buf->BindIndexBuffer(ind, 0, GetNativeIndexType(idxBuffer->GetSizeType()));
     buf->DrawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
@@ -2912,15 +2912,15 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
       VertexBuffer* vertexBuffer = data->getVertexData();
       IndexBuffer* indexBuffer = data->getIndexData();
-      VkBuffer vb = vertexBuffer->getHandle()->NativeBuffer();
+      VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
       VkDeviceSize offsets[] = { 0 };
       cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
       if (renderCmd._config & CMD_MORPH_BIT) {
         Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
         R_ASSERT(renderCmd._pMorph0, "morph0 is null");
         R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->NativeBuffer();
-        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->NativeBuffer();
+        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
         cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
         cmdBuffer->BindVertexBuffers(2, 1,  &morph1, offsets);
       } 
@@ -2933,7 +2933,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
 
       if (indexBuffer) {
-        VkBuffer ib = indexBuffer->getHandle()->NativeBuffer();
+        VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
 
@@ -2992,8 +2992,8 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
     VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };
 
     cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
-    VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->NativeBuffer();
-    VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->NativeBuffer();
+    VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
+    VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
 
     cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
@@ -3009,8 +3009,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
 
   VkIndexType indexType = GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType());
-  VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->NativeBuffer();
-  VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->NativeBuffer();
+  VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
+  VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
 
   GraphicsPipeline* hdrPipeline = hdr_gamma_pipelineKey;
@@ -3463,7 +3463,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
       VertexBuffer* vertexBuffer = data->getVertexData();
       IndexBuffer* indexBuffer = data->getIndexData();
-      VkBuffer vb = vertexBuffer->getHandle()->NativeBuffer();
+      VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
       GraphicsPipeline* Pipe = (Skinned ? 
@@ -3476,8 +3476,8 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
           : (debugging ? staticMorphPipelineDebug : staticMorphPipeline));
         R_ASSERT(renderCmd._pMorph0, "morph0 is null");
         R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->NativeBuffer();
-        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->NativeBuffer();
+        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
         cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
         cmdBuffer->BindVertexBuffers(2, 1, &morph1, offsets);
       }
@@ -3495,7 +3495,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       }
 
       if (indexBuffer) {
-        VkBuffer ib = indexBuffer->getHandle()->NativeBuffer();
+        VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
         cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
       ShadowMapSystem& shadow = m_pLights->getPrimaryShadowMapSystem();

@@ -239,8 +239,9 @@ public:
 
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
-    gAudio().loadSound("wave.mp3", true, true, false);
-    m_audioChannel = gAudio().initiateSound("wave.mp3", transform->_position, 0.1f);
+    m_audioComponent.initialize(this);
+    m_audioComponent.playSound("wave.mp3", 0.5f);
+    m_audioComponent.setRigidBodyReference(m_physicsComponent.getRigidBody());
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
@@ -341,10 +342,6 @@ public:
     if (Keyboard::KeyPressed(KEY_CODE_V)) {
       m_pParticleSystem->SetMaxParticleCount(100);
     }
-    
-#if !defined FORCE_AUDIO_OFF
-    gAudio().SetChannel3DPosition(m_audioChannel, getTransform()->_position, m_physicsComponent.getRigidBody()->_velocity);
-#endif
   }
 
   void setPosition(const Vector3& newPos)
@@ -384,6 +381,6 @@ private:
   Material*                 m_pMaterialRef;
   Texture2DArray*           m_particleTexture;
 #if !defined FORCE_AUDIO_OFF
-  u32                       m_audioChannel;
+  AudioComponent            m_audioComponent;
 #endif
 };

@@ -225,10 +225,6 @@ void Engine::update()
   m_dLag += Time::deltaTime;
 
 
-#if !defined FORCE_AUDIO_OFF
-  gAudio().updateState(dt);
-#endif
-
   // Update using next frame input.
   AnimationComponent::updateComponents();
   gAnimation().updateState(dt);
@@ -240,6 +236,11 @@ void Engine::update()
   m_workers[0] = std::thread([&] () -> void {
     gPhysics().updateState(dt, tick);
     PhysicsComponent::updateComponents();
+
+#if !defined FORCE_AUDIO_OFF
+    AudioComponent::updateComponents();
+    gAudio().updateState(dt);
+#endif
   });
 
   m_workers[1] = std::thread([&]() -> void {

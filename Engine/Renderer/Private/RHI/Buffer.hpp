@@ -23,17 +23,17 @@ public:
 
   // Map call which will map out the buffer in memory. Returns the pointer of the mapped
   // object. To get the mapped pointer, call Mapped().
-  VkResult          Map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-  void              UnMap();
+  VkResult          map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+  void              unmap();
 
-  VkBuffer          NativeBuffer() const { return mBuffer; }
-  VkDeviceMemory    Memory() const { return mMemory; }
+  VkBuffer          getNativeBuffer() const { return mBuffer; }
+  VkDeviceMemory    getMemory() const { return mMemory; }
 
   // Memory size of this buffer, in bytes.
-  VkDeviceSize      MemorySize() const { return mMemSize; }
+  VkDeviceSize      getMemorySize() const { return mMemSize; }
 
   // Mapped pointer to this buffer.
-  void*             Mapped() const { return mMapped; }
+  void*             getMapped() const { return mMapped; }
 
 private:
   void*             mMapped;

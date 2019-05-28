@@ -80,14 +80,14 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
     m_pGlobalBuffers[i] = pRhi->createBuffer();
 
     m_pGlobalBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pGlobalBuffers[i]->Map();
+    m_pGlobalBuffers[i]->map();
 
 
     m_pDescriptorSets[i] = pRhi->createDescriptorSet();
     m_pDescriptorSets[i]->allocate(pRhi->descriptorPool(), pbrLayout);
 
     VkDescriptorBufferInfo globalBufferInfo = {};
-    globalBufferInfo.buffer = m_pGlobalBuffers[i]->NativeBuffer();
+    globalBufferInfo.buffer = m_pGlobalBuffers[i]->getNativeBuffer();
     globalBufferInfo.offset = 0;
     globalBufferInfo.range = sizeof(GlobalBuffer);
 
@@ -116,7 +116,7 @@ void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
     }
 
     if (m_pGlobalBuffers[i]) {
-      m_pGlobalBuffers[i]->UnMap();
+      m_pGlobalBuffers[i]->unmap();
       pRhi->freeBuffer(m_pGlobalBuffers[i]);
       m_pGlobalBuffers[i] = nullptr;
     }
@@ -127,13 +127,13 @@ void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 void GlobalDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 {
   u32 currFrame = frameIndex;
-  R_ASSERT(m_pGlobalBuffers[currFrame]->Mapped(), "Global data was not mapped!");
-  memcpy(m_pGlobalBuffers[currFrame]->Mapped(), &m_Global, sizeof(GlobalBuffer));
+  R_ASSERT(m_pGlobalBuffers[currFrame]->getMapped(), "Global data was not mapped!");
+  memcpy(m_pGlobalBuffers[currFrame]->getMapped(), &m_Global, sizeof(GlobalBuffer));
   
   VkMappedMemoryRange range = { };
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-  range.memory = m_pGlobalBuffers[currFrame]->Memory();
-  range.size = m_pGlobalBuffers[currFrame]->MemorySize();
+  range.memory = m_pGlobalBuffers[currFrame]->getMemory();
+  range.size = m_pGlobalBuffers[currFrame]->getMemorySize();
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse
