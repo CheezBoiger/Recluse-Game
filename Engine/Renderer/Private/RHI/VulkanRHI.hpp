@@ -229,7 +229,7 @@ public:
                                     VkFence fence = nullptr);
   
   // Present the rendered surface.
-  void present();
+  VkResult present();
 
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 

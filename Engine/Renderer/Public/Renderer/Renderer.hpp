@@ -416,6 +416,7 @@ private:
   Clusterer*            m_pClusterer;
   TextureCube*          m_preRenderSkybox;
   LightProbe*           m_globalLightProbe;
+
   u32                   m_workGroupSize;
   u32                   m_rhiBits;
   b32                   m_staticUpdate;

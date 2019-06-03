@@ -49,9 +49,10 @@ enum WindowResolution {
   Resolution_1280x720,
   Resolution_1440x900,
   Resolution_1920x1080,
-  Resolution_1920x1440,
-  Resolution_2560x1440,
-  Resolution_3840x2160,
+  Resolution_1920x1200,
+  Resolution_2048x1440, // 2k
+  Resolution_3840x2160, // 4k
+  Resolution_7680x4320 // 8k
 };
 
 

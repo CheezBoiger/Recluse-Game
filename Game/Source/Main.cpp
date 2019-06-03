@@ -160,7 +160,7 @@ GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
         else if (option.compare("1280x720") == 0) { graphics._Resolution = Resolution_1280x720; w = 1280; h = 720; }
         else if (option.compare("1440x900") == 0) { graphics._Resolution = Resolution_1440x900; w = 1400; h = 900; }
         else if (option.compare("1920x1080") == 0) { graphics._Resolution = Resolution_1920x1080; w = 1920; h = 1080; }
-        else if (option.compare("1920x1440") == 0) { graphics._Resolution = Resolution_1920x1440; w = 1920; h = 1440; }
+        else if (option.compare("1920x1200") == 0) { graphics._Resolution = Resolution_1920x1200; w = 1920; h = 1200; }
       }
       if (AvailableOption(line, "Window")) {
         std::string option = GetOption(line);

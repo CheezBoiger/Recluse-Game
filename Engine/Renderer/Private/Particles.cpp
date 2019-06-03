@@ -902,7 +902,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex)
 {
   if (particleList.Size() == 0) return;
-  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = { pbr_forwardFrameBuffer->getWidth(), pbr_forwardFrameBuffer->getHeight() };
   VkRenderPassBeginInfo renderPassInfo = { };
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassInfo.framebuffer = pbr_forwardFrameBuffer->getHandle();

@@ -1124,6 +1124,13 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   finalLayout.pushConstantRangeCount = 0;
   finalLayout.pPushConstantRanges = nullptr;
 
+  VkPipelineDynamicStateCreateInfo dd = { };
+  VkDynamicState ds[] = {VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_VIEWPORT};
+  dd.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dd.dynamicStateCount = 2;
+  dd.pDynamicStates = ds;
+  GraphicsInfo.pDynamicState = &dd;
+
   quadPipeline->initialize(GraphicsInfo, finalLayout);
 
   // Now create the output pipeline.

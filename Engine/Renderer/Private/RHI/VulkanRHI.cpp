@@ -662,7 +662,7 @@ void VulkanRHI::submitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore
 }
 
 
-void VulkanRHI::present()
+VkResult VulkanRHI::present()
 {
   VkSemaphore signalSemaphores[] = { currentGraphicsFinishedSemaphore() };
   VkSwapchainKHR swapchains[] = { mSwapchain.getHandle() };
@@ -686,6 +686,7 @@ void VulkanRHI::present()
 
   // Increment to next frame after every present of the current frame.
   m_currentFrame = (m_currentFrame + 1) % mSwapchain.CurrentBufferCount();
+  return result;
 }
 
 
@@ -796,7 +797,7 @@ void VulkanRHI::rebuildCommandBuffers(u32 set)
 void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount)
 {
   if (width <= 0 || height <= 0) return;
-
+  deviceWaitIdle();
   for (size_t i = 0; i < mSwapchainInfo.mSwapchainFramebuffers.size(); ++i) {
     VkFramebuffer framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
     vkDestroyFramebuffer(mLogicalDevice.getNative(), framebuffer, nullptr);

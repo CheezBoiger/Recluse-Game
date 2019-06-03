@@ -49,6 +49,7 @@
 namespace Recluse {
 
 const char* Renderer::appName = "No name";
+VkExtent2D m_displayExtent =  {};
 
 Renderer& gRenderer() { 
   return Renderer::instance();
@@ -86,6 +87,7 @@ Renderer::Renderer()
   m_skybox._envmap = nullptr;
   m_skybox._irradiance = nullptr;
   m_skybox._specular = nullptr;
+
 
   m_cmdDeferredList.resize(1024);
   m_forwardCmdList.resize(1024);
@@ -178,7 +180,9 @@ void Renderer::endFrame()
 {
   m_Rendering = false;
   cleanStaticUpdate();
-  m_pRhi->present();
+  if (m_pRhi->present() != VK_SUCCESS) {
+    updateRendererConfigs(nullptr);
+  }
 }
 
 
@@ -474,6 +478,8 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   }
 
   m_pWindow = window;
+  m_displayExtent = { (u32)m_pWindow->getWidth(), (u32)m_pWindow->getHeight() };
+
   m_pRhi->initialize(window->getHandle(), params);
   {
     std::set<std::string> missing = VulkanRHI::getMissingExtensions(VulkanRHI::gPhysicalDevice.handle());
@@ -552,7 +558,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pRhi->setSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
-    VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+    VkExtent2D windowExtent = { m_pWindow->getWidth(), m_pWindow->getHeight() };
     VkViewport viewport = { };
     viewport.height = (r32) windowExtent.height;
     viewport.width = (r32) windowExtent.width;
@@ -560,12 +566,17 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
     viewport.maxDepth = 1.0f;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    
+
+    VkRect2D scissor = { };
+    scissor.offset = { 0, 0 };
+    scissor.extent = windowExtent;
+
     GraphicsPipeline* finalPipeline = output_pipelineKey;
     DescriptorSet* finalSet = output_descSetKey;
     
     cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer.SetViewPorts(0, 1, &viewport);
+      cmdBuffer.SetScissor(0, 1, &scissor);
       cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
       VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };    
 
@@ -1009,7 +1020,8 @@ void Renderer::cleanUpDescriptorSetLayouts()
 
 void Renderer::setUpFrameBuffers()
 {
-  VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = m_displayExtent;  
+  // m_pRhi->swapchainObject()->SwapchainExtent();
   Texture* gbuffer_Albedo = gbuffer_AlbedoAttachKey;
   Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
   Texture* gbuffer_Position = gbuffer_PositionAttachKey;
@@ -1527,8 +1539,8 @@ void Renderer::setUpFrameBuffers()
   attachments[0] = GlowTarget->getView();
   attachmentDescriptions[0].format = GlowTarget->Format();
   attachmentDescriptions[0].samples = GlowTarget->Samples();
-  framebufferCI.width = m_pRhi->swapchainObject()->SwapchainExtent().width;
-  framebufferCI.height = m_pRhi->swapchainObject()->SwapchainExtent().height;
+  framebufferCI.width = m_displayExtent.width;
+  framebufferCI.height = m_displayExtent.height;
   GlowFB->Finalize(framebufferCI, hdr_renderPass);
 }
 
@@ -1541,7 +1553,7 @@ void Renderer::setUpGraphicsPipelines()
   assemblyCI.primitiveRestartEnable = VK_FALSE;
 
   VkViewport viewport = { };
-  VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = m_displayExtent;
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
@@ -1550,7 +1562,7 @@ void Renderer::setUpGraphicsPipelines()
   viewport.width = static_cast<r32>(windowExtent.width);
 
   VkRect2D scissor = { };
-  scissor.extent = m_pRhi->swapchainObject()->SwapchainExtent();
+  scissor.extent = windowExtent;
   scissor.offset = { 0, 0 };
 
   VkPipelineViewportStateCreateInfo viewportCI = { };
@@ -1895,7 +1907,7 @@ void Renderer::setUpRenderTextures(b32 fullSetup)
   
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
-  VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = m_displayExtent;
 
   // TODO(): Need to make this more adaptable, as intel chips have trouble with srgb optimal tiling.
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2172,10 +2184,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
-  VkExtent2D windowExtent = { 
-    (u32)m_pGlobal->getData()->_ScreenSize[0], 
-    (u32)m_pGlobal->getData()->_ScreenSize[1] 
-  };
+  VkExtent2D windowExtent = m_displayExtent;
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2814,10 +2823,7 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].depthStencil = { 1.0f, 0 };
 
-  VkExtent2D windowExtent = { 
-    (u32)m_pGlobal->getData()->_ScreenSize[0], 
-    (u32)m_pGlobal->getData()->_ScreenSize[1] 
-  };
+  VkExtent2D windowExtent = m_displayExtent;
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2873,10 +2879,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValues[4].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
-  VkExtent2D windowExtent = { 
-    (u32)m_pGlobal->getData()->_ScreenSize[0], 
-    (u32)m_pGlobal->getData()->_ScreenSize[1] 
-  };
+  VkExtent2D windowExtent = m_displayExtent;
   gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->getHandle();
   gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->getHandle();
@@ -2960,7 +2963,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = m_displayExtent;
   // Do stuff with the buffer.
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
@@ -3049,7 +3052,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
   renderpassInfo.renderPass = hdr_renderPass->getHandle();
-  renderpassInfo.renderArea.extent = m_pRhi->swapchainObject()->SwapchainExtent();
+  renderpassInfo.renderArea.extent = m_displayExtent;
   renderpassInfo.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass2x =  { };
@@ -3098,7 +3101,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   GlowPass.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  VkExtent2D windowExtent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D windowExtent = m_displayExtent;
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
@@ -3220,7 +3223,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkClearRect rect = {};
     rect.baseArrayLayer = 0;
     rect.layerCount = 1;
-    VkExtent2D extent = m_pRhi->swapchainObject()->SwapchainExtent();
+    VkExtent2D extent = m_displayExtent;
     rect.rect.extent = extent;
     rect.rect = { 0, 0 };
     cmdBuffer->ClearAttachments(1, &clearAttachment, 1, &rect);
@@ -3428,10 +3431,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValues[6].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
-  VkExtent2D windowExtent = { 
-    (u32)m_pGlobal->getData()->_ScreenSize[0], 
-    (u32)m_pGlobal->getData()->_ScreenSize[1] 
-  };
+  VkExtent2D windowExtent = m_displayExtent;
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_forwardFrameBuffer->getHandle();
   renderPassCi.renderPass = pbr_forwardRenderPass->getHandle();
@@ -4096,20 +4096,38 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
     if (m_currentGraphicsConfigs._EnableLocalReflections != params->_EnableLocalReflections) {
       reconstruct = true;
     }
-
+    
+    if (params->_Resolution != m_currentGraphicsConfigs._Resolution) {
+      reconstruct = true;
+    }
     updateRuntimeConfigs(params);
+
   }
 
-  VkExtent2D extent = m_pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = m_displayExtent;
   if (!params || (presentMode != m_pRhi->swapchainObject()->CurrentPresentMode()) 
     || (bufferCount != m_pRhi->swapchainObject()->CurrentBufferCount()) || 
     (extent.height  != m_pWindow->getHeight() || extent.width != m_pWindow->getWidth())) {
+    u32 w, h;
+    switch (m_currentGraphicsConfigs._Resolution) {
+      case Resolution_800x600: { w = 800; h = 600; } break;
+      case Resolution_1200x800: { w = 1200; h = 800; } break;
+      case Resolution_1280x720: { w = 1280; h = 720; } break;
+      case Resolution_1440x900: { w = 1440; h = 900; } break;
+      case Resolution_1920x1080: { w = 1920; h = 1080; } break;
+      case Resolution_1920x1200: { w = 1920; h = 1200; } break;
+      case Resolution_2048x1440: { w = 2048; h = 1440; } break;
+      case Resolution_3840x2160: { w = 3840; h = 2160; } break;
+      case Resolution_7680x4320: { w = 7680; h = 4320; } break;
+      default: { w = m_pWindow->getWidth(); h = m_pWindow->getHeight(); } break;
+    }
+    m_displayExtent = { w, h };
     reconstruct = true;
   }
 
   if (reconstruct) {
-    m_pGlobal->getData()->_ScreenSize[0] = m_pWindow->getWidth();
-    m_pGlobal->getData()->_ScreenSize[1] = m_pWindow->getHeight();
+    m_pGlobal->getData()->_ScreenSize[0] = m_displayExtent.width;
+    m_pGlobal->getData()->_ScreenSize[1] = m_displayExtent.height;
     // Triple buffering atm, we will need to use user params to switch this.
     m_pRhi->reConfigure(presentMode, m_pWindow->getWidth(), m_pWindow->getHeight(), bufferCount, 3);
 

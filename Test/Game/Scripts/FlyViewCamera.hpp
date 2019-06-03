@@ -125,10 +125,16 @@ public:
 
     // Test window resizing.
     if (Keyboard::KeyPressed(KEY_CODE_N)) { 
+      GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
+      params._Resolution = Resolution_1920x1080;
+      gRenderer().updateRendererConfigs(&params);
       gEngine().getWindow()->setToWindowed(Window::getFullscreenWidth(), Window::getFullscreenHeight(), true); 
     }
 
     if (Keyboard::KeyPressed(KEY_CODE_M)) { 
+      GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
+      params._Resolution = Resolution_1200x800;
+      gRenderer().updateRendererConfigs(&params);
       gEngine().getWindow()->setToWindowed(1200, 800); 
       gEngine().getWindow()->setToCenter();
       gEngine().getWindow()->show(); 

@@ -683,8 +683,8 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = (r32)pRhi->swapchainObject()->SwapchainExtent().height;
-  viewport.width = (r32)pRhi->swapchainObject()->SwapchainExtent().width;
+  viewport.height = (r32)final_frameBufferKey->getHeight();
+  viewport.width = (r32)final_frameBufferKey->getWidth();
 
   // TODO(): This needs to be programmable now. Not hardcoded this way...
   NkObject* nk = gNkDevice();
@@ -698,7 +698,7 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   VkClearValue clearValues[1];
   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = { final_frameBufferKey->getWidth(), final_frameBufferKey->getHeight() };
   VkRenderPassBeginInfo renderPassBeginInfo = { };
   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassBeginInfo.framebuffer = final_frameBufferKey->getHandle();
