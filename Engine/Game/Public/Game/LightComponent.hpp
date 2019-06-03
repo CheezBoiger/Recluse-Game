@@ -29,7 +29,7 @@ public:
   };
 
   LightComponent(LightType type = UNKNOWN_LIGHT)
-    : m_Type(type)
+    : m_type(type)
     , m_debug(false)
     , m_enable(true) { }
 
@@ -56,7 +56,7 @@ protected:
 
   virtual void onDebug() { }
 
-  LightType                 m_Type;
+  LightType                 m_type;
   b32                       m_debug : 1,
                             m_enable : 1;
 };

@@ -43,8 +43,8 @@ public:
   virtual void loadSound(const std::string& soundName, b32 is3D = true, b32 looping = false, b32 stream = false) override;
   virtual void unLoadSound(const std::string& soundName) override;
   virtual u32 initiateSound(const std::string& soundName, const Vector3& pos, r32 volume) override;
-  virtual void SetChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) override;
-  virtual void SetChannelVolume(u32 nChannelId, r32 volume) override;
+  virtual void setChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) override;
+  virtual void setChannelVolume(u32 nChannelId, r32 volume) override;
   virtual void loadEventBank(const std::string& bankPath) override;
     
 

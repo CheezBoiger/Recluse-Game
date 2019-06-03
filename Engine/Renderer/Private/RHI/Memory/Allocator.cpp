@@ -12,6 +12,48 @@
 namespace Recluse {
 
 
+b32 isMemoryResourcesOnSeparatePages(VkDeviceSize rOffsetA, 
+                                     VkDeviceSize rSizeA,
+                                     VkDeviceSize rOffsetB,
+                                     VkDeviceSize bufferImageGranularity)
+{
+  VkDeviceSize rResEndA = rOffsetA + rSizeA - 1;
+  VkDeviceSize rResEndPageA = rResEndA & ~(bufferImageGranularity - 1);
+  VkDeviceSize rResStartB = rOffsetB;
+  VkDeviceSize rResStartPageB = rResStartB & ~(bufferImageGranularity - 1);
+  return rResEndA < rResStartPageB;
+}
+
+
+b32 hasGranularityConflict(VulkanAllocationType type1, VulkanAllocationType type2)
+{
+  if (type1 > type2) {
+    VulkanAllocationType t = type1;
+    type1 = type2;
+    type2 = t;
+  }
+
+  switch (type1) {
+    case VULKAN_ALLOCATION_TYPE_FREE:
+      return false;
+    case VULKAN_ALLOCATION_TYPE_BUFFER:
+      return type2 == VULKAN_ALLOCATION_TYPE_IMAGE ||
+             type2 == VULKAN_ALLOCATION_TYPE_IMAGE_OPTIMAL;
+    case VULKAN_ALLOCATION_TYPE_IMAGE:
+      return type2 == VULKAN_ALLOCATION_TYPE_IMAGE ||
+             type2 == VULKAN_ALLOCATION_TYPE_IMAGE_LINEAR ||
+             type2 == VULKAN_ALLOCATION_TYPE_IMAGE_OPTIMAL;
+    case VULKAN_ALLOCATION_TYPE_IMAGE_LINEAR:
+      return type2 == VULKAN_ALLOCATION_TYPE_IMAGE_OPTIMAL;
+    case VULKAN_ALLOCATION_TYPE_IMAGE_OPTIMAL:
+      return false;
+    default:
+      R_ASSERT(false, "Vulkan Allocation type must have a proper value assigned!");
+      return true;
+  }
+}
+
+
 VulkanMemoryPool::VulkanMemoryPool()
   : m_nextBlockId(0)
   , m_memTypeIndex(0)
@@ -94,6 +136,7 @@ b32 VulkanMemoryPool::isHostVisible() const
 b32 VulkanMemoryPool::allocate(u32 sz, 
                                u32 align, 
                                VulkanAllocationType allocType, 
+                               VkDeviceSize granularity,
                                VulkanAllocation* pOutput)
 {
   R_ASSERT(((align & (align - 1)) == 0), "align is not a power of 2!");
@@ -113,13 +156,34 @@ b32 VulkanMemoryPool::allocate(u32 sz,
   node->_pPrev  = nullptr;
 
   VulkanMemBlockNode* pCurrent = m_pHead;
-  u32 offset = 0;
-  VkDeviceSize pt = reinterpret_cast<VkDeviceSize>(m_pRawDat);
-  while (pCurrent->_pNext) {
+  VkDeviceSize offset = 0;
+  VkDeviceSize padding = 0;
+  VkDeviceSize alignedSize = 0;
+
+  VulkanMemBlockNode* pPrev = nullptr;
+  for (pCurrent = m_pHead; pCurrent != nullptr; pPrev = pCurrent, pCurrent = pCurrent->_pNext) {
     offset = R_MEM_ALIGN(pCurrent->_offset, align);
-    pCurrent = pCurrent->_pNext;
-    pt += pCurrent->_sz;
+    if (pPrev && granularity > 1 && !isMemoryResourcesOnSeparatePages(pPrev->_offset, 
+                                                                      pPrev->_sz, 
+                                                                      offset, 
+                                                                      granularity)) {
+      if (hasGranularityConflict(pPrev->_type, allocType)) {
+        offset = R_MEM_ALIGN(offset, granularity);
+      }
+    }
+
+    padding = offset - pCurrent->_offset;
+    alignedSize = padding + sz;
+
+    if (alignedSize > pCurrent->_sz) {
+      continue;
+    }  
+    if (alignedSize + m_memAllocated >= m_memSz) {
+      continue;
+    }
+  
   }
+
   pCurrent->_pNext = node;
   node->_pPrev = pCurrent;
 
@@ -128,10 +192,10 @@ b32 VulkanMemoryPool::allocate(u32 sz,
   pOutput->_memId = m_memTypeIndex; 
   pOutput->_deviceMemory = m_rawMem;
   pOutput->_offset = node->_offset;
-  pOutput->_pData = nullptr;
+  pOutput->_pData = reinterpret_cast<b8*>((VkDeviceSize)m_pRawDat + node->_offset);
   pOutput->_poolId = m_id;
   pOutput->_sz = sz;
-
+  m_memAllocated += sz;
   return true;
 }
 
@@ -196,7 +260,7 @@ VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
     if (pool->getMemoryTypeIndex() != memoryIndex) {
       continue;
     }
-    if (pool->allocate(sz, align, allocType, &allocation)) {
+    if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, &allocation)) {
       return allocation;      
     }
   }
@@ -207,7 +271,7 @@ VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
   if (newPool->init(device, (poolGroup.size() + 1),  memoryIndex, usage, sz)) {
     poolGroup.push_back(newPool);
   }
-  newPool->allocate(sz, align, allocType, &allocation);
+  newPool->allocate(sz, align, allocType, m_bufferImageGranularity, &allocation);
   return allocation;
 }
 

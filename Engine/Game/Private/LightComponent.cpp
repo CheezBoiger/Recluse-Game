@@ -59,9 +59,9 @@ void PointLightComponent::update()
   }
   // Rotate about the same area of where the position should be.
   Vector3 rel = transform->_rotation * m_offset;
-  m_NativeLight._Position = transform->_position + rel;
+  m_nativeLight._Position = transform->_position + rel;
 
-  gRenderer().pushPointLight(m_NativeLight);
+  gRenderer().pushPointLight(m_nativeLight);
 
   if (isDebugging()) {
     MeshRenderCmd cmd;
@@ -76,7 +76,7 @@ void PointLightComponent::update()
       Vector4(1.0f, 0.0f, 0.0f, 0.0f),
       Vector4(0.0f, 1.0f, 0.0f, 0.0f),
       Vector4(0.0f, 0.0f, 1.0f, 0.0f),
-      m_NativeLight._Position);
+      m_nativeLight._Position);
     buffer->_model[3][3] = 1.0f;
     buffer->_model = Matrix4::scale(buffer->_model, Vector3(0.3f, 0.3f, 0.3f));
 
@@ -134,11 +134,11 @@ void SpotLightComponent::onCleanUp()
 
 void SpotLightComponent::onInitialize(GameObject* owner)
 {
-  m_NativeLight._Enable = true;
-  m_NativeLight._Range = 10.0f;
-  m_NativeLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-  m_NativeLight._InnerCutOff = cosf(Radians(12.7f));
-  m_NativeLight._OuterCutOff = cosf(Radians(17.5f));
+  m_nativeLight._Enable = true;
+  m_nativeLight._Range = 10.0f;
+  m_nativeLight._Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  m_nativeLight._InnerCutOff = cosf(Radians(12.7f));
+  m_nativeLight._OuterCutOff = cosf(Radians(17.5f));
 
   REGISTER_COMPONENT(SpotLightComponent, this);
 }
@@ -155,15 +155,15 @@ void SpotLightComponent::update()
     // Rotate about the same area of where the position should be.
     if (m_syncGameObject) {
       Vector3 rel = transform->_rotation * m_offset;
-      m_NativeLight._Position = transform->_position + rel;
-      m_NativeLight._Direction = transform->front() * m_rotQuat;
+      m_nativeLight._Position = transform->_position + rel;
+      m_nativeLight._Direction = transform->front() * m_rotQuat;
     }
   } else {
     // Fixed transformation. No Relative rotation to the parent mesh.
-    m_NativeLight._Position = transform->_position + m_offset;
-    m_NativeLight._Direction = Vector3::FRONT * m_rotQuat;
+    m_nativeLight._Position = transform->_position + m_offset;
+    m_nativeLight._Direction = Vector3::FRONT * m_rotQuat;
   }
 
-  gRenderer().pushSpotLight(m_NativeLight);
+  gRenderer().pushSpotLight(m_nativeLight);
 }
 } // Recluse

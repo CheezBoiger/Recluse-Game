@@ -202,7 +202,7 @@ void main()
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
     float shadowFactor = 1.0;
     if (gWorldBuffer.enableShadows >= 1.0) {
-      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace);
+      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
       shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
                                             dynamicLightSpace.lightSpace, dynamicShadowMap,
                                             light.direction.xyz, pbrInfo.N);

@@ -87,7 +87,7 @@ void main()
     float shadowFactor = 1.0;
     if (gWorldBuffer.enableShadows >= 1.0) {
       vec4 vpos = (gWorldBuffer.view * vec4(pbrInfo.WP, 1.0)).zzzz;
-      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace);
+      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
       shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, 
                                             pbrInfo.WP, cascadeIdx,
                                             dynamicLightSpace.lightSpace, 

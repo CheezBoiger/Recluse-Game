@@ -34,6 +34,12 @@ void AudioComponent::update()
 {
   Vector3 vel = Vector3();
   if (m_pRigidBodyRef) vel = m_pRigidBodyRef->_velocity;
-  gAudio().SetChannel3DPosition(m_audioChannelId, getTransform()->_position, vel);
+  gAudio().setChannel3DPosition(m_audioChannelId, getTransform()->_position, vel);
+}
+
+
+void AudioComponent::setVolume(r32 volume)
+{
+  gAudio().setChannelVolume(m_audioChannelId, volume);
 }
 } // Recluse

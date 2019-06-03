@@ -145,7 +145,7 @@ u32 FMODAudioEngine::initiateSound(const std::string& soundName, const Vector3& 
 }
 
 
-void FMODAudioEngine::SetChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) 
+void FMODAudioEngine::setChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) 
 { 
   auto it = m_channelMap.find(nChannelId);
   if (it == m_channelMap.end()) { return; }
@@ -156,7 +156,7 @@ void FMODAudioEngine::SetChannel3DPosition(u32 nChannelId, const Vector3& pos, c
 }
 
 
-void FMODAudioEngine::SetChannelVolume(u32 nChannelId, r32 volume) 
+void FMODAudioEngine::setChannelVolume(u32 nChannelId, r32 volume) 
 { 
   auto it = m_channelMap.find(nChannelId);
   if (it == m_channelMap.end()) { return; }

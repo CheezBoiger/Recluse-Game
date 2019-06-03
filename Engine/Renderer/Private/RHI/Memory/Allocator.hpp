@@ -27,6 +27,7 @@ enum VulkanAllocationType {
 struct VulkanMemBlockNode {
   VkDeviceSize _sz;
   VkDeviceSize _offset;
+  VulkanAllocationType _type;
   VulkanMemBlockNode* _pPrev;
   VulkanMemBlockNode* _pNext;
   u64 _id       : 32,
@@ -63,6 +64,7 @@ public:
   b32 allocate(u32 sz, 
                u32 align, 
                VulkanAllocationType allocType, 
+               VkDeviceSize granularity,
                VulkanAllocation* pOutput);
   void free(VulkanAllocation* pIn);
   b32 isHostVisible() const;

@@ -37,10 +37,10 @@ public:
   virtual u32  initiateSound(const std::string& soundName, 
                              const Vector3& pos, 
                              r32 volume) { return 0; }
-  virtual void SetChannel3DPosition(u32 nChannelId, 
+  virtual void setChannel3DPosition(u32 nChannelId, 
                                     const Vector3& pos, 
                                     const Vector3& vel = Vector3()) { }
-  virtual void SetChannelVolume(u32 nChannelId, r32 volume) { }
+  virtual void setChannelVolume(u32 nChannelId, r32 volume) { }
   virtual void loadEventBank(const std::string& bankPath) { }
   virtual void updateState(r64 dt) { }
 

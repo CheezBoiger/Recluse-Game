@@ -20,6 +20,7 @@ public:
   void setRigidBodyReference(RigidBody* pBody) { m_pRigidBodyRef = pBody; }
   void playSound(const std::string& soundPath, r32 volume);
   void pause();
+  void setVolume(r32 volume);
   void isPaused();
   
 private:

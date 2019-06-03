@@ -384,18 +384,16 @@ float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS,
 }
 
 
-int GetCascadeIndex(vec4 vpos, in LightSpaceCascade dynamicLS)
+int GetCascadeIndex(vec4 vpos, in vec4 split)
 {
-  
-  vec4 fComparison = vec4(greaterThan(vpos, dynamicLS.split));
+  vec4 fComparison = vec4(greaterThan(vpos, split));
   vec4 cc = vec4( MAX_CASCADING_SHADOWMAP_COUNT > 0,
                   MAX_CASCADING_SHADOWMAP_COUNT > 1,
                   MAX_CASCADING_SHADOWMAP_COUNT > 2,
                   MAX_CASCADING_SHADOWMAP_COUNT > 3);
   float fIndex = dot( cc, fComparison );
   fIndex = min(fIndex, MAX_CASCADING_SHADOWMAP_COUNT);
-  int cascadeIdx = int(fIndex);
-  return cascadeIdx;
+  return int(fIndex);
 }
 
 

@@ -56,7 +56,8 @@ RenderPass*       ShadowMapSystem::k_pDynamicRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pStaticRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pCascadeRenderPass = nullptr;
 const u32         ShadowMapSystem::kTotalCascades = 4u;
-const u32         ShadowMapSystem::kMaxShadowDim = 2048u;
+const u32         ShadowMapSystem::kMaxShadowDim = 4096u;
+
 
 u32 LightBuffer::maxNumDirectionalLights()
 {
