@@ -154,10 +154,10 @@ void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi)
       dependencies[i].srcSubpass = i - 1;
       if (i == 0) dependencies[i].srcSubpass = VK_SUBPASS_EXTERNAL;
       dependencies[i].dstSubpass = (i == 0) ? 0 : i;
-      dependencies[i].srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-      dependencies[i].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-      dependencies[i].srcAccessMask = 0;
-      dependencies[i].dstAccessMask = 0;
+      dependencies[i].srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      dependencies[i].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      dependencies[i].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      dependencies[i].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     }
 
     for (u32 i = 0; i < attachments.size(); ++i) {
@@ -166,7 +166,7 @@ void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi)
       attachments[i].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
       // TODO(): We want to make our shadowmap shader readonly!! this will require 
       // Some fixes to the PBR shader pipes that read this rendertexture.
-      attachments[i].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      attachments[i].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
       attachments[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
       attachments[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
       attachments[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -877,7 +877,7 @@ void initializeShadowMapRenderPass(RenderPass* renderPass, VkFormat format, VkSa
   attachmentDescriptions[0] = CreateAttachmentDescription(
     format,
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -985,12 +985,12 @@ void ShadowMapSystem::initializeShadowMapDescriptors(VulkanRHI* pRhi)
     // TODO(): Once we create our shadow map, we will add it here.
     // This will pass the rendered shadow map to the pbr pipeline.
     VkDescriptorImageInfo globalShadowInfo = {};
-    globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    globalShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     globalShadowInfo.imageView = m_pCascadeShadowMapD[i]->getView();
     globalShadowInfo.sampler = _pSampler->getHandle(); 
 
     VkDescriptorImageInfo staticShadowInfo = { };
-    staticShadowInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    staticShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     staticShadowInfo.imageView = m_pStaticMap->getView();
     staticShadowInfo.sampler = _pSampler->getHandle();
 
@@ -1148,8 +1148,9 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
       PrimitiveRenderCmd& renderCmd = dynamicCmds[j];
       render(renderCmd, m_cascadeViewSpace._ViewProj[i], i);
     }
+
     if (i+1 < m_cascades[frameIndex].size()) {
-    pCmdBuffer->NextSubpass(VK_SUBPASS_CONTENTS_INLINE);
+      pCmdBuffer->NextSubpass(VK_SUBPASS_CONTENTS_INLINE);
     }
   }
   pCmdBuffer->EndRenderPass();

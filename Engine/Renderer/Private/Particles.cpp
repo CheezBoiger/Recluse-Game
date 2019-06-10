@@ -687,8 +687,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   // final color.
   attachmentDescriptions[0] = {};
   attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-  attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[0].format = pbr_FinalTextureKey->Format();
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -697,8 +697,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
 
   // brightness output.
   attachmentDescriptions[1] = {};
-  attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[1].format = pbr_BrightTextureKey->Format();
   attachmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -707,8 +707,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   attachmentDescriptions[2] = {};
-  attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[2].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[2].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[2].format = gbuffer_AlbedoAttachKey->Format();
   attachmentDescriptions[2].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[2].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -717,8 +717,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[2].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   attachmentDescriptions[3] = {};
-  attachmentDescriptions[3].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[3].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[3].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[3].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[3].format = gbuffer_NormalAttachKey->Format();
   attachmentDescriptions[3].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[3].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -727,8 +727,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[3].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   attachmentDescriptions[4] = {};
-  attachmentDescriptions[4].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[4].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[4].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[4].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[4].format = gbuffer_PositionAttachKey->Format();
   attachmentDescriptions[4].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[4].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -737,8 +737,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[4].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
   attachmentDescriptions[5] = {};
-  attachmentDescriptions[5].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[5].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[5].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[5].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[5].format = gbuffer_EmissionAttachKey->Format();
   attachmentDescriptions[5].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[5].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -748,8 +748,8 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
 
   // depth load, from total scene. This is after deferred and forward pipeline.
   attachmentDescriptions[6] = {};
-  attachmentDescriptions[6].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-  attachmentDescriptions[6].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  attachmentDescriptions[6].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  attachmentDescriptions[6].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
   attachmentDescriptions[6].format = gbuffer_DepthAttachKey->Format();
   attachmentDescriptions[6].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[6].storeOp = VK_ATTACHMENT_STORE_OP_STORE;

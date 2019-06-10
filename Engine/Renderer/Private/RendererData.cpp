@@ -1514,7 +1514,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 
   VkDescriptorImageInfo inputInfo = {};
-  inputInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  inputInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   inputInfo.imageView = pbr_FinalTextureKey->getView();
   inputInfo.sampler = gbuffer_SamplerKey->getHandle();
 

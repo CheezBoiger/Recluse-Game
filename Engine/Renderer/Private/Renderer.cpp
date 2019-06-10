@@ -1046,7 +1046,7 @@ void Renderer::setUpFrameBuffers()
     attachmentDescriptions[0] = CreateAttachmentDescription(
       final_renderTargetKey->Format(),
       VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1114,7 +1114,7 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[0] = CreateAttachmentDescription(
     gbuffer_Albedo->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1125,7 +1125,7 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[1] = CreateAttachmentDescription(
     gbuffer_Normal->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1136,7 +1136,7 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[2] = CreateAttachmentDescription(
     gbuffer_Position->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1147,7 +1147,7 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[3] = CreateAttachmentDescription(
     gbuffer_Emission->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1158,7 +1158,7 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[4] = CreateAttachmentDescription(
     gbuffer_Depth->Format(),
     VK_IMAGE_LAYOUT_UNDEFINED,
-    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -1168,20 +1168,20 @@ void Renderer::setUpFrameBuffers()
 
   dependencies[0] = CreateSubPassDependency(
     VK_SUBPASS_EXTERNAL, 
-    VK_ACCESS_MEMORY_READ_BIT, 
-    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_ACCESS_MEMORY_WRITE_BIT, 
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
     0, 
-    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, 
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, 
     VK_DEPENDENCY_BY_REGION_BIT
   );
 
   dependencies[1] = CreateSubPassDependency(
     0,
-    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
     VK_SUBPASS_EXTERNAL,
-    VK_ACCESS_MEMORY_READ_BIT,
+    VK_ACCESS_MEMORY_WRITE_BIT,
     VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
     VK_DEPENDENCY_BY_REGION_BIT
   );
@@ -1249,7 +1249,7 @@ void Renderer::setUpFrameBuffers()
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
       pbr_Final->Format(),
       VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1260,7 +1260,7 @@ void Renderer::setUpFrameBuffers()
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
       pbr_Bright->Format(),
       VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1270,8 +1270,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
       gbuffer_Depth->Format(),
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_LOAD,
@@ -1284,6 +1284,7 @@ void Renderer::setUpFrameBuffers()
     pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 5);
     pbrSubpass.pColorAttachments = attachmentColors.data();
     attachmentDepthRef.attachment = 2;
+    attachmentDepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
 
     VkRenderPassCreateInfo pbrRenderpassCI = CreateRenderPassInfo(
@@ -1316,8 +1317,8 @@ void Renderer::setUpFrameBuffers()
     // Forward renderpass portion.
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
       pbr_Final->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1327,8 +1328,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
       pbr_Bright->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1338,8 +1339,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
       gbuffer_Albedo->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1349,8 +1350,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[3] = CreateAttachmentDescription(
       gbuffer_Normal->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1360,8 +1361,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[4] = CreateAttachmentDescription(
       gbuffer_Position->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1371,8 +1372,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[5] = CreateAttachmentDescription(
       gbuffer_Emission->Format(),
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1382,8 +1383,8 @@ void Renderer::setUpFrameBuffers()
 
     pbrAttachmentDescriptions[6] = CreateAttachmentDescription(
       gbuffer_Depth->Format(),
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-      VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+      VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -1403,6 +1404,7 @@ void Renderer::setUpFrameBuffers()
     pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 1);
     pbrSubpass.pColorAttachments = attachmentColors.data();
     attachmentDepthRef.attachment = 6;
+    attachmentDepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
 
     pbrRenderpassCI = CreateRenderPassInfo(
@@ -1439,6 +1441,8 @@ void Renderer::setUpFrameBuffers()
   attachmentDescriptions[0].samples = hdrColor->Samples();
   attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   renderpassCI.attachmentCount = 1;
   subpass.colorAttachmentCount = 1;
   hdr_renderPass = m_pRhi->createRenderPass();
@@ -2345,9 +2349,6 @@ void Renderer::cleanUpOffscreen()
 
 void Renderer::setUpDownscale(b32 FullSetUp)
 {
-  if (FullSetUp) {
-  }
-
   DescriptorSetLayout* getLayout = DownscaleBlurLayoutKey;
   DescriptorSetLayout* GlowLayout = GlowDescriptorSetLayoutKey;
   DescriptorSet* DBDS2x = m_pRhi->createDescriptorSet();
@@ -2394,7 +2395,8 @@ void Renderer::setUpDownscale(b32 FullSetUp)
   VkDescriptorImageInfo Img = { };
   Img.sampler = gbuffer_Sampler->getHandle();
   Img.imageView = RTBright->getView();
-  Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  Log(rNotify) << Img.imageLayout << "\n";
   
   VkWriteDescriptorSet WriteSet = { };
   WriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -2406,10 +2408,11 @@ void Renderer::setUpDownscale(b32 FullSetUp)
   WriteSet.pImageInfo = &Img;
   WriteSet.pNext = nullptr;
   WriteSet.pTexelBufferView = nullptr;
+  Log(rNotify) << WriteSet.descriptorType << "\n";
   
   DBDS2x->update(1, &WriteSet);
   Img.imageView = Color2x->getView();
-  Img.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   DBDS2xFinal->update(1, &WriteSet);
   Img.imageView = Color2xFinal->getView();
   DBDS4x->update(1, &WriteSet);
@@ -2429,17 +2432,17 @@ void Renderer::setUpDownscale(b32 FullSetUp)
   VkDescriptorImageInfo Img1 = { };
   Img1.sampler = gbuffer_Sampler->getHandle();
   Img1.imageView = Color4xFinal->getView();
-  Img1.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  Img1.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkDescriptorImageInfo Img2 = { };
   Img2.sampler = gbuffer_Sampler->getHandle();
   Img2.imageView = Color8xFinal->getView();
-  Img2.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  Img2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkDescriptorImageInfo Img3 = { };
   Img3.sampler = gbuffer_Sampler->getHandle();
   Img3.imageView = Color16xFinal->getView();
-  Img3.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  Img3.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   // Glow buffer.
   std::array<VkWriteDescriptorSet, 4> GlowWrites;
@@ -2546,21 +2549,21 @@ void Renderer::setUpHDR(b32 fullSetUp)
       Sampler* sampler = m_pAntiAliasingFXAA->GetOutputSampler();
       pbrImageInfo.sampler = sampler->getHandle();
       pbrImageInfo.imageView = texture->getView();
-      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     } break;
     case AA_None:
     default:  
     {
       pbrImageInfo.sampler = gbuffer_SamplerKey->getHandle();
       pbrImageInfo.imageView = pbr_FinalTextureKey->getView();
-      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
   }
   // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
   VkDescriptorImageInfo bloomImageInfo = { };
   bloomImageInfo.sampler = gbuffer_SamplerKey->getHandle();
   bloomImageInfo.imageView = RenderTargetGlowKey->getView();
-  bloomImageInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  bloomImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   hdrWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   hdrWrites[0].descriptorCount = 1;
@@ -2897,59 +2900,78 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   viewport.x = 0.0f;
 
   VkDescriptorSet DescriptorSets[6];
-  
   cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
-      PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.get(i);
-      // Need to notify that this render command does not have a render object.
-      if (!renderCmd._pMeshDesc) continue;
-      if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
-          (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
-      R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
-
-      MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      // Set up the render mesh
-      MeshData* data = renderCmd._pMeshData;
-
-      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
-      VertexBuffer* vertexBuffer = data->getVertexData();
-      IndexBuffer* indexBuffer = data->getIndexData();
-      VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
-      VkDeviceSize offsets[] = { 0 };
-      cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
-      if (renderCmd._config & CMD_MORPH_BIT) {
-        Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
-        R_ASSERT(renderCmd._pMorph0, "morph0 is null");
-        R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
-        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
-        cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
-        cmdBuffer->BindVertexBuffers(2, 1,  &morph1, offsets);
-      } 
-
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-
-      DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
-      DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
-      DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
-
-      if (indexBuffer) {
-        VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-        cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+    if (m_cmdDeferredList.Size() == 0) {
+      VkClearAttachment clearAttachments[5];
+      for (u32 i = 0; i < 4; ++i) {
+        clearAttachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        clearAttachments[i].clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        clearAttachments[i].colorAttachment = i;
       }
+      clearAttachments[4].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+      clearAttachments[4].clearValue.depthStencil = { 1.0f, 0 };
+      clearAttachments[4].colorAttachment = 4;
+      VkClearRect clearRects[4] = { };
+      for (u32 i = 0; i < 4; ++i) {
+        clearRects[i].baseArrayLayer = 0;
+        clearRects[i].layerCount = 0;
+        clearRects[i].rect.extent = m_displayExtent;
+        clearRects[i].rect.offset = { 0, 0 };
+      }
+      cmdBuffer->ClearAttachments(5, clearAttachments, 4, clearRects);
+    } else {
+      for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
+        PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.get(i);
+        // Need to notify that this render command does not have a render object.
+        if (!renderCmd._pMeshDesc) continue;
+        if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
+            (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
+        R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
 
-      MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
-      DescriptorSets[2] = pMatDesc->CurrMaterialSet()->getHandle();
-      // Bind materials.
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-        Pipe->getLayout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
-      if (indexBuffer) {
-        cmdBuffer->DrawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
-          renderCmd._pPrimitive->_firstIndex, 0, 0);
-      } else {
-        cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+        MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
+        // Set up the render mesh
+        MeshData* data = renderCmd._pMeshData;
+
+        b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
+        GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
+        VertexBuffer* vertexBuffer = data->getVertexData();
+        IndexBuffer* indexBuffer = data->getIndexData();
+        VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
+        VkDeviceSize offsets[] = { 0 };
+        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+        if (renderCmd._config & CMD_MORPH_BIT) {
+          Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
+          R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+          R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+          VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+          VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
+          cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
+          cmdBuffer->BindVertexBuffers(2, 1,  &morph1, offsets);
+        } 
+
+        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+        cmdBuffer->SetViewPorts(0, 1, &viewport);
+
+        DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
+        DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
+        DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
+
+        if (indexBuffer) {
+          VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
+          cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+        }
+
+        MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
+        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->getHandle();
+        // Bind materials.
+        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+          Pipe->getLayout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
+        if (indexBuffer) {
+          cmdBuffer->DrawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
+            renderCmd._pPrimitive->_firstIndex, 0, 0);
+        } else {
+          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+        }
       }
     }
   cmdBuffer->EndRenderPass();
@@ -2973,6 +2995,10 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
   viewport.x = 0.0f;
   viewport.y = 0.0f;
 
+  VkRect2D scissor = { };
+  scissor.extent = m_displayExtent;
+  scissor.offset = { 0, 0 };
+
   GraphicsPipeline* finalPipeline = final_PipelineKey;
   DescriptorSet* finalSet = final_DescSetKey;
   FrameBuffer* finalFrameBuffer = final_frameBufferKey;
@@ -2991,6 +3017,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 
   cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
     cmdBuffer->SetViewPorts(0, 1, &viewport);
+    cmdBuffer->SetScissor(0, 1, &scissor);
     cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
     VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };
 
@@ -3575,27 +3602,27 @@ void Renderer::setUpPBR()
   pbr_DescSetKey = pbr_Set;
   {
     VkDescriptorImageInfo albedo = {};
-    albedo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    albedo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     albedo.imageView = gbuffer_AlbedoAttachKey->getView();
     albedo.sampler = pbr_Sampler->getHandle();
 
     VkDescriptorImageInfo normal = {};
-    normal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    normal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     normal.imageView = gbuffer_NormalAttachKey->getView();
     normal.sampler = pbr_Sampler->getHandle();
 
     VkDescriptorImageInfo position = {};
-    position.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    position.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     position.imageView = gbuffer_PositionAttachKey->getView();
     position.sampler = pbr_Sampler->getHandle();
 
     VkDescriptorImageInfo emission = {};
-    emission.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    emission.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     emission.imageView = gbuffer_EmissionAttachKey->getView();
     emission.sampler = pbr_Sampler->getHandle();
 
     VkDescriptorImageInfo depth = { };
-    depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     depth.imageView = gbuffer_DepthAttachKey->getView();
     depth.sampler = pbr_Sampler->getHandle();
 
@@ -3755,7 +3782,7 @@ void Renderer::setUpFinalOutputs()
   {
     // Final texture must be either hdr post process texture, or pbr output without hdr.
     VkDescriptorImageInfo renderTextureFinal = {};
-    renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    renderTextureFinal.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     if (m_HDR._Enabled) {
       renderTextureFinal.sampler = hdr_Sampler->getHandle();
@@ -3786,7 +3813,7 @@ void Renderer::setUpFinalOutputs()
 
     // TODO(): usingAntialiasing will need to be compensated here, similar to final texture, above.
     VkDescriptorImageInfo renderTextureOut = {};
-    renderTextureOut.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    renderTextureOut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     renderTextureOut.imageView = final_renderTargetKey->getView();
     renderTextureOut.sampler = hdr_gamma_samplerKey->getHandle();
 

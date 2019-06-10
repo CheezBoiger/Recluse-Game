@@ -205,6 +205,45 @@ extern Texture* final_renderTargetKey;
 extern DescriptorSet* output_descSetKey;
 extern GraphicsPipeline* output_pipelineKey;
 
+
+enum GraphicsPipelineT {
+  GRAPHICS_PIPELINE_START = 0,
+  GRAPHICS_PIPELINE_FINAL,
+  GRAPHICS_PIPELINE_CLUSTER,
+  GRAPHICS_PIPELINE_GBUFFER_STATIC_LR,
+  GRAPHICS_PIPELINE_GBUFFER_STATIC_NO_LR,
+  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_LR,
+  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_NO_LR,
+  GRAPHICS_PIPELINE_PBR_DEFERRED,
+  GRAPHICS_PIPELINE_PBR_FORWARD,
+  GRAPHICS_PIPELINE_HDR,
+  GRAPHICS_PIPELINE_GLOW,
+  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_2X,
+  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_4X,
+  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_8X,
+  GRAPHICS_PIPELINE_END,
+};
+
+
+enum FrameBufferT {
+
+};
+
+
+enum RenderPassT {
+
+};
+
+
+enum DescriptorSetLayoutT {
+
+};
+
+
+enum DescriptorSetT {
+
+};
+
 extern char const* kDefaultShaderEntryPointStr;
 
 void SetUpRenderData();

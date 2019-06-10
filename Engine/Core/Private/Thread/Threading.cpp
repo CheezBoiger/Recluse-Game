@@ -25,7 +25,7 @@ void ThreadPool::RunAll()
   m_SignalStop = false;
   for (size_t i = 0; i < m_ThreadWorkers.size(); ++i) {
     m_ThreadWorkers[i].run([&] (thread_id_t id) -> void {
-      R_DEBUG(rNotify, "Thread " + std::to_string(i) + " starting...\n");
+      R_DEBUG(rNotify, "Thread " + std::to_string(id) + " starting...\n");
       while (!m_SignalStop) {
         {
           std::unique_lock<std::mutex> grd(m_JobMutex);

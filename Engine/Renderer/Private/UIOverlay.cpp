@@ -392,8 +392,8 @@ void UIOverlay::initializeRenderPass(VulkanRHI* pRhi)
   VkSubpassDependency dependencies[2];
   attachmentDescriptions[0] = CreateAttachmentDescription(
     final_renderTargetKey->Format(),
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,

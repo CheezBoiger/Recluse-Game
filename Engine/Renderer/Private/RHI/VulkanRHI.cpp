@@ -194,7 +194,7 @@ b32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
   vkGetPhysicalDeviceProperties(device, &props);
 
   if (!requiredExtensions.empty()) return 0;
-
+  score += 1;
   if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
     score += 100;
   }

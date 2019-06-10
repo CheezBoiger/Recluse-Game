@@ -239,9 +239,9 @@ public:
 
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
-    m_audioComponent.initialize(this);
-    m_audioComponent.playSound("wave.mp3", 0.5f);
-    m_audioComponent.setRigidBodyReference(m_physicsComponent.getRigidBody());
+    //m_audioComponent.initialize(this);
+    //m_audioComponent.playSound("wave.mp3", 0.1f);
+    //m_audioComponent.setRigidBodyReference(m_physicsComponent.getRigidBody());
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
@@ -303,7 +303,7 @@ public:
     transform->_scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::get("buster", &model);
+    ModelCache::get("busterDrone", &model);
     
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.addMesh(model->meshes[i]);
