@@ -22,6 +22,7 @@ class MeshData;
 class MorphTarget;
 class Texture2D;
 class UIDescriptor;
+class Material;
 
 struct Primitive;
 
@@ -56,7 +57,8 @@ enum DebugCmdConfig {
   DEBUG_CONFIG_EMISSIVE_BIT = (1 << 4),
   DEBUG_CONFIG_DIRECT_LIGHT_BIT = (1 << 5),
   DEBUG_CONFIG_POINT_LIGHT_BIT = (1 << 6),
-  DEBUG_CONFIG_IBL_BIT = (1 << 7)
+  DEBUG_CONFIG_IBL_BIT = (1 << 7),
+  DEBUG_CONFIG_WIREFRAME = (1 << 8)
 };
 
 
@@ -114,11 +116,12 @@ struct BasicDebugRenderCmd : public MeshRenderCmd {
 
 struct DecalRenderCmd {
   DecalRenderCmd()
-    : _pTexture(nullptr)
+    : _pMat(nullptr)
       { }
 
-  Texture2D*  _pTexture;
-  Matrix4     _transform;
+  Material*   _pMat;
+  Matrix4     _obb;
+  Matrix4     _scale;
 };
 
 

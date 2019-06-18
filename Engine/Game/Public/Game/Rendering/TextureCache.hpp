@@ -27,9 +27,9 @@ public:
   };
 
   // Cache the texture2D into this data structure.
-  static CacheResult                cache(Texture2D* texture);
+  static CacheResult                cache(Texture2D* texture, std::string& name = std::string());
 
-#if 0
+#if 1
   // Get the specified texture 2d from cache.
   static CacheResult                get(std::string texname, Texture2D** out);
 

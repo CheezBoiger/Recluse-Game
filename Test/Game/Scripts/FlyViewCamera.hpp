@@ -91,6 +91,8 @@ public:
     m_pSpotLight2->setColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     m_pSpotLight2->setIntensity(2.0f);
     m_pSpotLight2->setOffset(Vector3(-0.5f, -0.5f, 0.0f));
+    pCam->enableFilmGrain(true);
+    pCam->setFilmGrainSpeed(50.0f);
   }
 
   // Game object updating.
@@ -182,6 +184,12 @@ public:
 
       m_yaw += xoffset;
       m_pitch += yoffset;
+      if (m_pitch < -Radians(270.0f)) {
+        m_pitch = -Radians(270.0f);
+      }
+      if (m_pitch > -Radians(90.0f)) {
+        m_pitch = -Radians(90.0f);
+      }
     }
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
     if (!bFollow) {

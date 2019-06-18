@@ -5,6 +5,7 @@
 #include "Component.hpp"
 
 #include "Renderer/MaterialDescriptor.hpp"
+#include "Renderer/Mesh.hpp"
 #include "Renderer/MeshData.hpp"
 #include <unordered_map>
 
@@ -55,7 +56,12 @@ public:
 
 
   void signalClean() { m_bDirty = false; }
-  virtual void addMesh(Mesh* mesh) { m_meshes.push_back(mesh); }
+  
+  virtual void addMesh(Mesh* mesh, u32 idx = Mesh::kMeshUnknownValue) { 
+    if (idx == Mesh::kMeshUnknownValue) m_meshes.push_back(mesh);
+    else m_meshes[idx] = mesh; 
+  }
+  
   virtual void clearMeshes() { m_meshes.clear(); }
   Mesh* getMesh(size_t idx) { return m_meshes[idx]; }
   u32 getMeshCount() const { return static_cast<u32>(m_meshes.size()); }
@@ -72,6 +78,9 @@ public:
 
   virtual void setAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
   virtual AnimHandle* getAnimHandle() { return m_pAnimHandle; }
+
+
+  virtual void resize(u32 sz) { m_meshes.resize(sz); };
 
 protected:
 
@@ -153,10 +162,19 @@ public:
   virtual void serialize(IArchive& a) override { }
   virtual void deserialize(IArchive& a) override { }
 
-  virtual void addMesh(Mesh* mesh) override;
+  virtual void addMesh(Mesh* mesh, u32 idx = Mesh::kMeshUnknownValue) override;
   virtual void clearMeshes() override;
 
+  void assignMeshParent(u32 meshIdx, u32 parentIdx) { m_perMeshDescriptors[meshIdx].parentId = parentIdx; }
+
+  virtual void resize(u32 sz) override { AbstractRendererComponent::resize(sz); 
+                                         m_perMeshDescriptors.resize(sz); }
+
 protected:
-  std::vector<MeshDescriptor*> m_perMeshDescriptors;
+  struct MeshNode {
+    MeshDescriptor* _pMeshDescriptor;
+    u32 parentId;
+  };
+  std::vector<MeshNode> m_perMeshDescriptors;
 };
 } // Recluse

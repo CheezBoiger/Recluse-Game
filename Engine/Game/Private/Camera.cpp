@@ -41,8 +41,11 @@ Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
   , m_Bloom(false)
   , m_Gamma(2.2f)
   , m_Exposure(4.2f)
+  , m_filmGrainSpeed(1.0f)
+  , m_filmGrainZoom(2.0f)
   , m_FrustumCull(false)
   , m_interleaveVideo(false)
+  , m_filmGrain(false)
 {
 }
 
@@ -148,7 +151,9 @@ void Camera::flushToGpuBus()
   gGlobalBuffer->_FPlane = m_viewFrustum[ViewFrustum::PFAR];
 
   // HDR settings.
-  hdr->_interleavedVideo.x = r32(getInterleavedVideo());
+  hdr->_bEnable.x = r32(getInterleavedVideo());
+  hdr->_bEnable.z = r32(getFilmGrain());
+  hdr->_filmGrain = Vector4(m_filmGrainZoom, m_filmGrainSpeed, 0.0f, 0.0f);
 }
 
 

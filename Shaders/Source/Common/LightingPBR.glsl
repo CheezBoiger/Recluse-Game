@@ -11,9 +11,11 @@
 
 const float PI = 3.14159265359;
 
+// NOTE(): Keep this in sync with cpu code. LightDescriptor.
 #define MAX_DIRECTION_LIGHTS    4
 #define MAX_SPOT_LIGHTS         16
 #define MAX_POINT_LIGHTS        32
+#define MAX_PL_SHADOW_MAPS      2
 
 struct PBRInfo {
   vec3 WP;      // world position.

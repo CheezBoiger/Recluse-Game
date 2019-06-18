@@ -1602,7 +1602,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
   pOutput->Dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
 
   imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
   imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 

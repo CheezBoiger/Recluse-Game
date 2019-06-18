@@ -99,6 +99,7 @@ struct LightGridBuffer {
 #define MAX_DIRECTIONAL_LIGHTS  4
 #define MAX_SPOT_LIGHTS         16
 #define MAX_POINT_LIGHTS        32
+#define MAX_PL_SHADOW_MAPS      2
 
 
 struct LightBuffer {

@@ -327,14 +327,25 @@ void BatchRendererComponent::onInitialize(GameObject* owner)
 }
 
 
-void BatchRendererComponent::addMesh(Mesh* pMeshRef)
+void BatchRendererComponent::addMesh(Mesh* pMeshRef, u32 idx)
 {
-  AbstractRendererComponent::addMesh(pMeshRef);
+  AbstractRendererComponent::addMesh(pMeshRef, idx);
 
   MeshDescriptor* pMeshDescriptor = gRenderer().createMeshDescriptor();
   pMeshDescriptor->initialize(gRenderer().getRHI());
   pMeshDescriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
-  m_perMeshDescriptors.push_back(pMeshDescriptor);
+  MeshNode node = { };
+  node.parentId = Mesh::kMeshUnknownValue;
+  node._pMeshDescriptor = pMeshDescriptor;
+  if (idx == Mesh::kMeshUnknownValue) {
+    m_perMeshDescriptors.push_back(node);
+  } else {
+    // TODO: May need to check if there is a memory leak!
+    if (m_perMeshDescriptors[idx]._pMeshDescriptor) {
+      gRenderer().freeMeshDescriptor(m_perMeshDescriptors[idx]._pMeshDescriptor);
+    }
+    m_perMeshDescriptors[idx] = node;
+  }
 }
 
 
@@ -342,8 +353,8 @@ void BatchRendererComponent::clearMeshes()
 {
   AbstractRendererComponent::clearMeshes();
   for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
-    gRenderer().freeMeshDescriptor(m_perMeshDescriptors[i]);
-    m_perMeshDescriptors[i] = nullptr;
+    gRenderer().freeMeshDescriptor(m_perMeshDescriptors[i]._pMeshDescriptor);
+    m_perMeshDescriptors[i]._pMeshDescriptor = nullptr;
   }
   m_perMeshDescriptors.clear();
 }
@@ -352,15 +363,18 @@ void BatchRendererComponent::clearMeshes()
 void BatchRendererComponent::update()
 {
   Transform* transform = getTransform();
-  Matrix4 parentModel = transform->getLocalToWorldMatrix();
 
   // Each mesh corresponds to each mesh descriptor.
   for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
     MeshRenderCmd meshCmd = { };
-    MeshDescriptor* pMeshDescriptor = m_perMeshDescriptors[i];
+    MeshNode& mn = m_perMeshDescriptors[i];
+    MeshDescriptor* pMeshDescriptor = mn._pMeshDescriptor;
     ObjectBuffer* pBuffer = pMeshDescriptor->getObjectData();
     MeshData* pMeshData = m_meshes[i]->getMeshData();
     Matrix4 localMatrix = Matrix4::identity();
+    Matrix4 parentModel = (mn.parentId != Mesh::kMeshUnknownValue) ? 
+                          m_perMeshDescriptors[mn.parentId]._pMeshDescriptor->getObjectData()->_model : 
+                          transform->getLocalToWorldMatrix();
 
     meshCmd._pMeshData = pMeshData;
     meshCmd._pMeshDesc = pMeshDescriptor;
@@ -406,8 +420,9 @@ void BatchRendererComponent::update()
 void BatchRendererComponent::onCleanUp()
 {
   for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
-    m_perMeshDescriptors[i]->cleanUp(gRenderer().getRHI());
-    m_perMeshDescriptors[i] = nullptr;
+    m_perMeshDescriptors[i]._pMeshDescriptor->cleanUp(gRenderer().getRHI());
+    m_perMeshDescriptors[i]._pMeshDescriptor = nullptr;
+    m_perMeshDescriptors[i].parentId = Skeleton::kNoSkeletonId;
   }
   m_perMeshDescriptors.clear();
 

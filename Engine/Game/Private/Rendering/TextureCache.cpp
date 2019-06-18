@@ -25,19 +25,23 @@ TextureCache::~TextureCache()
 
 
 
-TextureCache::CacheResult TextureCache::cache(Texture2D* texture)
+TextureCache::CacheResult TextureCache::cache(Texture2D* texture, std::string& name)
 {
   if (!texture) return Cache_Null_Pointer;
-  auto it = sCache.find(texture->UUID());
+  tcache_t t = texture->UUID();
+  if (!name.empty()) {
+    t = std::hash<std::string>()(name);
+  }
+  auto it = sCache.find(t);
   if (it != sCache.end()) {
     return Cache_Map_Exists;
   }
 
-  sCache[texture->UUID()] = texture;
+  sCache[t] = texture;
   return Cache_Success;
 }
 
-#if 0
+#if 1
 TextureCache::CacheResult TextureCache::get(std::string texname, Texture2D** out)
 {
   tcache_t v = std::hash<std::string>()(texname);

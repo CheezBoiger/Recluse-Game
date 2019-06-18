@@ -305,8 +305,17 @@ public:
     ModelLoader::Model* model = nullptr;
     ModelCache::get("busterDrone", &model);
     
-    for (size_t i = 0; i < model->meshes.size(); ++i) {
+    for (u32 i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.addMesh(model->meshes[i]);
+        
+      for (auto nn : model->nodeHierarchy) {
+        if (nn.second._meshId == i) {
+          m_rendererComponent.assignMeshParent(nn.second._meshId,
+                                               model->nodeHierarchy[nn.second._parentId]._meshId);
+          break;
+        }
+      }
+
       for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
         Primitive* prim = model->meshes[i]->getPrimitive(p);
         prim->_pMat->setEmissiveFactor(0.2f);
@@ -330,7 +339,7 @@ public:
     //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
     //m_animationComponent.playback("Dance");
     //m_animationComponent.setPlaybackRate(1.0f);
-    transform->_scale = Vector3(0.1f, 0.1f, 0.1f);
+    transform->_scale = Vector3(1.f, 1.f, 1.0f);
  #endif
 
     transform->_position = Vector3(2.0f, 5.0f, 0.0f);

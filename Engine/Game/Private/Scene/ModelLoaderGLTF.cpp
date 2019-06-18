@@ -478,11 +478,16 @@ static void FlipStaticTrianglesInArray(std::vector<StaticVertex>& vertices)
 }
 
 
-static Mesh* LoadMesh(const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, Matrix4& localMatrix)
+static Mesh* LoadMesh(const tinygltf::Node& node,
+                      u32 nodeIdx, 
+                      const tinygltf::Model& model, 
+                      Model* engineModel, 
+                      Matrix4& localMatrix)
 {
   Mesh* pMesh = nullptr;
   if (node.mesh > -1) {
     const tinygltf::Mesh& mesh = model.meshes[node.mesh];
+    engineModel->nodeHierarchy[nodeIdx]._meshId = node.mesh;
     std::vector<Primitive> primitives;
     // Mesh Should hold the fully buffer data. Primitives specify start and index count, that
     // defines some submesh in the full mesh object.
@@ -1015,25 +1020,41 @@ static skeleton_uuid_t LoadSkin(const tinygltf::Node& node, const tinygltf::Mode
 }
 
 
-static void LoadNode(const u32 nodeId, const tinygltf::Node& node, const tinygltf::Model& model, Model* engineModel, const Matrix4& parentMatrix, const r32 scale)
+static void LoadNode(const u32 nodeId, 
+                     const tinygltf::Node& node, 
+                     const tinygltf::Model& model, 
+                     Model* engineModel, 
+                     const Matrix4& parentMatrix, 
+                     const r32 scale)
 {
   NodeTransform transform = CalculateGlobalTransform(node, parentMatrix);
-  engineModel->nodeHierarchy[nodeId] = {};
+  //engineModel->nodeHierarchy[nodeId] = {};
   if (!node.children.empty()) {
-    engineModel->nodeHierarchy[nodeId].resize(node.children.size());
     for (size_t i = 0; i < node.children.size(); ++i) {
-      engineModel->nodeHierarchy[nodeId][i] = node.children[i];
-      LoadNode(node.children[i], model.nodes[node.children[i]], model, engineModel, transform._globalMatrix, scale);
+      engineModel->nodeHierarchy[node.children[i]]._parentId = nodeId;
+      engineModel->nodeHierarchy[node.children[i]]._meshId = Mesh::kMeshUnknownValue;
+      LoadNode(node.children[i], 
+               model.nodes[node.children[i]], 
+               model, 
+               engineModel, 
+               transform._globalMatrix, 
+               scale);
     }
   }
 
   if (node.skin != -1) {
+    engineModel->nodeHierarchy[nodeId]._nodeConfig |= Model_Skinned;
     skeleton_uuid_t skeleId = LoadSkin(node, model, engineModel, transform._globalMatrix);
     Mesh* pMesh = LoadSkinnedMesh(node, model, engineModel, transform._globalMatrix);
     pMesh->setSkeletonReference(skeleId);
-  }
-  else {
-    LoadMesh(node, model, engineModel, transform._globalMatrix);
+  } else {
+    if (LoadMesh(node, 
+                 nodeId, 
+                 model, 
+                 engineModel, 
+                 transform._globalMatrix)) {
+      engineModel->nodeHierarchy[nodeId]._nodeConfig |= Model_Mesh;
+    }
   }
 }
 

@@ -30,7 +30,8 @@ enum ModelResult {
   Model_Skinned = (1 << 5),
   Model_Unknown = (1 << 6),
   Model_Cached = (1 << 7),
-  Model_Materials = (1 << 8)
+  Model_Materials = (1 << 8),
+  Model_Mesh = (1 << 9)
 };
 
 
@@ -39,19 +40,25 @@ using ModelConfigBits = u32;
 using NodeId = u32;
 using NodeChildren = std::vector<NodeId>;
 
+struct NodeInfo {
+  NodeId _parentId;
+  u32 _nodeConfig;
+  u32 _meshId;
+};
+
 
 // Model is a container of meshes that correspond to materials.
 struct Model {
   // Name of the model
-  std::string                   name;
+  std::string name;
   std::map<NodeId, 
-           NodeChildren> nodeHierarchy;
-  std::vector<Mesh*>            meshes;
-  std::vector<Material*>        materials;
-  std::vector<Texture2D*>       textures;
-  std::vector<AnimClip*>        animations;
-  std::vector<Skeleton*>        skeletons;
-  std::vector<TextureSampler*>  samplers;
+           NodeInfo> nodeHierarchy;
+  std::vector<Mesh*> meshes;
+  std::vector<Material*> materials;
+  std::vector<Texture2D*> textures;
+  std::vector<AnimClip*> animations;
+  std::vector<Skeleton*> skeletons;
+  std::vector<TextureSampler*> samplers;
 };
 
 

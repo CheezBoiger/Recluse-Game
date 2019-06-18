@@ -70,7 +70,7 @@ public:
       , &material);
     Transform* trans = getTransform();
     m_pRendererComponent->initialize(this);
-#if 0
+#if 1
     m_pRendererComponent->enableStatic(false);
     m_pRendererComponent->forceForward(false);
     m_pRendererComponent->addMesh(mesh);

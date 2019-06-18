@@ -61,6 +61,18 @@ public:
     }
 
 
+    if (Mouse::buttonDown(Mouse::LEFT)) {
+      RayTestHit hitOut;
+      if (gPhysics().rayTest(transform->_position, m_playerCamera->GetFront(), 50.0f, &hitOut)) {
+        GameObject* obj = hitOut._rigidbody->_gameObj;
+        IActor* actor = obj->castTo<IActor>();
+        if (actor) {
+          
+        }
+      }
+    }
+
+
     m_playerCamera->UpdateCamera();
   }
 

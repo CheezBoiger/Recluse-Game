@@ -17,8 +17,8 @@ public:
   void SetTargetActor(IActor* actor) { m_actorTarget = actor; }
   void initialize(GameObject* obj) { 
     m_pCamera->initialize(obj);
-    m_lastX = (r32)Mouse::X();
-    m_lastY = (r32)Mouse::Y();
+    m_lastX = (r32)Mouse::getX();
+    m_lastY = (r32)Mouse::getY();
   }
 
   void UpdateCamera()
@@ -29,8 +29,8 @@ public:
     m_yaw = euler.x;
     m_pitch = euler.y;
 
-    r32 lx = (r32)Mouse::X();
-    r32 ly = (r32)Mouse::Y();  
+    r32 lx = (r32)Mouse::getX();
+    r32 ly = (r32)Mouse::getY();  
 
     r32 xoffset = m_lastX - lx;
     r32 yoffset = ly - m_lastY;
@@ -42,6 +42,12 @@ public:
 
     m_yaw += xoffset;
     m_pitch += yoffset;
+    if (m_pitch < -Radians(270.0f)) {
+      m_pitch = -Radians(270.0f);
+    }
+    if (m_pitch > -Radians(90.0f)) {
+      m_pitch = -Radians(90.0f);
+    }
 
     m_pCamera->update();
   }

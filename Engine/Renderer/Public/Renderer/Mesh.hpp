@@ -45,6 +45,7 @@ public:
 
   static const u32 kMaxMeshLodWidth = 5u;
   static const u32 kMeshLodZero = 0u;
+  static const u32 kMeshUnknownValue = ~0;
 
   Mesh() : m_bSkinned(false)
          , m_skeleId(Skeleton::kNoSkeletonId) 

@@ -202,7 +202,8 @@ void Animation::doMechanicalAnimation(AnimJobSubmitInfo& job,
     JointPose* currJoint = &currAnimPose->_aLocalPoses[i];
     JointPose* nextJoint = &nextAnimPose->_aLocalPoses[i];
     Matrix4 localTransform = linearInterpolate(currJoint, nextJoint, currAnimPose->_time, nextAnimPose->_time, lt);
-    job._output->_finalPalette[i] = localTransform;
+    Matrix4 parentTransform = job._output->_finalPalette[currJoint->_id];
+    job._output->_finalPalette[currJoint->_id] = localTransform;
   }
 }
 

@@ -74,14 +74,20 @@ public:
   b32                 getBloom() const { return m_Bloom; }
   b32                 getCulling() const { return m_FrustumCull; }
   b32                 getInterleavedVideo() const { return m_interleaveVideo; }
+  b32                 getFilmGrain() const { return m_filmGrain; }
+  r32                 getFilmGrainSpeed() const { return m_filmGrainSpeed; }
+  r32                 getFilmGrainZoom() const { return m_filmGrainZoom; }
 
   void                resetAspect();
   void                setExposure(r32 exposure) { m_Exposure = exposure; }
   void                setGamma(r32 gamma) { m_Gamma = gamma; }
   void                enableBloom(b32 enable) { m_Bloom = enable; }
   void                enableInterleavedVideo(b32 enable) { m_interleaveVideo = enable; }
+  void                enableFilmGrain(b32 enable) { m_filmGrain = enable; }
   void                enableFrustumCull(b32 enable) { m_FrustumCull = enable; }
   void                setOrthoScale(r32 scale) { m_OrthoScale = scale; }
+  void                setFilmGrainSpeed(r32 speed) { m_filmGrainSpeed = speed; }
+  void                setFilmGrainZoom(r32 zoom) { m_filmGrainZoom = zoom; }
 
   Vector3             getWorldToScreenProjection(const Vector3& position);
 
@@ -102,9 +108,12 @@ protected:
 
   r32                 m_Gamma;
   r32                 m_Exposure;
+  r32                 m_filmGrainZoom;
+  r32                 m_filmGrainSpeed;
   b32                 m_Bloom;
   b32                 m_FrustumCull;
   b32                 m_interleaveVideo;
+  b32                 m_filmGrain;
 
   // Gpu component update by the engine.
   void                flushToGpuBus();

@@ -28,8 +28,10 @@ struct ConfigHDR {
   Vector4 _allowChromaticAberration;
   Vector4 _k;
   Vector4 _kcube;
-  Vector4 _interleavedVideo;
+  Vector4 _bEnable; // x = interleaving, y = fade, z = filmgrain, w = distort.
   Vector4 _interleavedVideoShakeInterval;
+  Vector4 _fade;
+  Vector4 _filmGrain;
 };
 
 

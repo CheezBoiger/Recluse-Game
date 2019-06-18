@@ -468,6 +468,7 @@ int main(int c, char* argv[])
  // ModelLoader::load(RTEXT("Assets/BoxAnimated.glb"));
   ModelLoader::load(RTEXT("Assets/sponza/Sponza.gltf"));
   ModelLoader::load(RTEXT("Assets/busterDrone/busterDrone.gltf"));
+  //ModelLoader::load(RTEXT("Assets/ux3d-industrial-robot/source/robot.glb"));
   //ModelLoader::load(RTEXT("Assets/WaterBottle.glb"));
   //ModelLoader::load(RTEXT("Assets/AnimatedMorphCube.gltf"));
   //ModelLoader::load(RTEXT("Assets/Wolf.glb"));
