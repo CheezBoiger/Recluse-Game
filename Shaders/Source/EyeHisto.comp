@@ -6,6 +6,10 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform image2D inImage;
 layout (set = 1, binding = 1) uniform image2D outImage;
 

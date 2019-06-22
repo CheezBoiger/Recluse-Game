@@ -6,6 +6,10 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 // Bounding box and it's uv coordinates. No normal is required as it only defines 
 // the bounds of the decal.
 layout (location = 0) in vec4 position;
@@ -35,7 +39,7 @@ void main()
   fragIn.uv0 = uv0;
   fragIn.uv1 = uv1;
   
-  vec4 clipPos = gWorldBuffer.viewProj * transform.model * position;
+  vec4 clipPos = gWorldBuffer.global.viewProj * transform.model * position;
   gl_Position = clipPos;
   fragIn.positionCS = clipPos.xyz;
 }

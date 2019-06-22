@@ -20,6 +20,11 @@ in FRAG_IN {
 } frag_in;
 
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
+
 layout (set = 1, binding = 0) uniform sampler2D sceneSurface;
 layout (set = 1, binding = 1) uniform sampler2D bloomSurface;
 
@@ -56,9 +61,9 @@ vec3 Uncharted2Tonemap(vec3 x)
 void main()
 {
   vec2 uv = frag_in.uv;
-  vec2 resolution = vec2(gWorldBuffer.screenSize.xy);
+  vec2 resolution = vec2(gWorldBuffer.global.screenSize.xy);
   vec3 color = texture(sceneSurface, uv).rgb;
-  float time = gWorldBuffer.fEngineTime;
+  float time = gWorldBuffer.global.fEngineTime;
   
   // TODO(): These need to be set as a descripter param instead.
   //float k = -0.15;
@@ -96,7 +101,7 @@ void main()
   
   // Perform an additive blending to the scene surface. This is because
   // we want to be able to enhance bloom areas within the scene texture.
-  if (gWorldBuffer.bloomEnabled >= 1) { 
+  if (gWorldBuffer.global.bloomEnabled >= 1) { 
     vec3 bloom = texture(bloomSurface, uv).rgb;
     color += bloom * paramConfigs.bloomStrength; 
   }
@@ -104,12 +109,12 @@ void main()
   
   // Extended exposure pass with Uncharted 2 tone mapping. Gamma correction
   // is also enabled.
-  color *= gWorldBuffer.exposure;
+  color *= gWorldBuffer.global.exposure;
   vec3 tone = Uncharted2Tonemap(color);
   tone = tone * (1.0 / Uncharted2Tonemap(vec3(11.2)));
   
   // Gamma correction.
-  tone = pow(tone, vec3(1.0 / gWorldBuffer.gamma));
+  tone = pow(tone, vec3(1.0 / gWorldBuffer.global.gamma));
   
   vec4 post = vec4(tone, 1.0);
   fragColor = post;

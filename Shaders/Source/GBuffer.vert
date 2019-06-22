@@ -31,13 +31,12 @@ layout (location = 13) in vec2  uv11;
 
 #define MAX_JOINTS     64
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;  
-  float lod;
-  int   hasJoints; 
-  float w0;
-  float w1;
+  Model obj;
 } objBuffer;
 
 
@@ -65,8 +64,8 @@ void main()
   vec2 temp_uv1 = uv1;
   
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
-  float w0 = objBuffer.w0;
-  float w1 = objBuffer.w1;
+  float w0 = objBuffer.obj.w0;
+  float w1 = objBuffer.obj.w1;
   vec3  morphPositionDiff0 = position0.xyz;
   vec3  morphPositionDiff1 = position1.xyz;
   vec3  morphNormalDiff0 = normal0.xyz;
@@ -86,7 +85,7 @@ void main()
 #endif
 
   // Compute the skin matrix transform.
-  if (objBuffer.hasJoints >= 1) {
+  if (objBuffer.obj.hasJoints >= 1) {
     mat4 skinMatrix  = jointsBuffer.joints[jointIDs[0]] * jointWeights[0];
     skinMatrix      += jointsBuffer.joints[jointIDs[1]] * jointWeights[1];
     skinMatrix      += jointsBuffer.joints[jointIDs[2]] * jointWeights[2];
@@ -96,13 +95,13 @@ void main()
     skinNormal = normalize(skinMatrix * skinNormal);
   }
   
-  vec4 worldPosition = objBuffer.model * skinPosition;
+  vec4 worldPosition = objBuffer.obj.model * skinPosition;
   
   frag_in.position = worldPosition.xyz;
   frag_in.uv0 = temp_uv0;
   frag_in.uv1 = temp_uv1;
-  frag_in.normal = normalize(objBuffer.normalMatrix * skinNormal).xyz;
-  frag_in.vpos = (gWorldBuffer.view * worldPosition).zzzz;
+  frag_in.normal = normalize(objBuffer.obj.normalMatrix * skinNormal).xyz;
+  frag_in.vpos = (gWorldBuffer.global.view * worldPosition).zzzz;
   
-  gl_Position = gWorldBuffer.viewProj * worldPosition;
+  gl_Position = gWorldBuffer.global.viewProj * worldPosition;
 }

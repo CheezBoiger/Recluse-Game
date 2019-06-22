@@ -6,6 +6,9 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 layout (location = 0) in vec2 v2Position;
 layout (location = 1) in vec2 v2Uv;
@@ -20,7 +23,7 @@ out FRAG_IN {
 
 void main()
 {
-  vec2 localPos = v2Position / vec2(gWorldBuffer.screenSize);
+  vec2 localPos = v2Position / vec2(gWorldBuffer.global.screenSize);
   localPos = 2.0*localPos - 1.0;
   gl_Position = vec4(localPos, 0.0, 1.0);
   frag_in.v2Uv = v2Uv;

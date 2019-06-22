@@ -17,6 +17,9 @@ in FRAG_IN {
   vec2 texcoord1;
 } frag_in;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 layout (push_constant) uniform PushConst {
   vec4 color;

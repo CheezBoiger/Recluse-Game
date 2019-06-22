@@ -9,6 +9,9 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 in VertOut {
   vec4 currWPos;
@@ -26,8 +29,8 @@ out FragIn {
 
 void main()
 {
-  mat4 vp = gWorldBuffer.viewProj;
-  vec3 c = gWorldBuffer.cameraPos.xyz;
+  mat4 vp = gWorldBuffer.global.viewProj;
+  vec3 c = gWorldBuffer.global.cameraPos.xyz;
   vec3 pi = vert_out[0].currWPos.xyz;
   vec3 ppi = vert_out[0].nextWPos.xyz;
   vec3 pni = vert_out[0].prevWPos.xyz;

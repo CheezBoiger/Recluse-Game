@@ -13,6 +13,10 @@ layout (location = 3) out vec4 rt1;
 layout (location = 4) out vec4 rt2;
 layout (location = 5) out vec4 rt3;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 in FragIn {
   vec4 color;
 } frag_in; 

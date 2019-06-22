@@ -30,6 +30,10 @@ layout (location = 11) in vec2  uv11;
 
 #define MAX_BONES     64
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ObjectBuffer {
   mat4  model;
   mat4  normalMatrix;
@@ -88,17 +92,17 @@ void main()
   worldPosition = objBuffer.model * worldPosition;
   
 #if defined(ENABLE_WATER_RENDERING)
-  gl_ClipDistance[0] = dot(worldPosition, gWorldBuffer.clipPlane0);  
+  gl_ClipDistance[0] = dot(worldPosition, gWorldBuffer.global.clipPlane0);  
 #endif
 
   frag_in.position = worldPosition.xyz;
   frag_in.texcoord0 = temp_uv0;
   frag_in.texcoord1 = temp_uv1;
   frag_in.normal = normalize(objBuffer.normalMatrix * worldNormal).xyz;
-  frag_in.vpos = (gWorldBuffer.view * worldPosition).zzzz;
+  frag_in.vpos = (gWorldBuffer.global.view * worldPosition).zzzz;
   
 #if !defined(RENDER_ENV_MAP)
-  gl_Position = gWorldBuffer.viewProj * worldPosition;
+  gl_Position = gWorldBuffer.global.viewProj * worldPosition;
 #else
   gl_Position = viewer.viewProj * worldPosition;
 #endif

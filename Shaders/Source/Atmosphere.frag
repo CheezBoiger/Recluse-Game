@@ -6,6 +6,9 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 in FRAG_IN {
   vec2 uv;
@@ -89,31 +92,31 @@ float HorizonExtinction(vec3 position, vec3 dir, float radius)
 
 vec3 Absorb(float dist, vec3 color, float factor)
 {
-  return color - color * pow(gWorldBuffer.vAirColor.rgb, vec3(factor/dist));
+  return color - color * pow(gWorldBuffer.global.vAirColor.rgb, vec3(factor/dist));
 }
 
 
 void main()
 {
   vec3  vEyeDir = GetWorldNormal();
-  float alpha = dot(vEyeDir, gWorldBuffer.vSun.xyz);
+  float alpha = dot(vEyeDir, gWorldBuffer.global.vSun.xyz);
   
   // Rayleigh air particles factor.
-  float fRayleighFactor = Phase(alpha, -0.01) * gWorldBuffer.fRayleigh;
+  float fRayleighFactor = Phase(alpha, -0.01) * gWorldBuffer.global.fRayleigh;
   
   // Mie factor to determine aerosol particles.
-  float fMieFactor = Phase(alpha, gWorldBuffer.fMieDist) * gWorldBuffer.fMie;
+  float fMieFactor = Phase(alpha, gWorldBuffer.global.fMieDist) * gWorldBuffer.global.fMie;
   // Spot that forms the sun.
-  float spot = smoothstep(0.0, 15.0, alpha) * gWorldBuffer.vSun.w; 
+  float spot = smoothstep(0.0, 15.0, alpha) * gWorldBuffer.global.vSun.w; 
   
   vec3 vRayleighCollected = vec3(0.0);
   vec3 vMieCollected = vec3(0.0);
   
   float fSurfaceHeight = 0.0;
-  float fScatterStrength = gWorldBuffer.fScatterStrength;
-  float fRayleighStength = gWorldBuffer.fRayleighStength;
-  float fMieStength = gWorldBuffer.fMieStength;
-  float fIntensity = gWorldBuffer.fIntensity;
+  float fScatterStrength = gWorldBuffer.global.fScatterStrength;
+  float fRayleighStength = gWorldBuffer.global.fRayleighStength;
+  float fMieStength = gWorldBuffer.global.fMieStength;
+  float fIntensity = gWorldBuffer.global.fIntensity;
 
   int iStepCount = 16;
   vec3 vEyePos = vec3(0.0, fSurfaceHeight, 0.0);
@@ -123,9 +126,9 @@ void main()
   for (int i = 0; i < iStepCount; ++i) {
     float fSampleDist = fStepLength * float(i);
     vec3 position = vEyePos + vEyeDir * fSampleDist;
-    float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.vSun.xyz);
+    float fSampleDepth = AtmosphericDepth(position, gWorldBuffer.global.vSun.xyz);
     vec3 influx = Absorb(fSampleDepth, vec3(fIntensity), fScatterStrength);
-    vRayleighCollected += Absorb(fSampleDist, gWorldBuffer.vAirColor.rgb * influx, fRayleighStength);
+    vRayleighCollected += Absorb(fSampleDist, gWorldBuffer.global.vAirColor.rgb * influx, fRayleighStength);
     vMieCollected += Absorb(fSampleDepth, influx, fMieStength);
   }
   

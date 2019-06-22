@@ -1,6 +1,9 @@
 // Copyright (c) 2018 Recluse Project. All rights reserved.
 #ifndef GBUFFERDEFINES_H
 #define GBUFFERDEFINES_H
+
+#include "Globals.glsl"
+
 #define NAN                     0./0.
 
 struct GBuffer
@@ -18,6 +21,7 @@ struct GBuffer
 
 
 GBuffer ReadGBuffer(ivec2 uv, 
+          in GlobalBuffer global,
 					in sampler2D inRt0,
 					in sampler2D inRt1, 
 					in sampler2D inRt2,
@@ -39,12 +43,12 @@ GBuffer ReadGBuffer(ivec2 uv,
   gbuffer.ao                = albedo.a;
   gbuffer.anisoSpec         = vec4(normal.a, erm.a, 0.0, 0.0);
   
-  vec2 resolution = vec2(gWorldBuffer.screenSize);
+  vec2 resolution = vec2(global.screenSize);
   float z = texelFetch(inDepth, uv, 0).r;
   float x = float((uv.x / resolution.x) * 2 - 1);
   float y = float((uv.y / resolution.y) * 2 - 1);
   vec4 clipPos = vec4(x, y, z, 1.0);
-  vec4 worldPos = gWorldBuffer.invViewProj * clipPos;
+  vec4 worldPos = global.invViewProj * clipPos;
   worldPos /= worldPos.w;
   gbuffer.pos = worldPos.xyz;
 

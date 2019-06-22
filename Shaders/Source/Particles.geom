@@ -9,6 +9,10 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  model;
   mat4  modelView;
@@ -53,7 +57,7 @@ void main()
   for (int i = 0; i < gl_in.length(); ++i) {
     float size = vert_out[i].size * particleBuffer.globalScale.x;
     vec4 P = gl_in[i].gl_Position;
-    mat4 p = gWorldBuffer.proj;
+    mat4 p = gWorldBuffer.global.proj;
     float xrot = cos(DEG_TO_RAD(vert_out[i].angle));
     float yrot = sin(DEG_TO_RAD(vert_out[i].angle));
     vec2 rotation = vec2(xrot, yrot);

@@ -8,6 +8,9 @@
 
 layout (location = 0) in vec4 position;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 out FRAG_IN {
   vec3 uvw;
@@ -16,7 +19,7 @@ out FRAG_IN {
 void main()
 {
   frag_in.uvw = position.xyz;
-  mat4 view = mat4(mat3(gWorldBuffer.view));
-  vec4 pos = gWorldBuffer.proj * view * position;
+  mat4 view = mat4(mat3(gWorldBuffer.global.view));
+  vec4 pos = gWorldBuffer.global.proj * view * position;
   gl_Position = pos.xyww;
 }

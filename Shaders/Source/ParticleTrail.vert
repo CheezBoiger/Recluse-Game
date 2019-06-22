@@ -13,6 +13,9 @@ layout (location = 2) in vec4 nextPosition;
 layout (location = 3) in vec4 color;
 layout (location = 4) in float radius;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
 
 out VertOut {
   vec4 currWPos;

@@ -203,6 +203,7 @@ void RendererComponent::update()
   N[3][3] = 1.0f;
   renderData->_model = model;
   renderData->_normalMatrix = N.inverse().transpose();
+  renderData->_lod = m_currLod;
   m_meshDescriptor->pushUpdate(MESH_BUFFER_UPDATE_BIT);
 }
 
@@ -427,5 +428,17 @@ void BatchRendererComponent::onCleanUp()
   m_perMeshDescriptors.clear();
 
   UNREGISTER_COMPONENT(AbstractRendererComponent);
+}
+
+
+void BatchRendererComponent::setLodBias(r32 bias, u32 meshIdx)
+{
+  m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod = bias;
+}
+
+
+r32 BatchRendererComponent::getLodBias(u32 meshIdx) const 
+{
+  return m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod;
 }
 } // Recluse

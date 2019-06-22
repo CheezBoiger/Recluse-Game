@@ -30,33 +30,18 @@ in FRAG_IN {
   vec4 vpos;
 } frag_in;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 
 layout (set = 1, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;
-  float lod;          // Level of Detail
-  int   hasBones; 
-  float w0;
-  float w1;
+  Model obj;
 } objBuffer;
 
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
-  vec4  color;
-  vec4  anisoSpec;
-  vec4  offsetUV;
-  float opaque;
-  float metal;
-  float rough;
-  float emissive;
-  int   hasAlbedo;
-  int   hasMetallic;
-  int   hasRoughness;
-  int   hasNormal;
-  int   hasEmissive;
-  int   hasAO;
-  int   isTransparent;
-  int   pad;
+  Material material;
 } matBuffer;
 
 
@@ -67,11 +52,8 @@ layout (set = 2, binding = 4) uniform sampler2D ao;
 layout (set = 2, binding = 5) uniform sampler2D emissive;
 
 
-layout (set = 3, binding = 0) uniform LightBuffer {
-  DirectionLight  primaryLight;
-  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
-  PointLight      pointLights[MAX_POINT_LIGHTS];
-  SpotLight       spotLights[MAX_SPOT_LIGHTS];
+layout (set = 3, binding = 0) uniform Lights {
+  LightBuffer lights;
 } gLightBuffer;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -128,53 +110,53 @@ layout (push_constant) uniform Debug {
 
 void main()
 {
-  vec2 offsetUV0 = matBuffer.offsetUV.xy;
+  vec2 offsetUV0 = matBuffer.material.offsetUV.xy;
   vec2 uv0 = frag_in.texcoord0 + offsetUV0;
   
-  vec4 baseColor = matBuffer.color.rgba;
+  vec4 baseColor = matBuffer.material.color.rgba;
   vec3 fragAlbedo = baseColor.rgb;
-  float transparency = matBuffer.opaque * baseColor.a;
+  float transparency = matBuffer.material.opaque * baseColor.a;
   vec3 fragNormal = frag_in.normal;
   vec3 fragEmissive = vec3(0.0);
 
-  float fragMetallic  = matBuffer.metal;
-  float fragRoughness = matBuffer.rough;
+  float fragMetallic  = matBuffer.material.metal;
+  float fragRoughness = matBuffer.material.rough;
   float fragAO = 1.0;  // still WIP
   
-  if (matBuffer.hasAlbedo >= 1) {
-    vec4 alb = texture(albedo, uv0, objBuffer.lod);
+  if (matBuffer.material.hasAlbedo >= 1) {
+    vec4 alb = texture(albedo, uv0, objBuffer.obj.lod);
     fragAlbedo = pow(alb.rgb, vec3(2.2));
     transparency *= alb.w;
   }
   
   if (transparency < 0.05) { discard; }
   
-  if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
-    vec4 roughMetal = texture(roughnessMetallic, uv0, objBuffer.lod);
-    if (matBuffer.hasMetallic >= 1) {
+  if (matBuffer.material.hasMetallic >= 1 || matBuffer.material.hasRoughness >= 1) {
+    vec4 roughMetal = texture(roughnessMetallic, uv0, objBuffer.obj.lod);
+    if (matBuffer.material.hasMetallic >= 1) {
       fragMetallic *= roughMetal.b;
     }
   
-    if (matBuffer.hasRoughness >= 1) {
+    if (matBuffer.material.hasRoughness >= 1) {
       fragRoughness *= clamp(roughMetal.g, 0.04, 1.0);
     }
   }
   
-  if (matBuffer.hasNormal >= 1) {
-    fragNormal = GetNormal(normal, objBuffer.lod, frag_in.normal, frag_in.position, uv0);
+  if (matBuffer.material.hasNormal >= 1) {
+    fragNormal = GetNormal(normal, objBuffer.obj.lod, frag_in.normal, frag_in.position, uv0);
   }
   
-  if (matBuffer.hasAO >= 1) {
-    fragAO = texture(ao, uv0, objBuffer.lod).r;
+  if (matBuffer.material.hasAO >= 1) {
+    fragAO = texture(ao, uv0, objBuffer.obj.lod).r;
   }
   
-  if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = pow(texture(emissive, uv0, objBuffer.lod).rgb, vec3(2.2));
+  if (matBuffer.material.hasEmissive >= 1) {
+    fragEmissive = pow(texture(emissive, uv0, objBuffer.obj.lod).rgb, vec3(2.2));
   } 
   
   vec4 vpos = frag_in.vpos;
   vec3 N = normalize(fragNormal);
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - frag_in.position);
+  vec3 V = normalize(gWorldBuffer.global.cameraPos.xyz - frag_in.position);
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, fragAlbedo, fragMetallic);
   float NoV = clamp(abs(dot(N, V)), 0.001, 1.0);
@@ -195,15 +177,15 @@ void main()
   // TODO(): Map light probes in the future, to produce environment ambient instead.
   vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);
 
-  if (gLightBuffer.primaryLight.enable > 0) {
-    DirectionLight light = gLightBuffer.primaryLight;
+  if (gLightBuffer.lights.primaryLight.enable > 0) {
+    DirectionLight light = gLightBuffer.lights.primaryLight;
     vec3 ambient = light.ambient.rgb * fragAlbedo;
     outColor += ambient;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo); 
     float shadowFactor = 1.0;
-    if (gWorldBuffer.enableShadows >= 1.0) {
+    if (gWorldBuffer.global.enableShadows >= 1.0) {
       int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
-      shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, pbrInfo.WP, cascadeIdx,
+      shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, pbrInfo.WP, cascadeIdx,
                                             dynamicLightSpace.lightSpace, dynamicShadowMap,
                                             light.direction.xyz, pbrInfo.N);
     }
@@ -213,22 +195,22 @@ void main()
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
-    DirectionLight light = gLightBuffer.directionLights[i];
+    DirectionLight light = gLightBuffer.lights.directionLights[i];
     outColor += light.ambient.rgb * fragAlbedo;
     outColor += CookTorrBRDFDirectional(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
-    PointLight light = gLightBuffer.pointLights[i];
+    PointLight light = gLightBuffer.lights.pointLights[i];
     outColor += CookTorrBRDFPoint(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_SPOT_LIGHTS; ++i) {
-    SpotLight light = gLightBuffer.spotLights[i];
+    SpotLight light = gLightBuffer.lights.spotLights[i];
     outColor += CookTorrBRDFSpot(light, pbrInfo);
   }
   
-  outColor = matBuffer.emissive * 20.0 * fragEmissive + (outColor * fragAO);
+  outColor = matBuffer.material.emissive * 20.0 * fragEmissive + (outColor * fragAO);
     
 #else
 
@@ -253,7 +235,7 @@ void main()
     outColor.b += fragMetallic;
   }
   if ((v & DEBUG_EMISSIVE) == DEBUG_EMISSIVE) {
-    outColor += matBuffer.emissive * 20.0 * fragEmissive;
+    outColor += matBuffer.material.emissive * 20.0 * fragEmissive;
   }
   if ((v & DEBUG_IBL) == DEBUG_IBL) {
     outColor += GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);
@@ -274,11 +256,11 @@ void main()
   gbuffer.pos = frag_in.position;
   gbuffer.normal = N;
   gbuffer.emission = fragEmissive;
-  gbuffer.emissionStrength = matBuffer.emissive;
+  gbuffer.emissionStrength = matBuffer.material.emissive;
   gbuffer.metallic = fragMetallic;
   gbuffer.roughness = fragRoughness;
   gbuffer.ao = fragAO;
-  gbuffer.anisoSpec = matBuffer.anisoSpec;
+  gbuffer.anisoSpec = matBuffer.material.anisoSpec;
   
   WriteGBuffer(gbuffer, rt0, rt1, rt2, rt3);
 #endif

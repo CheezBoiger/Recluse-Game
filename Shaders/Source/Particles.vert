@@ -15,6 +15,10 @@ layout (location = 5) in vec4   color;
 layout (location = 6) in vec4   particleInfo; // x = angle, y = size, z = weight, w = life.
 layout (location = 7) in vec4   camDist;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  model;
   mat4  modelView;
@@ -59,5 +63,5 @@ void main()
   vert_out.size = particleInfo.y;
   vert_out.weight = particleInfo.z;
   vert_out.life = particleInfo.w;
-  gl_Position = gWorldBuffer.view * worldPos;
+  gl_Position = gWorldBuffer.global.view * worldPos;
 }

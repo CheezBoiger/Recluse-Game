@@ -4,7 +4,8 @@
 
 // Global const buffer ALWAYS bound to descriptor set 0, or the 
 // first descriptor set.
-layout (set = 0, binding = 0) uniform GlobalBuffer {
+
+struct GlobalBuffer {
   mat4  view;
   mat4  proj;
   mat4  invView;
@@ -40,6 +41,35 @@ layout (set = 0, binding = 0) uniform GlobalBuffer {
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
-} gWorldBuffer;
+};
+
+
+struct Material {
+  vec4  color;
+  vec4  anisoSpec;
+  vec4  offsetUV;
+  float opaque;
+  float metal;
+  float rough;
+  float emissive;
+  int   hasAlbedo;
+  int   hasMetallic;
+  int   hasRoughness;
+  int   hasNormal;
+  int   hasEmissive;
+  int   hasAO;
+  int   isTransparent;
+  int   pad;
+};
+
+
+struct Model {
+  mat4  model;
+  mat4  normalMatrix;
+  float lod;          // Level of Detail
+  int   hasJoints; 
+  float w0;
+  float w1;
+};
 
 #endif // GLOBALS_H

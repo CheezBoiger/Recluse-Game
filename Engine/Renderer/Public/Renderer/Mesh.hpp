@@ -50,6 +50,7 @@ public:
   Mesh() : m_bSkinned(false)
          , m_skeleId(Skeleton::kNoSkeletonId) 
          , m_pMeshData{nullptr}
+         , m_lodBias(0.0)
   {
   }
 
@@ -98,7 +99,10 @@ public:
   // this mesh object.
   void sortPrimitives(SortType type);
 
-private:
+  r32 getLodBias() const { return m_lodBias; }
+  void setLodBias(r32 bias) { m_lodBias = bias; }
+
+ private:
 
   void clearMorphTargets(Renderer* pRenderer);
 
@@ -119,5 +123,7 @@ private:
 
   // Bounding shape of this mesh.
   AABB m_aabb;
+
+  r32 m_lodBias;
 };
 } // Recluse 

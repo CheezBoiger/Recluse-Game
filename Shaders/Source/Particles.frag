@@ -13,6 +13,10 @@ layout (location = 3) out vec4 rt1;
 layout (location = 4) out vec4 rt2;
 layout (location = 5) out vec4 rt3;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ParticleBuffer {
   mat4  model;
   mat4  modelView;
@@ -52,8 +56,8 @@ vec4 SRGBToLINEAR(vec4 srgbIn)
 void main()
 {
   vec4 worldPos = frag_in.clipPos / frag_in.clipPos.w;
-  worldPos *= gWorldBuffer.invViewProj;
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - worldPos.xyz);
+  worldPos *= gWorldBuffer.global.invViewProj;
+  vec3 V = normalize(gWorldBuffer.global.cameraPos.xyz - worldPos.xyz);
   // for test.
   // TODO(): 
   vec4 color = frag_in.color;

@@ -13,6 +13,10 @@ in FRAG_IN {
   vec3 uvw;
 } frag_in;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform samplerCube skyTexture;
 
 void main()
@@ -22,11 +26,11 @@ void main()
   vBrightColor = vec4(0.0, 0.0, 0.0, 1.0);
   // We might just want to work with the final image.
   vec3 pos = normalize(frag_in.uvw);
-  float bright = dot(pos, -gWorldBuffer.vSun.xyz);
+  float bright = dot(pos, -gWorldBuffer.global.vSun.xyz);
 
   vec3 glow = vFragColor.rgb * bright;
   glow = max(glow, vec3(0.0));
-  glow = glow * gWorldBuffer.vSun.w;
+  glow = glow * gWorldBuffer.global.vSun.w;
   glow = clamp(glow, vec3(0.0), vec3(1.0));
   vBrightColor = vec4(glow, 1.0);
 }

@@ -12,6 +12,10 @@
 layout (location = 0) out vec4 vFragColor;
 layout (location = 1) out vec4 vBrightColor;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform sampler2D rt0;
 layout (set = 1, binding = 1) uniform sampler2D rt1;
 layout (set = 1, binding = 2) uniform sampler2D rt2;
@@ -19,11 +23,8 @@ layout (set = 1, binding = 3) uniform sampler2D rt3;
 layout (set = 1, binding = 4) uniform sampler2D rtDepth;
 
 
-layout (set = 2, binding = 0) uniform LightBuffer {
-  DirectionLight  primaryLight;
-  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
-  PointLight      pointLights[MAX_POINT_LIGHTS];
-  SpotLight       spotLights[MAX_SPOT_LIGHTS];
+layout (set = 2, binding = 0) uniform Lights {
+  LightBuffer lights;
 } gLightBuffer;
 
 layout (set = 3, binding = 0) uniform DynamicLightSpace {
@@ -57,10 +58,12 @@ layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup
 
 void main()
 {
-  GBuffer gbuffer = ReadGBuffer(ivec2(gl_FragCoord.xy), rt0, rt1, rt2, rt3, rtDepth);
+  GBuffer gbuffer = ReadGBuffer(ivec2(gl_FragCoord.xy), 
+                                gWorldBuffer.global, 
+                                rt0, rt1, rt2, rt3, rtDepth);
 
   vec3 N = normalize(gbuffer.normal);
-  vec3 V = normalize(gWorldBuffer.cameraPos.xyz - gbuffer.pos);
+  vec3 V = normalize(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos);
   vec3 F0 = vec3(0.04);
   F0 = mix(F0, gbuffer.albedo, gbuffer.metallic);
   float NoV = clamp(abs(dot(N, V)), 0.001, 1.0);
@@ -80,15 +83,15 @@ void main()
   // TODO(): Map light probes in the future, to produce environment ambient instead.
   vec3 outColor = GetIBLContribution(pbrInfo, R, brdfLut, globalMapInfo.sh, specMap);//vec3(0.0);
 
-  if (gLightBuffer.primaryLight.enable > 0) {
-    DirectionLight light = gLightBuffer.primaryLight;
+  if (gLightBuffer.lights.primaryLight.enable > 0) {
+    DirectionLight light = gLightBuffer.lights.primaryLight;
     vec3 ambient = light.ambient.rgb * gbuffer.albedo;
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo);
     float shadowFactor = 1.0;
-    if (gWorldBuffer.enableShadows >= 1.0) {
-      vec4 vpos = (gWorldBuffer.view * vec4(pbrInfo.WP, 1.0)).zzzz;
+    if (gWorldBuffer.global.enableShadows >= 1.0) {
+      vec4 vpos = (gWorldBuffer.global.view * vec4(pbrInfo.WP, 1.0)).zzzz;
       int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
-      shadowFactor = GetShadowFactorCascade(gWorldBuffer.enableShadows, 
+      shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, 
                                             pbrInfo.WP, cascadeIdx,
                                             dynamicLightSpace.lightSpace, 
                                             dynamicShadowMap,
@@ -101,24 +104,24 @@ void main()
   }
   
   for (int i = 0; i < MAX_DIRECTION_LIGHTS; ++i) {
-    DirectionLight light = gLightBuffer.directionLights[i];
+    DirectionLight light = gLightBuffer.lights.directionLights[i];
     outColor += light.ambient.rgb * gbuffer.albedo;
     outColor += CookTorrBRDFDirectional(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_POINT_LIGHTS; ++i) {
-    PointLight light = gLightBuffer.pointLights[i];
+    PointLight light = gLightBuffer.lights.pointLights[i];
     outColor += CookTorrBRDFPoint(light, pbrInfo);
   }
   
   for (int i = 0; i < MAX_SPOT_LIGHTS; ++i) {
-    SpotLight light = gLightBuffer.spotLights[i];
+    SpotLight light = gLightBuffer.lights.spotLights[i];
     outColor += CookTorrBRDFSpot(light, pbrInfo);
   }
   
   outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);
   
-  vec3 glow = outColor.rgb - length(gWorldBuffer.cameraPos.xyz - gbuffer.pos) * 0.2;
+  vec3 glow = outColor.rgb - length(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
   glow = clamp(glow, vec3(0.0), vec3(1.0));

@@ -18,32 +18,17 @@ in FRAG_IN {
   vec4  vpos;
 } frag_in;
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;
-  float lod;          // Level of Detail
-  int   hasBones; 
-  float w0;
-  float w1;
+  Model obj;
 } objBuffer;
 
 
 layout (set = 2, binding = 0) uniform MaterialBuffer {
-  vec4  color;
-  vec4  anisoSpec;
-  vec4  offsetUV;
-  float opaque;
-  float metal;
-  float rough;
-  float emissive;
-  int   hasAlbedo;
-  int   hasMetallic;
-  int   hasRoughness;
-  int   hasNormal;
-  int   hasEmissive;
-  int   hasAO;
-  int   isTransparent;
-  int   pad;
+  Material material;
 } matBuffer;
 
 
@@ -72,41 +57,41 @@ layout (location = 0) out vec4 debugColor;
 
 void main()
 { 
-  vec2 offsetUV0 = matBuffer.offsetUV.xy;
+  vec2 offsetUV0 = matBuffer.material.offsetUV.xy;
   vec2 uv0 = frag_in.texcoord0 + offsetUV0;
-  vec3 fragAlbedo = matBuffer.color.rgb;
+  vec3 fragAlbedo = matBuffer.material.color.rgb;
   vec3 fragNormal = frag_in.normal;
   vec3 fragEmissive = vec3(0.0);
 
-  float fragMetallic  = matBuffer.metal;
-  float fragRoughness = matBuffer.rough;
+  float fragMetallic  = matBuffer.material.metal;
+  float fragRoughness = matBuffer.material.rough;
   float fragAO = 1.0;  // still WIP
   
-  if (matBuffer.hasAlbedo >= 1) {
-    fragAlbedo = pow(texture(albedo, uv0, objBuffer.lod).rgb, vec3(2.2));
+  if (matBuffer.material.hasAlbedo >= 1) {
+    fragAlbedo = pow(texture(albedo, uv0, objBuffer.obj.lod).rgb, vec3(2.2));
   }
   
-  if (matBuffer.hasMetallic >= 1 || matBuffer.hasRoughness >= 1) {
-    vec4 roughMetal = texture(roughnessMetallic, uv0, objBuffer.lod);
-    if (matBuffer.hasMetallic >= 1) {
+  if (matBuffer.material.hasMetallic >= 1 || matBuffer.material.hasRoughness >= 1) {
+    vec4 roughMetal = texture(roughnessMetallic, uv0, objBuffer.obj.lod);
+    if (matBuffer.material.hasMetallic >= 1) {
       fragMetallic *= roughMetal.b;
     }
   
-    if (matBuffer.hasRoughness >= 1) {
+    if (matBuffer.material.hasRoughness >= 1) {
       fragRoughness *= clamp(roughMetal.g, 0.04, 1.0);
     }
   }
   
-  if (matBuffer.hasNormal >= 1) {
-    fragNormal = GetNormal(normal, objBuffer.lod, frag_in.normal, frag_in.position, uv0);
+  if (matBuffer.material.hasNormal >= 1) {
+    fragNormal = GetNormal(normal, objBuffer.obj.lod, frag_in.normal, frag_in.position, uv0);
   }
   
-  if (matBuffer.hasAO >= 1) {
-    fragAO = texture(ao, uv0, objBuffer.lod).r;
+  if (matBuffer.material.hasAO >= 1) {
+    fragAO = texture(ao, uv0, objBuffer.obj.lod).r;
   }
   
-  if (matBuffer.hasEmissive >= 1) {
-    fragEmissive = pow(texture(emissive, uv0, objBuffer.lod).rgb, vec3(2.2));
+  if (matBuffer.material.hasEmissive >= 1) {
+    fragEmissive = pow(texture(emissive, uv0, objBuffer.obj.lod).rgb, vec3(2.2));
   }   
   
   vec3 N = normalize(fragNormal);
@@ -117,11 +102,11 @@ void main()
   gbuffer.pos = frag_in.position;
   gbuffer.normal = N;
   gbuffer.emission = fragEmissive;
-  gbuffer.emissionStrength = matBuffer.emissive;
+  gbuffer.emissionStrength = matBuffer.material.emissive;
   gbuffer.metallic = fragMetallic;
   gbuffer.roughness = fragRoughness;
   gbuffer.ao = fragAO;
-  gbuffer.anisoSpec = matBuffer.anisoSpec;
+  gbuffer.anisoSpec = matBuffer.material.anisoSpec;
   gbuffer.anisoSpec.z = frag_in.vpos.z;
   
   WriteGBuffer(gbuffer, rt0, rt1, rt2, rt3);

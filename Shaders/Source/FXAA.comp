@@ -6,6 +6,10 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 layout (set = 1, binding = 0) uniform sampler2D finalTexture;
 layout (set = 1, binding = 1, rgba8) uniform writeonly image2D resultImage;
 
@@ -1049,12 +1053,12 @@ FxaaFloat4 FxaaPixelShader(
 layout(local_size_x = LOCAL_SIZE, local_size_y = LOCAL_SIZE, local_size_z = 1) in;
 void main()
 {
-  vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / vec2(gWorldBuffer.screenSize);
+  vec2 uv = (vec2(gl_GlobalInvocationID.xy) + 0.5) / vec2(gWorldBuffer.global.screenSize);
   vec4 final = vec4(0.0, 0.0, 0.0, 1.0);
-  if (gWorldBuffer.enableAA >= 1) {
-    //vec2 aaCoord = frag_in.texcoord * vec2(gWorldBuffer.screenSize);
-    //final = AntiAliasingFXAA(finalTexture, aaCoord, gWorldBuffer.screenSize).rgb;
-    vec2 rcpFrame = vec2(1.0 / float(gWorldBuffer.screenSize.x), 1.0 / float(gWorldBuffer.screenSize.y));
+  if (gWorldBuffer.global.enableAA >= 1) {
+    //vec2 aaCoord = frag_in.texcoord * vec2(gWorldBuffer.global.screenSize);
+    //final = AntiAliasingFXAA(finalTexture, aaCoord, gWorldBuffer.global.screenSize).rgb;
+    vec2 rcpFrame = vec2(1.0 / float(gWorldBuffer.global.screenSize.x), 1.0 / float(gWorldBuffer.global.screenSize.y));
     final = FxaaPixelShader(uv,
       FxaaFloat4(0.0, 0.0, 0.0, 0.0),
       finalTexture,

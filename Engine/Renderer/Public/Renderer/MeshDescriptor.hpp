@@ -84,7 +84,6 @@ protected:
 
   b32             m_Visible;
   b32             m_Static;
-  
   u32             m_currIdx;
 
   std::vector<UpdateManager> m_pGpuHandles;

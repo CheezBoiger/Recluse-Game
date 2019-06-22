@@ -29,6 +29,18 @@ struct PBRInfo {
 };
 
 
+struct Sphere {
+  vec3 center;
+  float radius;
+};
+
+
+struct AABB {
+  vec4 pmin;
+  vec4 pmax;
+};
+
+
 struct DirectionLight {
   vec4  direction;
   vec4  ambient;
@@ -67,6 +79,14 @@ struct DiffuseSH {
 };
 
 
+struct LightBuffer {
+  DirectionLight  primaryLight;
+  DirectionLight  directionLights[MAX_DIRECTION_LIGHTS];
+  PointLight      pointLights[MAX_POINT_LIGHTS];
+  SpotLight       spotLights[MAX_SPOT_LIGHTS];
+};
+
+
 vec4 SRGBToLINEAR(vec4 srgbIn)
 {
   vec3 linOut = pow(srgbIn.xyz, vec3(2.2));
@@ -91,6 +111,25 @@ vec3 SampleSH(in vec3 n, in vec4 sh[9])
             sh[7].xyz * 0.858085 * x * z +
             sh[8].xyz * 0.429043 * (x * x - y * y);
   return max(r, vec3(0.0));
+}
+
+
+float sqDistPointAABB(vec3 p, in AABB aabb)
+{
+  float sqDistance = 0.0;
+  for (uint i = 0; i < 3; ++i) {
+    float v = p[i];
+    if (v < aabb.pmin[i]) sqDistance += pow(aabb.pmin[i] - v, 2);
+    if (v > aabb.pmax[i]) sqDistance += pow(aabb.pmax[i] - v, 2);
+  }
+  return sqDistance;
+} 
+
+
+int sphereInAABB(in Sphere sphere, in AABB aabb)
+{
+  float sqDist = sqDistPointAABB(sphere.center, aabb);
+  return int(sqDist <= (sphere.radius * sphere.radius));
 }
 
 

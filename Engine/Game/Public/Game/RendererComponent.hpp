@@ -69,7 +69,7 @@ public:
   void enableLod(b32 enable) { m_allowLod = enable; }
 
 
-  u32 getCurrentLod() const { return m_currLod; }
+  r32 getCurrentLod() const { return m_currLod; }
   u32 getMorphIndex0() const { return m_morphIndex0; }
   u32 getMorphIndex1() const { return m_morphIndex1; }
 
@@ -79,6 +79,8 @@ public:
   virtual void setAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
   virtual AnimHandle* getAnimHandle() { return m_pAnimHandle; }
 
+  virtual void setLodBias(r32 bias, u32 meshIdx = 0) { (void)(meshIdx); m_currLod = bias; }
+  virtual r32 getLodBias(u32 meshIdx = 0) const { (void)meshIdx; return m_currLod; }
 
   virtual void resize(u32 sz) { m_meshes.resize(sz); };
 
@@ -95,7 +97,7 @@ protected:
   u32 m_configs;
   b32 m_debugConfigs;
   b32 m_allowLod;
-  u32 m_currLod;
+  r32 m_currLod;
   i32 m_morphIndex0; // Morph index for binding.
   i32 m_morphIndex1; // Morph index for binding.
   AnimHandle* m_pAnimHandle;
@@ -169,6 +171,9 @@ public:
 
   virtual void resize(u32 sz) override { AbstractRendererComponent::resize(sz); 
                                          m_perMeshDescriptors.resize(sz); }
+
+  virtual void setLodBias(r32 bias, u32 meshIdx = 0) override;
+  virtual r32 getLodBias(u32 meshIdx = 0) const override;
 
 protected:
   struct MeshNode {

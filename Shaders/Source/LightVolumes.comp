@@ -7,6 +7,10 @@
 
 #include "Common/Globals.glsl"
 
+layout (set = 0, binding = 0) uniform Globals {
+  GlobalBuffer global;
+} gWorldBuffer;
+
 // Shadow map used to compare values and determine which pixel samples are lit.
 layout (set = 1, binding = 0, r32f) uniform readonly image2D inShadowMap;
 
@@ -21,7 +25,8 @@ layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main()
 {
   ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
-  ivec2 texCoord = ivec2(iPixCoord.x / gWorldBuffer.screenSize.x, iPixCoord.y / gWorldBuffer.screenSize.y);
+  ivec2 texCoord = ivec2( iPixCoord.x / gWorldBuffer.global.screenSize.x, 
+                          iPixCoord.y / gWorldBuffer.global.screenSize.y);
   float sceneDepthFactor = imageLoad(inSceneDepth, texCoord).r;
   
   // reconstruct the world position
@@ -31,7 +36,7 @@ void main()
   clipPos.z = sceneDepthFactor;
   clipPos.w = 1.0;
   
-  vec4 positionWs = clipPos * gWorldBuffer.invProj * gWorldBuffer.invView;
+  vec4 positionWs = clipPos * gWorldBuffer.global.invProj * gWorldBuffer.global.invView;
   // Perspective division.
   positionWs.w = 1.0 / positionWs.w;
   positionWs.xyz *= positionWs.w;
