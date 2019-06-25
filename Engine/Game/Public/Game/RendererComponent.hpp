@@ -65,8 +65,8 @@ public:
   virtual void clearMeshes() { m_meshes.clear(); }
   Mesh* getMesh(size_t idx) { return m_meshes[idx]; }
   u32 getMeshCount() const { return static_cast<u32>(m_meshes.size()); }
-  inline b32 allowLod() const { return m_allowLod; }
-  void enableLod(b32 enable) { m_allowLod = enable; }
+  inline b32 allowAutoLod() const { return m_allowAutoLod; }
+  void enableAutoLod(b32 enable) { m_allowAutoLod = enable; }
 
 
   r32 getCurrentLod() const { return m_currLod; }
@@ -96,7 +96,7 @@ protected:
   b32 m_bDirty;
   u32 m_configs;
   b32 m_debugConfigs;
-  b32 m_allowLod;
+  b32 m_allowAutoLod;
   r32 m_currLod;
   i32 m_morphIndex0; // Morph index for binding.
   i32 m_morphIndex1; // Morph index for binding.

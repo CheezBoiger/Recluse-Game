@@ -56,7 +56,7 @@ public:
     //material->setRoughnessFactor(1.0f);
     m_pRendererComponent->initialize(this);
     m_pRendererComponent->addMesh(mesh);
-    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->enableAutoLod(false);
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
@@ -140,7 +140,7 @@ public:
     //material->setRoughnessFactor(1.0f);
     m_pRendererComponent->initialize(this);
     m_pRendererComponent->addMesh(mesh);
-    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->enableAutoLod(false);
     std::random_device r;
     std::mt19937 twist(r());
     std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
@@ -229,7 +229,7 @@ public:
 
     m_pRendererComponent->initialize(this);
     m_pRendererComponent->addMesh(mesh);
-    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->enableAutoLod(false);
     material->setEmissiveFactor(0.2f);
 
     std::random_device r;

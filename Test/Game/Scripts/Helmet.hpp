@@ -88,7 +88,7 @@ public:
     //material->setMetallicFactor(1.0f);
     //material->setEmissiveFactor(1.0f);
 
-    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->enableAutoLod(false);
     m_pRendererComponent->initialize(this);
     m_pRendererComponent->forceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
@@ -328,8 +328,8 @@ public:
     
     AnimClip* pClip = model->animations[0];
     m_animationComponent.addClip(pClip, "StartUp");
-    m_animationComponent.playback("StartUp");
-    m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
+    //m_animationComponent.playback("StartUp");
+    //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
     //m_rendererComponent.enableMorphTargets(true);
     m_rendererComponent.forceForward(false);
     //m_rendererComponent.setMorphIndex0(0);
@@ -339,10 +339,10 @@ public:
     //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
     //m_animationComponent.playback("Dance");
     //m_animationComponent.setPlaybackRate(1.0f);
-    transform->_scale = Vector3(1.f, 1.f, 1.0f);
+    transform->_scale = Vector3(0.5f, 0.5f, 0.5f);
  #endif
 
-    transform->_position = Vector3(2.0f, 5.0f, 0.0f);
+    transform->_position = Vector3(2.0f, 10.0f, 0.0f);
     m_pParticleSystem->EnableWorldSpace(true);
   }
 

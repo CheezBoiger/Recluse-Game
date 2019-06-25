@@ -25,7 +25,7 @@ AbstractRendererComponent::AbstractRendererComponent()
   , m_debugConfigs(0)
   , m_bDirty(true)
   , m_currLod(Mesh::kMeshLodZero)
-  , m_allowLod(true)
+  , m_allowAutoLod(false)
   , m_morphIndex0(kNoMorphIndex)
   , m_morphIndex1(kNoMorphIndex)
   , m_pAnimHandle(nullptr)
@@ -195,15 +195,17 @@ void RendererComponent::update()
     }
   }
 
-  if (model == renderData->_model) return;
-  Matrix4 N = model;
-  N[3][0] = 0.0f;
-  N[3][1] = 0.0f;
-  N[3][2] = 0.0f;
-  N[3][3] = 1.0f;
-  renderData->_model = model;
-  renderData->_normalMatrix = N.inverse().transpose();
-  renderData->_lod = m_currLod;
+  renderData->_lod = gRenderer().getCurrentGraphicsConfigs()._Lod + m_currLod;
+
+  if (model != renderData->_model) {
+    Matrix4 N = model;
+    N[3][0] = 0.0f;
+    N[3][1] = 0.0f;
+    N[3][2] = 0.0f;
+    N[3][3] = 1.0f;
+    renderData->_model = model;
+    renderData->_normalMatrix = N.inverse().transpose();
+  }
   m_meshDescriptor->pushUpdate(MESH_BUFFER_UPDATE_BIT);
 }
 
@@ -296,7 +298,7 @@ SkinnedRendererComponent::SkinnedRendererComponent()
 
 void AbstractRendererComponent::updateLod(Transform* meshTransform)
 {
-  if (!allowLod()) return;
+  if (!allowAutoLod()) return;
   Camera* currCamera = Camera::getMain();
   if (!currCamera) return;
   Transform* camTransform = currCamera->getTransform();
@@ -376,7 +378,7 @@ void BatchRendererComponent::update()
     Matrix4 parentModel = (mn.parentId != Mesh::kMeshUnknownValue) ? 
                           m_perMeshDescriptors[mn.parentId]._pMeshDescriptor->getObjectData()->_model : 
                           transform->getLocalToWorldMatrix();
-
+  
     meshCmd._pMeshData = pMeshData;
     meshCmd._pMeshDesc = pMeshDescriptor;
     meshCmd._pJointDesc = getJointDescriptor(i);
@@ -405,13 +407,15 @@ void BatchRendererComponent::update()
     }
 
     Matrix4 model = localMatrix * parentModel;
-    Matrix4 N = model;
-    N[3][0] = 0.0f; 
-    N[3][1] = 0.0f;
-    N[3][2] = 0.0f; 
-    N[3][3] = 1.0f;
-    pBuffer->_model = model;
-    pBuffer->_normalMatrix = N.inverse().transpose();
+    if (model != pBuffer->_model) {
+      Matrix4 N = model;
+      N[3][0] = 0.0f; 
+      N[3][1] = 0.0f;
+      N[3][2] = 0.0f; 
+      N[3][3] = 1.0f;
+      pBuffer->_model = model;
+      pBuffer->_normalMatrix = N.inverse().transpose();
+    }
     pMeshDescriptor->pushUpdate(MESH_BUFFER_UPDATE_BIT);
     gRenderer().pushMeshRender(meshCmd);
   }
@@ -433,12 +437,14 @@ void BatchRendererComponent::onCleanUp()
 
 void BatchRendererComponent::setLodBias(r32 bias, u32 meshIdx)
 {
-  m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod = bias;
+  m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod = 
+    gRenderer().getCurrentGraphicsConfigs()._Lod + bias;
 }
 
 
 r32 BatchRendererComponent::getLodBias(u32 meshIdx) const 
 {
-  return m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod;
+  return gRenderer().getCurrentGraphicsConfigs()._Lod - 
+         m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod;
 }
 } // Recluse

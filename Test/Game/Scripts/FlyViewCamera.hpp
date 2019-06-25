@@ -72,9 +72,10 @@ public:
     m_pPhysicsComponent = new PhysicsComponent();
     m_pPhysicsComponent->initialize(this);
     m_pPhysicsComponent->addCollider(m_pCollider);
+    m_pPhysicsComponent->setAngleFactor(Vector3(0.0f, 1.0f, 0.0f));
 
     bFollow = false;
-    m_pPhysicsComponent->setMass(0.0f);
+    m_pPhysicsComponent->setMass(1.0f);
 
     m_pSpotLight = new SpotLightComponent();
     m_pSpotLight->initialize(this);
@@ -151,6 +152,7 @@ public:
       params._AA = AA_None;
       params._Shadows = GRAPHICS_QUALITY_NONE;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
+      params._Lod = 5.0f;
       params._EnableMultithreadedRendering = true;
       gRenderer().updateRendererConfigs(&params);
     }
@@ -162,6 +164,7 @@ public:
       params._EnableBloom = true;
       params._EnableMultithreadedRendering = false;
       params._AA = AA_FXAA_2x;
+      params._Lod = 0.0f;
       params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       gRenderer().updateRendererConfigs(&params);
@@ -231,6 +234,7 @@ public:
       Transform* t = _pHolding->getTransform();
       t->_position = transform->_position + transform->front() * 3.0f;
     }
+
 
 #define CAMERA_REVOLVE 0
 #if CAMERA_REVOLVE > 0

@@ -308,7 +308,7 @@ public:
       //gRenderer().SetSkyboxCubeMap(cubemap1);
       //gRenderer().usePreRenderSkyboxMap(true);
       //gRenderer().setGlobalLightProbe(&otherLightProbe);
-      gRenderer().setGlobalLightProbe(nullptr);
+      gRenderer().setGlobalLightProbe(&otherLightProbe);
       gRenderer().usePreRenderSkyboxMap(false);
     }
   }
@@ -454,7 +454,7 @@ int main(int c, char* argv[])
   }
 
   // Model Loading.
-  ModelLoader::load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
+  //ModelLoader::load(RTEXT("Assets/DamagedHelmet/DamagedHelmet.gltf"));
   //ModelLoader::load(RTEXT("Assets/BoomBox/BoomBox.gltf"));
   //ModelLoader::load(RTEXT("Assets/Lantern/lantern.gltf"));
   ModelLoader::load(RTEXT("Assets/Lantern2/Lantern.gltf"));
