@@ -46,12 +46,12 @@ void PhysicsComponent::update()
       for (auto pCol : colliders) {
         Collider* coll = pCol;
         coll->update();
-        BasicDebugRenderCmd rC = coll->GetRenderCmd();
+        BasicDebugRenderCmd rC = coll->getRenderCmd();
         gRenderer().pushMeshRender(rC);
       }
     } else {
       m_pRigidBody->_collider->update();
-      BasicDebugRenderCmd rC = m_pRigidBody->_collider->GetRenderCmd();
+      BasicDebugRenderCmd rC = m_pRigidBody->_collider->getRenderCmd();
       gRenderer().pushMeshRender(rC);
     }
   }
@@ -88,7 +88,7 @@ void PhysicsComponent::updateFromGameObject()
   gPhysics().setTransform(m_pRigidBody, 
     m_pRigidBody->_position, 
     m_pRigidBody->_rotation);
-  if (m_updateBits & PHYSICS_UPDATE_ALL) 
+  if (m_updateBits & PHYSICS_UPDATE_ALL)
     gPhysics().updateRigidBody(m_pRigidBody, m_updateBits);
   m_updateBits = PHYSICS_UPDATE_NONE;
 }
@@ -152,6 +152,13 @@ void PhysicsComponent::setSpinningFriction(r32 friction)
   // gPhysics().setSpinningFriction(m_pRigidBody, friction);
   m_pRigidBody->_spinningFriction = friction;
   m_updateBits |= PHYSICS_UPDATE_SPINNING_FRICTION;
+}
+
+
+void PhysicsComponent::setLinearVelocity(const Vector3& velocity)
+{
+  m_pRigidBody->_desiredVelocity = velocity;
+  m_updateBits |= PHYSICS_UPDATE_LINEAR_VELOCITY;
 }
 
 

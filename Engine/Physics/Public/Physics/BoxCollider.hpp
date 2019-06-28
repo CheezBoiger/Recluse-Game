@@ -21,7 +21,7 @@ public:
   static void InitMeshDebugData();
   static void CleanUpMeshDebugData();
 
-  MeshData* GetDebugMeshData() override { return kBoxMesh; }
+  MeshData* getDebugMeshData() override { return kBoxMesh; }
 #endif
   void      SetExtent(const Vector3& e) { m_extent= e; SetDirty(); }
   Vector3   GetExtent() const { return m_extent; }

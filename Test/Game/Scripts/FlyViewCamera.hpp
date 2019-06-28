@@ -247,6 +247,39 @@ public:
 #endif
   }
 
+  void onCollisionEnter(Collision* other) override
+  {
+    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
+    if (cube) {
+      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
+      Log() << "enter CubeObject\n";
+    }
+  }
+
+  void onCollisionExit(Collision* other) override
+  {
+    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
+    if (cube) {
+      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 1.0f, 1.0f));
+      m_pPhysicsComponent->setLinearVelocity(Vector3());
+      m_pPhysicsComponent->clearForces();
+      //Log() << "exit CubeObject\n";
+    } else {
+      m_pPhysicsComponent->clearForces();
+      m_pPhysicsComponent->setLinearVelocity(Vector3());
+      //Log() << "Stop.\n";
+    }
+  }
+
+
+  void onCollisionStay(Collision* other) override
+  {
+    //Log() << "Collision stay\n";
+    m_pPhysicsComponent->setLinearVelocity(Vector3(m_pPhysicsComponent->getRigidBody()->_velocity.x,
+                                           0.0f,
+                                           m_pPhysicsComponent->getRigidBody()->_velocity.z));
+  }
+
   void onCleanUp() override 
   {
     m_pPhysicsComponent->cleanUp();

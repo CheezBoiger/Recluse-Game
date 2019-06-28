@@ -39,6 +39,7 @@ public:
   //void SetRelativeOffset(const Vector3& offset);
   void            applyForce(const Vector3& force);
   void            setGravity(const Vector3& gravity);
+  void            setLinearVelocity(const Vector3& velocity);
   void            clearForces();
 
   // Reset this physics body. Clears existing velocity and forces applied to this object.

@@ -33,11 +33,11 @@ public:
 
   virtual ~PhysicsObject() { }
 
-  physics_uuid_t                GetUUID() const { return m_uuid; }
+  physics_uuid_t                getUUID() const { return m_uuid; }
 
-  virtual MeshData*  GetDebugMeshData() { return nullptr;  }
+  virtual MeshData*  getDebugMeshData() { return nullptr;  }
 
-  virtual BasicDebugRenderCmd GetRenderCmd() { return BasicDebugRenderCmd(); }
+  virtual BasicDebugRenderCmd getRenderCmd() { return BasicDebugRenderCmd(); }
 
 private:
   physics_uuid_t                m_uuid;

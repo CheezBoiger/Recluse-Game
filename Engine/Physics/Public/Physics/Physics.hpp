@@ -89,7 +89,7 @@ public:
   virtual void                            reset(RigidBody* body) { }
   virtual void                            freeCollider(Collider* collider) { }
   virtual void                            updateRigidBody(RigidBody* body, physics_update_bits_t bits) { }
-  virtual void                            SetWorldGravity(const Vector3& gravity) { }
+  virtual void                            setWorldGravity(const Vector3& gravity) { }
 
   virtual void                            setMass(RigidBody* body, r32 mass) { }
   virtual void                            applyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) { }

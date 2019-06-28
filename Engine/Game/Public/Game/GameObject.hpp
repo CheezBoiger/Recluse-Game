@@ -66,9 +66,6 @@ public:
   // Update the object. Can be overridable from inherited classes.
   virtual void                        update(r32 tick) { }
 
-  // Dispatch an event for collision.
-  void                                dispatchCollisionEvent(Collision* collision) { onCollision(collision); }
-
 protected:
   // Wakes up the game object in the scene. First time initialization is done with this call.
   virtual void                        onStartUp() { }
@@ -78,12 +75,14 @@ protected:
 
   // On collision call. The can be overridden. 
   // other - Information of object colliding with this game object.
-  virtual void                        onCollision(Collision* other) { }
+  virtual void                        onCollisionEnter(Collision* other) { }
+  virtual void                        onCollisionExit(Collision* other) { }
+  virtual void                        onCollisionStay(Collision* other) { }
 
 
 public:
   // Puts game object to sleep. Called manually, and allows for certain components to be disabled if needed.
-  virtual void                        Sleep() { }
+  virtual void                        sleep() { }
 
   GameObject*                         GetParent() { return m_pParent; }
   GameObject*                         getChild(std::string id);
@@ -128,7 +127,21 @@ private:
   Transform                           m_transform;
   game_uuid_t                         m_id;
   b32                                 m_bStarted;
-  
+
+  // Dispatch an event for collision. For Rigid Body use.
+  void dispatchCollisionEnterEvent(Collision* collision) {
+    onCollisionEnter(collision);
+  }
+  void dispatchCollisionExitEvent(Collision* collision) {
+    onCollisionExit(collision);
+  }
+  void dispatchCollisionStayEvent(Collision* collision) {
+    onCollisionStay(collision);
+  }
+
+  friend struct RigidBody;
+  friend class Physics;
+  friend class BulletPhysics;
   friend class GameObjectManager;
   friend class Component;
   friend class Engine;

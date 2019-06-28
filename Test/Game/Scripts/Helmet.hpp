@@ -33,7 +33,7 @@ public:
   }
 
   // Testing collision callbacking.
-  void onCollision(Collision* collision) override
+  void onCollisionEnter(Collision* collision) override
   {
     GameObject* other = collision->_gameObject;
     CubeObject* cube = other->castTo<CubeObject>();

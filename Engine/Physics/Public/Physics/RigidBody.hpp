@@ -39,7 +39,6 @@ struct RigidBody : public PhysicsObject {
     , _friction(0.0f)
     , _angleFactor(Vector3::ONE)
     , _linearFactor(Vector3::ONE) { }
-  void                  InvokeCollision(Collision* body);
 
   Vector3               _velocity;
   Vector3               _position;
@@ -62,10 +61,13 @@ struct RigidBody : public PhysicsObject {
   Collider*               _collider;
 
   // forces that are cleared every update.
+  Vector3                 _desiredVelocity;
   std::vector<Vector3>    _forces;
   std::vector<Vector3>    _impulses;
   std::vector<Vector3>    _forceRelativePositions;
   std::vector<Vector3>    _impulseRelativePositions;
+
+public:
   friend class Physics;
 };
 } // Recluse

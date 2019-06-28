@@ -59,9 +59,11 @@ public:
   void                  setRollingFriction(RigidBody* body, r32 friction) override;
   void                  setSpinningFriction(RigidBody* body, r32 friction) override;
 
-  void                  SetWorldGravity(const Vector3& gravity) override;
+  void                  setWorldGravity(const Vector3& gravity) override;
   void                  clearForces(RigidBody* body) override;
   void                  addCollider(RigidBody* body, Collider* collider) override;
+  void                  invokeCollisions(RigidBody* pRigidBody, Collision* pCollision);
+  void                  updateCollisions();
 
   void                  setTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) override;
   b32                   rayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) override;

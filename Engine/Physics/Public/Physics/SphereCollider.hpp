@@ -24,7 +24,7 @@ public:
   static void InitMeshDebugData();
   static void CleanUpMeshDebugData();
 
-  MeshData* GetDebugMeshData() override { return kSphereMesh; }
+  MeshData* getDebugMeshData() override { return kSphereMesh; }
 
 private:
   r32 m_radius;
