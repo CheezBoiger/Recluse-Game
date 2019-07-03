@@ -109,8 +109,15 @@ struct PrimitiveRenderCmd {
 };
 
 
-struct BasicDebugRenderCmd : public MeshRenderCmd {
-  Vector4                 _color;
+struct SimpleRenderCmd {
+  MeshData* _pMeshData;
+  Primitive* _pPrimitive;
+  JointDescriptor* _pJointDesc;
+  struct PushConst {
+    Matrix4   _model;
+    Vector4   _hasJoints;
+    Vector4   _color;
+  } _info;
 };
 
 

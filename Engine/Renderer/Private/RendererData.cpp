@@ -196,6 +196,9 @@ FrameBuffer*       envMap_frameBuffer = nullptr;
 RenderPass*        envMap_renderPass = nullptr;
 Texture*           envMap_texture = nullptr;
 
+GraphicsPipeline* debug_wireframePipelineStatic = nullptr;
+GraphicsPipeline* debug_wireframePipelineAnim = nullptr;
+
 // Default entry point on shaders.
 char const* kDefaultShaderEntryPointStr = "main";
 
@@ -1638,15 +1641,27 @@ void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
 void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 {
   Texture* pbrFinal = pbr_FinalTextureKey;
-  std::array<VkAttachmentDescription, 1> attachments;
+  Texture* depthFinal = gbuffer_DepthAttachKey;
+  std::array<VkAttachmentDescription, 2> attachments;
+  attachments[0] = { };
   attachments[0].format = pbrFinal->Format();
-  attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-  attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+  attachments[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
   attachments[0].samples = pbrFinal->Samples();
-  attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+  attachments[1] = { };
+  attachments[1].format = depthFinal->Format();
+  attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+  attachments[1].samples = depthFinal->Samples();
+  attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
   std::array<VkAttachmentReference, 1> refs;
   refs[0].attachment = 0;
@@ -1663,12 +1678,36 @@ void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
   debugSubpass.pDepthStencilAttachment = &depthRef;
   debugSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
+  VkSubpassDependency dependencies[2];
+
+  dependencies[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL, 
+    VK_ACCESS_MEMORY_WRITE_BIT, 
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    0, 
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, 
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependencies[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_WRITE_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
   VkRenderPassCreateInfo rpCi = { };
   rpCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   rpCi.attachmentCount = static_cast<u32>(attachments.size());
   rpCi.pAttachments = attachments.data();
   rpCi.pSubpasses = &debugSubpass;
   rpCi.subpassCount = 1;
+  rpCi.dependencyCount = 2;
+  rpCi.pDependencies = dependencies;
 
   m_renderPass = pRhi->createRenderPass();
   m_renderPass->initialize(rpCi);
@@ -1678,7 +1717,7 @@ void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 void DebugManager::initialize(VulkanRHI* pRhi)
 {
   initializeRenderPass(pRhi);
-
+  createPipelines(pRhi);
 }
 
 
@@ -1688,5 +1727,58 @@ void DebugManager::cleanUp(VulkanRHI* pRhi)
     pRhi->freeRenderPass(m_renderPass);
     m_renderPass = nullptr;
   }
+
+  if (m_staticWireframePipeline) {
+    pRhi->freeGraphicsPipeline(m_staticWireframePipeline);
+    m_staticWireframePipeline = nullptr;
+  }
+}
+
+
+
+void DebugManager::createPipelines(VulkanRHI* pRhi)
+{
+  m_staticWireframePipeline = pRhi->createGraphicsPipeline();
+  VkGraphicsPipelineCreateInfo ci = { };
+  ci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+  VkPipelineInputAssemblyStateCreateInfo assem = { };
+  assem.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  assem.primitiveRestartEnable = VK_FALSE;
+  assem.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+  VkPipelineVertexInputStateCreateInfo input = { };
+  input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO; 
+
+  VkPipelineRasterizationStateCreateInfo rast = { };
+  rast.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+
+  VkPipelineDepthStencilStateCreateInfo ds = { };
+  ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  ds.depthTestEnable = VK_TRUE;
+  ds.depthWriteEnable = VK_TRUE;
+  ds.maxDepthBounds = 1.0f;
+  ds.minDepthBounds = 0.0f;
+  ds.stencilTestEnable = VK_FALSE;
+  ds.depthBoundsTestEnable = VK_TRUE;
+  ds.depthCompareOp = VK_COMPARE_OP_LESS;
+
+  ci.renderPass = m_renderPass->getHandle();
+  ci.pRasterizationState = &rast;
+  ci.pVertexInputState = &input;
+  ci.pInputAssemblyState = &assem;
+  ci.pDepthStencilState = &ds;
+
+  ci.stageCount = 2;  
+
+}
+
+
+void DebugManager::RecordDebugCommands(VulkanRHI* pRhi,
+                                       CommandBuffer* pBuf,
+                                       SimpleRenderCmd* renderCmds,
+                                       u32 count)
+{
+
 }
 } // Recluse

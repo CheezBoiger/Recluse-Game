@@ -47,6 +47,7 @@ class TextureCubeArray;
 class TextureSampler;
 class UIOverlay;
 class Fence;
+class DebugManager;
 class RenderObject;
 class SkinnedRenderObject;
 class AntiAliasingFXAA;
@@ -221,6 +222,7 @@ public:
 
   // Push mesh to render.
   void pushMeshRender(MeshRenderCmd& cmd);
+  void pushSimpleRender(SimpleRenderCmd& cmd);
   void pushParticleSystem(ParticleSystem* system);
   void pushPointLight(const PointLight& lightInfo);
   void pushSpotLight(const SpotLight& lightInfo);
@@ -343,6 +345,7 @@ private:
   CmdList<PrimitiveRenderCmd>            m_forwardCmdList;
   CmdList<PrimitiveRenderCmd>            m_staticCmdList;
   CmdList<PrimitiveRenderCmd>            m_dynamicCmdList;
+  CmdList<SimpleRenderCmd>                m_debugRenderCmd;
 
   CmdList<JointDescriptor*>         m_jointDescriptors;
   CmdList<MeshDescriptor*>          m_meshDescriptors;
@@ -410,6 +413,7 @@ private:
   ParticleEngine*       m_particleEngine;
   HDR*                  m_pHDR;
   SkyRenderer*          m_pSky;
+  DebugManager*         m_pDebugManager;
   BakeIBL*              m_pBakeIbl;
   GlobalIllumination*   m_pGlobalIllumination;
   AntiAliasingFXAA*     m_pAntiAliasingFXAA;

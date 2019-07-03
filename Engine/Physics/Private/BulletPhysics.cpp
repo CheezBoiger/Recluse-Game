@@ -451,6 +451,9 @@ b32 BulletPhysics::rayTest(const Vector3& origin, const Vector3& direction, cons
   output->_normal = Vector3(hit.m_hitNormalWorld.x(),
                             hit.m_hitNormalWorld.y(),
                             hit.m_hitNormalWorld.z());
+  output->_worldHit = Vector3(hit.m_hitPointWorld.x(),
+                              hit.m_hitPointWorld.y(),
+                              hit.m_hitPointWorld.z());
   hit.m_closestHitFraction;
   return true;
 }

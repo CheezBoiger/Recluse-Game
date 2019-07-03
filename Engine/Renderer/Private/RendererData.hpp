@@ -6,7 +6,6 @@
 #include "RHI/VulkanRHI.hpp"
 #include "UserParams.hpp"
 
-
 #include <array>
 
 #define GBUFFER_ALBEDO_FORMAT             VK_FORMAT_R8G8B8A8_UNORM
@@ -38,6 +37,8 @@ class GlobalDescriptor;
 class Buffer;
 class HDR;
 
+struct SimpleRenderCmd;
+
 // Get our view matrices.
 // Index                Face
 // 0                    POSITIVE_X
@@ -58,17 +59,20 @@ extern VkImageView DefaultTexture2DArrayView;
 // This allows drawing lines, shapes, or anything that 
 // may be needed to debug the renderer.
 extern GraphicsPipeline*  debug_linePipeline;
-extern GraphicsPipeline*  debug_wireframePipeline;
+extern GraphicsPipeline* debug_wireframePipelineStatic;
+extern GraphicsPipeline* debug_wireframePipelineAnim;
 extern RenderPass*        debug_renderPass;
 
 extern GraphicsPipeline* ShadowMapPipelineKey;
 extern GraphicsPipeline* shadowMap_staticMorphTargetsPipeline;
 extern GraphicsPipeline* DynamicShadowMapPipelineKey;
 extern GraphicsPipeline*  shadowMap_dynamicMorphTargetPipeline;
+
 extern std::string ShadowMapVertFileStr;
 extern std::string ShadowMapFragFileStr;
 extern std::string ShadowMapFragOpaqueFileStr;
 extern std::string DynamicShadowMapVertFileStr;
+
 extern DescriptorSetLayout* LightViewDescriptorSetLayoutKey;
 extern DescriptorSetLayout* globalIllumination_DescLR;
 extern DescriptorSetLayout* globalIllumination_DescNoLR;
@@ -82,7 +86,9 @@ extern GraphicsPipeline* gbuffer_PipelineKey;
 extern GraphicsPipeline* gbuffer_morphTargetPipeline;
 extern GraphicsPipeline* gbuffer_staticMorphTargetPipeline;
 extern GraphicsPipeline* gbuffer_StaticPipelineKey;
+
 extern DescriptorSetLayout* gbuffer_LayoutKey;
+
 extern Texture* gbuffer_AlbedoAttachKey;
 extern Texture* gbuffer_NormalAttachKey;
 extern Texture* gbuffer_PositionAttachKey;
@@ -214,6 +220,14 @@ enum GraphicsPipelineT {
   GRAPHICS_PIPELINE_GBUFFER_STATIC_NO_LR,
   GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_LR,
   GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_NO_LR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_LR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_NOLR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_LR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_NOLR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_MORPH_LR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_MORPH_NOLR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_LR,
+  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_NOLR,
   GRAPHICS_PIPELINE_PBR_DEFERRED,
   GRAPHICS_PIPELINE_PBR_FORWARD,
   GRAPHICS_PIPELINE_HDR,
@@ -340,18 +354,24 @@ public:
   void                initialize(VulkanRHI* pRhi);
   void                cleanUp(VulkanRHI* pRhi);
 
+
+  void RecordDebugCommands(VulkanRHI* pRhi, 
+                           CommandBuffer* pBuf, 
+                           SimpleRenderCmd* renderCmds, 
+                           u32 count);
+
   RenderPass*         GetRenderPass() { return m_renderPass; }
   GraphicsPipeline*   GetWireFrameStaticPipeline() { }
   GraphicsPipeline*   GetWireFrameDynamicPipeline() { }
 
 private:
   void                initializeRenderPass(VulkanRHI* pRhi);
+  void                createPipelines(VulkanRHI* pRhi);
+
   // Simple renderer pipeline requires no material information, 
   // is not shaded with shadow, and has no ibl. For debugging purposes.
   GraphicsPipeline*  m_staticWireframePipeline;
-  GraphicsPipeline*  m_staticSolidPipeline;
   GraphicsPipeline*  m_dynamicWireframePipeline;
-  GraphicsPipeline*  m_dynamicSolidPipeline;
   RenderPass*        m_renderPass;
 };
 } // Recluse

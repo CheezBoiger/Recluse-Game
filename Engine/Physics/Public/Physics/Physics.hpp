@@ -32,6 +32,7 @@ struct RayTestHit {
   Collider*  _collider;
   
   Vector3   _normal;
+  Vector3   _worldHit;
 };
 
 

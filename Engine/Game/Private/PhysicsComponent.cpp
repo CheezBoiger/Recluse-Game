@@ -46,13 +46,13 @@ void PhysicsComponent::update()
       for (auto pCol : colliders) {
         Collider* coll = pCol;
         coll->update();
-        BasicDebugRenderCmd rC = coll->getRenderCmd();
-        gRenderer().pushMeshRender(rC);
+        SimpleRenderCmd rC = coll->getRenderCmd();
+        gRenderer().pushSimpleRender(rC);
       }
     } else {
       m_pRigidBody->_collider->update();
-      BasicDebugRenderCmd rC = m_pRigidBody->_collider->getRenderCmd();
-      gRenderer().pushMeshRender(rC);
+      SimpleRenderCmd rC = m_pRigidBody->_collider->getRenderCmd();
+      gRenderer().pushSimpleRender(rC);
     }
   }
 }

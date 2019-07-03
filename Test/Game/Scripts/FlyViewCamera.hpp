@@ -31,6 +31,61 @@ struct CameraTransition {
 };
 
 
+class TempExplosion : public GameObject {
+public:
+  TempExplosion()
+    : m_outOfLife(true)
+    , m_pTempLight(nullptr)
+    , currLife(0.0f) { }
+
+  void onStartUp() override
+  {
+    if (!m_outOfLife) {
+      return;
+    }
+    m_pTempLight = new PointLightComponent();
+    m_pTempLight->initialize(this);
+    m_pTempLight->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+    m_pTempLight->setIntensity(32.0f);
+    m_pTempLight->setRange(16.0f);
+    m_outOfLife = false;
+    currLife = 0.5f;
+  }
+
+  
+  void update(r32 tick) override 
+  {
+    if (m_outOfLife) {
+      return;
+    }
+    currLife -= 1.0f * tick;
+    if (currLife <= 0.0f) {
+      m_pTempLight->enable(false);
+      m_outOfLife = true;
+    }
+
+    if (m_outOfLife) {
+      cleanUp();
+    }
+  }
+
+  b32 isOutOfLife() const { return m_outOfLife; }
+
+
+  void onCleanUp() override
+  {
+    m_pTempLight->cleanUp();
+    delete m_pTempLight;
+    m_pTempLight = nullptr;
+  }
+
+private:
+  PointLightComponent* m_pTempLight;
+  r32 currLife;
+  b32 m_outOfLife;
+};
+
+
 // Main camera is an object in the scene.
 class MainCamera : public GameObject
 {
@@ -44,7 +99,6 @@ public:
     , m_constrainPitch(Radians(90.0f))
     , m_lastX(0.0f)
     , m_lastY(0.0f)
-    , m_speed(5.0f)
     , _pHolding(nullptr)
   {
   }
@@ -67,16 +121,6 @@ public:
     m_yaw = euler.y;
     m_roll = euler.z;
 
-    // Anything in contact with this flying camera will get pushed aside.
-    m_pCollider = gPhysics().createBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
-    m_pPhysicsComponent = new PhysicsComponent();
-    m_pPhysicsComponent->initialize(this);
-    m_pPhysicsComponent->addCollider(m_pCollider);
-    m_pPhysicsComponent->setAngleFactor(Vector3(0.0f, 1.0f, 0.0f));
-
-    bFollow = false;
-    m_pPhysicsComponent->setMass(1.0f);
-
     m_pSpotLight = new SpotLightComponent();
     m_pSpotLight->initialize(this);
     m_pSpotLight->setOuterCutoff(cosf(Radians(25.0f)));
@@ -92,6 +136,7 @@ public:
     m_pSpotLight2->setColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
     m_pSpotLight2->setIntensity(2.0f);
     m_pSpotLight2->setOffset(Vector3(-0.5f, -0.5f, 0.0f));
+
     pCam->enableFilmGrain(true);
     pCam->setFilmGrainSpeed(50.0f);
   }
@@ -115,15 +160,6 @@ public:
       //pCam->setExposure(pCam->getExposure() + 2.0f * (r32)Time::deltaTime);
       m_pSpotLight->setEnable(true);
       m_pSpotLight2->setEnable(true);
-    }
-
-    if (!bFollow) {
-      r32 speed = m_speed;
-      if (Keyboard::KeyPressed(KEY_CODE_LSHIFT)) { speed *= 5.0f; }
-      if (Keyboard::KeyPressed(KEY_CODE_A)) { transform->_position -= transform->right() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_D)) { transform->_position += transform->right() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_W)) { transform->_position += transform->front() * speed * tick; }
-      if (Keyboard::KeyPressed(KEY_CODE_S)) { transform->_position -= transform->front() * speed * tick; }
     }
 
     // Test window resizing.
@@ -187,17 +223,16 @@ public:
 
       m_yaw += xoffset;
       m_pitch += yoffset;
-      if (m_pitch < -Radians(270.0f)) {
-        m_pitch = -Radians(270.0f);
+      if (m_pitch < -Radians(269.5f)) {
+        m_pitch = -Radians(269.5f);
       }
-      if (m_pitch > -Radians(90.0f)) {
-        m_pitch = -Radians(90.0f);
+      if (m_pitch > -Radians(90.5f)) {
+        m_pitch = -Radians(90.5f);
       }
     }
+
     Vector3 euler = Vector3(m_pitch, m_yaw, m_roll);
-    if (!bFollow) {
-      transform->_rotation = Quaternion::eulerAnglesToQuaternion(euler);
-    }
+    transform->_rotation = Quaternion::eulerAnglesToQuaternion(euler);
 
     // Must update the camera manually, as it may need to be updated before other game logic.
     // Update before ray picking.
@@ -214,6 +249,9 @@ public:
     if (Mouse::buttonDown(Mouse::LEFT)) {
       RayTestHit hitOut;
       if (gPhysics().rayTest(transform->_position, transform->front(), 50.0f, &hitOut)) {
+        m_temp.getTransform()->_position = hitOut._worldHit;
+        m_temp.start();
+
         GameObject* obj = hitOut._rigidbody->_gameObj;
         Item* item = obj->castTo<Item>();
         if (item) {
@@ -221,7 +259,10 @@ public:
           item->GetPhysicsComponent()->setMass(0.0f);
         }
       }
+
     }
+
+    m_temp.update(tick);
 
     if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
@@ -247,46 +288,11 @@ public:
 #endif
   }
 
-  void onCollisionEnter(Collision* other) override
-  {
-    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
-    if (cube) {
-      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
-      Log() << "enter CubeObject\n";
-    }
-  }
-
-  void onCollisionExit(Collision* other) override
-  {
-    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
-    if (cube) {
-      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 1.0f, 1.0f));
-      m_pPhysicsComponent->setLinearVelocity(Vector3());
-      m_pPhysicsComponent->clearForces();
-      //Log() << "exit CubeObject\n";
-    } else {
-      m_pPhysicsComponent->clearForces();
-      m_pPhysicsComponent->setLinearVelocity(Vector3());
-      //Log() << "Stop.\n";
-    }
-  }
-
-
-  void onCollisionStay(Collision* other) override
-  {
-    //Log() << "Collision stay\n";
-    m_pPhysicsComponent->setLinearVelocity(Vector3(m_pPhysicsComponent->getRigidBody()->_velocity.x,
-                                           0.0f,
-                                           m_pPhysicsComponent->getRigidBody()->_velocity.z));
-  }
-
   void onCleanUp() override 
   {
-    m_pPhysicsComponent->cleanUp();
     m_pSpotLight->cleanUp();
     m_pSpotLight2->cleanUp();
-    delete m_pPhysicsComponent;
-    delete m_pCollider;
+
     delete m_pSpotLight;
     delete m_pSpotLight2;
   }
@@ -302,17 +308,137 @@ private:
   r32     m_yaw;
   r32     m_roll;
   r32     m_constrainPitch;
-  r32     m_speed;
 #if CAMERA_REVOLVE > 0
   r32     t = 0.0f;
 #endif
-  PhysicsComponent* m_pPhysicsComponent;
   SpotLightComponent* m_pSpotLight;
   SpotLightComponent* m_pSpotLight2;
-
-  Collider*         m_pCollider;
+  TempExplosion   m_temp;
   b32               bFollow;
   // Object to hold on to.
   Item*             _pHolding;
   Transform         oldTransform;
+};
+
+
+
+class Mover : public GameObject {
+  R_GAME_OBJECT(Mover);
+public:
+  MainCamera* pMainCam;
+
+  Mover()
+    : m_speed(5.0f)
+    , pMainCam(nullptr)
+    , m_jumping(false) { }
+
+  void onStartUp() {
+    // Anything in contact with this flying camera will get pushed aside.
+    m_pCollider = gPhysics().createBoxCollider(Vector3(1.0f, 1.0f, 1.0f));
+    m_pPhysicsComponent = new PhysicsComponent();
+    m_pPhysicsComponent->initialize(this);
+    m_pPhysicsComponent->addCollider(m_pCollider);
+    m_pPhysicsComponent->setAngleFactor(Vector3(0.0f, 1.0f, 0.0f));
+    m_pPhysicsComponent->setFriction(2.0f);
+
+    bFollow = false;
+    m_pPhysicsComponent->setMass(1.0f);
+  }
+
+  void update(r32 tick) override {
+    Transform* transform = getTransform();
+    r32 speed = m_speed;
+    Vector3 f = transform->front();
+    Vector3 r = transform->right();
+
+    if (m_pPhysicsComponent->getRigidBody()->_velocity.y == 0.0f) {
+      m_jumping = false;
+    }
+
+    // Use main camera's rotations, based on where user is looking.
+    if (pMainCam) {
+      Transform* camTransform = pMainCam->getTransform();
+      camTransform->_position = transform->_position;
+      f = camTransform->front();
+      r = camTransform->right();
+    }
+
+    f.y = 0.0f;
+    f = f.normalize();
+
+    if (Keyboard::KeyPressed(KEY_CODE_LSHIFT)) {
+      speed *= 5.0f;
+    }
+    if (Keyboard::KeyPressed(KEY_CODE_A)) {
+      transform->_position -= r * speed * tick;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_D)) {
+      transform->_position += r * speed * tick;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_W)) {
+      transform->_position += f * speed * tick;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_S)) {
+      transform->_position -= f * speed * tick;
+    }
+
+    if (Keyboard::KeyPressed(KEY_CODE_SPACE)) {
+      if (!m_jumping) {
+        m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
+        m_pPhysicsComponent->applyImpulse(Vector3(0.0f, 10.0f, 0.0f),
+                                          Vector3());
+        m_jumping = true;
+      }
+    }
+  }
+
+
+  void onCleanUp() override {
+    m_pPhysicsComponent->cleanUp();
+    delete m_pPhysicsComponent;
+    delete m_pCollider;
+  }
+
+  void onCollisionEnter(Collision* other) override {
+    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
+    if (cube) {
+      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
+      m_pPhysicsComponent->setLinearVelocity(Vector3());
+      m_pPhysicsComponent->clearForces();
+      m_jumping = false;
+      Log() << "enter CubeObject\n";
+    }
+  }
+
+  void onCollisionExit(Collision* other) override {
+    CubeObject* cube = other->_gameObject->castTo<CubeObject>();
+    if (cube) {
+      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 1.0f, 1.0f));
+      // m_pPhysicsComponent->setLinearVelocity(Vector3());
+      // m_pPhysicsComponent->clearForces();
+      Log() << "exit CubeObject\n";
+    } else {
+       m_pPhysicsComponent->clearForces();
+       m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, m_pPhysicsComponent->getRigidBody()->_velocity.y, 0.0f));
+      // Log() << "Stop.\n";
+    }
+  }
+
+  void onCollisionStay(Collision* other) override {
+    // Log() << "Collision stay\n";
+    //m_pPhysicsComponent->setLinearVelocity(
+    //    Vector3(0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.x*/, 
+    //            0.0f,
+    //            0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.z*/));
+  }
+
+private:
+  PhysicsComponent* m_pPhysicsComponent;
+  Collider* m_pCollider;
+  b8 m_jumping;
+  b8 bFollow;
+  r32 m_speed;
 };

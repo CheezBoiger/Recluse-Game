@@ -37,7 +37,7 @@ public:
 
   virtual MeshData*  getDebugMeshData() { return nullptr;  }
 
-  virtual BasicDebugRenderCmd getRenderCmd() { return BasicDebugRenderCmd(); }
+  virtual SimpleRenderCmd getRenderCmd() { return SimpleRenderCmd(); }
 
 private:
   physics_uuid_t                m_uuid;

@@ -78,6 +78,7 @@ Renderer::Renderer()
   , m_particleEngine(nullptr)
   , m_usePreRenderSkybox(false)
   , m_pBakeIbl(nullptr)
+  , m_pDebugManager(nullptr)
 {
   m_HDR._Enabled = true;
   m_Downscale._Horizontal = 0;
@@ -400,6 +401,9 @@ void Renderer::cleanUp()
   // Must wait for all command buffers to finish before cleaning up.
   m_pRhi->deviceWaitIdle();
 
+  m_pDebugManager->cleanUp(m_pRhi);
+  delete m_pDebugManager;
+  m_pDebugManager = nullptr;
 
   m_pAntiAliasingFXAA->cleanUp(m_pRhi);
   delete m_pAntiAliasingFXAA;
@@ -535,6 +539,9 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   m_particleEngine = new ParticleEngine();
   m_particleEngine->initialize(m_pRhi);
+
+  m_pDebugManager = new DebugManager();
+  m_pDebugManager->initialize(m_pRhi);
 
   {
     u32 vendorId = m_pRhi->vendorID();
@@ -4847,5 +4854,11 @@ void Renderer::pushPointLight(const PointLight& lightInfo)
 void Renderer::pushSpotLight(const SpotLight& lightInfo)
 {
   m_spotLights.pushBack(lightInfo);
+}
+
+
+void Renderer::pushSimpleRender(SimpleRenderCmd& cmd)
+{
+
 }
 } // Recluse

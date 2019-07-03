@@ -201,10 +201,14 @@ public:
     lantern = new LanternObject();
     monster = new Monster();
     mainCam = new MainCamera();
+    mover = new Mover();
+    mover->pMainCam = mainCam;
 
     getRoot()->addChild(mainCam);
     getRoot()->addChild(acube);
+    getRoot()->addChild(mover);
     mainCam->start();
+    mover->start();
 
     for (u32 i = 0; i < kMaxCount; ++i) {
       helmets.push_back(new HelmetObject());
@@ -285,6 +289,7 @@ public:
 
   // Update function call. Called very loop iteration.
   void update(r32 tick) override {
+    mover->update(tick);
     mainCam->update(tick);
     lantern->update(tick);
     cube->update(tick);
@@ -362,6 +367,7 @@ private:
   LightProbe                              otherLightProbe;
   Monster*                                monster;
   MainCamera*                             mainCam;
+  Mover*                                  mover;
 };
 
 

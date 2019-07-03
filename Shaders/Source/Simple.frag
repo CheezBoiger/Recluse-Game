@@ -22,7 +22,7 @@ layout (set = 0, binding = 0) uniform Globals {
 } gWorldBuffer;
 
 layout (push_constant) uniform PushConst {
-  vec4 color;
+  layout (offset = 80) vec4 color;
 } pushInfo;
 
 

@@ -46,6 +46,7 @@ class Transform;
             uuid64 uuid = getUID(); \
             auto it = _k##cls##s.find(uuid); \
             if (it != _k##cls##s.end()) { \
+              _k##cls##s.erase(it); \
             } \
           } \
         }
