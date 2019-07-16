@@ -131,8 +131,7 @@ public:
                             ShadowMapSystem();
                             ~ShadowMapSystem();
 
-  void                      initialize(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail, 
-                              b32 staticSoftShadows = true, b32 dynamicSoftShadows = true);
+  void                      initialize(VulkanRHI* pRhi, const GraphicsConfigParams* pParams);
   
   void                      cleanUp(VulkanRHI* pRhi);
 
@@ -279,7 +278,8 @@ public:
   void update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIndex);
 
   // Initialize. 
-  void initialize(VulkanRHI* pRhi, GraphicsQuality shadowDetail, b32 enableSoftShadows = true);
+  void initialize(VulkanRHI* pRhi, const GraphicsConfigParams* params);
+  void checkBuffering(VulkanRHI* pRhi, const GraphicsConfigParams* params);
 
   // Cleanup.
   void cleanUp(VulkanRHI* pRhi);

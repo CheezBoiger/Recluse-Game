@@ -59,13 +59,13 @@ void IndexBuffer::initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer->Begin(beginInfo);
+  cmdBuffer->begin(beginInfo);
   VkBufferCopy region = {};
   region.size = sizeType * indexCount;
   region.srcOffset = 0;
   region.dstOffset = 0;
-  cmdBuffer->CopyBuffer(stagingBuffer->getNativeBuffer(), mBuffer->getNativeBuffer(), 1, &region);
-  cmdBuffer->End();
+  cmdBuffer->copyBuffer(stagingBuffer->getNativeBuffer(), mBuffer->getNativeBuffer(), 1, &region);
+  cmdBuffer->end();
 
   VkCommandBuffer cmd = cmdBuffer->getHandle();
   VkSubmitInfo submitInfo = {};

@@ -82,6 +82,11 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
 
 void MeshDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 {
+  if (pRhi->bufferingCount() != m_pGpuHandles.size()) {
+    cleanUp(pRhi);
+    initialize(pRhi);
+  }
+
   // Mesh
   Buffer* pBuf = m_pGpuHandles[frameIndex]._pBuf;
   DescriptorSet* pSet = m_pGpuHandles[frameIndex]._pSet;
@@ -182,6 +187,11 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
 
 void JointDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 {
+  if (pRhi->bufferingCount() != m_pJointHandles.size()) {
+    cleanUp(pRhi);
+    initialize(pRhi);
+  }
+
   UpdateManager& m = m_pJointHandles[frameIndex];
   u32 updates = m._updates;
   Buffer* pBuf = m._pBuf;

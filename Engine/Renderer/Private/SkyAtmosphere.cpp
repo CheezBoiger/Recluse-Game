@@ -536,7 +536,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     VkCommandBufferBeginInfo begin = { };
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    cmdBuffer->Begin(begin);
+    cmdBuffer->begin(begin);
   }
   
     VkClearValue colorClear;
@@ -587,7 +587,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     imgMemBarrier.image = m_pCubeMap->Image();
 
     // set the cubemap image layout for transfer from our framebuffer.
-    cmdBuffer->PipelineBarrier(
+    cmdBuffer->pipelineBarrier(
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       0, 
@@ -600,16 +600,16 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     //   render 
     //   Copy to cubemap face.
     for (size_t face = 0; face < 6; ++face) {
-      cmdBuffer->BeginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
-        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
+      cmdBuffer->beginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
+        cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
         viewerConsts._InvView = kViewMatrices[face].transpose();
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->getLayout(), 0, 1, &globalDesc, 0, nullptr);
-        cmdBuffer->PushConstants(m_pPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
+        cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->getLayout(), 0, 1, &globalDesc, 0, nullptr);
+        cmdBuffer->pushConstants(m_pPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);
         
-        cmdBuffer->BindVertexBuffers(0, 1, &vertexbuf, &offsets);
-        cmdBuffer->BindIndexBuffer(indexbuf, 0, indexType);
-        cmdBuffer->DrawIndexed(indexCount, 1, 0, 0, 0);
-      cmdBuffer->EndRenderPass();
+        cmdBuffer->bindVertexBuffers(0, 1, &vertexbuf, &offsets);
+        cmdBuffer->bindIndexBuffer(indexbuf, 0, indexType);
+        cmdBuffer->drawIndexed(indexCount, 1, 0, 0, 0);
+      cmdBuffer->endRenderPass();
     
       // TODO(): Perform copy to cubemap, here.
       // Barriers will be needed.
@@ -627,7 +627,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       imgMemBarrier.subresourceRange = subRange;
 
       // transfer color attachment to transfer.
-      cmdBuffer->PipelineBarrier(
+      cmdBuffer->pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0,
@@ -653,7 +653,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       imgCopy.extent.height = kTextureSize;
       imgCopy.extent.depth = 1;
 
-      cmdBuffer->CopyImage(
+      cmdBuffer->copyImage(
         m_RenderTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
         m_pCubeMap->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
         1, &imgCopy
@@ -664,7 +664,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       imgMemBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-      cmdBuffer->PipelineBarrier(
+      cmdBuffer->pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0, 
@@ -686,7 +686,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     imgMemBarrier.image = m_pCubeMap->Image();
     imgMemBarrier.subresourceRange = subRange;
     
-    cmdBuffer->PipelineBarrier(
+    cmdBuffer->pipelineBarrier(
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       0,
@@ -696,7 +696,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     );
     
   if (!pOutput) {
-    cmdBuffer->End();
+    cmdBuffer->end();
   }
 }
 

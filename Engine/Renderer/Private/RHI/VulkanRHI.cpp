@@ -758,7 +758,7 @@ void VulkanRHI::createSwapchainCommandBuffers(u32 set)
     cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBufferBI.flags= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-    cmdBuffer.Begin(cmdBufferBI);
+    cmdBuffer.begin(cmdBufferBI);
       VkRenderPassBeginInfo rpBI = {};
       VkClearValue clearValues[2];
 
@@ -776,7 +776,7 @@ void VulkanRHI::createSwapchainCommandBuffers(u32 set)
       if (mSwapchainCmdBufferBuild) { 
         mSwapchainCmdBufferBuild(cmdBuffer, rpBI);
       }
-    cmdBuffer.End();
+    cmdBuffer.end();
   }
   mSwapchainInfo.mComplete = true;
 }

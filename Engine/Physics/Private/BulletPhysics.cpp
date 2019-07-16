@@ -282,8 +282,8 @@ void BulletPhysics::freeRigidBody(RigidBody* body)
 void BulletPhysics::updateState(r64 dt, r64 tick)
 {
   // TODO(): Needs assert.
-  if (!bt_manager._pWorld) { return; }
-  bt_manager._pWorld->stepSimulation(btScalar(dt), 10, btScalar(tick));
+  R_ASSERT(bt_manager._pWorld, "No world to run physics sim.");
+  bt_manager._pWorld->stepSimulation(btScalar(dt), 1, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
   u32 numManifolds = pDispatcher->getNumManifolds();
 
@@ -310,9 +310,11 @@ void BulletPhysics::updateState(r64 dt, r64 tick)
 
         contactA._point = Vector3(ptB.x(), ptB.y(), ptB.z());
         contactA._distance = pt.getDistance();
+        contactA._normal = Vector3(normalOnB.x(), normalOnB.y(), normalOnB.z());
 
         contactB._point = Vector3(ptA.x(), ptA.y(), ptA.z());
         contactB._distance = pt.getDistance();
+        contactB._normal = -contactA._normal;
       }  
     }
 
@@ -322,7 +324,7 @@ void BulletPhysics::updateState(r64 dt, r64 tick)
 
     collisionOnA._gameObject = bodyB->_gameObj;
     collisionOnA._rigidBody = bodyB;
-
+    
     collisionOnB._gameObject = bodyA->_gameObj;
     collisionOnB._rigidBody = bodyA;
 

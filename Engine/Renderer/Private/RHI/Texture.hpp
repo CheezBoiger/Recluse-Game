@@ -6,6 +6,8 @@
 #include "Core/Types.hpp"
 #include "Core/Utility/Image.hpp"
 
+#include "Memory/Allocator.hpp"
+
 
 namespace Recluse {
 
@@ -51,7 +53,6 @@ public:
   Texture()
     : mView(VK_NULL_HANDLE)
     , mImage(VK_NULL_HANDLE)
-    , mMemory(VK_NULL_HANDLE)
     , mMipLevels(0)
     , mArrayLayers(0)
     , mFormat(VK_FORMAT_UNDEFINED)
@@ -67,7 +68,7 @@ public:
 
   VkImageView           getView() { return mView; }
   VkImage               Image() { return mImage; }
-  VkDeviceMemory        Memory() { return mMemory; }
+  VkDeviceMemory        Memory() { return m_allocation._deviceMemory; }
   VkFormat              Format() const { return mFormat; }
   u32                   getWidth() const { return mWidth; }
   u32                   getHeight() const { return mHeight; }
@@ -78,7 +79,7 @@ public:
 private:
   VkImageView           mView;
   VkImage               mImage;
-  VkDeviceMemory        mMemory;
+  VulkanAllocation      m_allocation;
   VkFormat              mFormat;
   VkSampleCountFlagBits mSamples;
   u32                   mWidth;

@@ -41,70 +41,70 @@ void CommandBuffer::reset(const VkCommandBufferResetFlags flags)
 }
 
 
-void CommandBuffer::Begin(const VkCommandBufferBeginInfo& beginInfo)
+void CommandBuffer::begin(const VkCommandBufferBeginInfo& beginInfo)
 {
   vkBeginCommandBuffer(mHandle, &beginInfo);
   mRecording = true;
 }
 
 
-void CommandBuffer::End()
+void CommandBuffer::end()
 {
   vkEndCommandBuffer(mHandle);
   mRecording = false;
 }
 
 
-void CommandBuffer::BeginRenderPass(const VkRenderPassBeginInfo& beginInfo, VkSubpassContents contents)
+void CommandBuffer::beginRenderPass(const VkRenderPassBeginInfo& beginInfo, VkSubpassContents contents)
 {
   ASSERT_RECORDING();
   vkCmdBeginRenderPass(mHandle, &beginInfo, contents);
 }
 
 
-void CommandBuffer::EndRenderPass()
+void CommandBuffer::endRenderPass()
 {
   ASSERT_RECORDING();
   vkCmdEndRenderPass(mHandle);
 }
 
 
-void CommandBuffer::Draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance)
+void CommandBuffer::draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance)
 {
   ASSERT_RECORDING();
   vkCmdDraw(mHandle, vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
 
-void CommandBuffer::DrawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance)
+void CommandBuffer::drawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance)
 {
   ASSERT_RECORDING();
   vkCmdDrawIndexed(mHandle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
 
-void CommandBuffer::BindPipeline(VkPipelineBindPoint bindPoint, VkPipeline pipeline)
+void CommandBuffer::bindPipeline(VkPipelineBindPoint bindPoint, VkPipeline pipeline)
 {
   ASSERT_RECORDING();
   vkCmdBindPipeline(mHandle, bindPoint, pipeline);
 }
 
 
-void CommandBuffer::BindVertexBuffers(u32 firstBinding, u32 bindingCount, const VkBuffer* buffers, const VkDeviceSize* offsets)
+void CommandBuffer::bindVertexBuffers(u32 firstBinding, u32 bindingCount, const VkBuffer* buffers, const VkDeviceSize* offsets)
 {
   ASSERT_RECORDING();
   vkCmdBindVertexBuffers(mHandle, firstBinding, bindingCount, buffers, offsets);
 }
 
 
-void CommandBuffer::BindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType)
+void CommandBuffer::bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType)
 {
   ASSERT_RECORDING();
   vkCmdBindIndexBuffer(mHandle, buffer, offset, indexType);
 }
 
 
-void CommandBuffer::PipelineBarrier(VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags,
+void CommandBuffer::pipelineBarrier(VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags,
   u32 memoryBarrierCount, const VkMemoryBarrier* memoryBarriers, u32 bufferMemoryBarrierCount,
   const VkBufferMemoryBarrier* bufferMemoryBarriers, u32 imageMemoryBarrierCount, const VkImageMemoryBarrier* imageMemoryBarriers)
 {
@@ -115,7 +115,7 @@ void CommandBuffer::PipelineBarrier(VkPipelineStageFlags srcStageMask, VkPipelin
 } 
 
 
-void CommandBuffer::BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipelineLayout layout, u32 firstSet, u32 descriptorSetCount,
+void CommandBuffer::bindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipelineLayout layout, u32 firstSet, u32 descriptorSetCount,
   const VkDescriptorSet* descriptorSets, u32 dynamicOffsetCount, const u32* dynamicOffsets)
 {
   ASSERT_RECORDING();
@@ -124,14 +124,14 @@ void CommandBuffer::BindDescriptorSets(VkPipelineBindPoint bindPoint, VkPipeline
 }
 
 
-void CommandBuffer::SetScissor(u32 firstScissor, u32 scissorCount, const VkRect2D* pScissors)
+void CommandBuffer::setScissor(u32 firstScissor, u32 scissorCount, const VkRect2D* pScissors)
 {
   ASSERT_RECORDING();
   vkCmdSetScissor(mHandle, firstScissor, scissorCount, pScissors);
 }
 
 
-void CommandBuffer::CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
+void CommandBuffer::copyBufferToImage(VkBuffer src, VkImage img, VkImageLayout imgLayout, 
   u32 regionCount, const VkBufferImageCopy* regions)
 {
   ASSERT_RECORDING();
@@ -139,77 +139,77 @@ void CommandBuffer::CopyBufferToImage(VkBuffer src, VkImage img, VkImageLayout i
 }
 
 
-void CommandBuffer::CopyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, const VkBufferCopy* regions)
+void CommandBuffer::copyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, const VkBufferCopy* regions)
 {
   ASSERT_RECORDING();
   vkCmdCopyBuffer(mHandle, src, dst, regionCount, regions);
 }
 
 
-void CommandBuffer::SetViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports)
+void CommandBuffer::setViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports)
 {
   ASSERT_RECORDING(); 
   vkCmdSetViewport(mHandle, firstViewPort, viewPortCount, viewports);
 }
 
 
-void CommandBuffer::BeginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags)
+void CommandBuffer::beginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags)
 {
   ASSERT_RECORDING();
   vkCmdBeginQuery(mHandle, queryPool, query, flags);
 }
 
 
-void CommandBuffer::EndQuery(VkQueryPool queryPool, u32 query)
+void CommandBuffer::endQuery(VkQueryPool queryPool, u32 query)
 {
   ASSERT_RECORDING();
   vkCmdEndQuery(mHandle, queryPool, query);
 }
 
 
-void CommandBuffer::PushConstants(VkPipelineLayout getLayout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values)
+void CommandBuffer::pushConstants(VkPipelineLayout getLayout, VkShaderStageFlags StageFlags, u32 Offset, u32 Size, const void* p_Values)
 {
   ASSERT_RECORDING();
   vkCmdPushConstants(mHandle, getLayout, StageFlags, Offset, Size, p_Values);
 }
 
 
-void CommandBuffer::CopyImageToBuffer(VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, u32 regionCount, VkBufferImageCopy* pRegions)
+void CommandBuffer::copyImageToBuffer(VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, u32 regionCount, VkBufferImageCopy* pRegions)
 {
   ASSERT_RECORDING();
   vkCmdCopyImageToBuffer(mHandle, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
 }
 
 
-void CommandBuffer::CopyImage(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageCopy* pRegions)
+void CommandBuffer::copyImage(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageCopy* pRegions)
 {
   ASSERT_RECORDING();
   vkCmdCopyImage(mHandle, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
 }
 
 
-void CommandBuffer::Dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ)
+void CommandBuffer::dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ)
 {
   ASSERT_RECORDING();
   vkCmdDispatch(mHandle, groupCountX, groupCountY, groupCountZ);
 }
 
 
-void CommandBuffer::ClearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges)
+void CommandBuffer::clearColorImage(VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, u32 rangeCount, const VkImageSubresourceRange* pRanges)
 {
   ASSERT_RECORDING();
   vkCmdClearColorImage(mHandle, image, imageLayout, pColor, rangeCount, pRanges);
 }
 
 
-void CommandBuffer::ClearAttachments(u32 attachmentCount, const VkClearAttachment* pAttachments, u32 rectCount, const VkClearRect* pRects)
+void CommandBuffer::clearAttachments(u32 attachmentCount, const VkClearAttachment* pAttachments, u32 rectCount, const VkClearRect* pRects)
 {
   ASSERT_RECORDING();
   vkCmdClearAttachments(mHandle, attachmentCount, pAttachments, rectCount, pRects);
 }
 
 
-void CommandBuffer::ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageBlit* pRegions, VkFilter filter)
+void CommandBuffer::imageBlit(VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, u32 regionCount, const VkImageBlit* pRegions, VkFilter filter)
 {
   ASSERT_RECORDING();
   vkCmdBlitImage(mHandle,
@@ -223,7 +223,7 @@ void CommandBuffer::ImageBlit(VkImage srcImage, VkImageLayout srcImageLayout, Vk
 }
 
 
-void CommandBuffer::NextSubpass(VkSubpassContents contents)
+void CommandBuffer::nextSubpass(VkSubpassContents contents)
 {
   ASSERT_RECORDING();
   vkCmdNextSubpass(mHandle, contents);

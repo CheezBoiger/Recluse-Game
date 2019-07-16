@@ -108,6 +108,8 @@ public:
 
   void emptyGarbage(VulkanRHI* pRhi);
 
+  VkDeviceSize getMaxDeviceLocalMemBytes() { return m_maxDeviceLocalMemBytes; }
+
 private:
   u32 m_nextPoolId;
   u32 m_garbageIndex;
@@ -115,6 +117,7 @@ private:
   VkDeviceSize m_deviceLocalMemoryMB;
   VkDeviceSize m_hostVisibleMemoryMB;
   VkDeviceSize m_bufferImageGranularity;
+  VkDeviceSize m_maxDeviceLocalMemBytes;
 
   std::array<std::vector<VulkanMemoryPool*>, VK_MAX_MEMORY_TYPES> m_pools;
   std::vector<std::vector<VulkanAllocation>> m_frameGarbage;

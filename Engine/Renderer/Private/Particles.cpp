@@ -202,17 +202,17 @@ void ParticleSystem::getParticleState(Particle* output)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Begin(beginInfo);
+  cmdBuffer.begin(beginInfo);
   VkBufferCopy region = {};
   region.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
   region.srcOffset = 0;
   region.dstOffset = 0;
-  cmdBuffer.CopyBuffer(
+  cmdBuffer.copyBuffer(
     m_particleBuffer->getNativeBuffer(),
     staging.getNativeBuffer(),
     1,
     &region);
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};
@@ -270,16 +270,16 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Begin(beginInfo);
+  cmdBuffer.begin(beginInfo);
   VkBufferCopy region = {};
   region.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
   region.srcOffset = 0;
   region.dstOffset = 0;
-  cmdBuffer.CopyBuffer(staging.getNativeBuffer(),
+  cmdBuffer.copyBuffer(staging.getNativeBuffer(),
     m_particleBuffer->getNativeBuffer(),
     1,
     &region);
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};
@@ -883,7 +883,7 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
 {
   if (particleList.Size() == 0) return;
 
-  cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->Pipeline());
+  cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->Pipeline());
 
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
@@ -891,9 +891,9 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
       global->getDescriptorSet(frameIndex)->getHandle(),
       system->getSet()->getHandle()
     };
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->getLayout(),
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->getLayout(),
     0, 2, sets, 0, nullptr);
-    cmdBuffer->Dispatch(1, 1, 1);
+    cmdBuffer->dispatch(1, 1, 1);
   }
 }
 
@@ -920,7 +920,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
   renderPassInfo.pClearValues = clearValues.data();
 
-  cmdBuffer->BeginRenderPass(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);  
+  cmdBuffer->beginRenderPass(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);  
   VkViewport viewport = { };
   viewport.width = (r32)extent.width;
   viewport.height = (r32)extent.height;
@@ -928,7 +928,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   viewport.y = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.minDepth = 0.0f;
-  cmdBuffer->SetViewPorts(0, 1, &viewport);
+  cmdBuffer->setViewPorts(0, 1, &viewport);
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
     GraphicsPipeline* pRenderPipe = nullptr;
@@ -953,12 +953,12 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
       system->getSet()->getHandle()
     };
     VkBuffer nativeBuffer = system->getParticleBuffer()->getNativeBuffer();
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
       0, 2, sets, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &nativeBuffer, offset);
-    cmdBuffer->Draw((u32)system->_particleConfig._maxParticles, 1, 0, 0);
+    cmdBuffer->bindVertexBuffers(0, 1, &nativeBuffer, offset);
+    cmdBuffer->draw((u32)system->_particleConfig._maxParticles, 1, 0, 0);
   }
-  cmdBuffer->EndRenderPass();
+  cmdBuffer->endRenderPass();
 }
 } // Recluse

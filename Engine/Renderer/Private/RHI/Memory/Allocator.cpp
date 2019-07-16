@@ -231,6 +231,13 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
   m_deviceLocalMemoryMB = 128 * R_MEM_1_MB;
   m_deviceLocalMemoryMB = 64 * R_MEM_1_MB; 
   m_bufferImageGranularity = props->limits.bufferImageGranularity;
+
+  for (u32 i = 0; i < pMemProperties->memoryHeapCount; ++i) {
+    VkMemoryHeap heap = pMemProperties->memoryHeaps[i];
+    m_maxDeviceLocalMemBytes = heap.size;
+    break;
+  }
+
   update(pRhi);
 }
 

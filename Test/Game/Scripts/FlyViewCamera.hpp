@@ -46,7 +46,7 @@ public:
     m_pTempLight = new PointLightComponent();
     m_pTempLight->initialize(this);
     m_pTempLight->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-    m_pTempLight->setIntensity(32.0f);
+    m_pTempLight->setIntensity(2.0f);
     m_pTempLight->setRange(16.0f);
     m_outOfLife = false;
     currLife = 0.5f;
@@ -195,8 +195,8 @@ public:
 
     if (Keyboard::KeyPressed(KEY_CODE_9)) {
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
-      params._Buffering = DOUBLE_BUFFER;
-      params._EnableVsync = true;
+      params._Buffering = TRIPLE_BUFFER;
+      params._EnableVsync = false;
       params._EnableBloom = true;
       params._EnableMultithreadedRendering = false;
       params._AA = AA_FXAA_2x;
@@ -351,10 +351,6 @@ public:
     Vector3 f = transform->front();
     Vector3 r = transform->right();
 
-    if (m_pPhysicsComponent->getRigidBody()->_velocity.y == 0.0f) {
-      m_jumping = false;
-    }
-
     // Use main camera's rotations, based on where user is looking.
     if (pMainCam) {
       Transform* camTransform = pMainCam->getTransform();
@@ -402,6 +398,7 @@ public:
     delete m_pCollider;
   }
 
+
   void onCollisionEnter(Collision* other) override {
     CubeObject* cube = other->_gameObject->castTo<CubeObject>();
     if (cube) {
@@ -421,7 +418,7 @@ public:
       // m_pPhysicsComponent->clearForces();
       Log() << "exit CubeObject\n";
     } else {
-       m_pPhysicsComponent->clearForces();
+       //m_pPhysicsComponent->clearForces();
        m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, m_pPhysicsComponent->getRigidBody()->_velocity.y, 0.0f));
       // Log() << "Stop.\n";
     }
@@ -433,6 +430,22 @@ public:
     //    Vector3(0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.x*/, 
     //            0.0f,
     //            0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.z*/));
+    if (other->_gameObject->castTo<CubeObject>()) return;
+
+    if (m_jumping) {
+      for (u32 i = 0; i < other->_contactPoints.size(); ++i) {
+        if ((Vector3::UP.dot(other->_contactPoints[i]._normal) >=
+             1.0f - 0.3f) &&
+            (Vector3::UP.dot(other->_contactPoints[i]._normal) <=
+             1.0f + 0.3f)) {
+          Log() << "enter stop jumping.\n";
+          Log() << other->_contactPoints[i]._normal << "\n";
+          m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
+          m_jumping = false;
+          break;
+        }
+      }
+    }
   }
 
 private:

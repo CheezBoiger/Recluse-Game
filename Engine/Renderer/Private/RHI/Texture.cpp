@@ -47,14 +47,14 @@ void Texture::initialize(const VkImageCreateInfo& imageInfo,
   allocInfo.memoryTypeIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, 
                                                                         PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
   
-  VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &mMemory);
+  VkResult rslt = vkAllocateMemory(mOwner, &allocInfo, nullptr, &m_allocation._deviceMemory);
   if (rslt != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to allocate host memory for image!\n");
     R_ASSERT(false, "");
     return;
   }
   VulkanMemoryAllocatorManager::numberOfAllocations++;
-  if (vkBindImageMemory(mOwner, mImage, mMemory, 0) != VK_SUCCESS) {
+  if (vkBindImageMemory(mOwner, mImage, m_allocation._deviceMemory, 0) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to bind memory to image!\n");
     return;
   }
@@ -103,10 +103,10 @@ void Texture::cleanUp()
     mView = VK_NULL_HANDLE;
   }
 
-  if (mMemory) {
+  if ( m_allocation._deviceMemory ) {
     //R_DEBUG(rNotify, "Image Memory: " << Memory() << "\n");
-    vkFreeMemory(mOwner, mMemory, nullptr);
-    mMemory = VK_NULL_HANDLE;
+    vkFreeMemory(mOwner, m_allocation._deviceMemory, nullptr);
+    m_allocation._deviceMemory = VK_NULL_HANDLE;
   }
   VulkanMemoryAllocatorManager::numberOfAllocations--;
 }

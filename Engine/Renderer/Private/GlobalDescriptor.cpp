@@ -127,6 +127,12 @@ void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 void GlobalDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 {
   u32 currFrame = frameIndex;
+
+  if (pRhi->bufferingCount() != m_pGlobalBuffers.size()) {
+    cleanUp(pRhi);
+    initialize(pRhi);
+  }
+
   R_ASSERT(m_pGlobalBuffers[currFrame]->getMapped(), "Global data was not mapped!");
   memcpy(m_pGlobalBuffers[currFrame]->getMapped(), &m_Global, sizeof(GlobalBuffer));
   

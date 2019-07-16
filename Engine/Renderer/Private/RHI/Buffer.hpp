@@ -2,6 +2,7 @@
 #pragma once
 
 #include "VulkanConfigs.hpp"
+#include "Memory/Allocator.hpp"
 
 
 namespace Recluse {
@@ -12,10 +13,7 @@ class PhysicalDevice;
 class Buffer : public VulkanHandle {
 public:
   Buffer()
-    : mMapped(nullptr)
-    , mBuffer(nullptr)
-    , mMemory(nullptr)
-    , mMemSize(0) { }
+    : mBuffer(nullptr) { }
 
   void              cleanUp();
   void              initialize(const VkBufferCreateInfo& info, 
@@ -27,18 +25,17 @@ public:
   void              unmap();
 
   VkBuffer          getNativeBuffer() const { return mBuffer; }
-  VkDeviceMemory    getMemory() const { return mMemory; }
+  VkDeviceMemory    getMemory() const { return m_allocation._deviceMemory; }
 
   // Memory size of this buffer, in bytes.
-  VkDeviceSize      getMemorySize() const { return mMemSize; }
+  VkDeviceSize      getMemorySize() const { return m_allocation._sz; }
 
   // Mapped pointer to this buffer.
-  void*             getMapped() const { return mMapped; }
+  void*             getMapped() const { return m_allocation._pData; }
 
 private:
-  void*             mMapped;
+
   VkBuffer          mBuffer;
-  VkDeviceMemory    mMemory;
-  VkDeviceSize      mMemSize;
+  VulkanAllocation m_allocation;
 };
 } // Recluse

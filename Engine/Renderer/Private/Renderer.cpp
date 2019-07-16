@@ -319,7 +319,7 @@ void Renderer::render()
   uiSi.pWaitDstStageMask = waitFlags;
 
   // Spinlock until we know this is finished.
-  while (m_Offscreen._cmdBuffers[frameIndex]->Recording()) {}
+  while (m_Offscreen._cmdBuffers[frameIndex]->recording()) {}
 
   // render shadow map here. Primary shadow map is our concern.
   if (m_pLights->isPrimaryShadowEnabled() || staticNeedsUpdate()) {
@@ -518,7 +518,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   // Dependency on shadow map pipeline initialization.
   ShadowMapSystem::initializeShadowPipelines(m_pRhi);
   m_pLights = new LightDescriptor();
-  m_pLights->initialize(m_pRhi, params->_Shadows, params->_EnableSoftShadows);
+  m_pLights->initialize(m_pRhi, params);
   for (u32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
     m_pLights->update(m_pRhi, m_pGlobal->getData(), i);
   }
@@ -581,22 +581,22 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
     GraphicsPipeline* finalPipeline = output_pipelineKey;
     DescriptorSet* finalSet = output_descSetKey;
     
-    cmdBuffer.BeginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer.SetViewPorts(0, 1, &viewport);
-      cmdBuffer.SetScissor(0, 1, &scissor);
-      cmdBuffer.BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
+    cmdBuffer.beginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer.setViewPorts(0, 1, &viewport);
+      cmdBuffer.setScissor(0, 1, &scissor);
+      cmdBuffer.bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
       VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };    
 
-      cmdBuffer.BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
+      cmdBuffer.bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
       VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
       VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
-      cmdBuffer.BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
-      cmdBuffer.BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer.bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+      cmdBuffer.bindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
-      cmdBuffer.DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer.EndRenderPass();
+      cmdBuffer.drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer.endRenderPass();
   });
 
   if (!m_pUI) {
@@ -2224,7 +2224,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   const u32 dSetCount = 5;
 #if !COMPUTE_PBR
-    cmdBuffer->BeginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     GraphicsPipeline* pbr_Pipeline = pPipeline;
     VkDescriptorSet sets[dSetCount] = {
       m_pGlobal->getDescriptorSet(frameIndex)->getHandle(),
@@ -2234,16 +2234,16 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       //shadow.StaticShadowMapViewDescriptor(frameIndex)->getHandle(),
       m_pGlobalIllumination->getDescriptorSet()->getHandle(),
     };
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->getLayout(), 0, dSetCount, sets, 0, nullptr);
+    cmdBuffer->setViewPorts(0, 1, &viewport);
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->Pipeline());
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pbr_Pipeline->getLayout(), 0, dSetCount, sets, 0, nullptr);
     VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
     VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
-    cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+    cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 #else
     std::array<VkImageMemoryBarrier, 2> imageMemBarriers;
     imageMemBarriers[0] = { };
@@ -2629,9 +2629,9 @@ void Renderer::buildOffScreenCmdList()
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmdBuf->Begin(beginInfo);
+    cmdBuf->begin(beginInfo);
     generateOffScreenCmds(cmdBuf, i);
-    cmdBuf->End();
+    cmdBuf->end();
   }
 }
 
@@ -2645,9 +2645,9 @@ void Renderer::buildHDRCmdList()
     VkCommandBufferBeginInfo cmdBi = {};
     cmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    pCmdBuffer->Begin(cmdBi);
+    pCmdBuffer->begin(cmdBi);
     generateHDRCmds(pCmdBuffer, i);
-    pCmdBuffer->End();
+    pCmdBuffer->end();
   }
 }
 
@@ -2661,9 +2661,9 @@ void Renderer::buildShadowCmdList()
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-  shadowBuf->Begin(begin);
+  shadowBuf->begin(begin);
   generateShadowCmds(shadowBuf, frameIndex);
-  shadowBuf->End();
+  shadowBuf->end();
 }
 
 
@@ -2676,9 +2676,9 @@ void Renderer::buildPbrCmdLists()
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    pCmdBuffer->Begin(beginInfo);
+    pCmdBuffer->begin(beginInfo);
     generatePbrCmds(pCmdBuffer, i);
-    pCmdBuffer->End();
+    pCmdBuffer->end();
   }
 }
 
@@ -2692,9 +2692,9 @@ void Renderer::buildSkyboxCmdLists()
     VkCommandBufferBeginInfo beginInfo = {};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    pCmdBuffer->Begin(beginInfo);
+    pCmdBuffer->begin(beginInfo);
     generateSkyboxCmds(pCmdBuffer, i);
-    pCmdBuffer->End();
+    pCmdBuffer->end();
   }
 }
 
@@ -2708,9 +2708,9 @@ void Renderer::buildFinalCmdLists()
     VkCommandBufferBeginInfo cmdBi = {};
     cmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    pCmdBuffer->Begin(cmdBi);
+    pCmdBuffer->begin(cmdBi);
     generateFinalCmds(pCmdBuffer);
-    pCmdBuffer->End();
+    pCmdBuffer->end();
   }
 }
 
@@ -2718,7 +2718,9 @@ void Renderer::buildFinalCmdLists()
 void Renderer::build()
 {
   m_pRhi->waitAllGraphicsQueues();
-  
+
+  updateSceneDescriptors(m_pRhi->currentFrame());
+
   buildOffScreenCmdList();
   buildHDRCmdList();
   buildShadowCmdList();
@@ -2852,20 +2854,20 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderBegin.renderArea.extent = windowExtent;
     
   // Start the renderpass.
-  buf->BeginRenderPass(renderBegin, VK_SUBPASS_CONTENTS_INLINE);
-    buf->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Pipeline());
-    buf->SetViewPorts(0, 1, &viewport);
-    buf->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->getLayout(), 0, 2, descriptorSets, 0, nullptr);
+  buf->beginRenderPass(renderBegin, VK_SUBPASS_CONTENTS_INLINE);
+    buf->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->Pipeline());
+    buf->setViewPorts(0, 1, &viewport);
+    buf->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->getLayout(), 0, 2, descriptorSets, 0, nullptr);
     VertexBuffer* vertexbuffer = m_pSky->GetSkyboxVertexBuffer();
     IndexBuffer* idxBuffer = m_pSky->GetSkyboxIndexBuffer();
 
     VkDeviceSize offsets[] =  { 0 };
     VkBuffer vert = vertexbuffer->getHandle()->getNativeBuffer();
     VkBuffer ind = idxBuffer->getHandle()->getNativeBuffer();
-    buf->BindVertexBuffers(0 , 1, &vert, offsets);  
-    buf->BindIndexBuffer(ind, 0, GetNativeIndexType(idxBuffer->GetSizeType()));
-    buf->DrawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
-  buf->EndRenderPass();
+    buf->bindVertexBuffers(0 , 1, &vert, offsets);  
+    buf->bindIndexBuffer(ind, 0, GetNativeIndexType(idxBuffer->GetSizeType()));
+    buf->drawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
+  buf->endRenderPass();
 }
 
 
@@ -2907,7 +2909,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   viewport.x = 0.0f;
 
   VkDescriptorSet DescriptorSets[6];
-  cmdBuffer->BeginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+  cmdBuffer->beginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     if (m_cmdDeferredList.Size() == 0) {
       VkClearAttachment clearAttachments[5];
       for (u32 i = 0; i < 4; ++i) {
@@ -2925,7 +2927,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
         clearRects[i].rect.extent = m_displayExtent;
         clearRects[i].rect.offset = { 0, 0 };
       }
-      cmdBuffer->ClearAttachments(5, clearAttachments, 4, clearRects);
+      cmdBuffer->clearAttachments(5, clearAttachments, 4, clearRects);
     } else {
       for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
         PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.get(i);
@@ -2945,19 +2947,19 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
         IndexBuffer* indexBuffer = data->getIndexData();
         VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
         VkDeviceSize offsets[] = { 0 };
-        cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+        cmdBuffer->bindVertexBuffers(0, 1, &vb, offsets);
         if (renderCmd._config & CMD_MORPH_BIT) {
           Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
           R_ASSERT(renderCmd._pMorph0, "morph0 is null");
           R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
           VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
           VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
-          cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
-          cmdBuffer->BindVertexBuffers(2, 1,  &morph1, offsets);
+          cmdBuffer->bindVertexBuffers(1, 1, &morph0, offsets);
+          cmdBuffer->bindVertexBuffers(2, 1,  &morph1, offsets);
         } 
 
-        cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-        cmdBuffer->SetViewPorts(0, 1, &viewport);
+        cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+        cmdBuffer->setViewPorts(0, 1, &viewport);
 
         DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
         DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
@@ -2965,23 +2967,23 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
         if (indexBuffer) {
           VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-          cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+          cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
         }
 
         MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
         DescriptorSets[2] = pMatDesc->CurrMaterialSet()->getHandle();
         // Bind materials.
-        cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
           Pipe->getLayout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
         if (indexBuffer) {
-          cmdBuffer->DrawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
+          cmdBuffer->drawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
             renderCmd._pPrimitive->_firstIndex, 0, 0);
         } else {
-          cmdBuffer->Draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
+          cmdBuffer->draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
         }
       }
     }
-  cmdBuffer->EndRenderPass();
+  cmdBuffer->endRenderPass();
 
   // Build decals after.
   m_decalEngine->BuildDecals(cmdBuffer);
@@ -3022,22 +3024,22 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
   renderpassInfo.renderArea.extent = windowExtent;
   renderpassInfo.renderArea.offset = { 0, 0 };
 
-  cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->SetScissor(0, 1, &scissor);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
+  cmdBuffer->beginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->setViewPorts(0, 1, &viewport);
+    cmdBuffer->setScissor(0, 1, &scissor);
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->Pipeline());
     VkDescriptorSet finalDescriptorSets[] = { finalSet->getHandle() };
 
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, finalPipeline->getLayout(), 0, 1, finalDescriptorSets, 0, nullptr);
     VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
     VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
 
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+    cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
-    cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+    cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+  cmdBuffer->endRenderPass();
 }
 
 
@@ -3151,104 +3153,104 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->getHandle();
     viewport.height = (r32)(windowExtent.height >> 1);
     viewport.width =  (r32)(windowExtent.width  >> 1);
-    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->PushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
-      cmdBuffer->PushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
-      cmdBuffer->PushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
     DownscalePass2x.framebuffer = FB2xFinal->getHandle();
     DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->BeginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->getHandle();
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     viewport.height = (r32)(windowExtent.height >> 2);
     viewport.width = (r32)(windowExtent.width   >> 2);
     DownscaleSetNative = DownscaleSet4x->getHandle();
     i32 _Horizontal = true;
-    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
-      cmdBuffer->PushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     DownscalePass4x.framebuffer = FB4xFinal->getHandle();
     DownscalePass4x.renderPass = FB4xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->BeginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->getHandle();
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     viewport.height = (r32)(windowExtent.height >> 3);
     viewport.width = (r32)(windowExtent.width   >> 3);
     DownscaleSetNative = DownscaleSet8x->getHandle();
     _Horizontal = true;
-    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
-      cmdBuffer->PushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     DownscalePass8x.framebuffer = FB8xFinal->getHandle();
     DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->BeginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->getHandle();
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     viewport.height = (r32)(windowExtent.height >> 4);
     viewport.width = (r32)(windowExtent.width   >> 4);
     DownscaleSetNative = DownscaleSet16x->getHandle();
     _Horizontal = true;
-    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
-      cmdBuffer->PushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
 
     DownscalePass16x.framebuffer = FB16xFinal->getHandle();
     DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->BeginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet16xFinal->getHandle();
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->PushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
-      cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->EndRenderPass();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
   }
 
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
   VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
-  cmdBuffer->BeginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
+  cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
   if (!m_currentGraphicsConfigs._EnableBloom) {
     VkClearAttachment clearAttachment = {};
     clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -3260,16 +3262,16 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkExtent2D extent = m_displayExtent;
     rect.rect.extent = extent;
     rect.rect = { 0, 0 };
-    cmdBuffer->ClearAttachments(1, &clearAttachment, 1, &rect);
+    cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
   } else {
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->getLayout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->setViewPorts(0, 1, &viewport);
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Pipeline());
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->getLayout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
+    cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+    cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
   }
-  cmdBuffer->EndRenderPass();
+  cmdBuffer->endRenderPass();
 
   
 
@@ -3282,15 +3284,15 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     m_pAntiAliasingFXAA->GenerateCommands(m_pRhi, cmdBuffer, m_pGlobal, frameIndex);
   }
 
-  cmdBuffer->BeginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    cmdBuffer->SetViewPorts(0, 1, &viewport);
-    cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
-    cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->getLayout(), 0, 3, dSets, 0, nullptr);
-    cmdBuffer->PushConstants(hdrPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);
-    cmdBuffer->BindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->BindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->DrawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-  cmdBuffer->EndRenderPass();
+  cmdBuffer->beginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->setViewPorts(0, 1, &viewport);
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
+    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->getLayout(), 0, 3, dSets, 0, nullptr);
+    cmdBuffer->pushConstants(hdrPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);
+    cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+    cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+  cmdBuffer->endRenderPass();
 }
 
 
@@ -3304,9 +3306,9 @@ void Renderer::adjustHDRSettings(const ParamsHDR& hdrSettings)
     VkCommandBufferBeginInfo cmdBi = { };
     cmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     cmdBi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;  
-    pCmdBuffer->Begin(cmdBi);
+    pCmdBuffer->begin(cmdBi);
     generateHDRCmds(pCmdBuffer, i);
-    pCmdBuffer->End();
+    pCmdBuffer->end();
   }
 }
 
@@ -3484,7 +3486,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   
   VkDescriptorSet DescriptorSets[7];
 
-  cmdBuffer->BeginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
+  cmdBuffer->beginRenderPass(renderPassCi, VK_SUBPASS_CONTENTS_INLINE);
     for (size_t i = 0; i < m_forwardCmdList.Size(); ++i) {
       PrimitiveRenderCmd& renderCmd = m_forwardCmdList[i];
       if (!(renderCmd._config & CMD_FORWARD_BIT) && !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
@@ -3503,7 +3505,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       GraphicsPipeline* Pipe = (Skinned ? 
         (debugging ? skinPipelineDebug : skinPipeline) 
         : (debugging ? staticPipelineDebug : staticPipeline));
-      cmdBuffer->BindVertexBuffers(0, 1, &vb, offsets);
+      cmdBuffer->bindVertexBuffers(0, 1, &vb, offsets);
       if (renderCmd._config & CMD_MORPH_BIT) {
         Pipe = (Skinned ? 
           (debugging ? skinMorphPipelineDebug : skinMorphPipeline) 
@@ -3512,12 +3514,12 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
         R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
         VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
         VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
-        cmdBuffer->BindVertexBuffers(1, 1, &morph0, offsets);
-        cmdBuffer->BindVertexBuffers(2, 1, &morph1, offsets);
+        cmdBuffer->bindVertexBuffers(1, 1, &morph0, offsets);
+        cmdBuffer->bindVertexBuffers(2, 1, &morph1, offsets);
       }
   
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+      cmdBuffer->setViewPorts(0, 1, &viewport);
 
       if (debugging) {
         struct ivec4 {
@@ -3525,12 +3527,12 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
         };
         ivec4 value;
         value.v[0] = renderCmd._debugConfig;
-        cmdBuffer->PushConstants(Pipe->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ivec4), &value);
+        cmdBuffer->pushConstants(Pipe->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ivec4), &value);
       }
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-        cmdBuffer->BindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+        cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
       ShadowMapSystem& shadow = m_pLights->getPrimaryShadowMapSystem();
       DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
@@ -3544,7 +3546,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       // Bind materials.
       Primitive* primitive = renderCmd._pPrimitive;
       DescriptorSets[2] = primitive->_pMat->getNative()->CurrMaterialSet()->getHandle();
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS,
         Pipe->getLayout(),
         0,
         (Skinned ? 7 : 6),
@@ -3554,12 +3556,12 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       );
 
       if (indexBuffer) {
-        cmdBuffer->DrawIndexed(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0, 0);
+        cmdBuffer->drawIndexed(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0, 0);
       } else {
-        cmdBuffer->Draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
+        cmdBuffer->draw(primitive->_indexCount, renderCmd._instances, primitive->_firstIndex, 0);
       }
     }
-  cmdBuffer->EndRenderPass();
+  cmdBuffer->endRenderPass();
 
   // TODO(): Move particle compute on separate job, can be ran asyncronously!
   m_particleEngine->generateParticleComputeCommands(m_pRhi, cmdBuffer, m_pGlobal, m_particleSystems, frameIndex);
@@ -3875,24 +3877,24 @@ void Renderer::checkCmdUpdate()
     m_workers[0] = std::thread([&]() -> void {
       CommandBuffer* offscreenCmdList = m_Offscreen._cmdBuffers[frameIndex];
       offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-      offscreenCmdList->Begin(begin);
+      offscreenCmdList->begin(begin);
       generateOffScreenCmds(offscreenCmdList, frameIndex);
-      offscreenCmdList->End();
+      offscreenCmdList->end();
 
       m_Forward._cmdBuffers[frameIndex]->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-      m_Forward._cmdBuffers[frameIndex]->Begin(begin);
+      m_Forward._cmdBuffers[frameIndex]->begin(begin);
       generateForwardPBRCmds(m_Forward._cmdBuffers[frameIndex], frameIndex);
-      m_Forward._cmdBuffers[frameIndex]->End();
+      m_Forward._cmdBuffers[frameIndex]->end();
     });
 
     if (m_pLights->isPrimaryShadowEnabled() || m_pLights->getPrimaryShadowMapSystem().staticMapNeedsUpdate()) {
       CommandBuffer* shadowBuf = m_Offscreen._shadowCmdBuffers[frameIndex];
       R_ASSERT(shadowBuf, "Shadow Buffer is null.");
       shadowBuf->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-      shadowBuf->Begin(begin);
+      shadowBuf->begin(begin);
       generateShadowCmds(shadowBuf, frameIndex);
-      shadowBuf->End();
+      shadowBuf->end();
     }
 
     m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
@@ -3900,23 +3902,23 @@ void Renderer::checkCmdUpdate()
   } else {
     CommandBuffer* offscreenCmdList = m_Offscreen._cmdBuffers[frameIndex];
     offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    offscreenCmdList->Begin(begin);
+    offscreenCmdList->begin(begin);
     generateOffScreenCmds(offscreenCmdList, frameIndex);
-    offscreenCmdList->End();
+    offscreenCmdList->end();
 
     m_Forward._cmdBuffers[frameIndex]->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-    m_Forward._cmdBuffers[frameIndex]->Begin(begin);
+    m_Forward._cmdBuffers[frameIndex]->begin(begin);
     generateForwardPBRCmds(m_Forward._cmdBuffers[frameIndex], frameIndex);
-    m_Forward._cmdBuffers[frameIndex]->End();
+    m_Forward._cmdBuffers[frameIndex]->end();
 
     if (m_pLights->isPrimaryShadowEnabled() || m_pLights->getPrimaryShadowMapSystem().staticMapNeedsUpdate()) {
       CommandBuffer* shadowBuf = m_Offscreen._shadowCmdBuffers[frameIndex];
       R_ASSERT(shadowBuf, "Shadow Buffer is null.");
       shadowBuf->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-      shadowBuf->Begin(begin);
+      shadowBuf->begin(begin);
       generateShadowCmds(shadowBuf, frameIndex);
-      shadowBuf->End();
+      shadowBuf->end();
     }
     m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
   }
@@ -3996,6 +3998,9 @@ void Renderer::updateLightBuffer(u32 frameIndex)
     pLights->_DirectionalLights[usedDirectionLights] = DirectionalLight();
     ++usedDirectionLights;
   }
+
+  m_pLights->checkBuffering(m_pRhi, &m_currentGraphicsConfigs);
+
   m_pLights->update(m_pRhi, m_pGlobal->getData(), frameIndex);
 }
 
@@ -4169,8 +4174,8 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
 
     cleanUpForwardPBR();
     cleanUpPBR();
-    cleanUpHDR(false);
-    cleanUpDownscale(false);
+    cleanUpHDR(true);
+    cleanUpDownscale(true);
     cleanUpSkybox(true);
     //CleanUpOffscreen();
     cleanUpFinalOutputs();
@@ -4188,8 +4193,8 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
   }
 
   setUpOffscreen();
-  setUpDownscale(false);
-  setUpHDR(false);
+  setUpDownscale(true);
+  setUpHDR(true);
   setUpPBR();
   setUpSkybox(true);
   setUpFinalOutputs();
@@ -4558,7 +4563,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
       cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-      cmdBuffer.Begin(begin);
+      cmdBuffer.begin(begin);
 
       // render to frame first.
       generateOffScreenCmds(&cmdBuffer, 0);
@@ -4571,7 +4576,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       generateSkyboxCmds(&cmdBuffer, 0);
       generateForwardPBRCmds(&cmdBuffer, 0);
 
-      cmdBuffer.End();
+      cmdBuffer.end();
 
       VkSubmitInfo submit{};
       submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -4583,7 +4588,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       m_pRhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
 
       cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-      cmdBuffer.Begin(begin);
+      cmdBuffer.begin(begin);
       VkDeviceSize offsets = { 0 };
 
       VkImageSubresourceRange subRange = {};
@@ -4603,7 +4608,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.image = cubeTexture->Image();
 
       // set the cubemap image layout for transfer from our framebuffer.
-      cmdBuffer.PipelineBarrier(
+      cmdBuffer.pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0,
@@ -4627,7 +4632,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.subresourceRange = subRange;
 
       // transfer color attachment to transfer.
-      cmdBuffer.PipelineBarrier(
+      cmdBuffer.pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0,
@@ -4653,7 +4658,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgCopy.extent.height = texSize;
       imgCopy.extent.depth = 1;
 
-      cmdBuffer.CopyImage(
+      cmdBuffer.copyImage(
         pbr_FinalTextureKey->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         cubeTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         1, &imgCopy
@@ -4664,7 +4669,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       imgMemBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-      cmdBuffer.PipelineBarrier(
+      cmdBuffer.pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0,
@@ -4685,7 +4690,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.image = cubeTexture->Image();
       imgMemBarrier.subresourceRange = subRange;
 
-      cmdBuffer.PipelineBarrier(
+      cmdBuffer.pipelineBarrier(
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
         0,
@@ -4693,7 +4698,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
         0, nullptr,
         1, &imgMemBarrier
       );
-      cmdBuffer.End();
+      cmdBuffer.end();
 
       submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
       submit.commandBufferCount = 1;
@@ -4769,7 +4774,7 @@ Texture2D* Renderer::generateBRDFLUT(u32 x, u32 y)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmd.Begin(beginInfo);
+  cmd.begin(beginInfo);
 
   GlobalBuffer* g = m_pGlobal->getData();
   i32 prevx = g->_ScreenSize[0];
@@ -4780,7 +4785,7 @@ Texture2D* Renderer::generateBRDFLUT(u32 x, u32 y)
   m_pBakeIbl->updateTargetBRDF(texture);
   m_pBakeIbl->renderGenBRDF(&cmd, m_pGlobal, texture, 0);
 
-  cmd.End();
+  cmd.end();
 
   VkSubmitInfo submitInfo = { };
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

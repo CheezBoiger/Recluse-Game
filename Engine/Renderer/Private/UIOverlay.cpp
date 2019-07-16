@@ -132,9 +132,9 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   imgBarrier.subresourceRange.levelCount = obj->_texture->MipLevels();
 
   // TODO(): Copy buffer to image stream.
-  cmdBuffer.Begin(begin);
+  cmdBuffer.begin(begin);
   // Image memory barrier.
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
     0,
     0, nullptr,
@@ -143,7 +143,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   );
 
   // Send buffer image copy cmd.
-  cmdBuffer.CopyBufferToImage(
+  cmdBuffer.copyBufferToImage(
     obj->_cache->getNativeBuffer(),
     obj->_texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -156,7 +156,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
     0, nullptr,
@@ -164,7 +164,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
     1, &imgBarrier
   );
 
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   // TODO(): Submit it to graphics queue!
   VkCommandBuffer commandbuffers[] = { cmdBuffer.getHandle() };
@@ -760,14 +760,14 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
   VkDeviceSize offsets[] = { 0 };
   VkDescriptorSet sets[] = { global->getDescriptorSet(frameIndex)->getHandle(), nk->_font_set->getHandle() };
   // Unmap vertices and index buffers, then perform drawing here.
-  cmdBuffer->Begin(beginInfo);  
+  cmdBuffer->begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
-    cmdBuffer->BeginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->SetViewPorts(0, 1, &viewport);
-      cmdBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
-      cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
-      cmdBuffer->BindVertexBuffers(0, 1, &vert, offsets);
-      cmdBuffer->BindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);
+    cmdBuffer->beginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vert, offsets);
+      cmdBuffer->bindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);
       const struct nk_draw_command* cmd;
 #if 1
       u32 vertOffset = 0;
@@ -778,20 +778,20 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
         scissor.offset.y = R_Max((i32)cmd->clip_rect.y, 0);
         scissor.extent.width = (u32)cmd->clip_rect.w;
         scissor.extent.height = (u32)cmd->clip_rect.h;
-        cmdBuffer->SetScissor(0, 1, &scissor);
+        cmdBuffer->setScissor(0, 1, &scissor);
 
         if (cmd->texture.ptr) {
           DescriptorSet* set = static_cast<DescriptorSet*>(cmd->texture.ptr);
           sets[1] = set->getHandle();
-          cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
+          cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
         }
-        cmdBuffer->DrawIndexed(cmd->elem_count, 1, vertOffset, 0, 0);
+        cmdBuffer->drawIndexed(cmd->elem_count, 1, vertOffset, 0, 0);
         vertOffset += cmd->elem_count;
       }
 #endif
       nk_clear(&nk->_ctx);
-    cmdBuffer->EndRenderPass();
-  cmdBuffer->End();
+    cmdBuffer->endRenderPass();
+  cmdBuffer->end();
 }
 
 
@@ -908,12 +908,12 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Begin(beginInfo);
+  cmdBuffer.begin(beginInfo);
     VkBufferCopy region = {};
     region.size = MAX_VERTEX_MEMORY;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    cmdBuffer.CopyBuffer(m_vertStagingBuffer->getNativeBuffer(),
+    cmdBuffer.copyBuffer(m_vertStagingBuffer->getNativeBuffer(),
       m_vertBuffers[frameIndex]->getNativeBuffer(),
       1,
       &region);
@@ -921,11 +921,11 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, u32 frameIndex)
     regionIndices.size = MAX_ELEMENT_MEMORY;
     regionIndices.srcOffset = 0;
     regionIndices.dstOffset = 0;
-    cmdBuffer.CopyBuffer(m_indicesStagingBuffer->getNativeBuffer(),
+    cmdBuffer.copyBuffer(m_indicesStagingBuffer->getNativeBuffer(),
       m_indicesBuffers[frameIndex]->getNativeBuffer(),
       1,
       &regionIndices);
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkCommandBuffer cmd = cmdBuffer.getHandle();
   VkSubmitInfo submitInfo = {};

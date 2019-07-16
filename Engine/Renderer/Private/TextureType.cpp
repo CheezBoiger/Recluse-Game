@@ -102,7 +102,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
     VkCommandBufferBeginInfo begin = { };
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmdBuffer.Begin(begin);
+    cmdBuffer.begin(begin);
   }
 
   VkImageMemoryBarrier barrier = { };
@@ -124,7 +124,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    cmdBuffer.PipelineBarrier(
+    cmdBuffer.pipelineBarrier(
       VK_PIPELINE_STAGE_TRANSFER_BIT, 
       VK_PIPELINE_STAGE_TRANSFER_BIT,
       0,
@@ -146,7 +146,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
     blit.dstSubresource.layerCount = 1;
     blit.dstSubresource.mipLevel = i;
 
-    cmdBuffer.ImageBlit(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+    cmdBuffer.imageBlit(image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
       image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       1, &blit, VK_FILTER_LINEAR);
 
@@ -154,7 +154,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
     barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    cmdBuffer.PipelineBarrier(
+    cmdBuffer.pipelineBarrier(
       VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
       0, 
       0, nullptr,
@@ -170,13 +170,13 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
   
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
     0, nullptr,
     0, nullptr,
     1, &barrier);
   
-  cmdBuffer.End();
+  cmdBuffer.end();
   
   VkSubmitInfo submit = { };
   VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
@@ -250,9 +250,9 @@ void Texture2D::update(Image const& Image)
   imgBarrier.subresourceRange.levelCount = texture->MipLevels();
 
   // TODO(): Copy buffer to image stream.
-  buffer.Begin(beginInfo);
+  buffer.begin(beginInfo);
   // Image memory barrier.
-  buffer.PipelineBarrier(
+  buffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
     0,
     0, nullptr,
@@ -261,7 +261,7 @@ void Texture2D::update(Image const& Image)
   );
 
   // Send buffer image copy cmd.
-  buffer.CopyBufferToImage(
+  buffer.copyBufferToImage(
     stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -275,7 +275,7 @@ void Texture2D::update(Image const& Image)
     imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-    buffer.PipelineBarrier(
+    buffer.pipelineBarrier(
       VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
       0,
       0, nullptr,
@@ -283,7 +283,7 @@ void Texture2D::update(Image const& Image)
       1, &imgBarrier
     );
   }
-  buffer.End();
+  buffer.end();
 
   // TODO(): Submit it to graphics queue!
   VkCommandBuffer commandbuffers[] = { buffer.getHandle() };
@@ -348,7 +348,7 @@ void Texture2D::Save(const std::string filename)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  cmdBuffer.Begin(beginInfo);
+  cmdBuffer.begin(beginInfo);
 
   // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
@@ -386,7 +386,7 @@ void Texture2D::Save(const std::string filename)
 
   // TODO(): Copy buffer to image stream.
   // Image memory barrier.
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
     0,
     0, nullptr,
@@ -395,7 +395,7 @@ void Texture2D::Save(const std::string filename)
   );
 
   // Send buffer image copy cmd.
-  cmdBuffer.CopyImageToBuffer(
+  cmdBuffer.copyImageToBuffer(
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
@@ -408,7 +408,7 @@ void Texture2D::Save(const std::string filename)
   imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
   imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
     0, nullptr,
@@ -416,7 +416,7 @@ void Texture2D::Save(const std::string filename)
     1, &imgBarrier
   );
 
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkSubmitInfo submit = {};
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -546,7 +546,7 @@ void TextureCube::Save(const std::string filename)
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-  cmdBuffer.Begin(begin);
+  cmdBuffer.begin(begin);
 
   VkImageSubresourceRange subRange = {};
   subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -565,7 +565,7 @@ void TextureCube::Save(const std::string filename)
   imgMemBarrier.image = texture->Image();
 
   // set the cubemap image layout for transfer from our framebuffer.
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
@@ -575,7 +575,7 @@ void TextureCube::Save(const std::string filename)
   );
 
 ////////////////////////////
-  cmdBuffer.CopyImageToBuffer(texture->Image(),
+  cmdBuffer.copyImageToBuffer(texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
     static_cast<u32>(imageCopyRegions.size()),
@@ -593,7 +593,7 @@ void TextureCube::Save(const std::string filename)
   imgMemBarrier.image = texture->Image();
   imgMemBarrier.subresourceRange = subRange;
 
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
@@ -602,7 +602,7 @@ void TextureCube::Save(const std::string filename)
     1, &imgMemBarrier
   );
 
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   VkSubmitInfo submit = { };
@@ -757,7 +757,7 @@ void TextureCube::update(Image const& image)
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-  cmdBuffer.Begin(begin);
+  cmdBuffer.begin(begin);
 
   VkImageSubresourceRange subRange = {};
   subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -776,7 +776,7 @@ void TextureCube::update(Image const& image)
   imgMemBarrier.image = texture->Image();
 
   // set the cubemap image layout for transfer from our framebuffer.
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
@@ -786,7 +786,7 @@ void TextureCube::update(Image const& image)
   );
 
   ////////////////////////////
-  cmdBuffer.CopyBufferToImage(stagingBuffer.getNativeBuffer(),
+  cmdBuffer.copyBufferToImage(stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(imageCopyRegions.size()),
@@ -804,7 +804,7 @@ void TextureCube::update(Image const& image)
   imgMemBarrier.image = texture->Image();
   imgMemBarrier.subresourceRange = subRange;
 
-  cmdBuffer.PipelineBarrier(
+  cmdBuffer.pipelineBarrier(
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
@@ -813,7 +813,7 @@ void TextureCube::update(Image const& image)
     1, &imgMemBarrier
   );
 
-  cmdBuffer.End();
+  cmdBuffer.end();
 
   VkCommandBuffer cmd[] = { cmdBuffer.getHandle() };
   VkSubmitInfo submit = {};
@@ -982,9 +982,9 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   imgBarrier.subresourceRange.levelCount = texture->MipLevels();
 
   // TODO(): Copy buffer to image stream.
-  buffer.Begin(beginInfo);
+  buffer.begin(beginInfo);
   // Image memory barrier.
-  buffer.PipelineBarrier(
+  buffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
     0,
     0, nullptr,
@@ -993,7 +993,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   );
 
   // Send buffer image copy cmd.
-  buffer.CopyBufferToImage(
+  buffer.copyBufferToImage(
     stagingBuffer.getNativeBuffer(),
     texture->Image(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -1006,7 +1006,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   imgBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   imgBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  buffer.PipelineBarrier(
+  buffer.pipelineBarrier(
     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0,
     0, nullptr,
@@ -1014,7 +1014,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
     1, &imgBarrier
   );
 
-  buffer.End();
+  buffer.end();
 
   // TODO(): Submit it to graphics queue!
   VkCommandBuffer commandbuffers[] = { buffer.getHandle() };

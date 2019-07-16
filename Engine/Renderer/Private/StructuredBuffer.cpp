@@ -71,16 +71,16 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   CmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   CmdBi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  CmdBuffer->Begin(CmdBi);
+  CmdBuffer->begin(CmdBi);
     VkBufferCopy region = { };
     region.size = MemSize;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    CmdBuffer->CopyBuffer(StagingBuffer->getNativeBuffer(),
+    CmdBuffer->copyBuffer(StagingBuffer->getNativeBuffer(),
                           mBuffer->getNativeBuffer(),
                           1,
                           &region);
-  CmdBuffer->End();
+  CmdBuffer->end();
 
   VkCommandBuffer native = CmdBuffer->getHandle();
   VkSubmitInfo submit = { };

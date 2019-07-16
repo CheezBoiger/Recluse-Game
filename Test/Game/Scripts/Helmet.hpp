@@ -303,11 +303,11 @@ public:
     transform->_scale = Vector3(1.0f, 1.0f, 1.0f);
 #elif MODEL_TYPE == DRONE
     ModelLoader::Model* model = nullptr;
-    ModelCache::get("busterDrone", &model);
+    ModelCache::get("DamagedHelmet", &model);
     
     for (u32 i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.addMesh(model->meshes[i]);
-        
+#if 0        
       for (auto nn : model->nodeHierarchy) {
         if (nn.second._meshId == i) {
           m_rendererComponent.assignMeshParent(nn.second._meshId,
@@ -315,10 +315,10 @@ public:
           break;
         }
       }
-
+#endif
       for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
         Primitive* prim = model->meshes[i]->getPrimitive(p);
-        prim->_pMat->setEmissiveFactor(0.2f);
+        prim->_pMat->setEmissiveFactor(0.5f);
         //prim->_pMat->disableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
         prim->_pMat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         //prim->_pMat->setRoughnessFactor(1.0f);
@@ -326,8 +326,8 @@ public:
       }
     }
     
-    AnimClip* pClip = model->animations[0];
-    m_animationComponent.addClip(pClip, "StartUp");
+    //AnimClip* pClip = model->animations[0];
+    //m_animationComponent.addClip(pClip, "StartUp");
     //m_animationComponent.playback("StartUp");
     //m_rendererComponent.setAnimationHandler(m_animationComponent.getAnimHandle());
     //m_rendererComponent.enableMorphTargets(true);
@@ -379,7 +379,7 @@ private:
 #if MODEL_TYPE == MONSTER
   SkinnedRendererComponent  m_rendererComponent;
 #else
-  BatchRendererComponent m_rendererComponent;
+  RendererComponent m_rendererComponent;
 #endif
   MeshComponent             m_meshComponent;
   AnimationComponent        m_animationComponent;

@@ -1591,7 +1591,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
   imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
   imageMemBarrier.image = m_output->Image();
 
-  pOutput->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+  pOutput->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
 
   VkDescriptorSet sets[] = {
@@ -1600,16 +1600,16 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
   };
 
   VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
-  pOutput->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
-  pOutput->BindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
-  pOutput->Dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
+  pOutput->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
+  pOutput->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
+  pOutput->dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
 
   imageMemBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
   imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
   imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  pOutput->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+  pOutput->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
 }
 
