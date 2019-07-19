@@ -182,7 +182,7 @@ public:
     // Testing renderer configurations during runtime.
     if (Keyboard::KeyPressed(KEY_CODE_8)) {
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
-      params._Buffering = DOUBLE_BUFFER;
+      params._Buffering = SINGLE_BUFFER;
       params._EnableVsync = true;
       params._EnableBloom = false;
       params._AA = AA_None;
@@ -330,6 +330,8 @@ public:
   Mover()
     : m_speed(5.0f)
     , pMainCam(nullptr)
+    , m_camOffset(1.0f)
+    , offset(1.0f)
     , m_jumping(false) { }
 
   void onStartUp() {
@@ -355,6 +357,15 @@ public:
     if (pMainCam) {
       Transform* camTransform = pMainCam->getTransform();
       camTransform->_position = transform->_position;
+      if (Keyboard::KeyPressed(KEY_CODE_LCONTROL)) {
+        offset = Lerpf(offset, 0.0f, tick * 5.0f);
+        speed *= 0.5f;
+      } else {
+        offset = Lerpf(offset, m_camOffset, tick * 9.0f);
+      }
+
+      camTransform->_position.y += offset;
+
       f = camTransform->front();
       r = camTransform->right();
     }
@@ -453,5 +464,7 @@ private:
   Collider* m_pCollider;
   b8 m_jumping;
   b8 bFollow;
+  r32 m_camOffset;
+  r32 offset;
   r32 m_speed;
 };
