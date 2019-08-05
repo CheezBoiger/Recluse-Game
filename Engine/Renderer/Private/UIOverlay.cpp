@@ -552,8 +552,8 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     Shader* vert = pRhi->createShader();
     Shader* frag = pRhi->createShader();
 
-    RendererPass::LoadShader("UI.vert.spv", vert);
-    RendererPass::LoadShader("UI.frag.spv", frag);
+    RendererPass::loadShader("UI.vert.spv", vert);
+    RendererPass::loadShader("UI.frag.spv", frag);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages;
     shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

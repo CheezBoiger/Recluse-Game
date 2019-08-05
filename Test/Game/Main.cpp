@@ -302,13 +302,13 @@ public:
       monsters[i]->update(tick);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_J)) {
+    if (Keyboard::keyPressed(KEY_CODE_J)) {
       //Camera::getMain()->enableInterleavedVideo(true);
       gRenderer().setSkyboxCubeMap(cubemap0);
       gRenderer().setGlobalLightProbe(&lightprobe);
       gRenderer().usePreRenderSkyboxMap(true);
     }
-    if (Keyboard::KeyPressed(KEY_CODE_K)) {
+    if (Keyboard::keyPressed(KEY_CODE_K)) {
       //Camera::getMain()->enableInterleavedVideo(false);
       //gRenderer().SetSkyboxCubeMap(cubemap1);
       //gRenderer().usePreRenderSkyboxMap(true);

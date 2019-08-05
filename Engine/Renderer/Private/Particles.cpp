@@ -406,9 +406,9 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   Shader vertShader; vertShader.SetOwner(pRhi->logicDevice()->getNative());
   Shader fragShader; fragShader.SetOwner(pRhi->logicDevice()->getNative());
   Shader geomShader; geomShader.SetOwner(pRhi->logicDevice()->getNative());
-  RendererPass::LoadShader("Particles.vert.spv", &vertShader);
-  RendererPass::LoadShader("Particles.frag.spv", &fragShader);
-  RendererPass::LoadShader("Particles.geom.spv", &geomShader);
+  RendererPass::loadShader("Particles.vert.spv", &vertShader);
+  RendererPass::loadShader("Particles.frag.spv", &fragShader);
+  RendererPass::loadShader("Particles.geom.spv", &geomShader);
 
   // TODO():
   VkGraphicsPipelineCreateInfo graphicsCi = {};
@@ -652,7 +652,7 @@ void ParticleEngine::initialize(VulkanRHI* pRhi)
   // Particle Compute Pipeline.
   {
     Shader* compShader = pRhi->createShader();
-    RendererPass::LoadShader("Particles.comp.spv", compShader);
+    RendererPass::loadShader("Particles.comp.spv", compShader);
     m_pParticleCompute = pRhi->createComputePipeline();
     VkPipelineShaderStageCreateInfo shaderCi = { };
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

@@ -103,6 +103,81 @@ public:
     m_particleSystem->SetAcceleration(Vector3(1.0f, -0.8f, 0.8f));
     m_particleSystem->SetAngleRate(1.0f);
     m_particleSystem->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    gUI().SetEventHandle( "Resolution change.", 
+                          0, 0, 200, 200, 
+                          []() -> b32 {
+                            GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
+                            params._Resolution = Resolution_1200x800;
+                            gRenderer().updateRendererConfigs(&params);
+                            gEngine().getWindow()->setToWindowed(1200, 800);
+                            gEngine().getWindow()->setToCenter();
+                            gEngine().getWindow()->show();
+                            return false;
+                          },
+                          [&] () -> b32 { 
+                            Transform* transform = getTransform();
+                            AABB aabb = m_pMeshComponent->MeshRef()->getAABB();
+                            aabb.min = (aabb.min * transform->_scale) + transform->_position;
+                            aabb.max = (aabb.max * transform->_scale) + transform->_position;
+
+                            ViewFrustum::Result result =
+                                Camera::getMain()->getViewFrustum().intersect(aabb);
+                            std::string lol = getName() + " " +
+                                              std::to_string(static_cast<u32>(m_health)) + " hp";
+
+                            Vector3 spos = Camera::getMain()->getWorldToScreenProjection(
+                                transform->_position);
+
+                            std::string frustumResult = "Frustum result: ";
+                            ViewFrustum frustum = Camera::getMain()->getViewFrustum();
+                            Plane farPlane = frustum[ViewFrustum::PFAR];
+                            Plane nearPlane = frustum[ViewFrustum::PNEAR];
+                            Plane topPlane = frustum[ViewFrustum::PTOP];
+                            Plane bottomPlane = frustum[ViewFrustum::PBOTTOM];
+                            Plane leftPlane = frustum[ViewFrustum::PLEFT];
+                            Plane rightPlane = frustum[ViewFrustum::PRIGHT];
+                            std::string farS = "Far Plane:" + std::string(farPlane);
+                            std::string nearS = "Near Plane: " + std::string(nearPlane);
+                            std::string topS = "Top Plane: " + std::string(topPlane);
+                            std::string bottomS = "Bottom Plane: " + std::string(bottomPlane);
+                            std::string leftS = "Left Plane: " + std::string(leftPlane);
+
+                            switch (result) {
+                              case ViewFrustum::Result_Inside:
+                                frustumResult += "Inside";
+                                break;
+                              case ViewFrustum::Result_Intersect:
+                                frustumResult += "Intersect";
+                                break;
+                              case ViewFrustum::Result_Outside:
+                                frustumResult += "Outside";
+                                break;
+                              default:
+                                frustumResult += "None";
+                            }
+
+                            gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 10000.0f,
+                                              1000.0f);
+                              gUI().EmitText(frustumResult, 6.0f, 40.0f, 500.0f, 200.0f);
+                              gUI().EmitText(farS, 6.0f, 60.0f, 800.0f, 20.0f);
+                              gUI().EmitText(nearS, 6.0f, 80.0f, 800.0f, 20.0f);
+                              gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
+                              gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
+                              gUI().SetForegroundColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+                              gUI().EmitText(lol, spos.x, spos.y, 300.0f, 30.0f);
+                              gUI().SetForegroundColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                              auto data = Profiler::GetAll(PROFILE_TYPES_RENDERER);
+                              float offset = 120.0f;
+                              for (auto it : data) {
+                                offset += 20.0f;
+                                std::string tss =
+                                    it._tag + ": " + std::to_string(it._total * 1000.0f) + " ms";
+                                gUI().EmitText(tss, 6.0f, offset, 800.0f, 20.0f);
+                              }
+                            gUI().EndCanvas();
+                            return false; 
+                          } );
   }
 
   void update(r32 tick) override
@@ -116,7 +191,7 @@ public:
 #define ALLOW_SUN_MOVEMENT 1
 #if ALLOW_SUN_MOVEMENT >= 1
     static r32 tt = 0.0f;
-    if (Keyboard::KeyPressed(KEY_CODE_Q)) {
+    if (Keyboard::keyPressed(KEY_CODE_Q)) {
       Scene* scene = gEngine().getScene();
       DirectionalLight* light = scene->getSky()->getSunLight();
       light->_Direction = Vector3(
@@ -126,70 +201,26 @@ public:
       tt += 1.0f;
     }
 #endif
-    AABB aabb = m_pMeshComponent->MeshRef()->getAABB();
-    aabb.min = (aabb.min * transform->_scale) + transform->_position;
-    aabb.max = (aabb.max * transform->_scale) + transform->_position;
-    ViewFrustum::Result result = Camera::getMain()->getViewFrustum().intersect(aabb);
-
-    std::string frustumResult = "Frustum result: ";
-    ViewFrustum frustum = Camera::getMain()->getViewFrustum();
-    Plane farPlane = frustum[ViewFrustum::PFAR];
-    Plane nearPlane = frustum[ViewFrustum::PNEAR];
-    Plane topPlane = frustum[ViewFrustum::PTOP];
-    Plane bottomPlane = frustum[ViewFrustum::PBOTTOM];
-    Plane leftPlane = frustum[ViewFrustum::PLEFT];
-    Plane rightPlane = frustum[ViewFrustum::PRIGHT];
-    std::string farS = "Far Plane:" + std::string(farPlane); 
-    std::string nearS = "Near Plane: " + std::string(nearPlane);
-    std::string topS = "Top Plane: " + std::string(topPlane);
-    std::string bottomS = "Bottom Plane: " + std::string(bottomPlane);
-    std::string leftS = "Left Plane: " + std::string(leftPlane);
-
-    switch (result) {
-      case ViewFrustum::Result_Inside: frustumResult += "Inside"; break;
-      case ViewFrustum::Result_Intersect: frustumResult += "Intersect"; break;
-      case ViewFrustum::Result_Outside: frustumResult += "Outside"; break;
-      default: frustumResult += "None";
-    }
 
     m_health += m_healthRegen * tick;
     if (m_health > m_maxHealth) m_health = m_maxHealth;
- 
-    Vector3 spos = Camera::getMain()->getWorldToScreenProjection(transform->_position);
 
-    std::string lol = getName() + " " + std::to_string(static_cast<u32>(m_health)) + " hp";
     // UI Testing.
     // TODO(): Need to figure out how to to create canvases instead of using one default.
     std::string str = std::to_string(SECONDS_PER_FRAME_TO_FPS(Time::deltaTime)) + " fps       ";
     std::string engine = RTEXT("Recluse Engine v0.0.3");
     std::string device = gRenderer().getDeviceName();
     std::string globalTime = "time: " + std::to_string(Time::currentTime()) + " s";
+    std::string mousePos = "Mouse: x: " + 
+                           std::to_string( Mouse::getX() ) + " y: " + std::to_string( Mouse::getY( ) );
     Window* window = gEngine().getWindow();
     std::string intro = "WASD to move;Mouse to look; ESC to escape.";
-    gUI().BeginCanvas(RTEXT("Copyright (c) 2018 Recluse Project. All rights reserved."), 0.0f, window->getHeight() - 300.0f, 800.0f, 500.0f);
+    gUI().BeginCanvas(RTEXT("Copyright (c) 2019 Recluse Project. All rights reserved."), 0.0f, window->getHeight() - 300.0f, 800.0f, 500.0f);
       gUI().EmitText(str, 6.0f, 100.0f, 150.0f, 20.0f);
       gUI().EmitText(engine, 6.0f, 40.0f, 350.0f, 20.0f);
-      gUI().EmitText(device, 6.0f, 60.0f, 300.0f, 20.0f);
+      gUI().EmitText(mousePos, 6.0f, 60.0f, 300.0f, 20.0f);
       gUI().EmitText(intro, 6.0f, 80.0f, 450.0f, 20.0f);
       gUI().EmitText(globalTime, 6.0f, 120.0f, 500.0f, 20.0f); 
-    gUI().EndCanvas();
-
-    gUI().BeginCanvas(RTEXT("Frustum Result"), 0.0f, 100.0f, 10000.0f, 1000.0f);
-      gUI().EmitText(frustumResult, 6.0f, 40.0f, 500.0f, 200.0f);
-      gUI().EmitText(farS, 6.0f, 60.0f, 800.0f, 20.0f);
-      gUI().EmitText(nearS, 6.0f, 80.0f, 800.0f, 20.0f);
-      gUI().EmitText(topS, 6.0f, 100.0f, 800.0f, 20.0f);
-      gUI().EmitText(bottomS, 6.0f, 120.0f, 1000.0f, 20.0f);
-      gUI().SetForegroundColor(Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-      gUI().EmitText(lol, spos.x, spos.y, 300.0f, 30.0f);
-      gUI().SetForegroundColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-      auto data = Profiler::GetAll(PROFILE_TYPES_RENDERER);
-      float offset = 120.0f;
-      for (auto it : data) {
-        offset += 20.0f;
-        std::string tss = it._tag + ": " + std::to_string(it._total * 1000.0f) + " ms";
-        gUI().EmitText(tss, 6.0f, offset, 800.0f, 20.0f); 
-      }
     gUI().EndCanvas();
   }
 

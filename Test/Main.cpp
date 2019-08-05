@@ -22,26 +22,26 @@ void processInput()
   Window* window = gEngine().getWindow();
 
   // Test getGamma correction
-  if (Keyboard::KeyPressed(KEY_CODE_G)) { camera->setGamma(camera->getGamma() + (r32)(5.0 * Time::deltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_H)) { camera->setGamma(camera->getGamma() <= 0.0f ? 0.1f : camera->getGamma() - (r32)(5.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_G)) { camera->setGamma(camera->getGamma() + (r32)(5.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_H)) { camera->setGamma(camera->getGamma() <= 0.0f ? 0.1f : camera->getGamma() - (r32)(5.0 * Time::deltaTime)); }
   // Test HDR Reinhard exposure.
-  if (Keyboard::KeyPressed(KEY_CODE_E)) { camera->setExposure(camera->getExposure() + (r32)(2.0 * Time::deltaTime)); }
-  if (Keyboard::KeyPressed(KEY_CODE_R)) { camera->setExposure(camera->getExposure() <= 0.0f ? 0.1f : camera->getExposure() - (r32)(2.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_E)) { camera->setExposure(camera->getExposure() + (r32)(2.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_R)) { camera->setExposure(camera->getExposure() <= 0.0f ? 0.1f : camera->getExposure() - (r32)(2.0 * Time::deltaTime)); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_0)) { camera->enableBloom(false); }
-  if (Keyboard::KeyPressed(KEY_CODE_1)) { camera->enableBloom(true); }
+  if (Keyboard::keyPressed(KEY_CODE_0)) { camera->enableBloom(false); }
+  if (Keyboard::keyPressed(KEY_CODE_1)) { camera->enableBloom(true); }
 
   // Camera projection changing.
-  if (Keyboard::KeyPressed(KEY_CODE_O)) { camera->setProjection(Camera::ORTHO); }
-  if (Keyboard::KeyPressed(KEY_CODE_P)) { camera->setProjection(Camera::PERSPECTIVE); }
-  if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) { Time::scaleTime -= 0.5f * Time::deltaTime;  }
-  if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) { Time::scaleTime += 0.5f * Time::deltaTime; }
+  if (Keyboard::keyPressed(KEY_CODE_O)) { camera->setProjection(Camera::ORTHO); }
+  if (Keyboard::keyPressed(KEY_CODE_P)) { camera->setProjection(Camera::PERSPECTIVE); }
+  if (Keyboard::keyPressed(KEY_CODE_LEFT_ARROW)) { Time::scaleTime -= 0.5f * Time::deltaTime;  }
+  if (Keyboard::keyPressed(KEY_CODE_RIGHT_ARROW)) { Time::scaleTime += 0.5f * Time::deltaTime; }
 
   // Window changing sets.
-  if (Keyboard::KeyPressed(KEY_CODE_M)) { window->setToFullScreen(); }
-  if (Keyboard::KeyPressed(KEY_CODE_N)) { window->setToWindowed(1200, 800); window->setToCenter(); window->show(); }
+  if (Keyboard::keyPressed(KEY_CODE_M)) { window->setToFullScreen(); }
+  if (Keyboard::keyPressed(KEY_CODE_N)) { window->setToWindowed(1200, 800); window->setToCenter(); window->show(); }
 
-  if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
+  if (Keyboard::keyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
 }
 
 #define SPHERE_SEGS 64
@@ -51,7 +51,6 @@ void processInput()
 int main(int c, char* argv[])
 {
   Log::displayToConsole(true);
-  Mouse::setEnable(false);
   Mouse::show(false);
 
   gEngine().startUp(RTEXT("Recluse"), false, 1200, 800);

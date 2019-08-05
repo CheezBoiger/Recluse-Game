@@ -83,6 +83,7 @@ private:
 };
 
 
+// Memory Allocator.
 class VulkanMemoryAllocatorManager {
 public:
 
@@ -109,13 +110,13 @@ public:
   void emptyGarbage(VulkanRHI* pRhi);
 
   VkDeviceSize getMaxDeviceLocalMemBytes() { return m_maxDeviceLocalMemBytes; }
-
+  VkDeviceSize getDeviceLocalMemBytes() const { return m_deviceLocalMemoryBytes; }
 private:
   u32 m_nextPoolId;
   u32 m_garbageIndex;
   u32 m_bufferCount;
-  VkDeviceSize m_deviceLocalMemoryMB;
-  VkDeviceSize m_hostVisibleMemoryMB;
+  VkDeviceSize m_deviceLocalMemoryBytes;
+  VkDeviceSize m_hostVisibleMemoryBytes;
   VkDeviceSize m_bufferImageGranularity;
   VkDeviceSize m_maxDeviceLocalMemBytes;
 

@@ -82,11 +82,6 @@ extern GraphicsPipeline*    transparent_staticShadowPipe;
 extern GraphicsPipeline*    transparent_dynamicShadowPipe;
 extern GraphicsPipeline*    transparent_colorFilterPipe;
 
-extern GraphicsPipeline* gbuffer_PipelineKey;
-extern GraphicsPipeline* gbuffer_morphTargetPipeline;
-extern GraphicsPipeline* gbuffer_staticMorphTargetPipeline;
-extern GraphicsPipeline* gbuffer_StaticPipelineKey;
-
 extern DescriptorSetLayout* gbuffer_LayoutKey;
 
 extern Texture* gbuffer_AlbedoAttachKey;
@@ -98,8 +93,6 @@ extern Texture* gbuffer_DepthAttachKey;
 extern FrameBuffer* gbuffer_FrameBufferKey;
 extern RenderPass* gbuffer_renderPass;
 
-extern GraphicsPipeline* pbr_Pipeline_LR;
-extern GraphicsPipeline* pbr_Pipeline_NoLR;
 extern ComputePipeline*  pbr_computePipeline_NoLR;
 extern ComputePipeline*   pbr_computePipeline_LR;
 extern GraphicsPipeline* pbr_static_LR_Debug;
@@ -193,7 +186,6 @@ extern GraphicsPipeline* DownscaleBlurPipeline16xKey;
 
 extern Texture* RenderTargetVelocityKey;
 
-extern GraphicsPipeline* hdr_gamma_pipelineKey;
 extern Texture* hdr_gamma_colorAttachKey;
 extern FrameBuffer* hdr_gamma_frameBufferKey;
 extern RenderPass* hdr_renderPass;
@@ -214,12 +206,16 @@ extern GraphicsPipeline* output_pipelineKey;
 
 enum GraphicsPipelineT {
   GRAPHICS_PIPELINE_START = 0,
+  GRAPHICS_PIPELINE_PREZ_DYNAMIC = GRAPHICS_PIPELINE_START,
+  GRPAHICS_PIPELINE_PREZ_DYNAMIC_MORPH_TARGETS,
+  GRAPHICS_PIPELINE_PREZ_STATIC,
+  GRAPHICS_PIPELINE_PREZ_STATIC_MORPH_TARGETS,
   GRAPHICS_PIPELINE_FINAL,
   GRAPHICS_PIPELINE_CLUSTER,
-  GRAPHICS_PIPELINE_GBUFFER_STATIC_LR,
-  GRAPHICS_PIPELINE_GBUFFER_STATIC_NO_LR,
-  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_LR,
-  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_NO_LR,
+  GRAPHICS_PIPELINE_GBUFFER_STATIC,
+  GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS,
+  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC,
+  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS,
   GRAPHICS_PIPELINE_PBR_FORWARD_LR,
   GRAPHICS_PIPELINE_PBR_FORWARD_NOLR,
   GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_LR,
@@ -228,9 +224,10 @@ enum GraphicsPipelineT {
   GRAPHICS_PIPELINE_PBR_FORWARD_MORPH_NOLR,
   GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_LR,
   GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_NOLR,
-  GRAPHICS_PIPELINE_PBR_DEFERRED,
+  GRAPHICS_PIPELINE_PBR_DEFERRED_LR,
+  GRAPHICS_PIPELINE_PBR_DEFERRED_NOLR,
   GRAPHICS_PIPELINE_PBR_FORWARD,
-  GRAPHICS_PIPELINE_HDR,
+  GRAPHICS_PIPELINE_HDR_GAMMA,
   GRAPHICS_PIPELINE_GLOW,
   GRAPHICS_PIPELINE_DOWNSCALE_BLUR_2X,
   GRAPHICS_PIPELINE_DOWNSCALE_BLUR_4X,
@@ -263,12 +260,18 @@ extern char const* kDefaultShaderEntryPointStr;
 void SetUpRenderData();
 void CleanUpRenderData();
 
+
 namespace RendererPass {
 
-void LoadShader(const std::string& Filename, Shader* S);
+
+void initialize(VulkanRHI* pRhi);
+void cleanUp(VulkanRHI* pRhi);
+GraphicsPipeline* getPipeline(GraphicsPipelineT pipeline);
+
+void loadShader(const std::string& Filename, Shader* S);
 
 // Set up the downscale pass.
-void SetUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
+void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
 
 // Set up the HDR getGamma pass.
 void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, HDR* pHDR);
@@ -287,7 +290,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
 
 void setUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultInfo);
 
-void SetUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
+void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
 
 enum AntiAliasingType {

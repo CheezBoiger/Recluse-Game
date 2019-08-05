@@ -462,8 +462,8 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
   Shader* vert = rhi->createShader();
   Shader* frag = rhi->createShader();
   
-  RendererPass::LoadShader(kAtmVertStr, vert);
-  RendererPass::LoadShader(kAtmFragStr, frag);
+  RendererPass::loadShader(kAtmVertStr, vert);
+  RendererPass::loadShader(kAtmFragStr, frag);
 
   gpCi.renderPass = m_pFrameBuffer->RenderPassRef()->getHandle();
   gpCi.pColorBlendState = &blendCi;

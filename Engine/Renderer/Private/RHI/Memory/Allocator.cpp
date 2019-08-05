@@ -212,8 +212,8 @@ VulkanMemoryAllocatorManager::VulkanMemoryAllocatorManager()
   : m_nextPoolId(0)
   , m_garbageIndex(0)
   , m_bufferCount(0)
-  , m_deviceLocalMemoryMB(0)
-  , m_hostVisibleMemoryMB(0)
+  , m_deviceLocalMemoryBytes(0)
+  , m_hostVisibleMemoryBytes(0)
   , m_bufferImageGranularity(0)
 {
 }
@@ -228,8 +228,8 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
                                         const VkPhysicalDeviceProperties* props,
                                         const VkPhysicalDeviceMemoryProperties* pMemProperties)
 {
-  m_deviceLocalMemoryMB = 128 * R_MEM_1_MB;
-  m_deviceLocalMemoryMB = 64 * R_MEM_1_MB; 
+  m_deviceLocalMemoryBytes = 128 * R_MEM_1_MB;
+  m_deviceLocalMemoryBytes = 64 * R_MEM_1_MB; 
   m_bufferImageGranularity = props->limits.bufferImageGranularity;
 
   for (u32 i = 0; i < pMemProperties->memoryHeapCount; ++i) {
@@ -272,7 +272,7 @@ VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
     }
   }
   // If no pool exists for the wanted memory type, create one!
-  VkDeviceSize poolSz = ((usage == PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY) ? m_deviceLocalMemoryMB : m_hostVisibleMemoryMB);
+  VkDeviceSize poolSz = ((usage == PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY) ? m_deviceLocalMemoryBytes : m_hostVisibleMemoryBytes);
   VulkanMemoryPool* newPool = new VulkanMemoryPool();
   VkPhysicalDeviceMemoryProperties memProps = VulkanRHI::gPhysicalDevice.getMemoryProperties();
   if (newPool->init(device, (poolGroup.size() + 1),  memoryIndex, usage, sz)) {

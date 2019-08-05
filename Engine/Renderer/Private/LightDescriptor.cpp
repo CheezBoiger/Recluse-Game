@@ -56,7 +56,7 @@ RenderPass*       ShadowMapSystem::k_pDynamicRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pStaticRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pCascadeRenderPass = nullptr;
 const u32         ShadowMapSystem::kTotalCascades = 4u;
-const u32         ShadowMapSystem::kMaxShadowDim = 4096u;
+const u32         ShadowMapSystem::kMaxShadowDim = 2048u;
 
 
 u32 LightBuffer::maxNumDirectionalLights()
@@ -877,10 +877,10 @@ void initializeShadowPipeline(VulkanRHI* pRhi, GraphicsPipeline* pipeline,
   Shader* SmVert = pRhi->createShader();
   Shader* SmFrag = pRhi->createShader();
 
-  RendererPass::LoadShader((skinned ? 
-    (morphTargets ? "DynamicShadowMapping_MorphTargets.vert.spv" : DynamicShadowMapVertFileStr) :  
-    (morphTargets ? "ShadowMapping_MorphTargets.vert.spv" : ShadowMapVertFileStr)), SmVert);
-  RendererPass::LoadShader(opaque ? 
+  RendererPass::loadShader((skinned ? 
+    (morphTargets ? "DynamicDepth_MorphTargets.vert.spv" : DynamicShadowMapVertFileStr) :  
+    (morphTargets ? "Depth_MorphTargets.vert.spv" : ShadowMapVertFileStr)), SmVert);
+  RendererPass::loadShader(opaque ? 
     (ShadowMapFragOpaqueFileStr) : (ShadowMapFragFileStr), SmFrag);
 
   std::array<VkPipelineShaderStageCreateInfo, 2> Shaders;

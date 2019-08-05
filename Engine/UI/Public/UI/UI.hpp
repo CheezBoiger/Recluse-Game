@@ -7,7 +7,8 @@
 #include "Core/Utility/Vector.hpp"
 #include "FontManager.hpp"
 
-
+#include <functional>
+#include <map>
 
 namespace Recluse {
 
@@ -20,6 +21,9 @@ class BufferUI;
 // User Interface manager.
 class UI : public EngineModule<UI> {
 public:
+
+  typedef std::function<b32()> CallbackUI;
+
   UI()
     : m_currForeColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f))
     , m_currBackColor(Vector4(0.0f, 0.0f, 0.0f, 0.0f))
@@ -45,12 +49,40 @@ public:
   void                      EndCanvas();
   void                      EmitImage(GUIImage* image);
 
+  void SetEventHandle( const std::string& eventName, 
+                       r32 x, 
+                       r32 y, 
+                       r32 w, 
+                       r32 h, 
+                       CallbackUI callbackOnPress = nullptr,
+                       CallbackUI callabckOnHover = nullptr ) 
+  {
+    m_eventHandles[ eventName ] = { { x, y, w, h }, callbackOnPress, callabckOnHover };
+  }
+
 private:
+
+  struct UIEvent 
+  {
+    struct 
+    {
+      r32 _x,
+          _y,
+          _w,
+          _h;
+    } _bbox;
+    CallbackUI _eventOnPress;
+    CallbackUI _eventOnHover;
+    CallbackUI _eventOnHold;
+    CallbackUI _eventOnRelease;
+  };
+
   r32                     m_currX;
   r32                     m_currY;
   Vector4                 m_currForeColor;
   Vector4                 m_currBackColor;
   BufferUI*               m_currUiBuffer;
+  std::map<std::string, UIEvent> m_eventHandles;
 };
 
 

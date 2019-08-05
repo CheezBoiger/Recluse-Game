@@ -140,30 +140,30 @@ public:
     Quaternion targ = Camera::getMain()->getTransform()->_rotation;
     transform->_rotation = targ;
 #endif
-    if (Keyboard::KeyPressed(KEY_CODE_UP_ARROW)) {
+    if (Keyboard::keyPressed(KEY_CODE_UP_ARROW)) {
       transform->_position += transform->front() * 1.0f * tick;
     }
-    if (Keyboard::KeyPressed(KEY_CODE_DOWN_ARROW)) {
+    if (Keyboard::keyPressed(KEY_CODE_DOWN_ARROW)) {
       transform->_position -= transform->front() * 1.0f * tick;
     }
-    if (Keyboard::KeyPressed(KEY_CODE_RIGHT_ARROW)) {
+    if (Keyboard::keyPressed(KEY_CODE_RIGHT_ARROW)) {
       transform->_rotation = transform->_rotation * 
         Quaternion::angleAxis(Radians(45.0f) * tick, Vector3::UP);
     }
-    if (Keyboard::KeyPressed(KEY_CODE_LEFT_ARROW)) {
+    if (Keyboard::keyPressed(KEY_CODE_LEFT_ARROW)) {
       transform->_rotation = transform->_rotation * 
         Quaternion::angleAxis(Radians(-45.0f) * tick, Vector3::UP);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_V)) {
+    if (Keyboard::keyPressed(KEY_CODE_V)) {
       m_pPhysicsComponent->setEnable(true);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_3)) {
+    if (Keyboard::keyPressed(KEY_CODE_3)) {
       m_pAnim->setPlaybackRate(m_pAnim->getPlaybackRate() - tick * 0.3f);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_4)) {
+    if (Keyboard::keyPressed(KEY_CODE_4)) {
       m_pAnim->setPlaybackRate(m_pAnim->getPlaybackRate() + tick * 0.3f);
     }
 
@@ -348,7 +348,7 @@ public:
 
   void update(r32 tick) override
   { 
-    if (Keyboard::KeyPressed(KEY_CODE_V)) {
+    if (Keyboard::keyPressed(KEY_CODE_V)) {
       m_pParticleSystem->SetMaxParticleCount(100);
     }
   }

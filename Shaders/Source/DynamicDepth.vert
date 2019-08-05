@@ -2,6 +2,9 @@
 #version 430
 #extension GL_ARB_separate_shader_objects   : enable
 #extension GL_ARB_shading_language_420pack  : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "Common/Globals.glsl"
 
 layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
@@ -28,12 +31,7 @@ layout (location = 13) in vec2  uv11;
 #define MAX_JOINTS     64
 
 layout (set = 0, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;
-  float lod;
-  int   hasJoints; 
-  float w0;
-  float w1;
+  Model m;
 } obj_buffer;
 
 
@@ -61,8 +59,8 @@ void main()
   vec2 temp_uv1 = uv1;
   
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
-  float w0 = obj_buffer.w0;
-  float w1 = obj_buffer.w1;
+  float w0 = obj_buffer.m.w0;
+  float w1 = obj_buffer.m.w1;
   vec3  morphPositionDiff0 = position0.xyz;
   vec3  morphPositionDiff1 = position1.xyz;
   vec2  morphUV00 = uv00;
@@ -78,7 +76,7 @@ void main()
 #endif
  
   // Compute the skin matrix.
-  if (obj_buffer.hasJoints >= 1) {
+  if (obj_buffer.m.hasJoints >= 1) {
     mat4 skinMatrix  = joints_buffer.joints[jointIDs[0]] * jointWeights[0];
     skinMatrix      += joints_buffer.joints[jointIDs[1]] * jointWeights[1];
     skinMatrix      += joints_buffer.joints[jointIDs[2]] * jointWeights[2];
@@ -87,7 +85,7 @@ void main()
     worldPosition = skinMatrix * worldPosition;
   }
   
-  worldPosition = obj_buffer.model * worldPosition;
+  worldPosition = obj_buffer.m.model * worldPosition;
   gl_Position = light_space.viewProj * worldPosition;
   
   fragIn.uv0 = temp_uv0;

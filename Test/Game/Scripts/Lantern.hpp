@@ -75,10 +75,10 @@ public:
 
   void update(r32 tick) override
   {
-    if (Keyboard::KeyPressed(KEY_CODE_5)) {
+    if (Keyboard::keyPressed(KEY_CODE_5)) {
       m_pointLight->enableDebug(false);
     }
-    if (Keyboard::KeyPressed(KEY_CODE_6)) {
+    if (Keyboard::keyPressed(KEY_CODE_6)) {
       m_pointLight->enableDebug(true);;
     }
   }
@@ -251,12 +251,12 @@ public:
     Camera* cam = Camera::getMain();
     Transform* camTransform = cam->getTransform();
 
-    if (!bFollow && Keyboard::KeyPressed(KEY_CODE_0)) {
+    if (!bFollow && Keyboard::keyPressed(KEY_CODE_0)) {
       oldTransform = *camTransform;
       bFollow = false;
     }
 
-    if (bFollow && Keyboard::KeyPressed(KEY_CODE_1)) {
+    if (bFollow && Keyboard::keyPressed(KEY_CODE_1)) {
       *camTransform = oldTransform;
       bFollow = false;
     }
@@ -269,10 +269,10 @@ public:
       camTransform->_rotation = transform->_rotation * Quaternion::angleAxis(Radians(180.f), Vector3::UP);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_U)) {
+    if (Keyboard::keyPressed(KEY_CODE_U)) {
       m_pRendererComponent->setEnable(false);
     }
-    if (Keyboard::KeyPressed(KEY_CODE_Y)) {
+    if (Keyboard::keyPressed(KEY_CODE_Y)) {
       m_pRendererComponent->setEnable(true);
     }
 

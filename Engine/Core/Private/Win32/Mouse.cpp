@@ -6,7 +6,6 @@
 namespace Recluse {
 
 
-
 b32 Mouse::mouseTrack = true;
 b32 Mouse::mouseEnabled = true;
 b32 Mouse::mouseShow = true;
@@ -19,8 +18,7 @@ HCURSOR Mouse::cursor = NULL;
 b32 Mouse::buttonActions[Mouse::MAX_MOUSE_BUTTONS];
 
 
-void Mouse::setEnable(b32 enable)
-{
+void Mouse::setEnable(b32 enable) {
   if (enable && Mouse::cursor) {
     SetCursor(Mouse::cursor);
   } else {

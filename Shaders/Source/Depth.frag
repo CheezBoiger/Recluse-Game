@@ -2,25 +2,14 @@
 #version 430
 #extension GL_ARB_separate_shader_objects   : enable
 #extension GL_ARB_shading_language_420pack  : enable
+#extension GL_GOOGLE_include_directive : enable
 
-#ifndef SHADOW_MAP_OPAQUE
+#include "Common/Globals.glsl"
+
+#ifndef DEPTH_OPAQUE
 
 layout (set = 1, binding = 0) uniform MaterialBuffer {
-  vec4  color;
-  vec4  anisoSpec;
-  vec4  offsetUV;
-  float opaque;
-  float metal;
-  float rough;
-  float emissive;
-  int   hasAlbedo;
-  int   hasMetallic;
-  int   hasRoughness;
-  int   hasNormal;
-  int   hasEmissive;
-  int   hasAO;
-  int   isTransparent;
-  int   pad;
+  Material mat;
 } matBuffer;
 
 layout (set = 1, binding = 1) uniform sampler2D albedo;
@@ -39,10 +28,10 @@ in FragIn {
 void main()
 {
   // TODO(): We may also want to add in transparency map as well?
-#ifndef SHADOW_MAP_OPAQUE  
-  vec4 alb = matBuffer.color;
-  if (matBuffer.hasAlbedo >= 1) {
-    vec2 uv0 = fragIn.uv0 + matBuffer.offsetUV.xy;
+#ifndef DEPTH_OPAQUE  
+  vec4 alb = matBuffer.mat.color;
+  if (matBuffer.mat.hasAlbedo >= 1) {
+    vec2 uv0 = fragIn.uv0 + matBuffer.mat.offsetUV.xy;
     alb = texture(albedo, uv0);
   }
   

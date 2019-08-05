@@ -47,7 +47,7 @@ void BakeIBL::setUpComputePipelines(VulkanRHI* pRhi)
   {
     m_pPipeGenBRDF = pRhi->createComputePipeline();
     Shader shader; shader.SetOwner(pRhi->logicDevice()->getNative());
-    RendererPass::LoadShader("GenerateBRDFLUT.comp.spv", &shader);
+    RendererPass::loadShader("GenerateBRDFLUT.comp.spv", &shader);
 
     VkPipelineShaderStageCreateInfo shaderCi = { };
     shaderCi.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

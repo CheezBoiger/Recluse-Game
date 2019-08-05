@@ -30,7 +30,27 @@ void UpdateTransform(Engine* engine, GameObject* object, size_t currNum)
 
 void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 {
-  Keyboard::keys[key] = (KeyAction)action;
+  switch ( ( KeyAction )action )
+  {
+    case KEY_DOWN:
+    {
+      if (Keyboard::keys[key] == KEY_DOWN)
+      {
+        Keyboard::keys[key] = KEY_STILLDOWN;
+      }
+      else if (Keyboard::keys[key] != KEY_STILLDOWN)
+      { 
+        Keyboard::keys[key] = KEY_DOWN;
+      }
+    } break;
+    case KEY_UP:
+    {
+      Keyboard::keys[ key ] = KEY_UP; 
+    } break;
+    default:
+      Keyboard::keys[key] = (KeyAction)action; break;
+  }
+#if 0
   if (Keyboard::KeyPressed(KEY_CODE_2)) {
     Mouse::show(!Mouse::isShowing());
     Mouse::setEnable(!Mouse::isEnabled());
@@ -44,6 +64,7 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
                           gEngine().GameMousePosY());
     }
   }
+#endif
 }
 
 
@@ -54,16 +75,6 @@ void WindowResized(Window* window, i32 width, i32 height)
     R_DEBUG(rVerbose, "Engine Renderer has been updated prior to resize.\n");
   }
   
-}
-
-
-void MousePositionMove(Window* window, r64 x, r64 y)
-{
-  Camera* camera = Camera::getMain();
-  if (camera && !Mouse::isEnabled()) {
-    gEngine().SetGameMouseX(x);
-    gEngine().SetGameMouseY(y);
-  }
 }
 
 
@@ -112,6 +123,14 @@ Engine::~Engine()
 }
 
 
+void Engine::processInput() 
+{
+  Window::pollEvents();
+  if (m_pControlInputFunc) m_pControlInputFunc();
+}
+
+
+
 void Engine::startUp(std::string appName, b32 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
 {
   if (m_running) return;
@@ -123,7 +142,6 @@ void Engine::startUp(std::string appName, b32 fullscreen, i32 width, i32 height,
 
   Window::setKeyboardCallback(KeyCallback);
   Window::setWindowResizeCallback(WindowResized);
-  Window::setMousePositionCallback(MousePositionMove);
   Window::setMouseButtonCallback(MouseButtonClick);
 
   m_window.create(appName, width, height);
@@ -226,6 +244,8 @@ void Engine::update()
 
 
   // Update using next frame input.
+  gUI().updateState(dt);
+
   AnimationComponent::updateComponents();
   gAnimation().updateState(dt);
   
@@ -255,7 +275,6 @@ void Engine::update()
   });
 
   ParticleSystemComponent::updateComponents();
-  gUI().updateState(dt);
 
   m_workers[0].join();
   m_workers[1].join();

@@ -87,8 +87,7 @@ public:
   
   // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.
   void                          setControlInput(ControlInputCallback callback) { m_pControlInputFunc = callback; }
-  void                          processInput() { Window::pollEvents(); if (m_pControlInputFunc) m_pControlInputFunc(); }
-
+  void                          processInput();
   void                          run();
   void                          signalStop() { m_stopping = true; }
   Window*                       getWindow() { return &m_window; }

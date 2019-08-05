@@ -76,7 +76,9 @@ enum KeyCode {
 
 enum KeyAction {
   KEY_DOWN = WM_KEYDOWN,
-  KEY_UP = WM_KEYUP
+  KEY_UP = WM_KEYUP,
+  KEY_STILLDOWN,
+  KEY_IDLE
 };
 
 
@@ -84,7 +86,9 @@ enum KeyAction {
 class Keyboard {
 public:
   static KeyAction keys[256];
-  static b32 KeyPressed(KeyCode keycode);
-  static b32 KeyReleased(KeyCode keycode);
+  static void preUpdate();
+  static b32 keyPressed(KeyCode keycode);
+  static b32 keyHeldDown(KeyCode keycode);
+  static b32 keyReleased(KeyCode keycode);
 };
 } // Recluse

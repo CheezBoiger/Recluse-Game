@@ -2,6 +2,9 @@
 #version 430
 #extension GL_ARB_separate_shader_objects   : enable
 #extension GL_ARB_shading_language_420pack  : enable
+#extension GL_GOOGLE_include_directive : enable
+
+#include "Common/Globals.glsl"
 
 layout (location = 0) in vec4   position;
 layout (location = 1) in vec4   normal;
@@ -25,12 +28,7 @@ layout (location = 11) in vec2  uv11;
 
 
 layout (set = 0, binding = 0) uniform ObjectBuffer {
-  mat4  model;
-  mat4  normalMatrix;
-  float lod;
-  int   hasBones; 
-  float w0;
-  float w1;
+  Model m;
 } obj_buffer;
 
 
@@ -51,8 +49,8 @@ void main()
   vec2 temp_uv1 = texcoord1;
   
 #if defined(INCLUDE_MORPH_TARGET_ANIMATION)
-  float w0 = obj_buffer.w0;
-  float w1 = obj_buffer.w1;
+  float w0 = obj_buffer.m.w0;
+  float w1 = obj_buffer.m.w1;
   vec3  morphPositionDiff0 = position0.xyz;
   vec3  morphPositionDiff1 = position1.xyz;
   vec2  morphUV00 = uv00;
@@ -67,7 +65,7 @@ void main()
   temp_uv1 += morphUV11 * w1;
 #endif
 
-  mat4 mvp = light_space.viewProj * obj_buffer.model;
+  mat4 mvp = light_space.viewProj * obj_buffer.m.model;
   gl_Position = mvp * vec4(worldPosition.xyz, 1.0);
   
   fragIn.uv0 = temp_uv0;

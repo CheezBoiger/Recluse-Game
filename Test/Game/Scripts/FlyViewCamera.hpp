@@ -100,6 +100,7 @@ public:
     , m_lastX(0.0f)
     , m_lastY(0.0f)
     , _pHolding(nullptr)
+    , m_pause(false)
   {
   }
 
@@ -137,17 +138,17 @@ public:
     m_pSpotLight2->setIntensity(2.0f);
     m_pSpotLight2->setOffset(Vector3(-0.5f, -0.5f, 0.0f));
 
-    pCam->enableFilmGrain(true);
+    //pCam->enableFilmGrain(true);
     pCam->setFilmGrainSpeed(50.0f);
   }
 
   // Game object updating.
   void update(r32 tick) override
   {
-    if (Keyboard::KeyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
+    if (Keyboard::keyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
     Transform* transform = getTransform();
 
-    if (Keyboard::KeyPressed(KEY_CODE_0)) {
+    if (Keyboard::keyPressed(KEY_CODE_0)) {
      // pCam->setFoV(pCam->getFoV() + Radians(1.0f));
      //pCam->setExposure(pCam->getExposure() - 2.0f * Time::deltaTime);
       //gRenderer().takeSnapshot("screenshot.png");
@@ -155,7 +156,7 @@ public:
       m_pSpotLight2->setEnable(false);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_1)) {
+    if (Keyboard::keyPressed(KEY_CODE_1)) {
       //pCam->setFoV(pCam->getFoV() - Radians(1.0f));
       //pCam->setExposure(pCam->getExposure() + 2.0f * (r32)Time::deltaTime);
       m_pSpotLight->setEnable(true);
@@ -163,14 +164,14 @@ public:
     }
 
     // Test window resizing.
-    if (Keyboard::KeyPressed(KEY_CODE_N)) { 
+    if (Keyboard::keyPressed(KEY_CODE_N)) { 
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Resolution = Resolution_1920x1080;
       gRenderer().updateRendererConfigs(&params);
       gEngine().getWindow()->setToWindowed(Window::getFullscreenWidth(), Window::getFullscreenHeight(), true); 
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_M)) { 
+    if (Keyboard::keyPressed(KEY_CODE_M)) { 
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Resolution = Resolution_1200x800;
       gRenderer().updateRendererConfigs(&params);
@@ -180,7 +181,7 @@ public:
     }
 
     // Testing renderer configurations during runtime.
-    if (Keyboard::KeyPressed(KEY_CODE_8)) {
+    if (Keyboard::keyPressed(KEY_CODE_8)) {
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Buffering = SINGLE_BUFFER;
       params._EnableVsync = true;
@@ -193,7 +194,7 @@ public:
       gRenderer().updateRendererConfigs(&params);
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_9)) {
+    if (Keyboard::keyPressed(KEY_CODE_9)) {
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Buffering = TRIPLE_BUFFER;
       params._EnableVsync = false;
@@ -206,13 +207,32 @@ public:
       gRenderer().updateRendererConfigs(&params);
     }
 
+    if ( Keyboard::keyPressed( KEY_CODE_2 ) )
+    {
+      m_pause = !m_pause;
+      Log() << "Pressed\n";
+      if (m_pause)
+      {
+        m_pX = Mouse::getX( );
+        m_pY = Mouse::getY( );
+        Mouse::setEnable(true);
+        Mouse::show(true);
+      }
+      else
+      {
+        Mouse::setEnable(false);
+        Mouse::setPosition( m_pX, m_pY );
+        Mouse::show(false);
+      }
+    }
+
     if (bFirstLook) {
       m_lastX = (r32)Mouse::getX();
       m_lastY = (r32)Mouse::getY();
       bFirstLook = false;
     }
 
-    if (Mouse::isTracking()) {
+    if ( !m_pause ) {
       r32 xoffset = m_lastX - (r32)Mouse::getX();
       r32 yoffset = (r32)Mouse::getY() - m_lastY;
       m_lastX = (r32)Mouse::getX();
@@ -264,7 +284,7 @@ public:
 
     m_temp.update(tick);
 
-    if (Keyboard::KeyPressed(KEY_CODE_E) && _pHolding) {
+    if (Keyboard::keyPressed(KEY_CODE_E) && _pHolding) {
       // Let go of object we are holding.
       _pHolding->GetPhysicsComponent()->setMass(1.0f);
       _pHolding->GetPhysicsComponent()->reset();
@@ -308,6 +328,8 @@ private:
   r32     m_yaw;
   r32     m_roll;
   r32     m_constrainPitch;
+  b32     m_pause;
+  r32     m_pX, m_pY;
 #if CAMERA_REVOLVE > 0
   r32     t = 0.0f;
 #endif
@@ -357,7 +379,8 @@ public:
     if (pMainCam) {
       Transform* camTransform = pMainCam->getTransform();
       camTransform->_position = transform->_position;
-      if (Keyboard::KeyPressed(KEY_CODE_LCONTROL)) {
+      if ( Keyboard::keyPressed( KEY_CODE_LCONTROL ) ||
+           Keyboard::keyHeldDown( KEY_CODE_LCONTROL ) ) {
         offset = Lerpf(offset, 0.0f, tick * 5.0f);
         speed *= 0.5f;
       } else {
@@ -373,26 +396,30 @@ public:
     f.y = 0.0f;
     f = f.normalize();
 
-    if (Keyboard::KeyPressed(KEY_CODE_LSHIFT)) {
+    if (Keyboard::keyPressed(KEY_CODE_LSHIFT)) {
       speed *= 5.0f;
     }
-    if (Keyboard::KeyPressed(KEY_CODE_A)) {
+    if (Keyboard::keyPressed( KEY_CODE_A ) ||
+        Keyboard::keyHeldDown( KEY_CODE_A ) ) {
       transform->_position -= r * speed * tick;
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_D)) {
+    if ( Keyboard::keyPressed( KEY_CODE_D ) ||
+         Keyboard::keyHeldDown( KEY_CODE_D ) ) {
       transform->_position += r * speed * tick;
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_W)) {
+    if ( Keyboard::keyPressed( KEY_CODE_W ) ||
+         Keyboard::keyHeldDown( KEY_CODE_W ) ) {
       transform->_position += f * speed * tick;
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_S)) {
+    if ( Keyboard::keyPressed( KEY_CODE_S ) ||
+         Keyboard::keyHeldDown( KEY_CODE_S ) ) {
       transform->_position -= f * speed * tick;
     }
 
-    if (Keyboard::KeyPressed(KEY_CODE_SPACE)) {
+    if (Keyboard::keyPressed(KEY_CODE_SPACE)) {
       if (!m_jumping) {
         m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
         m_pPhysicsComponent->applyImpulse(Vector3(0.0f, 10.0f, 0.0f),

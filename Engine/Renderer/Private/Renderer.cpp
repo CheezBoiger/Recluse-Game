@@ -1558,6 +1558,8 @@ void Renderer::setUpFrameBuffers()
 
 void Renderer::setUpGraphicsPipelines()
 {
+  RendererPass::initialize(m_pRhi);
+
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   assemblyCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -1729,11 +1731,11 @@ void Renderer::setUpGraphicsPipelines()
   colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
 
   RendererPass::SetUpDeferredPhysicallyBasedPass(getRHI(), GraphicsPipelineInfo);
-  RendererPass::SetUpDownScalePass(getRHI(), GraphicsPipelineInfo);
+  RendererPass::setUpDownScalePass(getRHI(), GraphicsPipelineInfo);
   RendererPass::SetUpHDRGammaPass(getRHI(), GraphicsPipelineInfo, m_pHDR);
 
   if (m_AntiAliasing) {
-    RendererPass::SetUpAAPass(getRHI(), GraphicsPipelineInfo, m_currentGraphicsConfigs._AA);
+    RendererPass::setUpAAPass(getRHI(), GraphicsPipelineInfo, m_currentGraphicsConfigs._AA);
   }
 
   colorBlendAttachments[0].blendEnable = VK_FALSE;
@@ -1743,18 +1745,9 @@ void Renderer::setUpGraphicsPipelines()
 
 void Renderer::cleanUpGraphicsPipelines()
 {
-  GraphicsPipeline* gbuffer_Pipeline = gbuffer_PipelineKey;
-  m_pRhi->freeGraphicsPipeline(gbuffer_Pipeline);
 
-  GraphicsPipeline* pbr_Pipeline = pbr_Pipeline_LR;
-  m_pRhi->freeGraphicsPipeline(pbr_Pipeline);
+  RendererPass::cleanUp(m_pRhi);
 
-  m_pRhi->freeGraphicsPipeline(pbr_Pipeline_NoLR);
-
-  GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
-  m_pRhi->freeGraphicsPipeline(gbuffer_StaticPipeline);
-  m_pRhi->freeGraphicsPipeline(gbuffer_staticMorphTargetPipeline);
-  m_pRhi->freeGraphicsPipeline(gbuffer_morphTargetPipeline);
   m_pRhi->freeGraphicsPipeline(pbr_forwardPipeline_LR);
   m_pRhi->freeGraphicsPipeline(pbr_staticForwardPipeline_LR);
   m_pRhi->freeGraphicsPipeline(pbr_forwardPipeline_NoLR);
@@ -1781,9 +1774,6 @@ void Renderer::cleanUpGraphicsPipelines()
   m_pRhi->freeGraphicsPipeline(output_pipelineKey);
   m_pRhi->freeComputePipeline(pbr_computePipeline_NoLR);
   m_pRhi->freeComputePipeline(pbr_computePipeline_LR);
-
-  GraphicsPipeline* HdrPipeline = hdr_gamma_pipelineKey;
-  m_pRhi->freeGraphicsPipeline(HdrPipeline);
 
   GraphicsPipeline* DownscalePipeline2x = DownscaleBlurPipeline2xKey;
   m_pRhi->freeGraphicsPipeline(DownscalePipeline2x);
@@ -2185,11 +2175,11 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 {
   GraphicsPipeline* pPipeline = nullptr;
   ComputePipeline* pCompPipeline = nullptr;
-  pPipeline = pbr_Pipeline_NoLR;
+  pPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_PBR_DEFERRED_NOLR );
   pCompPipeline = pbr_computePipeline_NoLR;
 
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
-    pPipeline = pbr_Pipeline_LR;
+    pPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_PBR_DEFERRED_LR );
     pCompPipeline = pbr_computePipeline_LR;
   }
 
@@ -2880,25 +2870,32 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   } 
 
   FrameBuffer* gbuffer_FrameBuffer = gbuffer_FrameBufferKey;
-  GraphicsPipeline* gbuffer_Pipeline = gbuffer_PipelineKey;
-  GraphicsPipeline* gbuffer_StaticPipeline = gbuffer_StaticPipelineKey;
-
-  std::array<VkClearValue, 5> clearValues;
-  clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[4].depthStencil = { 1.0f, 0 };
-
-  VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
+  GraphicsPipeline* gbuffer_Pipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_DYNAMIC );
+  GraphicsPipeline* gbuffer_StaticPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC );
+  GraphicsPipeline* gbuffer_staticMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS );
+  GraphicsPipeline* gbuffer_dynamicMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS );
   VkExtent2D windowExtent = m_displayExtent;
-  gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->getHandle();
-  gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->getHandle();
-  gbuffer_RenderPassInfo.pClearValues = clearValues.data();
-  gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-  gbuffer_RenderPassInfo.renderArea.extent = windowExtent;
-  gbuffer_RenderPassInfo.renderArea.offset = { 0, 0 };
+  VkDescriptorSet DescriptorSets[6];
+
+  {
+    std::array<VkClearValue, 5> clearValues;
+    clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[2].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[3].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+    clearValues[4].depthStencil = { 1.0f, 0 };
+
+    VkRenderPassBeginInfo gbuffer_RenderPassInfo = {};
+    gbuffer_RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->getHandle();
+    gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->getHandle();
+    gbuffer_RenderPassInfo.pClearValues = clearValues.data();
+    gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
+    gbuffer_RenderPassInfo.renderArea.extent = windowExtent;
+    gbuffer_RenderPassInfo.renderArea.offset = { 0, 0 };
+
+    cmdBuffer->beginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+  }
 
   VkViewport viewport =  { };
   viewport.height = (r32)windowExtent.height;
@@ -2908,81 +2905,80 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   viewport.y = 0.0f;
   viewport.x = 0.0f;
 
-  VkDescriptorSet DescriptorSets[6];
-  cmdBuffer->beginRenderPass(gbuffer_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    if (m_cmdDeferredList.Size() == 0) {
-      VkClearAttachment clearAttachments[5];
-      for (u32 i = 0; i < 4; ++i) {
-        clearAttachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        clearAttachments[i].clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
-        clearAttachments[i].colorAttachment = i;
+  if (m_cmdDeferredList.Size() == 0) {
+    VkClearAttachment clearAttachments[5];
+    for (u32 i = 0; i < 4; ++i) {
+      clearAttachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      clearAttachments[i].clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+      clearAttachments[i].colorAttachment = i;
+    }
+    clearAttachments[4].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    clearAttachments[4].clearValue.depthStencil = { 1.0f, 0 };
+    clearAttachments[4].colorAttachment = 4;
+    VkClearRect clearRects[4] = { };
+    for (u32 i = 0; i < 4; ++i) {
+      clearRects[i].baseArrayLayer = 0;
+      clearRects[i].layerCount = 0;
+      clearRects[i].rect.extent = m_displayExtent;
+      clearRects[i].rect.offset = { 0, 0 };
+    }
+    cmdBuffer->clearAttachments(5, clearAttachments, 4, clearRects);
+  } else {
+    for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
+      PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.get(i);
+      // Need to notify that this render command does not have a render object.
+      if (!renderCmd._pMeshDesc) continue;
+      if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
+          (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
+      R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
+
+      MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
+      // Set up the render mesh
+      MeshData* data = renderCmd._pMeshData;
+
+      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
+      GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
+      VertexBuffer* vertexBuffer = data->getVertexData();
+      IndexBuffer* indexBuffer = data->getIndexData();
+      VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
+      VkDeviceSize offsets[] = { 0 };
+      cmdBuffer->bindVertexBuffers(0, 1, &vb, offsets);
+      if (renderCmd._config & CMD_MORPH_BIT) {
+        Pipe = Skinned ? gbuffer_dynamicMorph : gbuffer_staticMorph;
+        R_ASSERT(renderCmd._pMorph0, "morph0 is null");
+        R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
+        VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
+        VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
+        cmdBuffer->bindVertexBuffers(1, 1, &morph0, offsets);
+        cmdBuffer->bindVertexBuffers(2, 1,  &morph1, offsets);
+      } 
+
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+
+      DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
+      DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
+      DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
+
+      if (indexBuffer) {
+        VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
+        cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
       }
-      clearAttachments[4].aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-      clearAttachments[4].clearValue.depthStencil = { 1.0f, 0 };
-      clearAttachments[4].colorAttachment = 4;
-      VkClearRect clearRects[4] = { };
-      for (u32 i = 0; i < 4; ++i) {
-        clearRects[i].baseArrayLayer = 0;
-        clearRects[i].layerCount = 0;
-        clearRects[i].rect.extent = m_displayExtent;
-        clearRects[i].rect.offset = { 0, 0 };
-      }
-      cmdBuffer->clearAttachments(5, clearAttachments, 4, clearRects);
-    } else {
-      for (size_t i = 0; i < m_cmdDeferredList.Size(); ++i) {
-        PrimitiveRenderCmd& renderCmd = m_cmdDeferredList.get(i);
-        // Need to notify that this render command does not have a render object.
-        if (!renderCmd._pMeshDesc) continue;
-        if (!(renderCmd._config & CMD_RENDERABLE_BIT) ||
-            (renderCmd._config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT))) continue;
-        R_ASSERT(renderCmd._pMeshData, "Null data passed to renderer.");
 
-        MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-        // Set up the render mesh
-        MeshData* data = renderCmd._pMeshData;
-
-        b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-        GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
-        VertexBuffer* vertexBuffer = data->getVertexData();
-        IndexBuffer* indexBuffer = data->getIndexData();
-        VkBuffer vb = vertexBuffer->getHandle()->getNativeBuffer();
-        VkDeviceSize offsets[] = { 0 };
-        cmdBuffer->bindVertexBuffers(0, 1, &vb, offsets);
-        if (renderCmd._config & CMD_MORPH_BIT) {
-          Pipe = Skinned ? gbuffer_morphTargetPipeline : gbuffer_staticMorphTargetPipeline;
-          R_ASSERT(renderCmd._pMorph0, "morph0 is null");
-          R_ASSERT(renderCmd._pMorph1, "morph1 is null.");
-          VkBuffer morph0 = renderCmd._pMorph0->getVertexData()->getHandle()->getNativeBuffer();
-          VkBuffer morph1 = renderCmd._pMorph1->getVertexData()->getHandle()->getNativeBuffer();
-          cmdBuffer->bindVertexBuffers(1, 1, &morph0, offsets);
-          cmdBuffer->bindVertexBuffers(2, 1,  &morph1, offsets);
-        } 
-
-        cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Pipe->Pipeline());
-        cmdBuffer->setViewPorts(0, 1, &viewport);
-
-        DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
-        DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
-        DescriptorSets[3] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
-
-        if (indexBuffer) {
-          VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-          cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
-        }
-
-        MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
-        DescriptorSets[2] = pMatDesc->CurrMaterialSet()->getHandle();
-        // Bind materials.
-        cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-          Pipe->getLayout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
-        if (indexBuffer) {
-          cmdBuffer->drawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
-            renderCmd._pPrimitive->_firstIndex, 0, 0);
-        } else {
-          cmdBuffer->draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
-        }
+      MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
+      DescriptorSets[2] = pMatDesc->CurrMaterialSet()->getHandle();
+      // Bind materials.
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        Pipe->getLayout(), 0, (Skinned ? 4 : 3), DescriptorSets, 0, nullptr);
+      if (indexBuffer) {
+        cmdBuffer->drawIndexed(renderCmd._pPrimitive->_indexCount, renderCmd._instances, 
+          renderCmd._pPrimitive->_firstIndex, 0, 0);
+      } else {
+        cmdBuffer->draw(vertexBuffer->VertexCount(), renderCmd._instances, 0, 0);
       }
     }
+  }
+
   cmdBuffer->endRenderPass();
 
   // Build decals after.
@@ -3052,7 +3048,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
 
-  GraphicsPipeline* hdrPipeline = hdr_gamma_pipelineKey;
+  GraphicsPipeline* hdrPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_HDR_GAMMA );
   GraphicsPipeline* Downscale2x = DownscaleBlurPipeline2xKey;
   GraphicsPipeline* Downscale4x = DownscaleBlurPipeline4xKey;
   GraphicsPipeline* Downscale8x = DownscaleBlurPipeline8xKey;

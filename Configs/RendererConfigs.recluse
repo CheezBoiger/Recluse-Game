@@ -10,6 +10,7 @@
 [ChromaticAberration] = true
 [PostProcessing] = true
 [LocalReflections] = true
+[FilmGrain] = false
 [SoftShadows] = true
 [Bloom] = true
 [Multithreading] = true
@@ -17,7 +18,11 @@
 [Window] = borderless
 [Particles] = medium
 [Decals] = medium
-[RTX] = false
+[RTXEnable] = false
+[RTXShadows] = false
+[RTXReflections] = false
+[RTXAmbientOcclusion] = false
+[RTXCaustics] = false
 [SSAO] = none
 [PhysicsQuality] = high
 [AudioQuality] = high
