@@ -175,10 +175,10 @@ public:
 
 private:
 
-  void                      initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, GraphicsQuality staticShadowDetail);
+  void                      initializeShadowMapD(VulkanRHI* pRhi, u32 resolution = 1u);
   void                      initializeShadowMapDescriptors(VulkanRHI* pRhi);
   void                      initializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
-  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail);
+  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution = 1u);
 
   void                      cleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
   void                      cleanUpShadowMapCascades(VulkanRHI* pRhi);
@@ -257,6 +257,7 @@ private:
   r32                           m_rShadowViewportDim;
   b32                           m_staticMapNeedsUpdate;
   u32                           m_numPointLights;
+  GraphicsQuality               m_shadowQuality;
   std::vector<Texture*>         m_pCascadeShadowMapD;
   std::vector<Vector3>          m_pointMapPositions;
   std::vector<std::vector<Cascade>>          m_cascades;

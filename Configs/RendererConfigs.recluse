@@ -12,6 +12,8 @@
 [LocalReflections] = true
 [FilmGrain] = false
 [SoftShadows] = true
+[ShadowMapResolution] = 2048
+[ShadowMapPointLightResolution] = 512
 [Bloom] = true
 [Multithreading] = true
 [Resolution] = 1440x900

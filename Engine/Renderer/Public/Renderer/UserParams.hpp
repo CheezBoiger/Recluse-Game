@@ -93,6 +93,10 @@ public:
   // render scale determines the viewport surface to render onto.
   r32             _renderScale;
 
+  u32             _shadowMapRes;
+
+  u32             _shadowMapArrayRes;
+
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
   // refresh at max 60 Hz. If this monitor can achieve higher refresh rates, this feature may only
   // have negative impacts, and is best to leave off. This may have a slight impact
@@ -138,6 +142,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   GRAPHICS_QUALITY_HIGH,
   0.0f,
   1.0f,
+  2048u,
+  512u,
   true,
   true,
   true,

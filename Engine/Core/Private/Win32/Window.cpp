@@ -314,9 +314,7 @@ b32 Window::initializeAPI()
   kFullscreenWidth = GetSystemMetrics(SM_CXSCREEN);
   kFullscreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-  for (size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i) {
-    Mouse::buttonActions[i] = Mouse::IDLE;
-  }
+  Mouse::resetButtonActions( );
 
   return bInitialized;
 }
@@ -324,18 +322,21 @@ b32 Window::initializeAPI()
 
 void Window::pollEvents()
 {
-  for (size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i) {
-    if (Mouse::buttonActions[i] == Mouse::RELEASED) {
-      Mouse::buttonActions[i] = Mouse::IDLE;
+  for ( size_t i = 0; i < Mouse::MAX_MOUSE_BUTTONS; ++i ) 
+  {
+    if ( Mouse::buttonActions[ i ] == Mouse::RELEASED ) 
+    {
+      Mouse::buttonActions[ i ] = Mouse::IDLE;
     }
   }
 
-  Keyboard::preUpdate();
+  Keyboard::preUpdate( );
 
   MSG msg;
-  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+  while ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) ) 
+  {
+    TranslateMessage( &msg );
+    DispatchMessage( &msg );
   }
 }
 

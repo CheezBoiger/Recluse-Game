@@ -15,7 +15,7 @@ r64 Mouse ::yPos = 0;
 r64 Mouse::lastXPos = 0;
 r64 Mouse::lastYPos = 0;
 HCURSOR Mouse::cursor = NULL;
-b32 Mouse::buttonActions[Mouse::MAX_MOUSE_BUTTONS];
+Mouse::ButtonAction Mouse::buttonActions[Mouse::MAX_MOUSE_BUTTONS];
 
 
 void Mouse::setEnable(b32 enable) {
@@ -31,13 +31,25 @@ void Mouse::setEnable(b32 enable) {
 
 void Mouse::show(b32 enable)
 {
-  if (enable) {
-    ShowCursor(true);
-  } else {
-    ShowCursor(false);
+  if ( enable ) 
+  {
+    ShowCursor( true );
+  } 
+  else 
+  {
+    ShowCursor( false );
   }
 
   mouseShow = enable;
+}
+
+
+void Mouse::resetButtonActions()
+{
+  for (u32 i = 0; i < MAX_MOUSE_BUTTONS; ++i)
+  {
+    buttonActions[ i ] = Mouse::IDLE;
+  }
 }
 
 

@@ -26,7 +26,10 @@ public:
     MIDDLE = 2,
   };
 
+  // Enable mouse on screen position. Setting to false, will use raw input.
   static void setEnable(b32 enable);
+
+  //Track mouse.
   static void setTrack(b32 enable) { mouseTrack = enable; }
   static void show(b32 enable);
   static void clampWithinWindow(b32 enable) { mouseClamped = enable; }
@@ -46,6 +49,8 @@ public:
   static b32 buttonDown(ButtonType type);
   static b32 buttonUp(ButtonType type);
 
+  static void resetButtonActions();
+
 private:
   static b32       mouseClamped;
   static b32       mouseTrack;
@@ -59,7 +64,7 @@ private:
   static HCURSOR  cursor;
 
   // TODO(): Other buttons on the mouse should be supported too...
-  static b32      buttonActions   [MAX_MOUSE_BUTTONS];
+  static ButtonAction      buttonActions   [MAX_MOUSE_BUTTONS];
   friend class Window;
 };
 } // Recluse

@@ -56,7 +56,7 @@ RenderPass*       ShadowMapSystem::k_pDynamicRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pStaticRenderPass = nullptr;
 RenderPass*       ShadowMapSystem::k_pCascadeRenderPass = nullptr;
 const u32         ShadowMapSystem::kTotalCascades = 4u;
-const u32         ShadowMapSystem::kMaxShadowDim = 2048u;
+const u32         ShadowMapSystem::kMaxShadowDim = 4196u;
 
 
 u32 LightBuffer::maxNumDirectionalLights()
@@ -471,7 +471,7 @@ void ShadowMapSystem::cleanUpSpotLightShadowMapArray(VulkanRHI* pRhi)
 }
 
 
-void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQuality shadowDetail)
+void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution)
 {
   /*
   m_pCascadeDescriptorSet = pRhi->CreateDescriptorSet();
@@ -497,7 +497,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
   }
   */
   
-  u32 sDim =  shadowDetail == GRAPHICS_QUALITY_NONE ? 1u : kMaxShadowDim;
+  u32 sDim = resolution;
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   ImageCi.arrayLayers = kTotalCascades;
@@ -561,7 +561,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
     m_pCascadeFrameBuffers[i]->Finalize(fCi, k_pCascadeRenderPass);
   }
 
-  if (shadowDetail == GRAPHICS_QUALITY_NONE) {
+  if (resolution == 1u) {
     for (u32 i = 0; i < m_pCascadeShadowMapD.size(); ++i) {
       CommandBuffer cmd;
       cmd.SetOwner(pRhi->logicDevice()->getNative());
@@ -605,10 +605,9 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, GraphicsQualit
 }
 
 
-void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dynamicShadowDetail, 
-  GraphicsQuality staticShadowDetail)
+void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, u32 resolution)
 {
-  u32 dDim = dynamicShadowDetail == GRAPHICS_QUALITY_NONE ? 1u : kMaxShadowDim;
+  u32 dDim = resolution;
   // ShadowMap is a depth image.
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -667,7 +666,7 @@ void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
   if (!m_pStaticMap) {
     m_pStaticMap = pRhi->createTexture();
     RDEBUG_SET_VULKAN_NAME(m_pStaticMap, "Static Shadowmap.");
-    u32 sDim = staticShadowDetail == GRAPHICS_QUALITY_NONE ? 1u : kMaxShadowDim;
+    u32 sDim = resolution;
     ImageCi.extent.width = sDim;
     ImageCi.extent.height = sDim;
     R_DEBUG(rNotify, "Static Shadow map size: ");
@@ -679,10 +678,11 @@ void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, GraphicsQuality dyna
 
 void ShadowMapSystem::initialize(VulkanRHI* pRhi, const GraphicsConfigParams* params)
 {
-  initializeShadowMapD(pRhi, params->_Shadows, params->_Shadows);
-  initializeCascadeShadowMap(pRhi, params->_Shadows);
+  m_shadowQuality = params->_Shadows;
+  initializeShadowMapD(pRhi, params->_shadowMapRes);
+  initializeCascadeShadowMap(pRhi, params->_shadowMapRes);
   initializeShadowMapDescriptors(pRhi);  
-  initializeSpotLightShadowMapArray(pRhi);
+  initializeSpotLightShadowMapArray(pRhi, params->_shadowMapArrayRes);
   
   enableStaticMapSoftShadows(params->_EnableSoftShadows);
   enableDynamicMapSoftShadows(params->_EnableSoftShadows);

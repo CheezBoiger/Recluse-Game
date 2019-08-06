@@ -191,13 +191,15 @@ public:
 #define ALLOW_SUN_MOVEMENT 1
 #if ALLOW_SUN_MOVEMENT >= 1
     static r32 tt = 0.0f;
-    if (Keyboard::keyPressed(KEY_CODE_Q)) {
-      Scene* scene = gEngine().getScene();
-      DirectionalLight* light = scene->getSky()->getSunLight();
+    if ( Keyboard::keyPressed( KEY_CODE_Q ) || 
+         Keyboard::keyHeldDown( KEY_CODE_Q ) ) 
+    {
+      Scene* scene = gEngine( ).getScene( );
+      DirectionalLight* light = scene->getSky( )->getSunLight( );
       light->_Direction = Vector3(
         0.0f, 
-        sinf(static_cast<r32>(tt * 0.01f)) * 0.5f,
-        cosf(static_cast<r32>(tt * 0.01f)) * 0.5f).normalize();
+        sinf( static_cast< r32 >( tt * 0.01f ) ) * 0.5f,
+        cosf( static_cast< r32 >( tt * 0.01f ) ) * 0.5f ).normalize( );
       tt += 1.0f;
     }
 #endif
