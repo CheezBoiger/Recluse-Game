@@ -520,46 +520,36 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
         u32 res = atoi(option.c_str());
         graphics._shadowMapArrayRes = res;
       }
-      if (availableOption(line, "Resolution")) {
+      if (availableOption(line, "RenderResolution")) {
         std::string option = getOption(line);
         if (option.compare("800x600") == 0) {
           graphics._Resolution = Resolution_800x600;
-          w = 800;
-          h = 600;
         } else if (option.compare("1200x800") == 0) {
           graphics._Resolution = Resolution_1200x800;
-          w = 1200;
-          h = 800;
         } else if (option.compare("1280x720") == 0) {
           graphics._Resolution = Resolution_1280x720;
-          w = 1280;
-          h = 720;
         } else if (option.compare("1440x900") == 0) {
           graphics._Resolution = Resolution_1440x900;
-          w = 1400;
-          h = 900;
         } else if (option.compare("1920x1080") == 0) {
           graphics._Resolution = Resolution_1920x1080;
-          w = 1920;
-          h = 1080;
         } else if (option.compare("1920x1200") == 0) {
           graphics._Resolution = Resolution_1920x1200;
-          w = 1920;
-          h = 1200;
         } else if (option.compare("2048x1440") == 0) {
           graphics._Resolution = Resolution_2048x1440;
-          w = 2048;
-          h = 1440;
         } else if (option.compare("3840x2160") == 0) {
           graphics._Resolution = Resolution_3840x2160;
-          w = 3840;
-          h = 2160;
         } else if (option.compare("7680x4320") == 0) {
           graphics._Resolution = Resolution_7680x4320;
-          w = 7680;
-          h = 4320;
         } else if (option.compare("unknown") == 0) {
         }
+      }
+      if (availableOption(line, "WindowResolutionX")) {
+        std::string option = getOption(line);
+        w = atoi(option.c_str());
+      }
+      if (availableOption(line, "WindowResolutionY")) {
+        std::string option = getOption(line);
+        h = atoi(option.c_str());
       }
       if (availableOption(line, "Window")) {
         std::string option = getOption(line);
@@ -574,6 +564,15 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
       line.clear();
     }
   }
+
+  if (w == 0) {
+    w = 800;
+  }
+
+  if (h == 0) {
+    h = 600;
+  }
+
   return graphics;
 }
 } // Recluse

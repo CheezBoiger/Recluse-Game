@@ -101,8 +101,8 @@ void Camera::update()
     m_projectionMatrix = Matrix4::perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
   }
 
-  r32 winPixWidth = r32(pWindow->getWidth());
-  r32 winPixHeight = r32(pWindow->getHeight());
+  r32 winPixWidth = r32(gRenderer().getRenderWidth());//r32(pWindow->getWidth());
+  r32 winPixHeight = r32(gRenderer().getRenderHeight());//r32(pWindow->getHeight());
   if (m_PixelHeight != winPixHeight || m_PixelWidth != winPixWidth) {
     m_PixelWidth = winPixWidth;
     m_PixelHeight = winPixHeight;
@@ -132,8 +132,8 @@ void Camera::flushToGpuBus()
   gGlobalBuffer->_InvProj = gGlobalBuffer->_Proj.inverse();
   gGlobalBuffer->_zFar = m_ZFar;
   gGlobalBuffer->_zNear = m_ZNear;
-  gGlobalBuffer->_ScreenSize[0] = pWindow->getWidth();
-  gGlobalBuffer->_ScreenSize[1] = pWindow->getHeight();
+  gGlobalBuffer->_ScreenSize[0] = gRenderer().getRenderWidth( );
+  gGlobalBuffer->_ScreenSize[1] = gRenderer().getRenderHeight( );
   gGlobalBuffer->_BloomEnabled = getBloom();
   gGlobalBuffer->_Exposure = getExposure();
   gGlobalBuffer->_Gamma = getGamma();

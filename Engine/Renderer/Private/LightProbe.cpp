@@ -71,8 +71,8 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     std::vector<VkBufferImageCopy> imageCopyRegions;
     VkDeviceSize offset = 0;
 
-    for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
-      for (size_t level = 0; level < texture->MipLevels(); ++level) {
+    for (size_t layer = 0; layer < texture->getArrayLayers(); ++layer) {
+      for (size_t level = 0; level < texture->getMipLevels(); ++level) {
         VkBufferImageCopy region = {};
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         region.imageSubresource.baseArrayLayer = (u32)layer;
@@ -124,7 +124,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     imgMemBarrier.srcAccessMask = 0;
     imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    imgMemBarrier.image = texture->Image();
+    imgMemBarrier.image = texture->getImage();
 
     // set the cubemap image layout for transfer from our framebuffer.
     vkCmdPipelineBarrier(
@@ -138,7 +138,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     );
 
     ////////////////////////////
-    vkCmdCopyImageToBuffer(cmdBuf, texture->Image(),
+    vkCmdCopyImageToBuffer(cmdBuf, texture->getImage(),
       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
       stagingBuffer.getNativeBuffer(),
       static_cast<u32>(imageCopyRegions.size()),
@@ -153,7 +153,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    imgMemBarrier.image = texture->Image();
+    imgMemBarrier.image = texture->getImage();
     imgMemBarrier.subresourceRange = subRange;
 
     vkCmdPipelineBarrier(

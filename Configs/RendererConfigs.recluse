@@ -16,7 +16,9 @@
 [ShadowMapPointLightResolution] = 512
 [Bloom] = true
 [Multithreading] = true
-[Resolution] = 1440x900
+[RenderResolution] = 1920x1080
+[WindowResolutionX] = 1920
+[WindowResolutionY] =  1080 
 [Window] = borderless
 [Particles] = medium
 [Decals] = medium

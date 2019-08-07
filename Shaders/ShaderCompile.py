@@ -106,7 +106,9 @@ recluse_shaders = [
   Shader('ParticleTrail', 'ParticleTrail.frag'),
   Shader('Simple', 'Simple.frag'),
   Shader('Simple', 'Simple.vert'),
-  Shader('Simple_anim', 'Simple.vert', params='-DSKIN_ANIMATION=1')
+  Shader('Simple_anim', 'Simple.vert', params='-DSKIN_ANIMATION=1'),
+  Shader('Decal', 'Decal.vert'),
+  Shader('Decal', 'Decal.frag')
 ]
   
 def get_shader_ext(filename):

@@ -11,11 +11,9 @@ layout (set = 0, binding = 0) uniform Globals {
 } gWorldBuffer;
 
 in FRAG_IN {
-  vec3    positionCS;
-  float   lodBias;
-  vec2    uv0;
-  vec2    uv1;
+  vec4    posCS;
   vec4    opacity;
+  vec4   lodBias;
 } fragIn;
 
 // Texture lookups using the texIndex.
@@ -34,9 +32,9 @@ layout (location = 3) out vec4 rt3; // emissive.
 void main()
 {
   // coordinates of screen from gl_FragCoord, which is in window space.
-  vec2 sPos = gl_FragCoord.xy / gWorldBuffer.global.screenSize.xy; // gl_FragCoord already includes the half-pixel offset.
-  vec2 depthUV = sPos;
-  float depth = texture(gDepth, depthUV);
+  vec2 screenPos = fragIn.posCS.xy / fragIn.posCS.w;
+  vec2 depthUV = screenPos * vec2(0.5, 0.5) + 0.5;
+  float depth = texture( gDepth, depthUV ).r;
   
   vec4 tempPosWS = vec4(depthUV * 2.0 - 1.0, depth, 1.0);
   vec4 posWS = gWorldBuffer.global.invView * tempPosWS;

@@ -98,9 +98,9 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
   
   // maximum barriers.
-  std::vector<VkBufferImageCopy> bufferCopies(obj->_texture->MipLevels());
+  std::vector<VkBufferImageCopy> bufferCopies(obj->_texture->getMipLevels());
   size_t offset = 0;
-  for (u32 mipLevel = 0; mipLevel < obj->_texture->MipLevels(); ++mipLevel) {
+  for (u32 mipLevel = 0; mipLevel < obj->_texture->getMipLevels(); ++mipLevel) {
     VkBufferImageCopy region = { };
     region.bufferOffset = offset;
     region.bufferImageHeight = 0;
@@ -118,7 +118,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
 
   VkImageMemoryBarrier imgBarrier = {};
   imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  imgBarrier.image = obj->_texture->Image();
+  imgBarrier.image = obj->_texture->getImage();
   imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -128,8 +128,8 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   imgBarrier.subresourceRange.baseArrayLayer = 0;
   imgBarrier.subresourceRange.baseMipLevel = 0;
-  imgBarrier.subresourceRange.layerCount = obj->_texture->ArrayLayers();
-  imgBarrier.subresourceRange.levelCount = obj->_texture->MipLevels();
+  imgBarrier.subresourceRange.layerCount = obj->_texture->getArrayLayers();
+  imgBarrier.subresourceRange.levelCount = obj->_texture->getMipLevels();
 
   // TODO(): Copy buffer to image stream.
   cmdBuffer.begin(begin);
@@ -145,7 +145,7 @@ void UploadAtlas(NkObject* obj, const void* image, i32 w, i32 h, VulkanRHI* rhi)
   // Send buffer image copy cmd.
   cmdBuffer.copyBufferToImage(
     obj->_cache->getNativeBuffer(),
-    obj->_texture->Image(),
+    obj->_texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),
     bufferCopies.data()
@@ -347,7 +347,7 @@ void UIOverlay::initialize(VulkanRHI* rhi)
   }
 
   initializeRenderPass(rhi);
-  CreateDescriptorSetLayout(rhi);
+  createDescriptorSetLayout(rhi);
   SetUpGraphicsPipeline(rhi);
   CreateBuffers(rhi);
   // After initialization of our graphics gui pipeline, it's time to 
@@ -391,14 +391,14 @@ void UIOverlay::initializeRenderPass(VulkanRHI* pRhi)
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    final_renderTargetKey->Format(),
+    final_renderTargetKey->getFormat(),
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    final_renderTargetKey->Samples()
+    final_renderTargetKey->getSamples()
   );
 
   dependencies[0] = CreateSubPassDependency(
@@ -795,7 +795,7 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 f
 }
 
 
-void UIOverlay::CreateDescriptorSetLayout(VulkanRHI* pRhi)
+void UIOverlay::createDescriptorSetLayout(VulkanRHI* pRhi)
 {
   std::array<VkDescriptorSetLayoutBinding, 1> bindings;
   bindings[0].binding = 0;

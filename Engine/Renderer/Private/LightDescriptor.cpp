@@ -434,7 +434,7 @@ void ShadowMapSystem::initializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 lay
     VkImageViewCreateInfo viewCi = { };
     viewCi.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewCi.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewCi.image = m_pSpotLightMapArray->Image();
+    viewCi.image = m_pSpotLightMapArray->getImage();
     viewCi.subresourceRange.baseMipLevel = 0;
     viewCi.subresourceRange.layerCount = 1;
     viewCi.subresourceRange.levelCount = 1;
@@ -550,7 +550,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution
     std::vector<VkImageView> cascadeViews(kTotalCascades);
     for (u32 j = 0; j < cascade.size(); ++j) {
       ViewCi.subresourceRange.baseArrayLayer = j;
-      ViewCi.image = m_pCascadeShadowMapD[i]->Image();
+      ViewCi.image = m_pCascadeShadowMapD[i]->getImage();
       cascade[j]._view = pRhi->createImageView(ViewCi);
       cascadeViews[j] = cascade[j]._view->getHandle();
     }
@@ -576,13 +576,13 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution
       imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
       imgBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
       imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-      imgBarrier.image = m_pCascadeShadowMapD[i]->Image();
+      imgBarrier.image = m_pCascadeShadowMapD[i]->getImage();
       imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
       imgBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
       imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
       imgBarrier.subresourceRange.baseArrayLayer = 0;
       imgBarrier.subresourceRange.baseMipLevel = 0;
-      imgBarrier.subresourceRange.layerCount = m_pCascadeShadowMapD[i]->ArrayLayers();
+      imgBarrier.subresourceRange.layerCount = m_pCascadeShadowMapD[i]->getArrayLayers();
       imgBarrier.subresourceRange.levelCount = 1;
 
       cmd.pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 
@@ -1157,7 +1157,7 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
 
     if (index) {
       VkBuffer ind = index->getHandle()->getNativeBuffer();
-      pCmdBuffer->bindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
+      pCmdBuffer->bindIndexBuffer(ind, 0, getNativeIndexType(index->GetSizeType()));
     }
 
     Primitive* primitive = renderCmd._pPrimitive;
@@ -1272,7 +1272,7 @@ void ShadowMapSystem::generateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
 
     if (index) {
       VkBuffer ind = index->getHandle()->getNativeBuffer();
-      pCmdBuffer->bindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
+      pCmdBuffer->bindIndexBuffer(ind, 0, getNativeIndexType(index->GetSizeType()));
     }
 
     Primitive* primitive = renderCmd._pPrimitive;
@@ -1625,7 +1625,7 @@ void LightDescriptor::initialize(VulkanRHI* pRhi, const GraphicsConfigParams* pa
   // Create our shadow map texture.
   if (!m_pOpaqueShadowMap) {
     // TODO():
-    m_pOpaqueShadowMap = pRhi->CreateTexture();
+    m_pOpaqueShadowMap = pRhi->createTexture();
 
     // ShadowMap is a depth image.
     VkImageCreateInfo ImageCi = {};
@@ -1841,7 +1841,7 @@ void LightDescriptor::InitializePrimaryShadow(VulkanRHI* pRhi)
   if (m_pFrameBuffer) return;
 
   DescriptorSetLayout* viewLayout = LightViewDescriptorSetLayoutKey;
-  m_pLightViewDescriptorSet = pRhi->CreateDescriptorSet();
+  m_pLightViewDescriptorSet = pRhi->createDescriptorSet();
   m_pLightViewDescriptorSet->allocate(pRhi->DescriptorPool(), viewLayout);
 
   VkDescriptorBufferInfo viewBuf = { };

@@ -10,36 +10,30 @@ layout (set = 0, binding = 0) uniform Globals {
   GlobalBuffer global;
 } gWorldBuffer;
 
-// Bounding box and it's uv coordinates. No normal is required as it only defines 
+// Bounding box position vertices. No normals or uvs are required as it only defines 
 // the bounds of the decal.
 layout (location = 0) in vec4 position;
-layout (location = 1) in vec2 uv0;
-layout (location = 2) in vec2 uv1;
 
 layout (push_constant) uniform DecalTransform {
-  mat4      model;
-  mat4      invModel;
+  mat4      obb;
+  mat4      invObb;
   float     lodBias;
   float     opacity;
 } transform;
 
 
 out FRAG_IN {
-  vec3  positionCS;   // position of boundingbox in clip space.
-  float lodBias;      // level of detail.
-  vec2  uv0;          // uv coords.
-  vec2  uv1;          // second uv coords.
+  vec4  posCS; // position clip space.
   vec4  opacity;      // opacity.
+  vec4 lodBias;      // level of detail.
 } fragIn;
 
 void main()
 {
-  fragIn.lodBias = transform.lodBias;
+  fragIn.lodBias = vec4(transform.lodBias).xxxx;
   fragIn.opacity.x = transform.opacity;
-  fragIn.uv0 = uv0;
-  fragIn.uv1 = uv1;
   
-  vec4 clipPos = gWorldBuffer.global.viewProj * transform.model * position;
+  vec4 clipPos = gWorldBuffer.global.viewProj * transform.obb * position;
   gl_Position = clipPos;
-  fragIn.positionCS = clipPos.xyz;
+  fragIn.posCS = clipPos;
 }

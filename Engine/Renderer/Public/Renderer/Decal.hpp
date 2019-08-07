@@ -6,22 +6,23 @@
 
 #include "CmdList.hpp"
 #include "RenderCmd.hpp"
-#include "VertexBuffer.hpp"
-#include "IndexBuffer.hpp"
 
 namespace Recluse {
 
 
 class Texture2D;
+class Image;
 class GraphicsPipeline;
 class RenderPass;
 class Semaphore;
 class CommandBuffer;
 class VulkanRHI;
 class VertexBuffer;
+class IndexBuffer;
+class Texture;
 
 // Maximum decals that can be tagged into the world.
-#define DECAL_MAX         1024
+#define DECAL_MAX         4196
 
 
 // Decal manager engine. this engine keeps track, and updates,
@@ -38,33 +39,49 @@ public:
     , m_renderPass(nullptr) { }
 
 
-  static u32 GetMaxDecalCount() { return kMaxDecalCount; }
+  static u32 getMaxDecalCount() { return kMaxDecalCount; }
 
   void        initialize(VulkanRHI* rhi);
   void        cleanUp(VulkanRHI* rhi);
 
-  // Get decal data information.
-  DecalPerInstanceInfo&      GetDecalInfo(size_t idx) { return m_decals[idx]; }
-
-  void      PushDecal(DecalPerInstanceInfo& decal);
-
   // Decals are set as the next subpass within the offscreen cmdbuffer;
-  void        BuildDecals(CommandBuffer* offscreenCmdBuffer);
+  void        buildDecals(CommandBuffer* offscreenCmdBuffer);
+  void        updateTextureAtlas(const Image& img, u32 idx);
   
-  void        ClearDecalBuffer() { m_decalCmds.clear(); }
-  void        PushDecal(const DecalRenderCmd& cmd);
+  void        clearDecalBuffer() { m_decalCmds.clear(); }
+  void        pushDecal(const DecalRenderCmd& cmd) { m_decalCmds.pushBack( cmd ); }
+
+  void  visualizeBoundingBoxes(b32 enable) { m_visualizeBBoxes = enable; }
   
 private:
 
-  void        CreateRenderPass(VulkanRHI* pRhi);
-  void        CreatePipeline(VulkanRHI* pRhi);
-  void        CreateBoundingBox();
+  void        createRenderPass(VulkanRHI* pRhi);
+  void        createPipeline(VulkanRHI* pRhi);
+  void        createBoundingBox(VulkanRHI* pRhi);
+
+  void freeBoundingBox(VulkanRHI* pRhi);
 
   CmdList<DecalRenderCmd>             m_decalCmds;
-  std::vector<DecalPerInstanceInfo>   m_decals;
   u32                                 m_decalCount;
+  b32                                 m_visualizeBBoxes;
   GraphicsPipeline*                   m_pipeline;
   RenderPass*                         m_renderPass;
-  VertexBuffer                        m_boundingBox;
+  VertexBuffer*                       m_gpuBBoxVertices;
+  IndexBuffer*                        m_gpuBBoxIndices;
+};
+
+
+class InstancedDecalEngine : public DecalEngine
+{
+public:
+  
+};
+
+
+class ClusterDecalEngine : public DecalEngine
+{
+public:
+
+
 };
 } // Recluse

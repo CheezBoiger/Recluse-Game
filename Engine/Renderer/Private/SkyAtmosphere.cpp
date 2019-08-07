@@ -222,14 +222,14 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
   VkImageView attachment = m_RenderTexture->getView();
 
   VkAttachmentDescription attachDesc = CreateAttachmentDescription(
-    m_RenderTexture->Format(),
+    m_RenderTexture->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    m_RenderTexture->Samples()
+    m_RenderTexture->getSamples()
   );
 
   VkAttachmentReference colorRef = { 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
@@ -289,36 +289,36 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
   VkSubpassDependency dependenciesNative[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    pbr_Color->Format(),
+    pbr_Color->getFormat(),
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbr_Color->Samples()
+    pbr_Color->getSamples()
   );
 
   attachmentDescriptions[1] = CreateAttachmentDescription(
-    pbr_Bright->Format(),
+    pbr_Bright->getFormat(),
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbr_Bright->Samples()
+    pbr_Bright->getSamples()
   );
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
-    pbr_Depth->Format(),
+    pbr_Depth->getFormat(),
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    pbr_Depth->Samples()
+    pbr_Depth->getSamples()
   );
 
   dependenciesNative[0] = CreateSubPassDependency(
@@ -565,7 +565,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     VkDescriptorSet globalDesc = global->getDescriptorSet(frameIndex)->getHandle();
     VkBuffer vertexbuf = quad->getQuad()->getHandle()->getNativeBuffer();
     VkBuffer indexbuf = quad->getIndices()->getHandle()->getNativeBuffer();
-    VkIndexType indexType = GetNativeIndexType(quad->getIndices()->GetSizeType());
+    VkIndexType indexType = getNativeIndexType(quad->getIndices()->GetSizeType());
     u32 indexCount = quad->getIndices()->IndexCount();
   
     VkDeviceSize offsets = { 0 };
@@ -584,7 +584,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     imgMemBarrier.srcAccessMask = 0;
     imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    imgMemBarrier.image = m_pCubeMap->Image();
+    imgMemBarrier.image = m_pCubeMap->getImage();
 
     // set the cubemap image layout for transfer from our framebuffer.
     cmdBuffer->pipelineBarrier(
@@ -619,7 +619,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       subRange.layerCount = 1;
       subRange.levelCount = 1;
 
-      imgMemBarrier.image = m_RenderTexture->Image();
+      imgMemBarrier.image = m_RenderTexture->getImage();
       imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -654,8 +654,8 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       imgCopy.extent.depth = 1;
 
       cmdBuffer->copyImage(
-        m_RenderTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
-        m_pCubeMap->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
+        m_RenderTexture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
+        m_pCubeMap->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 
         1, &imgCopy
       );
 
@@ -683,7 +683,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    imgMemBarrier.image = m_pCubeMap->Image();
+    imgMemBarrier.image = m_pCubeMap->getImage();
     imgMemBarrier.subresourceRange = subRange;
     
     cmdBuffer->pipelineBarrier(

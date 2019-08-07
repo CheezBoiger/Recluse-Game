@@ -200,7 +200,7 @@ VkPipelineColorBlendStateCreateInfo CreateBlendStateInfo(u32 attachmentCount,
 }
 
 
-inline VkIndexType GetNativeIndexType(u32 sizeType)
+inline VkIndexType getNativeIndexType(u32 sizeType)
 {
   VkIndexType indexType;
   switch (sizeType) {

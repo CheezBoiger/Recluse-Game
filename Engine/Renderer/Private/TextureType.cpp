@@ -236,7 +236,7 @@ void Texture2D::update(Image const& Image)
 
   VkImageMemoryBarrier imgBarrier = {};
   imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  imgBarrier.image = texture->Image();
+  imgBarrier.image = texture->getImage();
   imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -246,8 +246,8 @@ void Texture2D::update(Image const& Image)
   imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   imgBarrier.subresourceRange.baseArrayLayer = 0;
   imgBarrier.subresourceRange.baseMipLevel = 0;
-  imgBarrier.subresourceRange.layerCount = texture->ArrayLayers();
-  imgBarrier.subresourceRange.levelCount = texture->MipLevels();
+  imgBarrier.subresourceRange.layerCount = texture->getArrayLayers();
+  imgBarrier.subresourceRange.levelCount = texture->getMipLevels();
 
   // TODO(): Copy buffer to image stream.
   buffer.begin(beginInfo);
@@ -263,7 +263,7 @@ void Texture2D::update(Image const& Image)
   // Send buffer image copy cmd.
   buffer.copyBufferToImage(
     stagingBuffer.getNativeBuffer(),
-    texture->Image(),
+    texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),
     bufferCopies.data()
@@ -300,11 +300,11 @@ void Texture2D::update(Image const& Image)
   stagingBuffer.cleanUp();
 
   if (m_bGenMips) {
-    GenerateMipMaps(texture->Image(), 
-      texture->Format(), 
+    GenerateMipMaps(texture->getImage(), 
+      texture->getFormat(), 
       texture->getWidth(), 
       texture->getHeight(), 
-      texture->MipLevels());
+      texture->getMipLevels());
   } 
 }
 
@@ -351,9 +351,9 @@ void Texture2D::Save(const std::string filename)
   cmdBuffer.begin(beginInfo);
 
   // maximum barriers.
-  std::vector<VkBufferImageCopy> bufferCopies(texture->MipLevels());
+  std::vector<VkBufferImageCopy> bufferCopies(texture->getMipLevels());
   size_t offset = 0;
-  for (u32 mipLevel = 0; mipLevel < texture->MipLevels(); ++mipLevel) {
+  for (u32 mipLevel = 0; mipLevel < texture->getMipLevels(); ++mipLevel) {
     VkBufferImageCopy region = {};
     region.bufferOffset = offset;
     region.bufferImageHeight = 0;
@@ -371,7 +371,7 @@ void Texture2D::Save(const std::string filename)
 
   VkImageMemoryBarrier imgBarrier = {};
   imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  imgBarrier.image = texture->Image();
+  imgBarrier.image = texture->getImage();
   imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
   imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -381,8 +381,8 @@ void Texture2D::Save(const std::string filename)
   imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   imgBarrier.subresourceRange.baseArrayLayer = 0;
   imgBarrier.subresourceRange.baseMipLevel = 0;
-  imgBarrier.subresourceRange.layerCount = texture->ArrayLayers();
-  imgBarrier.subresourceRange.levelCount = texture->MipLevels();
+  imgBarrier.subresourceRange.layerCount = texture->getArrayLayers();
+  imgBarrier.subresourceRange.levelCount = texture->getMipLevels();
 
   // TODO(): Copy buffer to image stream.
   // Image memory barrier.
@@ -396,7 +396,7 @@ void Texture2D::Save(const std::string filename)
 
   // Send buffer image copy cmd.
   cmdBuffer.copyImageToBuffer(
-    texture->Image(),
+    texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
     static_cast<u32>(bufferCopies.size()),
@@ -510,8 +510,8 @@ void TextureCube::Save(const std::string filename)
   std::vector<VkBufferImageCopy> imageCopyRegions;
   VkDeviceSize offset = 0;
 
-  for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
-    for (size_t level = 0; level < texture->MipLevels(); ++level) {
+  for (size_t layer = 0; layer < texture->getArrayLayers(); ++layer) {
+    for (size_t level = 0; level < texture->getMipLevels(); ++level) {
       VkBufferImageCopy region = { };
       region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       region.imageSubresource.baseArrayLayer = (u32)layer;
@@ -562,7 +562,7 @@ void TextureCube::Save(const std::string filename)
   imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
   imgMemBarrier.srcAccessMask = 0;
   imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.image = texture->getImage();
 
   // set the cubemap image layout for transfer from our framebuffer.
   cmdBuffer.pipelineBarrier(
@@ -575,7 +575,7 @@ void TextureCube::Save(const std::string filename)
   );
 
 ////////////////////////////
-  cmdBuffer.copyImageToBuffer(texture->Image(),
+  cmdBuffer.copyImageToBuffer(texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
     static_cast<u32>(imageCopyRegions.size()),
@@ -590,7 +590,7 @@ void TextureCube::Save(const std::string filename)
   imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.image = texture->getImage();
   imgMemBarrier.subresourceRange = subRange;
 
   cmdBuffer.pipelineBarrier(
@@ -721,8 +721,8 @@ void TextureCube::update(Image const& image)
   std::vector<VkBufferImageCopy> imageCopyRegions;
   VkDeviceSize offset = 0;
 
-  for (size_t layer = 0; layer < texture->ArrayLayers(); ++layer) {
-    for (size_t level = 0; level < texture->MipLevels(); ++level) {
+  for (size_t layer = 0; layer < texture->getArrayLayers(); ++layer) {
+    for (size_t level = 0; level < texture->getMipLevels(); ++level) {
       VkBufferImageCopy region = {};
       region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       region.imageSubresource.baseArrayLayer = (u32)layer;
@@ -773,7 +773,7 @@ void TextureCube::update(Image const& image)
   imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   imgMemBarrier.srcAccessMask = 0;
   imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.image = texture->getImage();
 
   // set the cubemap image layout for transfer from our framebuffer.
   cmdBuffer.pipelineBarrier(
@@ -787,7 +787,7 @@ void TextureCube::update(Image const& image)
 
   ////////////////////////////
   cmdBuffer.copyBufferToImage(stagingBuffer.getNativeBuffer(),
-    texture->Image(),
+    texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(imageCopyRegions.size()),
     imageCopyRegions.data());
@@ -801,7 +801,7 @@ void TextureCube::update(Image const& image)
   imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-  imgMemBarrier.image = texture->Image();
+  imgMemBarrier.image = texture->getImage();
   imgMemBarrier.subresourceRange = subRange;
 
   cmdBuffer.pipelineBarrier(
@@ -943,7 +943,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   // maximum barriers.
-  std::vector<VkBufferImageCopy> bufferCopies(texture->ArrayLayers());
+  std::vector<VkBufferImageCopy> bufferCopies(texture->getArrayLayers());
   size_t offset = 0;
   u32 layer = 0;
 
@@ -968,7 +968,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   }
   VkImageMemoryBarrier imgBarrier = {};
   imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  imgBarrier.image = texture->Image();
+  imgBarrier.image = texture->getImage();
   imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   imgBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   imgBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -978,8 +978,8 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
   imgBarrier.subresourceRange.baseArrayLayer = 0;
   imgBarrier.subresourceRange.baseMipLevel = 0;
-  imgBarrier.subresourceRange.layerCount = texture->ArrayLayers();
-  imgBarrier.subresourceRange.levelCount = texture->MipLevels();
+  imgBarrier.subresourceRange.layerCount = texture->getArrayLayers();
+  imgBarrier.subresourceRange.levelCount = texture->getMipLevels();
 
   // TODO(): Copy buffer to image stream.
   buffer.begin(beginInfo);
@@ -995,7 +995,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   // Send buffer image copy cmd.
   buffer.copyBufferToImage(
     stagingBuffer.getNativeBuffer(),
-    texture->Image(),
+    texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     static_cast<u32>(bufferCopies.size()),
     bufferCopies.data()

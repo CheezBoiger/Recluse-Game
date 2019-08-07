@@ -43,7 +43,7 @@ enum WindowType {
 };
 
 
-enum WindowResolution {
+enum RenderResolution {
   Resolution_800x600,
   Resolution_1200x800,
   Resolution_1280x720,
@@ -128,7 +128,7 @@ public:
   // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
   b32             _EnableSoftShadows;
 
-  WindowResolution _Resolution;
+  RenderResolution _Resolution;
   WindowType       _WindowType;
 };
 

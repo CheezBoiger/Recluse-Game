@@ -127,7 +127,7 @@ struct DecalRenderCmd {
       { }
 
   Material*   _pMat;
-  Matrix4     _obb;
+  Matrix4     _obb;       // decal oriented bounding box
   Matrix4     _scale;
 };
 

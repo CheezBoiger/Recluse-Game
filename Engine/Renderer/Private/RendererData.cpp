@@ -1428,10 +1428,10 @@ void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
 void AntiAliasingFXAA::initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
 {
   
-  CreateTexture(pRhi);
-  CreateSampler(pRhi);
-  CreateDescriptorSetLayout(pRhi);
-  CreateDescriptorSet(pRhi, pWorld);
+  createTexture(pRhi, pWorld);
+  createSampler(pRhi);
+  createDescriptorSetLayout(pRhi);
+  createDescriptorSet(pRhi, pWorld);
 
   VkPipelineLayoutCreateInfo layoutCi{};
   layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1505,10 +1505,11 @@ void AntiAliasingFXAA::cleanUp(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
+void AntiAliasingFXAA::createTexture(VulkanRHI* pRhi, GlobalDescriptor* pGlobal)
 {
   m_output = pRhi->createTexture();
-  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = { (u32)pGlobal->getData()->_ScreenSize[0],
+                        (u32)pGlobal->getData()->_ScreenSize[1] };
   VkImageCreateInfo imgCi = { };
   VkImageViewCreateInfo imgViewCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1539,20 +1540,20 @@ void AntiAliasingFXAA::CreateTexture(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+void AntiAliasingFXAA::createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
 {
   m_descSet = pRhi->createDescriptorSet();
   m_descSet->allocate(pRhi->descriptorPool(), m_layout);
 
-  UpdateSets(pRhi, pDescriptor);
+  updateSets(pRhi, pDescriptor);
 }
 
 
-void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+void AntiAliasingFXAA::updateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
 {
   pRhi->freeTexture(m_output);
 
-  CreateTexture(pRhi);
+  createTexture(pRhi, pDescriptor);
 
   VkDescriptorBufferInfo worldInfo = {};
   worldInfo.buffer = pDescriptor->getHandle(pRhi->currentFrame())->getNativeBuffer();
@@ -1590,7 +1591,7 @@ void AntiAliasingFXAA::UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
 }
 
 
-void AntiAliasingFXAA::CreateDescriptorSetLayout(VulkanRHI* pRhi)
+void AntiAliasingFXAA::createDescriptorSetLayout(VulkanRHI* pRhi)
 {
   VkDescriptorSetLayoutCreateInfo layoutCi = { };
   layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -1616,7 +1617,7 @@ void AntiAliasingFXAA::CreateDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, u32 frameIndex)
+void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, u32 frameIndex)
 {
   VkImageSubresourceRange subrange = {};
   subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1632,7 +1633,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
   imageMemBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
   imageMemBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
   imageMemBarrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
-  imageMemBarrier.image = m_output->Image();
+  imageMemBarrier.image = m_output->getImage();
 
   pOutput->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
@@ -1642,7 +1643,8 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
     m_descSet->getHandle()
   };
 
-  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = { (u32)pGlobal->getData()->_ScreenSize[0],
+                        (u32)pGlobal->getData()->_ScreenSize[1] };
   pOutput->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
   pOutput->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
   pOutput->dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
@@ -1657,7 +1659,7 @@ void AntiAliasingFXAA::GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
 }
 
 
-void AntiAliasingFXAA::CreateSampler(VulkanRHI* pRhi)
+void AntiAliasingFXAA::createSampler(VulkanRHI* pRhi)
 {
   m_outputSampler = pRhi->createSampler();
   VkSamplerCreateInfo  samplerCi = { };
@@ -1687,21 +1689,21 @@ void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
   Texture* depthFinal = gbuffer_DepthAttachKey;
   std::array<VkAttachmentDescription, 2> attachments;
   attachments[0] = { };
-  attachments[0].format = pbrFinal->Format();
+  attachments[0].format = pbrFinal->getFormat();
   attachments[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachments[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-  attachments[0].samples = pbrFinal->Samples();
+  attachments[0].samples = pbrFinal->getSamples();
   attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
   attachments[1] = { };
-  attachments[1].format = depthFinal->Format();
+  attachments[1].format = depthFinal->getFormat();
   attachments[1].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
   attachments[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
   attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-  attachments[1].samples = depthFinal->Samples();
+  attachments[1].samples = depthFinal->getSamples();
   attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachments[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

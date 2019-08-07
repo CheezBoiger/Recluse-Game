@@ -58,7 +58,7 @@ private:
   void                        initializeRenderPass(VulkanRHI* pRhi);
   void                        CreateBuffers(VulkanRHI* pRhi);
   void                        SetUpGraphicsPipeline(VulkanRHI* pRhi);
-  void                        CreateDescriptorSetLayout(VulkanRHI* pRhi);
+  void                        createDescriptorSetLayout(VulkanRHI* pRhi);
   void                        CleanUpDescriptorSetLayout(VulkanRHI* pRhi);
   void                        CleanUpBuffers(VulkanRHI* pRhi);
   void                        StreamBuffers(VulkanRHI* pRhi, u32 frameIndex);

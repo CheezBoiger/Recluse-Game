@@ -49,7 +49,6 @@
 namespace Recluse {
 
 const char* Renderer::appName = "No name";
-VkExtent2D m_displayExtent =  {};
 
 Renderer& gRenderer() { 
   return Renderer::instance();
@@ -482,7 +481,11 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   }
 
   m_pWindow = window;
-  m_displayExtent = { (u32)m_pWindow->getWidth(), (u32)m_pWindow->getHeight() };
+
+  m_renderWidth = (u32)m_pWindow->getWidth(); 
+  m_renderHeight = (u32)m_pWindow->getHeight();
+
+  updateRenderResolution(params->_Resolution);
 
   m_pRhi->initialize(window->getHandle(), params);
   {
@@ -497,8 +500,8 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   GlobalDescriptor* gMat = new GlobalDescriptor();
   gMat->initialize(m_pRhi);
-  gMat->getData()->_ScreenSize[0] = window->getWidth();
-  gMat->getData()->_ScreenSize[1] = window->getHeight();
+  gMat->getData()->_ScreenSize[0] = m_renderWidth;
+  gMat->getData()->_ScreenSize[1] = m_renderHeight;
   for (u32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
     gMat->update(m_pRhi, i);
   }
@@ -519,6 +522,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   ShadowMapSystem::initializeShadowPipelines(m_pRhi);
   m_pLights = new LightDescriptor();
   m_pLights->initialize(m_pRhi, params);
+
   for (u32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
     m_pLights->update(m_pRhi, m_pGlobal->getData(), i);
   }
@@ -592,7 +596,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
       VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
       VkDeviceSize offsets[] = { 0 };
 
-      cmdBuffer.bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+      cmdBuffer.bindIndexBuffer(indexBuffer, 0, getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
       cmdBuffer.bindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
       cmdBuffer.drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
@@ -1027,7 +1031,7 @@ void Renderer::cleanUpDescriptorSetLayouts()
 
 void Renderer::setUpFrameBuffers()
 {
-  VkExtent2D windowExtent = m_displayExtent;  
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   // m_pRhi->swapchainObject()->SwapchainExtent();
   Texture* gbuffer_Albedo = gbuffer_AlbedoAttachKey;
   Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
@@ -1051,14 +1055,14 @@ void Renderer::setUpFrameBuffers()
     std::array<VkAttachmentDescription, 1> attachmentDescriptions;
     VkSubpassDependency dependencies[2];
     attachmentDescriptions[0] = CreateAttachmentDescription(
-      final_renderTargetKey->Format(),
+      final_renderTargetKey->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      final_renderTargetKey->Samples()
+      final_renderTargetKey->getSamples()
     );
 
     dependencies[0] = CreateSubPassDependency(
@@ -1119,58 +1123,58 @@ void Renderer::setUpFrameBuffers()
   VkSubpassDependency dependencies[2];
 
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    gbuffer_Albedo->Format(),
+    gbuffer_Albedo->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    gbuffer_Albedo->Samples()
+    gbuffer_Albedo->getSamples()
   );
 
   attachmentDescriptions[1] = CreateAttachmentDescription(
-    gbuffer_Normal->Format(),
+    gbuffer_Normal->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    gbuffer_Normal->Samples()
+    gbuffer_Normal->getSamples()
   );
 
   attachmentDescriptions[2] = CreateAttachmentDescription(
-    gbuffer_Position->Format(),
+    gbuffer_Position->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    gbuffer_Position->Samples()
+    gbuffer_Position->getSamples()
   );
 
   attachmentDescriptions[3] = CreateAttachmentDescription(
-    gbuffer_Emission->Format(),
+    gbuffer_Emission->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    gbuffer_Emission->Samples()
+    gbuffer_Emission->getSamples()
   );
 
   attachmentDescriptions[4] = CreateAttachmentDescription(
-    gbuffer_Depth->Format(),
+    gbuffer_Depth->getFormat(),
     VK_IMAGE_LAYOUT_UNDEFINED,
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_CLEAR,
     VK_ATTACHMENT_STORE_OP_STORE,
-    gbuffer_Depth->Samples()
+    gbuffer_Depth->getSamples()
   );
 
   dependencies[0] = CreateSubPassDependency(
@@ -1254,36 +1258,36 @@ void Renderer::setUpFrameBuffers()
     Texture* pbr_Final = pbr_FinalTextureKey;
     std::array<VkAttachmentDescription, 7> pbrAttachmentDescriptions;
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
-      pbr_Final->Format(),
+      pbr_Final->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-     pbr_Final->Samples()
+     pbr_Final->getSamples()
     );
 
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
-      pbr_Bright->Format(),
+      pbr_Bright->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Bright->Samples()
+      pbr_Bright->getSamples()
     );
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
-      gbuffer_Depth->Format(),
+      gbuffer_Depth->getFormat(),
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
-      gbuffer_Depth->Samples()
+      gbuffer_Depth->getSamples()
     );
 
     VkSubpassDescription pbrSubpass = {};
@@ -1323,80 +1327,80 @@ void Renderer::setUpFrameBuffers()
 
     // Forward renderpass portion.
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
-      pbr_Final->Format(),
+      pbr_Final->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Final->Samples()
+      pbr_Final->getSamples()
     );
 
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
-      pbr_Bright->Format(),
+      pbr_Bright->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Bright->Samples()
+      pbr_Bright->getSamples()
     );
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
-      gbuffer_Albedo->Format(),
+      gbuffer_Albedo->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      gbuffer_Albedo->Samples()
+      gbuffer_Albedo->getSamples()
     );
 
     pbrAttachmentDescriptions[3] = CreateAttachmentDescription(
-      gbuffer_Normal->Format(),
+      gbuffer_Normal->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      gbuffer_Normal->Samples()
+      gbuffer_Normal->getSamples()
     );
 
     pbrAttachmentDescriptions[4] = CreateAttachmentDescription(
-      gbuffer_Position->Format(),
+      gbuffer_Position->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      gbuffer_Position->Samples()
+      gbuffer_Position->getSamples()
     );
 
     pbrAttachmentDescriptions[5] = CreateAttachmentDescription(
-      gbuffer_Emission->Format(),
+      gbuffer_Emission->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      gbuffer_Emission->Samples()
+      gbuffer_Emission->getSamples()
     );
 
     pbrAttachmentDescriptions[6] = CreateAttachmentDescription(
-      gbuffer_Depth->Format(),
+      gbuffer_Depth->getFormat(),
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      gbuffer_Depth->Samples()
+      gbuffer_Depth->getSamples()
     );
 
     pbrAttachments[0] = pbr_Final->getView();
@@ -1444,8 +1448,8 @@ void Renderer::setUpFrameBuffers()
   subpass.pDepthStencilAttachment = nullptr;
   attachments[0] = hdrColor->getView();
   framebufferCI.attachmentCount = 1;
-  attachmentDescriptions[0].format = hdrColor->Format();
-  attachmentDescriptions[0].samples = hdrColor->Samples();
+  attachmentDescriptions[0].format = hdrColor->getFormat();
+  attachmentDescriptions[0].samples = hdrColor->getSamples();
   attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1488,70 +1492,70 @@ void Renderer::setUpFrameBuffers()
 
   // 2x
   attachments[0] = RenderTarget2xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget2xFinal->Format();
-  attachmentDescriptions[0].samples = RenderTarget2xFinal->Samples();
+  attachmentDescriptions[0].format = RenderTarget2xFinal->getFormat();
+  attachmentDescriptions[0].samples = RenderTarget2xFinal->getSamples();
   framebufferCI.width = RenderTarget2xFinal->getWidth();
   framebufferCI.height = RenderTarget2xFinal->getHeight();
   FB2xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale2x->getView();
-  attachmentDescriptions[0].format = rtDownScale2x->Format();
-  attachmentDescriptions[0].samples = rtDownScale2x->Samples();
+  attachmentDescriptions[0].format = rtDownScale2x->getFormat();
+  attachmentDescriptions[0].samples = rtDownScale2x->getSamples();
   framebufferCI.width = rtDownScale2x->getWidth();
   framebufferCI.height = rtDownScale2x->getHeight();
   DownScaleFB2x->Finalize(framebufferCI, hdr_renderPass);
 
   // 4x
   attachments[0] = RenderTarget4xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget4xFinal->Format();
-  attachmentDescriptions[0].samples = RenderTarget4xFinal->Samples();
+  attachmentDescriptions[0].format = RenderTarget4xFinal->getFormat();
+  attachmentDescriptions[0].samples = RenderTarget4xFinal->getSamples();
   framebufferCI.width = RenderTarget4xFinal->getWidth();
   framebufferCI.height = RenderTarget4xFinal->getHeight();
   FB4xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale4x->getView();
-  attachmentDescriptions[0].format = rtDownScale4x->Format();
-  attachmentDescriptions[0].samples = rtDownScale4x->Samples();
+  attachmentDescriptions[0].format = rtDownScale4x->getFormat();
+  attachmentDescriptions[0].samples = rtDownScale4x->getSamples();
   framebufferCI.width = rtDownScale4x->getWidth();
   framebufferCI.height = rtDownScale4x->getHeight();
   DownScaleFB4x->Finalize(framebufferCI, hdr_renderPass);
 
   // 8x
   attachments[0] = RenderTarget8xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget8xFinal->Format();
-  attachmentDescriptions[0].samples = RenderTarget8xFinal->Samples();
+  attachmentDescriptions[0].format = RenderTarget8xFinal->getFormat();
+  attachmentDescriptions[0].samples = RenderTarget8xFinal->getSamples();
   framebufferCI.width = RenderTarget8xFinal->getWidth();
   framebufferCI.height = RenderTarget8xFinal->getHeight();
   FB8xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale8x->getView();
-  attachmentDescriptions[0].format = rtDownScale8x->Format();
-  attachmentDescriptions[0].samples = rtDownScale8x->Samples();
+  attachmentDescriptions[0].format = rtDownScale8x->getFormat();
+  attachmentDescriptions[0].samples = rtDownScale8x->getSamples();
   framebufferCI.width = rtDownScale8x->getWidth();
   framebufferCI.height = rtDownScale8x->getHeight();
   DownScaleFB8x->Finalize(framebufferCI, hdr_renderPass);
 
   // 16x
   attachments[0] = RenderTarget16xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget16xFinal->Format();
-  attachmentDescriptions[0].samples = RenderTarget16xFinal->Samples();
+  attachmentDescriptions[0].format = RenderTarget16xFinal->getFormat();
+  attachmentDescriptions[0].samples = RenderTarget16xFinal->getSamples();
   framebufferCI.width = RenderTarget16xFinal->getWidth();
   framebufferCI.height = RenderTarget16xFinal->getHeight();
   FB16xFinal->Finalize(framebufferCI, hdr_renderPass);
 
   attachments[0] = rtDownScale16x->getView();
-  attachmentDescriptions[0].format = rtDownScale16x->Format();
-  attachmentDescriptions[0].samples = rtDownScale16x->Samples();
+  attachmentDescriptions[0].format = rtDownScale16x->getFormat();
+  attachmentDescriptions[0].samples = rtDownScale16x->getSamples();
   framebufferCI.width = rtDownScale16x->getWidth();
   framebufferCI.height = rtDownScale16x->getHeight();
   DownScaleFB16x->Finalize(framebufferCI, hdr_renderPass);
 
   // Glow
   attachments[0] = GlowTarget->getView();
-  attachmentDescriptions[0].format = GlowTarget->Format();
-  attachmentDescriptions[0].samples = GlowTarget->Samples();
-  framebufferCI.width = m_displayExtent.width;
-  framebufferCI.height = m_displayExtent.height;
+  attachmentDescriptions[0].format = GlowTarget->getFormat();
+  attachmentDescriptions[0].samples = GlowTarget->getSamples();
+  framebufferCI.width = m_renderWidth;
+  framebufferCI.height = m_renderHeight;
   GlowFB->Finalize(framebufferCI, hdr_renderPass);
 }
 
@@ -1566,7 +1570,7 @@ void Renderer::setUpGraphicsPipelines()
   assemblyCI.primitiveRestartEnable = VK_FALSE;
 
   VkViewport viewport = { };
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
@@ -1908,7 +1912,7 @@ void Renderer::setUpRenderTextures(b32 fullSetup)
   
   VkImageCreateInfo cImageInfo = { };
   VkImageViewCreateInfo cViewInfo = { };
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
 
   // TODO(): Need to make this more adaptable, as intel chips have trouble with srgb optimal tiling.
   cImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2097,7 +2101,7 @@ void Renderer::setUpRenderTextures(b32 fullSetup)
 
     if (!DefaultTexture2DArrayView) {
       dViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-      dViewInfo.image = defaultTexture->Image();
+      dViewInfo.image = defaultTexture->getImage();
       vkCreateImageView(m_pRhi->logicDevice()->getNative(), &dViewInfo, nullptr, &DefaultTexture2DArrayView);
     }
   }
@@ -2185,7 +2189,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
 
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2231,7 +2235,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
     cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
     cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 #else
@@ -2531,7 +2535,7 @@ void Renderer::setUpHDR(b32 fullSetUp)
   }
 
   switch (m_currentGraphicsConfigs._AA) {
-  case AA_FXAA_2x: m_pAntiAliasingFXAA->UpdateSets(m_pRhi, m_pGlobal);
+  case AA_FXAA_2x: m_pAntiAliasingFXAA->updateSets(m_pRhi, m_pGlobal);
   }
 
   DescriptorSet* hdrSet = m_pRhi->createDescriptorSet();
@@ -2825,7 +2829,7 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValues[1].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[2].depthStencil = { 1.0f, 0 };
 
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
@@ -2855,7 +2859,7 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkBuffer vert = vertexbuffer->getHandle()->getNativeBuffer();
     VkBuffer ind = idxBuffer->getHandle()->getNativeBuffer();
     buf->bindVertexBuffers(0 , 1, &vert, offsets);  
-    buf->bindIndexBuffer(ind, 0, GetNativeIndexType(idxBuffer->GetSizeType()));
+    buf->bindIndexBuffer(ind, 0, getNativeIndexType(idxBuffer->GetSizeType()));
     buf->drawIndexed(idxBuffer->IndexCount(), 1, 0, 0, 0);
   buf->endRenderPass();
 }
@@ -2874,7 +2878,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   GraphicsPipeline* gbuffer_StaticPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC );
   GraphicsPipeline* gbuffer_staticMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS );
   GraphicsPipeline* gbuffer_dynamicMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS );
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkDescriptorSet DescriptorSets[6];
 
   {
@@ -2919,7 +2923,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     for (u32 i = 0; i < 4; ++i) {
       clearRects[i].baseArrayLayer = 0;
       clearRects[i].layerCount = 0;
-      clearRects[i].rect.extent = m_displayExtent;
+      clearRects[i].rect.extent = { m_renderWidth, m_renderHeight };
       clearRects[i].rect.offset = { 0, 0 };
     }
     cmdBuffer->clearAttachments(5, clearAttachments, 4, clearRects);
@@ -2962,7 +2966,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-        cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+        cmdBuffer->bindIndexBuffer(ib, 0, getNativeIndexType(indexBuffer->GetSizeType()));
       }
 
       MaterialDescriptor* pMatDesc = renderCmd._pPrimitive->_pMat->getNative();
@@ -2982,7 +2986,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   cmdBuffer->endRenderPass();
 
   // Build decals after.
-  m_decalEngine->BuildDecals(cmdBuffer);
+  m_decalEngine->buildDecals(cmdBuffer);
 }
 
 
@@ -2990,7 +2994,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   // Do stuff with the buffer.
   VkViewport viewport = {};
   viewport.height = (r32)windowExtent.height;
@@ -3001,7 +3005,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
   viewport.y = 0.0f;
 
   VkRect2D scissor = { };
-  scissor.extent = m_displayExtent;
+  scissor.extent = { m_renderWidth, m_renderHeight };
   scissor.offset = { 0, 0 };
 
   GraphicsPipeline* finalPipeline = final_PipelineKey;
@@ -3031,7 +3035,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
     VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
     VkDeviceSize offsets[] = { 0 };
 
-    cmdBuffer->bindIndexBuffer(indexBuffer, 0, GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
+    cmdBuffer->bindIndexBuffer(indexBuffer, 0, getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType()));
     cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
 
     cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
@@ -3043,7 +3047,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 {
 
 
-  VkIndexType indexType = GetNativeIndexType(m_RenderQuad.getIndices()->GetSizeType());
+  VkIndexType indexType = getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType());
   VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
   VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
@@ -3084,7 +3088,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderpassInfo.clearValueCount = 1;
   renderpassInfo.pClearValues = &clearVal;
   renderpassInfo.renderPass = hdr_renderPass->getHandle();
-  renderpassInfo.renderArea.extent = m_displayExtent;
+  renderpassInfo.renderArea.extent = { m_renderWidth, m_renderHeight };
   renderpassInfo.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass2x =  { };
@@ -3133,7 +3137,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   GlowPass.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   viewport.height = (r32)windowExtent.height;
   viewport.width = (r32)windowExtent.width;
   viewport.minDepth = 0.0f;
@@ -3255,7 +3259,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     VkClearRect rect = {};
     rect.baseArrayLayer = 0;
     rect.layerCount = 1;
-    VkExtent2D extent = m_displayExtent;
+    VkExtent2D extent = { m_renderWidth, m_renderHeight };
     rect.rect.extent = extent;
     rect.rect = { 0, 0 };
     cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
@@ -3277,7 +3281,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   dSets[2] = m_pHDR->getSet()->getHandle();
   
   if (m_currentGraphicsConfigs._AA == AA_FXAA_2x) {
-    m_pAntiAliasingFXAA->GenerateCommands(m_pRhi, cmdBuffer, m_pGlobal, frameIndex);
+    m_pAntiAliasingFXAA->generateCommands(m_pRhi, cmdBuffer, m_pGlobal, frameIndex);
   }
 
   cmdBuffer->beginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -3369,7 +3373,7 @@ void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     cmdBuffer->BindVertexBuffers(0, 1, &buf, offset);
     if (index) {
       VkBuffer ind = index->getHandle()->NativeBuffer();
-      cmdBuffer->BindIndexBuffer(ind, 0, GetNativeIndexType(index->GetSizeType()));
+      cmdBuffer->BindIndexBuffer(ind, 0, getNativeIndexType(index->GetSizeType()));
     }
 
     Primitive* primitives = mesh->getPrimitiveData();
@@ -3463,7 +3467,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   clearValues[6].depthStencil = { 1.0f, 0 };
 
   VkRenderPassBeginInfo renderPassCi = {};
-  VkExtent2D windowExtent = m_displayExtent;
+  VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassCi.framebuffer = pbr_forwardFrameBuffer->getHandle();
   renderPassCi.renderPass = pbr_forwardRenderPass->getHandle();
@@ -3528,7 +3532,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
       if (indexBuffer) {
         VkBuffer ib = indexBuffer->getHandle()->getNativeBuffer();
-        cmdBuffer->bindIndexBuffer(ib, 0, GetNativeIndexType(indexBuffer->GetSizeType()));
+        cmdBuffer->bindIndexBuffer(ib, 0, getNativeIndexType(indexBuffer->GetSizeType()));
       }
       ShadowMapSystem& shadow = m_pLights->getPrimaryShadowMapSystem();
       DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
@@ -4133,36 +4137,22 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
     }
     
     if (params->_Resolution != m_currentGraphicsConfigs._Resolution) {
+      updateRenderResolution(params->_Resolution);
       reconstruct = true;
     }
     updateRuntimeConfigs(params);
 
   }
 
-  VkExtent2D extent = m_displayExtent;
+  VkExtent2D extent = { m_renderWidth, m_renderHeight };
   if (!params || (presentMode != m_pRhi->swapchainObject()->CurrentPresentMode()) 
-    || (bufferCount != m_pRhi->swapchainObject()->CurrentBufferCount()) || 
-    (extent.height  != m_pWindow->getHeight() || extent.width != m_pWindow->getWidth())) {
-    u32 w, h;
-    switch (m_currentGraphicsConfigs._Resolution) {
-      case Resolution_800x600: { w = 800; h = 600; } break;
-      case Resolution_1200x800: { w = 1200; h = 800; } break;
-      case Resolution_1280x720: { w = 1280; h = 720; } break;
-      case Resolution_1440x900: { w = 1440; h = 900; } break;
-      case Resolution_1920x1080: { w = 1920; h = 1080; } break;
-      case Resolution_1920x1200: { w = 1920; h = 1200; } break;
-      case Resolution_2048x1440: { w = 2048; h = 1440; } break;
-      case Resolution_3840x2160: { w = 3840; h = 2160; } break;
-      case Resolution_7680x4320: { w = 7680; h = 4320; } break;
-      default: { w = m_pWindow->getWidth(); h = m_pWindow->getHeight(); } break;
-    }
-    m_displayExtent = { w, h };
+    || (bufferCount != m_pRhi->swapchainObject()->CurrentBufferCount())) {
     reconstruct = true;
   }
 
   if (reconstruct) {
-    m_pGlobal->getData()->_ScreenSize[0] = m_displayExtent.width;
-    m_pGlobal->getData()->_ScreenSize[1] = m_displayExtent.height;
+    m_pGlobal->getData()->_ScreenSize[0] = m_renderWidth;
+    m_pGlobal->getData()->_ScreenSize[1] = m_renderHeight;
     // Triple buffering atm, we will need to use user params to switch this.
     m_pRhi->reConfigure(presentMode, m_pWindow->getWidth(), m_pWindow->getHeight(), bufferCount, 3);
 
@@ -4601,7 +4591,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
       imgMemBarrier.srcAccessMask = 0;
       imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-      imgMemBarrier.image = cubeTexture->Image();
+      imgMemBarrier.image = cubeTexture->getImage();
 
       // set the cubemap image layout for transfer from our framebuffer.
       cmdBuffer.pipelineBarrier(
@@ -4620,7 +4610,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       subRange.layerCount = 1;
       subRange.levelCount = 1;
 
-      imgMemBarrier.image = pbr_FinalTextureKey->Image();
+      imgMemBarrier.image = pbr_FinalTextureKey->getImage();
       imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -4655,8 +4645,8 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgCopy.extent.depth = 1;
 
       cmdBuffer.copyImage(
-        pbr_FinalTextureKey->Image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-        cubeTexture->Image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        pbr_FinalTextureKey->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        cubeTexture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         1, &imgCopy
       );
 
@@ -4683,7 +4673,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
       imgMemBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-      imgMemBarrier.image = cubeTexture->Image();
+      imgMemBarrier.image = cubeTexture->getImage();
       imgMemBarrier.subresourceRange = subRange;
 
       cmdBuffer.pipelineBarrier(
@@ -4861,5 +4851,56 @@ void Renderer::pushSpotLight(const SpotLight& lightInfo)
 void Renderer::pushSimpleRender(SimpleRenderCmd& cmd)
 {
 
+}
+
+
+void Renderer::updateRenderResolution(RenderResolution resolution)
+{
+  u32 w, h;
+  switch ( resolution ) {
+    case Resolution_800x600: {
+      w = 800;
+      h = 600;
+    } break;
+    case Resolution_1200x800: {
+      w = 1200;
+      h = 800;
+    } break;
+    case Resolution_1280x720: {
+      w = 1280;
+      h = 720;
+    } break;
+    case Resolution_1440x900: {
+      w = 1440;
+      h = 900;
+    } break;
+    case Resolution_1920x1080: {
+      w = 1920;
+      h = 1080;
+    } break;
+    case Resolution_1920x1200: {
+      w = 1920;
+      h = 1200;
+    } break;
+    case Resolution_2048x1440: {
+      w = 2048;
+      h = 1440;
+    } break;
+    case Resolution_3840x2160: {
+      w = 3840;
+      h = 2160;
+    } break;
+    case Resolution_7680x4320: {
+      w = 7680;
+      h = 4320;
+    } break;
+    default: {
+      w = m_pWindow->getWidth();
+      h = m_pWindow->getHeight();
+    } break;
+  }
+
+  m_renderWidth = w;
+  m_renderHeight = h;
 }
 } // Recluse

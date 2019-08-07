@@ -325,17 +325,21 @@ public:
   void    initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
   void    cleanUp(VulkanRHI* pRhi);
 
-  void    GenerateCommands(VulkanRHI* pRhi, CommandBuffer* pOut, GlobalDescriptor* pDescriptor, u32 frameIndex);
-  void    UpdateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
+  void    generateCommands(VulkanRHI* pRhi, 
+                           CommandBuffer* pOut, 
+                           GlobalDescriptor* pDescriptor, 
+                           u32 frameIndex);
+  void    updateSets(VulkanRHI* pRhi, 
+                     GlobalDescriptor* pDescriptor);
   Texture*  GetOutput() { return m_output; }
   Sampler*  GetOutputSampler() { return m_outputSampler; }
 
 private:
 
-  void                    CreateTexture(VulkanRHI* pRhi);
-  void                    CreateDescriptorSetLayout(VulkanRHI* pRhi);
-  void                    CreateDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
-  void                    CreateSampler(VulkanRHI* pRhi);
+  void                    createTexture(VulkanRHI* pRhi, GlobalDescriptor* pGlobal);
+  void                    createDescriptorSetLayout(VulkanRHI* pRhi);
+  void                    createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
+  void                    createSampler(VulkanRHI* pRhi);
 
 
   ComputePipeline*        m_pipeline;

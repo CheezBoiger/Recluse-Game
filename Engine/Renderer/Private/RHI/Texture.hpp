@@ -67,14 +67,14 @@ public:
   void                  cleanUp();
 
   VkImageView           getView() { return mView; }
-  VkImage               Image() { return mImage; }
-  VkDeviceMemory        Memory() { return m_allocation._deviceMemory; }
-  VkFormat              Format() const { return mFormat; }
+  VkImage               getImage() { return mImage; }
+  VkDeviceMemory        getMemory() { return m_allocation._deviceMemory; }
+  VkFormat              getFormat() const { return mFormat; }
   u32                   getWidth() const { return mWidth; }
   u32                   getHeight() const { return mHeight; }
-  u32                   MipLevels() const { return mMipLevels; }
-  u32                   ArrayLayers() const { return mArrayLayers; }
-  VkSampleCountFlagBits Samples() const { return mSamples; }
+  u32                   getMipLevels() const { return mMipLevels; }
+  u32                   getArrayLayers() const { return mArrayLayers; }
+  VkSampleCountFlagBits getSamples() const { return mSamples; }
 
 private:
   VkImageView           mView;

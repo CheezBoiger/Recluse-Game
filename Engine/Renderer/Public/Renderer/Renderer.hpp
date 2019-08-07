@@ -266,6 +266,12 @@ public:
   // Wipes out all currently pushed in meshes in this renderer.
   void              clearCmdLists();
 
+  // Get backbuffer render width. This is different from window display width!
+  u32 getRenderWidth() const { return m_renderWidth; }
+
+  // Get backbuffer render height. This is different from window display height!
+  u32 getRenderHeight() const { return m_renderHeight; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -302,6 +308,7 @@ private:
   void              generateSkyboxCmds(CommandBuffer* buf, u32 frameIndex);
   void              generateFinalCmds(CommandBuffer* buf);
   void              generateForwardPBRCmds(CommandBuffer* buf, u32 frameIndex);
+  void              updateRenderResolution(RenderResolution resolution);
 
   void              buildOffScreenCmdList();
   void              buildPbrCmdLists();
@@ -421,6 +428,9 @@ private:
   TextureCube*          m_preRenderSkybox;
   LightProbe*           m_globalLightProbe;
 
+
+  u32                   m_renderWidth;
+  u32                   m_renderHeight;
   u32                   m_workGroupSize;
   u32                   m_rhiBits;
   b32                   m_staticUpdate;
