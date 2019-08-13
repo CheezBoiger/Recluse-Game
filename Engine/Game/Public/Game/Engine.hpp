@@ -146,6 +146,7 @@ public:
   void                          clearProbeTargets() { m_envProbeTargets.clear(); }
 
   GraphicsConfigParams readGraphicsConfig( u32& w, u32& h );
+  void saveEngineConfig( GraphicsConfigParams& config );
 
 private:
 

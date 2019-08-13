@@ -12,7 +12,8 @@
 [LocalReflections] = true
 [FilmGrain] = false
 [SoftShadows] = true
-[ShadowMapResolution] = 2048
+[CascadeShadowMapResolution] = 2048
+[NumberCascadeShadowMaps] = 4
 [ShadowMapPointLightResolution] = 512
 [Bloom] = true
 [Multithreading] = true

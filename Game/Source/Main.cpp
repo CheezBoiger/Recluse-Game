@@ -138,10 +138,10 @@ GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
       if (AvailableOption(line, "SoftShadows")) {
         std::string option = GetOption(line);
         if (option.compare("true") == 0) {
-          graphics._EnableSoftShadows = true;
+          graphics._enableSoftShadows = true;
         }
         else {
-          graphics._EnableSoftShadows = false;
+          graphics._enableSoftShadows = false;
         }
       }
       if (AvailableOption(line, "Multithreading")) {

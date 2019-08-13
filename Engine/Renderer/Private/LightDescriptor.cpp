@@ -115,11 +115,12 @@ ShadowMapSystem::ShadowMapSystem()
   , m_staticMapNeedsUpdate(true)
   , m_rShadowViewportDim(15.0f)
   , m_staticShadowViewportDim(100.0f)
+  , m_numCascadeShadowMaps(kTotalCascades)
 { 
 }
 
 
-void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi)
+void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi, u32 numCascades)
 {
   if (!k_pStaticRenderPass) {
     k_pStaticRenderPass = pRhi->createRenderPass();
@@ -133,10 +134,10 @@ void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi)
 
   {
     VkRenderPassCreateInfo renderPass = {};
-    std::array<VkAttachmentDescription, kTotalCascades> attachments;
-    std::array<VkSubpassDescription, kTotalCascades> subpasses;
-    std::array<VkSubpassDependency, kTotalCascades>   dependencies;
-    std::array<VkAttachmentReference, kTotalCascades> references;
+    std::vector<VkAttachmentDescription> attachments(numCascades);
+    std::vector<VkSubpassDescription> subpasses(numCascades);
+    std::vector<VkSubpassDependency>   dependencies(numCascades);
+    std::vector<VkAttachmentReference> references(numCascades);
 
     for (u32 i = 0; i < subpasses.size(); ++i) {
       VkAttachmentReference depth = {};
@@ -185,16 +186,16 @@ void ShadowMapSystem::initializeShadowPipelines(VulkanRHI* pRhi)
     k_pCascadeRenderPass = pRhi->createRenderPass();
     k_pCascadeRenderPass->initialize(renderPass);
   }
-  k_pSkinnedPipeline.resize(kTotalCascades);
-  k_pSkinnedPipelineOpaque.resize(kTotalCascades);
-  k_pSkinnedMorphPipeline.resize(kTotalCascades);
-  k_pSkinnedMorphPipelineOpaque.resize(kTotalCascades);
-  k_pStaticMorphPipeline.resize(kTotalCascades);
-  k_pStaticMorphPipelineOpaque.resize(kTotalCascades);
-  k_pStaticPipeline.resize(kTotalCascades);
-  k_pStaticPipelineOpaque.resize(kTotalCascades);
+  k_pSkinnedPipeline.resize(numCascades);
+  k_pSkinnedPipelineOpaque.resize(numCascades);
+  k_pSkinnedMorphPipeline.resize(numCascades);
+  k_pSkinnedMorphPipelineOpaque.resize(numCascades);
+  k_pStaticMorphPipeline.resize(numCascades);
+  k_pStaticMorphPipelineOpaque.resize(numCascades);
+  k_pStaticPipeline.resize(numCascades);
+  k_pStaticPipelineOpaque.resize(numCascades);
 
-  for (u32 i = 0; i < kTotalCascades; ++i) {
+  for (u32 i = 0; i < numCascades; ++i) {
     {
       std::vector<VkVertexInputBindingDescription> bindings = { SkinnedVertexDescription::GetBindingDescription() };
       k_pSkinnedPipeline[i] = pRhi->createGraphicsPipeline();
@@ -287,7 +288,7 @@ void ShadowMapSystem::cleanUpShadowPipelines(VulkanRHI* pRhi)
     k_pDynamicRenderPass = nullptr;
   }
 
-  for (u32 i = 0; i < kTotalCascades; ++i) {
+  for (u32 i = 0; i < k_pSkinnedPipeline.size(); ++i) {
     if (k_pSkinnedPipeline[i]) {
       pRhi->freeGraphicsPipeline(k_pSkinnedPipeline[i]);
       k_pSkinnedPipeline[i] = nullptr;
@@ -500,7 +501,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution
   u32 sDim = resolution;
   VkImageCreateInfo ImageCi = {};
   ImageCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  ImageCi.arrayLayers = kTotalCascades;
+  ImageCi.arrayLayers = m_numCascadeShadowMaps;
   ImageCi.extent.width = sDim;
   ImageCi.extent.height = sDim;
   ImageCi.extent.depth = 1;
@@ -521,7 +522,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution
   ViewCi.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
   ViewCi.subresourceRange.baseArrayLayer = 0;
   ViewCi.subresourceRange.baseMipLevel = 0;
-  ViewCi.subresourceRange.layerCount = kTotalCascades;
+  ViewCi.subresourceRange.layerCount = m_numCascadeShadowMaps;
   ViewCi.subresourceRange.levelCount = 1;
   ViewCi.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
@@ -538,16 +539,16 @@ void ShadowMapSystem::initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution
   ViewCi.subresourceRange.layerCount = 1;
   for(u32 i = 0; i < m_cascades.size(); ++i) {
     std::vector<Cascade>& cascade = m_cascades[i];
-    cascade.resize(kTotalCascades);
+    cascade.resize(m_numCascadeShadowMaps);
 
     VkFramebufferCreateInfo fCi = {};
     fCi.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     fCi.layers = 1;
     fCi.width = sDim;
     fCi.height = sDim;
-    fCi.attachmentCount = kTotalCascades;
+    fCi.attachmentCount = m_numCascadeShadowMaps;
 
-    std::vector<VkImageView> cascadeViews(kTotalCascades);
+    std::vector<VkImageView> cascadeViews(m_numCascadeShadowMaps);
     for (u32 j = 0; j < cascade.size(); ++j) {
       ViewCi.subresourceRange.baseArrayLayer = j;
       ViewCi.image = m_pCascadeShadowMapD[i]->getImage();
@@ -679,13 +680,51 @@ void ShadowMapSystem::initializeShadowMapD(VulkanRHI* pRhi, u32 resolution)
 void ShadowMapSystem::initialize(VulkanRHI* pRhi, const GraphicsConfigParams* params)
 {
   m_shadowQuality = params->_Shadows;
-  initializeShadowMapD(pRhi, params->_shadowMapRes);
-  initializeCascadeShadowMap(pRhi, params->_shadowMapRes);
+
+  if ( params->_numberCascadeShadowMaps > kTotalCascades ) 
+  {
+    m_numCascadeShadowMaps = kTotalCascades;
+  } 
+  else 
+  {
+    m_numCascadeShadowMaps = params->_numberCascadeShadowMaps;
+  }
+
+  initializeShadowMapD(pRhi, params->_cascadeShadowMapRes);
+  initializeCascadeShadowMap(pRhi, params->_cascadeShadowMapRes);
   initializeShadowMapDescriptors(pRhi);  
   initializeSpotLightShadowMapArray(pRhi, params->_shadowMapArrayRes);
   
-  enableStaticMapSoftShadows(params->_EnableSoftShadows);
-  enableDynamicMapSoftShadows(params->_EnableSoftShadows);
+  enableStaticMapSoftShadows(params->_enableSoftShadows);
+  enableDynamicMapSoftShadows(params->_enableSoftShadows);
+}
+
+
+void ShadowMapSystem::transitionEmptyShadowMap(CommandBuffer* cmdBuffer, u32 frameIndex)
+{
+  Texture* pCascadeShadowMap = m_pCascadeShadowMapD[frameIndex];
+
+  VkImageMemoryBarrier imgBarrier = { };
+  imgBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  imgBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  imgBarrier.image = pCascadeShadowMap->getImage();
+  imgBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+  imgBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+  imgBarrier.pNext = nullptr;
+
+  imgBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+  imgBarrier.subresourceRange.baseArrayLayer = 0;
+  imgBarrier.subresourceRange.baseMipLevel = 0;
+  imgBarrier.subresourceRange.layerCount = m_numCascadeShadowMaps;
+  imgBarrier.subresourceRange.levelCount = 1;
+
+  cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                              VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+                              0, 
+                              0, nullptr, 
+                              0, nullptr, 
+                              1, &imgBarrier);
 }
 
 
@@ -1099,11 +1138,13 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
   renderPass.renderArea.offset = { 0, 0 };
   renderPass.renderPass = pRp->getHandle();
   renderPass.framebuffer = pFb->getHandle();
+
   VkClearValue depthValues[kTotalCascades];
-  for (u32 i = 0; i < kTotalCascades; ++i) {
+
+  for (u32 i = 0; i < m_numCascadeShadowMaps; ++i) {
     depthValues[i].depthStencil = { 1.0f, 0 };
   }
-  renderPass.clearValueCount = kTotalCascades;
+  renderPass.clearValueCount = m_numCascadeShadowMaps;
   renderPass.pClearValues = depthValues;
 
   VkViewport viewport = {};
@@ -1350,7 +1391,7 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
   r32 cShadowDim = m_rShadowViewportDim;
   r32 rr = 5.0f;
   r32 e = 2.0f;
-  for (size_t i = 0; i < kTotalCascades; ++i) {
+  for (size_t i = 0; i < m_numCascadeShadowMaps; ++i) {
     Vector3 extent = viewerPos + camDir * e;
     Eye = Vector3(
       light->_Direction.x,

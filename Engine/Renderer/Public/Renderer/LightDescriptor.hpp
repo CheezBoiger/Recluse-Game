@@ -148,7 +148,7 @@ public:
 
   void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, u32 frameIndex);
   void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, u32 frameIndex);
-
+  void                      transitionEmptyShadowMap(CommandBuffer* cmdBuffer, u32 frameIndex);
   void                      signalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
   DescriptorSet*            getShadowMapViewDescriptor(u32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
@@ -170,7 +170,7 @@ public:
 
   LightViewSpace&           getSpotLightSpace(u32 idx) { return m_spotLightShadowMaps[idx]._space; }
 
-  static void               initializeShadowPipelines(VulkanRHI* pRhi);
+  static void               initializeShadowPipelines(VulkanRHI* pRhi, u32 numCascades);
   static void               cleanUpShadowPipelines(VulkanRHI* pRhi);
 
 private:
@@ -257,6 +257,7 @@ private:
   r32                           m_rShadowViewportDim;
   b32                           m_staticMapNeedsUpdate;
   u32                           m_numPointLights;
+  u32                           m_numCascadeShadowMaps;
   GraphicsQuality               m_shadowQuality;
   std::vector<Texture*>         m_pCascadeShadowMapD;
   std::vector<Vector3>          m_pointMapPositions;

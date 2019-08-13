@@ -93,8 +93,8 @@ public:
   // render scale determines the viewport surface to render onto.
   r32             _renderScale;
 
-  u32             _shadowMapRes;
-
+  u32             _cascadeShadowMapRes;
+  u32             _numberCascadeShadowMaps;
   u32             _shadowMapArrayRes;
 
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
@@ -126,7 +126,7 @@ public:
   // Soft shadows. Performs additional computations to produce realistic shadows that better translate 
   // to how large lights would shade an object in a scene by blurring depending on distance from
   // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
-  b32             _EnableSoftShadows;
+  b32             _enableSoftShadows;
 
   RenderResolution _Resolution;
   WindowType       _WindowType;
@@ -143,6 +143,7 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   0.0f,
   1.0f,
   2048u,
+  4,
   512u,
   true,
   true,

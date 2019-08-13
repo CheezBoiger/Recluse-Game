@@ -519,7 +519,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   setUpGraphicsPipelines();
 
   // Dependency on shadow map pipeline initialization.
-  ShadowMapSystem::initializeShadowPipelines(m_pRhi);
+  ShadowMapSystem::initializeShadowPipelines(m_pRhi, params->_numberCascadeShadowMaps);
   m_pLights = new LightDescriptor();
   m_pLights->initialize(m_pRhi, params);
 
@@ -3879,8 +3879,13 @@ void Renderer::checkCmdUpdate()
       offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
       offscreenCmdList->begin(begin);
       generateOffScreenCmds(offscreenCmdList, frameIndex);
+      // Should the shadow map be turned off (ex. in night time scenes), we still need to transition
+      // it to readable format.
+      if (!m_pLights->isPrimaryShadowEnabled()) {
+        m_pLights->getPrimaryShadowMapSystem().transitionEmptyShadowMap(offscreenCmdList, frameIndex);
+      }
       offscreenCmdList->end();
-
+      
       m_Forward._cmdBuffers[frameIndex]->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
       m_Forward._cmdBuffers[frameIndex]->begin(begin);
@@ -3904,6 +3909,11 @@ void Renderer::checkCmdUpdate()
     offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     offscreenCmdList->begin(begin);
     generateOffScreenCmds(offscreenCmdList, frameIndex);
+    // Should the shadow map be turned off (ex. in night time scenes), we still
+    // need to transition it to readable format.
+    if (!m_pLights->isPrimaryShadowEnabled()) {
+      m_pLights->getPrimaryShadowMapSystem().transitionEmptyShadowMap(offscreenCmdList, frameIndex);
+    }
     offscreenCmdList->end();
 
     m_Forward._cmdBuffers[frameIndex]->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -4097,8 +4107,8 @@ void Renderer::updateRuntimeConfigs(const GraphicsConfigParams* params)
   }
 
   ShadowMapSystem& sunShadow = m_pLights->getPrimaryShadowMapSystem();
-  sunShadow.enableDynamicMapSoftShadows(params->_EnableSoftShadows);
-  sunShadow.enableStaticMapSoftShadows(params->_EnableSoftShadows);
+  sunShadow.enableDynamicMapSoftShadows(params->_enableSoftShadows);
+  sunShadow.enableStaticMapSoftShadows(params->_enableSoftShadows);
 
   m_pHDR->getRealtimeConfiguration()->_allowChromaticAberration = 
     (params->_EnableChromaticAberration ? Vector4(1.0f) : Vector4(0.0f));

@@ -497,9 +497,9 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
       if (availableOption(line, "SoftShadows")) {
         std::string option = getOption(line);
         if (option.compare("true") == 0) {
-          graphics._EnableSoftShadows = true;
+          graphics._enableSoftShadows = true;
         } else {
-          graphics._EnableSoftShadows = false;
+          graphics._enableSoftShadows = false;
         }
       }
       if (availableOption(line, "Multithreading")) {
@@ -510,10 +510,15 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
           graphics._EnableMultithreadedRendering = false;
         }
       }
-      if ( availableOption( line, "ShadowMapResolution" ) ) {
+      if ( availableOption( line, "CascadeShadowMapResolution" ) ) {
         std::string option = getOption( line );
         u32 res = atoi( option.c_str( ) );
-        graphics._shadowMapRes = res;
+        graphics._cascadeShadowMapRes = res;
+      }
+      if ( availableOption( line, "NumberCascadeShadowMaps" ) ) {
+        std::string option = getOption( line );
+        u32 num = atoi( option.c_str( ) );
+        graphics._numberCascadeShadowMaps = num;
       }
       if (availableOption(line, "ShadowMapPointLightResolution")) {
         std::string option = getOption(line);
