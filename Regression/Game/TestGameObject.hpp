@@ -10,6 +10,6 @@ using namespace Recluse;
 namespace Test {
 
 
-b8 TestGameObject();
-b8 TestGameObjectManager();
+B8 TestGameObject();
+B8 TestGameObjectManager();
 } // Recluse

@@ -45,27 +45,27 @@ KeyAction Keyboard::keys[256] =
     KEY_IDLE, KEY_IDLE, KEY_IDLE, KEY_IDLE
 };
 
-b32 Keyboard::keyPressed(KeyCode key)
+B32 Keyboard::keyPressed(KeyCode key)
 {
-  return Keyboard::keys[(i32)key] == KEY_DOWN ? true : false;
+  return Keyboard::keys[(I32)key] == KEY_DOWN ? true : false;
 }
 
 
-b32 Keyboard::keyReleased(KeyCode key)
+B32 Keyboard::keyReleased(KeyCode key)
 {
-  return Keyboard::keys[(i32)key] == KEY_UP ? true : false;
+  return Keyboard::keys[(I32)key] == KEY_UP ? true : false;
 }
 
 
-b32 Keyboard::keyHeldDown(KeyCode key) 
+B32 Keyboard::keyHeldDown(KeyCode key) 
 {
-  return Keyboard::keys[(i32)key] == KEY_STILLDOWN ? true : false;
+  return Keyboard::keys[(I32)key] == KEY_STILLDOWN ? true : false;
 }
 
 
 void Keyboard::preUpdate()
 {
-  for (u32 i = 0; i < 256; ++i) 
+  for (U32 i = 0; i < 256; ++i) 
   {
     if (keys[ i ] == KEY_UP) 
     {

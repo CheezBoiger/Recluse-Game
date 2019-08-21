@@ -78,9 +78,9 @@ void DescriptorSet::free()
 }
 
 
-void DescriptorSet::update(u32 count, VkWriteDescriptorSet* writeDescriptorSets)
+void DescriptorSet::update(U32 count, VkWriteDescriptorSet* writeDescriptorSets)
 {
-  for (u32 i = 0; i < count; ++i) {
+  for (U32 i = 0; i < count; ++i) {
     writeDescriptorSets[i].dstSet = getHandle();
   }
   vkUpdateDescriptorSets(mOwner, count, writeDescriptorSets, 0, nullptr);

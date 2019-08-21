@@ -10,7 +10,7 @@ namespace Recluse {
 
 class Mouse {
 public:
-  static const i32 MAX_MOUSE_BUTTONS = 3;
+  static const I32 MAX_MOUSE_BUTTONS = 3;
  
   enum ButtonAction {
     IDLE,
@@ -27,40 +27,40 @@ public:
   };
 
   // Enable mouse on screen position. Setting to false, will use raw input.
-  static void setEnable(b32 enable);
+  static void setEnable(B32 enable);
 
   //Track mouse.
-  static void setTrack(b32 enable) { mouseTrack = enable; }
-  static void show(b32 enable);
-  static void clampWithinWindow(b32 enable) { mouseClamped = enable; }
+  static void setTrack(B32 enable) { mouseTrack = enable; }
+  static void show(B32 enable);
+  static void clampWithinWindow(B32 enable) { mouseClamped = enable; }
 
-  static b32 isEnabled() { return mouseEnabled; }
-  static b32 isShowing() { return mouseShow; }
-  static b32 isTracking() { return mouseTrack; }
-  static b32 isClamped() { return mouseClamped; }
-  static void setPosition(r64 x, r64 y);
+  static B32 isEnabled() { return mouseEnabled; }
+  static B32 isShowing() { return mouseShow; }
+  static B32 isTracking() { return mouseTrack; }
+  static B32 isClamped() { return mouseClamped; }
+  static void setPosition(R64 x, R64 y);
   static void setCursorImage(const std::string& imgPath);
 
-  static r64 getX() { return xPos; }
-  static r64 getY() { return yPos; }
-  static r64 lastX() { return lastXPos; }
-  static r64 lastY() { return lastYPos; }
+  static R64 getX() { return xPos; }
+  static R64 getY() { return yPos; }
+  static R64 lastX() { return lastXPos; }
+  static R64 lastY() { return lastYPos; }
 
-  static b32 buttonDown(ButtonType type);
-  static b32 buttonUp(ButtonType type);
+  static B32 buttonDown(ButtonType type);
+  static B32 buttonUp(ButtonType type);
 
   static void resetButtonActions();
 
 private:
-  static b32       mouseClamped;
-  static b32       mouseTrack;
-  static b32       mouseEnabled;
-  static b32       mouseShow;
-  static r64      xPos;
-  static r64      yPos;
+  static B32       mouseClamped;
+  static B32       mouseTrack;
+  static B32       mouseEnabled;
+  static B32       mouseShow;
+  static R64      xPos;
+  static R64      yPos;
 
-  static r64      lastXPos;
-  static r64      lastYPos;
+  static R64      lastXPos;
+  static R64      lastYPos;
   static HCURSOR  cursor;
 
   // TODO(): Other buttons on the mouse should be supported too...

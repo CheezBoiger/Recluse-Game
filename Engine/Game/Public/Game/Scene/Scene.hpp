@@ -52,7 +52,7 @@ public:
 
   // Load a scene from file. Will generate full scene graph for this object. Callers will still need to figure out which 
   // nodes to add scripts for. May be formatted in GLTF or FBX.
-  static b32                loadFromFile(Scene* pOut, const std::string& filename);
+  static B32                loadFromFile(Scene* pOut, const std::string& filename);
 
   Scene(std::string name = default_name);
 
@@ -75,7 +75,7 @@ public:
   virtual void              startUp() { }
 
   // Update the scene. Game logic override goes here.
-  virtual void              update(r32 tick) { }
+  virtual void              update(R32 tick) { }
 
   virtual void              cleanUp() { }
 

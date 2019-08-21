@@ -24,7 +24,7 @@ struct JointPose {
   Quaternion  _rot;   // rotation.
   Vector3     _trans; // translation.
   Vector3     _scale; // scale.
-  u8          _id;    // node id sample.
+  U8          _id;    // node id sample.
 
   JointPose() 
     : _scale(Vector3(1.0f, 1.0f, 1.0f))
@@ -45,8 +45,8 @@ struct JointPose {
 struct AnimPose {
   std::vector<JointPose>  _aLocalPoses;       // local pose matrices at time t.
   std::vector<Matrix4>    _aGlobalPoses;      // global pose matrices at time t.
-  std::vector<r32>        _morphs;            // Morph weights at key time t.
-  r32                     _time;              // key frame time within the animation.
+  std::vector<R32>        _morphs;            // Morph weights at key time t.
+  R32                     _time;              // key frame time within the animation.
 };
 
 
@@ -61,25 +61,25 @@ struct AnimClip {
     , _name() { }
 
   // Duration of this animation clip.
-  r32                           _fDuration;           // Duration of clip T.
-  r32                           _fFps;                // frames per second time.
-  u32                           _uFrameCount;         // Number of frames this clip occupies.
+  R32                           _fDuration;           // Duration of clip T.
+  R32                           _fFps;                // frames per second time.
+  U32                           _uFrameCount;         // Number of frames this clip occupies.
   skeleton_uuid_t               _skeletonId;          // id of skeleton that this clip works with.
   std::vector<AnimPose>         _aAnimPoseSamples;    //
-  b32                           _bLooping;            //
+  B32                           _bLooping;            //
   std::string                   _name;                // name of this clip.
 };
 
 
 // Animation clip state. Keeps track of the state of an animation's clip.
 struct AnimClipState {
-  r32                         _fCurrLocalTime;  // Local clock t. Runs until AnimClip._rDuration.
+  R32                         _fCurrLocalTime;  // Local clock t. Runs until AnimClip._rDuration.
                                                 // range : [0, AnimClip._rDuration]
-  r32                         _fWeight;
-  r32                         _fPlaybackRate;   // rate at which to play back animation.
-  b32                         _bEnabled;        // allow enabling this animation clip.
-  b32                         _bLooping;        // loop this state.
-  i32                         _next;            // Next pose idx within the clip.
-  r32                         _tau;             // global start time of this state.
+  R32                         _fWeight;
+  R32                         _fPlaybackRate;   // rate at which to play back animation.
+  B32                         _bEnabled;        // allow enabling this animation clip.
+  B32                         _bLooping;        // loop this state.
+  I32                         _next;            // Next pose idx within the clip.
+  R32                         _tau;             // global start time of this state.
 };
 } // Recluse

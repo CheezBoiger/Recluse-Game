@@ -22,7 +22,7 @@ struct physics_configs_t {
 };
 
 
-typedef uuid64 physics_uuid_t;
+typedef UUID64 physics_uuid_t;
 
 
 class PhysicsObject {

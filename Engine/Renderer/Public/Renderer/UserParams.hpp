@@ -88,45 +88,45 @@ public:
   GraphicsQuality     _modelQuality;
 
   // Level of detail, by distance. The higher, the better the models in the world.
-  r32             _Lod;
+  R32             _Lod;
 
   // render scale determines the viewport surface to render onto.
-  r32             _renderScale;
+  R32             _renderScale;
 
-  u32             _cascadeShadowMapRes;
-  u32             _numberCascadeShadowMaps;
-  u32             _shadowMapArrayRes;
+  U32             _cascadeShadowMapRes;
+  U32             _numberCascadeShadowMaps;
+  U32             _shadowMapArrayRes;
 
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
   // refresh at max 60 Hz. If this monitor can achieve higher refresh rates, this feature may only
   // have negative impacts, and is best to leave off. This may have a slight impact
   // in input response.
-  b32             _EnableVsync;
+  B32             _EnableVsync;
 
   // Enables chromatic aberration. This allows chromatic distortion
   // by which color fringing occurs and the light fails to focus all colors in one convergence point, 
   // resulting in rgb colors offsetting.
   // This also applies to water and certain translucent objects.
-  b32             _EnableChromaticAberration;
+  B32             _EnableChromaticAberration;
 
   // Post processing affects. This includes HDR.
-  b32             _EnablePostProcessing;
+  B32             _EnablePostProcessing;
 
   // setEnable local reflections. Global illumination for local enviroments which adds some 
   // quality to object surfaces. Disabling will improve performance, but reduce quality.
-  b32             _EnableLocalReflections;
+  B32             _EnableLocalReflections;
 
   // Allow blooms ingame. This allows light to bleed out of emissive, shiny, and metallic objects,
   // depending on how intense the light reflection, or light emission, is.
-  b32             _EnableBloom;
+  B32             _EnableBloom;
 
   // Allows the the renderer engine to multithread its workload.
-  b32             _EnableMultithreadedRendering;
+  B32             _EnableMultithreadedRendering;
 
   // Soft shadows. Performs additional computations to produce realistic shadows that better translate 
   // to how large lights would shade an object in a scene by blurring depending on distance from
   // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
-  b32             _enableSoftShadows;
+  B32             _enableSoftShadows;
 
   RenderResolution _Resolution;
   WindowType       _WindowType;

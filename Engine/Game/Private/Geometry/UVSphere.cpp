@@ -11,7 +11,7 @@
 
 namespace Recluse {
 
-std::vector<StaticVertex> UVSphere::meshInstance(r32 radius, u32 sliceCount, u32 stackCount)
+std::vector<StaticVertex> UVSphere::meshInstance(R32 radius, U32 sliceCount, U32 stackCount)
 {
   //subdivisions = (std::min)(subdivisions, 5u);
   std::vector<StaticVertex> vertices;
@@ -41,18 +41,18 @@ std::vector<StaticVertex> UVSphere::meshInstance(r32 radius, u32 sliceCount, u32
 
   vertices.push_back(bottomVertex);
 
-  float phiStep = r32(CONST_PI) / stackCount;
-  float thetaStep = 2.0f * r32(CONST_PI) / sliceCount;
+  float phiStep = R32(CONST_PI) / stackCount;
+  float thetaStep = 2.0f * R32(CONST_PI) / sliceCount;
 
   // Compute vertices for each stack ring (do not count the poles as rings).
-  for (u32 i = 1; i <= stackCount - 1; ++i)
+  for (U32 i = 1; i <= stackCount - 1; ++i)
   {
-    r32 phi = i*phiStep;
+    R32 phi = i*phiStep;
 
     // Vertices of ring.
-    for (u32 j = 0; j <= sliceCount; ++j)
+    for (U32 j = 0; j <= sliceCount; ++j)
     {
-      r32 theta = j*thetaStep;
+      R32 theta = j*thetaStep;
 
       StaticVertex v;
       //null_bones(v);
@@ -66,8 +66,8 @@ std::vector<StaticVertex> UVSphere::meshInstance(r32 radius, u32 sliceCount, u32
       Vector3 p = Vector3(v.position.x, v.position.y, v.position.z);
       v.normal = Vector4(p.normalize(), 1.0f);
   
-      v.texcoord0.x = theta / r32(CONST_2_PI);
-      v.texcoord0.y = phi / r32(CONST_PI);
+      v.texcoord0.x = theta / R32(CONST_2_PI);
+      v.texcoord0.y = phi / R32(CONST_PI);
       v.texcoord1 = v.texcoord0;
 
       v.normal.y *= -1.0f;
@@ -82,9 +82,9 @@ std::vector<StaticVertex> UVSphere::meshInstance(r32 radius, u32 sliceCount, u32
 }
 
 
-std::vector<u32> UVSphere::indicesInstance(u32 verticesCnt, u32 sliceCount, u32 stackCount)
+std::vector<U32> UVSphere::indicesInstance(U32 verticesCnt, U32 sliceCount, U32 stackCount)
 {
-  std::vector<u32> indices;
+  std::vector<U32> indices;
   //
   // Compute indices for top stack.  The top stack was written first to the vertex buffer
   // and connects the top pole to the first ring.
@@ -103,11 +103,11 @@ std::vector<u32> UVSphere::indicesInstance(u32 verticesCnt, u32 sliceCount, u32 
 
   // Offset the indices to the index of the first vertex in the first ring.
   // This is just skipping the top pole vertex.
-  u32 baseIndex = 1;
-  u32 ringVertexCount = sliceCount + 1;
-  for (u32 i = 0; i < stackCount - 2; ++i)
+  U32 baseIndex = 1;
+  U32 ringVertexCount = sliceCount + 1;
+  for (U32 i = 0; i < stackCount - 2; ++i)
   {
-    for (u32 j = 0; j < sliceCount; ++j)
+    for (U32 j = 0; j < sliceCount; ++j)
     {
       indices.push_back(baseIndex + i*ringVertexCount + j);
       indices.push_back(baseIndex + i*ringVertexCount + j + 1);
@@ -125,12 +125,12 @@ std::vector<u32> UVSphere::indicesInstance(u32 verticesCnt, u32 sliceCount, u32 
   //
 
   // South pole vertex was added last.
-  u32 southPoleIndex = (u32)verticesCnt - 1;
+  U32 southPoleIndex = (U32)verticesCnt - 1;
 
   // Offset the indices to the index of the first vertex in the last ring.
   baseIndex = southPoleIndex - ringVertexCount;
 
-  for (u32 i = 0; i < sliceCount; ++i)
+  for (U32 i = 0; i < sliceCount; ++i)
   {
     indices.push_back(southPoleIndex);
     indices.push_back(baseIndex + i);

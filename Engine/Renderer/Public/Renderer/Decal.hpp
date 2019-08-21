@@ -28,9 +28,9 @@ class Texture;
 // Decal manager engine. this engine keeps track, and updates,
 // decals within the game world. Decals are stored per instance.
 class DecalEngine {
-  static const u32 kMaxDecalCount = DECAL_MAX;
-  static const u32 kBoundingVertexIndex = 0;
-  static const u32 kInstanceVertexIndex = 1;
+  static const U32 kMaxDecalCount = DECAL_MAX;
+  static const U32 kBoundingVertexIndex = 0;
+  static const U32 kInstanceVertexIndex = 1;
 public:
 
   DecalEngine() 
@@ -39,19 +39,19 @@ public:
     , m_renderPass(nullptr) { }
 
 
-  static u32 getMaxDecalCount() { return kMaxDecalCount; }
+  static U32 getMaxDecalCount() { return kMaxDecalCount; }
 
   void        initialize(VulkanRHI* rhi);
   void        cleanUp(VulkanRHI* rhi);
 
   // Decals are set as the next subpass within the offscreen cmdbuffer;
   void        buildDecals(CommandBuffer* offscreenCmdBuffer);
-  void        updateTextureAtlas(const Image& img, u32 idx);
+  void        updateTextureAtlas(const Image& img, U32 idx);
   
   void        clearDecalBuffer() { m_decalCmds.clear(); }
   void        pushDecal(const DecalRenderCmd& cmd) { m_decalCmds.pushBack( cmd ); }
 
-  void  visualizeBoundingBoxes(b32 enable) { m_visualizeBBoxes = enable; }
+  void  visualizeBoundingBoxes(B32 enable) { m_visualizeBBoxes = enable; }
   
 private:
 
@@ -62,8 +62,8 @@ private:
   void freeBoundingBox(VulkanRHI* pRhi);
 
   CmdList<DecalRenderCmd>             m_decalCmds;
-  u32                                 m_decalCount;
-  b32                                 m_visualizeBBoxes;
+  U32                                 m_decalCount;
+  B32                                 m_visualizeBBoxes;
   GraphicsPipeline*                   m_pipeline;
   RenderPass*                         m_renderPass;
   VertexBuffer*                       m_gpuBBoxVertices;

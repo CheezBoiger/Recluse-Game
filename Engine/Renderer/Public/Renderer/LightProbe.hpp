@@ -27,7 +27,7 @@ struct LightProbe {
   Vector3 _shcoeff[9];   // Spherical harmonic coefficients.
   Vector3 _position;  // _position of where the this probe is, in 3D space.
   AABB    _aabb;    // AABB bounds.
-  r32     _bias;      // bias.
+  R32     _bias;      // bias.
 
   LightProbe()
     : _bias(1.0f) { }
@@ -39,18 +39,18 @@ struct LightProbe {
   void    generateSHCoefficients(const Image* img);
 
   // Save SH data to a file.
-  b32     saveToFile(const std::string& filename);
+  B32     saveToFile(const std::string& filename);
 
   // Load up spherical harmonic data from a file.
-  b32     loadFromFile(const std::string& filename);
+  B32     loadFromFile(const std::string& filename);
 };
 
 
 class LightProbeManager {
 public:
-  static const u32 kMaxAllowedProbes = 128;
+  static const U32 kMaxAllowedProbes = 128;
 
-  std::vector<LightProbe> generateProbes(u32 count = kMaxAllowedProbes);
+  std::vector<LightProbe> generateProbes(U32 count = kMaxAllowedProbes);
 };
 
 
@@ -73,7 +73,7 @@ public:
   GlobalIllumination();
   ~GlobalIllumination();
 
-  void initialize(VulkanRHI* pRhi, b32 enableLocalReflections);
+  void initialize(VulkanRHI* pRhi, B32 enableLocalReflections);
 
   void update(Renderer* pRenderer);
 
@@ -84,13 +84,13 @@ public:
   void setGlobalBRDFLUT(Texture* pTex) { m_pGlobalBRDFLUT = pTex; }
   void setGlobalProbe(LightProbe* probe) { 
     if (!probe) {
-      for (u32 i = 0; i < 9; ++i) {
+      for (U32 i = 0; i < 9; ++i) {
         m_globalDiffuseSH._c[i] = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
       }
       m_globalDiffuseSH._bias = 1.0f;
       return;
     }
-    for (u32 i = 0; i < 9; ++i) {
+    for (U32 i = 0; i < 9; ++i) {
       m_globalDiffuseSH._c[i] = probe->_shcoeff[i];
     }
     m_globalDiffuseSH._bias = probe->_bias;
@@ -113,6 +113,6 @@ private:
   DescriptorSet*        m_pGlobalIllumination;
   DiffuseSH             m_globalDiffuseSH;
   LocalInfoGI           m_localGICpu;
-  b32                   m_localReflectionsEnabled;
+  B32                   m_localReflectionsEnabled;
 };
 } // Recluse

@@ -27,29 +27,29 @@ class Resources {
   resource_id_t ObtainResourceId();
 
 public:
-  GraphicsPipeline*     GetGraphicsPipeline(u64 id);
-  ComputePipeline*      GetComputePipeline(u64 id);
-  FrameBuffer*          GetFrameBuffer(u64 id);
-  Texture*              GetRenderTexture(u64 id);
-  Sampler*              GetSampler(u64 id);
-  DescriptorSetLayout*  GetDescriptorSetLayout(u64 id);
-  DescriptorSet*        getDescriptorSet(u64 id);
+  GraphicsPipeline*     GetGraphicsPipeline(U64 id);
+  ComputePipeline*      GetComputePipeline(U64 id);
+  FrameBuffer*          GetFrameBuffer(U64 id);
+  Texture*              GetRenderTexture(U64 id);
+  Sampler*              GetSampler(U64 id);
+  DescriptorSetLayout*  GetDescriptorSetLayout(U64 id);
+  DescriptorSet*        getDescriptorSet(U64 id);
 
-  b32                   RegisterGraphicsPipeline(GraphicsPipeline* pipeline);
-  b32                   RegisterComputePipeline(ComputePipeline* pipeline);
-  b32                   RegisterFrameBuffer(FrameBuffer* framebuffer);
-  b32                   RegisterRenderTexture(Texture* texture);
-  b32                   RegisterSampler(Sampler* sampler);
-  b32                   RegisterDescriptorSetLayout(DescriptorSetLayout* layout);
-  b32                   RegisterDescriptorSet(DescriptorSet* set);
+  B32                   RegisterGraphicsPipeline(GraphicsPipeline* pipeline);
+  B32                   RegisterComputePipeline(ComputePipeline* pipeline);
+  B32                   RegisterFrameBuffer(FrameBuffer* framebuffer);
+  B32                   RegisterRenderTexture(Texture* texture);
+  B32                   RegisterSampler(Sampler* sampler);
+  B32                   RegisterDescriptorSetLayout(DescriptorSetLayout* layout);
+  B32                   RegisterDescriptorSet(DescriptorSet* set);
   
-  GraphicsPipeline*     UnregisterGraphicsPipeline(u64 id);
-  ComputePipeline*      UnregisterComputePipeline(u64 id);
-  FrameBuffer*          UnregisterFrameBuffer(u64 id);
-  Texture*              UnregisterRenderTexture(u64 id);
-  Sampler*              UnregisterSampler(u64 id);
-  DescriptorSetLayout*  UnregisterDescriptorSetLayout(u64 id);
-  DescriptorSet*        UnregisterDescriptorSet(u64 id);
+  GraphicsPipeline*     UnregisterGraphicsPipeline(U64 id);
+  ComputePipeline*      UnregisterComputePipeline(U64 id);
+  FrameBuffer*          UnregisterFrameBuffer(U64 id);
+  Texture*              UnregisterRenderTexture(U64 id);
+  Sampler*              UnregisterSampler(U64 id);
+  DescriptorSetLayout*  UnregisterDescriptorSetLayout(U64 id);
+  DescriptorSet*        UnregisterDescriptorSet(U64 id);
 };
 
 

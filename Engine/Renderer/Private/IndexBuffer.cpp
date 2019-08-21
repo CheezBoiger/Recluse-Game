@@ -28,8 +28,8 @@ void IndexBuffer::initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   }
 
   mBuffer = rhi->createBuffer();
-  mIndexCount = static_cast<u32>(indexCount);
-  m_sizeType = static_cast<u32>(sizeType);
+  mIndexCount = static_cast<U32>(indexCount);
+  m_sizeType = static_cast<U32>(sizeType);
   Buffer* stagingBuffer = rhi->createBuffer();
 
   {

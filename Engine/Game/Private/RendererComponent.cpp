@@ -73,26 +73,26 @@ RendererComponent& RendererComponent::operator=(const RendererComponent& obj)
 }
 
 
-void AbstractRendererComponent::enableShadow(b32 enable)
+void AbstractRendererComponent::enableShadow(B32 enable)
 {
   if (enable) { m_configs |= CMD_SHADOWS_BIT; }
   else { m_configs &= ~CMD_SHADOWS_BIT; }
 }
 
-void AbstractRendererComponent::enableDebug(b32 enable)
+void AbstractRendererComponent::enableDebug(B32 enable)
 {
   if (enable) { m_configs |= CMD_DEBUG_BIT; }
   else { m_configs &= ~CMD_DEBUG_BIT; }
 }
 
 
-b32 AbstractRendererComponent::isShadowEnabled() const
+B32 AbstractRendererComponent::isShadowEnabled() const
 {
   return (m_configs & CMD_SHADOWS_BIT);
 }
 
 
-void AbstractRendererComponent::enableStatic(b32 enable)
+void AbstractRendererComponent::enableStatic(B32 enable)
 {
   if (enable) { m_configs |= CMD_STATIC_BIT; }
   else { m_configs &= ~CMD_STATIC_BIT; }
@@ -124,26 +124,26 @@ void AbstractRendererComponent::onEnable()
 }
 
 
-void AbstractRendererComponent::forceForward(b32 enable)
+void AbstractRendererComponent::forceForward(B32 enable)
 {
   if (enable) { m_configs |= CMD_FORWARD_BIT; }
   else { m_configs &= ~CMD_FORWARD_BIT; }
 }
 
 
-void AbstractRendererComponent::enableMorphTargets(b32 enable)
+void AbstractRendererComponent::enableMorphTargets(B32 enable)
 {
   if (enable) { m_configs |= CMD_MORPH_BIT; }
   else { m_configs &= ~CMD_MORPH_BIT; }
 }
 
 
-void AbstractRendererComponent::setDebugBits(b32 bits)
+void AbstractRendererComponent::setDebugBits(B32 bits)
 {
   m_debugConfigs |= bits;
 }
 
-void AbstractRendererComponent::unsetDebugBits(b32 bits)
+void AbstractRendererComponent::unsetDebugBits(B32 bits)
 {
   m_debugConfigs &= ~bits;
 }
@@ -185,10 +185,10 @@ void RendererComponent::update()
   }
 
   if ( m_pAnimHandle ) {
-    const r32* weights = nullptr;
-    u32 weightSz = 0;
+    const R32* weights = nullptr;
+    U32 weightSz = 0;
     weights = m_pAnimHandle->_finalMorphs.data();
-    weightSz = static_cast<u32>(m_pAnimHandle->_finalMorphs.size());
+    weightSz = static_cast<U32>(m_pAnimHandle->_finalMorphs.size());
     if (weightSz > 0) {
       renderData->_w0 = weights[0];
       renderData->_w1 = weights[1];
@@ -210,14 +210,14 @@ void RendererComponent::update()
 }
 
 
-void AbstractRendererComponent::setTransparent(b32 enable)
+void AbstractRendererComponent::setTransparent(B32 enable)
 {
   if (enable) { m_configs |= CMD_TRANSPARENT_BIT | CMD_FORWARD_BIT; }
   else { m_configs &= ~(CMD_TRANSPARENT_BIT | CMD_FORWARD_BIT); }
 }
 
 
-b32 AbstractRendererComponent::isTransparentEnabled() const
+B32 AbstractRendererComponent::isTransparentEnabled() const
 {
   return (m_configs & CMD_TRANSPARENT_BIT);
 }
@@ -227,13 +227,13 @@ void SkinnedRendererComponent::update()
 {
   JointBuffer* pJointBuffer = m_pJointDescriptor->getJointData();
   R_ASSERT(pJointBuffer, "Joint buffer found null!");
-  u32 jointCount = m_pJointDescriptor->numJoints();
+  U32 jointCount = m_pJointDescriptor->numJoints();
 
   // TODO(): Need to extract joint pose matrices from animation
   // component!
 
   const Matrix4* palette = nullptr;
-  u32 paletteSz = 0;
+  U32 paletteSz = 0;
   if (m_pAnimHandle) {
     palette = m_pAnimHandle->_finalPalette;
     paletteSz = m_pAnimHandle->_paletteSz;
@@ -252,7 +252,7 @@ void SkinnedRendererComponent::update()
 }
 
 
-void RendererComponent::enableSkin(b32 enable)
+void RendererComponent::enableSkin(B32 enable)
 {
   ObjectBuffer* buffer = m_meshDescriptor->getObjectData();
   buffer->_hasJoints = enable;
@@ -306,7 +306,7 @@ void AbstractRendererComponent::updateLod(Transform* meshTransform)
   Vector3 meshPos = meshTransform->_position;
 
   // Length of vector between mesh and camera.
-  r32 len = (meshPos - camPos).length();
+  R32 len = (meshPos - camPos).length();
   m_currLod = 0;
   if (len > 10.0f) {
     m_currLod = 1;
@@ -330,7 +330,7 @@ void BatchRendererComponent::onInitialize(GameObject* owner)
 }
 
 
-void BatchRendererComponent::addMesh(Mesh* pMeshRef, u32 idx)
+void BatchRendererComponent::addMesh(Mesh* pMeshRef, U32 idx)
 {
   AbstractRendererComponent::addMesh(pMeshRef, idx);
 
@@ -355,7 +355,7 @@ void BatchRendererComponent::addMesh(Mesh* pMeshRef, u32 idx)
 void BatchRendererComponent::clearMeshes()
 {
   AbstractRendererComponent::clearMeshes();
-  for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
+  for (U32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
     gRenderer().freeMeshDescriptor(m_perMeshDescriptors[i]._pMeshDescriptor);
     m_perMeshDescriptors[i]._pMeshDescriptor = nullptr;
   }
@@ -368,7 +368,7 @@ void BatchRendererComponent::update()
   Transform* transform = getTransform();
 
   // Each mesh corresponds to each mesh descriptor.
-  for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
+  for (U32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
     MeshRenderCmd meshCmd = { };
     MeshNode& mn = m_perMeshDescriptors[i];
     MeshDescriptor* pMeshDescriptor = mn._pMeshDescriptor;
@@ -395,10 +395,10 @@ void BatchRendererComponent::update()
     }
 
     if (m_pAnimHandle) {
-      const r32* weights = nullptr;
-      u32 weightSz = 0;
+      const R32* weights = nullptr;
+      U32 weightSz = 0;
       weights = m_pAnimHandle->_finalMorphs.data();
-      weightSz = static_cast<u32>(m_pAnimHandle->_finalMorphs.size());
+      weightSz = static_cast<U32>(m_pAnimHandle->_finalMorphs.size());
       if (weightSz > 0) {
         pBuffer->_w0 = weights[0];
         pBuffer->_w1 = weights[1];
@@ -424,7 +424,7 @@ void BatchRendererComponent::update()
 
 void BatchRendererComponent::onCleanUp()
 {
-  for (u32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
+  for (U32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
     m_perMeshDescriptors[i]._pMeshDescriptor->cleanUp(gRenderer().getRHI());
     m_perMeshDescriptors[i]._pMeshDescriptor = nullptr;
     m_perMeshDescriptors[i].parentId = Skeleton::kNoSkeletonId;
@@ -435,14 +435,14 @@ void BatchRendererComponent::onCleanUp()
 }
 
 
-void BatchRendererComponent::setLodBias(r32 bias, u32 meshIdx)
+void BatchRendererComponent::setLodBias(R32 bias, U32 meshIdx)
 {
   m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod = 
     gRenderer().getCurrentGraphicsConfigs()._Lod + bias;
 }
 
 
-r32 BatchRendererComponent::getLodBias(u32 meshIdx) const 
+R32 BatchRendererComponent::getLodBias(U32 meshIdx) const 
 {
   return gRenderer().getCurrentGraphicsConfigs()._Lod - 
          m_perMeshDescriptors[meshIdx]._pMeshDescriptor->getObjectData()->_lod;

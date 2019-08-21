@@ -34,8 +34,8 @@ public:
   virtual void onShutDown() { }
 
 
-  static b8& isActive() {
-    static b8 active = false;
+  static B8& isActive() {
+    static B8 active = false;
     return active;
   }
 

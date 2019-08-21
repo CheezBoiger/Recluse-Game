@@ -15,7 +15,7 @@ namespace Recluse {
 
 // TODO(): This will require a pool allocator instead of a list!
 class GameObjectManager {
-  static u64            gGameObjectNumber;
+  static U64            gGameObjectNumber;
 public:
   GameObjectManager() { }
 

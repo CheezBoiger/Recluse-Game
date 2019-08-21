@@ -24,7 +24,7 @@ struct RigidBundle {
   btCompoundShape*    compound;
 };
 
-typedef b32 still_colliding_t;
+typedef B32 still_colliding_t;
 
 
 struct CollisionInfo {
@@ -192,7 +192,7 @@ void BulletPhysics::updateCollisions()
   // TODO(): Figure out a more optimal way to remove exiting collisions!
   static physics_uuid_t clearingIds[1024];
   for (auto& rigidCollisions : kRigidBodyCollisions) {
-    u32 top = 0;
+    U32 top = 0;
     RigidBody* body = getRigidBody(rigidCollisions.first);
     R_ASSERT(body, "No rigid body.");
 
@@ -279,15 +279,15 @@ void BulletPhysics::freeRigidBody(RigidBody* body)
 }
 
 
-void BulletPhysics::updateState(r64 dt, r64 tick)
+void BulletPhysics::updateState(R64 dt, R64 tick)
 {
   // TODO(): Needs assert.
   R_ASSERT(bt_manager._pWorld, "No world to run physics sim.");
   bt_manager._pWorld->stepSimulation(btScalar(dt), 1, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
-  u32 numManifolds = pDispatcher->getNumManifolds();
+  U32 numManifolds = pDispatcher->getNumManifolds();
 
-  for (u32 i = 0; i < numManifolds; ++i) {
+  for (U32 i = 0; i < numManifolds; ++i) {
     btPersistentManifold* contactManifold = pDispatcher->getManifoldByIndexInternal(i);
     const btCollisionObject* objA = contactManifold->getBody0();
     const btCollisionObject* objB = contactManifold->getBody1();
@@ -295,10 +295,10 @@ void BulletPhysics::updateState(r64 dt, r64 tick)
     Collision collisionOnA;
     Collision collisionOnB;
 
-    u32 numContacts = contactManifold->getNumContacts();
+    U32 numContacts = contactManifold->getNumContacts();
     collisionOnA._contactPoints.resize(numContacts);
     collisionOnB._contactPoints.resize(numContacts);
-    for (u32 j = 0; j < numContacts; ++j) {
+    for (U32 j = 0; j < numContacts; ++j) {
       btManifoldPoint& pt = contactManifold->getContactPoint(j);
       if (pt.getDistance() < 0.0f) {
         const btVector3& ptA = pt.getPositionWorldOnA();
@@ -354,7 +354,7 @@ void BulletPhysics::updateState(r64 dt, r64 tick)
 }
 
 
-void BulletPhysics::setMass(RigidBody* body, r32 mass)
+void BulletPhysics::setMass(RigidBody* body, R32 mass)
 {
   if (!body) return;
   physics_uuid_t key = body->getUUID();
@@ -430,7 +430,7 @@ void BulletPhysics::applyImpulse(RigidBody* body, const Vector3& impulse, const 
 }
 
 
-b32 BulletPhysics::rayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output)
+B32 BulletPhysics::rayTest(const Vector3& origin, const Vector3& direction, const R32 maxDistance, RayTestHit* output)
 {
   btVector3 start(btScalar(origin.x),
     btScalar(origin.y),
@@ -461,7 +461,7 @@ b32 BulletPhysics::rayTest(const Vector3& origin, const Vector3& direction, cons
 }
 
 
-b32 BulletPhysics::rayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output)
+B32 BulletPhysics::rayTestAll(const Vector3& origin, const Vector3& direction, const R32 maxDistance, RayTestHitAll* output)
 {
   btVector3 start(btScalar(origin.x),
     btScalar(origin.y),
@@ -480,7 +480,7 @@ b32 BulletPhysics::rayTestAll(const Vector3& origin, const Vector3& direction, c
   output->_colliders.resize(allHits.m_collisionObjects.size());
   output->_colliders.resize(allHits.m_collisionObjects.size());
   output->_normals.resize(allHits.m_hitNormalWorld.size());
-  for (i32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
+  for (I32 i = 0; i < allHits.m_collisionObjects.size(); ++i ) {
     const btVector3& n = allHits.m_hitNormalWorld[i];
     output->_rigidBodies[i] = static_cast<RigidBody*>(allHits.m_collisionObjects[i]->getUserPointer());
     output->_colliders[i] = &output->_rigidBodies[i]->_compound;
@@ -509,7 +509,7 @@ CompoundCollider* BulletPhysics::createCompoundCollider()
 }
 
 
-SphereCollider* BulletPhysics::createSphereCollider(r32 radius)
+SphereCollider* BulletPhysics::createSphereCollider(R32 radius)
 {
   SphereCollider* sphere = new SphereCollider(radius);
   btSphereShape* nativeSphere = new btSphereShape(btScalar(radius));
@@ -537,7 +537,7 @@ void BulletPhysics::addCollider(RigidBody* body, Collider* collider)
   bundle.compound->addChildShape(localTransform, shape);
 
   btVector3 inertia;
-  r32 mass = bundle.rigidBody->_mass;
+  R32 mass = bundle.rigidBody->_mass;
   bundle.compound->calculateLocalInertia(btScalar(mass),inertia);
 
   bundle.native->setMassProps(btScalar(mass), inertia);
@@ -559,7 +559,7 @@ void BulletPhysics::freeCollider(Collider* collider)
 }
 
 
-void BulletPhysics::setFriction(RigidBody* body, r32 friction)
+void BulletPhysics::setFriction(RigidBody* body, R32 friction)
 {
   R_ASSERT(body, "Body is null.");
   physics_uuid_t uuid = body->getUUID();
@@ -569,7 +569,7 @@ void BulletPhysics::setFriction(RigidBody* body, r32 friction)
 }
 
 
-void BulletPhysics::setRollingFriction(RigidBody* body, r32 friction)
+void BulletPhysics::setRollingFriction(RigidBody* body, R32 friction)
 {
   R_ASSERT(body, "Body is null.");
   physics_uuid_t uuid = body->getUUID();
@@ -579,7 +579,7 @@ void BulletPhysics::setRollingFriction(RigidBody* body, r32 friction)
 }
 
 
-void BulletPhysics::setSpinningFriction(RigidBody* body, r32 friction)
+void BulletPhysics::setSpinningFriction(RigidBody* body, R32 friction)
 {
   R_ASSERT(body, "Body is null.");
   physics_uuid_t uuid = body->getUUID();
@@ -603,8 +603,8 @@ void BulletPhysics::updateCompoundCollider(RigidBody* body, CompoundCollider* co
     pCompound = static_cast<btCompoundShape*>(pShape);
   }
 
-  i32 childCount = pCompound->getNumChildShapes();
-  for (i32 i = 0; i < childCount; ++i) {
+  I32 childCount = pCompound->getNumChildShapes();
+  for (I32 i = 0; i < childCount; ++i) {
     btCollisionShape* pChild = pCompound->getChildShape(0);
     pCompound->removeChildShape(pChild);
   }

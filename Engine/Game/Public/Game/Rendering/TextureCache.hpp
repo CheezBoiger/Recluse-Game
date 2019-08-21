@@ -59,6 +59,6 @@ public:
   static size_t         CacheCount() { return sCache.size(); }
 
 private:
-  static std::unordered_map<uuid64, TextureSampler*> sCache;
+  static std::unordered_map<UUID64, TextureSampler*> sCache;
 };
 } // Recluse

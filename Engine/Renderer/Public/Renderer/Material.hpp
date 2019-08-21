@@ -34,17 +34,17 @@ public:
   void                      initialize(Renderer* pRenderer);
   void                      cleanUp(Renderer* pRenderer);
 
-  r32                       emissiveFactor() const { return m_pDesc->getData()->_emissiveFactor; }
-  r32                       metallicFactor() const { return m_pDesc->getData()->_metalFactor; }
-  r32                       roughFactor() const { return m_pDesc->getData()->_roughFactor; }
+  R32                       emissiveFactor() const { return m_pDesc->getData()->_emissiveFactor; }
+  R32                       metallicFactor() const { return m_pDesc->getData()->_metalFactor; }
+  R32                       roughFactor() const { return m_pDesc->getData()->_roughFactor; }
 
-  void                      setRoughnessFactor(r32 rough) { m_pDesc->getData()->_roughFactor = rough; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      setMetallicFactor(r32 metal) { m_pDesc->getData()->_metalFactor = metal; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      setEmissiveFactor(r32 emissive) { m_pDesc->getData()->_emissiveFactor = emissive; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      setOpacity(r32 opaque) { m_pDesc->getData()->_Opacity = opaque; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      setRoughnessFactor(R32 rough) { m_pDesc->getData()->_roughFactor = rough; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      setMetallicFactor(R32 metal) { m_pDesc->getData()->_metalFactor = metal; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      setEmissiveFactor(R32 emissive) { m_pDesc->getData()->_emissiveFactor = emissive; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      setOpacity(R32 opaque) { m_pDesc->getData()->_Opacity = opaque; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
 
-  void                      enableMaps(b32 mapEnable);
-  void                      disableMaps(b32 mapsDisable);
+  void                      enableMaps(B32 mapEnable);
+  void                      disableMaps(B32 mapsDisable);
   void                      setAlbedoSampler(TextureSampler* sampler) { m_pDesc->setAlbedoSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      setNormalSampler(TextureSampler* sampler) { m_pDesc->setNormalSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      setRoughMetalSampler(TextureSampler* sampler) { m_pDesc->setRoughMetalSampler(sampler); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
@@ -56,13 +56,13 @@ public:
   void                      setAo(Texture2D* texture) { m_pDesc->setAo(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      setEmissive(Texture2D* texture) { m_pDesc->setEmissive(texture); MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
   void                      setBaseColor(Vector4 color) { m_pDesc->getData()->_Color = color; MARK_DIRTY_MATERIAL(MATERIAL_DESCRIPTOR_UPDATE_BIT); }
-  void                      setTransparent(b32 enable) { m_pDesc->getData()->_IsTransparent = enable; }
-  void                      enableAlbedo(b32 enable) { m_pDesc->getData()->_HasAlbedo = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      enableNormal(b32 enable) { m_pDesc->getData()->_HasNormal = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      enableRoughness(b32 enable) { m_pDesc->getData()->_HasRoughness = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      enableMetallic(b32 enable) { m_pDesc->getData()->_HasMetallic = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      enableEmissive(b32 enable) { m_pDesc->getData()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
-  void                      enableAo(b32 enable) { m_pDesc->getData()->_HasAO = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      setTransparent(B32 enable) { m_pDesc->getData()->_IsTransparent = enable; }
+  void                      enableAlbedo(B32 enable) { m_pDesc->getData()->_HasAlbedo = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      enableNormal(B32 enable) { m_pDesc->getData()->_HasNormal = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      enableRoughness(B32 enable) { m_pDesc->getData()->_HasRoughness = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      enableMetallic(B32 enable) { m_pDesc->getData()->_HasMetallic = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      enableEmissive(B32 enable) { m_pDesc->getData()->_HasEmissive = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
+  void                      enableAo(B32 enable) { m_pDesc->getData()->_HasAO = enable; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
   void                      setUvOffsets(Vector4 offsets) { m_pDesc->getData()->_offsetUV = offsets; MARK_DIRTY_MATERIAL(MATERIAL_BUFFER_UPDATE_BIT); }
   // Returns the native descriptor.
   MaterialDescriptor*       getNative() { return m_pDesc; }

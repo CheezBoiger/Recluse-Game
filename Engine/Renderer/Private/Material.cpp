@@ -31,7 +31,7 @@ void Material::cleanUp(Renderer* pRenderer)
 }
 
 
-void Material::enableMaps(b32 bits)
+void Material::enableMaps(B32 bits)
 {
   if (bits & MAT_ALBEDO_BIT) enableAlbedo(true);
   if (bits & MAT_NORMAL_BIT) enableNormal(true);
@@ -42,7 +42,7 @@ void Material::enableMaps(b32 bits)
 }
 
 
-void Material::disableMaps(b32 bits)
+void Material::disableMaps(B32 bits)
 {
   if (bits & MAT_ALBEDO_BIT) enableAlbedo(false);
   if (bits & MAT_NORMAL_BIT) enableNormal(false);

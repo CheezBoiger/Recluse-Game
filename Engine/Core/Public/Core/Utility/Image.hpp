@@ -17,24 +17,24 @@ struct Image {
 
   ~Image();
 
-  b8            load(const tchar* imgpath);
-  b8            SaveHDR(const tchar* imgpath);
-  b8            SavePNG(const tchar* imgpath);
+  B8            load(const TChar* imgpath);
+  B8            SaveHDR(const TChar* imgpath);
+  B8            SavePNG(const TChar* imgpath);
 
   // Clean up image data. Returns true if image was cleaned up. Returns false if
   // no image data was cleaned up (which could mean there was no data to begin with.)
-  b8            cleanUp();
-  b8            ContainsData() const { if (_data) return true; return false; }
+  B8            cleanUp();
+  B8            ContainsData() const { if (_data) return true; return false; }
 
-  i32           getHeight() const { return _height; }
-  i32           getWidth() const { return _width; }
-  const u8*     getData() const { return _data; }
-  u64           MemorySize() const { return _memorySize; }         
+  I32           getHeight() const { return _height; }
+  I32           getWidth() const { return _width; }
+  const U8*     getData() const { return _data; }
+  U64           MemorySize() const { return _memorySize; }         
 
-  u64           _memorySize;
-  i32           _width;
-  i32           _height;
-  i32           _channels;
-  u8*           _data;
+  U64           _memorySize;
+  I32           _width;
+  I32           _height;
+  I32           _channels;
+  U8*           _data;
 };
 } // Recluse

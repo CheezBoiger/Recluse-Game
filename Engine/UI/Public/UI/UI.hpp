@@ -22,7 +22,7 @@ class BufferUI;
 class UI : public EngineModule<UI> {
 public:
 
-  typedef std::function<b32()> CallbackUI;
+  typedef std::function<B32()> CallbackUI;
 
   UI()
     : m_currForeColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f))
@@ -35,7 +35,7 @@ public:
   void                      onShutDown() override;
 
   // Update the state of the manager.
-  void                      updateState(r64 dt);
+  void                      updateState(R64 dt);
 
 
   // TODO(): Needs to be more object oriented in the API level, instead of this way.
@@ -44,16 +44,16 @@ public:
   
   void                      ImportFont(const std::string& fontpath);
 
-  void                      BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 height);
-  void                      EmitText(const std::string& text, r32 x, r32 y, r32 width, r32 height);
+  void                      BeginCanvas(const std::string& title, R32 x, R32 y, R32 width, R32 height);
+  void                      EmitText(const std::string& text, R32 x, R32 y, R32 width, R32 height);
   void                      EndCanvas();
   void                      EmitImage(GUIImage* image);
 
   void SetEventHandle( const std::string& eventName, 
-                       r32 x, 
-                       r32 y, 
-                       r32 w, 
-                       r32 h, 
+                       R32 x, 
+                       R32 y, 
+                       R32 w, 
+                       R32 h, 
                        CallbackUI callbackOnPress = nullptr,
                        CallbackUI callabckOnHover = nullptr ) 
   {
@@ -66,7 +66,7 @@ private:
   {
     struct 
     {
-      r32 _x,
+      R32 _x,
           _y,
           _w,
           _h;
@@ -77,8 +77,8 @@ private:
     CallbackUI _eventOnRelease;
   };
 
-  r32                     m_currX;
-  r32                     m_currY;
+  R32                     m_currX;
+  R32                     m_currY;
   Vector4                 m_currForeColor;
   Vector4                 m_currBackColor;
   BufferUI*               m_currUiBuffer;

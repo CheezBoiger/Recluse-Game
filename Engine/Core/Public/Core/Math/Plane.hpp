@@ -25,9 +25,9 @@ struct Plane : public Vector4 {
   Plane(const Vector3& a, const Vector3& b, const Vector3& c);
 
   // Define a plane with 4 coefficients.
-  Plane(const r32 a, const r32 b, const r32 c, const r32 d) {
+  Plane(const R32 a, const R32 b, const R32 c, const R32 d) {
     Vector3 normal = Vector3(a, b, c);
-    r32 l = normal.length();
+    R32 l = normal.length();
     normal = normal.normalize();
     x = normal.x;
     y = normal.y;
@@ -51,11 +51,11 @@ struct Plane : public Vector4 {
     return (*this);
   }
 
-  r32 DistancePoint(const Vector4& Point) const;
+  R32 DistancePoint(const Vector4& Point) const;
   
   Vector3 LineIntersect(const Vector3& p0, const Vector3& p1) const;
-  b8      Intersects2Planes(const Plane& other1, const Plane& other2) const;
-  b8      IntersectsPlane(const Plane& other) const; 
+  B8      Intersects2Planes(const Plane& other1, const Plane& other2) const;
+  B8      IntersectsPlane(const Plane& other) const; 
 
 
   operator std::string () {

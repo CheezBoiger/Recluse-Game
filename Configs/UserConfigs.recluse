@@ -1,0 +1,13 @@
+[CameraShakeQuality] = none
+[FieldOfView] = 90.0
+[Multithreading] = true
+[MouseSensitivityX] = 25.0
+[MouseSensitivityY] = 25.0
+[PhysicsQuality] = high
+[RagdollQuality] = high
+[AudioQuality] = high
+[AnimationQuality] = high
+[MasterVolume] = 100.0
+[CharacterVolume] = 100.0
+[WeaponVolume] = 100.0
+[EnvironmentVolume] = 100.0

@@ -22,12 +22,12 @@ void RenderQuad::initialize(VulkanRHI* rhi)
   vertices[2] = { {  1.0f,  1.0f }, { 1.0f, 1.0f } };
   vertices[3] = { {  1.0f, -1.0f }, { 1.0f, 0.0f } };
 
-  std::array<u16, 6> indices = {
+  std::array<U16, 6> indices = {
     0, 1, 2, 2, 3, 0
   };
 
   quad.initialize(rhi, vertices.size(), sizeof(QuadVertex), vertices.data());
-  index.initialize(rhi, indices.size(), sizeof(u16), indices.data());
+  index.initialize(rhi, indices.size(), sizeof(U16), indices.data());
 }
 
 

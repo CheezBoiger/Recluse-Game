@@ -11,8 +11,8 @@
 
 using namespace Recluse;
 
-u32 Tester::TestsFailed = 0;
-u32 Tester::TestsPassed = 0;
+U32 Tester::TestsFailed = 0;
+U32 Tester::TestsPassed = 0;
 
 std::vector<Tester::TestFunc> test = {
   Test::BasicVectorMath,

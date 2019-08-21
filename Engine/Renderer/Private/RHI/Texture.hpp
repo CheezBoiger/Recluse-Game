@@ -62,7 +62,7 @@ public:
 
   
   void                  initialize(const VkImageCreateInfo& imageInfo, 
-                          VkImageViewCreateInfo& viewInfo, b8 stream = false);
+                          VkImageViewCreateInfo& viewInfo, B8 stream = false);
 
   void                  cleanUp();
 
@@ -70,10 +70,10 @@ public:
   VkImage               getImage() { return mImage; }
   VkDeviceMemory        getMemory() { return m_allocation._deviceMemory; }
   VkFormat              getFormat() const { return mFormat; }
-  u32                   getWidth() const { return mWidth; }
-  u32                   getHeight() const { return mHeight; }
-  u32                   getMipLevels() const { return mMipLevels; }
-  u32                   getArrayLayers() const { return mArrayLayers; }
+  U32                   getWidth() const { return mWidth; }
+  U32                   getHeight() const { return mHeight; }
+  U32                   getMipLevels() const { return mMipLevels; }
+  U32                   getArrayLayers() const { return mArrayLayers; }
   VkSampleCountFlagBits getSamples() const { return mSamples; }
 
 private:
@@ -82,9 +82,9 @@ private:
   VulkanAllocation      m_allocation;
   VkFormat              mFormat;
   VkSampleCountFlagBits mSamples;
-  u32                   mWidth;
-  u32                   mHeight;
-  u32                   mMipLevels;
-  u32                   mArrayLayers;
+  U32                   mWidth;
+  U32                   mHeight;
+  U32                   mMipLevels;
+  U32                   mArrayLayers;
 };
 } // Recluse

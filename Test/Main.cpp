@@ -22,11 +22,11 @@ void processInput()
   Window* window = gEngine().getWindow();
 
   // Test getGamma correction
-  if (Keyboard::keyPressed(KEY_CODE_G)) { camera->setGamma(camera->getGamma() + (r32)(5.0 * Time::deltaTime)); }
-  if (Keyboard::keyPressed(KEY_CODE_H)) { camera->setGamma(camera->getGamma() <= 0.0f ? 0.1f : camera->getGamma() - (r32)(5.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_G)) { camera->setGamma(camera->getGamma() + (R32)(5.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_H)) { camera->setGamma(camera->getGamma() <= 0.0f ? 0.1f : camera->getGamma() - (R32)(5.0 * Time::deltaTime)); }
   // Test HDR Reinhard exposure.
-  if (Keyboard::keyPressed(KEY_CODE_E)) { camera->setExposure(camera->getExposure() + (r32)(2.0 * Time::deltaTime)); }
-  if (Keyboard::keyPressed(KEY_CODE_R)) { camera->setExposure(camera->getExposure() <= 0.0f ? 0.1f : camera->getExposure() - (r32)(2.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_E)) { camera->setExposure(camera->getExposure() + (R32)(2.0 * Time::deltaTime)); }
+  if (Keyboard::keyPressed(KEY_CODE_R)) { camera->setExposure(camera->getExposure() <= 0.0f ? 0.1f : camera->getExposure() - (R32)(2.0 * Time::deltaTime)); }
 
   if (Keyboard::keyPressed(KEY_CODE_0)) { camera->enableBloom(false); }
   if (Keyboard::keyPressed(KEY_CODE_1)) { camera->enableBloom(true); }

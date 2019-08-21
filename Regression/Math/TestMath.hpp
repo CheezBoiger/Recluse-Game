@@ -8,8 +8,8 @@ using namespace Recluse;
 namespace Test {
 
 
-b8 BasicVectorMath();
-b8 BasicMatrixMath();
-b8 BasicRayMath();
-b8 BasicQuaternionMath();
+B8 BasicVectorMath();
+B8 BasicMatrixMath();
+B8 BasicRayMath();
+B8 BasicQuaternionMath();
 } // Test

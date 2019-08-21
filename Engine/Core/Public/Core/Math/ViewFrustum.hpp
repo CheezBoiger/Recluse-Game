@@ -12,12 +12,12 @@ namespace Recluse {
 
 // View frustum object.
 struct ViewFrustum {
-  static u32    PLEFT;
-  static u32    PRIGHT;
-  static u32    PTOP;
-  static u32    PBOTTOM;
-  static u32    PNEAR;
-  static u32    PFAR;
+  static U32    PLEFT;
+  static U32    PRIGHT;
+  static U32    PTOP;
+  static U32    PBOTTOM;
+  static U32    PNEAR;
+  static U32    PFAR;
 
   enum Result {
     Result_Outside,
@@ -48,6 +48,6 @@ struct ViewFrustum {
   Result          intersect(const AABB& aabb) const;
 
   // Check if AABB object is inside this frustum.
-  b32          insideFrustum(const AABB& aabb) { return false; }
+  B32          insideFrustum(const AABB& aabb) { return false; }
 };
 } // Recluse

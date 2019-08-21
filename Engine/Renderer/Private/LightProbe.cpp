@@ -18,11 +18,11 @@
 namespace Recluse {
 
 
-Vector3 GetWorldDirection(u32 faceIdx, u32 px, u32 py, u32 width, u32 height)
+Vector3 GetWorldDirection(U32 faceIdx, U32 px, U32 py, U32 width, U32 height)
 {
   Vector3 worldDir = Vector3();
-  Vector2 pixelSize(1.0f / static_cast<r32>(width), 1.0f / static_cast<r32>(height));
-  Vector2 uv = Vector2(static_cast<r32>(px) + 0.5f, static_cast<r32>(py) + 0.5f) * pixelSize;
+  Vector2 pixelSize(1.0f / static_cast<R32>(width), 1.0f / static_cast<R32>(height));
+  Vector2 uv = Vector2(static_cast<R32>(px) + 0.5f, static_cast<R32>(py) + 0.5f) * pixelSize;
   uv.y = 1.f - uv.y;
   uv -= 0.5f; // [-0.5, 0.5]
 
@@ -39,7 +39,7 @@ Vector3 GetWorldDirection(u32 faceIdx, u32 px, u32 py, u32 width, u32 height)
 }
 
 
-Vector3 GetWorldNormalFromCubeFace(u32 idx)
+Vector3 GetWorldNormalFromCubeFace(U32 idx)
 {
   // Get cube face normal.
   Vector3 n = Vector3(0.0f);
@@ -50,10 +50,10 @@ Vector3 GetWorldNormalFromCubeFace(u32 idx)
 
 void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 {
-  u32 width = envMap->WidthPerFace();
-  u32 height = envMap->HeightPerFace();
-  r32 pixelA = (1.0f / static_cast<r32>(width)) * (1.0f / static_cast<r32>(height));
-  u8* data = nullptr;
+  U32 width = envMap->WidthPerFace();
+  U32 height = envMap->HeightPerFace();
+  R32 pixelA = (1.0f / static_cast<R32>(width)) * (1.0f / static_cast<R32>(height));
+  U8* data = nullptr;
 
   {
     VkCommandBuffer cmdBuf;
@@ -75,9 +75,9 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
       for (size_t level = 0; level < texture->getMipLevels(); ++level) {
         VkBufferImageCopy region = {};
         region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.baseArrayLayer = (u32)layer;
+        region.imageSubresource.baseArrayLayer = (U32)layer;
         region.imageSubresource.layerCount = 1;
-        region.imageSubresource.mipLevel = (u32)level;
+        region.imageSubresource.mipLevel = (U32)level;
         region.imageExtent.width = texture->getWidth();
         region.imageExtent.height = texture->getHeight();
         region.imageExtent.depth = 1;
@@ -97,7 +97,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bufferci.size = sizeInBytes;
-    data = new u8[bufferci.size];
+    data = new U8[bufferci.size];
 
     stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
     stagingBuffer.map();
@@ -141,7 +141,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     vkCmdCopyImageToBuffer(cmdBuf, texture->getImage(),
       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
       stagingBuffer.getNativeBuffer(),
-      static_cast<u32>(imageCopyRegions.size()),
+      static_cast<U32>(imageCopyRegions.size()),
       imageCopyRegions.data());
 
     subRange.baseMipLevel = 0;
@@ -184,21 +184,21 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
   // Reference by Jian Ru's Laugh Engine implementation: https://github.com/jian-ru/laugh_engine
   // Research information though https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
   //
-  for (u32 fi = 0; fi < 6; ++fi ) {
+  for (U32 fi = 0; fi < 6; ++fi ) {
     Vector3 n = GetWorldNormalFromCubeFace(fi);
-    u32 ho = fi * height;
-    for (u32 py = 0; py < height; ++py) {
-      for (u32 px = 0; px < width; ++px) {
+    U32 ho = fi * height;
+    for (U32 py = 0; py < height; ++py) {
+      for (U32 px = 0; px < width; ++px) {
         
         Vector3 wi = GetWorldDirection(fi, px, py, width, height);
-        r32 dist2 = wi.dot(wi); 
+        R32 dist2 = wi.dot(wi); 
         wi = wi.normalize();
         // Obtain our solid angle differential.
-        r32 dw = pixelA * n.dot(-wi) / dist2;
-        i32 offset = ho * width + py * width + px * 4;
-        Vector3 L = Vector3(static_cast<r32>(data[offset + 0]) / 255.0f,
-                            static_cast<r32>(data[offset + 1]) / 255.0f,
-                            static_cast<r32>(data[offset + 2]) / 255.0f);
+        R32 dw = pixelA * n.dot(-wi) / dist2;
+        I32 offset = ho * width + py * width + px * 4;
+        Vector3 L = Vector3(static_cast<R32>(data[offset + 0]) / 255.0f,
+                            static_cast<R32>(data[offset + 1]) / 255.0f,
+                            static_cast<R32>(data[offset + 2]) / 255.0f);
 
         // Compute our coefficients by taking the sum of each lobe and applying over the distance lighting distribution.
         // which calculates the overall irradiance E(). 
@@ -219,14 +219,14 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 }
 
 
-b32 LightProbe::saveToFile(const std::string& filename)
+B32 LightProbe::saveToFile(const std::string& filename)
 {
   // TODO(): 
   return false;
 }
 
 
-b32 LightProbe::loadFromFile(const std::string& filename)
+B32 LightProbe::loadFromFile(const std::string& filename)
 {
   memset(_shcoeff, 0, sizeof(_shcoeff));
   _position = Vector3();
@@ -257,7 +257,7 @@ GlobalIllumination::~GlobalIllumination()
 }
 
 
-void GlobalIllumination::initialize(VulkanRHI* pRhi, b32 enableLocalReflections)
+void GlobalIllumination::initialize(VulkanRHI* pRhi, B32 enableLocalReflections)
 {
   m_pGlobalIllumination = pRhi->createDescriptorSet();
   DescriptorSetLayout* layout = nullptr;
@@ -328,7 +328,7 @@ void GlobalIllumination::updateGlobalGI(VulkanRHI* pRhi)
 void GlobalIllumination::update(Renderer* pRenderer)
 {
   std::array<VkWriteDescriptorSet, 6> writeSets;
-  u32 count = 3;
+  U32 count = 3;
   updateGlobalGI(pRenderer->getRHI());
 
   if (m_localReflectionsEnabled) {

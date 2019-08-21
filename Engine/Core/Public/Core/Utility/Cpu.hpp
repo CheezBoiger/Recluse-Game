@@ -10,13 +10,13 @@ namespace Recluse {
 class Cpu {
 public:
 
-  static b8   IsIntel();
-  static b8   IsAmd();
+  static B8   IsIntel();
+  static B8   IsAmd();
 
   // Count number of flipped bits with SWAR.
-  static i32 BitsFlippedCount(i32 v);
+  static I32 BitsFlippedCount(I32 v);
 
 private:
-  static b8   CheckVendorString(char* str);
+  static B8   CheckVendorString(char* str);
 };
 } // Recluse

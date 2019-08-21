@@ -18,7 +18,7 @@ Swapchain::~Swapchain()
 
 
 void Swapchain::initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
-      VkPresentModeKHR desiredPresent, u32 buffers, u32 desiredImages)
+      VkPresentModeKHR desiredPresent, U32 buffers, U32 desiredImages)
 {
 
   std::vector<VkPresentModeKHR> presentModes = physical.querySwapchainPresentModes(surface);
@@ -39,11 +39,11 @@ void Swapchain::initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
 
 
 void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, 
-  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities, u32 buffers, u32 desiredImages)
+  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities, U32 buffers, U32 desiredImages)
 {
   VkSwapchainKHR oldSwapChain = mSwapchain;
 
-  u32 imageCount = capabilities.minImageCount;
+  U32 imageCount = capabilities.minImageCount;
   if (desiredImages > imageCount) {
     imageCount = desiredImages;
   }
@@ -96,7 +96,7 @@ void Swapchain::cleanUp(LogicalDevice& device)
     vkDestroyImageView(device.getNative(), image.getView, nullptr);
   }
 
-  for (u32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
+  for (U32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
     vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
     vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
     vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
@@ -111,7 +111,7 @@ void Swapchain::cleanUp(LogicalDevice& device)
 
 void Swapchain::QuerySwapchainImages(LogicalDevice& device)
 {
-  u32 imageCount;
+  U32 imageCount;
   vkGetSwapchainImagesKHR(device.getNative(), mSwapchain, &imageCount, nullptr);
 
   std::vector<VkImage> images(imageCount);
@@ -150,7 +150,7 @@ void Swapchain::QuerySwapchainImages(LogicalDevice& device)
 }
 
 
-void Swapchain::CreateSemaphores(LogicalDevice& device, u32 count)
+void Swapchain::CreateSemaphores(LogicalDevice& device, U32 count)
 {
   VkSemaphoreCreateInfo semaphoreCI = {};
   semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -167,7 +167,7 @@ void Swapchain::CreateSemaphores(LogicalDevice& device, u32 count)
     R_DEBUG(rError, "Failed to create a semaphore!\n");
   }
 */
-  for (u32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
+  for (U32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
     vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
     vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
     vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
@@ -176,7 +176,7 @@ void Swapchain::CreateSemaphores(LogicalDevice& device, u32 count)
   m_imageAvailableSemas.resize(count);
   m_graphicsFinishedSemas.resize(count);
   m_inFlightFences.resize(count);
-  for (u32 i = 0; i < count; ++i) {
+  for (U32 i = 0; i < count; ++i) {
     VkResult result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_imageAvailableSemas[i]);
     R_ASSERT(result == VK_SUCCESS, "");
     result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_graphicsFinishedSemas[i]);

@@ -22,7 +22,7 @@ void AudioComponent::onCleanUp()
 }
 
 
-void AudioComponent::playSound(const std::string& soundPath, r32 volume)
+void AudioComponent::playSound(const std::string& soundPath, R32 volume)
 {
   Transform* transform = getTransform();
   gAudio().loadSound(soundPath, true, true, false);
@@ -38,7 +38,7 @@ void AudioComponent::update()
 }
 
 
-void AudioComponent::setVolume(r32 volume)
+void AudioComponent::setVolume(R32 volume)
 {
   gAudio().setChannelVolume(m_audioChannelId, volume);
 }

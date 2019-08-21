@@ -23,8 +23,8 @@ enum ThreadResult {
   ThrResultIncomplete
 };
 
-typedef u64 thread_id_t;
-typedef u32 error_t;
+typedef U64 thread_id_t;
+typedef U32 error_t;
 typedef std::function<void()> thr_work_func_t;
 typedef std::function<void(thread_id_t)> thread_func_t;
 
@@ -50,7 +50,7 @@ private:
 class ThreadPool {
 
 public:
-  ThreadPool(u32 InitThreadCount = 2) 
+  ThreadPool(U32 InitThreadCount = 2) 
     : m_CurrentTaskCount(0)
     , m_ThreadWorkers(InitThreadCount)
     , m_BusyThreadCount(0)
@@ -61,7 +61,7 @@ public:
   void                  ClearTasks();
   void                  StopAll();  
 
-  b8                    AllDone() const;
+  B8                    AllDone() const;
 
   void                  WaitAll();
 
@@ -80,8 +80,8 @@ private:
   std::mutex              m_JobMutex;
   std::mutex              m_ProgressMutex;
   std::condition_variable m_Cond;
-  u32                     m_CurrentTaskCount;
-  u32                     m_BusyThreadCount;
-  u32                     m_SignalStop;
+  U32                     m_CurrentTaskCount;
+  U32                     m_BusyThreadCount;
+  U32                     m_SignalStop;
 };
 } // Recluse

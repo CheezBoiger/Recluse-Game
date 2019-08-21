@@ -58,7 +58,7 @@ void PhysicsComponent::update()
 }
 
 
-void PhysicsComponent::setMass(r32 mass)
+void PhysicsComponent::setMass(R32 mass)
 {
   m_pRigidBody->_mass = mass;
   m_updateBits |= PHYSICS_UPDATE_MASS;
@@ -131,7 +131,7 @@ void PhysicsComponent::reset()
 }
 
 
-void PhysicsComponent::setFriction(r32 friction)
+void PhysicsComponent::setFriction(R32 friction)
 {
   // gPhysics().setFriction(m_pRigidBody, friction);
   m_pRigidBody->_friction = friction;
@@ -139,7 +139,7 @@ void PhysicsComponent::setFriction(r32 friction)
 }
 
 
-void PhysicsComponent::setRollingFriction(r32 friction)
+void PhysicsComponent::setRollingFriction(R32 friction)
 {
   // gPhysics().setRollingFriction(m_pRigidBody, friction);
   m_pRigidBody->_rollingFriction = friction;
@@ -147,7 +147,7 @@ void PhysicsComponent::setRollingFriction(r32 friction)
 }
 
 
-void PhysicsComponent::setSpinningFriction(r32 friction)
+void PhysicsComponent::setSpinningFriction(R32 friction)
 {
   // gPhysics().setSpinningFriction(m_pRigidBody, friction);
   m_pRigidBody->_spinningFriction = friction;
@@ -183,7 +183,7 @@ void PhysicsComponent::setLinearFactor(const Vector3& linearFactor)
 }
 
 
-void PhysicsComponent::enableDebug(b32 enable)
+void PhysicsComponent::enableDebug(B32 enable)
 {
   m_debug = enable;
 }

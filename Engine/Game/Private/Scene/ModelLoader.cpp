@@ -11,8 +11,8 @@
 
 namespace Recluse {
 
-static const u32 kMaxFbxExtensions = 1;
-static const u32 kMaxGLTFExtensions = 2;
+static const U32 kMaxFbxExtensions = 1;
+static const U32 kMaxGLTFExtensions = 2;
 
 const char* allowed_fbx_extensions[kMaxFbxExtensions] = {
   "fbx"
@@ -53,7 +53,7 @@ ModelResultBits load(const std::string filename)
   FileType type = FILETYPE_UNKNOWN;
   std::string ext = GetFilenameExt(filename);
 
-  for (u32 i = 0; i < kMaxGLTFExtensions; ++i) {
+  for (U32 i = 0; i < kMaxGLTFExtensions; ++i) {
     if (strcmp(allowed_gltf_extensions[i], ext.c_str()) == 0) {
       type = FILETYPE_GLTF;
       R_DEBUG(rNotify, "parsing GLTF file.\n");
@@ -62,7 +62,7 @@ ModelResultBits load(const std::string filename)
   }
 
   if (type == FILETYPE_UNKNOWN) {
-    for (u32 i = 0; i < kMaxFbxExtensions; ++i) {
+    for (U32 i = 0; i < kMaxFbxExtensions; ++i) {
       if (strcmp(allowed_fbx_extensions[i], ext.c_str()) == 0) {
         type = FILETYPE_FBX;
         R_DEBUG(rNotify, "parsing FBX file.\n");

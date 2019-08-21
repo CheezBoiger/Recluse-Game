@@ -40,7 +40,7 @@ void Transform::update()
 
   // Update local coordinates.
   Vector3 u = Vector3(_rotation.x, _rotation.y, _rotation.z);
-  r32 s = _rotation.w;
+  R32 s = _rotation.w;
   m_front = u * (u.dot(Vector3::FRONT) * 2.0f)  + (Vector3::FRONT * (s*s - u.dot(u))) + ((u ^ Vector3::FRONT) * s * 2.0f);
   m_right = u * (u.dot(Vector3::RIGHT) * 2.0f)  + (Vector3::RIGHT * (s*s - u.dot(u))) + ((u ^ Vector3::RIGHT) * s * 2.0f);
   m_up =    u * (u.dot(Vector3::UP) * 2.0f)     + (Vector3::UP * (s*s - u.dot(u)))    + ((u ^ Vector3::UP) * s * 2.0f);

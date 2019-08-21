@@ -19,13 +19,13 @@ void ParticleSystemComponent::onInitialize(GameObject* owner)
 
   m_pParticleSystem = gRenderer().createParticleSystem();
 
-  m_pParticleSystem->setUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, u32 count) -> void {
+  m_pParticleSystem->setUpdateFunct([=] (ParticleSystemConfig* config, Particle* particles, U32 count) -> void {
     std::random_device dev;
     std::mt19937 twist(dev());
-    std::uniform_real_distribution<r32> uni(-0.2f, 0.2f);
-    std::uniform_real_distribution<r32> pos(-3.0f, 3.0f);
-    r32 offset = config->_particleMaxAlive / config->_maxParticles;
-    r32 life = 0.0f;
+    std::uniform_real_distribution<R32> uni(-0.2f, 0.2f);
+    std::uniform_real_distribution<R32> pos(-3.0f, 3.0f);
+    R32 offset = config->_particleMaxAlive / config->_maxParticles;
+    R32 life = 0.0f;
     for (size_t i = 0; i < count; ++i) {
       Particle& p = particles[i];
       p._position = Vector4(config->_model[3][0], config->_model[3][1], config->_model[3][2], 1.0f);
@@ -41,7 +41,7 @@ void ParticleSystemComponent::onInitialize(GameObject* owner)
     }
   });
 
-  m_pParticleSystem->setSortFunct([=] (const Particle& p0, const Particle& p1) -> b32 {
+  m_pParticleSystem->setSortFunct([=] (const Particle& p0, const Particle& p1) -> B32 {
     return p0._camDist.x > p1._camDist.x;
   });
   REGISTER_COMPONENT(ParticleSystemComponent, this);
@@ -74,14 +74,14 @@ void ParticleSystemComponent::update()
 }
 
 
-void ParticleSystemComponent::SetMaxParticleCount(u32 maxCount)
+void ParticleSystemComponent::SetMaxParticleCount(U32 maxCount)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->setParticleMaxCount(maxCount);
 }
 
 
-void ParticleSystemComponent::EnableWorldSpace(b32 enable)
+void ParticleSystemComponent::EnableWorldSpace(B32 enable)
 {
   if (!m_pParticleSystem) return;
   ParticleSystemConfig* data = &m_pParticleSystem->_particleConfig;
@@ -102,15 +102,15 @@ void ParticleSystemComponent::SetTextureArray(Texture2DArray* texture)
 }
 
 
-void ParticleSystemComponent::UseAtlas(b32 enable)
+void ParticleSystemComponent::UseAtlas(B32 enable)
 {
   if (!m_pParticleSystem) return;
-  m_pParticleSystem->_particleConfig._hasAtlas = Vector4(r32(enable), r32(enable), r32(enable), r32(enable));
+  m_pParticleSystem->_particleConfig._hasAtlas = Vector4(R32(enable), R32(enable), R32(enable), R32(enable));
   m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
 
 
-void ParticleSystemComponent::SetMaxLife(r32 maxLife)
+void ParticleSystemComponent::SetMaxLife(R32 maxLife)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._particleMaxAlive = maxLife;
@@ -118,7 +118,7 @@ void ParticleSystemComponent::SetMaxLife(r32 maxLife)
 }
 
 
-void ParticleSystemComponent::SetLifetimeScale(r32 scale)
+void ParticleSystemComponent::SetLifetimeScale(R32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lifeTimeScale = scale;
@@ -126,7 +126,7 @@ void ParticleSystemComponent::SetLifetimeScale(r32 scale)
 }
 
 
-void ParticleSystemComponent::SetGlobalScale(r32 scale)
+void ParticleSystemComponent::SetGlobalScale(R32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._globalScale = scale;
@@ -134,7 +134,7 @@ void ParticleSystemComponent::SetGlobalScale(r32 scale)
 }
 
 
-void ParticleSystemComponent::SetBrightnessFactor(r32 scale)
+void ParticleSystemComponent::SetBrightnessFactor(R32 scale)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._lightFactor = scale;
@@ -142,7 +142,7 @@ void ParticleSystemComponent::SetBrightnessFactor(r32 scale)
 }
 
 
-void ParticleSystemComponent::SetFadeOut(r32 fadeOut)
+void ParticleSystemComponent::SetFadeOut(R32 fadeOut)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._fadeAt = fadeOut;
@@ -150,7 +150,7 @@ void ParticleSystemComponent::SetFadeOut(r32 fadeOut)
 }
 
 
-void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
+void ParticleSystemComponent::SetFadeIn(R32 fadeIn)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._fadeIn = fadeIn;
@@ -158,7 +158,7 @@ void ParticleSystemComponent::SetFadeIn(r32 fadeIn)
 }
 
 
-void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max, r32 offset)
+void ParticleSystemComponent::SetAnimationScale(R32 scale, R32 max, R32 offset)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._animScale = Vector3(scale, max, offset);
@@ -166,7 +166,7 @@ void ParticleSystemComponent::SetAnimationScale(r32 scale, r32 max, r32 offset)
 }
 
 
-void ParticleSystemComponent::SetAngleRate(r32 rate)
+void ParticleSystemComponent::SetAngleRate(R32 rate)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._angleRate = rate;
@@ -174,7 +174,7 @@ void ParticleSystemComponent::SetAngleRate(r32 rate)
 }
 
 
-void ParticleSystemComponent::SetRate(r32 rate)
+void ParticleSystemComponent::SetRate(R32 rate)
 {
   if (!m_pParticleSystem) return;
   m_pParticleSystem->_particleConfig._rate = rate;

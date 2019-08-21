@@ -26,7 +26,7 @@ struct AnimHandle;
 class AbstractRendererComponent : public Component {
   RCOMPONENT(AbstractRendererComponent)
 public:
-  static const i32 kNoMorphIndex = -1;
+  static const I32 kNoMorphIndex = -1;
   AbstractRendererComponent();
 
   virtual void serialize(IArchive& archive) override { }
@@ -34,55 +34,55 @@ public:
 
   virtual void onEnable() override;
 
-  void enableShadow(b32 enable);
-  void enableStatic(b32 enable);
-  void forceForward(b32 enable);
-  void enableMorphTargets(b32 enable);
-  void setTransparent(b32 enable);
-  virtual void enableSkin(b32 enable) { }
-  void enableDebug(b32 enable);
+  void enableShadow(B32 enable);
+  void enableStatic(B32 enable);
+  void forceForward(B32 enable);
+  void enableMorphTargets(B32 enable);
+  void setTransparent(B32 enable);
+  virtual void enableSkin(B32 enable) { }
+  void enableDebug(B32 enable);
 
-  b32 isDirty() const { return m_bDirty; }
-  b32 isTransparentEnabled() const;
-  b32 isShadowEnabled() const;
-  virtual b32 isSkinned() const { return false; }
-  virtual MeshDescriptor* getMeshDescriptor(u32 idx = 0) { return nullptr; }
-  virtual JointDescriptor* getJointDescriptor(u32 idx = 0) { return nullptr; }
+  B32 isDirty() const { return m_bDirty; }
+  B32 isTransparentEnabled() const;
+  B32 isShadowEnabled() const;
+  virtual B32 isSkinned() const { return false; }
+  virtual MeshDescriptor* getMeshDescriptor(U32 idx = 0) { return nullptr; }
+  virtual JointDescriptor* getJointDescriptor(U32 idx = 0) { return nullptr; }
 
 
   // These bits corresponds to RenderCommand debug bits. See Renderer/RenderCmd.hpp for DebugConfigBits.
-  void setDebugBits(b32 bits);
-  void unsetDebugBits(b32 bits);
+  void setDebugBits(B32 bits);
+  void unsetDebugBits(B32 bits);
 
 
   void signalClean() { m_bDirty = false; }
   
-  virtual void addMesh(Mesh* mesh, u32 idx = Mesh::kMeshUnknownValue) { 
+  virtual void addMesh(Mesh* mesh, U32 idx = Mesh::kMeshUnknownValue) { 
     if (idx == Mesh::kMeshUnknownValue) m_meshes.push_back(mesh);
     else m_meshes[idx] = mesh; 
   }
   
   virtual void clearMeshes() { m_meshes.clear(); }
   Mesh* getMesh(size_t idx) { return m_meshes[idx]; }
-  u32 getMeshCount() const { return static_cast<u32>(m_meshes.size()); }
-  inline b32 allowAutoLod() const { return m_allowAutoLod; }
-  void enableAutoLod(b32 enable) { m_allowAutoLod = enable; }
+  U32 getMeshCount() const { return static_cast<U32>(m_meshes.size()); }
+  inline B32 allowAutoLod() const { return m_allowAutoLod; }
+  void enableAutoLod(B32 enable) { m_allowAutoLod = enable; }
 
 
-  r32 getCurrentLod() const { return m_currLod; }
-  u32 getMorphIndex0() const { return m_morphIndex0; }
-  u32 getMorphIndex1() const { return m_morphIndex1; }
+  R32 getCurrentLod() const { return m_currLod; }
+  U32 getMorphIndex0() const { return m_morphIndex0; }
+  U32 getMorphIndex1() const { return m_morphIndex1; }
 
-  void setMorphIndex0(u32 idx) { m_morphIndex0 = idx; }
-  void setMorphIndex1(u32 idx) { m_morphIndex1 = idx; }
+  void setMorphIndex0(U32 idx) { m_morphIndex0 = idx; }
+  void setMorphIndex1(U32 idx) { m_morphIndex1 = idx; }
 
   virtual void setAnimationHandler(AnimHandle* anim) { m_pAnimHandle = anim; }
   virtual AnimHandle* getAnimHandle() { return m_pAnimHandle; }
 
-  virtual void setLodBias(r32 bias, u32 meshIdx = 0) { (void)(meshIdx); m_currLod = bias; }
-  virtual r32 getLodBias(u32 meshIdx = 0) const { (void)meshIdx; return m_currLod; }
+  virtual void setLodBias(R32 bias, U32 meshIdx = 0) { (void)(meshIdx); m_currLod = bias; }
+  virtual R32 getLodBias(U32 meshIdx = 0) const { (void)meshIdx; return m_currLod; }
 
-  virtual void resize(u32 sz) { m_meshes.resize(sz); };
+  virtual void resize(U32 sz) { m_meshes.resize(sz); };
 
 protected:
 
@@ -93,13 +93,13 @@ protected:
   void updateLod(Transform* meshTransform);
 
   std::vector<Mesh*> m_meshes;
-  b32 m_bDirty;
-  u32 m_configs;
-  b32 m_debugConfigs;
-  b32 m_allowAutoLod;
-  r32 m_currLod;
-  i32 m_morphIndex0; // Morph index for binding.
-  i32 m_morphIndex1; // Morph index for binding.
+  B32 m_bDirty;
+  U32 m_configs;
+  B32 m_debugConfigs;
+  B32 m_allowAutoLod;
+  R32 m_currLod;
+  I32 m_morphIndex0; // Morph index for binding.
+  I32 m_morphIndex1; // Morph index for binding.
   AnimHandle* m_pAnimHandle;
 
 };
@@ -119,10 +119,10 @@ public:
   virtual void serialize(IArchive& archive) override { }
   virtual void deserialize(IArchive& archive) override { }
 
-  virtual void enableSkin(b32 enable) override;
-  MeshDescriptor* getMeshDescriptor(u32 idx = 0) override { return getSingleMeshDescriptor(); }
+  virtual void enableSkin(B32 enable) override;
+  MeshDescriptor* getMeshDescriptor(U32 idx = 0) override { return getSingleMeshDescriptor(); }
   MeshDescriptor* getSingleMeshDescriptor() { return m_meshDescriptor; }
-  virtual JointDescriptor* getJointDescriptor(u32 idx = 0) override { return nullptr; }
+  virtual JointDescriptor* getJointDescriptor(U32 idx = 0) override { return nullptr; }
 
 protected:
   virtual void onInitialize(GameObject* owner) override;
@@ -145,8 +145,8 @@ public:
   virtual void update() override;
   virtual void serialize(IArchive& a) override { }
   virtual void deserialize(IArchive& a) override { }
-  virtual b32 isSkinned() const override { return true; }
-  virtual JointDescriptor* getJointDescriptor(u32 idx = 0) override { return getSingleJointDescriptor(); }
+  virtual B32 isSkinned() const override { return true; }
+  virtual JointDescriptor* getJointDescriptor(U32 idx = 0) override { return getSingleJointDescriptor(); }
   JointDescriptor* getSingleJointDescriptor() { return m_pJointDescriptor; }
   
 protected:
@@ -164,21 +164,21 @@ public:
   virtual void serialize(IArchive& a) override { }
   virtual void deserialize(IArchive& a) override { }
 
-  virtual void addMesh(Mesh* mesh, u32 idx = Mesh::kMeshUnknownValue) override;
+  virtual void addMesh(Mesh* mesh, U32 idx = Mesh::kMeshUnknownValue) override;
   virtual void clearMeshes() override;
 
-  void assignMeshParent(u32 meshIdx, u32 parentIdx) { m_perMeshDescriptors[meshIdx].parentId = parentIdx; }
+  void assignMeshParent(U32 meshIdx, U32 parentIdx) { m_perMeshDescriptors[meshIdx].parentId = parentIdx; }
 
-  virtual void resize(u32 sz) override { AbstractRendererComponent::resize(sz); 
+  virtual void resize(U32 sz) override { AbstractRendererComponent::resize(sz); 
                                          m_perMeshDescriptors.resize(sz); }
 
-  virtual void setLodBias(r32 bias, u32 meshIdx = 0) override;
-  virtual r32 getLodBias(u32 meshIdx = 0) const override;
+  virtual void setLodBias(R32 bias, U32 meshIdx = 0) override;
+  virtual R32 getLodBias(U32 meshIdx = 0) const override;
 
 protected:
   struct MeshNode {
     MeshDescriptor* _pMeshDescriptor;
-    u32 parentId;
+    U32 parentId;
   };
   std::vector<MeshNode> m_perMeshDescriptors;
 };

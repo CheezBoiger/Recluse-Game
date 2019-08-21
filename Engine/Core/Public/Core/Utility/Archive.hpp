@@ -15,40 +15,40 @@ class IArchive {
 public:
   virtual ~IArchive() { }
 
-  virtual b8        Open(const std::string Filename) { 
+  virtual B8        Open(const std::string Filename) { 
     m_Name = Filename;
     m_Opened = true; 
     return true; 
   }
 
-  virtual b8        close() { m_Opened = false;  return true; }
+  virtual B8        close() { m_Opened = false;  return true; }
 
-  virtual IArchive& operator<<(u8 Val) = 0;
-  virtual IArchive& operator<<(i8 Val) = 0;
-  virtual IArchive& operator<<(u16 Val) = 0;
-  virtual IArchive& operator<<(i16 Val) = 0;
-  virtual IArchive& operator<<(u32 Val) = 0;
-  virtual IArchive& operator<<(i32 Val) = 0;
-  virtual IArchive& operator<<(u64 Val) = 0;
-  virtual IArchive& operator<<(i64 Val) = 0;
+  virtual IArchive& operator<<(U8 Val) = 0;
+  virtual IArchive& operator<<(I8 Val) = 0;
+  virtual IArchive& operator<<(U16 Val) = 0;
+  virtual IArchive& operator<<(I16 Val) = 0;
+  virtual IArchive& operator<<(U32 Val) = 0;
+  virtual IArchive& operator<<(I32 Val) = 0;
+  virtual IArchive& operator<<(U64 Val) = 0;
+  virtual IArchive& operator<<(I64 Val) = 0;
   virtual IArchive& operator<<(std::string Str) = 0;
 
-  virtual IArchive& operator>>(u8& Val) = 0;
-  virtual IArchive& operator>>(i8& Val) = 0;
-  virtual IArchive& operator>>(u16& Val) = 0;
-  virtual IArchive& operator>>(i16& Val) = 0;
-  virtual IArchive& operator>>(u32& Val) = 0;
-  virtual IArchive& operator>>(i32& Val) = 0;
-  virtual IArchive& operator>>(u64& Val) = 0;
-  virtual IArchive& operator>>(i64& Val) = 0;
+  virtual IArchive& operator>>(U8& Val) = 0;
+  virtual IArchive& operator>>(I8& Val) = 0;
+  virtual IArchive& operator>>(U16& Val) = 0;
+  virtual IArchive& operator>>(I16& Val) = 0;
+  virtual IArchive& operator>>(U32& Val) = 0;
+  virtual IArchive& operator>>(I32& Val) = 0;
+  virtual IArchive& operator>>(U64& Val) = 0;
+  virtual IArchive& operator>>(I64& Val) = 0;
   virtual IArchive& operator>>(std::string& Val) = 0;
 
-  b8                Opened() const { return m_Opened; }
+  B8                Opened() const { return m_Opened; }
   std::string       getName() const { return m_Name; }
 
 protected:
   std::string m_Name;
-  b8          m_Opened;
+  B8          m_Opened;
 };
 
 
@@ -57,27 +57,27 @@ protected:
 // information back, so be sure to add in a header in order to figure out!
 class Archive : public IArchive {
 public:
-  virtual b8          Open(const std::string Filename) override;
-  virtual b8          close() override;
+  virtual B8          Open(const std::string Filename) override;
+  virtual B8          close() override;
 
-  IArchive&           operator<<(u8 Val) override;
-  IArchive&           operator<<(i8 Val) override;
-  IArchive&           operator<<(u16 Val) override;
-  IArchive&           operator<<(i16 Val) override;
-  IArchive&           operator<<(u32 Val) override;
-  IArchive&           operator<<(i32 Val) override;
-  IArchive&           operator<<(u64 Val) override;
-  IArchive&           operator<<(i64 Val) override;
+  IArchive&           operator<<(U8 Val) override;
+  IArchive&           operator<<(I8 Val) override;
+  IArchive&           operator<<(U16 Val) override;
+  IArchive&           operator<<(I16 Val) override;
+  IArchive&           operator<<(U32 Val) override;
+  IArchive&           operator<<(I32 Val) override;
+  IArchive&           operator<<(U64 Val) override;
+  IArchive&           operator<<(I64 Val) override;
   IArchive&           operator<<(std::string Val) override;
 
-  IArchive&           operator>>(u8& Val) override;
-  IArchive&           operator>>(i8& Val) override;
-  IArchive&           operator>>(u16& Val) override;
-  IArchive&           operator>>(i16& Val) override;
-  IArchive&           operator>>(u32& Val) override;
-  IArchive&           operator>>(i32& Val) override;
-  IArchive&           operator>>(u64& Val) override;
-  IArchive&           operator>>(i64& Val) override;
+  IArchive&           operator>>(U8& Val) override;
+  IArchive&           operator>>(I8& Val) override;
+  IArchive&           operator>>(U16& Val) override;
+  IArchive&           operator>>(I16& Val) override;
+  IArchive&           operator>>(U32& Val) override;
+  IArchive&           operator>>(I32& Val) override;
+  IArchive&           operator>>(U64& Val) override;
+  IArchive&           operator>>(I64& Val) override;
   IArchive&           operator>>(std::string& Val) override;
 
 private:

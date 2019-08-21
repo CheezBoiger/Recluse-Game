@@ -22,7 +22,7 @@ public:
   // enable pbr sky, this will render the sky instead of defining one. Uses
   // the primary light information from scene to render out where the sun/moon should
   // go.
-  b32            _bRenderPbrSky;
+  B32            _bRenderPbrSky;
 
   // If pbr sky rendering is disabled, then user wants to 
   // paste a cubemap sky instead. This must be defined then!
@@ -38,11 +38,11 @@ public:
 
   void              setRayleigh(const Vector3& bR);
 
-  void              setMieDistrib(r32 d);
+  void              setMieDistrib(R32 d);
 
-  void              setScatterStrength(r32 s);
+  void              setScatterStrength(R32 s);
 
-  void              setSkyIntensity(r32 i);
+  void              setSkyIntensity(R32 i);
 
 private:
   DirectionalLight  m_PrimaryLight;
@@ -50,9 +50,9 @@ private:
   Vector3           m_betaR;
   Vector3           m_betaM;  
   Vector3           m_sunDir;
-  r32               m_earthRadius;
-  r32               m_atmosphereRadius;
-  r32               m_hR; // Thickness of atmosphere (rayleigh).
-  r32               m_hM; // Thickness of atmosphere (mie).
+  R32               m_earthRadius;
+  R32               m_atmosphereRadius;
+  R32               m_hR; // Thickness of atmosphere (rayleigh).
+  R32               m_hM; // Thickness of atmosphere (mie).
 };
 } // Recluse

@@ -21,7 +21,7 @@ namespace Recluse {
 
 class FMODAudioEngine : public Audio {
   typedef std::map<std::string, FMOD::Sound*>                   SoundMap;
-  typedef std::map<u32, FMOD::Channel*>                         ChannelMap;
+  typedef std::map<U32, FMOD::Channel*>                         ChannelMap;
   typedef std::map<std::string, FMOD::Studio::EventInstance*>   EventMap;
   typedef std::map<std::string, FMOD::Studio::Bank*>            BankMap;
 public:
@@ -38,13 +38,13 @@ public:
 
   AudioId createAudioObject() override;
 
-  virtual void updateState(r64 dt) override;
+  virtual void updateState(R64 dt) override;
 
-  virtual void loadSound(const std::string& soundName, b32 is3D = true, b32 looping = false, b32 stream = false) override;
+  virtual void loadSound(const std::string& soundName, B32 is3D = true, B32 looping = false, B32 stream = false) override;
   virtual void unLoadSound(const std::string& soundName) override;
-  virtual u32 initiateSound(const std::string& soundName, const Vector3& pos, r32 volume) override;
-  virtual void setChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) override;
-  virtual void setChannelVolume(u32 nChannelId, r32 volume) override;
+  virtual U32 initiateSound(const std::string& soundName, const Vector3& pos, R32 volume) override;
+  virtual void setChannel3DPosition(U32 nChannelId, const Vector3& pos, const Vector3& vel) override;
+  virtual void setChannelVolume(U32 nChannelId, R32 volume) override;
   virtual void loadEventBank(const std::string& bankPath) override;
     
 
@@ -57,7 +57,7 @@ private:
   BankMap m_bankMap;
   FMOD::System* m_pSystem;
   FMOD::Studio::System* m_pStudioSystem;
-  u32 m_nextChannelId;
+  U32 m_nextChannelId;
   Vector3 m_globalListenerPosition;
   Vector3 m_globalListenerForward;
   Vector3 m_globalListenerUp;

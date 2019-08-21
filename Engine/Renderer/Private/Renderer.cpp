@@ -110,8 +110,8 @@ Renderer::Renderer()
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
     Vector3 v1 = p1 - cam_pos;
     Vector3 v2 = p2 - cam_pos;
-    r32 l1 = v1.length();
-    r32 l2 = v2.length();
+    R32 l1 = v1.length();
+    R32 l2 = v2.length();
     R_ASSERT(!isnan(l1) && !isnan(l2), "");
     return (l1 < l2);
   });
@@ -129,8 +129,8 @@ Renderer::Renderer()
     Vector3 cam_pos = Vector3(native_pos.x, native_pos.y, native_pos.z);
     Vector3 v1 = p1 - cam_pos;
     Vector3 v2 = p2 - cam_pos;
-    r32 l1 = v1.lengthSqr();
-    r32 l2 = v2.lengthSqr();
+    R32 l1 = v1.lengthSqr();
+    R32 l2 = v2.lengthSqr();
     R_ASSERT(!isnan(l1) && !isnan(l2), "");
     //Log() << p1 << " l1: " << l1 << "\n" << p2 << " l2: " << l2 << "\n";
     return (l2 < l1);
@@ -173,6 +173,8 @@ void Renderer::beginFrame()
   m_Rendering = true;
   //m_pRhi->PresentWaitIdle();
   m_pRhi->acquireNextImage();
+
+  VulkanRHI::gAllocator.update( m_pRhi );
 }
 
 
@@ -220,7 +222,7 @@ void Renderer::render()
 
   // begin frame. This is where we start our render process per frame.
   beginFrame();
-  u32 frameIndex = m_pRhi->currentFrame();
+  U32 frameIndex = m_pRhi->currentFrame();
   updateSceneDescriptors(frameIndex);
   checkCmdUpdate();
 
@@ -323,7 +325,7 @@ void Renderer::render()
   // render shadow map here. Primary shadow map is our concern.
   if (m_pLights->isPrimaryShadowEnabled() || staticNeedsUpdate()) {
     R_DEBUG(rNotify, "Shadow.\n");
-    u32 graphicsQueueCount = m_pRhi->graphicsQueueCount();
+    U32 graphicsQueueCount = m_pRhi->graphicsQueueCount();
     if (graphicsQueueCount > 1) {
 
       VkSubmitInfo shadowSI = {};
@@ -471,7 +473,7 @@ void Renderer::cleanUp()
 }
 
 
-b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
+B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 {
   if (!window) return false;
   if (m_Initialized) return true;
@@ -482,8 +484,8 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pWindow = window;
 
-  m_renderWidth = (u32)m_pWindow->getWidth(); 
-  m_renderHeight = (u32)m_pWindow->getHeight();
+  m_renderWidth = (U32)m_pWindow->getWidth(); 
+  m_renderHeight = (U32)m_pWindow->getHeight();
 
   updateRenderResolution(params->_Resolution);
 
@@ -502,7 +504,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   gMat->initialize(m_pRhi);
   gMat->getData()->_ScreenSize[0] = m_renderWidth;
   gMat->getData()->_ScreenSize[1] = m_renderHeight;
-  for (u32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
+  for (U32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
     gMat->update(m_pRhi, i);
   }
   m_pGlobal = gMat;
@@ -523,7 +525,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   m_pLights = new LightDescriptor();
   m_pLights->initialize(m_pRhi, params);
 
-  for (u32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
+  for (U32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
     m_pLights->update(m_pRhi, m_pGlobal->getData(), i);
   }
 
@@ -548,7 +550,7 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   m_pDebugManager->initialize(m_pRhi);
 
   {
-    u32 vendorId = m_pRhi->vendorID();
+    U32 vendorId = m_pRhi->vendorID();
     switch (vendorId) {
       case AMD_VENDOR_ID: m_workGroupSize = AMD_WAVEFRONT_SIZE; break;
       case NVIDIA_VENDOR_ID: m_workGroupSize = NVIDIA_WARP_SIZE; break;
@@ -571,8 +573,8 @@ b32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
     // Do stuff with the buffer.
     VkExtent2D windowExtent = { m_pWindow->getWidth(), m_pWindow->getHeight() };
     VkViewport viewport = { };
-    viewport.height = (r32) windowExtent.height;
-    viewport.width = (r32) windowExtent.width;
+    viewport.height = (R32) windowExtent.height;
+    viewport.width = (R32) windowExtent.width;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     viewport.x = 0.0f;
@@ -641,7 +643,7 @@ void Renderer::setUpDescriptorSetLayouts()
   
     VkDescriptorSetLayoutCreateInfo LightViewInfo = { };
     LightViewInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    LightViewInfo.bindingCount = static_cast<u32>(LightViewBindings.size());
+    LightViewInfo.bindingCount = static_cast<U32>(LightViewBindings.size());
     LightViewInfo.pBindings = LightViewBindings.data();
     LightViewLayout->initialize(LightViewInfo);
 
@@ -673,7 +675,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo GlobalLayout = {};
     GlobalLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    GlobalLayout.bindingCount = static_cast<u32>(GlobalBindings.size());
+    GlobalLayout.bindingCount = static_cast<U32>(GlobalBindings.size());
     GlobalLayout.pBindings = GlobalBindings.data();
     GlobalSetLayout->initialize(GlobalLayout);
     MeshSetLayout->initialize(GlobalLayout);
@@ -726,7 +728,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo MaterialLayout = {};
     MaterialLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    MaterialLayout.bindingCount = static_cast<u32>(MaterialBindings.size());
+    MaterialLayout.bindingCount = static_cast<U32>(MaterialBindings.size());
     MaterialLayout.pBindings = MaterialBindings.data();
 
     MaterialSetLayout->initialize(MaterialLayout);
@@ -775,7 +777,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo PbrLayout = { };
     PbrLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    PbrLayout.bindingCount = static_cast<u32>(bindings.size());
+    PbrLayout.bindingCount = static_cast<U32>(bindings.size());
     PbrLayout.pBindings = bindings.data();
     pbr_Layout->initialize(PbrLayout);
   }
@@ -791,7 +793,7 @@ void Renderer::setUpDescriptorSetLayouts()
     BonesBindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     VkDescriptorSetLayoutCreateInfo BoneLayout = { };
     BoneLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    BoneLayout.bindingCount = static_cast<u32>(BonesBindings.size());
+    BoneLayout.bindingCount = static_cast<U32>(BonesBindings.size());
     BoneLayout.pBindings = BonesBindings.data();
     BonesSetLayout->initialize(BoneLayout);
   }
@@ -859,11 +861,11 @@ void Renderer::setUpDescriptorSetLayouts()
     VkDescriptorSetLayoutCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     info.flags = 0;
-    info.bindingCount = static_cast<u32>(globalIllum.size());
+    info.bindingCount = static_cast<U32>(globalIllum.size());
     info.pBindings = globalIllum.data();
     info.pNext = nullptr;
     globalIllumination_DescLR->initialize(info);
-    info.bindingCount = static_cast<u32>(globalIllum.size() - 3);
+    info.bindingCount = static_cast<U32>(globalIllum.size() - 3);
     globalIllumination_DescNoLR->initialize(info);
   }
 
@@ -886,7 +888,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo info = { };
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    info.bindingCount = static_cast<u32>(bindings.size());
+    info.bindingCount = static_cast<U32>(bindings.size());
     info.pBindings = bindings.data();
 
     pbr_compDescLayout->initialize(info);
@@ -903,7 +905,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo LightLayout = { };
     LightLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    LightLayout.bindingCount = static_cast<u32>(LightBindings.size());
+    LightLayout.bindingCount = static_cast<U32>(LightBindings.size());
     LightLayout.pBindings = LightBindings.data();
 
     LightSetLayout->initialize(LightLayout);
@@ -923,7 +925,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
     VkDescriptorSetLayoutCreateInfo finalLayoutInfo = {};
     finalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    finalLayoutInfo.bindingCount = static_cast<u32>(finalBindings.size());
+    finalLayoutInfo.bindingCount = static_cast<U32>(finalBindings.size());
     finalLayoutInfo.pBindings = finalBindings.data();
 
     finalSetLayout->initialize(finalLayoutInfo);
@@ -946,7 +948,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
   VkDescriptorSetLayoutCreateInfo hdrLayoutCi = {};
   hdrLayoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  hdrLayoutCi.bindingCount = static_cast<u32>(hdrBindings.size());
+  hdrLayoutCi.bindingCount = static_cast<U32>(hdrBindings.size());
   hdrLayoutCi.pBindings = hdrBindings.data();
   
   hdrSetLayout->initialize(hdrLayoutCi);
@@ -1000,7 +1002,7 @@ void Renderer::setUpDescriptorSetLayouts()
   glow[3].pImmutableSamplers = nullptr;
 
   dwnLayout.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  dwnLayout.bindingCount = static_cast<u32>(glow.size());
+  dwnLayout.bindingCount = static_cast<U32>(glow.size());
   dwnLayout.pBindings = glow.data();
   dwnLayout.flags = 0;
   dwnLayout.pNext = nullptr;
@@ -1091,12 +1093,12 @@ void Renderer::setUpFrameBuffers()
 
     VkSubpassDescription subpass = {};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+    subpass.colorAttachmentCount = static_cast<U32>(attachmentColors.size());
     subpass.pColorAttachments = attachmentColors.data();
     subpass.pDepthStencilAttachment = nullptr;
 
     VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
-      static_cast<u32>(attachmentDescriptions.size()),
+      static_cast<U32>(attachmentDescriptions.size()),
       attachmentDescriptions.data(),
       2,
       dependencies,
@@ -1110,7 +1112,7 @@ void Renderer::setUpFrameBuffers()
       windowExtent.width,
       windowExtent.height,
       nullptr, // Finalize() call handles this for us.
-      static_cast<u32>(attachments.size()),
+      static_cast<U32>(attachments.size()),
       attachments.data(),
       1
     );
@@ -1219,12 +1221,12 @@ void Renderer::setUpFrameBuffers()
 
   VkSubpassDescription subpass = { };
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size() - 2);
+  subpass.colorAttachmentCount = static_cast<U32>(attachmentColors.size() - 2);
   subpass.pColorAttachments = attachmentColors.data();
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
   
   VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
-    static_cast<u32>(attachmentDescriptions.size()),
+    static_cast<U32>(attachmentDescriptions.size()),
     attachmentDescriptions.data(),
     2,
     dependencies,
@@ -1243,7 +1245,7 @@ void Renderer::setUpFrameBuffers()
     windowExtent.width,
     windowExtent.height,
     nullptr, // Finalize() call handles this for us.
-    static_cast<u32>(attachments.size()),
+    static_cast<U32>(attachments.size()),
     attachments.data(),
     1
   );
@@ -1292,14 +1294,14 @@ void Renderer::setUpFrameBuffers()
 
     VkSubpassDescription pbrSubpass = {};
     pbrSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 5);
+    pbrSubpass.colorAttachmentCount = static_cast<U32>(pbrAttachmentDescriptions.size() - 5);
     pbrSubpass.pColorAttachments = attachmentColors.data();
     attachmentDepthRef.attachment = 2;
     attachmentDepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
     pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
 
     VkRenderPassCreateInfo pbrRenderpassCI = CreateRenderPassInfo(
-      static_cast<u32>(pbrAttachmentDescriptions.size() - 4),
+      static_cast<U32>(pbrAttachmentDescriptions.size() - 4),
       pbrAttachmentDescriptions.data(),
       2,
       dependencies,
@@ -1316,7 +1318,7 @@ void Renderer::setUpFrameBuffers()
       windowExtent.width,
       windowExtent.height,
       nullptr, // Finalize() call handles this for us.
-      static_cast<u32>(pbrAttachments.size() - 4),
+      static_cast<U32>(pbrAttachments.size() - 4),
       pbrAttachments.data(),
       1
     );
@@ -1412,14 +1414,14 @@ void Renderer::setUpFrameBuffers()
     pbrAttachments[6] = gbuffer_Depth->getView();
 
     pbrSubpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    pbrSubpass.colorAttachmentCount = static_cast<u32>(pbrAttachmentDescriptions.size() - 1);
+    pbrSubpass.colorAttachmentCount = static_cast<U32>(pbrAttachmentDescriptions.size() - 1);
     pbrSubpass.pColorAttachments = attachmentColors.data();
     attachmentDepthRef.attachment = 6;
     attachmentDepthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     pbrSubpass.pDepthStencilAttachment = &attachmentDepthRef;
 
     pbrRenderpassCI = CreateRenderPassInfo(
-      static_cast<u32>(pbrAttachmentDescriptions.size()),
+      static_cast<U32>(pbrAttachmentDescriptions.size()),
       pbrAttachmentDescriptions.data(),
       2,
       dependencies,
@@ -1431,7 +1433,7 @@ void Renderer::setUpFrameBuffers()
       windowExtent.width,
       windowExtent.height,
       nullptr, // Finalize() call handles this for us.
-      static_cast<u32>(pbrAttachments.size()),
+      static_cast<U32>(pbrAttachments.size()),
       pbrAttachments.data(),
       1
     );
@@ -1575,8 +1577,8 @@ void Renderer::setUpGraphicsPipelines()
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
-  viewport.height = static_cast<r32>(windowExtent.height);
-  viewport.width = static_cast<r32>(windowExtent.width);
+  viewport.height = static_cast<R32>(windowExtent.height);
+  viewport.width = static_cast<R32>(windowExtent.width);
 
   VkRect2D scissor = { };
   scissor.extent = windowExtent;
@@ -1669,7 +1671,7 @@ void Renderer::setUpGraphicsPipelines()
   );
 
   VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    static_cast<u32>(colorBlendAttachments.size()),
+    static_cast<U32>(colorBlendAttachments.size()),
     colorBlendAttachments.data(),
     VK_FALSE,
     VK_LOGIC_OP_COPY
@@ -1691,7 +1693,7 @@ void Renderer::setUpGraphicsPipelines()
   vertexCI.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexCI.vertexBindingDescriptionCount = 1;
   vertexCI.pVertexBindingDescriptions = &vertBindingDesc;
-  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(pbrAttributes.size());
+  vertexCI.vertexAttributeDescriptionCount = static_cast<U32>(pbrAttributes.size());
   vertexCI.pVertexAttributeDescriptions = pbrAttributes.data();
 
   VkGraphicsPipelineCreateInfo GraphicsPipelineInfo = {};
@@ -1725,7 +1727,7 @@ void Renderer::setUpGraphicsPipelines()
 
   auto finalAttribs = QuadVertexDescription::GetVertexAttributes();
   vertBindingDesc = QuadVertexDescription::GetBindingDescription();
-  vertexCI.vertexAttributeDescriptionCount = static_cast<u32>(finalAttribs.size());
+  vertexCI.vertexAttributeDescriptionCount = static_cast<U32>(finalAttribs.size());
   vertexCI.pVertexAttributeDescriptions = finalAttribs.data();
 
   colorBlendAttachments[0].blendEnable = VK_FALSE;
@@ -1851,7 +1853,7 @@ void Renderer::cleanUpFrameBuffers()
 }
 
 
-void Renderer::setUpRenderTextures(b32 fullSetup)
+void Renderer::setUpRenderTextures(B32 fullSetup)
 {
   Texture* renderTarget2xScaled = m_pRhi->createTexture();
   Texture* RenderTarget2xFinal = m_pRhi->createTexture();
@@ -2094,7 +2096,7 @@ void Renderer::setUpRenderTextures(b32 fullSetup)
       tex2d.mRhi = m_pRhi;
       tex2d.texture = defaultTexture;
       tex2d.m_bGenMips = false;
-      Image img; img._data = new u8[4]; img._height = 1; img._width = 1; img._memorySize = 4;
+      Image img; img._data = new U8[4]; img._height = 1; img._width = 1; img._memorySize = 4;
       tex2d.update(img);
       delete img._data;
     }
@@ -2108,7 +2110,7 @@ void Renderer::setUpRenderTextures(b32 fullSetup)
 }
 
 
-void Renderer::cleanUpRenderTextures(b32 fullCleanup)
+void Renderer::cleanUpRenderTextures(B32 fullCleanup)
 {
   {
     Texture* renderTarget2xScaled = RenderTarget2xHorizKey;
@@ -2175,7 +2177,7 @@ void Renderer::cleanUpRenderTextures(b32 fullCleanup)
 }
 
 
-void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex) 
+void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, U32 frameIndex) 
 {
   GraphicsPipeline* pPipeline = nullptr;
   ComputePipeline* pCompPipeline = nullptr;
@@ -2191,8 +2193,8 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkViewport viewport = {};
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -2210,13 +2212,13 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   pbr_RenderPassInfo.framebuffer = pbr_FrameBuffer->getHandle();
   pbr_RenderPassInfo.renderPass = pbr_renderPass->getHandle();
   pbr_RenderPassInfo.pClearValues = clearValuesPBR.data();
-  pbr_RenderPassInfo.clearValueCount = static_cast<u32>(clearValuesPBR.size());
+  pbr_RenderPassInfo.clearValueCount = static_cast<U32>(clearValuesPBR.size());
   pbr_RenderPassInfo.renderArea.extent = windowExtent;
   pbr_RenderPassInfo.renderArea.offset = { 0, 0 };
 
   ShadowMapSystem& shadow = m_pLights->getPrimaryShadowMapSystem();
 
-  const u32 dSetCount = 5;
+  const U32 dSetCount = 5;
 #if !COMPUTE_PBR
     cmdBuffer->beginRenderPass(pbr_RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     GraphicsPipeline* pbr_Pipeline = pPipeline;
@@ -2267,7 +2269,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     imageMemBarriers[1].image = pbr_BrightTextureKey->Image();
 
     cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
+      0, 0, nullptr, 0, nullptr, static_cast<U32>(imageMemBarriers.size()), imageMemBarriers.data());
     VkDescriptorSet compSets[] = { 
       m_pGlobal->getDescriptorSet(frameIndex)->getHandle(),
       pbr_DescSetKey->getHandle(),
@@ -2305,7 +2307,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     imageMemBarriers[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
 
     cmdBuffer->PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-      0, 0, nullptr, 0, nullptr, static_cast<u32>(imageMemBarriers.size()), imageMemBarriers.data());
+      0, 0, nullptr, 0, nullptr, static_cast<U32>(imageMemBarriers.size()), imageMemBarriers.data());
 #endif
 }
 
@@ -2348,7 +2350,7 @@ void Renderer::cleanUpOffscreen()
 }
 
 
-void Renderer::setUpDownscale(b32 FullSetUp)
+void Renderer::setUpDownscale(B32 FullSetUp)
 {
   DescriptorSetLayout* getLayout = DownscaleBlurLayoutKey;
   DescriptorSetLayout* GlowLayout = GlowDescriptorSetLayoutKey;
@@ -2487,11 +2489,11 @@ void Renderer::setUpDownscale(b32 FullSetUp)
   GlowWrites[3].pNext = nullptr;
   GlowWrites[3].pTexelBufferView = nullptr;
 
-  GlowDS->update(static_cast<u32>(GlowWrites.size()), GlowWrites.data());
+  GlowDS->update(static_cast<U32>(GlowWrites.size()), GlowWrites.data());
 }
 
 
-void Renderer::cleanUpDownscale(b32 FullCleanUp)
+void Renderer::cleanUpDownscale(B32 FullCleanUp)
 {
 
   DescriptorSet* DBDS2x = DownscaleBlurDescriptorSet2x;
@@ -2515,12 +2517,12 @@ void Renderer::cleanUpDownscale(b32 FullCleanUp)
 }
 
 
-void Renderer::setUpHDR(b32 fullSetUp)
+void Renderer::setUpHDR(B32 fullSetUp)
 {
   cleanUpHDR(fullSetUp);
   if (fullSetUp) {
     m_HDR._CmdBuffers.resize(m_pRhi->bufferingCount());
-    for (u32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+    for (U32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
       m_HDR._CmdBuffers[i] = m_pRhi->createCommandBuffer();
       m_HDR._CmdBuffers[i]->allocate(m_pRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
@@ -2529,7 +2531,7 @@ void Renderer::setUpHDR(b32 fullSetUp)
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_HDR._semaphores.resize(m_pRhi->bufferingCount());
-  for (u32 i = 0; i < m_HDR._semaphores.size(); ++i) {
+  for (U32 i = 0; i < m_HDR._semaphores.size(); ++i) {
     m_HDR._semaphores[i] = m_pRhi->createVkSemaphore();
     m_HDR._semaphores[i]->initialize(semaCi);
   }
@@ -2588,14 +2590,14 @@ void Renderer::setUpHDR(b32 fullSetUp)
 
   // Allocate and update the hdr buffer.
   hdrSet->allocate(m_pRhi->descriptorPool(), hdr_gamma_descSetLayoutKey);
-  hdrSet->update(static_cast<u32>(hdrWrites.size()), hdrWrites.data());
+  hdrSet->update(static_cast<U32>(hdrWrites.size()), hdrWrites.data());
 }
 
 
-void Renderer::cleanUpHDR(b32 fullCleanUp)
+void Renderer::cleanUpHDR(B32 fullCleanUp)
 {
   if (fullCleanUp) {
-    for (u32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+    for (U32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
       m_pRhi->freeCommandBuffer(m_HDR._CmdBuffers[i]);
       m_HDR._CmdBuffers[i] = nullptr;
     }
@@ -2606,7 +2608,7 @@ void Renderer::cleanUpHDR(b32 fullCleanUp)
     hdr_gamma_descSetKey = nullptr;
   }
 
-  for (u32 i = 0; i < m_HDR._semaphores.size(); ++i) {
+  for (U32 i = 0; i < m_HDR._semaphores.size(); ++i) {
     m_pRhi->freeVkSemaphore(m_HDR._semaphores[i]);
     m_HDR._semaphores[i] = nullptr;
   }
@@ -2616,7 +2618,7 @@ void Renderer::cleanUpHDR(b32 fullCleanUp)
 void Renderer::buildOffScreenCmdList()
 {
   R_ASSERT(m_pRhi->bufferingCount() == m_Offscreen._cmdBuffers.size(), "Attempted to build offscreen cmd buffer. Index out of bounds!\n");
-  for (u32 i = 0; i < m_Offscreen._cmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_Offscreen._cmdBuffers.size(); ++i) {
     CommandBuffer* cmdBuf = m_Offscreen._cmdBuffers[i];
     R_ASSERT(cmdBuf, "Offscreen cmd buffer is null.");
     cmdBuf->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2632,7 +2634,7 @@ void Renderer::buildOffScreenCmdList()
 
 void Renderer::buildHDRCmdList()
 {
-  for (u32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_HDR._CmdBuffers[i];
     R_ASSERT(pCmdBuffer, "HDR buffer is null");
     pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2648,7 +2650,7 @@ void Renderer::buildHDRCmdList()
 
 void Renderer::buildShadowCmdList()
 {
-  u32 frameIndex = m_pRhi->currentFrame();
+  U32 frameIndex = m_pRhi->currentFrame();
   CommandBuffer* shadowBuf = m_Offscreen._shadowCmdBuffers[frameIndex];
   R_ASSERT(shadowBuf, "Shadow Buffer is null.");
   shadowBuf->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2663,7 +2665,7 @@ void Renderer::buildShadowCmdList()
 
 void Renderer::buildPbrCmdLists()
 {
-  for (u32 i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_Pbr._CmdBuffers[i];
     R_ASSERT(pCmdBuffer, "PBR command buffer is null.");
     pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2679,7 +2681,7 @@ void Renderer::buildPbrCmdLists()
 
 void Renderer::buildSkyboxCmdLists()
 {
-  for (u32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_pSkyboxCmdBuffers[i];
     R_ASSERT(pCmdBuffer, "Skybox buffer is null");
     pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2695,7 +2697,7 @@ void Renderer::buildSkyboxCmdLists()
 
 void Renderer::buildFinalCmdLists()
 {
-  for (u32 i = 0; i < m_pFinalCommandBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pFinalCommandBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_pFinalCommandBuffers[i];
     R_ASSERT(pCmdBuffer, "Final Command buffer is null.");
     pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -2749,7 +2751,7 @@ void Renderer::updateSkyboxCubeMap()
 }
 
 
-void Renderer::setUpSkybox(b32 justSemaphores)
+void Renderer::setUpSkybox(B32 justSemaphores)
 {
   cleanUpSkybox(justSemaphores);
   if (!justSemaphores) {
@@ -2764,21 +2766,21 @@ void Renderer::setUpSkybox(b32 justSemaphores)
 
   // Create skybox Commandbuffer.
   m_pSkyboxCmdBuffers.resize(m_pRhi->bufferingCount());
-  for (u32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
     m_pSkyboxCmdBuffers[i] = m_pRhi->createCommandBuffer();
     m_pSkyboxCmdBuffers[i]->allocate(m_pRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   }
   m_SkyboxFinishedSignals.resize(m_pRhi->bufferingCount());
   VkSemaphoreCreateInfo sema = {};
   sema.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  for (u32 i = 0; i < m_SkyboxFinishedSignals.size(); ++i) {
+  for (U32 i = 0; i < m_SkyboxFinishedSignals.size(); ++i) {
     m_SkyboxFinishedSignals[i] = m_pRhi->createVkSemaphore();
     m_SkyboxFinishedSignals[i]->initialize(sema);
   }
 }
 
 
-void Renderer::usePreRenderSkyboxMap(b32 enable)
+void Renderer::usePreRenderSkyboxMap(B32 enable)
 {
   m_usePreRenderSkybox = enable;
   m_pRhi->graphicsWaitIdle(0);
@@ -2790,18 +2792,18 @@ void Renderer::usePreRenderSkyboxMap(b32 enable)
 }
 
 
-void Renderer::cleanUpSkybox(b32 justSemaphores)
+void Renderer::cleanUpSkybox(B32 justSemaphores)
 {
   if (!justSemaphores) {
     DescriptorSet* skyboxSet = skybox_descriptorSetKey;
     m_pRhi->freeDescriptorSet(skyboxSet);
   }
-  for (u32 i = 0; i < m_SkyboxFinishedSignals.size(); ++i) {
+  for (U32 i = 0; i < m_SkyboxFinishedSignals.size(); ++i) {
     m_pRhi->freeVkSemaphore(m_SkyboxFinishedSignals[i]);
     m_SkyboxFinishedSignals[i] = nullptr;
   }
 
-  for (u32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
     // Cleanup commandbuffer for skybox.
     m_pRhi->freeCommandBuffer(m_pSkyboxCmdBuffers[i]);
     m_pSkyboxCmdBuffers[i] = nullptr;
@@ -2809,7 +2811,7 @@ void Renderer::cleanUpSkybox(b32 justSemaphores)
 }
 
 
-void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
+void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   R_TIMED_PROFILE_RENDERER();
   
@@ -2831,8 +2833,8 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkViewport viewport = {};
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -2842,7 +2844,7 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderBegin.framebuffer = skyFrameBuffer->getHandle();
   renderBegin.renderPass = m_pSky->GetSkyboxRenderPass()->getHandle();
-  renderBegin.clearValueCount = static_cast<u32>(clearValues.size());
+  renderBegin.clearValueCount = static_cast<U32>(clearValues.size());
   renderBegin.pClearValues = clearValues.data();
   renderBegin.renderArea.offset = { 0, 0 };
   renderBegin.renderArea.extent = windowExtent;
@@ -2865,7 +2867,7 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 }
 
 
-void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
+void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -2894,7 +2896,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     gbuffer_RenderPassInfo.framebuffer = gbuffer_FrameBuffer->getHandle();
     gbuffer_RenderPassInfo.renderPass = gbuffer_renderPass->getHandle();
     gbuffer_RenderPassInfo.pClearValues = clearValues.data();
-    gbuffer_RenderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
+    gbuffer_RenderPassInfo.clearValueCount = static_cast<U32>(clearValues.size());
     gbuffer_RenderPassInfo.renderArea.extent = windowExtent;
     gbuffer_RenderPassInfo.renderArea.offset = { 0, 0 };
 
@@ -2902,8 +2904,8 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   }
 
   VkViewport viewport =  { };
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -2911,7 +2913,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   if (m_cmdDeferredList.Size() == 0) {
     VkClearAttachment clearAttachments[5];
-    for (u32 i = 0; i < 4; ++i) {
+    for (U32 i = 0; i < 4; ++i) {
       clearAttachments[i].aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       clearAttachments[i].clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
       clearAttachments[i].colorAttachment = i;
@@ -2920,7 +2922,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     clearAttachments[4].clearValue.depthStencil = { 1.0f, 0 };
     clearAttachments[4].colorAttachment = 4;
     VkClearRect clearRects[4] = { };
-    for (u32 i = 0; i < 4; ++i) {
+    for (U32 i = 0; i < 4; ++i) {
       clearRects[i].baseArrayLayer = 0;
       clearRects[i].layerCount = 0;
       clearRects[i].rect.extent = { m_renderWidth, m_renderHeight };
@@ -2940,7 +2942,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
 
-      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
+      B32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
       GraphicsPipeline* Pipe = Skinned ? gbuffer_Pipeline : gbuffer_StaticPipeline;
       VertexBuffer* vertexBuffer = data->getVertexData();
       IndexBuffer* indexBuffer = data->getIndexData();
@@ -2997,8 +2999,8 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
   VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   // Do stuff with the buffer.
   VkViewport viewport = {};
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.x = 0.0f;
@@ -3043,7 +3045,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 }
 
 
-void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
+void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
 
 
@@ -3138,8 +3140,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
   VkViewport viewport = {};
   VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -3151,17 +3153,17 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     m_Downscale._Scale = 3.3f;
     m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->getHandle();
-    viewport.height = (r32)(windowExtent.height >> 1);
-    viewport.width =  (r32)(windowExtent.width  >> 1);
+    viewport.height = (R32)(windowExtent.height >> 1);
+    viewport.width =  (R32)(windowExtent.width  >> 1);
     cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->Pipeline());
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(r32), &m_Downscale._Horizontal);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(r32), &m_Downscale._Strength);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(r32), &m_Downscale._Scale);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(R32), &m_Downscale._Horizontal);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(R32), &m_Downscale._Strength);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(R32), &m_Downscale._Scale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
     DownscalePass2x.framebuffer = FB2xFinal->getHandle();
@@ -3170,18 +3172,18 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &m_Downscale._Horizontal);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &m_Downscale._Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (r32)(windowExtent.height >> 2);
-    viewport.width = (r32)(windowExtent.width   >> 2);
+    viewport.height = (R32)(windowExtent.height >> 2);
+    viewport.width = (R32)(windowExtent.width   >> 2);
     DownscaleSetNative = DownscaleSet4x->getHandle();
-    i32 _Horizontal = true;
+    I32 _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->Pipeline());
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3194,18 +3196,18 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (r32)(windowExtent.height >> 3);
-    viewport.width = (r32)(windowExtent.width   >> 3);
+    viewport.height = (R32)(windowExtent.height >> 3);
+    viewport.width = (R32)(windowExtent.width   >> 3);
     DownscaleSetNative = DownscaleSet8x->getHandle();
     _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->Pipeline());
-      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3218,18 +3220,18 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (r32)(windowExtent.height >> 4);
-    viewport.width = (r32)(windowExtent.width   >> 4);
+    viewport.height = (R32)(windowExtent.height >> 4);
+    viewport.width = (R32)(windowExtent.width   >> 4);
     DownscaleSetNative = DownscaleSet16x->getHandle();
     _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->Pipeline());
-      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3242,13 +3244,13 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       _Horizontal = false;
       DownscaleSetNative = DownscaleSet16xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(i32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
   }
 
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
   cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
   if (!m_currentGraphicsConfigs._EnableBloom) {
@@ -3299,7 +3301,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 void Renderer::adjustHDRSettings(const ParamsHDR& hdrSettings)
 {
   m_HDR._pushCnst = hdrSettings;
-  for (u32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_HDR._CmdBuffers[i];
     R_ASSERT(pCmdBuffer, "HDR buffer is null");
     pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
@@ -3313,7 +3315,7 @@ void Renderer::adjustHDRSettings(const ParamsHDR& hdrSettings)
 }
 
 
-void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
+void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -3344,8 +3346,8 @@ void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderPass.pClearValues = &depthValue;
 
   VkViewport viewport = {};
-  viewport.height = (r32)m_pLights->m_pFrameBuffer->getHeight();
-  viewport.width = (r32)m_pLights->m_pFrameBuffer->getWidth();
+  viewport.height = (R32)m_pLights->m_pFrameBuffer->getHeight();
+  viewport.width = (R32)m_pLights->m_pFrameBuffer->getWidth();
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -3356,7 +3358,7 @@ void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     if (!(renderCmd._config & CMD_RENDERABLE_BIT) || !(renderCmd._config & CMD_SHADOWS_BIT)) return;
     R_ASSERT(renderCmd._pMeshData, "Null data was passed to renderer.");
     MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-    b32 skinned = (renderCmd._config & CMD_SKINNED_BIT);
+    B32 skinned = (renderCmd._config & CMD_SKINNED_BIT);
     VkDescriptorSet descriptorSets[4];
     descriptorSets[0] = pMeshDesc->getCurrMeshSet()->getHandle();
     descriptorSets[1] = lightViewSet->getHandle();
@@ -3377,8 +3379,8 @@ void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
     }
 
     Primitive* primitives = mesh->getPrimitiveData();
-    u32 count = mesh->getPrimitiveCount();
-    for (u32 i = 0; i < count; ++i) {
+    U32 count = mesh->getPrimitiveCount();
+    for (U32 i = 0; i < count; ++i) {
       Primitive& primitive = primitives[i];
       descriptorSets[2] = primitive._pMat->CurrMaterialSet()->getHandle();
       cmdBuffer->BindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getLayout(), 0, skinned ? 4 : 3, descriptorSets, 0, nullptr);
@@ -3413,7 +3415,7 @@ void Renderer::setUpForwardPBR()
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-  for (u32 i = 0; i < m_Forward._cmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_Forward._cmdBuffers.size(); ++i) {
     m_Forward._cmdBuffers[i] = m_pRhi->createCommandBuffer();
     CommandBuffer* cmdB = m_Forward._cmdBuffers[i];
     cmdB->allocate(m_pRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
@@ -3427,14 +3429,14 @@ void Renderer::setUpForwardPBR()
 
 void Renderer::cleanUpForwardPBR()
 {
-  for (u32 i = 0; i < m_Forward._cmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_Forward._cmdBuffers.size(); ++i) {
     m_pRhi->freeCommandBuffer(m_Forward._cmdBuffers[i]);
     m_pRhi->freeVkSemaphore(m_Forward._semaphores[i]);
   }
 }
 
 
-void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
+void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -3472,13 +3474,13 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
   renderPassCi.framebuffer = pbr_forwardFrameBuffer->getHandle();
   renderPassCi.renderPass = pbr_forwardRenderPass->getHandle();
   renderPassCi.pClearValues = clearValues.data();
-  renderPassCi.clearValueCount = static_cast<u32>(clearValues.size());
+  renderPassCi.clearValueCount = static_cast<U32>(clearValues.size());
   renderPassCi.renderArea.extent = windowExtent;
   renderPassCi.renderArea.offset = { 0, 0 };
 
   VkViewport viewport = {};
-  viewport.height = (r32)windowExtent.height;
-  viewport.width = (r32)windowExtent.width;
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
@@ -3492,8 +3494,8 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
       if (!(renderCmd._config & CMD_FORWARD_BIT) && !(renderCmd._config & CMD_RENDERABLE_BIT)) continue;
       R_ASSERT(renderCmd._pMeshData, "Null mesh data was passed to renderer.");
       MeshDescriptor* pMeshDesc = renderCmd._pMeshDesc;
-      b32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
-      b32 debugging = (renderCmd._config & CMD_DEBUG_BIT);
+      B32 Skinned = (renderCmd._config & CMD_SKINNED_BIT);
+      B32 debugging = (renderCmd._config & CMD_DEBUG_BIT);
       // Set up the render mesh
       MeshData* data = renderCmd._pMeshData;
 
@@ -3523,7 +3525,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, u32 frameIndex)
 
       if (debugging) {
         struct ivec4 {
-          i32 v[4];
+          I32 v[4];
         };
         ivec4 value;
         value.v[0] = renderCmd._debugConfig;
@@ -3690,7 +3692,7 @@ void Renderer::setUpPBR()
     writeInfo[4].pNext = nullptr;
   
     pbr_Set->allocate(m_pRhi->descriptorPool(), pbr_Layout);
-    pbr_Set->update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+    pbr_Set->update(static_cast<U32>(writeInfo.size()), writeInfo.data());
   }
 
   if (pbr_compSet) {
@@ -3726,10 +3728,10 @@ void Renderer::setUpPBR()
     writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
     pbr_compSet->allocate(m_pRhi->descriptorPool(), pbr_compDescLayout);
-    pbr_compSet->update(static_cast<u32>(writes.size()), writes.data());
+    pbr_compSet->update(static_cast<U32>(writes.size()), writes.data());
   }
 
-  for (u32 i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_Pbr._CmdBuffers.size(); ++i) {
     if (m_Pbr._CmdBuffers[i]) {
       m_pRhi->freeCommandBuffer(m_Pbr._CmdBuffers[i]);
       m_Pbr._CmdBuffers[i] = nullptr;
@@ -3745,7 +3747,7 @@ void Renderer::setUpPBR()
 
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  for (u32 i = 0; i < m_Pbr._Semas.size(); ++i) {
+  for (U32 i = 0; i < m_Pbr._Semas.size(); ++i) {
     m_Pbr._Semas[i] = m_pRhi->createVkSemaphore();
     m_Pbr._Semas[i]->initialize(semaCi);
     m_Pbr._CmdBuffers[i] = m_pRhi->createCommandBuffer();
@@ -3763,7 +3765,7 @@ void Renderer::cleanUpPBR()
   pbr_DescSetKey = nullptr;
   pbr_compSet = nullptr;
 
-  for (u32 i = 0; i < m_Pbr._Semas.size(); ++i) {
+  for (U32 i = 0; i < m_Pbr._Semas.size(); ++i) {
     m_pRhi->freeVkSemaphore(m_Pbr._Semas[i]);
     m_pRhi->freeCommandBuffer(m_Pbr._CmdBuffers[i]);
     m_Pbr._Semas[i] = nullptr;
@@ -3812,7 +3814,7 @@ void Renderer::setUpFinalOutputs()
     writeInfo[0].dstArrayElement = 0;
     writeInfo[0].pNext = nullptr;
 
-    offscreenImageDescriptor->update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+    offscreenImageDescriptor->update(static_cast<U32>(writeInfo.size()), writeInfo.data());
   }
 
   // Output info
@@ -3836,10 +3838,10 @@ void Renderer::setUpFinalOutputs()
     writeInfo[0].pTexelBufferView = nullptr;
     writeInfo[0].dstArrayElement = 0;
     writeInfo[0].pNext = nullptr;
-    output_descSetKey->update(static_cast<u32>(writeInfo.size()), writeInfo.data());
+    output_descSetKey->update(static_cast<U32>(writeInfo.size()), writeInfo.data());
   }
 
-  for (u32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
+  for (U32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
     if (m_pFinalFinishedSemas[i]) {
       m_pRhi->freeVkSemaphore(m_pFinalFinishedSemas[i]);
       m_pFinalFinishedSemas[i] = nullptr;
@@ -3855,7 +3857,7 @@ void Renderer::setUpFinalOutputs()
   VkSemaphoreCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-  for (u32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
+  for (U32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
     m_pFinalFinishedSemas[i] = m_pRhi->createVkSemaphore();
     m_pFinalFinishedSemas[i]->initialize(info); 
     m_pFinalCommandBuffers[i] = m_pRhi->createCommandBuffer();
@@ -3868,7 +3870,7 @@ void Renderer::checkCmdUpdate()
 {
   R_TIMED_PROFILE_RENDERER();
 
-  i32 frameIndex = m_pRhi->currentFrame();
+  I32 frameIndex = m_pRhi->currentFrame();
   VkCommandBufferBeginInfo begin{};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -3957,7 +3959,7 @@ void Renderer::cleanUpFinalOutputs()
   m_pRhi->freeDescriptorSet(offscreenDescriptorSet);
 
   final_DescSetKey = nullptr;
-  for (u32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
+  for (U32 i = 0; i < m_pFinalFinishedSemas.size(); ++i) {
     m_pRhi->freeVkSemaphore(m_pFinalFinishedSemas[i]);
     m_pFinalFinishedSemas[i] = nullptr;
     m_pRhi->freeCommandBuffer(m_pFinalCommandBuffers[i]);
@@ -3972,14 +3974,14 @@ void Renderer::updateSky()
 }
 
 
-void Renderer::updateLightBuffer(u32 frameIndex)
+void Renderer::updateLightBuffer(U32 frameIndex)
 {
   //R_TIMED_PROFILE_RENDERER();
 
   LightBuffer* pLights = m_pLights->getData();
-  i32 usedPointLights = 0;
-  i32 usedSpotLights = 0;
-  i32 usedDirectionLights = 0;
+  I32 usedPointLights = 0;
+  I32 usedSpotLights = 0;
+  I32 usedDirectionLights = 0;
   for (; usedPointLights < m_pointLights.Size() && usedPointLights < MAX_POINT_LIGHTS; ++usedPointLights) {
     pLights->_PointLights[usedPointLights] = m_pointLights[usedPointLights];
   }
@@ -4015,7 +4017,7 @@ void Renderer::updateLightBuffer(u32 frameIndex)
 }
 
 
-void Renderer::updateSceneDescriptors(u32 frameIndex)
+void Renderer::updateSceneDescriptors(U32 frameIndex)
 {
   // Update global data.
   m_pGlobal->getData()->_EnableAA = m_AntiAliasing;
@@ -4127,8 +4129,8 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
   }
 
   VkPresentModeKHR presentMode = m_pRhi->swapchainObject()->CurrentPresentMode();
-  u32 bufferCount = m_pRhi->bufferingCount();
-  b32 reconstruct = false;
+  U32 bufferCount = m_pRhi->bufferingCount();
+  B32 reconstruct = false;
 
   if (params) {
     switch (params->_Buffering) {
@@ -4206,7 +4208,7 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
 
 void Renderer::buildAsync()
 {
-  static b8 inProgress = false;
+  static B8 inProgress = false;
   // TODO(): building the command buffers asyncronously requires us
   // to allocate temp commandbuffers, build them, and then swap them with
   // the previous commandbuffers.
@@ -4214,7 +4216,7 @@ void Renderer::buildAsync()
     if (inProgress) { return; }
 
     inProgress = true;
-    u32 idx = m_pRhi->currentImageIndex();
+    U32 idx = m_pRhi->currentImageIndex();
 
     inProgress = false;
   });
@@ -4356,7 +4358,7 @@ void Renderer::freeMeshDescriptor(MeshDescriptor* descriptor)
 }
 
 
-void Renderer::enableHDR(b32 enable)
+void Renderer::enableHDR(B32 enable)
 {
   if (m_HDR._Enabled != enable) {
     m_HDR._Enabled = enable;
@@ -4407,8 +4409,8 @@ void Renderer::pushMeshRender(MeshRenderCmd& cmd)
   if (m_Minimized) return;
 
   Primitive* primitives = cmd._pPrimitives;
-  u32 count = cmd._primitiveCount;
-  for (u32 i = 0; i < count; ++i) {
+  U32 count = cmd._primitiveCount;
+  for (U32 i = 0; i < count; ++i) {
     Primitive& prim = primitives[i];
     PrimitiveRenderCmd primCmd = {};
     primCmd._config = cmd._config | prim._localConfigs;
@@ -4434,7 +4436,7 @@ void Renderer::pushMeshRender(MeshRenderCmd& cmd)
     R_ASSERT(cmd._pMeshDesc, "No mesh descriptor added to this command.");
     m_meshDescriptors.pushBack(cmd._pMeshDesc);
 
-    u32 config = primCmd._config;
+    U32 config = primCmd._config;
     if ((config & (CMD_TRANSPARENT_BIT | CMD_TRANSLUCENT_BIT | CMD_FORWARD_BIT | CMD_DEBUG_BIT))) {
       m_forwardCmdList.pushBack(primCmd);
     }
@@ -4458,7 +4460,7 @@ BufferUI* Renderer::getUiBuffer() const
 }
 
 
-TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
+TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
 {
   TextureCube* pTexCube = nullptr;
   if (texSize == 0) return pTexCube;
@@ -4503,11 +4505,11 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
 
     // TODO():
     Matrix4 view;
-    Matrix4 proj = Matrix4::perspective(static_cast<r32>(CONST_PI_HALF), 1.0f, 0.1f, 512.0f);
+    Matrix4 proj = Matrix4::perspective(static_cast<R32>(CONST_PI_HALF), 1.0f, 0.1f, 512.0f);
     //proj[1][1] *= -1;
     GlobalBuffer* pGlobal = m_pGlobal->getData();
-    i32 orx = pGlobal->_ScreenSize[0];
-    i32 ory = pGlobal->_ScreenSize[1];
+    I32 orx = pGlobal->_ScreenSize[0];
+    I32 ory = pGlobal->_ScreenSize[1];
     Matrix4 prevView = pGlobal->_View;
     Matrix4 prevProj = pGlobal->_Proj;
     Matrix4 prevViewProj = pGlobal->_ViewProj;
@@ -4646,7 +4648,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
 
       imgCopy.dstOffset = { 0, 0, 0 };
       imgCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imgCopy.dstSubresource.baseArrayLayer = static_cast<u32>(i);
+      imgCopy.dstSubresource.baseArrayLayer = static_cast<U32>(i);
       imgCopy.dstSubresource.layerCount = 1;
       imgCopy.dstSubresource.mipLevel = 0;
 
@@ -4704,7 +4706,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, u32 texSize)
       m_pRhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
     }
 
-  pTexCube->SetTextureHandle(cubeTexture);
+  pTexCube->setTextureHandle(cubeTexture);
 
   pGlobal->_ScreenSize[0] = orx;
   pGlobal->_ScreenSize[1] = ory;
@@ -4723,11 +4725,11 @@ void Renderer::takeSnapshot(const std::string name)
   Texture2D tex2d;
   tex2d.mRhi = m_pRhi;
   tex2d.texture = final_renderTargetKey;
-  tex2d.Save(name);
+  tex2d.save(name);
 }
 
 
-Texture2D* Renderer::generateBRDFLUT(u32 x, u32 y)
+Texture2D* Renderer::generateBRDFLUT(U32 x, U32 y)
 {
   Texture2D* tex2D = new Texture2D();
   Texture* texture = m_pRhi->createTexture();
@@ -4773,8 +4775,8 @@ Texture2D* Renderer::generateBRDFLUT(u32 x, u32 y)
   cmd.begin(beginInfo);
 
   GlobalBuffer* g = m_pGlobal->getData();
-  i32 prevx = g->_ScreenSize[0];
-  i32 prevy = g->_ScreenSize[1];
+  I32 prevx = g->_ScreenSize[0];
+  I32 prevy = g->_ScreenSize[1];
   g->_ScreenSize[0] = x;
   g->_ScreenSize[1] = y;
   m_pGlobal->update(m_pRhi, 0);
@@ -4808,7 +4810,7 @@ void Renderer::pushParticleSystem(ParticleSystem* system)
 }
 
 
-ParticleSystem* Renderer::createParticleSystem(u32 maxInitParticleCount)
+ParticleSystem* Renderer::createParticleSystem(U32 maxInitParticleCount)
 {
   ParticleSystem* particleSystem = new ParticleSystem();
   particleSystem->initialize(m_pRhi, m_particleEngine->getParticleSystemDescriptorLayout(), maxInitParticleCount);
@@ -4866,7 +4868,7 @@ void Renderer::pushSimpleRender(SimpleRenderCmd& cmd)
 
 void Renderer::updateRenderResolution(RenderResolution resolution)
 {
-  u32 w, h;
+  U32 w, h;
   switch ( resolution ) {
     case Resolution_800x600: {
       w = 800;

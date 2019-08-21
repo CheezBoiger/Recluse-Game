@@ -69,7 +69,7 @@ void* FreeListAllocator::allocate(size_t Sz, size_t Align)
         m_MemBlocks = TraverseBlock->Next;
       }
     } else {
-      MemBlock* NextBlock = (MemBlock*)((u8*)(TraverseBlock + 1) + TotalSz);
+      MemBlock* NextBlock = (MemBlock*)((U8*)(TraverseBlock + 1) + TotalSz);
       NextBlock->Sz = TraverseBlock->Sz - TotalSz;
       NextBlock->Next = TraverseBlock->Next;
       if (PrevBlock) {

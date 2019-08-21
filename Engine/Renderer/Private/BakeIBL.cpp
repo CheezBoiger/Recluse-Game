@@ -124,7 +124,7 @@ void BakeIBL::cleanUpComputePipelines(VulkanRHI* pRhi)
 }
 
 
-void BakeIBL::renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex)
+void BakeIBL::renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, U32 frameIndex)
 {
   if (!pCmd || !target) return;
 
@@ -152,6 +152,6 @@ void BakeIBL::updateTargetBRDF(Texture* target)
   writes[0].dstBinding = 0;
   writes[0].dstArrayElement = 0;
   writes[0].pImageInfo = &imgInfo;
-  m_pBRDFSet->update(static_cast<u32>(writes.size()), writes.data());
+  m_pBRDFSet->update(static_cast<U32>(writes.size()), writes.data());
 }
 } // Recluse

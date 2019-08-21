@@ -34,7 +34,7 @@ struct TestStruct
 };
 
 
-b8 TestAllocators()
+B8 TestAllocators()
 {
   // Testing the data block.
   void* DataBlock = malloc(DATA_BLOCK_SZ);

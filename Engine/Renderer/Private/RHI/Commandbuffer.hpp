@@ -29,75 +29,75 @@ public:
                             VkImageLayout srcImageLayout, 
                             VkImage dstImage, 
                             VkImageLayout dstImageLayout, 
-                            u32 regionCount, 
+                            U32 regionCount, 
                             const VkImageCopy* pRegions);
-  void            copyBuffer(VkBuffer src, VkBuffer dst, u32 regionCount, const VkBufferCopy* regions);
+  void            copyBuffer(VkBuffer src, VkBuffer dst, U32 regionCount, const VkBufferCopy* regions);
 
   void            copyBufferToImage(VkBuffer src, 
                                     VkImage img, 
                                     VkImageLayout imgLayout, 
-                                    u32 regionCount, 
+                                    U32 regionCount, 
                                     const VkBufferImageCopy* regions);
   void            copyImageToBuffer(VkImage srcImage, 
                                     VkImageLayout srcImageLayout, 
                                     VkBuffer dstBuffer, 
-                                    u32 regionCount, 
+                                    U32 regionCount, 
                                     VkBufferImageCopy* pRegions);
 
   void            pipelineBarrier(VkPipelineStageFlags srcStageMask, 
                                   VkPipelineStageFlags dstStageMask,  
                                   VkDependencyFlags dependencyFlags,
-                                  u32 memoryBarrierCount, 
+                                  U32 memoryBarrierCount, 
                                   const VkMemoryBarrier* memoryBarriers, 
-                                  u32 bufferMemoryBarrierCount,
+                                  U32 bufferMemoryBarrierCount,
                                   const VkBufferMemoryBarrier* bufferMemoryBarriers, 
-                                  u32 imageMemoryBarrierCount, 
+                                  U32 imageMemoryBarrierCount, 
                                   const VkImageMemoryBarrier* imageMemoryBarriers);
 
   void            beginRenderPass(const VkRenderPassBeginInfo& renderpassInfo, VkSubpassContents contents);
   void            endRenderPass();
   void            bindPipeline(VkPipelineBindPoint bindPoint, VkPipeline pipeline);
-  void            draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance);
-  void            drawIndexed(u32 indexCount, 
-                              u32 instanceCount, 
-                              u32 firstIndex, 
-                              i32 vertexOffset, 
-                              u32 firstInstance);
+  void            draw(U32 vertexCount, U32 instanceCount, U32 firstVertex, U32 firstInstance);
+  void            drawIndexed(U32 indexCount, 
+                              U32 instanceCount, 
+                              U32 firstIndex, 
+                              I32 vertexOffset, 
+                              U32 firstInstance);
 
-  void            bindVertexBuffers(u32 firstBinding, 
-                                    u32 bindingCount, 
+  void            bindVertexBuffers(U32 firstBinding, 
+                                    U32 bindingCount, 
                                     const VkBuffer* buffers, 
                                     const VkDeviceSize* offsets);
   void            bindIndexBuffer(VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType);
 
   void            bindDescriptorSets(VkPipelineBindPoint bindPoint, 
                                      VkPipelineLayout layout, 
-                                     u32 firstSet, 
-                                     u32 descriptorSetCount,
+                                     U32 firstSet, 
+                                     U32 descriptorSetCount,
                                      const VkDescriptorSet* descriptorSets, 
-                                     u32 dynamicOffsetCount, 
-                                     const u32* dynamicOffsets);
-  void            setScissor(u32 firstScissor, u32 scissorCount, const VkRect2D* pScissors);
-  void            setViewPorts(u32 firstViewPort, u32 viewPortCount, const VkViewport* viewports);
+                                     U32 dynamicOffsetCount, 
+                                     const U32* dynamicOffsets);
+  void            setScissor(U32 firstScissor, U32 scissorCount, const VkRect2D* pScissors);
+  void            setViewPorts(U32 firstViewPort, U32 viewPortCount, const VkViewport* viewports);
 
-  void            beginQuery(VkQueryPool queryPool, u32 query, VkQueryControlFlags flags);
-  void            endQuery(VkQueryPool queryPool, u32 query);
+  void            beginQuery(VkQueryPool queryPool, U32 query, VkQueryControlFlags flags);
+  void            endQuery(VkQueryPool queryPool, U32 query);
 
   void            pushConstants(VkPipelineLayout getLayout, 
                                 VkShaderStageFlags StageFlags, 
-                                u32 Offset, 
-                                u32 Size, 
+                                U32 Offset, 
+                                U32 Size, 
                                 const void* p_Values);
-  void            dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ);
+  void            dispatch(U32 groupCountX, U32 groupCountY, U32 groupCountZ);
 
   void            clearColorImage(VkImage image, 
                                   VkImageLayout imageLayout, 
                                   const VkClearColorValue* pColor, 
-                                  u32 rangeCount, 
+                                  U32 rangeCount, 
                                   const VkImageSubresourceRange* pRanges);
-  void            clearAttachments(u32 attachmentCount, 
+  void            clearAttachments(U32 attachmentCount, 
                                    const VkClearAttachment* pAttachments, 
-                                   u32 rectCount, 
+                                   U32 rectCount, 
                                    const VkClearRect* pRects);
   void            reset(const VkCommandBufferResetFlags flags);
   void            nextSubpass(VkSubpassContents contents);
@@ -105,17 +105,17 @@ public:
                             VkImageLayout srcImageLayout, 
                             VkImage dstImage, 
                             VkImageLayout dstImageLayout, 
-                            u32 regionCount, 
+                            U32 regionCount, 
                             const VkImageBlit* pRegions, 
                             VkFilter filter);
 
   VkCommandBuffer getHandle() { return mHandle; }
   VkCommandPool   getPoolOwner() { return mPoolOwner; }
-  b32             recording() { return mRecording; }
+  B32             recording() { return mRecording; }
 
 private:
   VkCommandBuffer mHandle;
   VkCommandPool   mPoolOwner;
-  b32             mRecording;
+  B32             mRecording;
 };
 } // Recluse 

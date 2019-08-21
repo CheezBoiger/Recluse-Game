@@ -5,7 +5,7 @@
 #include "Core/Utility/Module.hpp"
 
 
-#define SECONDS_PER_FRAME_TO_FPS(spf) ((u32)((1.0 / (spf)) + 0.5f)) 
+#define SECONDS_PER_FRAME_TO_FPS(spf) ((U32)((1.0 / (spf)) + 0.5f)) 
 
 namespace Recluse {
 
@@ -18,19 +18,19 @@ public:
   void onStartUp() override;
 
   // Get Time in seconds.
-  static r64  currentTime();
+  static R64  currentTime();
 
   // Update delta time.
   static void update();
 
   // Scaled time, which is multiplied to our other times to scale.
-  static r64 scaleTime;
+  static R64 scaleTime;
 
   // Delta time, in seconds, between frames.
-  static r64 deltaTime;
+  static R64 deltaTime;
 
   // Fix time, in seconds, to which some engine modules rely on, such as physics.
-  static r64 fixTime;
+  static R64 fixTime;
 
   // Start up the time.
   static void start() { Time::instance().startUp(); }

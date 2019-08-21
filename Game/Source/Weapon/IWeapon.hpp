@@ -149,12 +149,12 @@ enum ArmorReduce {
 };
 
 
-typedef u32 WeaponTypeBits;
-typedef u32 BulletTypeBits;
-typedef u32 DamageEffectsBits;
-typedef u32 ArmorReduceBits;
-typedef u32 ArmorMaterialBits;
-typedef u32 DamageTypeBits;
+typedef U32 WeaponTypeBits;
+typedef U32 BulletTypeBits;
+typedef U32 DamageEffectsBits;
+typedef U32 ArmorReduceBits;
+typedef U32 ArmorMaterialBits;
+typedef U32 DamageTypeBits;
 
 
 // Bullet interface.
@@ -165,13 +165,13 @@ public:
 
   BulletTypeBits GetBulletType() const { return m_bulletType; }
 
-  virtual void update(r32 tick) override { }
+  virtual void update(R32 tick) override { }
 
 private:
   BulletTypeBits  m_bulletType;
   DamageTypeBits  m_damageType;
-  r32             m_damages[32];
-  r32             m_critFactor;
+  R32             m_damages[32];
+  R32             m_critFactor;
   IActor*         m_pOwnerRef;
 };
 
@@ -184,16 +184,16 @@ public:
 
   WeaponTypeBits GetWeaponType() const { return m_weaponType; }
 
-  virtual void update(r32 tick) override { }
+  virtual void update(R32 tick) override { }
 
 private:  
   std::string           m_name;
   WeaponTypeBits        m_weaponType;
   BulletTypeBits        m_bulletType;
   DamageTypeBits        m_damageType;
-  r32                   m_minDamage[32];
-  r32                   m_maxDamage[32];
-  r32                   m_critFactor;
+  R32                   m_minDamage[32];
+  R32                   m_maxDamage[32];
+  R32                   m_critFactor;
   IActor*               m_pOwnerRef;
 }; 
 
@@ -207,7 +207,7 @@ public:
   ArmorMaterialBits GetArmorMaterial() const { return m_armorMaterial; }
   ArmorReduceBits GetArmorReductions() const { return m_armorReduce; }
 
-  virtual void update(r32 tick) override { }
+  virtual void update(R32 tick) override { }
 
 private:
   std::string         m_name;

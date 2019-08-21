@@ -61,7 +61,7 @@ class BakeIBL;
 struct SamplerInfo;
 struct LightProbe;
 
-typedef u32 renderer_key_t;
+typedef U32 renderer_key_t;
 
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
@@ -69,20 +69,20 @@ typedef u32 renderer_key_t;
 // stuff on screen, and to display pretty graphics!
 class Renderer : public EngineModule<Renderer> {
   // Maximum number of workers allowed in renderer for multithreaded rendering.
-  static const u32  kMaxRendererThreadWorkerCount = 3;
+  static const U32  kMaxRendererThreadWorkerCount = 3;
   static const char* appName;
 public:
 
   Renderer();
   ~Renderer();
 
-  b32                initialize(Window* window, const GraphicsConfigParams* params = nullptr);
-  b32                isRendering() const { return m_Rendering; }
+  B32                initialize(Window* window, const GraphicsConfigParams* params = nullptr);
+  B32                isRendering() const { return m_Rendering; }
 
   void              setAppName(const char* name) { appName = name; }
 
   void              takeSnapshot(const std::string screenshotname);
-  void              setHardwareHints(const u32 rhiBits) { m_rhiBits = rhiBits; }
+  void              setHardwareHints(const U32 rhiBits) { m_rhiBits = rhiBits; }
 
   // Configure the renderer, resulting either add/removing features of the renderer such as 
   // certain pipelines like shadowing, or quality of the display. Pass nullptr in order 
@@ -136,7 +136,7 @@ public:
   // Create a material descriptor.
   MaterialDescriptor* createMaterialDescriptor();
 
-  ParticleSystem* createParticleSystem(u32 maxInitParticleCount = 100);
+  ParticleSystem* createParticleSystem(U32 maxInitParticleCount = 100);
 
   // Create a UI descriptor.
   UIDescriptor*     createUIDescriptor();
@@ -183,7 +183,7 @@ public:
   // Takes the position of where to bake the cubemap in, along with the texSize of the cubemap
   // dimensions for each texture surface. When Calling this function, will render all objects currently
   // in the render queue.
-  TextureCube*      bakeEnvironmentMap(const Vector3& position, u32 texSize = 512u);
+  TextureCube*      bakeEnvironmentMap(const Vector3& position, U32 texSize = 512u);
 
   // Offline light probe baking. We can effectively then use this probe in the scene
   // to render our mesh object with fast global illumination. This generates an irradiance
@@ -195,15 +195,15 @@ public:
   ReflectionProbe*  bakeReflectionProbe(const TextureCube* envmap);
 
   // Generate a BRDF LUT with given lookup size. Defaults to 512x512.
-  Texture2D*        generateBRDFLUT(u32 x = 512u, u32 y = 512u);
+  Texture2D*        generateBRDFLUT(U32 x = 512u, U32 y = 512u);
 
   // Window reference.
   Window*           getWindowRef() { return m_pWindow; }
   UIOverlay*        getOverlay() { return m_pUI; }  
 
   // Check if this renderer is initialized with the window reference given.
-  b32  isInitialized() { return m_Initialized; }
-  b32  usingAntialiasing() { return m_AntiAliasing; }
+  B32  isInitialized() { return m_Initialized; }
+  B32  usingAntialiasing() { return m_AntiAliasing; }
 
   // Get the rendering hardware interface used in this renderer.
   VulkanRHI* getRHI() { return m_pRhi; }
@@ -215,7 +215,7 @@ public:
   GraphicsConfigParams& getCurrentGraphicsConfigs() { return m_currentGraphicsConfigs; }
 
   // setEnable HDR Post processing.
-  void enableHDR(b32 enable);
+  void enableHDR(B32 enable);
 
   // Get this renderer's render quad.
   RenderQuad* getRenderQuad() { return &m_RenderQuad; }
@@ -246,9 +246,9 @@ public:
 
   // NOTE(): If brdf, or envmap, was cleaned up before cleaning up the engine, be sure to 
   // call this first, before freeing the set maps!
-  void              usePreRenderSkyboxMap(b32 enable);
+  void              usePreRenderSkyboxMap(B32 enable);
 
-  b32               usingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }
+  B32               usingPreRenderSkyboxMap() const { return m_usePreRenderSkybox; }
 
   // Builds/Updates commandbuffers for use in renderer. Very effective if you need to perform
   // a full update on the scene as a result of an application change, such as a window change. 
@@ -267,10 +267,10 @@ public:
   void              clearCmdLists();
 
   // Get backbuffer render width. This is different from window display width!
-  u32 getRenderWidth() const { return m_renderWidth; }
+  U32 getRenderWidth() const { return m_renderWidth; }
 
   // Get backbuffer render height. This is different from window display height!
-  u32 getRenderHeight() const { return m_renderHeight; }
+  U32 getRenderHeight() const { return m_renderHeight; }
 
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
@@ -289,25 +289,25 @@ private:
   void              cleanUpDescriptorSetLayouts();
   void              cleanUpGraphicsPipelines();
   void              cleanUpFrameBuffers();
-  void              cleanUpRenderTextures(b32 fullCleanup);
+  void              cleanUpRenderTextures(B32 fullCleanup);
   void              cleanUpOffscreen();
   void              cleanUpFinalOutputs();
   void              setUpFinalOutputs();
   void              setUpForwardPBR();
-  void              setUpRenderTextures(b32 fullSetup);
+  void              setUpRenderTextures(B32 fullSetup);
   void              setUpOffscreen();
   void              setUpDebugPass();
   void              cleanUpDebugPass();
   void              generateDebugCmds();
   void              setUpPBR();
-  void              setUpSkybox(b32 justSemaphores);
-  void              generateOffScreenCmds(CommandBuffer* buf, u32 frameIndex);
-  void              generatePbrCmds(CommandBuffer* buf, u32 frameIndex);
-  void              generateShadowCmds(CommandBuffer* buf, u32 frameIndex);
-  void              generateHDRCmds(CommandBuffer* buf, u32 frameIndex);
-  void              generateSkyboxCmds(CommandBuffer* buf, u32 frameIndex);
+  void              setUpSkybox(B32 justSemaphores);
+  void              generateOffScreenCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generatePbrCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateShadowCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateHDRCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateSkyboxCmds(CommandBuffer* buf, U32 frameIndex);
   void              generateFinalCmds(CommandBuffer* buf);
-  void              generateForwardPBRCmds(CommandBuffer* buf, u32 frameIndex);
+  void              generateForwardPBRCmds(CommandBuffer* buf, U32 frameIndex);
   void              updateRenderResolution(RenderResolution resolution);
 
   void              buildOffScreenCmdList();
@@ -318,18 +318,18 @@ private:
   void              buildForwardPBRCmdList();
   void              buildFinalCmdLists();
   void              updateGlobalIlluminationBuffer();
-  void updateLightBuffer(u32 frameIndex);
+  void updateLightBuffer(U32 frameIndex);
 
-  void              setUpDownscale(b32 FullSetUp);
-  void              cleanUpDownscale(b32 FullCleanUp);
+  void              setUpDownscale(B32 FullSetUp);
+  void              cleanUpDownscale(B32 FullCleanUp);
   void              updateRuntimeConfigs(const GraphicsConfigParams* params);
-  void              setUpHDR(b32 fullSetup);
+  void              setUpHDR(B32 fullSetup);
   void              cleanUpForwardPBR();
-  void              cleanUpHDR(b32 fullCleanup);
+  void              cleanUpHDR(B32 fullCleanup);
   void              cleanUpPBR();
   void              updateSkyboxCubeMap();
-  void              cleanUpSkybox(b32 justSemaphores);
-  void              updateSceneDescriptors(u32 frameIndex);
+  void              cleanUpSkybox(B32 justSemaphores);
+  void              updateSceneDescriptors(U32 frameIndex);
   void              renderOverlay();
   void              renderPrimaryShadows();
   void              checkCmdUpdate();
@@ -338,7 +338,7 @@ private:
   
   // Signals that tell if renderer needs to update any static data. Is cleaned out every 
   // frame!
-  b32               staticNeedsUpdate() { return m_staticUpdate; }
+  B32               staticNeedsUpdate() { return m_staticUpdate; }
   void              signalStaticUpdate() { m_staticUpdate = true; }
   void              cleanStaticUpdate() { m_staticUpdate = false; }
 
@@ -392,13 +392,13 @@ private:
     ParamsHDR                     _pushCnst;
     std::vector<CommandBuffer*>   _CmdBuffers;
     std::vector<Semaphore*>       _semaphores;
-    b32                           _Enabled;
+    B32                           _Enabled;
   } m_HDR;
 
   struct {
-    i32                           _Horizontal;
-    r32                           _Strength;
-    r32                           _Scale;
+    I32                           _Horizontal;
+    R32                           _Strength;
+    R32                           _Scale;
   } m_Downscale;
 
   struct {
@@ -429,17 +429,17 @@ private:
   LightProbe*           m_globalLightProbe;
 
 
-  u32                   m_renderWidth;
-  u32                   m_renderHeight;
-  u32                   m_workGroupSize;
-  u32                   m_rhiBits;
-  b32                   m_staticUpdate;
-  b32                   m_Rendering           : 1;
-  b32                   m_Initialized         : 1;
-  b32                   m_AntiAliasing        : 1; 
-  b32                   m_Minimized           : 1;
-  b32                   m_multithreaded       : 1;
-  b32                   m_usePreRenderSkybox  : 1;
+  U32                   m_renderWidth;
+  U32                   m_renderHeight;
+  U32                   m_workGroupSize;
+  U32                   m_rhiBits;
+  B32                   m_staticUpdate;
+  B32                   m_Rendering           : 1;
+  B32                   m_Initialized         : 1;
+  B32                   m_AntiAliasing        : 1; 
+  B32                   m_Minimized           : 1;
+  B32                   m_multithreaded       : 1;
+  B32                   m_usePreRenderSkybox  : 1;
 };
 
 Renderer&           gRenderer();

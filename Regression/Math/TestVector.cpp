@@ -9,7 +9,7 @@ using namespace Recluse;
 namespace Test {
 
 
-b8 ToleranceSuccess(const Vector3& a, const Vector3& b)
+B8 ToleranceSuccess(const Vector3& a, const Vector3& b)
 {
   if (a.x > b.x + CONST_TOLERANCE || a.x < b.x - CONST_TOLERANCE) {
     Log() << "Vector addition failed!\n";
@@ -31,14 +31,14 @@ b8 ToleranceSuccess(const Vector3& a, const Vector3& b)
 
 
 
-b8 BasicVectorMath()
+B8 BasicVectorMath()
 {
   Log() << "Vector Math\n";
 
   Log() << "Vector3 addition\n";
-  r32 ex = 4.4777f;
-  r32 ey = 1.3003f;
-  r32 ez = -132.222f;
+  R32 ex = 4.4777f;
+  R32 ey = 1.3003f;
+  R32 ez = -132.222f;
 
   Vector3 a3(3.4444f,  2.3333f, -132.222f);
   Vector3 b3(1.0333f, -1.033f,   0.0f);
@@ -51,9 +51,9 @@ b8 BasicVectorMath()
   }
 
   Log() << "Vector3 subtraction\n";
-  r32 sx = -2.4111f;
-  r32 sy = -3.3663f;
-  r32 sz = 132.222f;
+  R32 sx = -2.4111f;
+  R32 sy = -3.3663f;
+  R32 sz = 132.222f;
   Vector3 c4 = b3 - a3;
   Log() << "Calculated Subtraction Vector: " << c4 << "\n";
   if (!ToleranceSuccess(c4, Vector3(sx, sy, sz))) {

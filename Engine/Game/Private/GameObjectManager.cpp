@@ -4,7 +4,7 @@
 
 namespace Recluse {
 
-u64 GameObjectManager::gGameObjectNumber = 0;
+U64 GameObjectManager::gGameObjectNumber = 0;
 
 GameObjectManager& gGameObjectManager()
 {

@@ -23,7 +23,7 @@ struct AnimClipState;
 // any blend jobs that may need to be incorporated to the animation poses, and handle to the game
 // object that is associated with it.
 struct AnimHandle {
-  AnimHandle(uuid64 uuid)
+  AnimHandle(UUID64 uuid)
     : _uuid(uuid)
     , _paletteSz(64)
     , _isPerMesh(false) { 
@@ -35,10 +35,10 @@ struct AnimHandle {
   }
 
   Matrix4           _finalPalette[64];
-  std::vector<r32>  _finalMorphs;
-  u32               _paletteSz;
-  u32               _isPerMesh;
-  uuid64            _uuid;
+  std::vector<R32>  _finalMorphs;
+  U32               _paletteSz;
+  U32               _isPerMesh;
+  UUID64            _uuid;
   AnimClipState     _currState;
 };
 
@@ -54,8 +54,8 @@ struct AnimBlendLayer {
   // Local transforms that are outputted by the AnimSample job.
   Matrix4     _transforms[64];
   // Individual joint weight for per joint blending.
-  r32         _jointWeights[64];
-  r32         _weight;
+  R32         _jointWeights[64];
+  R32         _weight;
 };
 
 
@@ -83,10 +83,10 @@ public:
   void onShutDown() override;
 
   // Update event.
-  void updateState(r64 dt);
+  void updateState(R64 dt);
 
   // Create an animation object with specified gameobject id.
-  AnimHandle* createAnimHandle(uuid64 id);
+  AnimHandle* createAnimHandle(UUID64 id);
 
   // Free an animation object from the animation engine.
   void freeAnimHandle(AnimHandle* pObj);
@@ -94,30 +94,30 @@ public:
 
 protected:
   
-  void doSampleJob(AnimJobSubmitInfo& job, r32 gt);
-  void doBlendJob(AnimJobSubmitInfo& job, r32 gt);
+  void doSampleJob(AnimJobSubmitInfo& job, R32 gt);
+  void doBlendJob(AnimJobSubmitInfo& job, R32 gt);
   void doSkeletalAnimation( AnimJobSubmitInfo& job, 
                             Skeleton* pSkeleton, 
-                            r32 lt,
-                            u32 currPoseIdx, 
-                            u32 nextPoseIdx);
+                            R32 lt,
+                            U32 currPoseIdx, 
+                            U32 nextPoseIdx);
   void doMechanicalAnimation( AnimJobSubmitInfo& job,
-                              r32 lt,
-                              u32 currPoseIdx,
-                              u32 nextPoseIdx);
+                              R32 lt,
+                              U32 currPoseIdx,
+                              U32 nextPoseIdx);
   
 
   void applySkeletonPose(Matrix4* pOutput, Matrix4 globalMatrix, Skeleton* pSkeleton);
-  void getCurrentAndNextPoseIdx(u32* outCurr, u32* outNext, AnimClip* pClip, r32 lt);
-  b32  emptyPoseSamples(AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx);
-  void applyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx, r32 lt);
+  void getCurrentAndNextPoseIdx(U32* outCurr, U32* outNext, AnimClip* pClip, R32 lt);
+  B32  emptyPoseSamples(AnimClip* pClip, I32 currPoseIdx, I32 nextPoseIdx);
+  void applyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, I32 currPoseIdx, I32 nextPoseIdx, R32 lt);
 
 private:
 
-  Matrix4 linearInterpolate(JointPose* currPose, JointPose* nextPose, r32 currTime, r32 nextTime, r32 t);
+  Matrix4 linearInterpolate(JointPose* currPose, JointPose* nextPose, R32 currTime, R32 nextTime, R32 t);
 
   // Handler to the animation objects generated currently in use.
-  std::unordered_map<uuid64, AnimHandle*> m_animObjects;
+  std::unordered_map<UUID64, AnimHandle*> m_animObjects;
 
   std::mutex m_sampleJobMutex;
   std::mutex m_blendJobMutex;
@@ -125,7 +125,7 @@ private:
 
   // Sample jobs currently in place.
   std::vector<AnimJobSubmitInfo> m_sampleJobs;
-  //u32                                           m_currSampleJobCount;
+  //U32                                           m_currSampleJobCount;
 
   // Number of blend jobs to be executed after animation stepping.
   std::vector<AnimJobSubmitInfo> m_blendJobs;

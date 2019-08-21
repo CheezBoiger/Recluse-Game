@@ -19,7 +19,7 @@ public:
   }
 
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
   }
   

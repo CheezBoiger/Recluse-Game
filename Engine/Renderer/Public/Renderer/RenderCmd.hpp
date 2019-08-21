@@ -70,8 +70,8 @@ enum UiType {
 };
 
   
-typedef u32 CmdConfigBits;
-typedef u32 DebugConfigBits;
+typedef U32 CmdConfigBits;
+typedef U32 DebugConfigBits;
 
 
 struct MeshRenderCmd {
@@ -89,8 +89,8 @@ struct MeshRenderCmd {
   MorphTarget*            _pMorph1;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
-  u32                     _instances;
-  u32                     _primitiveCount;
+  U32                     _instances;
+  U32                     _primitiveCount;
   CmdConfigBits           _config;
   DebugConfigBits         _debugConfig;       // isDebug only if CMD_DEBUG_BIT is on.
 };
@@ -103,7 +103,7 @@ struct PrimitiveRenderCmd {
   MorphTarget*            _pMorph1;
   MeshDescriptor*         _pMeshDesc;
   JointDescriptor*        _pJointDesc;
-  u32                     _instances;
+  U32                     _instances;
   CmdConfigBits           _config;
   DebugConfigBits         _debugConfig;
 };
@@ -141,10 +141,10 @@ struct UiRenderCmd {
 struct UiText : public UiRenderCmd {
   UiText() { _uiType = UI_TEXT; }
 
-  r32         _x;
-  r32         _y;
-  r32         _width;
-  r32         _height;
+  R32         _x;
+  R32         _y;
+  R32         _width;
+  R32         _height;
   char        _str[128];
   size_t      _sz;
   Color4      _bgColor;
@@ -160,28 +160,28 @@ struct UiBeginCanvasInfo : public UiRenderCmd {
   Color4        _canvasBorderColor;
   Color4        _headerColor;
   char          _str[128];
-  r32           _x;
-  r32           _y;
-  r32           _width;
-  r32           _height;
+  R32           _x;
+  R32           _y;
+  R32           _width;
+  R32           _height;
 };
 
 
 struct UiImageInfo : public UiRenderCmd {
   UiImageInfo() { _uiType = UI_IMAGE; }
 
-  r32             _x;
-  r32             _y;
-  r32             _width;
-  r32             _height;
-  u16             _region[4];
+  R32             _x;
+  R32             _y;
+  R32             _width;
+  R32             _height;
+  U16             _region[4];
   UIDescriptor*   _descriptor;
 };
 
 
 class BufferUI {
 public:
-  BufferUI(u32 id)
+  BufferUI(U32 id)
     : m_id(id) { }
 
   void initialize();
@@ -190,9 +190,9 @@ public:
   void EmitText(const UiText& text);
   void EmitImage(const UiImageInfo& imgInfo);
 
-  u32   getId() const { return m_id; }
+  U32   getId() const { return m_id; }
 
 private:
-  u32 m_id;
+  U32 m_id;
 };
 } // Recluse

@@ -25,19 +25,19 @@ void Sky::setRayleigh(const Vector3& bR)
 }
 
 
-void Sky::setMieDistrib(r32 d)
+void Sky::setMieDistrib(R32 d)
 {
   gRenderer().getGlobalData()->_MieDist = d; gRenderer().updateSky();
 }
 
 
-void Sky::setScatterStrength(r32 s)
+void Sky::setScatterStrength(R32 s)
 {
   gRenderer().getGlobalData()->_fScatterStrength = s; gRenderer().updateSky();
 }
 
 
-void Sky::setSkyIntensity(r32 i)
+void Sky::setSkyIntensity(R32 i)
 {
   gRenderer().getGlobalData()->_fIntensity = i; gRenderer().updateSky();
 }

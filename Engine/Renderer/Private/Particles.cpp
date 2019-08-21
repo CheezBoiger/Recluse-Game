@@ -47,7 +47,7 @@ VkVertexInputBindingDescription GetParticleTrailBindingDescription()
 
 std::vector<VkVertexInputAttributeDescription> GetParticleAttributeDescription()
 {
-  u32 offset = 0;
+  U32 offset = 0;
   std::vector<VkVertexInputAttributeDescription> description(8);
   // _position
   description[0] = { };
@@ -120,7 +120,7 @@ void ParticleSystem::setUpGpuBuffer(VulkanRHI* pRhi)
   VkBufferCreateInfo gpuBufferCi = {};
   gpuBufferCi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   gpuBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<u32>(_particleConfig._maxParticles));
+  gpuBufferCi.size = VkDeviceSize(sizeof(Particle) * static_cast<U32>(_particleConfig._maxParticles));
   gpuBufferCi.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
     | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
     | VK_BUFFER_USAGE_TRANSFER_DST_BIT
@@ -139,9 +139,9 @@ void ParticleSystem::cleanUpGpuBuffer(VulkanRHI* pRhi)
 
 
 void ParticleSystem::initialize(VulkanRHI* pRhi, 
-  DescriptorSetLayout* particleLayout, u32 initialParticleCount)
+  DescriptorSetLayout* particleLayout, U32 initialParticleCount)
 {
-  _particleConfig._maxParticles = static_cast<r32>(initialParticleCount);
+  _particleConfig._maxParticles = static_cast<R32>(initialParticleCount);
   _particleConfig._angleThreshold = 0.0f;
   _particleConfig._fadeAt = 10.0f;
   _particleConfig._fadeThreshold = 1.0f;
@@ -224,7 +224,7 @@ void ParticleSystem::getParticleState(Particle* output)
   pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
   Particle* particles = (Particle* )staging.getMapped();
-  for (u32 i = 0; i < _particleConfig._maxParticles; ++i) {
+  for (U32 i = 0; i < _particleConfig._maxParticles; ++i) {
     output[i] = particles[i];
   }
 
@@ -246,7 +246,7 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
   } 
 
   if ((m_updateBits & PARTICLE_VERTEX_BUFFER_UPDATE_BIT) && m_updateFunct) {
-    m_updateFunct(&_particleConfig, particles.data(), (u32)particles.size());
+    m_updateFunct(&_particleConfig, particles.data(), (U32)particles.size());
   }
 
   {
@@ -338,7 +338,7 @@ void ParticleSystem::updateDescriptor()
   writes[2].descriptorCount = 1;
   writes[2].dstBinding = 2;
 
-  m_pDescriptorSet->update(static_cast<u32>(writes.size()), writes.data());
+  m_pDescriptorSet->update(static_cast<U32>(writes.size()), writes.data());
 }
 
 
@@ -421,7 +421,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   vertexCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   auto attribs = GetParticleAttributeDescription();
   auto binding = GetParticleBindingDescription();
-  vertexCi.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
+  vertexCi.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
   vertexCi.vertexBindingDescriptionCount = 1;
   vertexCi.pVertexBindingDescriptions = &binding;
   vertexCi.pVertexAttributeDescriptions = attribs.data();
@@ -504,7 +504,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
     VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
     VK_BLEND_OP_ADD
   );
-  colorBlendCi.attachmentCount = static_cast<u32>(colorBlendAttachments.size());
+  colorBlendCi.attachmentCount = static_cast<U32>(colorBlendAttachments.size());
   colorBlendCi.pAttachments = colorBlendAttachments.data();
   colorBlendCi.logicOpEnable = VK_FALSE;
   colorBlendCi.logicOp = VK_LOGIC_OP_COPY;
@@ -541,8 +541,8 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO; 
   VkViewport viewport = { };
   VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
-  viewport.width = static_cast<r32>(extent.width);
-  viewport.height = static_cast<r32>(extent.height);
+  viewport.width = static_cast<R32>(extent.width);
+  viewport.height = static_cast<R32>(extent.height);
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.minDepth = 0.0f;
@@ -588,7 +588,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   graphicsCi.renderPass = pRenderPass->getHandle();
   graphicsCi.basePipelineHandle = VK_NULL_HANDLE;
   graphicsCi.basePipelineIndex = -1;
-  graphicsCi.stageCount = static_cast<u32>(shaderStages.size());
+  graphicsCi.stageCount = static_cast<U32>(shaderStages.size());
   graphicsCi.pStages = shaderStages.data();
 
   VkPipelineLayoutCreateInfo pipelineLayoutCi = { };
@@ -638,7 +638,7 @@ void ParticleEngine::initialize(VulkanRHI* pRhi)
     bindings[2].pImmutableSamplers = nullptr;
     bindings[2].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-    dsLayoutCi.bindingCount = static_cast<u32>( bindings.size() );
+    dsLayoutCi.bindingCount = static_cast<U32>( bindings.size() );
     dsLayoutCi.pBindings = bindings.data();
 
     m_pParticleDescriptorSetLayout->initialize( dsLayoutCi );
@@ -800,10 +800,10 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   colorReferences[5].attachment = 5;
   colorReferences[5].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  depthStencilReference.attachment = static_cast<u32>(colorReferences.size());
+  depthStencilReference.attachment = static_cast<U32>(colorReferences.size());
   depthStencilReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-  subpassDescription.colorAttachmentCount = static_cast<u32>(colorReferences.size());
+  subpassDescription.colorAttachmentCount = static_cast<U32>(colorReferences.size());
   subpassDescription.inputAttachmentCount = 0;
   subpassDescription.pColorAttachments = colorReferences.data();
   subpassDescription.pDepthStencilAttachment = &depthStencilReference;
@@ -812,9 +812,9 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
 
   VkRenderPassCreateInfo renderPassCi = {};
   renderPassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderPassCi.attachmentCount = static_cast<u32>(attachmentDescriptions.size());
+  renderPassCi.attachmentCount = static_cast<U32>(attachmentDescriptions.size());
   renderPassCi.pAttachments = attachmentDescriptions.data();
-  renderPassCi.dependencyCount = static_cast<u32>(dependencies.size());
+  renderPassCi.dependencyCount = static_cast<U32>(dependencies.size());
   renderPassCi.pDependencies = dependencies.data();
   renderPassCi.pSubpasses = &subpassDescription;
   renderPassCi.subpassCount = 1u;
@@ -879,7 +879,7 @@ ParticleEngine::~ParticleEngine()
 
 
 void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, 
-  CmdList<ParticleSystem*>& particleList, u32 frameIndex)
+  CmdList<ParticleSystem*>& particleList, U32 frameIndex)
 {
   if (particleList.Size() == 0) return;
 
@@ -899,7 +899,7 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
 
 
 void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, 
-  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex)
+  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, U32 frameIndex)
 {
   if (particleList.Size() == 0) return;
   VkExtent2D extent = { pbr_forwardFrameBuffer->getWidth(), pbr_forwardFrameBuffer->getHeight() };
@@ -917,13 +917,13 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
   clearValues[4].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[5].color = { 0.0f, 0.0f, 0.0f, 1.0f };
   clearValues[6].depthStencil = { 1.0f, 0 };
-  renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
+  renderPassInfo.clearValueCount = static_cast<U32>(clearValues.size());
   renderPassInfo.pClearValues = clearValues.data();
 
   cmdBuffer->beginRenderPass(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);  
   VkViewport viewport = { };
-  viewport.width = (r32)extent.width;
-  viewport.height = (r32)extent.height;
+  viewport.width = (R32)extent.width;
+  viewport.height = (R32)extent.height;
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.maxDepth = 1.0f;
@@ -957,7 +957,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
     cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
       0, 2, sets, 0, nullptr);
     cmdBuffer->bindVertexBuffers(0, 1, &nativeBuffer, offset);
-    cmdBuffer->draw((u32)system->_particleConfig._maxParticles, 1, 0, 0);
+    cmdBuffer->draw((U32)system->_particleConfig._maxParticles, 1, 0, 0);
   }
   cmdBuffer->endRenderPass();
 }

@@ -31,11 +31,11 @@ struct ProfileData {
   std::string   _tag;
   ProfileTypes  _type;
   // start time in milliseconds.
-  r32           _start;
+  R32           _start;
   // end time in milliseconds.
-  r32           _end;
+  R32           _end;
   // total elapsed time between start and end.
-  r32           _total;
+  R32           _total;
 };
 
 
@@ -52,13 +52,13 @@ public:
 class ProfileObject {
 public:
   ProfileObject(ProfileTypes type = PROFILE_TYPES_NORMAL, const std::string& tag = "")
-    : m_time(static_cast<r32>(Time::currentTime()))
+    : m_time(static_cast<R32>(Time::currentTime()))
     , m_type(type)
     , m_tag(tag) { }
 
   ~ProfileObject()
   {
-    r32 _end = static_cast<r32>(Time::currentTime());
+    R32 _end = static_cast<R32>(Time::currentTime());
     ProfileData data;
     data._start = m_time;
     data._end = _end;
@@ -73,7 +73,7 @@ private:
   ProfileTypes  m_type;
 
   // start time on the global clock.
-  r32           m_time;
+  R32           m_time;
 
   // tag used for meta data.
   std::string   m_tag;

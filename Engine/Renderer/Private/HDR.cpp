@@ -48,7 +48,7 @@ void HDR::initialize(VulkanRHI* pRhi)
 
     VkDescriptorSetLayoutCreateInfo layoutCi = { };
     layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutCi.bindingCount = static_cast<u32>(bindings.size());
+    layoutCi.bindingCount = static_cast<U32>(bindings.size());
     layoutCi.pBindings = bindings.data();
     m_pLayout = pRhi->createDescriptorSetLayout();
     m_pLayout->initialize(layoutCi);
@@ -83,7 +83,7 @@ void HDR::initialize(VulkanRHI* pRhi)
   writeSets[0].pBufferInfo = &bufferInfo;
   writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 
-  m_pSet->update(static_cast<u32>(writeSets.size()), writeSets.data());
+  m_pSet->update(static_cast<U32>(writeSets.size()), writeSets.data());
 }
 
 

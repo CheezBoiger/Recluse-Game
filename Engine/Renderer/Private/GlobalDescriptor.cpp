@@ -50,7 +50,7 @@ GlobalDescriptor::GlobalDescriptor()
 GlobalDescriptor::~GlobalDescriptor()
 {
   DEBUG_OP(
-  for (u32 i = 0; i < m_pDescriptorSets.size(); ++i) {
+  for (U32 i = 0; i < m_pDescriptorSets.size(); ++i) {
     if (m_pGlobalBuffers[i]) {
       R_DEBUG(rWarning, "Global buffer was not cleaned up!\n");
     }
@@ -76,7 +76,7 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
 
   m_pGlobalBuffers.resize(pRhi->bufferingCount());
   m_pDescriptorSets.resize(pRhi->bufferingCount());
-  for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     m_pGlobalBuffers[i] = pRhi->createBuffer();
 
     m_pGlobalBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
@@ -100,7 +100,7 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
     writeSets[0].pNext = nullptr;
     writeSets[0].pBufferInfo = &globalBufferInfo;
 
-    m_pDescriptorSets[i]->update(static_cast<u32>(writeSets.size()), writeSets.data());
+    m_pDescriptorSets[i]->update(static_cast<U32>(writeSets.size()), writeSets.data());
   }
 }
 
@@ -108,7 +108,7 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
 void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 {
   // TODO
-  for (u32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
+  for (U32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     if (m_pDescriptorSets[i]) {
 
       pRhi->freeDescriptorSet(m_pDescriptorSets[i]);
@@ -124,9 +124,9 @@ void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 }
 
 
-void GlobalDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
+void GlobalDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
 {
-  u32 currFrame = frameIndex;
+  U32 currFrame = frameIndex;
 
   if (pRhi->bufferingCount() != m_pGlobalBuffers.size()) {
     cleanUp(pRhi);

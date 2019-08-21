@@ -15,15 +15,15 @@
 
 namespace Recluse {
 
-typedef u64 component_t;
+typedef U64 component_t;
 class Transform;
 
-#define RCOMPONENT(cls) protected: static std::unordered_map<uuid64, cls*> _k ## cls ## s; \
+#define RCOMPONENT(cls) protected: static std::unordered_map<UUID64, cls*> _k ## cls ## s; \
     friend class GameObject; \
-    static uuid64 kUID; \
-    static component_t getUUID() { return std::hash<tchar*>()( #cls ); } \
-    static const tchar* getName() { return #cls; } \
-    static uuid64 generateUID() { uuid64 uid = kUID++; return uid; } \
+    static UUID64 kUID; \
+    static component_t getUUID() { return std::hash<TChar*>()( #cls ); } \
+    static const TChar* getName() { return #cls; } \
+    static UUID64 generateUID() { UUID64 uid = kUID++; return uid; } \
     public: static void updateComponents() { \
               for (auto& it : _k##cls##s) { \
                 cls* comp = it.second; \
@@ -43,7 +43,7 @@ class Transform;
 
 #define UNREGISTER_COMPONENT(cls) { \
           if (getOwner()) { \
-            uuid64 uuid = getUID(); \
+            UUID64 uuid = getUID(); \
             auto it = _k##cls##s.find(uuid); \
             if (it != _k##cls##s.end()) { \
               _k##cls##s.erase(it); \
@@ -52,8 +52,8 @@ class Transform;
         }
 
 
-#define DEFINE_COMPONENT_MAP(cls) std::unordered_map<uuid64, cls*> cls::_k##cls##s; \
-                                  uuid64 cls::kUID = 0; 
+#define DEFINE_COMPONENT_MAP(cls) std::unordered_map<UUID64, cls*> cls::_k##cls##s; \
+                                  UUID64 cls::kUID = 0; 
                                 
     
 
@@ -105,13 +105,13 @@ public:
     onCleanUp();
   }
 
-  b32            enabled() const { return m_bEnabled; }
+  B32            enabled() const { return m_bEnabled; }
 
-  void          setEnable(b32 enable) { m_bEnabled = enable; onEnable(); }
+  void          setEnable(B32 enable) { m_bEnabled = enable; onEnable(); }
 
   Transform*    getTransform();
 
-  uuid64        getUID() { return m_componentUID; }
+  UUID64        getUID() { return m_componentUID; }
 
 protected:
   // Mandatory that this update function is defined.
@@ -125,13 +125,13 @@ protected:
   virtual void  onCleanUp() { }
   virtual void  onEnable() { }
 
-  uuid64        m_componentUID; 
+  UUID64        m_componentUID; 
 
 private:
   GameObject*   m_pGameObjectOwner;
   // Is component enabled? If so, the managers responsible for updating it will 
   // proceed to do so.
-  b32            m_bEnabled;
+  B32            m_bEnabled;
 };
 
 

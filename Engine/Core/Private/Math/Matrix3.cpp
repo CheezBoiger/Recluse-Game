@@ -9,7 +9,7 @@
 namespace Recluse {
 
 
-r32 Matrix3::determinant() const
+R32 Matrix3::determinant() const
 {
   return  Data[0][0] * (Data[1][1] * Data[2][2] - Data[1][2] * Data[2][1]) -
           Data[0][1] * (Data[1][0] * Data[2][2] - Data[1][2] * Data[2][0]) +
@@ -85,7 +85,7 @@ Matrix3 Matrix3::operator-(const Matrix3& other) const
 }
 
 
-Matrix3 Matrix3::operator*(const r32 scaler) const
+Matrix3 Matrix3::operator*(const R32 scaler) const
 {
   return Matrix3(
     Data[0][0] * scaler, Data[0][1] * scaler, Data[0][2] * scaler,
@@ -95,16 +95,16 @@ Matrix3 Matrix3::operator*(const r32 scaler) const
 }
 
 
-r32* Matrix3::operator[](const size_t i)
+R32* Matrix3::operator[](const size_t i)
 {
   return Data[i];
 }
 
 
-b8 Matrix3::operator==(const Matrix3& other) const
+B8 Matrix3::operator==(const Matrix3& other) const
 {
-  for (u32 i = 0; i < 3; ++i) {
-    for (u32 j = 0; j < 3; ++j) {
+  for (U32 i = 0; i < 3; ++i) {
+    for (U32 j = 0; j < 3; ++j) {
       if (Data[i][j] != other.Data[i][j]) {
         return false;
       }
@@ -114,7 +114,7 @@ b8 Matrix3::operator==(const Matrix3& other) const
 }
 
 
-b8 Matrix3::operator!=(const Matrix3& other) const
+B8 Matrix3::operator!=(const Matrix3& other) const
 {
   return !(*this == other);
 }

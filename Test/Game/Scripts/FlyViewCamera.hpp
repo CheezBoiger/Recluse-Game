@@ -24,8 +24,8 @@ using namespace Recluse;
 
 
 struct CameraTransition {
-  r32 interpolate;    // smoothness.
-  r32 time;           // how long to remain in this position.
+  R32 interpolate;    // smoothness.
+  R32 time;           // how long to remain in this position.
   Vector3 position;   // _position of this transition.
   Quaternion rotation;  // rotated face of this transition.
 };
@@ -53,7 +53,7 @@ public:
   }
 
   
-  void update(r32 tick) override 
+  void update(R32 tick) override 
   {
     if (m_outOfLife) {
       return;
@@ -69,7 +69,7 @@ public:
     }
   }
 
-  b32 isOutOfLife() const { return m_outOfLife; }
+  B32 isOutOfLife() const { return m_outOfLife; }
 
 
   void onCleanUp() override
@@ -81,8 +81,8 @@ public:
 
 private:
   PointLightComponent* m_pTempLight;
-  r32 currLife;
-  b32 m_outOfLife;
+  R32 currLife;
+  B32 m_outOfLife;
 };
 
 
@@ -106,10 +106,15 @@ public:
 
   void onStartUp() override
   {
+    const UserConfigParams& globalUserParams = gEngine( ).getGlobalUserConfigs( );
+    m_xSensitivity = globalUserParams._mouseSensitivityX;
+    m_ySensitivity = globalUserParams._mouseSensitivityY;
+    R32 fov = globalUserParams._fieldOfView;
+
     Window* pWindow = gEngine().getWindow();
     Transform* transform = getTransform();
     // Camera set.
-    pCam = new Camera(Camera::PERSPECTIVE, Radians(60.0f), 0.2f, 2000.0f);
+    pCam = new Camera(Camera::PERSPECTIVE, fov, 0.2f, 2000.0f);
     pCam->initialize(this);
     pCam->enableBloom(true);
     Camera::setMain(pCam);
@@ -143,7 +148,7 @@ public:
   }
 
   // Game object updating.
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
     if (Keyboard::keyPressed(KEY_CODE_ESCAPE)) { gEngine().signalStop(); }
     Transform* transform = getTransform();
@@ -158,7 +163,7 @@ public:
 
     if (Keyboard::keyPressed(KEY_CODE_1)) {
       //pCam->setFoV(pCam->getFoV() - Radians(1.0f));
-      //pCam->setExposure(pCam->getExposure() + 2.0f * (r32)Time::deltaTime);
+      //pCam->setExposure(pCam->getExposure() + 2.0f * (R32)Time::deltaTime);
       m_pSpotLight->setEnable(true);
       m_pSpotLight2->setEnable(true);
     }
@@ -227,16 +232,16 @@ public:
     }
 
     if (bFirstLook) {
-      m_lastX = (r32)Mouse::getX();
-      m_lastY = (r32)Mouse::getY();
+      m_lastX = (R32)Mouse::getX();
+      m_lastY = (R32)Mouse::getY();
       bFirstLook = false;
     }
 
     if ( !m_pause ) {
-      r32 xoffset = m_lastX - (r32)Mouse::getX();
-      r32 yoffset = (r32)Mouse::getY() - m_lastY;
-      m_lastX = (r32)Mouse::getX();
-      m_lastY = (r32)Mouse::getY();
+      R32 xoffset = m_lastX - (R32)Mouse::getX();
+      R32 yoffset = (R32)Mouse::getY() - m_lastY;
+      m_lastX = (R32)Mouse::getX();
+      m_lastY = (R32)Mouse::getY();
 
       xoffset *= m_xSensitivity;
       yoffset *= m_ySensitivity;
@@ -319,24 +324,24 @@ public:
 
 private:
   Camera * pCam;
-  b8      bFirstLook;
-  r32     m_lastX;
-  r32     m_lastY;
-  r32     m_xSensitivity;
-  r32     m_ySensitivity;
-  r32     m_pitch;
-  r32     m_yaw;
-  r32     m_roll;
-  r32     m_constrainPitch;
-  b32     m_pause;
-  r32     m_pX, m_pY;
+  B8      bFirstLook;
+  R32     m_lastX;
+  R32     m_lastY;
+  R32     m_xSensitivity;
+  R32     m_ySensitivity;
+  R32     m_pitch;
+  R32     m_yaw;
+  R32     m_roll;
+  R32     m_constrainPitch;
+  B32     m_pause;
+  R32     m_pX, m_pY;
 #if CAMERA_REVOLVE > 0
-  r32     t = 0.0f;
+  R32     t = 0.0f;
 #endif
   SpotLightComponent* m_pSpotLight;
   SpotLightComponent* m_pSpotLight2;
   TempExplosion   m_temp;
-  b32               bFollow;
+  B32               bFollow;
   // Object to hold on to.
   Item*             _pHolding;
   Transform         oldTransform;
@@ -369,9 +374,9 @@ public:
     m_pPhysicsComponent->setMass(1.0f);
   }
 
-  void update(r32 tick) override {
+  void update(R32 tick) override {
     Transform* transform = getTransform();
-    r32 speed = m_speed;
+    R32 speed = m_speed;
     Vector3 f = transform->front();
     Vector3 r = transform->right();
 
@@ -471,7 +476,7 @@ public:
     if (other->_gameObject->castTo<CubeObject>()) return;
 
     if (m_jumping) {
-      for (u32 i = 0; i < other->_contactPoints.size(); ++i) {
+      for (U32 i = 0; i < other->_contactPoints.size(); ++i) {
         if ((Vector3::UP.dot(other->_contactPoints[i]._normal) >=
              1.0f - 0.3f) &&
             (Vector3::UP.dot(other->_contactPoints[i]._normal) <=
@@ -489,9 +494,9 @@ public:
 private:
   PhysicsComponent* m_pPhysicsComponent;
   Collider* m_pCollider;
-  b8 m_jumping;
-  b8 bFollow;
-  r32 m_camOffset;
-  r32 offset;
-  r32 m_speed;
+  B8 m_jumping;
+  B8 bFollow;
+  R32 m_camOffset;
+  R32 offset;
+  R32 m_speed;
 };

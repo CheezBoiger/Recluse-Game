@@ -34,6 +34,6 @@ public:
 private:
   VulkanRHI*  mRhi;
   Buffer*     mBuffer;
-  u32         sizeBytes;
+  U32         sizeBytes;
 };
 } // Recluse

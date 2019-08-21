@@ -16,10 +16,10 @@ class IItem;
 
 
 struct IHUDState {
-  r32         _maxState;
-  r32         _currState;
-  r32         _maxRegen;
-  r32         _currRegen;
+  R32         _maxState;
+  R32         _currState;
+  R32         _maxRegen;
+  R32         _currRegen;
 };
 
 // Actor interface that defines a living being in the world.
@@ -44,11 +44,11 @@ public:
       Group_ = (1<<3)
   };
 
-  typedef u32 ActivityBits;
+  typedef U32 ActivityBits;
 
   virtual ~IActor() = 0 { }
 
-  virtual void update(r32 tick) override { }
+  virtual void update(R32 tick) override { }
   virtual void onStartUp() override { }
   virtual void onCleanUp() override { }
 
@@ -71,15 +71,15 @@ protected:
   Group       m_group;
 
   // current movement speed of the actor.
-  r32         m_currentMoveSpeed;
+  R32         m_currentMoveSpeed;
 
   // Maximum movement speed of the actor.
-  r32         m_maxMoveSpeed;
+  R32         m_maxMoveSpeed;
 
   // Jump strength.
-  r32         m_jumpStrength;
+  R32         m_jumpStrength;
 
-  r32         m_sprintFactor;
+  R32         m_sprintFactor;
 
   // Health.
   IHUDState   m_health;

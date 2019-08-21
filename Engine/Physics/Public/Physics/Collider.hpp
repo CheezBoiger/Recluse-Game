@@ -36,13 +36,13 @@ public:
   virtual void update() { }
   ColliderType GetColliderType() const { return m_colliderType; }
 
-  b32         NeedsUpdate() const { return m_needsUpdate; }
+  B32         NeedsUpdate() const { return m_needsUpdate; }
 
 protected:
 
   void              SetDirty() { m_needsUpdate = true; }
   Vector3           m_center;
-  b32               m_needsUpdate;
+  B32               m_needsUpdate;
 
 private:
 

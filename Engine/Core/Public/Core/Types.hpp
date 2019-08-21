@@ -7,25 +7,25 @@
 
 namespace Recluse {
 
-typedef uint8_t           b8;
-typedef uint8_t           u8;
-typedef int8_t            i8;
-typedef uint16_t          u16;
-typedef int16_t           i16;
-typedef uint32_t          u32;
-typedef int32_t           i32;
-typedef uint64_t          u64;
-typedef int64_t           i64;
-typedef u32               b32;
+typedef uint8_t           B8;
+typedef uint8_t           U8;
+typedef int8_t            I8;
+typedef uint16_t          U16;
+typedef int16_t           I16;
+typedef uint32_t          U32;
+typedef int32_t           I32;
+typedef uint64_t          U64;
+typedef int64_t           I64;
+typedef U32               B32;
 
-typedef float             r32;
-typedef double            r64;
+typedef float             R32;
+typedef double            R64;
 
-typedef char              tchar;
+typedef char              TChar;
 
 
 // Globally unique identifier.
-typedef u64               uuid64;
+typedef U64               UUID64;
 } // Recluse
 
 #define RTEXT(s)          u8##s

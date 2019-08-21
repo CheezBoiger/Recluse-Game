@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-b32 LogicalDevice::initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
+B32 LogicalDevice::initialize(const VkPhysicalDevice physical, const VkDeviceCreateInfo& info,
   QueueFamily* graphics, QueueFamily* compute, QueueFamily* transfer, QueueFamily* presentation)
 {
   VkResult Result = vkCreateDevice(physical, &info, nullptr, &handle);
@@ -29,14 +29,14 @@ b32 LogicalDevice::initialize(const VkPhysicalDevice physical, const VkDeviceCre
   // TODO(): Read initialize() call from vulkan context, queue index will change in the future.
   
   for (size_t i = 0; i < mGraphicsQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, (u32)i, &mGraphicsQueues[i]);
+    vkGetDeviceQueue(handle, mGraphicsQueueFamily._idx, (U32)i, &mGraphicsQueues[i]);
   }
   for (size_t i = 0; i < mComputeQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, (u32)i, &mComputeQueues[i]);
+    vkGetDeviceQueue(handle, mComputeQueueFamily._idx, (U32)i, &mComputeQueues[i]);
   }
 
   for (size_t i = 0; i < mTransferQueueFamily._queueCount; ++i) {
-    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, (u32)i, &mTransferQueues[i]);
+    vkGetDeviceQueue(handle, mTransferQueueFamily._idx, (U32)i, &mTransferQueues[i]);
   }
   vkGetDeviceQueue(handle, mPresentationQueueFamily._idx, 0u, &mPresentationQueue);
 
@@ -72,7 +72,7 @@ void LogicalDevice::cleanUp()
 }
 
 
-VkResult LogicalDevice::FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges)
+VkResult LogicalDevice::FlushMappedMemoryRanges(U32 count, const VkMappedMemoryRange* ranges)
 {
   return vkFlushMappedMemoryRanges(handle, count, ranges);
 }

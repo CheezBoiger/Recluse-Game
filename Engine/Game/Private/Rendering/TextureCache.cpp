@@ -11,7 +11,7 @@ namespace Recluse {
 
 
 std::unordered_map<tcache_t, Texture2D*> TextureCache::sCache;
-std::unordered_map<uuid64, TextureSampler*> SamplerCache::sCache;
+std::unordered_map<UUID64, TextureSampler*> SamplerCache::sCache;
 
 
 TextureCache::TextureCache()

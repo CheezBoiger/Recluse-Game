@@ -87,8 +87,8 @@ class Keyboard {
 public:
   static KeyAction keys[256];
   static void preUpdate();
-  static b32 keyPressed(KeyCode keycode);
-  static b32 keyHeldDown(KeyCode keycode);
-  static b32 keyReleased(KeyCode keycode);
+  static B32 keyPressed(KeyCode keycode);
+  static B32 keyHeldDown(KeyCode keycode);
+  static B32 keyReleased(KeyCode keycode);
 };
 } // Recluse

@@ -19,7 +19,7 @@ public:
     , mDebugEnabled(false) { }
 
 
-  b32                              createInstance(const char* appName);
+  B32                              createInstance(const char* appName);
   VkInstance                      currentInstance() { return mInstance; }
   VkSurfaceKHR                    createSurface(void* handle);
 
@@ -36,6 +36,6 @@ private:
   VkInstance                      mInstance;
   std::vector<VkPhysicalDevice>   mGpus;
   VkDebugReportCallbackEXT        mDebugReportCallback;
-  b32                              mDebugEnabled;
+  B32                              mDebugEnabled;
 };
 } // Recluse

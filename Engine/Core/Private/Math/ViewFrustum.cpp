@@ -6,12 +6,12 @@
 namespace Recluse {
 
 
-u32 ViewFrustum::PLEFT = 0;
-u32 ViewFrustum::PRIGHT = 1;
-u32 ViewFrustum::PBOTTOM = 2;
-u32 ViewFrustum::PTOP = 3;
-u32 ViewFrustum::PNEAR = 4;
-u32 ViewFrustum::PFAR = 5;
+U32 ViewFrustum::PLEFT = 0;
+U32 ViewFrustum::PRIGHT = 1;
+U32 ViewFrustum::PBOTTOM = 2;
+U32 ViewFrustum::PTOP = 3;
+U32 ViewFrustum::PNEAR = 4;
+U32 ViewFrustum::PFAR = 5;
 
 
 void ViewFrustum::update(Matrix4& vp)
@@ -54,7 +54,7 @@ ViewFrustum::Result ViewFrustum::intersect(const AABB& aabb) const
 
   ViewFrustum::Result result = Result_Inside;
   Vector3 vmin, vmax;
-  for (u32 i = 0; i < 6; ++i) {
+  for (U32 i = 0; i < 6; ++i) {
     Vector3 normal = Vector3(_planes[i].x, _planes[i].y, _planes[i].z);
     // x axis.
     if (_planes[i].x > 0) {

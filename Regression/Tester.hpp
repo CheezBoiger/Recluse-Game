@@ -43,10 +43,10 @@ namespace Recluse {
 
 struct Tester {
 private:
-  static u32    TestsPassed;
-  static u32    TestsFailed;
+  static U32    TestsPassed;
+  static U32    TestsFailed;
 public:
-  typedef b8 (*TestFunc)();
+  typedef B8 (*TestFunc)();
 
   static void   RunAllTests(std::vector<TestFunc> tests) {
     Log() << "Total tests: " << tests.size() << "\nRunning Tests...\n\n";
@@ -62,7 +62,7 @@ public:
     Log() << "Finished...\n\n";  
   }
 
-  static u32    GetTestsPassed() { return TestsPassed; }
-  static u32    GetTestsFailed() { return TestsFailed; }
+  static U32    GetTestsPassed() { return TestsPassed; }
+  static U32    GetTestsFailed() { return TestsFailed; }
 };
 } // Recluse

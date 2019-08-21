@@ -198,7 +198,7 @@ std::array<Vector4, 36> colors = {
 };
 
 
-std::array<u32, 36> indices = {
+std::array<U32, 36> indices = {
   0, 1, 2,
   3, 4, 5,
   6, 7, 8,
@@ -214,7 +214,7 @@ std::array<u32, 36> indices = {
 };
 
 
-std::vector<StaticVertex> Cube::meshInstance(r32 scale)
+std::vector<StaticVertex> Cube::meshInstance(R32 scale)
 {
   std::vector<StaticVertex> cube(36);
   for (size_t i = 0; i < cube.size(); ++i) {
@@ -231,9 +231,9 @@ std::vector<StaticVertex> Cube::meshInstance(r32 scale)
 }
 
 
-std::vector<u32> Cube::indicesInstance()
+std::vector<U32> Cube::indicesInstance()
 {
-  std::vector<u32> cubeIs(36);
+  std::vector<U32> cubeIs(36);
   for (size_t i = 0; i < indices.size(); ++i) {
     cubeIs[i] = indices[i];
   }

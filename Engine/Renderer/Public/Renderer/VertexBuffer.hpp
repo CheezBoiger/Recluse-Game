@@ -27,10 +27,10 @@ public:
   void          cleanUp(VulkanRHI* pRhi);
 
   Buffer*       getHandle() { return mBuffer; }
-  u32           VertexCount() { return mVertexCount; }
+  U32           VertexCount() { return mVertexCount; }
   
 private:
   Buffer*       mBuffer;
-  u32           mVertexCount;
+  U32           mVertexCount;
 };
 } // Recluse

@@ -48,7 +48,7 @@ struct ParticleTrail {
   Vector4 _prevWPos;  // current position.
   Vector4 _nextWPos;     // next position.
   Vector4 _color;       // color.
-  r32     _radius;
+  R32     _radius;
 };
 
 
@@ -61,14 +61,14 @@ struct ParticleSystemConfig {
   Vector4         _angleRate;         // rate of which to rotate.
   Vector4         _fadeIn;
   Vector4         _animScale;       // x = rate, y = maxOffset, z = offset
-  r32             _fadeAt;
-  r32             _fadeThreshold;
-  r32             _angleThreshold; 
-  r32             _rate;            // rate at which these particles are produced.
-  r32             _lifeTimeScale;
-  r32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
-  r32             _maxParticles;          // Maximum number of particles within this buffer.
-  r32             _isWorldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
+  R32             _fadeAt;
+  R32             _fadeThreshold;
+  R32             _angleThreshold; 
+  R32             _rate;            // rate at which these particles are produced.
+  R32             _lifeTimeScale;
+  R32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
+  R32             _maxParticles;          // Maximum number of particles within this buffer.
+  R32             _isWorldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
 };
 
 
@@ -84,7 +84,7 @@ typedef enum eParticleType {
   PARTICLE_TYPE_TRAIL
 } ParticleType;
 
-using particle_update_bits = u32;
+using particle_update_bits = U32;
 
 
 // Descriptor that defines a particle system, which allows cpu side interactions with
@@ -101,11 +101,11 @@ struct ParticleSystem {
     , m_updateFunct(nullptr)
     , m_sortFunct(nullptr) { }
 
-  typedef std::function<void(ParticleSystemConfig*, Particle*, u32)> ParticleUpdateFunct;
-  typedef std::function<b32(const Particle&, const Particle&)> ParticleSortFunct;
+  typedef std::function<void(ParticleSystemConfig*, Particle*, U32)> ParticleUpdateFunct;
+  typedef std::function<B32(const Particle&, const Particle&)> ParticleSortFunct;
 
   // Must initialize for compute pipeline as well!
-  void                  initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, u32 initialParticleCount);
+  void                  initialize(VulkanRHI* pRhi, DescriptorSetLayout* particleLayout, U32 initialParticleCount);
   void                  cleanUp(VulkanRHI* pRhi);
   void                  pushUpdate(particle_update_bits updateBits) { m_updateBits |= updateBits; }
   void                  update(VulkanRHI* pRhi);
@@ -116,13 +116,13 @@ struct ParticleSystem {
   void                  setSortFunct(ParticleSortFunct sortFunct) { m_sortFunct = sortFunct; }
   void                  setUpdateFunct(ParticleUpdateFunct updateFunct) { m_updateFunct = updateFunct; }
 
-  void                  setParticleMaxCount(u32 maxCount) { 
+  void                  setParticleMaxCount(U32 maxCount) { 
     if (maxCount == _particleConfig._maxParticles) return; 
-    _particleConfig._maxParticles = r32(maxCount);
+    _particleConfig._maxParticles = R32(maxCount);
     pushUpdate(PARTICLE_VERTEX_BUFFER_UPDATE_BIT);
   }
 
-  void                  setParticleMaxLife(r32 maxLife);
+  void                  setParticleMaxLife(R32 maxLife);
 
   Texture2DArray*       _texture;
   TextureSampler*       _sampler;
@@ -184,11 +184,11 @@ public:
   void                initializePipeline(VulkanRHI* pRhi);
 
   // Generate render commands for the given particles.
-  void                generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
+  void                generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, U32 frameIndex);
 
   // Generate commands to compute particle positions and life. This will generate particle
   // computation commands for the given particle system.
-  void                generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, u32 frameIndex);
+  void                generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, U32 frameIndex);
 
   DescriptorSetLayout* getParticleSystemDescriptorLayout() { return m_pParticleDescriptorSetLayout; }
 private:

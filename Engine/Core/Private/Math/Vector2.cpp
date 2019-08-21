@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-Vector2 Vector2::lerp(const Vector2& a, const Vector2& b, r32 t)
+Vector2 Vector2::lerp(const Vector2& a, const Vector2& b, R32 t)
 {
   return a * (1.0f - t) + b * t;
 }
@@ -62,7 +62,7 @@ Vector2 Vector2::operator-() const
 }
 
 
-Vector2 Vector2::operator*(const r32 scaler) const
+Vector2 Vector2::operator*(const R32 scaler) const
 {
   return Vector2(
     x + scaler,
@@ -77,9 +77,9 @@ Vector2 Vector2::operator*(const Vector2& other) const
 }
 
 
-Vector2 Vector2::operator/(const r32 scaler) const
+Vector2 Vector2::operator/(const R32 scaler) const
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   return Vector2(
     x * scale,
     y * scale  
@@ -101,40 +101,40 @@ void Vector2::operator-=(const Vector2& other)
 }
 
 
-void Vector2::operator*=(const r32 scaler)
+void Vector2::operator*=(const R32 scaler)
 {
   x *= scaler;
   y *= scaler;
 }
 
 
-void Vector2::operator/=(const r32 scaler)
+void Vector2::operator/=(const R32 scaler)
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   x *= scale;
   y *= scale;
 }
 
 
-r32 Vector2::length() const
+R32 Vector2::length() const
 {
   return sqrtf((x*x) + (y*y));
 }
 
 
-r32 Vector2::lengthSqr() const
+R32 Vector2::lengthSqr() const
 {
   return (x * x) + (y * y);
 }
 
 
-r32 Vector2::dot(const Vector2& other) const
+R32 Vector2::dot(const Vector2& other) const
 {
   return ((x*other.x) + (y*other.y));
 }
 
 
-b8 Vector2::operator==(const Vector2& other) const
+B8 Vector2::operator==(const Vector2& other) const
 {
   if (x == other.x &&
       y == other.y 
@@ -147,13 +147,13 @@ b8 Vector2::operator==(const Vector2& other) const
 }
 
 
-b8 Vector2::operator!=(const Vector2& other) const
+B8 Vector2::operator!=(const Vector2& other) const
 {
   return !(*this == other);
 }
 
 
-Vector2 operator/(const r32 scaler, const Vector2& other)
+Vector2 operator/(const R32 scaler, const Vector2& other)
 {
   return Vector2(scaler / other.x, scaler / other.y);
 }

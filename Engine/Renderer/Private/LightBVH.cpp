@@ -20,7 +20,7 @@ LightHierarchy::LightHierarchy()
 }
 
 
-void LightHierarchy::initialize(VulkanRHI* pRhi, u32 width, u32 height)
+void LightHierarchy::initialize(VulkanRHI* pRhi, U32 width, U32 height)
 {
   m_gpuBvh = pRhi->createBuffer();
   m_gpuClusterGrid = pRhi->createBuffer();

@@ -18,24 +18,24 @@ Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
   // https://gist.github.com/aeroson/043001ca12fe29ee911e
   // modified for left hand coordinate systems that is Recluse.
   Vector3 forward = dir.normalize();
-  Vector3 right = upwards.Cross(forward).normalize();
-  Vector3 up = forward.Cross(right);
+  Vector3 right = upwards.cross(forward).normalize();
+  Vector3 up = forward.cross(right);
 
-  r32 m00 = right.x;
-  r32 m01 = right.y;
-  r32 m02 = right.z;
-  r32 m10 = up.x;
-  r32 m11 = up.y;
-  r32 m12 = up.z;
-  r32 m20 = forward.x;
-  r32 m21 = forward.y;
-  r32 m22 = forward.z;
+  R32 m00 = right.x;
+  R32 m01 = right.y;
+  R32 m02 = right.z;
+  R32 m10 = up.x;
+  R32 m11 = up.y;
+  R32 m12 = up.z;
+  R32 m20 = forward.x;
+  R32 m21 = forward.y;
+  R32 m22 = forward.z;
 
-  r32 num8 = (m00 + m11) + m22;
+  R32 num8 = (m00 + m11) + m22;
   Quaternion ret;
 
   if (num8 > 0.0f) {
-    r32 num = sqrtf(num8 + 1.0f);
+    R32 num = sqrtf(num8 + 1.0f);
     ret.w = num * 0.5f;
     num = 0.5f / num;
     ret.x = (m12 - m21) * num;
@@ -45,8 +45,8 @@ Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
   }
 
   if ((m00 >= m11) && (m00 >= m22)) {
-    r32 num7 = sqrtf(((1.0f + m00) - m11) - m22);
-    r32 num4 = 0.5f * num7;
+    R32 num7 = sqrtf(((1.0f + m00) - m11) - m22);
+    R32 num4 = 0.5f * num7;
     ret.x = 0.5f * num7;
     ret.y = (m01 + m10) * num4;
     ret.z = (m02 + m20) * num4;
@@ -55,8 +55,8 @@ Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
   }
 
   if (m11 > m22) {
-    r32 num6 = sqrtf(((1.0f + m11) - m00) - m22);
-    r32 num3 = 0.5f / num6;
+    R32 num6 = sqrtf(((1.0f + m11) - m00) - m22);
+    R32 num3 = 0.5f / num6;
     ret.x = (m10 + m01) * num3;
     ret.y = 0.5f * num6;
     ret.z = (m21 + m12) * num3;
@@ -64,8 +64,8 @@ Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
     return ret;
   }
 
-  r32 num5 = sqrtf(((1.0f + m22) - m00) - m11);
-  r32 num2 = 0.5f / num5;
+  R32 num5 = sqrtf(((1.0f + m22) - m00) - m11);
+  R32 num2 = 0.5f / num5;
   ret.x = (m20 + m02) * num2;
   ret.y = (m21 + m12) * num2;
   ret.z = 0.5f * num5;
@@ -74,7 +74,7 @@ Quaternion Quaternion::lookRotation(const Vector3& dir, const Vector3& upwards)
 }
 
 
-r32 Quaternion::norm() const
+R32 Quaternion::norm() const
 {
   return sqrtf(x*x + y*y + z*z + w*w);
 }
@@ -89,7 +89,7 @@ Quaternion Quaternion::Conjugate() const
 Quaternion Quaternion::inverse() const
 {
   Quaternion conjugate = Conjugate();
-  r32 norm2 = (x*x + y*y + z*z + w*w);
+  R32 norm2 = (x*x + y*y + z*z + w*w);
   // TODO(): Possible divide by zero: may want to check for issue here.
   conjugate /= norm2;
   return conjugate;
@@ -123,13 +123,13 @@ void Quaternion::operator*=(const Quaternion& other)
 }
 
 
-Quaternion Quaternion::operator*(const r32 scaler) const
+Quaternion Quaternion::operator*(const R32 scaler) const
 {
   return Quaternion(x * scaler, y * scaler, z * scaler, w * scaler);
 }
 
 
-Quaternion Quaternion::operator/(const r32 scaler) const
+Quaternion Quaternion::operator/(const R32 scaler) const
 {
   return Quaternion(x / scaler, y / scaler, z / scaler, w / scaler);
 }
@@ -147,7 +147,7 @@ Quaternion Quaternion::operator-(const Quaternion& other) const
 }
 
 
-void Quaternion::operator*=(const r32 scaler) 
+void Quaternion::operator*=(const R32 scaler) 
 {
   x *= scaler;
   y *= scaler;
@@ -156,7 +156,7 @@ void Quaternion::operator*=(const r32 scaler)
 }
 
 
-void Quaternion::operator/=(const r32 scaler)
+void Quaternion::operator/=(const R32 scaler)
 {
   x /= scaler;
   y /= scaler;
@@ -185,15 +185,15 @@ void Quaternion::operator-=(const Quaternion& other)
 
 Quaternion Quaternion::normalize() const
 {
-  r32 n = norm();
+  R32 n = norm();
   return (*this / n);
 }
 
 
-Quaternion Quaternion::angleAxis(const r32 radians, const Vector3& axis)
+Quaternion Quaternion::angleAxis(const R32 radians, const Vector3& axis)
 {
-  r32 radHalf = radians * 0.5f;
-  r32 sineHalf = sinf(radHalf);
+  R32 radHalf = radians * 0.5f;
+  R32 sineHalf = sinf(radHalf);
   return Quaternion(
     axis.x * sineHalf,
     axis.y * sineHalf,
@@ -206,12 +206,12 @@ Quaternion Quaternion::angleAxis(const r32 radians, const Vector3& axis)
 Quaternion Quaternion::eulerAnglesToQuaternion(const Vector3& euler)
 {
   Quaternion q;
-  r32 t0 = cosf(euler.z * 0.5f);
-  r32 t1 = sinf(euler.z * 0.5f);
-  r32 t2 = cosf(euler.x * 0.5f);
-  r32 t3 = sinf(euler.x * 0.5f);
-  r32 t4 = cosf(euler.y * 0.5f);
-  r32 t5 = sinf(euler.y * 0.5f);
+  R32 t0 = cosf(euler.z * 0.5f);
+  R32 t1 = sinf(euler.z * 0.5f);
+  R32 t2 = cosf(euler.x * 0.5f);
+  R32 t3 = sinf(euler.x * 0.5f);
+  R32 t4 = cosf(euler.y * 0.5f);
+  R32 t5 = sinf(euler.y * 0.5f);
 
   q.w = t0*t2*t4 + t1*t3*t5;
   q.x = t0*t3*t4 - t1*t2*t5;
@@ -225,22 +225,22 @@ Quaternion Quaternion::eulerAnglesToQuaternion(const Vector3& euler)
 Vector3 Quaternion::toEulerAngles() const
 {
   Vector3 eulerAngles;
-  r32 ysqrt = y * y;
+  R32 ysqrt = y * y;
 
   // roll
-  r32 t0 = 2.0f * (w * x +  y * z);
-  r32 t1 = 1.0f - 2.0f * (x * x + ysqrt);
+  R32 t0 = 2.0f * (w * x +  y * z);
+  R32 t1 = 1.0f - 2.0f * (x * x + ysqrt);
   eulerAngles.x = atan2f(t0, t1);
 
   // pitch
-  r32 t2 = 2.0f * (w * y - x * z);
+  R32 t2 = 2.0f * (w * y - x * z);
   t2 = t2 > 1.0f ? 1.0f : t2;
   t2 = t2 < -1.0f ? -1.0f : t2;
   eulerAngles.y = asinf(t2);
 
   // yaw
-  r32 t3 = 2.0f * (w * z + x * y);
-  r32 t4 = 1.0f - 2.0f * (ysqrt + z * z);
+  R32 t3 = 2.0f * (w * z + x * y);
+  R32 t4 = 1.0f - 2.0f * (ysqrt + z * z);
   eulerAngles.z = atan2f(t3, t4);
 
   return eulerAngles;
@@ -265,11 +265,11 @@ Matrix4 Quaternion::toMatrix4() const
 }
 
 
-Quaternion Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, const r32 t)
+Quaternion Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, const R32 t)
 {
-  r32 dot = q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
+  R32 dot = q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
 
-  const r32 kThreshold = 0.9995f;
+  const R32 kThreshold = 0.9995f;
   if (fabs(dot) > kThreshold) {
     Quaternion result = q0 + (q1 - q0) * t;
     result = result.normalize();
@@ -283,8 +283,8 @@ Quaternion Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, const r
   }
 
   Clamp(dot, -1, 1);
-  r32 theta0 = acosf(dot);
-  r32 theta = theta0 * t;
+  R32 theta0 = acosf(dot);
+  R32 theta = theta0 * t;
   Quaternion v2 = v1 - q0*dot;
   v2 = v2.normalize();
 
@@ -292,7 +292,7 @@ Quaternion Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, const r
 }
 
 
-b8 Quaternion::operator==(const Quaternion& other) const
+B8 Quaternion::operator==(const Quaternion& other) const
 {
   if (x == other.x && y == other.y && z == other.z && w == other.w)
     return true;
@@ -300,7 +300,7 @@ b8 Quaternion::operator==(const Quaternion& other) const
 }
 
 
-b8 Quaternion::operator!=(const Quaternion& other) const
+B8 Quaternion::operator!=(const Quaternion& other) const
 {
   return !( *this == other );
 }
@@ -309,9 +309,9 @@ b8 Quaternion::operator!=(const Quaternion& other) const
 Vector3 Quaternion::operator*(const Vector3& other) const
 {
   Vector3 u(x, y, z);
-  r32 s = w;
+  R32 s = w;
   
-  return u * u.dot(other) * 2.0f + other * (s * s - u.dot(u)) + u.Cross(other) * 2.0f * s;
+  return u * u.dot(other) * 2.0f + other * (s * s - u.dot(u)) + u.cross(other) * 2.0f * s;
 }
 
 

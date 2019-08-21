@@ -8,7 +8,7 @@ namespace Recluse {
 
 std::vector<VkExtensionProperties> PhysicalDevice::getExtensionProperties(VkPhysicalDevice physical)
 {
-  u32 extensionCount;
+  U32 extensionCount;
   vkEnumerateDeviceExtensionProperties(physical, nullptr, &extensionCount, nullptr);
   std::vector<VkExtensionProperties> availableExtensions(extensionCount);
   vkEnumerateDeviceExtensionProperties(physical, nullptr, &extensionCount, availableExtensions.data());
@@ -16,7 +16,7 @@ std::vector<VkExtensionProperties> PhysicalDevice::getExtensionProperties(VkPhys
 }
 
 
-b32 PhysicalDevice::findQueueFamilies(VkSurfaceKHR surface,
+B32 PhysicalDevice::findQueueFamilies(VkSurfaceKHR surface,
                                       QueueFamily* presentation, 
                                       QueueFamily* graphics, 
                                       QueueFamily* transfer, 
@@ -26,12 +26,12 @@ b32 PhysicalDevice::findQueueFamilies(VkSurfaceKHR surface,
     R_DEBUG(rError, "No handle is set to query queue families from!\n");
     return false;
   }
-  u32 familyCount = 0;
+  U32 familyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &familyCount, nullptr);
   std::vector<VkQueueFamilyProperties> queueFamilies(familyCount);
   vkGetPhysicalDeviceQueueFamilyProperties(m_handle, &familyCount, queueFamilies.data());
 
-  i32 i = 0;
+  I32 i = 0;
   for (const auto& queueFamily : queueFamilies) {
     if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       graphics->_idx = i;
@@ -72,7 +72,7 @@ VkSurfaceCapabilitiesKHR PhysicalDevice::querySwapchainSurfaceCapabilities(VkSur
 std::vector<VkSurfaceFormatKHR> PhysicalDevice::querySwapchainSurfaceFormats(VkSurfaceKHR surface) const
 {
   std::vector<VkSurfaceFormatKHR> formats;
-  u32 formatCount;
+  U32 formatCount;
   vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &formatCount, nullptr);
   formats.resize(formatCount);
   vkGetPhysicalDeviceSurfaceFormatsKHR(m_handle, surface, &formatCount, formats.data());
@@ -83,7 +83,7 @@ std::vector<VkSurfaceFormatKHR> PhysicalDevice::querySwapchainSurfaceFormats(VkS
 std::vector<VkPresentModeKHR> PhysicalDevice::querySwapchainPresentModes(VkSurfaceKHR surface) const
 {
   std::vector<VkPresentModeKHR> presentModes;
-  u32 presentCount;
+  U32 presentCount;
   vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surface, &presentCount, nullptr);
   presentModes.resize(presentCount);
   vkGetPhysicalDeviceSurfacePresentModesKHR(m_handle, surface, &presentCount, presentModes.data());
@@ -99,11 +99,11 @@ VkPhysicalDeviceFeatures PhysicalDevice::getFeatures() const
 }
 
 
-u32 PhysicalDevice::findMemoryType(u32 filter, PhysicalDeviceMemoryUsage usage) const
+U32 PhysicalDevice::findMemoryType(U32 filter, PhysicalDeviceMemoryUsage usage) const
 { 
   VkMemoryPropertyFlags required = 0;
   VkMemoryPropertyFlags preferred = 0;
-  u32 index = 0xffffffff;
+  U32 index = 0xffffffff;
 
   switch (usage) {
     case PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY:
@@ -129,7 +129,7 @@ u32 PhysicalDevice::findMemoryType(u32 filter, PhysicalDeviceMemoryUsage usage) 
       break;
   };
 
-  for (u32 i = 0; i < m_memoryProperties.memoryTypeCount; ++i) {
+  for (U32 i = 0; i < m_memoryProperties.memoryTypeCount; ++i) {
     const VkMemoryPropertyFlags propFlags = m_memoryProperties.memoryTypes[i].propertyFlags;
     if ((filter & (1 << i))) {
       if ((propFlags & required) == required && ((propFlags & preferred) == preferred)) {

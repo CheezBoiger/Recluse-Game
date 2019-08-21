@@ -33,7 +33,7 @@ public:
 
   // Push back an object. Returns the index of the object stored in this structure.
   size_t                  pushBack(Cmd cmd) { if (m_currIdx >= mCmdList.size()) { resize(mCmdList.size() << 1); } mCmdList[m_currIdx] = cmd; return m_currIdx++; }
-  void                    erase(u32 i) { mCmdList.erase(mRenderList.begin() + i); }
+  void                    erase(U32 i) { mCmdList.erase(mRenderList.begin() + i); }
   // Sort using alg.
   void                    sort() { if (mCompare && m_currIdx > 0) std::sort(mCmdList.begin(), mCmdList.begin() + (m_currIdx), mCompare); }
   void                    clear() { m_currIdx = 0; }
@@ -42,7 +42,7 @@ public:
 private:
   std::vector<Cmd>        mCmdList;
   CmdCompareFunc         mCompare;
-  b32                     mDirty;
-  u32                    m_currIdx;
+  B32                     mDirty;
+  U32                    m_currIdx;
 };
 } // Recluse

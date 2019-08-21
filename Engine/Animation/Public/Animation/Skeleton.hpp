@@ -9,18 +9,18 @@
 
 namespace Recluse {
 
-typedef i32      skeleton_uuid_t;
+typedef I32      skeleton_uuid_t;
 
 
 // Joint represents the overall skeleton pose of our model. 
 // this information defines how the rig of an animation is posed at rest.
 struct Joint {
-  static const u8 kNoParentId = 0xff;
+  static const U8 kNoParentId = 0xff;
 
   Matrix4       _invBindPose;     // Bind pose transform of this joint.
   std::string   _name;            // name of the joint.
-  u8            _iParent;         // Joint parent, represented as an id in byte form.
-  u8            _id;              // node id test.
+  U8            _iParent;         // Joint parent, represented as an id in byte form.
+  U8            _id;              // node id test.
 };
 
 
@@ -61,7 +61,7 @@ public:
   std::vector<Joint>          _joints;
   // This skeleton's unique id.
   skeleton_uuid_t             _uuid;
-  b32                         _rootInJoints;
+  B32                         _rootInJoints;
   Matrix4                     _rootInvTransform;
 };
 } // Recluse

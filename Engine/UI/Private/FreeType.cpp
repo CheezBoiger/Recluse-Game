@@ -7,7 +7,7 @@
 namespace Recluse {
 
 
-b8 FreeType::initialize()
+B8 FreeType::initialize()
 {
   FT_Error error = FT_Init_FreeType(&mLibrary);
   if (error != FT_Err_Ok) {

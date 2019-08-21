@@ -17,8 +17,8 @@ public:
   void SetTargetActor(IActor* actor) { m_actorTarget = actor; }
   void initialize(GameObject* obj) { 
     m_pCamera->initialize(obj);
-    m_lastX = (r32)Mouse::getX();
-    m_lastY = (r32)Mouse::getY();
+    m_lastX = (R32)Mouse::getX();
+    m_lastY = (R32)Mouse::getY();
   }
 
   void UpdateCamera()
@@ -29,11 +29,11 @@ public:
     m_yaw = euler.x;
     m_pitch = euler.y;
 
-    r32 lx = (r32)Mouse::getX();
-    r32 ly = (r32)Mouse::getY();  
+    R32 lx = (R32)Mouse::getX();
+    R32 ly = (R32)Mouse::getY();  
 
-    r32 xoffset = m_lastX - lx;
-    r32 yoffset = ly - m_lastY;
+    R32 xoffset = m_lastX - lx;
+    R32 yoffset = ly - m_lastY;
     m_lastX = lx;
     m_lastY = ly;
 
@@ -75,10 +75,10 @@ private:
   // Camera object used by the engine.
   Camera* m_pCamera;
 
-  r32     m_lastX;
-  r32     m_lastY;
-  r32     m_yaw;
-  r32     m_pitch;
-  r32     m_sensitivityX;
-  r32     m_sensitivityY;
+  R32     m_lastX;
+  R32     m_lastY;
+  R32     m_yaw;
+  R32     m_pitch;
+  R32     m_sensitivityX;
+  R32     m_sensitivityY;
 };

@@ -16,7 +16,7 @@ class FreeType {
 public:
   FreeType() { }
 
-  b8              initialize();
+  B8              initialize();
   void            cleanUp();
   FT_Library&     getHandle() { return mLibrary; }
 

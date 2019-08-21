@@ -44,13 +44,13 @@ public:
 
   const RenderPass*   RenderPassRef() { return m_pRenderPassRef; }
 
-  u32           getWidth() const { return m_Width; }
-  u32           getHeight() const { return m_Height; }
+  U32           getWidth() const { return m_Width; }
+  U32           getHeight() const { return m_Height; }
 
 private:
   const RenderPass*   m_pRenderPassRef;
   VkFramebuffer       mHandle;
-  u32                 m_Width;
-  u32                 m_Height;
+  U32                 m_Width;
+  U32                 m_Height;
 };
 } // Recluse

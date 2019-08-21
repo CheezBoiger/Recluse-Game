@@ -18,7 +18,7 @@ class CollisionShape {
 struct ContactPoint {
   Vector3 _point;
   Vector3 _normal;
-  r32     _distance;
+  R32     _distance;
 };
 
 

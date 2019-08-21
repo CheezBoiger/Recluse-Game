@@ -67,7 +67,7 @@ enum PhysicsUpdateBits {
 };
 
 
-typedef u32 physics_update_bits_t;
+typedef U32 physics_update_bits_t;
 
 // Our physics engine interface.
 class Physics : public EngineModule<Physics> {
@@ -82,7 +82,7 @@ public:
   virtual RigidBody*                      createRigidBody(const Vector3& centerOfMassOffset = Vector3(0.0f, 0.0f, 0.0f)) { return nullptr; }
 
   virtual BoxCollider*                    createBoxCollider(const Vector3& scale) { return nullptr; }
-  virtual SphereCollider*                 createSphereCollider(r32 radius) { return nullptr; }
+  virtual SphereCollider*                 createSphereCollider(R32 radius) { return nullptr; }
   virtual CompoundCollider*               createCompoundCollider() { return nullptr; }
   virtual void                            updateCompoundCollider(RigidBody* body, CompoundCollider* compound) { }
   virtual void                            freeRigidBody(RigidBody* body) { }
@@ -92,21 +92,21 @@ public:
   virtual void                            updateRigidBody(RigidBody* body, physics_update_bits_t bits) { }
   virtual void                            setWorldGravity(const Vector3& gravity) { }
 
-  virtual void                            setMass(RigidBody* body, r32 mass) { }
+  virtual void                            setMass(RigidBody* body, R32 mass) { }
   virtual void                            applyImpulse(RigidBody* body, const Vector3& impulse, const Vector3& relPos) { }
   virtual void                            applyForce(RigidBody* body, const Vector3& force) { }
   virtual void                            activateRigidBody(RigidBody* body) { } 
   virtual void                            deactivateRigidBody(RigidBody* body) { }
   virtual void                            setTransform(RigidBody* body, const Vector3& pos, const Quaternion& rot) { }
 
-  virtual void                            setFriction(RigidBody* body, r32 friction) { }
-  virtual void                            setRollingFriction(RigidBody* body, r32 friction) { }
-  virtual void                            setSpinningFriction(RigidBody* body, r32 friction) { }
+  virtual void                            setFriction(RigidBody* body, R32 friction) { }
+  virtual void                            setRollingFriction(RigidBody* body, R32 friction) { }
+  virtual void                            setSpinningFriction(RigidBody* body, R32 friction) { }
   virtual void                            clearForces(RigidBody* body) { }
-  virtual void                            updateState(r64 dt, r64 fixedTime) { }
+  virtual void                            updateState(R64 dt, R64 fixedTime) { }
   virtual void                            addCollider(RigidBody* body, Collider* collider) { }
-  virtual b32                             rayTest(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHit* output) { return false; }
-  virtual b32                             rayTestAll(const Vector3& origin, const Vector3& direction, const r32 maxDistance, RayTestHitAll* output) { return false; }
+  virtual B32                             rayTest(const Vector3& origin, const Vector3& direction, const R32 maxDistance, RayTestHit* output) { return false; }
+  virtual B32                             rayTestAll(const Vector3& origin, const Vector3& direction, const R32 maxDistance, RayTestHitAll* output) { return false; }
   virtual void                            updateCollider(Collider* collider) { }
 private:
 };

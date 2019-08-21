@@ -42,27 +42,27 @@ struct GlobalBuffer {
   Vector4         _FPlane;
   Vector4         _clipPlane0;
   Vector2         _MousePos;
-  i32             _ScreenSize[2];
+  I32             _ScreenSize[2];
   Vector3         _vSunDir; // Sun direction, must be normalized!
-  r32             _vSunBrightness;
+  R32             _vSunBrightness;
   Vector4         _vAirColor;
   Vector4         _fov;
-  r32             _fEngineTime; // Current time passed within the engine.
-  r32             _fDeltaTime;  // Elapsed time between frames.
-  r32             _Gamma;
-  r32             _Exposure;
-  r32             _Rayleigh;
-  r32             _Mie;
-  r32             _MieDist;
-  r32             _fScatterStrength;
-  r32             _fRayleighStength;
-  r32             _fMieStength;
-  r32             _fIntensity;
-  r32             _zNear;
-  r32             _zFar;
-  i32             _BloomEnabled;
-  i32             _EnableShadows;
-  i32             _EnableAA;
+  R32             _fEngineTime; // Current time passed within the engine.
+  R32             _fDeltaTime;  // Elapsed time between frames.
+  R32             _Gamma;
+  R32             _Exposure;
+  R32             _Rayleigh;
+  R32             _Mie;
+  R32             _MieDist;
+  R32             _fScatterStrength;
+  R32             _fRayleighStength;
+  R32             _fMieStength;
+  R32             _fIntensity;
+  R32             _zNear;
+  R32             _zFar;
+  I32             _BloomEnabled;
+  I32             _EnableShadows;
+  I32             _EnableAA;
 };
 
 
@@ -72,14 +72,14 @@ public:
   GlobalDescriptor();
   ~GlobalDescriptor();
 
-  void              update(VulkanRHI* pRhi, u32 frameIndex);
+  void              update(VulkanRHI* pRhi, U32 frameIndex);
   void              initialize(VulkanRHI* pRhi);
   void              cleanUp(VulkanRHI* pRhi);
 
-  DescriptorSet*    getDescriptorSet(u32 idx) { return m_pDescriptorSets[idx]; }
+  DescriptorSet*    getDescriptorSet(U32 idx) { return m_pDescriptorSets[idx]; }
 
   GlobalBuffer*     getData() { return &m_Global; }
-  Buffer*           getHandle(u32 idx) { return m_pGlobalBuffers[idx]; }
+  Buffer*           getHandle(U32 idx) { return m_pGlobalBuffers[idx]; }
 
 private:
   std::vector<DescriptorSet*>    m_pDescriptorSets;

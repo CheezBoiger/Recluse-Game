@@ -27,9 +27,9 @@ namespace Recluse {
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
   VkDebugReportFlagsEXT flags,
   VkDebugReportObjectTypeEXT objType,
-  u64 obj,
+  U64 obj,
   size_t location,
-  i32 code,
+  I32 code,
   const char* layerPrefix,
   const char* msg,
   void* usrData)
@@ -40,7 +40,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 }
 
 
-b32 Context::createInstance(const char* appName)
+B32 Context::createInstance(const char* appName)
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -55,7 +55,7 @@ b32 Context::createInstance(const char* appName)
   instCreateInfo.pApplicationInfo = &appInfo;
 
   if (mDebugEnabled) {
-    instCreateInfo.enabledLayerCount = static_cast<u32>(validationLayers.size());
+    instCreateInfo.enabledLayerCount = static_cast<U32>(validationLayers.size());
     instCreateInfo.ppEnabledLayerNames = validationLayers.data();
     extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
   }
@@ -64,7 +64,7 @@ b32 Context::createInstance(const char* appName)
     instCreateInfo.ppEnabledLayerNames = nullptr;
   }
 
-  instCreateInfo.enabledExtensionCount = static_cast<u32>(extensions.size());
+  instCreateInfo.enabledExtensionCount = static_cast<U32>(extensions.size());
   instCreateInfo.ppEnabledExtensionNames = extensions.data();
   VkResult result = vkCreateInstance(&instCreateInfo, nullptr, &mInstance);
 
@@ -91,7 +91,7 @@ void Context::cleanUp()
 
 std::vector<VkPhysicalDevice>& Context::enumerateGpus()
 {
-  u32 deviceCount = 0;
+  U32 deviceCount = 0;
   vkEnumeratePhysicalDevices(mInstance, &deviceCount, nullptr);
 
 
@@ -142,13 +142,13 @@ void Context::destroySurface(VkSurfaceKHR surface)
 
 void Context::enableDebugMode()
 {
-  u32 count;
+  U32 count;
   vkEnumerateInstanceLayerProperties(&count, nullptr);
   std::vector<VkLayerProperties> layerPropertiesVector(count);
   vkEnumerateInstanceLayerProperties(&count, layerPropertiesVector.data());
 
   for (const char* layerName : validationLayers) {
-    b32 layerFound = false;
+    B32 layerFound = false;
     for (const auto& layerProperties : layerPropertiesVector) {
       if (strcmp(layerName, layerProperties.layerName) == 0) {
         layerFound = true;

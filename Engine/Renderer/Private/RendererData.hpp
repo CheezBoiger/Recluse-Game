@@ -328,7 +328,7 @@ public:
   void    generateCommands(VulkanRHI* pRhi, 
                            CommandBuffer* pOut, 
                            GlobalDescriptor* pDescriptor, 
-                           u32 frameIndex);
+                           U32 frameIndex);
   void    updateSets(VulkanRHI* pRhi, 
                      GlobalDescriptor* pDescriptor);
   Texture*  GetOutput() { return m_output; }
@@ -347,7 +347,7 @@ private:
   Sampler*                m_outputSampler;
   DescriptorSetLayout*    m_layout;
   DescriptorSet*          m_descSet;
-  u32                     m_groupSz;           
+  U32                     m_groupSz;           
 };
 
 
@@ -365,7 +365,7 @@ public:
   void RecordDebugCommands(VulkanRHI* pRhi, 
                            CommandBuffer* pBuf, 
                            SimpleRenderCmd* renderCmds, 
-                           u32 count);
+                           U32 count);
 
   RenderPass*         GetRenderPass() { return m_renderPass; }
   GraphicsPipeline*   GetWireFrameStaticPipeline() { }

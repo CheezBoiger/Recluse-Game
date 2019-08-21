@@ -6,19 +6,19 @@
 namespace Recluse {
 
 
-b32 Mouse::mouseTrack = true;
-b32 Mouse::mouseEnabled = true;
-b32 Mouse::mouseShow = true;
-b32 Mouse::mouseClamped = false;
-r64 Mouse::xPos = 0;
-r64 Mouse ::yPos = 0;
-r64 Mouse::lastXPos = 0;
-r64 Mouse::lastYPos = 0;
+B32 Mouse::mouseTrack = true;
+B32 Mouse::mouseEnabled = true;
+B32 Mouse::mouseShow = true;
+B32 Mouse::mouseClamped = false;
+R64 Mouse::xPos = 0;
+R64 Mouse ::yPos = 0;
+R64 Mouse::lastXPos = 0;
+R64 Mouse::lastYPos = 0;
 HCURSOR Mouse::cursor = NULL;
 Mouse::ButtonAction Mouse::buttonActions[Mouse::MAX_MOUSE_BUTTONS];
 
 
-void Mouse::setEnable(b32 enable) {
+void Mouse::setEnable(B32 enable) {
   if (enable && Mouse::cursor) {
     SetCursor(Mouse::cursor);
   } else {
@@ -29,7 +29,7 @@ void Mouse::setEnable(b32 enable) {
 }
 
 
-void Mouse::show(b32 enable)
+void Mouse::show(B32 enable)
 {
   if ( enable ) 
   {
@@ -46,16 +46,16 @@ void Mouse::show(b32 enable)
 
 void Mouse::resetButtonActions()
 {
-  for (u32 i = 0; i < MAX_MOUSE_BUTTONS; ++i)
+  for (U32 i = 0; i < MAX_MOUSE_BUTTONS; ++i)
   {
     buttonActions[ i ] = Mouse::IDLE;
   }
 }
 
 
-void Mouse::setPosition(r64 x, r64 y)
+void Mouse::setPosition(R64 x, R64 y)
 {
-  SetCursorPos((i32)x, (i32)y);
+  SetCursorPos((I32)x, (I32)y);
   Mouse::xPos = x;
   Mouse::yPos = y;
   Mouse::lastXPos = x;
@@ -63,14 +63,14 @@ void Mouse::setPosition(r64 x, r64 y)
 }
 
 
-b32 Mouse::buttonDown(Mouse::ButtonType type)
+B32 Mouse::buttonDown(Mouse::ButtonType type)
 {
-  return buttonActions[(i32)type] == Mouse::PRESSED;
+  return buttonActions[(I32)type] == Mouse::PRESSED;
 }
 
 
-b32 Mouse::buttonUp(Mouse::ButtonType type)
+B32 Mouse::buttonUp(Mouse::ButtonType type)
 {
-  return buttonActions[(i32)type] == Mouse::RELEASED;
+  return buttonActions[(I32)type] == Mouse::RELEASED;
 }
 } // Recluse

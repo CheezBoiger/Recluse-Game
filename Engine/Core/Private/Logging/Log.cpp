@@ -5,23 +5,23 @@
 
 namespace Recluse {
 
-b8 Log::display = false;
-b8 Log::store = false;
+B8 Log::display = false;
+B8 Log::store = false;
 
 
-void Log::displayToConsole(b8 enable)
+void Log::displayToConsole(B8 enable)
 {
   display = enable;
 }
 
 
-void Log::StoreLogs(b8 enable)
+void Log::StoreLogs(B8 enable)
 {
   store = enable;
 }
 
 
-b8 Log::DisplayingToConsole()
+B8 Log::DisplayingToConsole()
 {
   return Log::display;
 }

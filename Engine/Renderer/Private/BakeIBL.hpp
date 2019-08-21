@@ -30,7 +30,7 @@ public:
 
   void                  renderPrefilterSpec(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
   void                  renderIrrDiff(CommandBuffer* pCmd, CmdList<MeshRenderCmd>* pCmdList);
-  void                  renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, u32 frameIndex);
+  void                  renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Texture* target, U32 frameIndex);
   void                  updateTargetBRDF(Texture* target);
 private:
 

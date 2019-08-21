@@ -246,7 +246,7 @@ namespace RendererPass {
 
 void initialize(VulkanRHI* pRhi)
 { 
-  for (i32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i)
+  for (I32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i)
   {
     g_graphicsPipeline[ (GraphicsPipelineT)i ] = pRhi->createGraphicsPipeline();
   }
@@ -255,7 +255,7 @@ void initialize(VulkanRHI* pRhi)
 
 void cleanUp(VulkanRHI* pRhi)
 {
-  for (i32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i) 
+  for (I32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i) 
   {
     pRhi->freeGraphicsPipeline(g_graphicsPipeline[ (GraphicsPipelineT) i ]);
     g_graphicsPipeline[ (GraphicsPipelineT) i ] = nullptr;
@@ -346,7 +346,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size());
+  PipelineLayout.setLayoutCount = static_cast<U32>(DLayouts.size());
   PipelineLayout.pSetLayouts = DLayouts.data();
   PipelineLayout.pPushConstantRanges = 0;
   PipelineLayout.pushConstantRangeCount = 0;
@@ -363,8 +363,8 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     // Initialize pbr forward morph target pipeline.
     Rhi->freeShader(VertGBuffer);
@@ -381,7 +381,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   VkPipelineVertexInputStateCreateInfo Input = { };
 
   GraphicsInfo.pVertexInputState = &Input;
-  Input.vertexAttributeDescriptionCount = static_cast<u32>(VertexAttribs.size());
+  Input.vertexAttributeDescriptionCount = static_cast<U32>(VertexAttribs.size());
   Input.vertexBindingDescriptionCount = 1;
   Input.pVertexBindingDescriptions = &Bindings;
   Input.pVertexAttributeDescriptions = VertexAttribs.data();
@@ -393,7 +393,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   loadShader(gbuffer_StaticVertFileStr, VertGBuffer);
   
   PbrShaders[0].module = VertGBuffer->getHandle();
-  PipelineLayout.setLayoutCount = static_cast<u32>(DLayouts.size() - 1); // We don't need bone buffer.
+  PipelineLayout.setLayoutCount = static_cast<U32>(DLayouts.size() - 1); // We don't need bone buffer.
   g_graphicsPipeline[ GRAPHICS_PIPELINE_GBUFFER_STATIC ]->initialize(GraphicsInfo, PipelineLayout);
   
   Rhi->freeShader(VertGBuffer);
@@ -408,8 +408,8 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     // Initialize pbr forward morph target pipeline.
     Rhi->freeShader(VertGBuffer);
@@ -480,7 +480,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   pushConstantRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
   hdrLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  hdrLayout.setLayoutCount = static_cast<u32>(hdrSetLayout.size());
+  hdrLayout.setLayoutCount = static_cast<U32>(hdrSetLayout.size());
   hdrLayout.pSetLayouts = hdrSetLayout.data();
   hdrLayout.pPushConstantRanges = &pushConstantRange;
   hdrLayout.pushConstantRangeCount = 1;
@@ -575,7 +575,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     );
 
     VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-      static_cast<u32>(colorBlendAttachments.size()),
+      static_cast<U32>(colorBlendAttachments.size()),
       colorBlendAttachments.data(),
       VK_FALSE,
       VK_LOGIC_OP_COPY
@@ -593,7 +593,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 
     VkPipelineLayoutCreateInfo PipelineLayout = {};
     PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+    PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size());
     PipelineLayout.pSetLayouts = layouts.data();
     PipelineLayout.pPushConstantRanges = 0;
     PipelineLayout.pushConstantRangeCount = 0;
@@ -628,7 +628,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     Rhi->freeShader(FragPBR);
   }
 
-  u32 vendorId = Rhi->vendorID();
+  U32 vendorId = Rhi->vendorID();
 
   // PBR compute bound.
   {
@@ -835,7 +835,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   );
 
   VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    static_cast<u32>(colorBlendAttachments.size()),
+    static_cast<U32>(colorBlendAttachments.size()),
     colorBlendAttachments.data(),
     VK_FALSE,
     VK_LOGIC_OP_COPY
@@ -854,7 +854,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   layouts[6] = BonesSetLayoutKey->getLayout();
 
   struct ivec4 {
-    i32 v[4];
+    I32 v[4];
   };
 
   VkPushConstantRange range = { };
@@ -864,7 +864,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   VkPipelineLayoutCreateInfo PipelineLayout = {};
   PipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+  PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size());
   PipelineLayout.pSetLayouts = layouts.data();
   PipelineLayout.pPushConstantRanges = &range;
   PipelineLayout.pushConstantRangeCount = 0;
@@ -885,8 +885,8 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     PbrShaders[0].module = VertMorphSkin->getHandle();
     PbrShaders[1].module = FragPBRLR->getHandle();
@@ -901,7 +901,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[0].module = VertPBRLR->getHandle();
   PbrShaders[1].module = FragPBRNoLR->getHandle();
   layouts[5] = globalIllumination_DescNoLR->getLayout();
-  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size());
+  PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size());
   pbr_forwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
@@ -918,8 +918,8 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     PbrShaders[0].module = VertMorphSkin->getHandle();
     PbrShaders[1].module = FragPBRNoLR->getHandle();
@@ -933,7 +933,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
   PbrShaders[0].module = VertPBRStatic->getHandle();
   PbrShaders[1].module = FragPBRLR->getHandle();
-  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
+  PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size() - 1);
 
   // isStatic pipeline creation.
   auto StaticBindings = StaticVertexDescription::GetBindingDescription();
@@ -941,7 +941,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   VkPipelineVertexInputStateCreateInfo Input = {};
 
   GraphicsInfo.pVertexInputState = &Input;
-  Input.vertexAttributeDescriptionCount = static_cast<u32>(StaticVertexAttribs.size());
+  Input.vertexAttributeDescriptionCount = static_cast<U32>(StaticVertexAttribs.size());
   Input.vertexBindingDescriptionCount = 1;
   Input.pVertexBindingDescriptions = &StaticBindings;
   Input.pVertexAttributeDescriptions = StaticVertexAttribs.data();
@@ -964,8 +964,8 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     PbrShaders[0].module = VertMorphStatic->getHandle();
     PbrShaders[1].module = FragPBRLR->getHandle();
@@ -982,7 +982,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[0].module = VertPBRStatic->getHandle();
   PbrShaders[1].module = FragPBRNoLR->getHandle();
   layouts[5] = globalIllumination_DescNoLR->getLayout();
-  PipelineLayout.setLayoutCount = static_cast<u32>(layouts.size() - 1);
+  PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size() - 1);
   pbr_staticForwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
@@ -999,8 +999,8 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
     input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     input.pVertexAttributeDescriptions = attribs.data();
     input.pVertexBindingDescriptions = bindings.data();
-    input.vertexAttributeDescriptionCount = static_cast<u32>(attribs.size());
-    input.vertexBindingDescriptionCount = static_cast<u32>(bindings.size());
+    input.vertexAttributeDescriptionCount = static_cast<U32>(attribs.size());
+    input.vertexBindingDescriptionCount = static_cast<U32>(bindings.size());
 
     PbrShaders[0].module = VertMorphStatic->getHandle();
     PbrShaders[1].module = FragPBRNoLR->getHandle();
@@ -1211,14 +1211,14 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   Info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Info.pVertexAttributeDescriptions = Attribs.data();
   Info.pVertexBindingDescriptions = &Bindings;
-  Info.vertexAttributeDescriptionCount = static_cast<u32>(Attribs.size());
+  Info.vertexAttributeDescriptionCount = static_cast<U32>(Attribs.size());
   Info.vertexBindingDescriptionCount = 1;
   Info.pNext = nullptr;
 
   PipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   PipeLayout.pushConstantRangeCount = 0;
   PipeLayout.pPushConstantRanges = nullptr;
-  PipeLayout.setLayoutCount = static_cast<u32>(DescLayouts.size() - 1);
+  PipeLayout.setLayoutCount = static_cast<U32>(DescLayouts.size() - 1);
   PipeLayout.pSetLayouts = DescLayouts.data();
   // ShadowMapping shader.
   // TODO(): Shadow mapping MUST be done before downsampling and glow buffers have finished!
@@ -1247,7 +1247,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   Shaders[1].module = SmFrag->getHandle();
 
   GraphicsPipelineInfo.pStages = Shaders.data();
-  GraphicsPipelineInfo.stageCount = static_cast<u32>(Shaders.size());
+  GraphicsPipelineInfo.stageCount = static_cast<U32>(Shaders.size());
   GraphicsPipelineInfo.pVertexInputState = &Info;
 
   VkPipelineRasterizationStateCreateInfo rasterizerCI = CreateRasterInfo(
@@ -1267,7 +1267,7 @@ void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateIn
   Attribs = SkinnedVertexDescription::GetVertexAttributes();
   Info.pVertexAttributeDescriptions = Attribs.data();
   Info.pVertexBindingDescriptions = &Bindings;
-  Info.vertexAttributeDescriptionCount = static_cast<u32>(Attribs.size());
+  Info.vertexAttributeDescriptionCount = static_cast<U32>(Attribs.size());
   Info.vertexBindingDescriptionCount = 1;
   Info.pNext = nullptr;
   
@@ -1383,7 +1383,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   );
 
   VkPipelineColorBlendStateCreateInfo colorBlendCI = CreateBlendStateInfo(
-    static_cast<u32>(colorBlendAttachments.size()),
+    static_cast<U32>(colorBlendAttachments.size()),
     colorBlendAttachments.data(),
     VK_FALSE,
     VK_LOGIC_OP_COPY
@@ -1508,8 +1508,8 @@ void AntiAliasingFXAA::cleanUp(VulkanRHI* pRhi)
 void AntiAliasingFXAA::createTexture(VulkanRHI* pRhi, GlobalDescriptor* pGlobal)
 {
   m_output = pRhi->createTexture();
-  VkExtent2D extent = { (u32)pGlobal->getData()->_ScreenSize[0],
-                        (u32)pGlobal->getData()->_ScreenSize[1] };
+  VkExtent2D extent = { (U32)pGlobal->getData()->_ScreenSize[0],
+                        (U32)pGlobal->getData()->_ScreenSize[1] };
   VkImageCreateInfo imgCi = { };
   VkImageViewCreateInfo imgViewCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1587,7 +1587,7 @@ void AntiAliasingFXAA::updateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   writes[1].dstBinding = 1;
   writes[1].pImageInfo = &outputInfo;
 
-  m_descSet->update(static_cast<u32>(writes.size()), writes.data());
+  m_descSet->update(static_cast<U32>(writes.size()), writes.data());
 }
 
 
@@ -1609,7 +1609,7 @@ void AntiAliasingFXAA::createDescriptorSetLayout(VulkanRHI* pRhi)
   binds[1].binding = 1;
   binds[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 
-  layoutCi.bindingCount = static_cast<u32>(binds.size());
+  layoutCi.bindingCount = static_cast<U32>(binds.size());
   layoutCi.pBindings = binds.data();
 
   m_layout = pRhi->createDescriptorSetLayout();
@@ -1617,7 +1617,7 @@ void AntiAliasingFXAA::createDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, u32 frameIndex)
+void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, U32 frameIndex)
 {
   VkImageSubresourceRange subrange = {};
   subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1643,8 +1643,8 @@ void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
     m_descSet->getHandle()
   };
 
-  VkExtent2D extent = { (u32)pGlobal->getData()->_ScreenSize[0],
-                        (u32)pGlobal->getData()->_ScreenSize[1] };
+  VkExtent2D extent = { (U32)pGlobal->getData()->_ScreenSize[0],
+                        (U32)pGlobal->getData()->_ScreenSize[1] };
   pOutput->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
   pOutput->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
   pOutput->dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
@@ -1747,7 +1747,7 @@ void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 
   VkRenderPassCreateInfo rpCi = { };
   rpCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  rpCi.attachmentCount = static_cast<u32>(attachments.size());
+  rpCi.attachmentCount = static_cast<U32>(attachments.size());
   rpCi.pAttachments = attachments.data();
   rpCi.pSubpasses = &debugSubpass;
   rpCi.subpassCount = 1;
@@ -1822,7 +1822,7 @@ void DebugManager::createPipelines(VulkanRHI* pRhi)
 void DebugManager::RecordDebugCommands(VulkanRHI* pRhi,
                                        CommandBuffer* pBuf,
                                        SimpleRenderCmd* renderCmds,
-                                       u32 count)
+                                       U32 count)
 {
 
 }

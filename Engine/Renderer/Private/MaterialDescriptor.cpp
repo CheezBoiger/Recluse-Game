@@ -190,7 +190,7 @@ void MaterialDescriptor::update(VulkanRHI* pRhi)
     MaterialWriteSets[5].pBufferInfo = &matBufferInfo;
     MaterialWriteSets[5].pNext = nullptr;
 
-    m_materialSet->update(static_cast<u32>(MaterialWriteSets.size()), MaterialWriteSets.data());
+    m_materialSet->update(static_cast<U32>(MaterialWriteSets.size()), MaterialWriteSets.data());
     //SwapDescriptorSet();
   }
   

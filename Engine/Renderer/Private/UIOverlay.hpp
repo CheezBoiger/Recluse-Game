@@ -40,13 +40,13 @@ public:
   void                        render(VulkanRHI* pRhi);
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, u32 frameIndex);
+  void                        BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, U32 frameIndex);
 
-  Semaphore*                  Signal(u32 idx) { return m_pSemaphores[idx]; }
+  Semaphore*                  Signal(U32 idx) { return m_pSemaphores[idx]; }
 
   DescriptorSetLayout*        GetMaterialLayout() { return m_pDescLayout; }
 
-  CommandBuffer*              GetCommandBuffer(u32 idx) { return m_CmdBuffers[idx]; }
+  CommandBuffer*              GetCommandBuffer(U32 idx) { return m_CmdBuffers[idx]; }
 
   RenderPass*                 GetRenderPass() { return m_renderPass; }
 
@@ -61,7 +61,7 @@ private:
   void                        createDescriptorSetLayout(VulkanRHI* pRhi);
   void                        CleanUpDescriptorSetLayout(VulkanRHI* pRhi);
   void                        CleanUpBuffers(VulkanRHI* pRhi);
-  void                        StreamBuffers(VulkanRHI* pRhi, u32 frameIndex);
+  void                        StreamBuffers(VulkanRHI* pRhi, U32 frameIndex);
 
   std::vector<Semaphore*>     m_pSemaphores;
   std::vector<CommandBuffer*> m_CmdBuffers;

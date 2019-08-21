@@ -11,7 +11,7 @@ namespace Recluse {
 
 class UVSphere {
 public:
-  static std::vector<StaticVertex> meshInstance(r32 radius, u32 sliceCnt, u32 stckCount);
-  static std::vector<u32> indicesInstance(u32 verticesCnt, u32 sliceCnd, u32 stckCnt);
+  static std::vector<StaticVertex> meshInstance(R32 radius, U32 sliceCnt, U32 stckCount);
+  static std::vector<U32> indicesInstance(U32 verticesCnt, U32 sliceCnd, U32 stckCnt);
 };
 } // Recluse

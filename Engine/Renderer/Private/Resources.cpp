@@ -17,13 +17,13 @@
 namespace Recluse {
 
 
-std::unordered_map<u64, GraphicsPipeline* > GraphicsPipelineMap;
-std::unordered_map<u64, ComputePipeline* >  ComputePipelineMap;
-std::unordered_map<u64, FrameBuffer* > FrameBuffers;
-std::unordered_map<u64, Texture*> RenderTextureMap;
-std::unordered_map<u64, Sampler*> SamplerMap;
-std::unordered_map<u64, DescriptorSetLayout*> DescriptorSetLayoutMap;
-std::unordered_map<u64, DescriptorSet* > DescriptorSetMap;
+std::unordered_map<U64, GraphicsPipeline* > GraphicsPipelineMap;
+std::unordered_map<U64, ComputePipeline* >  ComputePipelineMap;
+std::unordered_map<U64, FrameBuffer* > FrameBuffers;
+std::unordered_map<U64, Texture*> RenderTextureMap;
+std::unordered_map<U64, Sampler*> SamplerMap;
+std::unordered_map<U64, DescriptorSetLayout*> DescriptorSetLayoutMap;
+std::unordered_map<U64, DescriptorSet* > DescriptorSetMap;
 
 resource_id_t Resources::idCount = 0;
 
@@ -42,7 +42,7 @@ Resources& gResources()
 }
 
 
-b32 Resources::RegisterGraphicsPipeline(GraphicsPipeline* pipeline)
+B32 Resources::RegisterGraphicsPipeline(GraphicsPipeline* pipeline)
 { 
   if (!pipeline) return false;
   graphics_uuid_t id = pipeline->GetUUID();
@@ -55,7 +55,7 @@ b32 Resources::RegisterGraphicsPipeline(GraphicsPipeline* pipeline)
 }
 
 
-b32 Resources::RegisterComputePipeline(ComputePipeline* pipeline)
+B32 Resources::RegisterComputePipeline(ComputePipeline* pipeline)
 {
   graphics_uuid_t id = pipeline->GetUUID();
   if (ComputePipelineMap.find(id) == ComputePipelineMap.end()) {
@@ -67,7 +67,7 @@ b32 Resources::RegisterComputePipeline(ComputePipeline* pipeline)
 }
 
 
-b32 Resources::RegisterFrameBuffer(FrameBuffer* framebuffer)
+B32 Resources::RegisterFrameBuffer(FrameBuffer* framebuffer)
 {
   graphics_uuid_t id = framebuffer->GetUUID();
   if (FrameBuffers.find(id) == FrameBuffers.end()) {
@@ -79,7 +79,7 @@ b32 Resources::RegisterFrameBuffer(FrameBuffer* framebuffer)
 }
 
 
-b32 Resources::RegisterRenderTexture(Texture* texture)
+B32 Resources::RegisterRenderTexture(Texture* texture)
 {
   graphics_uuid_t id = texture->GetUUID();
   if (RenderTextureMap.find(id) == RenderTextureMap.end()) {
@@ -90,7 +90,7 @@ b32 Resources::RegisterRenderTexture(Texture* texture)
 }
 
 
-b32 Resources::RegisterSampler(Sampler* sampler)
+B32 Resources::RegisterSampler(Sampler* sampler)
 {
   graphics_uuid_t id = sampler->GetUUID();
   if (SamplerMap.find(id) == SamplerMap.end()) {
@@ -102,7 +102,7 @@ b32 Resources::RegisterSampler(Sampler* sampler)
 }
 
 
-b32 Resources::RegisterDescriptorSetLayout(DescriptorSetLayout* layout)
+B32 Resources::RegisterDescriptorSetLayout(DescriptorSetLayout* layout)
 {
   graphics_uuid_t id = layout->GetUUID();
   if (DescriptorSetLayoutMap.find(id) == DescriptorSetLayoutMap.end()) {
@@ -113,7 +113,7 @@ b32 Resources::RegisterDescriptorSetLayout(DescriptorSetLayout* layout)
 }
 
 
-b32 Resources::RegisterDescriptorSet(DescriptorSet* set)
+B32 Resources::RegisterDescriptorSet(DescriptorSet* set)
 {
   graphics_uuid_t id = set->GetUUID();
   if (DescriptorSetMap.find(id) == DescriptorSetMap.end()) {
@@ -124,7 +124,7 @@ b32 Resources::RegisterDescriptorSet(DescriptorSet* set)
 }
 
 
-GraphicsPipeline* Resources::GetGraphicsPipeline(u64 id)
+GraphicsPipeline* Resources::GetGraphicsPipeline(U64 id)
 {
   if (GraphicsPipelineMap.find(id) != GraphicsPipelineMap.end()) {
     return GraphicsPipelineMap[id];
@@ -134,7 +134,7 @@ GraphicsPipeline* Resources::GetGraphicsPipeline(u64 id)
 }
 
 
-ComputePipeline* Resources::GetComputePipeline(u64 id)
+ComputePipeline* Resources::GetComputePipeline(U64 id)
 {
   if (ComputePipelineMap.find(id) != ComputePipelineMap.end()) {
     return ComputePipelineMap[id];
@@ -144,7 +144,7 @@ ComputePipeline* Resources::GetComputePipeline(u64 id)
 }
 
 
-FrameBuffer* Resources::GetFrameBuffer(u64 id)
+FrameBuffer* Resources::GetFrameBuffer(U64 id)
 {
   if (FrameBuffers.find(id) != FrameBuffers.end()) {
     return FrameBuffers[id];
@@ -153,7 +153,7 @@ FrameBuffer* Resources::GetFrameBuffer(u64 id)
 }
 
 
-Texture* Resources::GetRenderTexture(u64 id)
+Texture* Resources::GetRenderTexture(U64 id)
 {
   if (RenderTextureMap.find(id) != RenderTextureMap.end()) {
     return RenderTextureMap[id];
@@ -162,7 +162,7 @@ Texture* Resources::GetRenderTexture(u64 id)
 }
 
 
-Sampler* Resources::GetSampler(u64 id)
+Sampler* Resources::GetSampler(U64 id)
 {
   if (SamplerMap.find(id) != SamplerMap.end()) {
     return SamplerMap[id];
@@ -171,7 +171,7 @@ Sampler* Resources::GetSampler(u64 id)
 }
 
 
-DescriptorSetLayout* Resources::GetDescriptorSetLayout(u64 id)
+DescriptorSetLayout* Resources::GetDescriptorSetLayout(U64 id)
 {
   if (DescriptorSetLayoutMap.find(id) != DescriptorSetLayoutMap.end()) {
     return DescriptorSetLayoutMap[id];
@@ -180,7 +180,7 @@ DescriptorSetLayout* Resources::GetDescriptorSetLayout(u64 id)
 }
 
 
-DescriptorSet* Resources::getDescriptorSet(u64 id)
+DescriptorSet* Resources::getDescriptorSet(U64 id)
 {
   if (DescriptorSetMap.find(id) != DescriptorSetMap.end()) {
     return DescriptorSetMap[id];
@@ -189,7 +189,7 @@ DescriptorSet* Resources::getDescriptorSet(u64 id)
 }
 
 
-GraphicsPipeline* Resources::UnregisterGraphicsPipeline(u64 id)
+GraphicsPipeline* Resources::UnregisterGraphicsPipeline(U64 id)
 {
   GraphicsPipeline* pipeline = nullptr;
 
@@ -202,7 +202,7 @@ GraphicsPipeline* Resources::UnregisterGraphicsPipeline(u64 id)
 }
 
 
-ComputePipeline* Resources::UnregisterComputePipeline(u64 id)
+ComputePipeline* Resources::UnregisterComputePipeline(U64 id)
 {
   ComputePipeline* pipeline = nullptr;
   if (ComputePipelineMap.find(id) != ComputePipelineMap.end()) {
@@ -214,7 +214,7 @@ ComputePipeline* Resources::UnregisterComputePipeline(u64 id)
 }
 
 
-FrameBuffer* Resources::UnregisterFrameBuffer(u64 id)
+FrameBuffer* Resources::UnregisterFrameBuffer(U64 id)
 {
   FrameBuffer* framebuffer = nullptr;
   
@@ -227,7 +227,7 @@ FrameBuffer* Resources::UnregisterFrameBuffer(u64 id)
 }
 
 
-Texture* Resources::UnregisterRenderTexture(u64 id)
+Texture* Resources::UnregisterRenderTexture(U64 id)
 {
   Texture* texture = nullptr;
 
@@ -240,7 +240,7 @@ Texture* Resources::UnregisterRenderTexture(u64 id)
 }
 
 
-Sampler* Resources::UnregisterSampler(u64 id)
+Sampler* Resources::UnregisterSampler(U64 id)
 {
   Sampler* sampler = nullptr;
 
@@ -253,7 +253,7 @@ Sampler* Resources::UnregisterSampler(u64 id)
 }
 
 
-DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(u64 id)
+DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(U64 id)
 {
   DescriptorSetLayout* layout = nullptr;
 
@@ -266,7 +266,7 @@ DescriptorSetLayout* Resources::UnregisterDescriptorSetLayout(u64 id)
 }
 
 
-DescriptorSet* Resources::UnregisterDescriptorSet(u64 id)
+DescriptorSet* Resources::UnregisterDescriptorSet(U64 id)
 {
   DescriptorSet* set = nullptr;
 

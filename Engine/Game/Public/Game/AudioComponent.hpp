@@ -18,15 +18,15 @@ public:
   void update() override;
 
   void setRigidBodyReference(RigidBody* pBody) { m_pRigidBodyRef = pBody; }
-  void playSound(const std::string& soundPath, r32 volume);
+  void playSound(const std::string& soundPath, R32 volume);
   void pause();
-  void setVolume(r32 volume);
+  void setVolume(R32 volume);
   void isPaused();
   
 private:
 
   RigidBody* m_pRigidBodyRef;
-  u32 m_audioChannelId;
-  u32 m_audioChannelGroupId;
+  U32 m_audioChannelId;
+  U32 m_audioChannelGroupId;
 };
 } // Recluse 

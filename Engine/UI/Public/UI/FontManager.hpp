@@ -14,7 +14,7 @@ class Renderer;
 
 class FontManager : public EngineModule<FontManager> {
 public:
-  typedef i32   font_key_t;
+  typedef I32   font_key_t;
 
   FontManager() 
     : mCache(nullptr)

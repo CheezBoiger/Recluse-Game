@@ -28,9 +28,9 @@ public:
   void  onCleanUp() override;
   void  update() override;
 
-  void  setIntensity(r32 intensity) override { m_nativeLight._Intensity = intensity; }
+  void  setIntensity(R32 intensity) override { m_nativeLight._Intensity = intensity; }
   void  setColor(const Vector4& color) override { m_nativeLight._Color = color; }
-  void  setRange(r32 range) { m_nativeLight._Range = range; }
+  void  setRange(R32 range) { m_nativeLight._Range = range; }
   virtual void  onEnable() override { m_nativeLight._Enable = enabled(); }
   
   void  setOffset(const Vector3& offset) { m_offset = offset; }
@@ -58,21 +58,21 @@ public:
   void  onCleanUp() override;
   void  update() override;
 
-  void setRange(r32 range) { m_nativeLight._Range = range; }
+  void setRange(R32 range) { m_nativeLight._Range = range; }
   void setColor(const Vector4& color) override { m_nativeLight._Color = color; }
-  void enableFixed(b32 enable) { m_fixed = enable; }
-  void enableShadowing(b32 enable) { m_enableShadow = enable; }
-  void enableSyncWithParent(b32 enable) { m_syncGameObject = enable; }
+  void enableFixed(B32 enable) { m_fixed = enable; }
+  void enableShadowing(B32 enable) { m_enableShadow = enable; }
+  void enableSyncWithParent(B32 enable) { m_syncGameObject = enable; }
 
-  void setOuterCutoff(r32 cutoff) { m_nativeLight._OuterCutOff = cutoff; }
-  void setInnerCutoff(r32 cutoff) { m_nativeLight._InnerCutOff = cutoff; }
-  void setIntensity(r32 intensity) override { m_nativeLight._Color.w = intensity; }
+  void setOuterCutoff(R32 cutoff) { m_nativeLight._OuterCutOff = cutoff; }
+  void setInnerCutoff(R32 cutoff) { m_nativeLight._InnerCutOff = cutoff; }
+  void setIntensity(R32 intensity) override { m_nativeLight._Color.w = intensity; }
   virtual void onEnable() override { m_nativeLight._Enable = enabled(); }
   void setOffset(const Vector3& offset) { m_offset = offset; }
   void setRotationOffset(const Quaternion& rot) { m_rotQuat = rot; }
 
-  Vector3 getPosition() const { return Vector3((r32*)&(m_nativeLight._Position)); }
-  Vector3 getDirection() const { return Vector3((r32*)&(m_nativeLight._Direction)); }
+  Vector3 getPosition() const { return Vector3((R32*)&(m_nativeLight._Position)); }
+  Vector3 getDirection() const { return Vector3((R32*)&(m_nativeLight._Direction)); }
 
 
   // Allows override of position and direction of spotlight, if SyncWithParent is disabled.
@@ -85,7 +85,7 @@ private:
   Quaternion  m_rotQuat;
   SpotLight   m_nativeLight;
   Vector3     m_offset;
-  b32         m_fixed : 1,
+  B32         m_fixed : 1,
               m_enableShadow : 1,
               m_syncGameObject : 1,
               m_enable : 1;

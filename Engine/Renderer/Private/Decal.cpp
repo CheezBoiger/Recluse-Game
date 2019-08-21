@@ -60,7 +60,7 @@ std::array<Vector4, 36> bboxPositions =
 };
 
 
-std::array<u16, 36> bboxIndices = 
+std::array<U16, 36> bboxIndices = 
 {
   0, 1, 2,
   3, 4, 5,
@@ -161,7 +161,7 @@ void DecalEngine::createBoundingBox(VulkanRHI* pRhi)
   m_gpuBBoxIndices = new IndexBuffer();
   
   m_gpuBBoxVertices->initialize(pRhi, bboxPositions.size(), sizeof(Vector4), bboxPositions.data());
-  m_gpuBBoxIndices->initialize(pRhi, bboxIndices.size(), sizeof(u16), bboxPositions.data());
+  m_gpuBBoxIndices->initialize(pRhi, bboxIndices.size(), sizeof(U16), bboxPositions.data());
 
   
 }

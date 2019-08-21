@@ -12,7 +12,7 @@
 namespace Recluse {
 
 
-Vector4 Vector4::lerp(const Vector4& A, const Vector4& B, const r32 T)
+Vector4 Vector4::lerp(const Vector4& A, const Vector4& B, const R32 T)
 {
   return A * (1.0f - T) + B * T;
 }
@@ -80,7 +80,7 @@ Vector4 Vector4::operator-() const
 }
 
 
-Vector4 Vector4::operator*(const r32 scaler) const
+Vector4 Vector4::operator*(const R32 scaler) const
 {
   return Vector4(
     x * scaler, y * scaler, z * scaler, w * scaler
@@ -88,9 +88,9 @@ Vector4 Vector4::operator*(const r32 scaler) const
 }
 
 
-Vector4 Vector4::operator/(const r32 scaler) const
+Vector4 Vector4::operator/(const R32 scaler) const
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   return Vector4(
     x * scale, y * scale, z * scale, w * scale
   );
@@ -129,7 +129,7 @@ void Vector4::operator-=(const Vector4& other)
 }
 
 
-void Vector4::operator*=(const r32 scaler)
+void Vector4::operator*=(const R32 scaler)
 {
   x *= scaler;
   y *= scaler;
@@ -138,9 +138,9 @@ void Vector4::operator*=(const r32 scaler)
 }
 
 
-void Vector4::operator/=(const r32 scaler)
+void Vector4::operator/=(const R32 scaler)
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   x *= scale;
   y *= scale;
   z *= scale;
@@ -148,19 +148,19 @@ void Vector4::operator/=(const r32 scaler)
 }
 
 
-r32 Vector4::length() const
+R32 Vector4::length() const
 {
   return sqrtf( (x * x) + (y * y) + (z * z) + (w * w) );
 }
 
 
-r32 Vector4::lengthSqr() const
+R32 Vector4::lengthSqr() const
 {
   return (x * x) + (y * y) + (z * z) + (w * w);
 }
 
 
-r32 Vector4::dot(const Vector4& other) const
+R32 Vector4::dot(const Vector4& other) const
 {
   return (x * other.x + y * other.y + z * other.z + w * other.w);
 }
@@ -168,12 +168,12 @@ r32 Vector4::dot(const Vector4& other) const
 
 Vector4 Vector4::normalize() const
 {
-  r32 magnitude = length();
+  R32 magnitude = length();
   return (*this) / magnitude;
 }
 
 
-b8 Vector4::operator==(const Vector4& other) const
+B8 Vector4::operator==(const Vector4& other) const
 {
   if (x == other.x && 
       y == other.y && 
@@ -188,7 +188,7 @@ b8 Vector4::operator==(const Vector4& other) const
 }
 
 
-b8 Vector4::operator!=(const Vector4& other) const
+B8 Vector4::operator!=(const Vector4& other) const
 {
   return !(*this == other);
 }

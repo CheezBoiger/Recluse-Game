@@ -35,15 +35,15 @@ enum ModelResult {
 };
 
 
-using ModelResultBits = u32;
-using ModelConfigBits = u32;
-using NodeId = u32;
+using ModelResultBits = U32;
+using ModelConfigBits = U32;
+using NodeId = U32;
 using NodeChildren = std::vector<NodeId>;
 
 struct NodeInfo {
   NodeId _parentId;
-  u32 _nodeConfig;
-  u32 _meshId;
+  U32 _nodeConfig;
+  U32 _meshId;
 };
 
 

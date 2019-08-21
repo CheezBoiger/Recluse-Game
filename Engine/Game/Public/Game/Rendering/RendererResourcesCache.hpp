@@ -29,7 +29,7 @@ public:
     m_Cache.clear();
   }
 
-  static b32         cache(std::string name, Mesh* mesh) {
+  static B32         cache(std::string name, Mesh* mesh) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -37,7 +37,7 @@ public:
     return true;
   }
 
-  static b32         UnCache(std::string name, Mesh** out) {
+  static B32         UnCache(std::string name, Mesh** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       Mesh* pMesh = it->second;
@@ -49,7 +49,7 @@ public:
     return false;
   }
 
-  static b32         get(std::string name, Mesh** out) {
+  static B32         get(std::string name, Mesh** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;
@@ -76,7 +76,7 @@ public:
     m_Cache.clear();
   }
 
-  static b32         cache(std::string name, Material* mat) {
+  static B32         cache(std::string name, Material* mat) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -84,7 +84,7 @@ public:
     return true;
   }
 
-  static b32         UnCache(std::string name, Material** out) {
+  static B32         UnCache(std::string name, Material** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       Material* pMat = it->second;
@@ -96,7 +96,7 @@ public:
     return false;
   }
 
-  static b32         get(std::string name, Material** out) {
+  static B32         get(std::string name, Material** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;
@@ -122,7 +122,7 @@ public:
     m_Cache.clear();
   }
 
-  static b32         cache(std::string name, ModelLoader::Model* model) {
+  static B32         cache(std::string name, ModelLoader::Model* model) {
     if (m_Cache.find(name) != m_Cache.end()) {
       return false;
     }
@@ -130,7 +130,7 @@ public:
     return true;
   }
 
-  static b32         UnCache(std::string name, ModelLoader::Model** out) {
+  static B32         UnCache(std::string name, ModelLoader::Model** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       ModelLoader::Model* pMod = it->second;
@@ -142,7 +142,7 @@ public:
     return false;
   }
 
-  static b32         get(std::string name, ModelLoader::Model** out) {
+  static B32         get(std::string name, ModelLoader::Model** out) {
     auto it = m_Cache.find(name);
     if (it != m_Cache.end()) {
       *out = it->second;

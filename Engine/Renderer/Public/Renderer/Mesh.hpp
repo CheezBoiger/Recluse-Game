@@ -21,8 +21,8 @@ struct Primitive {
     , _pMat(nullptr) { }
 
   Material*             _pMat;
-  u32                   _firstIndex;
-  u32                   _indexCount;
+  U32                   _firstIndex;
+  U32                   _indexCount;
   CmdConfigBits         _localConfigs;
   AABB                  _aabb;
 };
@@ -43,9 +43,9 @@ public:
     QUAD
   }; 
 
-  static const u32 kMaxMeshLodWidth = 5u;
-  static const u32 kMeshLodZero = 0u;
-  static const u32 kMeshUnknownValue = ~0;
+  static const U32 kMaxMeshLodWidth = 5u;
+  static const U32 kMeshLodZero = 0u;
+  static const U32 kMeshUnknownValue = ~0;
 
   Mesh() : m_bSkinned(false)
          , m_skeleId(Skeleton::kNoSkeletonId) 
@@ -69,20 +69,20 @@ public:
   void cleanUp(Renderer* pRenderer);
 
   MeshData* getMeshData() { return m_pMeshData; }
-  b32 isSkinned() { return m_bSkinned; }
+  B32 isSkinned() { return m_bSkinned; }
 
   void setSkeletonReference(skeleton_uuid_t uuid) { m_skeleId = uuid; }
   skeleton_uuid_t getSkeletonReference() const { return m_skeleId; }
 
   Primitive* getPrimitiveData() { return m_primitives.data(); }
-  u32 getPrimitiveCount() const { return static_cast<u32>(m_primitives.size()); }
-  Primitive* getPrimitive(u32 idx) { return &m_primitives[idx]; }
-  inline void clearPrimitives(u32 lod = kMeshLodZero) { m_primitives.clear(); }
+  U32 getPrimitiveCount() const { return static_cast<U32>(m_primitives.size()); }
+  Primitive* getPrimitive(U32 idx) { return &m_primitives[idx]; }
+  inline void clearPrimitives(U32 lod = kMeshLodZero) { m_primitives.clear(); }
   inline void pushPrimitive(const Primitive& primitive) { m_primitives.push_back(primitive); }
 
   void allocateMorphTargetBuffer(size_t newsize);
   MorphTarget* getMorphTarget(size_t idx) { return m_morphTargets[idx]; }
-  u32 getMorphTargetCount() const { return static_cast<u32>(m_morphTargets.size()); }
+  U32 getMorphTargetCount() const { return static_cast<U32>(m_morphTargets.size()); }
   void initializeMorphTarget(Renderer* pRenderer,
                               size_t idx, 
                               size_t elementCount, 
@@ -99,8 +99,8 @@ public:
   // this mesh object.
   void sortPrimitives(SortType type);
 
-  r32 getLodBias() const { return m_lodBias; }
-  void setLodBias(r32 bias) { m_lodBias = bias; }
+  R32 getLodBias() const { return m_lodBias; }
+  void setLodBias(R32 bias) { m_lodBias = bias; }
 
  private:
 
@@ -116,7 +116,7 @@ public:
   std::vector<MorphTarget*> m_morphTargets;
 
   // skinned boolean.
-  b32 m_bSkinned;
+  B32 m_bSkinned;
 
   // skeleton id reference.
   skeleton_uuid_t m_skeleId;
@@ -124,6 +124,6 @@ public:
   // Bounding shape of this mesh.
   AABB m_aabb;
 
-  r32 m_lodBias;
+  R32 m_lodBias;
 };
 } // Recluse 

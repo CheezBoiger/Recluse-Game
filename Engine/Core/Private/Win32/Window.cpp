@@ -11,18 +11,18 @@
 namespace Recluse {
 
 
-b32                        Window::bInitialized = false;
+B32                        Window::bInitialized = false;
 WindowResizeCallback      Window::gWindowResizeCallback = nullptr;
 KeyboardCallback          Window::gKeyboardCallback = nullptr;
 MouseButtonCallback       Window::gMouseButtonCallback = nullptr;
 MousePositionCallback     Window::gMousePositionCallback = nullptr;
 WindowInactiveCallack     Window::gWindowInactiveCallback = nullptr;
-u32                       Window::kFullscreenHeight = 0;
-u32                       Window::kFullscreenWidth = 0;
+U32                       Window::kFullscreenHeight = 0;
+U32                       Window::kFullscreenWidth = 0;
 BYTE                      lpb[1 << 23];
 
 
-b32 Window::isInitialized()
+B32 Window::isInitialized()
 {
   return bInitialized;
 }
@@ -57,8 +57,8 @@ void Window::SetWindowInactiveCallback(WindowInactiveCallack callback)
   gWindowInactiveCallback = callback;
 }
 
-b8    gFullScreenAltTab = false;
-b8    gHooked = false;
+B8    gFullScreenAltTab = false;
+B8    gHooked = false;
 HHOOK gFullScreenHook = NULL;
 
 
@@ -128,15 +128,15 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
 
 #define CHECK_KEY_STATE_DOWN(keyCode) { \
     SHORT s = GetKeyState(keyCode); \
-    if (s & 0x8000) gKeyboardCallback(window, i32(keyCode), MapVirtualKey(u32(keyCode), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); \
+    if (s & 0x8000) gKeyboardCallback(window, I32(keyCode), MapVirtualKey(U32(keyCode), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); \
   }
 #define CHECK_KEY_STATE_UP(keyCode) { \
     SHORT s = GetKeyState(keyCode); \
-    if (~(s & 0x8000)) gKeyboardCallback(window, i32(keyCode), MapVirtualKey(u32(keyCode), MAPVK_VK_TO_VSC), WM_KEYUP, 0); \
+    if (~(s & 0x8000)) gKeyboardCallback(window, I32(keyCode), MapVirtualKey(U32(keyCode), MAPVK_VK_TO_VSC), WM_KEYUP, 0); \
   }
 
     if (gKeyboardCallback) { 
-      gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); 
+      gKeyboardCallback(window, I32(wParam), MapVirtualKey(U32(wParam), MAPVK_VK_TO_VSC), WM_KEYDOWN, 0); 
       if (wParam == KEY_CODE_SHIFT) {
         CHECK_KEY_STATE_DOWN(VK_LSHIFT);
         CHECK_KEY_STATE_DOWN(VK_RSHIFT);
@@ -150,7 +150,7 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
   case WM_KEYUP:
   {
     if (gKeyboardCallback) {
-      gKeyboardCallback(window, i32(wParam), MapVirtualKey(u32(wParam), MAPVK_VK_TO_VSC), WM_KEYUP, 0);
+      gKeyboardCallback(window, I32(wParam), MapVirtualKey(U32(wParam), MAPVK_VK_TO_VSC), WM_KEYUP, 0);
       if (wParam == KEY_CODE_SHIFT) {
         CHECK_KEY_STATE_UP(VK_LSHIFT);
         CHECK_KEY_STATE_UP(VK_RSHIFT);
@@ -169,10 +169,10 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
   }  break;
   case WM_SIZE:
   {
-    b32 windowChange = false;
+    B32 windowChange = false;
     if (window) {
-      i32 width = LOWORD(lParam);
-      i32 height = HIWORD(lParam);
+      I32 width = LOWORD(lParam);
+      I32 height = HIWORD(lParam);
       if (width != window->mWidth || height != window->mHeight) {
         window->mWidth  = width;
         window->mHeight = height;
@@ -225,12 +225,12 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
       default: type = Mouse::UNKNOWN; break;
       };
 
-      Mouse::buttonActions[(i32)type] = Mouse::PRESSED;
+      Mouse::buttonActions[(I32)type] = Mouse::PRESSED;
 
       int X = (int)(short) GET_X_LPARAM(lParam);
       int Y = (int)(short) GET_Y_LPARAM(lParam);
       if (gMouseButtonCallback) gMouseButtonCallback(window, type, 
-                                  Mouse::buttonActions[(i32)type], 0);
+                                  Mouse::buttonActions[(I32)type], 0);
     }
   } break;
   case WM_LBUTTONUP:
@@ -244,18 +244,18 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
       default: type = Mouse::UNKNOWN; break;
       };
 
-      Mouse::buttonActions[(i32)type] = Mouse::RELEASED;
+      Mouse::buttonActions[(I32)type] = Mouse::RELEASED;
 
       int X = (int)(short)GET_X_LPARAM(lParam);
       int Y = (int)(short)GET_Y_LPARAM(lParam);
       if (gMouseButtonCallback) gMouseButtonCallback(window, type,
-        Mouse::buttonActions[(i32)type], 0);
+        Mouse::buttonActions[(I32)type], 0);
     }
   } break;
   case WM_INPUT:
   {
     if (window && !Mouse::isEnabled() && Mouse::isTracking()) {
-      i32 dx, dy;
+      I32 dx, dy;
       UINT dwSize;
 
       AdjustClientViewRect(window->mHandle);
@@ -271,18 +271,18 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
       RAWINPUT* raw = (RAWINPUT*)lpb;
       if (raw->header.dwType == RIM_TYPEMOUSE) {
         if (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) {
-          dx = raw->data.mouse.lLastX - (i32)Mouse::lastXPos;
-          dy = raw->data.mouse.lLastY - (i32)Mouse::lastYPos;
+          dx = raw->data.mouse.lLastX - (I32)Mouse::lastXPos;
+          dy = raw->data.mouse.lLastY - (I32)Mouse::lastYPos;
         } else {
           dx = raw->data.mouse.lLastX;
           dy = raw->data.mouse.lLastY;
         }
       }
 
-      window->inputMousePos((i32)Mouse::xPos + dx, (i32)Mouse::yPos + dy);
+      window->inputMousePos((I32)Mouse::xPos + dx, (I32)Mouse::yPos + dy);
 
-      Mouse::lastXPos += (r64)dx;
-      Mouse::lastYPos += (r64)dy;
+      Mouse::lastXPos += (R64)dx;
+      Mouse::lastYPos += (R64)dy;
     }
   } break;
   default: break;
@@ -292,7 +292,7 @@ LRESULT CALLBACK Window::windowProc(HWND   hwnd,
 }
 
 
-b32 Window::initializeAPI()
+B32 Window::initializeAPI()
 {
   if (bInitialized) return true;
 
@@ -349,7 +349,7 @@ Window::~Window()
 }
 
 
-b32 Window::create(std::string title, i32 width, i32 height)
+B32 Window::create(std::string title, I32 width, I32 height)
 {
   m_PosX = 0;
   m_PosY = 0;
@@ -430,8 +430,8 @@ void Window::setToCenter()
   RECT rect;
   GetWindowRect(mHandle, &rect);
 
-  i32 xPos = (GetSystemMetrics(SM_CXSCREEN) - rect.right) / 2;
-  i32 yPos = (GetSystemMetrics(SM_CYSCREEN) - rect.bottom) / 2;
+  I32 xPos = (GetSystemMetrics(SM_CXSCREEN) - rect.right) / 2;
+  I32 yPos = (GetSystemMetrics(SM_CYSCREEN) - rect.bottom) / 2;
 
   SetWindowPos(mHandle, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
   UpdateWindow(mHandle);
@@ -468,7 +468,7 @@ void Window::setToFullScreen()
 }
 
 
-void Window::setToWindowed(i32 width, i32 height, b32 borderless)
+void Window::setToWindowed(I32 width, I32 height, B32 borderless)
 {
   if (mFullScreen && gHooked) { 
     UnhookWindowsHookEx(gFullScreenHook);
@@ -506,24 +506,24 @@ void Window::close()
 }
 
 
-void Window::inputMousePos(i32 x, i32 y)
+void Window::inputMousePos(I32 x, I32 y)
 {
   if (Mouse::xPos == x && Mouse::yPos == y) return;
 
-  Mouse::xPos = (r64)x;
-  Mouse::yPos = (r64)y;
+  Mouse::xPos = (R64)x;
+  Mouse::yPos = (R64)y;
 
   if (gMousePositionCallback) {
-    gMousePositionCallback(this, (r64)x, (r64)y);
+    gMousePositionCallback(this, (R64)x, (R64)y);
   }
 }
 
 
-u32 Window::getRefreshRate()
+U32 Window::getRefreshRate()
 {
   DEVMODEA lDevMode;
   EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &lDevMode);
   DWORD hertz = lDevMode.dmDisplayFrequency;
-  return u32(hertz);
+  return U32(hertz);
 }
 } // Recluse 

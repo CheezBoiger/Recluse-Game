@@ -21,7 +21,7 @@ public:
 
   DualQuaternion operator+(const DualQuaternion& other) const;
   DualQuaternion operator*(const DualQuaternion& other) const;
-  DualQuaternion operator*(const r32 scaler) const;
+  DualQuaternion operator*(const R32 scaler) const;
   
   DualQuaternion normalize() const;
 };

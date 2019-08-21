@@ -10,8 +10,8 @@ namespace Recluse {
 
 
 struct QueueFamily {
-  i32             _idx;
-  u32             _queueCount;
+  I32             _idx;
+  U32             _queueCount;
 };
 
 
@@ -35,13 +35,13 @@ public:
   std::vector<VkSurfaceFormatKHR> querySwapchainSurfaceFormats(VkSurfaceKHR surface) const;
   std::vector<VkPresentModeKHR> querySwapchainPresentModes(VkSurfaceKHR surface) const;
 
-  b32 findQueueFamilies(VkSurfaceKHR surface,
+  B32 findQueueFamilies(VkSurfaceKHR surface,
                         QueueFamily* presentation, 
                         QueueFamily* graphics, 
                         QueueFamily* transfer, 
                         QueueFamily* compute) const;
 
-  u32 findMemoryType(u32 filter, PhysicalDeviceMemoryUsage usage) const;
+  U32 findMemoryType(U32 filter, PhysicalDeviceMemoryUsage usage) const;
 
   VkResult getImageFormatProperties(VkFormat format, 
                                     VkImageType type, 

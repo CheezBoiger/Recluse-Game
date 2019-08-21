@@ -7,7 +7,7 @@
 namespace Test {
 
 
-b8 BasicMatrixMath()
+B8 BasicMatrixMath()
 {
   Log() << "\n\nMatrix Math\n\n";
 

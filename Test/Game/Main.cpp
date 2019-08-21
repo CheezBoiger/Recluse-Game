@@ -25,8 +25,8 @@ using namespace Recluse;
 
 // Test scene that is used for setting up the game world.
 class TestScene : public Scene {
-  static const u32 kMaxCount = 1;
-  static const u32 kNumberOfMonsters = 1;
+  static const U32 kMaxCount = 1;
+  static const U32 kNumberOfMonsters = 1;
   TextureCube* cubemap1;
   TextureCube* cubemap0;
   Texture2D* brdfLUT;
@@ -52,7 +52,7 @@ public:
     mainCam->start();
     mover->start();
 
-    for (u32 i = 0; i < kMaxCount; ++i) {
+    for (U32 i = 0; i < kMaxCount; ++i) {
       helmets.push_back(new HelmetObject());
       getRoot()->addChild(helmets[i]);
       helmets[i]->start();
@@ -60,9 +60,9 @@ public:
 
     std::random_device dev;
     std::mt19937 twist(dev());
-    std::uniform_real_distribution<r32> uni(-10.0f, 10.0f);
-    std::uniform_real_distribution<r32> above(0.0f, 20.0f);
-    for (u32 i = 0; i < kNumberOfMonsters; ++i) {
+    std::uniform_real_distribution<R32> uni(-10.0f, 10.0f);
+    std::uniform_real_distribution<R32> above(0.0f, 20.0f);
+    for (U32 i = 0; i < kNumberOfMonsters; ++i) {
       monsters[i] = new Monster();
       monsters[i]->start();
       monsters[i]->setPosition(Vector3(uni(twist), above(twist), uni(twist)));
@@ -130,7 +130,7 @@ public:
   }
 
   // Update function call. Called very loop iteration.
-  void update(r32 tick) override {
+  void update(R32 tick) override {
     mover->update(tick);
     mainCam->update(tick);
     lantern->update(tick);
@@ -164,12 +164,12 @@ public:
   // Clean up function call.
   void cleanUp() override {
     // Clean up all game objects with done.
-    for (u32 i = 0; i < kMaxCount; ++i) {
+    for (U32 i = 0; i < kMaxCount; ++i) {
       helmets[i]->cleanUp();
       delete helmets[i];
     }
 
-    for (u32 i = 0; i < kNumberOfMonsters; ++i) {
+    for (U32 i = 0; i < kNumberOfMonsters; ++i) {
       monsters[i]->cleanUp();
       delete monsters[i];
     }
@@ -210,6 +210,7 @@ private:
   Monster*                                monster;
   MainCamera*                             mainCam;
   Mover*                                  mover;
+  UserConfigParams userConfigs;
 };
 
 
@@ -221,9 +222,17 @@ int main(int c, char* argv[])
 
   // Setting the renderer to vsync double buffering when starting up the engine,
   // Inputting gpu params is optional, and can pass nullptr if you prefer default.
+  // User parameters is useful for global parameters such as cameras, be sure to read and
+  // set to engine global.
   {
-    u32 w = 800, h = 600;
-    GraphicsConfigParams params = gEngine( ).readGraphicsConfig( w, h );
+    U32 w = 800, h = 600;
+    GraphicsConfigParams params;
+    gEngine( ).readGraphicsConfig( params, w, h );
+
+    UserConfigParams userParams;
+    gEngine( ).readUserConfigs( userParams );
+    gEngine( ).setGlobalUserConfigs( userParams );
+
     // Start up the engine and set the input controller.
     gEngine().startUp(RTEXT("Recluse Test Game"), false, w, h, &params);
     gEngine().run();
@@ -284,11 +293,11 @@ int main(int c, char* argv[])
 
   {
     Mesh* mesh = new Mesh();
-    i32 stckCnt = 32;
-    i32 minus = 32 / 5;
-    //for (i32 lod = 0; lod < 5; ++lod) {
+    I32 stckCnt = 32;
+    I32 minus = 32 / 5;
+    //for (I32 lod = 0; lod < 5; ++lod) {
       auto sphereVerts = UVSphere::meshInstance(1.0f, stckCnt, stckCnt);
-      auto sphereInd = UVSphere::indicesInstance(static_cast<u32>(sphereVerts.size()), stckCnt, stckCnt);
+      auto sphereInd = UVSphere::indicesInstance(static_cast<U32>(sphereVerts.size()), stckCnt, stckCnt);
       mesh->initialize(&gRenderer(), sphereVerts.size(), sphereVerts.data(), Mesh::STATIC, sphereInd.size(), sphereInd.data());
     //  stckCnt -= minus;
     //}
@@ -343,7 +352,7 @@ int main(int c, char* argv[])
   while (gEngine().isRunning()) {
     Time::update();
     gEngine().processInput();
-    scene.update((r32)Time::deltaTime);
+    scene.update((R32)Time::deltaTime);
     gEngine().update();
   }
 #else
@@ -359,7 +368,7 @@ int main(int c, char* argv[])
   gEngine().setEnvProbeTargets(positions.data(), positions.size());
   gEngine().update();
   Texture2D* g = gRenderer().generateBRDFLUT();
-  g->Save("brdf.png");
+  g->save("brdf.png");
   gRenderer().freeTexture2D(g);
   gEngine().signalStop();
   gEngine().update();

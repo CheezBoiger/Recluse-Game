@@ -12,10 +12,10 @@ namespace Recluse {
 
 
 struct FileHandle {
-  u64   Sz;
-  tchar*   Buf;
+  U64   Sz;
+  TChar*   Buf;
 
-  static const u64 kNoFile = 0xffffffffffffffff; 
+  static const U64 kNoFile = 0xffffffffffffffff; 
   
   FileHandle()
     : Sz(kNoFile)
@@ -32,7 +32,7 @@ struct FileHandle {
 struct AsyncFileHandle : public FileHandle {
     // Check if the file is finished reading. If not, 
     // Buf and Sz are not readable!
-    b8    Finished;
+    B8    Finished;
 };
 
 
@@ -56,24 +56,24 @@ public:
 
   void                      onStartUp() override;
   void                      onShutDown() override;
-  void                      SetCurrentAppDirectory(tchar* ApplicationPath);
-  void                      AppendSearchPath(tchar* path);
-  FilesystemResult          ReadFrom(const tchar* filepath, FileHandle* Buf);
-  FilesystemResult          WriteTo(const tchar* filepath, tchar* in, u32 sz);
+  void                      SetCurrentAppDirectory(TChar* ApplicationPath);
+  void                      AppendSearchPath(TChar* path);
+  FilesystemResult          ReadFrom(const TChar* filepath, FileHandle* Buf);
+  FilesystemResult          WriteTo(const TChar* filepath, TChar* in, U32 sz);
   void                      AsyncReadFile(AsyncFileHandle* Buf);
 
   // Current application directory of the executable.
-  const tchar*              CurrentAppDirectory();
+  const TChar*              CurrentAppDirectory();
 
-  b8                        FileExists(tchar* Filepath);
-  b8                        DirectoryExists(tchar* DirectoryPath);
-  tchar*                    GetApplicationSourcePath();
-  tchar*                    SetApplicationSourcePath(const tchar* SrcPath);
+  B8                        FileExists(TChar* Filepath);
+  B8                        DirectoryExists(TChar* DirectoryPath);
+  TChar*                    GetApplicationSourcePath();
+  TChar*                    SetApplicationSourcePath(const TChar* SrcPath);
   std::vector<std::string>  DirectoryContents(std::string& Path);
   std::vector<std::string>  SearchPaths() { return m_SearchPath; }  
 
   // Load a scene from a file.
-  b8                        LoadScene(Scene* output, std::string filepath);
+  B8                        LoadScene(Scene* output, std::string filepath);
 
 private:
   std::string               m_CurrentDirectoryPath;

@@ -6,7 +6,7 @@ namespace Recluse {
 
 
 
-b8 Cpu::CheckVendorString(char* str)
+B8 Cpu::CheckVendorString(char* str)
 {
   int b[4];
   __cpuid(b, 0);
@@ -20,7 +20,7 @@ b8 Cpu::CheckVendorString(char* str)
 }
 
 
-i32 Cpu::BitsFlippedCount(i32 v)
+I32 Cpu::BitsFlippedCount(I32 v)
 {
   v = v - ((v >> 1) & 0x55555555);
   v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
@@ -28,13 +28,13 @@ i32 Cpu::BitsFlippedCount(i32 v)
 }
 
 
-b8 Cpu::IsIntel()
+B8 Cpu::IsIntel()
 {
   return CheckVendorString("GenuineIntel");
 }
 
 
-b8 Cpu::IsAmd()
+B8 Cpu::IsAmd()
 {
   return CheckVendorString("AuthenticAMD");
 }

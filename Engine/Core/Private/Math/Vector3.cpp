@@ -25,7 +25,7 @@ Vector3 Vector3::ZERO = Vector3(0.0f, 0.0f, 0.0f);
 Vector3 Vector3::ONE = Vector3(1.0f, 1.0f, 1.0f);
 
 
-Vector3 Vector3::lerp(const Vector3& a, const Vector3& b, const r32 t)
+Vector3 Vector3::lerp(const Vector3& a, const Vector3& b, const R32 t)
 {
   return a * (1.0f - t) + b * t;
 }
@@ -47,7 +47,7 @@ Vector3 Vector3::maximum(const Vector3& a, const Vector3& b)
 }
 
 
-r32 Vector3::dot(const Vector3& other) const
+R32 Vector3::dot(const Vector3& other) const
 {
   return (x * other.x + y * other.y + z * other.z);
 }
@@ -56,7 +56,7 @@ r32 Vector3::dot(const Vector3& other) const
 //   i j k
 //c  x y z
 //o  x y z
-Vector3 Vector3::Cross(const Vector3& other) const
+Vector3 Vector3::cross(const Vector3& other) const
 {
   return Vector3(
     y * other.z - z * other.y,
@@ -68,18 +68,18 @@ Vector3 Vector3::Cross(const Vector3& other) const
 
 Vector3 Vector3::normalize() const
 {
-  r32 magnitude = length();
+  R32 magnitude = length();
   return (*this) / magnitude;
 }
 
 
-r32 Vector3::length() const
+R32 Vector3::length() const
 {
   return sqrtf(x * x + y * y + z * z);
 }
 
 
-r32 Vector3::lengthSqr() const
+R32 Vector3::lengthSqr() const
 {
   return (x * x) + (y * y) + (z * z);
 }
@@ -88,7 +88,7 @@ r32 Vector3::lengthSqr() const
 Vector3 Vector3::operator+(const Vector3& other) const
 {
 #if FAST_INTRINSICS
-  r32 v0[4];
+  R32 v0[4];
   v0[0] = x; v0[1] = y; v0[2] = z; v0[3] = 0.0f;
   __m128 a0 = _mm_load_ps(v0);
   v0[0] = other.x; v0[1] = other.y; v0[2] = other.z;
@@ -109,7 +109,7 @@ Vector3 Vector3::operator+(const Vector3& other) const
 Vector3 Vector3::operator-(const Vector3& other) const
 {
 #if FAST_INTRINSICS
-  r32 v0[4];
+  R32 v0[4];
   v0[0] = x; v0[1] = y; v0[2] = z; v0[3] = 0.0f;
   __m128 a0 = _mm_load_ps(v0);
   v0[0] = other.x; v0[1] = other.y; v0[2] = other.z;
@@ -135,7 +135,7 @@ Vector3 Vector3::operator-() const
 }
 
 
-Vector3 Vector3::operator*(const r32 scaler) const
+Vector3 Vector3::operator*(const R32 scaler) const
 {
   return Vector3(
     x * scaler,
@@ -145,9 +145,9 @@ Vector3 Vector3::operator*(const r32 scaler) const
 }
 
 
-Vector3 Vector3::operator/(const r32 scaler) const
+Vector3 Vector3::operator/(const R32 scaler) const
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   return Vector3(
     x * scale,
     y * scale,
@@ -172,7 +172,7 @@ void Vector3::operator-=(const Vector3& other)
 }
 
 
-void Vector3::operator*=(const r32 scaler)
+void Vector3::operator*=(const R32 scaler)
 {
   x *= scaler;
   y *= scaler;
@@ -180,16 +180,16 @@ void Vector3::operator*=(const r32 scaler)
 }
 
 
-void Vector3::operator/=(const r32 scaler)
+void Vector3::operator/=(const R32 scaler)
 {
-  r32 scale = 1.0f / scaler;
+  R32 scale = 1.0f / scaler;
   x *= scale;
   y *= scale;
   z *= scale;
 }
 
 
-b8 Vector3::operator==(const Vector3& other) const
+B8 Vector3::operator==(const Vector3& other) const
 {
   if (x == other.x &&
       y == other.y &&
@@ -203,7 +203,7 @@ b8 Vector3::operator==(const Vector3& other) const
 }
 
 
-b8 Vector3::operator!=(const Vector3& other) const
+B8 Vector3::operator!=(const Vector3& other) const
 {
   return !(*this == other);
 }
@@ -252,7 +252,7 @@ Vector3 Vector3::operator*(const Quaternion& other) const
 {
   const Vector3 u(other.x, other.y, other.z);
   const Vector3& v = (*this);
-  r32 s = other.w;
-  return (u * u.dot(v) * 2.0f) + (v * (s * s - u.dot(u))) + (u.Cross(v) * s * 2.0f);
+  R32 s = other.w;
+  return (u * u.dot(v) * 2.0f) + (v * (s * s - u.dot(u))) + (u.cross(v) * s * 2.0f);
 }
 } // Recluse

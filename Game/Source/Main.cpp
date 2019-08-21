@@ -12,13 +12,13 @@ std::string GetOption(const std::string& line)
   size_t pos = line.find('=');
   if (pos == std::string::npos) return "";
   std::string option = line.substr(pos + 1);
-  option.erase(std::remove_if(option.begin(), option.end(), [](u8 x) -> i32 { return std::isspace(x); }), option.end());
+  option.erase(std::remove_if(option.begin(), option.end(), [](U8 x) -> I32 { return std::isspace(x); }), option.end());
   std::transform(option.begin(), option.end(), option.begin(), std::tolower);
   return option;
 }
 
 
-b32 AvailableOption(const std::string& line, const tchar* option)
+B32 AvailableOption(const std::string& line, const TChar* option)
 {
   size_t pos = line.find(option);
   if (pos != std::string::npos) return true;
@@ -26,7 +26,7 @@ b32 AvailableOption(const std::string& line, const tchar* option)
 }
 
 
-GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
+GraphicsConfigParams ReadGraphicsConfig(U32& w, U32& h)
 {
   GraphicsConfigParams graphics = kDefaultGpuConfigs;
   FileHandle Buf;
@@ -38,7 +38,7 @@ GraphicsConfigParams ReadGraphicsConfig(u32& w, u32& h)
 
   std::string line = "";
   for (size_t i = 0; i < Buf.Sz; ++i) {
-    tchar ch = Buf.Buf[i];
+    TChar ch = Buf.Buf[i];
     line.push_back(ch);
     if (ch == '\n') {
       std::cout << line;
@@ -180,8 +180,8 @@ int main(int c, char* argv[])
   // Before the game engine starts up, we want to read our configuration file, 
   // used to determine engine settings saved by user.
   {
-    u32 width = 800;
-    u32 height = 600;
+    U32 width = 800;
+    U32 height = 600;
     GraphicsConfigParams params = ReadGraphicsConfig(width, height);
     gEngine().startUp("Recluse", false, width, height, &params);
     gEngine().run();

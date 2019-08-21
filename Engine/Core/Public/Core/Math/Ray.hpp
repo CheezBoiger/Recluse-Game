@@ -19,7 +19,7 @@ struct Ray {
 
 
   // Obtain a vector going along this ray direction.
-  inline Vector3 point(r32 t) {
+  inline Vector3 point(R32 t) {
     return Origin + Direction * t;
   }
 };

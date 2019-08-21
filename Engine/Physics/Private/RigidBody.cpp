@@ -9,6 +9,6 @@
 namespace Recluse {
 
 
-uuid64 PhysicsObject::genIdx = 0;
+UUID64 PhysicsObject::genIdx = 0;
 
 } // Recluse 

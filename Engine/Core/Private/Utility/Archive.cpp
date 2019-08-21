@@ -6,7 +6,7 @@
 namespace Recluse {
 
 
-b8 Archive::Open(const std::string Filename)
+B8 Archive::Open(const std::string Filename)
 {
   m_File.open(Filename);
   if (!m_File.is_open()) {
@@ -17,7 +17,7 @@ b8 Archive::Open(const std::string Filename)
 }
 
 
-b8 Archive::close()
+B8 Archive::close()
 {
   if (!Opened()) {
     R_ASSERT(false, "Archive file was not open to begin with! Can not close anything!\n");
@@ -31,55 +31,55 @@ b8 Archive::close()
 
 // TOD(): Serialize and Deserialize stuff...
 
-IArchive& Archive::operator<<(u8 Val) 
+IArchive& Archive::operator<<(U8 Val) 
 {
   m_File << Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator<<(i8 Val)
+IArchive& Archive::operator<<(I8 Val)
 {
-  return operator<<(static_cast<u8>(Val));
+  return operator<<(static_cast<U8>(Val));
 }
 
 
-IArchive& Archive::operator<<(u16 Val)
+IArchive& Archive::operator<<(U16 Val)
 {
   m_File << Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator<<(i16 Val)
+IArchive& Archive::operator<<(I16 Val)
 {
-  return operator<<(static_cast<u16>(Val));
+  return operator<<(static_cast<U16>(Val));
 }
 
 
-IArchive& Archive::operator<<(u32 Val)
+IArchive& Archive::operator<<(U32 Val)
 {
   m_File << Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator<<(i32 Val)
+IArchive& Archive::operator<<(I32 Val)
 {
-  return operator<<(static_cast<u32>(Val));
+  return operator<<(static_cast<U32>(Val));
 }
 
 
-IArchive& Archive::operator<<(u64 Val)
+IArchive& Archive::operator<<(U64 Val)
 {
   m_File << Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator<<(i64 Val)
+IArchive& Archive::operator<<(I64 Val)
 {
-  return operator<<(static_cast<u64>(Val));
+  return operator<<(static_cast<U64>(Val));
 }
 
 
@@ -90,56 +90,56 @@ IArchive& Archive::operator<<(std::string Val)
 }
 
 
-IArchive& Archive::operator>>(u8& Val)
+IArchive& Archive::operator>>(U8& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(i8& Val)
+IArchive& Archive::operator>>(I8& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(u16& Val)
+IArchive& Archive::operator>>(U16& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(i16& Val)
+IArchive& Archive::operator>>(I16& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(u32& Val)
+IArchive& Archive::operator>>(U32& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(i32& Val)
+IArchive& Archive::operator>>(I32& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(u64& Val)
+IArchive& Archive::operator>>(U64& Val)
 {
   m_File >> Val;
   return (*this);
 }
 
 
-IArchive& Archive::operator>>(i64& Val)
+IArchive& Archive::operator>>(I64& Val)
 {
   m_File >> Val;
   return (*this);

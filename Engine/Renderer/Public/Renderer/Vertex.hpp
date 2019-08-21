@@ -73,7 +73,7 @@ struct SkinnedVertex {
   Vector2 texcoord0;
   Vector2 texcoord1;
   Vector4 boneWeights;
-  i32     boneIds       [4];
+  I32     boneIds       [4];
 };
 
 

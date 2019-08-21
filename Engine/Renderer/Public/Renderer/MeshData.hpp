@@ -40,7 +40,7 @@ public:
   void                    optimize();
 
   // Compress mesh data to become optimal by lod.
-  void                    getCompressByLod(u32 lod);
+  void                    getCompressByLod(U32 lod);
 
 private:
   VertexBuffer                        m_vertexBuffer;

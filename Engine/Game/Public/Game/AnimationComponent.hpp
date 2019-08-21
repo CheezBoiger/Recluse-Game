@@ -30,14 +30,14 @@ public:
   void addClip(AnimClip* clip, const std::string& name);
 
   // Blend an animation to target weight over time in seconds.
-  void blendPlayback(const std::string& name, r32 targetWeight = 1.0f, r32 fadeLen = 0.3f);
+  void blendPlayback(const std::string& name, R32 targetWeight = 1.0f, R32 fadeLen = 0.3f);
   
   // Signal to play back an animation clip with given name.
   // May also optionally specify at what time to play the animation [0,1] as the normalized time.
-  void playback(const std::string& name, r32 rate = 1.0f, r32 atTime = 0.0f);
+  void playback(const std::string& name, R32 rate = 1.0f, R32 atTime = 0.0f);
   
   // Check if component is playing back a clip.
-  b32    isPlayingBack(const std::string& name);
+  B32    isPlayingBack(const std::string& name);
 
   // TODO():
   virtual void              onInitialize(GameObject* owner) override;
@@ -59,10 +59,10 @@ public:
 
   // Set the playback rate of this animation. Current animations will also experience 
   // this rate change as well...
-  void                      setPlaybackRate(r32 rate);
+  void                      setPlaybackRate(R32 rate);
 
   // Get the current playback rate.
-  r32                       getPlaybackRate() const;
+  R32                       getPlaybackRate() const;
 
 private:
   std::map<std::string, AnimClip*>    m_clips;

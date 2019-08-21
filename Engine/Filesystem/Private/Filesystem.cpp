@@ -36,13 +36,13 @@ void Filesystem::onShutDown()
 }
 
 
-const tchar* Filesystem::CurrentAppDirectory()
+const TChar* Filesystem::CurrentAppDirectory()
 {
   return m_CurrentDirectoryPath.data();
 }
 
 
-FilesystemResult Filesystem::ReadFrom(const tchar* filepath, FileHandle* buf)
+FilesystemResult Filesystem::ReadFrom(const TChar* filepath, FileHandle* buf)
 {
   HANDLE fileH = CreateFile(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (fileH == INVALID_HANDLE_VALUE) {
@@ -50,7 +50,7 @@ FilesystemResult Filesystem::ReadFrom(const tchar* filepath, FileHandle* buf)
   }
   DWORD sz = GetFileSize(fileH, NULL);
   DWORD bytesRead;
-  buf->Buf = new tchar[sz + 1];
+  buf->Buf = new TChar[sz + 1];
   buf->Sz = sz;
   ReadFile(fileH, buf->Buf, sz, &bytesRead, NULL);
   CloseHandle(fileH);

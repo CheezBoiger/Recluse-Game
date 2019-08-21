@@ -27,7 +27,7 @@ void MeshData::initialize(Renderer* pRenderer,
   m_vertexBuffer.initialize(pRenderer->getRHI(), elementCount, vertexSize, data);
 
   if (indexCount) {
-    m_indexBuffer.initialize(pRenderer->getRHI(), indexCount, sizeof(u32), indices);
+    m_indexBuffer.initialize(pRenderer->getRHI(), indexCount, sizeof(U32), indices);
   }
 }
 

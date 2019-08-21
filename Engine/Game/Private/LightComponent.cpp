@@ -95,9 +95,9 @@ void PointLightComponent::update()
 void PointLightComponent::InitializeMeshDebug()
 {
   kPointLightMesh = new Mesh();
-  u32 g = 48;
+  U32 g = 48;
   auto vertices = UVSphere::meshInstance(1.0f, g, g);
-  auto indices = UVSphere::indicesInstance(static_cast<u32>(vertices.size()), g, g);
+  auto indices = UVSphere::indicesInstance(static_cast<U32>(vertices.size()), g, g);
   kPointLightMesh->initialize(&gRenderer(), vertices.size(), vertices.data(), Mesh::STATIC, indices.size(), indices.data());
   pointLightPrim._firstIndex = 0;
   pointLightPrim._indexCount = 

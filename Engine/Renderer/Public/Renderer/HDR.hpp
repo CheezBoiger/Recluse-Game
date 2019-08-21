@@ -19,7 +19,7 @@ struct ParamsHDR {
   ParamsHDR() 
     : _bloomStrength(1.0) { }
 
-  r32 _bloomStrength;
+  R32 _bloomStrength;
 };
 
 

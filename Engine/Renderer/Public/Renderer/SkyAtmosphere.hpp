@@ -30,9 +30,9 @@ public:
   static const std::string  kAtmFragStr;
   static const std::string  kSkyVertStr;
   static const std::string  kSkyFragStr;
-  static const u32          kTextureSize;
+  static const U32          kTextureSize;
   static std::array<Vector4, 36> kSkyBoxVertices;
-  static std::array<u16, 36>  kSkyboxIndices;
+  static std::array<U16, 36>  kSkyboxIndices;
   static const Vector3      kDefaultAirColor;
 
   SkyRenderer() 
@@ -60,8 +60,8 @@ public:
   Texture*                GetCubeMap() { return m_pCubeMap; }
   Sampler*                GetSampler() { return m_pSampler; }
 
-  b32                     NeedsRendering() { return m_bDirty; }
-  b32                     UsingPredefinedSkybox() const { return m_bUsingPredefined; }
+  B32                     NeedsRendering() { return m_bDirty; }
+  B32                     UsingPredefinedSkybox() const { return m_bUsingPredefined; }
   CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
@@ -74,7 +74,7 @@ public:
   Vector3                 GetAirColor() const { return m_vAirColor; }
   void                    SetAirColor(Vector3 color) { m_vAirColor = color; }
 
-  void                    BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr, u32 frameIndex = 0);
+  void                    BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr, U32 frameIndex = 0);
 
 private:
   void                    CreateRenderAttachment(VulkanRHI* rhi);
@@ -96,8 +96,8 @@ private:
   RenderPass*             m_SkyboxRenderPass;
   VertexBuffer            m_SkyboxVertBuf;
   IndexBuffer             m_SkyboxIndBuf;
-  b32                     m_bDirty;
-  b32                     m_bUsingPredefined;
+  B32                     m_bDirty;
+  B32                     m_bUsingPredefined;
   Vector3                 m_vAirColor;
 };
 } // Recluse 

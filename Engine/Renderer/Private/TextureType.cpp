@@ -17,8 +17,8 @@ namespace Recluse {
 
 
 std::string TextureBase::kDefaultName = "DefaultTexture_";
-u64         TextureBase::sIteration = 0;
-uuid64 TextureSampler::sIteration = 0;
+U64         TextureBase::sIteration = 0;
+UUID64 TextureSampler::sIteration = 0;
 
 
 VkFormat GetNativeFormat(RFormat format)
@@ -31,7 +31,7 @@ VkFormat GetNativeFormat(RFormat format)
 }
 
 
-void Texture2D::initialize(RFormat format, u32 width, u32 height, b32 genMips)
+void Texture2D::initialize(RFormat format, U32 width, U32 height, B32 genMips)
 {
   if (texture) return;
 
@@ -41,7 +41,7 @@ void Texture2D::initialize(RFormat format, u32 width, u32 height, b32 genMips)
   VkImageCreateInfo imgCI = { };
   VkImageViewCreateInfo imgViewCI = { };
   
-  u32 mips = (!genMips ? 1 : u32((Log2f(static_cast<r32>(R_Max(width, height)) + 1))));
+  U32 mips = (!genMips ? 1 : U32((Log2f(static_cast<R32>(R_Max(width, height)) + 1))));
   imgCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCI.mipLevels = mips;
   imgCI.arrayLayers = 1;
@@ -83,7 +83,7 @@ void Texture2D::cleanUp()
 }
 
 
-void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 mipLevels)
+void GenerateMipMaps(VkImage image, VkFormat format, U32 width, U32 height, U32 mipLevels)
 {
   {
     VkFormatProperties properties;
@@ -115,10 +115,10 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
   barrier.subresourceRange.layerCount = 1;
   barrier.subresourceRange.levelCount = 1;
 
-  u32 mipWidth = width;
-  u32 mipHeight = height;
+  U32 mipWidth = width;
+  U32 mipHeight = height;
 
-  for (u32 i = 1; i < mipLevels; ++i) {
+  for (U32 i = 1; i < mipLevels; ++i) {
     barrier.subresourceRange.baseMipLevel = i - 1;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -134,13 +134,13 @@ void GenerateMipMaps(VkImage image, VkFormat format, u32 width, u32 height, u32 
 
     VkImageBlit blit= { };
     blit.srcOffsets[0] = { 0, 0, 0 };
-    blit.srcOffsets[1] = { i32(mipWidth), i32(mipHeight), 1 };
+    blit.srcOffsets[1] = { I32(mipWidth), I32(mipHeight), 1 };
     blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.srcSubresource.baseArrayLayer = 0;
     blit.srcSubresource.layerCount = 1;
     blit.srcSubresource.mipLevel = i - 1;
     blit.dstOffsets[0] = { 0, 0, 0 };
-    blit.dstOffsets[1] = { mipWidth > 1 ? i32(mipWidth / 2) : 1, mipHeight > 1 ? i32(mipHeight / 2) : 1, 1 };
+    blit.dstOffsets[1] = { mipWidth > 1 ? I32(mipWidth / 2) : 1, mipHeight > 1 ? I32(mipHeight / 2) : 1, 1 };
     blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.dstSubresource.baseArrayLayer = 0;
     blit.dstSubresource.layerCount = 1;
@@ -218,7 +218,7 @@ void Texture2D::update(Image const& Image)
   // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(1);
   size_t offset = 0;
-  for (u32 mipLevel = 0; mipLevel < 1; ++mipLevel) {
+  for (U32 mipLevel = 0; mipLevel < 1; ++mipLevel) {
     VkBufferImageCopy region = { };
     region.bufferOffset = offset;
     region.bufferImageHeight = 0;
@@ -265,7 +265,7 @@ void Texture2D::update(Image const& Image)
     stagingBuffer.getNativeBuffer(),
     texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    static_cast<u32>(bufferCopies.size()),
+    static_cast<U32>(bufferCopies.size()),
     bufferCopies.data()
   );
 
@@ -309,21 +309,21 @@ void Texture2D::update(Image const& Image)
 }
 
 
-u32 Texture2D::getWidth() const 
+U32 Texture2D::getWidth() const 
 {
   if (!texture) return 0; 
   return texture->getWidth();
 }
 
 
-u32 Texture2D::getHeight() const
+U32 Texture2D::getHeight() const
 {
   if (!texture) return 0;
   return texture->getHeight();
 }
 
 
-void Texture2D::Save(const std::string filename) 
+void Texture2D::save(const std::string filename) 
 {
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -337,7 +337,7 @@ void Texture2D::Save(const std::string filename)
   bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
   bufferci.size = VkDeviceSize(texture->getWidth() * texture->getHeight() * 4);
-  u8* data = new u8[bufferci.size];
+  U8* data = new U8[bufferci.size];
 
 
   stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
@@ -353,7 +353,7 @@ void Texture2D::Save(const std::string filename)
   // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(texture->getMipLevels());
   size_t offset = 0;
-  for (u32 mipLevel = 0; mipLevel < texture->getMipLevels(); ++mipLevel) {
+  for (U32 mipLevel = 0; mipLevel < texture->getMipLevels(); ++mipLevel) {
     VkBufferImageCopy region = {};
     region.bufferOffset = offset;
     region.bufferImageHeight = 0;
@@ -399,7 +399,7 @@ void Texture2D::Save(const std::string filename)
     texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
-    static_cast<u32>(bufferCopies.size()),
+    static_cast<U32>(bufferCopies.size()),
     bufferCopies.data()
   );
 
@@ -442,7 +442,7 @@ void Texture2D::Save(const std::string filename)
 }
 
 
-void TextureCube::initialize(u32 dim)
+void TextureCube::initialize(U32 dim)
 {
   if (texture) return;
 
@@ -478,13 +478,13 @@ void TextureCube::initialize(u32 dim)
 }
 
 
-u32 TextureCube::WidthPerFace() const
+U32 TextureCube::WidthPerFace() const
 {
   return texture->getWidth();
 }
 
 
-u32 TextureCube::HeightPerFace() const
+U32 TextureCube::HeightPerFace() const
 {
   return texture->getHeight();
 }
@@ -500,7 +500,7 @@ void TextureCube::cleanUp()
 }
 
 
-void TextureCube::Save(const std::string filename)
+void TextureCube::save(const std::string filename)
 {
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -514,9 +514,9 @@ void TextureCube::Save(const std::string filename)
     for (size_t level = 0; level < texture->getMipLevels(); ++level) {
       VkBufferImageCopy region = { };
       region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      region.imageSubresource.baseArrayLayer = (u32)layer;
+      region.imageSubresource.baseArrayLayer = (U32)layer;
       region.imageSubresource.layerCount = 1;
-      region.imageSubresource.mipLevel = (u32)level;
+      region.imageSubresource.mipLevel = (U32)level;
       region.imageExtent.width = texture->getWidth();
       region.imageExtent.height = texture->getHeight();
       region.imageExtent.depth = 1;
@@ -536,7 +536,7 @@ void TextureCube::Save(const std::string filename)
   bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
   bufferci.size = sizeInBytes;
-  u8* data = new u8[bufferci.size];
+  U8* data = new U8[bufferci.size];
 
   stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   stagingBuffer.map();
@@ -578,7 +578,7 @@ void TextureCube::Save(const std::string filename)
   cmdBuffer.copyImageToBuffer(texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
     stagingBuffer.getNativeBuffer(),
-    static_cast<u32>(imageCopyRegions.size()),
+    static_cast<U32>(imageCopyRegions.size()),
     imageCopyRegions.data());
 
   subRange.baseMipLevel = 0;
@@ -620,7 +620,7 @@ void TextureCube::Save(const std::string filename)
   img._height = texture->getHeight() * 6;
   img._width = texture->getWidth();
   img._channels = 4;
-  img._memorySize = u32(sizeInBytes);
+  img._memorySize = U32(sizeInBytes);
   img.SavePNG(filename.c_str());
 
   stagingBuffer.unmap();
@@ -710,8 +710,8 @@ void TextureSampler::cleanUp(VulkanRHI* pRhi)
 
 void TextureCube::update(Image const& image)
 {
-  u32 width = image.getWidth();
-  u32 heightOffset = image.getHeight() / 6;
+  U32 width = image.getWidth();
+  U32 heightOffset = image.getHeight() / 6;
 
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -725,9 +725,9 @@ void TextureCube::update(Image const& image)
     for (size_t level = 0; level < texture->getMipLevels(); ++level) {
       VkBufferImageCopy region = {};
       region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      region.imageSubresource.baseArrayLayer = (u32)layer;
+      region.imageSubresource.baseArrayLayer = (U32)layer;
       region.imageSubresource.layerCount = 1;
-      region.imageSubresource.mipLevel = (u32)level;
+      region.imageSubresource.mipLevel = (U32)level;
       region.imageExtent.width = texture->getWidth();
       region.imageExtent.height = heightOffset;
       region.imageExtent.depth = 1;
@@ -789,7 +789,7 @@ void TextureCube::update(Image const& image)
   cmdBuffer.copyBufferToImage(stagingBuffer.getNativeBuffer(),
     texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    static_cast<u32>(imageCopyRegions.size()),
+    static_cast<U32>(imageCopyRegions.size()),
     imageCopyRegions.data());
 
   subRange.baseMipLevel = 0;
@@ -829,7 +829,7 @@ void TextureCube::update(Image const& image)
 }
 
 
-void TextureCubeArray::initialize(u32 dim, u32 cubeLayers)
+void TextureCubeArray::initialize(U32 dim, U32 cubeLayers)
 {
   VkImageCreateInfo imgCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;  
@@ -872,7 +872,7 @@ void TextureCubeArray::cleanUp()
 }
 
 
-void Texture2DArray::initialize(RFormat format, u32 width, u32 height, u32 layers)
+void Texture2DArray::initialize(RFormat format, U32 width, U32 height, U32 layers)
 {
   if (texture) return;
 
@@ -881,7 +881,7 @@ void Texture2DArray::initialize(RFormat format, u32 width, u32 height, u32 layer
   VkImageCreateInfo imgCI = {};
   VkImageViewCreateInfo imgViewCI = {};
 
-  u32 mips = 1;//(!genMips ? 1 : u32((Log2f(static_cast<r32>(R_Max(width, height)) + 1))));
+  U32 mips = 1;//(!genMips ? 1 : U32((Log2f(static_cast<R32>(R_Max(width, height)) + 1))));
   imgCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCI.mipLevels = mips;
   imgCI.arrayLayers = layers;
@@ -911,7 +911,7 @@ void Texture2DArray::initialize(RFormat format, u32 width, u32 height, u32 layer
 }
 
 
-void Texture2DArray::update(const Image& img, u32 x, u32 y)
+void Texture2DArray::update(const Image& img, U32 x, U32 y)
 {
   // tODO(): NEed to figure out why image is not being read properly,
   // Only reading the first 4 slices and repeating!
@@ -919,8 +919,8 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   Buffer stagingBuffer;
   stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
   
-  u32 widthOffset = img.getWidth() / x;
-  u32 heightOffset = img.getHeight() / y;
+  U32 widthOffset = img.getWidth() / x;
+  U32 heightOffset = img.getHeight() / y;
 
   VkBufferCreateInfo stagingCI = {};
   stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -945,11 +945,11 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
   // maximum barriers.
   std::vector<VkBufferImageCopy> bufferCopies(texture->getArrayLayers());
   size_t offset = 0;
-  u32 layer = 0;
+  U32 layer = 0;
 
-  for (u32 yi = 0; yi < y; ++yi) {
+  for (U32 yi = 0; yi < y; ++yi) {
     offset = heightOffset * img.getWidth() * 4 * yi;
-    for (u32 xi = 0; xi < x; ++xi) {
+    for (U32 xi = 0; xi < x; ++xi) {
       VkBufferImageCopy region = {};
       region.bufferOffset = offset;
       region.bufferImageHeight = 0;
@@ -997,7 +997,7 @@ void Texture2DArray::update(const Image& img, u32 x, u32 y)
     stagingBuffer.getNativeBuffer(),
     texture->getImage(),
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    static_cast<u32>(bufferCopies.size()),
+    static_cast<U32>(bufferCopies.size()),
     bufferCopies.data()
   );
 

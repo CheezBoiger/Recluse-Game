@@ -13,16 +13,16 @@ struct Vector3;
 // Quaternion mathematical object for spatial rotations.
 // Quaternions of this library are formatted as XYZW form.
 struct Quaternion {
-  struct { r32 x, y, z, w; };
+  struct { R32 x, y, z, w; };
 
-  Quaternion(r32 x = 0.0f, r32 y = 0.0f, r32 z = 0.0f, r32 w = 1.0f)
+  Quaternion(R32 x = 0.0f, R32 y = 0.0f, R32 z = 0.0f, R32 w = 1.0f)
     : x(x), y(y), z(z), w(w) { }
 
-  Quaternion(const r32* raw)
+  Quaternion(const R32* raw)
     : x(raw[0]), y(raw[1]), z(raw[2]), w(raw[3]) { }
 
-  static Quaternion angleAxis(const r32 radians, const Vector3& axis);
-  static Quaternion slerp(const Quaternion& q0, const Quaternion& q1, const r32 t);
+  static Quaternion angleAxis(const R32 radians, const Vector3& axis);
+  static Quaternion slerp(const Quaternion& q0, const Quaternion& q1, const R32 t);
   static Quaternion eulerAnglesToQuaternion(const Vector3& euler);
   static Quaternion matrix4ToQuaternion(const Matrix4& rot);  
   static Quaternion lookRotation(const Vector3&dir, const Vector3& up);
@@ -33,19 +33,19 @@ struct Quaternion {
   Quaternion        operator*(const Quaternion& other) const;
 
   
-  Quaternion        operator*(const r32 scaler) const;
-  Quaternion        operator/(const r32 scaler) const;
+  Quaternion        operator*(const R32 scaler) const;
+  Quaternion        operator/(const R32 scaler) const;
   Quaternion        operator-() const;
 
   void              operator*=(const Quaternion& other);
   void              operator+=(const Quaternion& other);
   void              operator-=(const Quaternion& other);
 
-  void              operator*=(const r32 scaler);
-  void              operator/=(const r32 scaler);
+  void              operator*=(const R32 scaler);
+  void              operator/=(const R32 scaler);
 
-  b8                operator==(const Quaternion& other) const;
-  b8                operator!=(const Quaternion& other) const;
+  B8                operator==(const Quaternion& other) const;
+  B8                operator!=(const Quaternion& other) const;
 
   Quaternion        Conjugate() const;
   Quaternion        inverse() const;
@@ -62,7 +62,7 @@ struct Quaternion {
 
   Matrix4           toMatrix4() const;
 
-  r32               norm() const;
+  R32               norm() const;
 };
 
 

@@ -24,29 +24,29 @@ class CommandBuffer;
 
 
 struct ClusterKey {
-  static const u32 g_invalidIdPacked = 0xffffffff;
+  static const U32 g_invalidIdPacked = 0xffffffff;
 
-  static const u32 x_bits = 8;
-  static const u32 y_bits = 8;
-  static const u32 z_bits = 10;
+  static const U32 x_bits = 8;
+  static const U32 y_bits = 8;
+  static const U32 z_bits = 10;
 
-  static const u32 x_shift = y_bits + z_bits;
-  static const u32 y_shift = z_bits;
-  static const u32 z_shift = 0;
+  static const U32 x_shift = y_bits + z_bits;
+  static const U32 y_shift = z_bits;
+  static const U32 z_shift = 0;
 
-  static const u32 x_mask = (1ul<<x_bits)-1ul;
-  static const u32 y_mask = (1ul<<y_bits)-1ul;
-  static const u32 z_mask = (1ul<<z_bits)-1ul;
+  static const U32 x_mask = (1ul<<x_bits)-1ul;
+  static const U32 y_mask = (1ul<<y_bits)-1ul;
+  static const U32 z_mask = (1ul<<z_bits)-1ul;
 
-  u32 _x;
-  u32 _y;
-  u32 _z;
-  u32 _pN; // packed normal.
+  U32 _x;
+  U32 _y;
+  U32 _z;
+  U32 _pN; // packed normal.
 };
 
 
 struct IVector4 {
-  u32 x,
+  U32 x,
       y,
       z,
       w;
@@ -55,10 +55,10 @@ struct IVector4 {
 
 // Cpu bound light bounding volume hierarchy.
 struct LightBVH {
-  u32       _numLevels;
-  u32       _numNodes;
-  u32       _numMaxNodes;
-  u32       _numMaxLights;
+  U32       _numLevels;
+  U32       _numNodes;
+  U32       _numMaxNodes;
+  U32       _numMaxLights;
   Vector4   _zGridLocFar;
   Vector4*  _nodesMin;
   Vector4*  _nodesMax;
@@ -70,7 +70,7 @@ class LightHierarchy {
 public:
   LightHierarchy();
 
-  void initialize(VulkanRHI* pRhi, u32 width, u32 height);
+  void initialize(VulkanRHI* pRhi, U32 width, U32 height);
   void cleanUp(VulkanRHI* pRhi);
   void build(CommandBuffer* pCmdBuffer);
   

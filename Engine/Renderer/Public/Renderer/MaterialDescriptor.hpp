@@ -33,18 +33,18 @@ struct MaterialBuffer {
   Vector4 _Color;             // object base color.
   Vector4 _AnisoSpec;         // Anisotropy control.
   Vector4 _offsetUV;          // offset values for texture coordinates of uv 0 (xy) and 1 (zw).
-  r32     _Opacity;           // opacity [0.0, 1.0]
-  r32     _metalFactor;       // object base metalness [0.0, 1.0]
-  r32     _roughFactor;       // object base roughness [0.0, 1.0]
-  r32     _emissiveFactor;    // emissive base [0.0, inf]
-  u32     _HasAlbedo;         // does object have albedo map?
-  u32     _HasMetallic;       // does object have metalness map?
-  u32     _HasRoughness;      // does object have roughness map?
-  u32     _HasNormal;         // does object have normal map?
-  u32     _HasEmissive;       // does object have emissive map?
-  u32     _HasAO;             // does object have ambient occlusion map?
-  u32     _IsTransparent;     // is object transparent?
-  u32     _Pad;
+  R32     _Opacity;           // opacity [0.0, 1.0]
+  R32     _metalFactor;       // object base metalness [0.0, 1.0]
+  R32     _roughFactor;       // object base roughness [0.0, 1.0]
+  R32     _emissiveFactor;    // emissive base [0.0, inf]
+  U32     _HasAlbedo;         // does object have albedo map?
+  U32     _HasMetallic;       // does object have metalness map?
+  U32     _HasRoughness;      // does object have roughness map?
+  U32     _HasNormal;         // does object have normal map?
+  U32     _HasEmissive;       // does object have emissive map?
+  U32     _HasAO;             // does object have ambient occlusion map?
+  U32     _IsTransparent;     // is object transparent?
+  U32     _Pad;
 };
 
 // Physically based material layout that our renderer uses as material for 
@@ -70,15 +70,15 @@ public:
   void            setNormal(Texture2D* normal) { m_pNormal = normal; }
   void            setAo(Texture2D* ao) { m_pAo = ao; }
   void            setEmissive(Texture2D* emissive) { m_pEmissive = emissive; }
-  void            setTransparent(b8 enable) { m_MaterialData._IsTransparent = enable; }
+  void            setTransparent(B8 enable) { m_MaterialData._IsTransparent = enable; }
 
-  void            pushUpdate(b32 updateBits = MATERIAL_BUFFER_UPDATE_BIT) { m_bNeedsUpdate |= updateBits; }
+  void            pushUpdate(B32 updateBits = MATERIAL_BUFFER_UPDATE_BIT) { m_bNeedsUpdate |= updateBits; }
   DescriptorSet*          CurrMaterialSet() { return m_materialSet; }
 
   MaterialBuffer* getData() { return &m_MaterialData; }
   Buffer*         getNative() { return m_pBuffer; }
 
-  b32              isTransparent() const { return m_MaterialData._IsTransparent; }
+  B32              isTransparent() const { return m_MaterialData._IsTransparent; }
 
   Texture2D*      getAlbedo() { return m_pAlbedo; }
   Texture2D*      getRoughnessMetallic() { return m_pRoughnessMetallic; }
@@ -110,7 +110,7 @@ private:
   TextureSampler* m_pRoughMetalSampler;
   TextureSampler* m_pAoSampler;
   TextureSampler* m_pEmissiveSampler;
-  u32             m_bNeedsUpdate;
+  U32             m_bNeedsUpdate;
   DescriptorSet*  m_materialSet;
   friend class Renderer;
 };

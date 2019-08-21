@@ -35,7 +35,7 @@ public:
 
   void            onEnable() override;
   void            addCollider(Collider* collider);
-  void            setMass(r32 mass);
+  void            setMass(R32 mass);
   //void SetRelativeOffset(const Vector3& offset);
   void            applyForce(const Vector3& force);
   void            setGravity(const Vector3& gravity);
@@ -49,11 +49,11 @@ public:
   void            setCenterOfMass(const Vector3& centerOfMass);
   Vector3         getCenterOfMassPosition();
 
-  r32             getMass() const { return m_pRigidBody->_mass; }
+  R32             getMass() const { return m_pRigidBody->_mass; }
   void            updateFromGameObject();
-  void            setFriction(r32 friction);
-  void            setRollingFriction(r32 friction);
-  void            setSpinningFriction(r32 friction);
+  void            setFriction(R32 friction);
+  void            setRollingFriction(R32 friction);
+  void            setSpinningFriction(R32 friction);
   
   // Rotation axis that can be influenced by outside forces. 1.0 to enable, 0.0 to disable.
   void            setAngleFactor(const Vector3& angleFactor);
@@ -63,7 +63,7 @@ public:
 
   RigidBody*      getRigidBody() { return m_pRigidBody; }
 
-  void            enableDebug(b32 enable);
+  void            enableDebug(B32 enable);
 
 private:
 
@@ -71,6 +71,6 @@ private:
 
   RigidBody*              m_pRigidBody;
   physics_update_bits_t   m_updateBits;
-  b32                     m_debug;
+  B32                     m_debug;
 };
 } // Recluse

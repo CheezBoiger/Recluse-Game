@@ -11,7 +11,7 @@ Image::~Image()
 }
 
 
-b8 Image::load(const tchar* imgpath)
+B8 Image::load(const TChar* imgpath)
 {
   _data = stbi_load(imgpath, &_width, &_height, &_channels, STBI_rgb_alpha);
   if (!_data) return false;
@@ -21,7 +21,7 @@ b8 Image::load(const tchar* imgpath)
 }
 
 
-b8 Image::SavePNG(const tchar* imgpath)
+B8 Image::SavePNG(const TChar* imgpath)
 {
   if (!_data) { return false; }
 
@@ -30,15 +30,15 @@ b8 Image::SavePNG(const tchar* imgpath)
 }
 
 
-b8 Image::SaveHDR(const tchar* imgPath)
+B8 Image::SaveHDR(const TChar* imgPath)
 {
   if (!_data) { return false; }
-  stbi_write_hdr(imgPath, _width, _height, _channels, (const r32*)_data);
+  stbi_write_hdr(imgPath, _width, _height, _channels, (const R32*)_data);
   return true;
 }
 
 
-b8 Image::cleanUp()
+B8 Image::cleanUp()
 {
   if (_data) {
     stbi_image_free(_data);

@@ -24,7 +24,7 @@ const std::string SkyRenderer::kAtmVertStr = "Atmosphere.vert.spv";
 const std::string SkyRenderer::kAtmFragStr = "Atmosphere.frag.spv";
 const std::string SkyRenderer::kSkyVertStr = "Sky.vert.spv";
 const std::string SkyRenderer::kSkyFragStr = "Sky.frag.spv";
-const u32         SkyRenderer::kTextureSize = 512;
+const U32         SkyRenderer::kTextureSize = 512;
 const Vector3     SkyRenderer::kDefaultAirColor = Vector3(0.18867780436772762f, 0.2978442963618773f, 0.7616065586417131f);
 std::array<Vector4, 36> SkyRenderer::kSkyBoxVertices = { 
   // front
@@ -72,7 +72,7 @@ std::array<Vector4, 36> SkyRenderer::kSkyBoxVertices = {
 };
 
 
-std::array<u16, 36> SkyRenderer::kSkyboxIndices = {
+std::array<U16, 36> SkyRenderer::kSkyboxIndices = {
   0, 1, 2,
   3, 4, 5,
   6, 7, 8,
@@ -104,9 +104,9 @@ void SkyRenderer::initialize()
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   m_pAtmosphereSema->initialize(semaCi);
 
-  m_SkyboxVertBuf.initialize(pRhi, static_cast<u32>(kSkyBoxVertices.size()), 
+  m_SkyboxVertBuf.initialize(pRhi, static_cast<U32>(kSkyBoxVertices.size()), 
     sizeof(Vector4), kSkyBoxVertices.data());
-  m_SkyboxIndBuf.initialize(pRhi, static_cast<u32>(kSkyboxIndices.size()), sizeof(u16), kSkyboxIndices.data());
+  m_SkyboxIndBuf.initialize(pRhi, static_cast<U32>(kSkyboxIndices.size()), sizeof(U16), kSkyboxIndices.data());
 }
 
 
@@ -264,7 +264,7 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
   renderpassCi.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderpassCi.attachmentCount = 1;
   renderpassCi.pAttachments = &attachDesc;
-  renderpassCi.dependencyCount = static_cast<u32>(dependencies.size());
+  renderpassCi.dependencyCount = static_cast<U32>(dependencies.size());
   renderpassCi.pDependencies = dependencies.data();
   renderpassCi.subpassCount = 1;
   renderpassCi.pSubpasses = &subpassDesc;
@@ -342,7 +342,7 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
   );
 
   std::array<VkAttachmentReference, 2> attachmentColors;
-  VkAttachmentReference attachmentDepthRef = { static_cast<u32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+  VkAttachmentReference attachmentDepthRef = { static_cast<U32>(attachmentColors.size()), VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
   attachmentColors[0].attachment = 0;
   attachmentColors[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
@@ -351,12 +351,12 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
 
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-  subpass.colorAttachmentCount = static_cast<u32>(attachmentColors.size());
+  subpass.colorAttachmentCount = static_cast<U32>(attachmentColors.size());
   subpass.pColorAttachments = attachmentColors.data();
   subpass.pDepthStencilAttachment = &attachmentDepthRef;
 
   VkRenderPassCreateInfo renderpassCI = CreateRenderPassInfo(
-    static_cast<u32>(attachmentDescriptions.size()),
+    static_cast<U32>(attachmentDescriptions.size()),
     attachmentDescriptions.data(),
     2,
     dependenciesNative,
@@ -384,7 +384,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 
   VkPipelineVertexInputStateCreateInfo vertexCi = { };
   vertexCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexCi.vertexAttributeDescriptionCount = static_cast<u32>(attributes.size());
+  vertexCi.vertexAttributeDescriptionCount = static_cast<U32>(attributes.size());
   vertexCi.vertexBindingDescriptionCount = 1;
   vertexCi.pVertexAttributeDescriptions = attributes.data();
   vertexCi.pVertexBindingDescriptions = &bindings;
@@ -495,7 +495,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
   shaderStages[1].pNext = nullptr;
   shaderStages[1].flags = 0;
 
-  gpCi.stageCount = static_cast<u32>(shaderStages.size());
+  gpCi.stageCount = static_cast<U32>(shaderStages.size());
   gpCi.pStages = shaderStages.data();
 
   VkPushConstantRange range = { };
@@ -521,7 +521,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 frameIndex)
+void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 frameIndex)
 {
   CommandBuffer* cmdBuffer = m_pCmdBuffer;
   if (pOutput) {
@@ -555,8 +555,8 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
       Matrix4             _InvProj;
     } viewerConsts;
 
-    viewerConsts._InvProj = Matrix4::perspective(static_cast<r32>(CONST_PI_HALF), 
-      1.0f, 0.1f, static_cast<r32>(kTextureSize)).transpose();
+    viewerConsts._InvProj = Matrix4::perspective(static_cast<R32>(CONST_PI_HALF), 
+      1.0f, 0.1f, static_cast<R32>(kTextureSize)).transpose();
 
     // can't be doing this...
     GlobalDescriptor* global = gRenderer().getGlobalNative();
@@ -566,7 +566,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
     VkBuffer vertexbuf = quad->getQuad()->getHandle()->getNativeBuffer();
     VkBuffer indexbuf = quad->getIndices()->getHandle()->getNativeBuffer();
     VkIndexType indexType = getNativeIndexType(quad->getIndices()->GetSizeType());
-    u32 indexCount = quad->getIndices()->IndexCount();
+    U32 indexCount = quad->getIndices()->IndexCount();
   
     VkDeviceSize offsets = { 0 };
 
@@ -645,7 +645,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, u32 fra
 
       imgCopy.dstOffset = { 0, 0, 0 };
       imgCopy.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imgCopy.dstSubresource.baseArrayLayer = static_cast<u32>(face);
+      imgCopy.dstSubresource.baseArrayLayer = static_cast<U32>(face);
       imgCopy.dstSubresource.layerCount = 1;
       imgCopy.dstSubresource.mipLevel = 0;
 

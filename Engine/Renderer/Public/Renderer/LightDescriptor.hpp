@@ -38,9 +38,9 @@ struct DirectionalLight {
   Vector4           _Direction;
   Vector4           _Ambient;        // Ambient override. Not needed if Object is influenced by a light probe.
   Vector4           _Color;
-  r32               _Intensity;
-  i32               _Enable;
-  i32               _Pad[2];
+  R32               _Intensity;
+  I32               _Enable;
+  I32               _Pad[2];
 
   DirectionalLight()
     : _Enable(false) { }
@@ -50,10 +50,10 @@ struct DirectionalLight {
 struct PointLight {
   Vector4           _Position;
   Vector4           _Color;
-  r32               _Range;
-  r32               _Intensity;
-  i32               _Enable;
-  i32               _shadowIndex;
+  R32               _Range;
+  R32               _Intensity;
+  I32               _Enable;
+  I32               _shadowIndex;
 
   PointLight()
     : _Enable(false), _Range(1.0f) { }
@@ -64,12 +64,12 @@ struct SpotLight {
   Vector4           _Position;
   Vector4           _Direction;
   Vector4           _Color;
-  r32               _Range;
-  r32               _OuterCutOff;
-  r32               _InnerCutOff;
-  i32               _Enable;
-  r32               _goboIndex;
-  r32               _shadowIndex;
+  R32               _Range;
+  R32               _OuterCutOff;
+  R32               _InnerCutOff;
+  I32               _Enable;
+  R32               _goboIndex;
+  R32               _shadowIndex;
   Vector2           _pad;
 };
 
@@ -103,9 +103,9 @@ struct LightGridBuffer {
 
 
 struct LightBuffer {
-  static u32        maxNumDirectionalLights();
-  static u32        maxNumPointLights();
-  static u32        maxNumSpotLights();
+  static U32        maxNumDirectionalLights();
+  static U32        maxNumPointLights();
+  static U32        maxNumSpotLights();
   // NOTE(): Do we want more directional lights? This can be done if needed.
   DirectionalLight  _PrimaryLight;
   DirectionalLight  _DirectionalLights [MAX_DIRECTIONAL_LIGHTS];
@@ -125,8 +125,8 @@ public:
 // depending on whether it is a Directional, or Point, light source.
 class ShadowMapSystem {
   // Maximum shadow map pixel dimension.
-  static const u32          kMaxShadowDim;
-  static const u32          kTotalCascades;
+  static const U32          kMaxShadowDim;
+  static const U32          kTotalCascades;
 public:
                             ShadowMapSystem();
                             ~ShadowMapSystem();
@@ -142,49 +142,49 @@ public:
   LightViewSpace&           getStaticViewSpace() { return m_staticViewSpace; }
 
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
-  void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, i32 idx = -1, u32 frameIndex = 0);
+  void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, I32 idx = -1, U32 frameIndex = 0);
 
-  void                      setViewportDim(r32 dim) { m_rShadowViewportDim = dim; }
+  void                      setViewportDim(R32 dim) { m_rShadowViewportDim = dim; }
 
-  void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, u32 frameIndex);
-  void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, u32 frameIndex);
-  void                      transitionEmptyShadowMap(CommandBuffer* cmdBuffer, u32 frameIndex);
+  void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, U32 frameIndex);
+  void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, U32 frameIndex);
+  void                      transitionEmptyShadowMap(CommandBuffer* cmdBuffer, U32 frameIndex);
   void                      signalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
-  DescriptorSet*            getShadowMapViewDescriptor(u32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
-  DescriptorSet*            getStaticShadowMapViewDescriptor(u32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            getShadowMapViewDescriptor(U32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            getStaticShadowMapViewDescriptor(U32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
 
   Sampler*                  _pSampler;
-  b32                       staticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
+  B32                       staticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
 
   void                      setStaticViewerPosition(const Vector3& pos) { m_staticViewerPos = pos; }
-  void                      setStaticShadowMapDim(r32 dim) { m_staticShadowViewportDim = dim; }
+  void                      setStaticShadowMapDim(R32 dim) { m_staticShadowViewportDim = dim; }
 
-  void                      enableStaticMapSoftShadows(b32 enable);
-  void                      enableDynamicMapSoftShadows(b32 enable);
+  void                      enableStaticMapSoftShadows(B32 enable);
+  void                      enableDynamicMapSoftShadows(B32 enable);
 
-  r32                       getStaticShadowMapDim() const { return m_staticShadowViewportDim; }
+  R32                       getStaticShadowMapDim() const { return m_staticShadowViewportDim; }
 
   Texture*                  getSpotLightShadowMapArray() { return m_pSpotLightMapArray; }
   Texture*                  getOmniLightShadowMapArray() { return m_pOmniMapArray; }
 
-  LightViewSpace&           getSpotLightSpace(u32 idx) { return m_spotLightShadowMaps[idx]._space; }
+  LightViewSpace&           getSpotLightSpace(U32 idx) { return m_spotLightShadowMaps[idx]._space; }
 
-  static void               initializeShadowPipelines(VulkanRHI* pRhi, u32 numCascades);
+  static void               initializeShadowPipelines(VulkanRHI* pRhi, U32 numCascades);
   static void               cleanUpShadowPipelines(VulkanRHI* pRhi);
 
 private:
 
-  void                      initializeShadowMapD(VulkanRHI* pRhi, u32 resolution = 1u);
+  void                      initializeShadowMapD(VulkanRHI* pRhi, U32 resolution = 1u);
   void                      initializeShadowMapDescriptors(VulkanRHI* pRhi);
-  void                      initializeSpotLightShadowMapArray(VulkanRHI* pRhi, u32 layers = 4, u32 resolution = 512u);
-  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, u32 resolution = 1u);
+  void                      initializeSpotLightShadowMapArray(VulkanRHI* pRhi, U32 layers = 4, U32 resolution = 512u);
+  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, U32 resolution = 1u);
 
   void                      cleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
   void                      cleanUpShadowMapCascades(VulkanRHI* pRhi);
 
   Vector3                   m_staticViewerPos;
-  r32                       m_staticShadowViewportDim;
+  R32                       m_staticShadowViewportDim;
 
   // Maps that contain shadow information on the directional, sunlight/moonlight object.
   // These are 2D arrays containing cascaded shadow maps.
@@ -254,10 +254,10 @@ private:
   LightViewSpace                m_viewSpace;
   LightViewSpace                m_staticViewSpace;
   LightViewCascadeSpace         m_cascadeViewSpace;
-  r32                           m_rShadowViewportDim;
-  b32                           m_staticMapNeedsUpdate;
-  u32                           m_numPointLights;
-  u32                           m_numCascadeShadowMaps;
+  R32                           m_rShadowViewportDim;
+  B32                           m_staticMapNeedsUpdate;
+  U32                           m_numPointLights;
+  U32                           m_numCascadeShadowMaps;
   GraphicsQuality               m_shadowQuality;
   std::vector<Texture*>         m_pCascadeShadowMapD;
   std::vector<Vector3>          m_pointMapPositions;
@@ -277,7 +277,7 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, u32 frameIndex);
+  void update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, U32 frameIndex);
 
   // Initialize. 
   void initialize(VulkanRHI* pRhi, const GraphicsConfigParams* params);
@@ -288,7 +288,7 @@ public:
 
   LightBuffer* getData() { return &m_Lights; }
 
-  DescriptorSet* getDescriptorSet(u32 frameIdx) { return m_pLightDescriptorSets[frameIdx]; }
+  DescriptorSet* getDescriptorSet(U32 frameIdx) { return m_pLightDescriptorSets[frameIdx]; }
 #if 0
   DescriptorSet*      ViewSet() { return m_pLightViewDescriptorSet; }
 
@@ -298,10 +298,10 @@ public:
   void setViewerPosition(Vector3 viewer) { m_vViewerPos = viewer; }
   Vector3 getViewerPos() const { return m_vViewerPos; }
 
-  void setShadowViewport(r32 width, r32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
-  void enablePrimaryShadow(b8 enable) { m_PrimaryShadowEnable = enable; }
+  void setShadowViewport(R32 width, R32 height) { m_rShadowViewportWidth = width; m_rShadowViewportHeight = height; }
+  void enablePrimaryShadow(B8 enable) { m_PrimaryShadowEnable = enable; }
 
-  b32 isPrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
+  B32 isPrimaryShadowEnabled() const { return m_PrimaryShadowEnable; }
 
   ShadowMapSystem& getPrimaryShadowMapSystem() { return m_primaryMapSystem; }
 
@@ -351,9 +351,9 @@ w
   // Shadow map sampler.
   Sampler* m_pShadowSampler;
   LightBuffer m_Lights;
-  r32 m_rShadowViewportWidth;
-  r32 m_rShadowViewportHeight;
-  b32 m_PrimaryShadowEnable;
+  R32 m_rShadowViewportWidth;
+  R32 m_rShadowViewportHeight;
+  B32 m_PrimaryShadowEnable;
 
   friend class Renderer;
 };

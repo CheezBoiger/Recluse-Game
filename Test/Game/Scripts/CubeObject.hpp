@@ -26,13 +26,13 @@ class CubeObject : public GameObject
 {
   R_GAME_OBJECT(CubeObject)
 
-  r32     m_health;
-  r32     m_maxHealth;
-  r32     m_healthRegen;
+  R32     m_health;
+  R32     m_maxHealth;
+  R32     m_healthRegen;
 
 public:
     
-  CubeObject(b32 enableUI)
+  CubeObject(B32 enableUI)
       : m_enableUI(enableUI)
   {
     setName("CubeObject :3");
@@ -91,7 +91,7 @@ public:
 #endif
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-4.0f, 4.0f);
+    std::uniform_real_distribution<R32> dist(-4.0f, 4.0f);
     //trans->_rotation = Quaternion::angleAxis(Radians(90.0f), Vector3(1.0f, 0.0f, 0.0f));
     trans->_position = Vector3(0.0f, -15.0f, 0.0f);
     //m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).normalize();
@@ -106,7 +106,7 @@ public:
 
     gUI().SetEventHandle( "Resolution change.", 
                           0, 0, 200, 200, 
-                          []() -> b32 {
+                          []() -> B32 {
                             GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
                             params._Resolution = Resolution_1200x800;
                             gRenderer().updateRendererConfigs(&params);
@@ -115,7 +115,7 @@ public:
                             gEngine().getWindow()->show();
                             return false;
                           },
-                          [&] () -> b32 { 
+                          [&] () -> B32 { 
                             Transform* transform = getTransform();
                             AABB aabb = m_pMeshComponent->MeshRef()->getAABB();
                             aabb.min = (aabb.min * transform->_scale) + transform->_position;
@@ -124,7 +124,7 @@ public:
                             ViewFrustum::Result result =
                                 Camera::getMain()->getViewFrustum().intersect(aabb);
                             std::string lol = getName() + " " +
-                                              std::to_string(static_cast<u32>(m_health)) + " hp";
+                                              std::to_string(static_cast<U32>(m_health)) + " hp";
 
                             Vector3 spos = Camera::getMain()->getWorldToScreenProjection(
                                 transform->_position);
@@ -180,7 +180,7 @@ public:
                           } );
   }
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
     if (!m_enableUI) { return; }
     Transform* transform = getTransform();
@@ -190,7 +190,7 @@ public:
     // Test sun rendering. This is not mandatory for running the engine!
 #define ALLOW_SUN_MOVEMENT 1
 #if ALLOW_SUN_MOVEMENT >= 1
-    static r32 tt = 0.0f;
+    static R32 tt = 0.0f;
     if ( Keyboard::keyPressed( KEY_CODE_Q ) || 
          Keyboard::keyHeldDown( KEY_CODE_Q ) ) 
     {
@@ -198,8 +198,8 @@ public:
       DirectionalLight* light = scene->getSky( )->getSunLight( );
       light->_Direction = Vector3(
         0.0f, 
-        sinf( static_cast< r32 >( tt * 0.01f ) ) * 0.5f,
-        cosf( static_cast< r32 >( tt * 0.01f ) ) * 0.5f ).normalize( );
+        sinf( static_cast< R32 >( tt * 0.01f ) ) * 0.5f,
+        cosf( static_cast< R32 >( tt * 0.01f ) ) * 0.5f ).normalize( );
       tt += 1.0f;
     }
 #endif
@@ -251,5 +251,5 @@ private:
   PhysicsComponent*   m_pPhysicsComponent;
   Collider*           m_pCollider;
   ParticleSystemComponent*  m_particleSystem;
-  b32                 m_enableUI;
+  B32                 m_enableUI;
 };

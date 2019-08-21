@@ -35,7 +35,7 @@ void UI::onShutDown()
 }
 
 
-void UI::updateState(r64 dt)
+void UI::updateState(R64 dt)
 {
   Window* pWindow = gRenderer().getWindowRef();
   // Check if window. If none, return.
@@ -44,8 +44,8 @@ void UI::updateState(r64 dt)
     return;
   }
 
-  r32 mX = static_cast< r32 >( Mouse::getX( ) );
-  r32 mY = static_cast< r32 >( Mouse::getY( ) );
+  R32 mX = static_cast< R32 >( Mouse::getX( ) );
+  R32 mY = static_cast< R32 >( Mouse::getY( ) );
 
   for ( auto& eventHandle : m_eventHandles )
   {
@@ -73,21 +73,21 @@ void UI::updateState(r64 dt)
 }
 
 
-void UI::EmitText( const std::string& text, r32 x, r32 y, r32 width, r32 height )
+void UI::EmitText( const std::string& text, R32 x, R32 y, R32 width, R32 height )
 {
   UiText textCmd;
   memcpy( textCmd._str, text.c_str( ), text.size( ) );
 
   textCmd._sz = text.size();
-  textCmd._bgColor.r = static_cast< i32 >( m_currBackColor.x * 255.0f );
-  textCmd._bgColor.g = static_cast< i32 >( m_currBackColor.y * 255.0f );
-  textCmd._bgColor.b = static_cast< i32 >( m_currBackColor.z * 255.0f );
-  textCmd._bgColor.a = static_cast< i32 >( m_currBackColor.w * 255.0f );
+  textCmd._bgColor.r = static_cast< I32 >( m_currBackColor.x * 255.0f );
+  textCmd._bgColor.g = static_cast< I32 >( m_currBackColor.y * 255.0f );
+  textCmd._bgColor.b = static_cast< I32 >( m_currBackColor.z * 255.0f );
+  textCmd._bgColor.a = static_cast< I32 >( m_currBackColor.w * 255.0f );
 
-  textCmd._fgColor.r = static_cast< i32 >( m_currForeColor.x * 255.0f );
-  textCmd._fgColor.g = static_cast< i32 >( m_currForeColor.y * 255.0f );
-  textCmd._fgColor.b = static_cast< i32 >( m_currForeColor.z * 255.0f );
-  textCmd._fgColor.a = static_cast< i32 >( m_currForeColor.w * 255.0f );
+  textCmd._fgColor.r = static_cast< I32 >( m_currForeColor.x * 255.0f );
+  textCmd._fgColor.g = static_cast< I32 >( m_currForeColor.y * 255.0f );
+  textCmd._fgColor.b = static_cast< I32 >( m_currForeColor.z * 255.0f );
+  textCmd._fgColor.a = static_cast< I32 >( m_currForeColor.w * 255.0f );
 
   textCmd._x = m_currX + x;
   textCmd._y = m_currY + y;
@@ -98,7 +98,7 @@ void UI::EmitText( const std::string& text, r32 x, r32 y, r32 width, r32 height 
 }
 
 
-void UI::BeginCanvas(const std::string& title, r32 x, r32 y, r32 width, r32 height)
+void UI::BeginCanvas(const std::string& title, R32 x, R32 y, R32 width, R32 height)
 {
   UiBeginCanvasInfo begin;
   begin._backgroundColor = Color4(255, 255, 255, 0);

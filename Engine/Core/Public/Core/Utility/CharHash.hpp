@@ -34,7 +34,7 @@ public:
 
   constexpr void
   update(const void *const data, const std::size_t size) {
-    const auto cdata = static_cast<const u8* >(data);
+    const auto cdata = static_cast<const U8* >(data);
     auto acc = this->state_;
     for (auto i = std::size_t {}; i < size; ++i)
       {

@@ -29,7 +29,7 @@ public:
   }
 
 
-  virtual void update(r32 tick) override
+  virtual void update(R32 tick) override
   {
     Transform* transform = getTransform();
     transform->_position += Vector3(1.0f, 0.0f, 0.0f) * tick;
@@ -53,7 +53,7 @@ private:
 };
 
 
-b8 TestGameObject()
+B8 TestGameObject()
 {
 
   return true;

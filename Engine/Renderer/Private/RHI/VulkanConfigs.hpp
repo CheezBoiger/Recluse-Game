@@ -68,8 +68,8 @@ namespace Recluse {
 namespace {
 
 
-VkSubpassDependency CreateSubPassDependency(u32 srcSubpass, VkAccessFlags srcAccessMask,
-  VkPipelineStageFlags srcStageMask, u32 dstSubpass, VkAccessFlags dstAccessMask,
+VkSubpassDependency CreateSubPassDependency(U32 srcSubpass, VkAccessFlags srcAccessMask,
+  VkPipelineStageFlags srcStageMask, U32 dstSubpass, VkAccessFlags dstAccessMask,
   VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags)
 {
   VkSubpassDependency d = { };
@@ -104,9 +104,9 @@ VkAttachmentDescription CreateAttachmentDescription(VkFormat format, VkImageLayo
 }
 
 
-VkRenderPassCreateInfo CreateRenderPassInfo(Recluse::u32 attachmentCount, 
-  VkAttachmentDescription* pAttachments, Recluse::u32 dependencyCount, VkSubpassDependency* pDependencies,
-  u32 subpassCount, VkSubpassDescription* pSubpasses, VkRenderPassCreateFlags flags = 0, 
+VkRenderPassCreateInfo CreateRenderPassInfo(Recluse::U32 attachmentCount, 
+  VkAttachmentDescription* pAttachments, Recluse::U32 dependencyCount, VkSubpassDependency* pDependencies,
+  U32 subpassCount, VkSubpassDescription* pSubpasses, VkRenderPassCreateFlags flags = 0, 
   void* pNext = nullptr)
 {
   VkRenderPassCreateInfo rp = { };
@@ -123,9 +123,9 @@ VkRenderPassCreateInfo CreateRenderPassInfo(Recluse::u32 attachmentCount,
 }
 
 
-VkFramebufferCreateInfo CreateFrameBufferInfo(u32 width, u32 height,
-  VkRenderPass renderPass, u32 attachmentCount, const VkImageView* pAttachments,
-  u32 layers, VkFramebufferCreateFlags flags = 0)
+VkFramebufferCreateInfo CreateFrameBufferInfo(U32 width, U32 height,
+  VkRenderPass renderPass, U32 attachmentCount, const VkImageView* pAttachments,
+  U32 layers, VkFramebufferCreateFlags flags = 0)
 {
   VkFramebufferCreateInfo fb = { };
   fb.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -142,8 +142,8 @@ VkFramebufferCreateInfo CreateFrameBufferInfo(u32 width, u32 height,
 
 VkPipelineRasterizationStateCreateInfo CreateRasterInfo(VkPolygonMode polygonMode, 
   VkBool32 rasterizerDiscardEnable, VkCullModeFlags cullMode, VkFrontFace frontFace, 
-  r32 lineWidth, VkBool32 depthBiasEnable, VkBool32 depthClampEnable, r32 depthBiasClamp = 0.0f,
-  r32 depthBiasSlopeFactor = 0.0f, VkPipelineRasterizationStateCreateFlags flags = 0
+  R32 lineWidth, VkBool32 depthBiasEnable, VkBool32 depthClampEnable, R32 depthBiasClamp = 0.0f,
+  R32 depthBiasSlopeFactor = 0.0f, VkPipelineRasterizationStateCreateFlags flags = 0
   )
 {
   VkPipelineRasterizationStateCreateInfo raster = { };
@@ -180,10 +180,10 @@ VkPipelineColorBlendAttachmentState CreateColorBlendAttachmentState(VkBool32 ble
 }
 
 
-VkPipelineColorBlendStateCreateInfo CreateBlendStateInfo(u32 attachmentCount,
+VkPipelineColorBlendStateCreateInfo CreateBlendStateInfo(U32 attachmentCount,
   const VkPipelineColorBlendAttachmentState* pAttachments, VkBool32 logicOpEnable,
-  VkLogicOp logicOp, r32 constant0 = 0.0f, r32 constant1 = 0.0f, 
-  r32 constant2 = 0.0f, r32 constant3 = 0.0f, VkPipelineColorBlendStateCreateFlags flags = 0)
+  VkLogicOp logicOp, R32 constant0 = 0.0f, R32 constant1 = 0.0f, 
+  R32 constant2 = 0.0f, R32 constant3 = 0.0f, VkPipelineColorBlendStateCreateFlags flags = 0)
 {
   VkPipelineColorBlendStateCreateInfo blend =  { };
   blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO; 
@@ -200,7 +200,7 @@ VkPipelineColorBlendStateCreateInfo CreateBlendStateInfo(u32 attachmentCount,
 }
 
 
-inline VkIndexType getNativeIndexType(u32 sizeType)
+inline VkIndexType getNativeIndexType(U32 sizeType)
 {
   VkIndexType indexType;
   switch (sizeType) {
@@ -212,16 +212,16 @@ inline VkIndexType getNativeIndexType(u32 sizeType)
 }
 
 
-u32 findMemoryProperties(const VkPhysicalDeviceMemoryProperties* pMemProperties, 
-                          u32 memoryTypeBitsRequirement)
+U32 findMemoryProperties(const VkPhysicalDeviceMemoryProperties* pMemProperties, 
+                          U32 memoryTypeBitsRequirement)
 {
-  const u32 memoryCount = pMemProperties->memoryTypeCount;
-  for (u32 memoryIndex = 0; memoryIndex < memoryCount; ++memoryIndex) {
-    u32 memoryTypeBits = (1 << memoryIndex);
-    b32 isRequiredMemoryType = memoryTypeBitsRequirement & memoryTypeBits;
+  const U32 memoryCount = pMemProperties->memoryTypeCount;
+  for (U32 memoryIndex = 0; memoryIndex < memoryCount; ++memoryIndex) {
+    U32 memoryTypeBits = (1 << memoryIndex);
+    B32 isRequiredMemoryType = memoryTypeBitsRequirement & memoryTypeBits;
     const VkMemoryPropertyFlags properties = pMemProperties->memoryTypes[memoryIndex].propertyFlags;
     if (isRequiredMemoryType) {
-      return static_cast<u32>(memoryIndex);
+      return static_cast<U32>(memoryIndex);
     }
   }
   // fail.

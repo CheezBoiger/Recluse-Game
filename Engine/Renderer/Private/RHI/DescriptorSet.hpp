@@ -35,7 +35,7 @@ public:
 
   // Updates the descriptor set with the given info. This also automatically sets the
   // dstSet parameter with each decriptor set write info.
-  void                  update(u32 count, VkWriteDescriptorSet* writeDescriptorSets);
+  void                  update(U32 count, VkWriteDescriptorSet* writeDescriptorSets);
  
   VkDescriptorSet       getHandle() const { return mDescriptorSet; }
   VkDescriptorPool      getPoolOwner() const { return mPoolOwner; }

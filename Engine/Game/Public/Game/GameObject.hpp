@@ -18,8 +18,8 @@
 namespace Recluse {
 
 
-typedef uuid64  game_uuid_t;
-typedef uuid64  object_uuid_t;
+typedef UUID64  game_uuid_t;
+typedef UUID64  object_uuid_t;
 struct Collision;
 class Scene;
 
@@ -39,11 +39,11 @@ class GameObject : public ISerializable {
   GameObject(const GameObject&) = delete;
   GameObject& operator=(const GameObject&) = delete;
 
-  static u64 sGameObjectCount;
+  static U64 sGameObjectCount;
 
 public:
 
-  static u64 numGameObjectsCreated() { return sGameObjectCount; }
+  static U64 numGameObjectsCreated() { return sGameObjectCount; }
   static game_uuid_t globalId() { return hash_bytes("GameObject", strlen("GameObject")); }
 
   GameObject();
@@ -64,7 +64,7 @@ public:
   }
   
   // Update the object. Can be overridable from inherited classes.
-  virtual void                        update(r32 tick) { }
+  virtual void                        update(R32 tick) { }
 
 protected:
   // Wakes up the game object in the scene. First time initialization is done with this call.
@@ -109,7 +109,7 @@ public:
     return obj->castTo<T>();
   }
 
-  b32                                 hasStarted() { return m_bStarted; }
+  B32                                 hasStarted() { return m_bStarted; }
   void                                cleanUp() { if (m_bStarted) { onCleanUp(); m_bStarted = false; } }
   void                                start() { if (!m_bStarted) { onStartUp(); m_bStarted = true; } }
 
@@ -126,7 +126,7 @@ private:
   Scene*                              m_pScene;
   Transform                           m_transform;
   game_uuid_t                         m_id;
-  b32                                 m_bStarted;
+  B32                                 m_bStarted;
 
   // Dispatch an event for collision. For Rigid Body use.
   void dispatchCollisionEnterEvent(Collision* collision) {

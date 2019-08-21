@@ -46,11 +46,11 @@ void FMODAudioEngine::cleanUp()
 }
 
 
-void FMODAudioEngine::updateState(r64 dt)
+void FMODAudioEngine::updateState(R64 dt)
 {
   static std::vector<ChannelMap::iterator> stoppedChannels(32);
-  u32 top = 0;
-  u32 sz = 0;
+  U32 top = 0;
+  U32 sz = 0;
 
   for (auto it = m_channelMap.begin(), itEnd = m_channelMap.end(); it != itEnd; ++it) {
     bool bIsPlaying = false;
@@ -61,7 +61,7 @@ void FMODAudioEngine::updateState(r64 dt)
       sz += 1;
     }
   }
-  for (u32 i = 0; i < sz; ++i) {
+  for (U32 i = 0; i < sz; ++i) {
     auto it = stoppedChannels[i];
     m_channelMap.erase(it);
   }
@@ -83,7 +83,7 @@ AudioId FMODAudioEngine::createAudioObject()
 }
 
 
-void FMODAudioEngine::loadSound(const std::string& soundName, b32 is3D, b32 looping, b32 streaming) 
+void FMODAudioEngine::loadSound(const std::string& soundName, B32 is3D, B32 looping, B32 streaming) 
 {
   auto it = m_soundMap.find(soundName);
   if (it != m_soundMap.end()) { return; }
@@ -112,9 +112,9 @@ void FMODAudioEngine::unLoadSound(const std::string& soundName)
 }
 
 
-u32 FMODAudioEngine::initiateSound(const std::string& soundName, const Vector3& pos, r32 volume) 
+U32 FMODAudioEngine::initiateSound(const std::string& soundName, const Vector3& pos, R32 volume) 
 { 
-  u32 nChannelId = m_nextChannelId++;
+  U32 nChannelId = m_nextChannelId++;
   auto it = m_soundMap.find(soundName);
   if (it == m_soundMap.end()) {
     loadSound(soundName);
@@ -145,7 +145,7 @@ u32 FMODAudioEngine::initiateSound(const std::string& soundName, const Vector3& 
 }
 
 
-void FMODAudioEngine::setChannel3DPosition(u32 nChannelId, const Vector3& pos, const Vector3& vel) 
+void FMODAudioEngine::setChannel3DPosition(U32 nChannelId, const Vector3& pos, const Vector3& vel) 
 { 
   auto it = m_channelMap.find(nChannelId);
   if (it == m_channelMap.end()) { return; }
@@ -156,7 +156,7 @@ void FMODAudioEngine::setChannel3DPosition(u32 nChannelId, const Vector3& pos, c
 }
 
 
-void FMODAudioEngine::setChannelVolume(u32 nChannelId, r32 volume) 
+void FMODAudioEngine::setChannelVolume(U32 nChannelId, R32 volume) 
 { 
   auto it = m_channelMap.find(nChannelId);
   if (it == m_channelMap.end()) { return; }

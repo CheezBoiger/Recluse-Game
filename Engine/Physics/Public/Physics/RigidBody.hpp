@@ -45,13 +45,13 @@ struct RigidBody : public PhysicsObject {
   Vector3               _centerOfMass;
   Vector3               _linearFactor;
   Vector3               _angleFactor;
-  r32                   _mass;
-  r32                   _friction;
-  r32                   _rollingFriction;
-  r32                   _spinningFriction;
+  R32                   _mass;
+  R32                   _friction;
+  R32                   _rollingFriction;
+  R32                   _spinningFriction;
   Quaternion            _rotation;
-  b32                   _kinematic;
-  b32                   _activated;
+  B32                   _kinematic;
+  B32                   _activated;
   GameObject*           _gameObj;
 
   // TODO(): Need to separate compound to be optional instead.

@@ -59,7 +59,7 @@ public:
     m_pRendererComponent->enableAutoLod(false);
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    std::uniform_real_distribution<R32> dist(-10.0f, 10.0f);
     Transform* trans = getTransform();
     trans->_scale = Vector3(0.01f, 0.01f, 0.01f);
     trans->_position = Vector3(0.0f, 0.05f, 0.0f);
@@ -73,7 +73,7 @@ public:
     m_pointLight->setEnable(true);
   }
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
     if (Keyboard::keyPressed(KEY_CODE_5)) {
       m_pointLight->enableDebug(false);
@@ -143,7 +143,7 @@ public:
     m_pRendererComponent->enableAutoLod(false);
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    std::uniform_real_distribution<R32> dist(-10.0f, 10.0f);
     Transform* trans = getTransform();
     trans->_position = Vector3(0.0f, 0.05f, 0.0f);
     m_vRandDir = Vector3(dist(twist), dist(twist), dist(twist)).normalize();
@@ -153,7 +153,7 @@ public:
     m_pHandle->start();
   }
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
     m_pHandle->update(tick);
   }
@@ -234,7 +234,7 @@ public:
 
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(-10.0f, 10.0f);
+    std::uniform_real_distribution<R32> dist(-10.0f, 10.0f);
     Transform* trans = getTransform();
     trans->_scale = Vector3(0.2f, 0.2f, 0.2f);
     trans->_position = Vector3(-4.0f, 0.0f, 4.0f);
@@ -246,7 +246,7 @@ public:
     bFollow = false;
   }
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
     Camera* cam = Camera::getMain();
     Transform* camTransform = cam->getTransform();
@@ -297,7 +297,7 @@ public:
 
 private:
   Vector3             m_vRandDir;
-  b32                 bFollow;
+  B32                 bFollow;
   LanternCage*        m_pCage;
   Transform           oldTransform;
   Collider*           m_secondCollider;

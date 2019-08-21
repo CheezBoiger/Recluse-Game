@@ -32,7 +32,7 @@ void Sampler::cleanUp()
 
 
 void Texture::initialize(const VkImageCreateInfo& imageInfo, 
-  VkImageViewCreateInfo& viewInfo, b8 stream)
+  VkImageViewCreateInfo& viewInfo, B8 stream)
 {
   if (vkCreateImage(mOwner, &imageInfo, nullptr, &mImage) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create image!\n");

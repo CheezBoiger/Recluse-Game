@@ -19,15 +19,15 @@ enum Verbosity {
 
 // TODO(): Log should be reading into a file for keeping history of events happening in the engine.
 class Log {
-  static b8     display;
-  static b8     store;
+  static B8     display;
+  static B8     store;
 public:
-  static b8     DisplayingToConsole();
-  static b8     Storing() { return store; }
-  static b8     Disable(Verbosity verbose);
-  static b8     setEnable(Verbosity verbose);
-  static void   displayToConsole(b8 enable);
-  static void   StoreLogs(b8 enable);
+  static B8     DisplayingToConsole();
+  static B8     Storing() { return store; }
+  static B8     Disable(Verbosity verbose);
+  static B8     setEnable(Verbosity verbose);
+  static void   displayToConsole(B8 enable);
+  static void   StoreLogs(B8 enable);
 
   Log(Verbosity verbosity = rNormal) : Type(verbosity) { }
 

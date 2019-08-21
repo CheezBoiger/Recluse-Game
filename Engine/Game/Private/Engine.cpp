@@ -30,7 +30,7 @@ void UpdateTransform(Engine* engine, GameObject* object, size_t currNum)
 }
 
 
-void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
+void KeyCallback(Window* window, I32 key, I32 scanCode, I32 action, I32 mods)
 {
   switch ( ( KeyAction )action )
   {
@@ -70,7 +70,7 @@ void KeyCallback(Window* window, i32 key, i32 scanCode, i32 action, i32 mods)
 }
 
 
-void WindowResized(Window* window, i32 width, i32 height)
+void WindowResized(Window* window, I32 width, I32 height)
 {
   if ( gRenderer( ).isActive( ) && gRenderer( ).isInitialized( ) ) 
   {
@@ -82,7 +82,7 @@ void WindowResized(Window* window, i32 width, i32 height)
 }
 
 
-void MouseButtonClick(Window* window, i32 button, i32 action, i32 mod)
+void MouseButtonClick(Window* window, I32 button, I32 action, I32 mod)
 {
 #if 0
   if (action == Mouse::PRESSED) {
@@ -135,7 +135,7 @@ void Engine::processInput()
 
 
 
-void Engine::startUp(std::string appName, b32 fullscreen, i32 width, i32 height, const GraphicsConfigParams* params)
+void Engine::startUp(std::string appName, B32 fullscreen, I32 width, I32 height, const GraphicsConfigParams* params)
 {
   if (m_running) return;
 
@@ -242,8 +242,8 @@ void Engine::update()
     return;
   }
   // render out the scene.
-  r64 dt = Time::deltaTime;
-  r64 tick = Time::fixTime;
+  R64 dt = Time::deltaTime;
+  R64 tick = Time::fixTime;
   m_dLag += Time::deltaTime;
 
 
@@ -300,7 +300,7 @@ void Engine::update()
         TextureCube* cube = gRenderer().bakeEnvironmentMap(position);
         std::string name = std::string(probname) + std::to_string(i) + ".png";
         Log(rNotify) << "probe : " << name << " baking.";
-        cube->Save(name.c_str());
+        cube->save(name.c_str());
         Log() << " Done!\n";
         gRenderer().freeTextureCube(cube);
       }
@@ -340,12 +340,12 @@ void Engine::traverseScene(GameObjectActionCallback callback)
   // TODO(Mario): This is too primitive (what if there are more than this many game objects
   // in the scene?) Need a stack that can be resized.
   static std::vector<GameObject*> nodes(1024);
-  i32 top = -1;
+  I32 top = -1;
   m_sceneObjectCount = 0;
   SceneNode* root = m_pPushedScene->getRoot();
   for (size_t i = 0; i < root->getChildrenCount(); ++i) {
     nodes[++top] = root->getChild(i);
-    if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
+    if (top >= (I32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
   }
   
   while (top != -1) {
@@ -359,7 +359,7 @@ void Engine::traverseScene(GameObjectActionCallback callback)
     for (size_t i = 0; i < child_count; ++i) {
       GameObject* child = object->getChild(i);
       nodes[++top] = child;
-      if (top >= (i32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
+      if (top >= (I32(nodes.size()) - 1)) { nodes.resize(nodes.size() << 1); }
     }
   }
 }
@@ -380,14 +380,14 @@ std::string getOption(const std::string& line)
   if (pos == std::string::npos) return "";
   std::string option = line.substr(pos + 1);
   option.erase(std::remove_if(option.begin(), option.end(),
-                              [](u8 x) -> i32 { return std::isspace(x); }),
+                              [](U8 x) -> I32 { return std::isspace(x); }),
                option.end());
   std::transform(option.begin(), option.end(), option.begin(), std::tolower);
   return option;
 }
 
 
-b32 availableOption(const std::string& line, const tchar* option) 
+B32 availableOption(const std::string& line, const TChar* option) 
 {
   size_t pos = line.find(option);
   if (pos != std::string::npos) return true;
@@ -395,24 +395,24 @@ b32 availableOption(const std::string& line, const tchar* option)
 }
 
 
-GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
+void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
 {
-  GraphicsConfigParams graphics = kDefaultGpuConfigs;
   FileHandle Buf;
   FilesystemResult result =
       gFilesystem().ReadFrom("Configs/RendererConfigs.recluse", &Buf);
   if (result == FilesystemResult_NotFound) {
+    graphics = kDefaultGpuConfigs;
     Log(rWarning) << "RendererConfigs not found! Setting default rendering "
                      "configuration.\n";
-    return graphics;
+    return;
   }
 
   std::string line = "";
   for (size_t i = 0; i < Buf.Sz; ++i) {
-    tchar ch = Buf.Buf[i];
+    TChar ch = Buf.Buf[i];
     line.push_back(ch);
     if (ch == '\n') {
-      std::cout << line;
+      Log(rDebug) << line;
       if (availableOption(line, "Buffering")) {
         std::string option = getOption(line);
         if (option.compare("triple") == 0) {
@@ -502,7 +502,7 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
           graphics._enableSoftShadows = false;
         }
       }
-      if (availableOption(line, "Multithreading")) {
+      if (availableOption(line, "RenderMultithreading")) {
         std::string option = getOption(line);
         if (option.compare("true") == 0) {
           graphics._EnableMultithreadedRendering = true;
@@ -512,17 +512,17 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
       }
       if ( availableOption( line, "CascadeShadowMapResolution" ) ) {
         std::string option = getOption( line );
-        u32 res = atoi( option.c_str( ) );
+        U32 res = atoi( option.c_str( ) );
         graphics._cascadeShadowMapRes = res;
       }
       if ( availableOption( line, "NumberCascadeShadowMaps" ) ) {
         std::string option = getOption( line );
-        u32 num = atoi( option.c_str( ) );
+        U32 num = atoi( option.c_str( ) );
         graphics._numberCascadeShadowMaps = num;
       }
       if (availableOption(line, "ShadowMapPointLightResolution")) {
         std::string option = getOption(line);
-        u32 res = atoi(option.c_str());
+        U32 res = atoi(option.c_str());
         graphics._shadowMapArrayRes = res;
       }
       if (availableOption(line, "RenderResolution")) {
@@ -577,7 +577,64 @@ GraphicsConfigParams Engine::readGraphicsConfig( u32& w, u32&h )
   if (h == 0) {
     h = 600;
   }
+}
 
-  return graphics;
+
+void Engine::readUserConfigs( UserConfigParams& params )
+{
+  FileHandle Buf;
+  FilesystemResult result =
+      gFilesystem().ReadFrom("Configs/UserConfigs.recluse", &Buf);
+  if (result == FilesystemResult_NotFound) {
+    Log(rWarning) << "UserConfigs not found! Setting default user "
+                     "configuration.\n";
+    return;
+  }
+
+  std::string line = "";
+  for (size_t i = 0; i < Buf.Sz; ++i) {
+    TChar ch = Buf.Buf[i];
+    line.push_back(ch);
+    if (ch == '\n') {
+      Log(rDebug) << line;
+      if (availableOption(line, "MouseSensitivityX")) {
+        std::string option = getOption( line );
+        R32 s = std::stof( option ) / 10000.0f;
+        params._mouseSensitivityX = Clamp(s, 0.0001f, 1.0f);
+      }
+      if (availableOption(line, "MouseSensitivityY")) {
+        std::string option = getOption( line );
+        R32 s = std::stof( option ) / 10000.0f;
+        params._mouseSensitivityY = Clamp(s, 0.0001f, 1.0f);
+      }
+      if ( availableOption( line, "FieldOfView" ) ) {
+        std::string option = getOption( line );
+        R32 fov = std::stof( option );
+        params._fieldOfView = Radians(fov - 20.0);
+      }
+      if (availableOption(line, "Multithreading")) {
+        std::string option = getOption(line);
+        if ( option.compare("true") == 0) {
+          params._engineMultiThreading = true;
+        } else {
+          params._engineMultiThreading = false;
+        }
+      }
+      if (availableOption(line, "CameraShakeQuality")) {
+        std::string option = getOption(line);
+        if (option.compare("high") == 0) {
+          params._cameraShakeQuality = USER_QUALITY_HIGH;
+        } else if ( option.compare("medium") == 0 ) {
+          params._cameraShakeQuality = USER_QUALITY_MEDIUM;
+        } else if ( option.compare("low") == 0 ) {
+          params._cameraShakeQuality = USER_QUALITY_LOW;
+        } else {
+          params._cameraShakeQuality = USER_QUALITY_NONE;
+        }
+      }
+
+      line.clear();
+    }
+  }
 }
 } // Recluse

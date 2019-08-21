@@ -29,11 +29,11 @@ public:
     }
   }
 
-  virtual void update(r32 tick) override
+  virtual void update(R32 tick) override
   {
     Transform* transform = getTransform();
 
-    r32 speed = m_currentMoveSpeed;
+    R32 speed = m_currentMoveSpeed;
 
     if (Keyboard::KeyPressed(m_sprintKey)) {
       speed *= m_sprintFactor;

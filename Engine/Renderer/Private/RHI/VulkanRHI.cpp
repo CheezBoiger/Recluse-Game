@@ -24,7 +24,7 @@ namespace Recluse {
 Context                       VulkanRHI::gContext;
 PhysicalDevice                VulkanRHI::gPhysicalDevice;
 VulkanMemoryAllocatorManager  VulkanRHI::gAllocator;
-std::vector<const tchar*>     gExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+std::vector<const TChar*>     gExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
 VkPresentModeKHR GetPresentMode(const GraphicsConfigParams* params)
@@ -118,7 +118,7 @@ VulkanRHI::~VulkanRHI()
 }
 
 
-b32 VulkanRHI::createContext(const char* appName)
+B32 VulkanRHI::createContext(const char* appName)
 {
 // setEnable debug mode, should we decide to enable validation layers.
 #if defined(_DEBUG) || defined(_NDEBUG)
@@ -141,7 +141,7 @@ std::set<std::string> VulkanRHI::getMissingExtensions(VkPhysicalDevice device)
 }
 
 
-b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
+B32 VulkanRHI::findPhysicalDevice(U32 rhiBits)
 {
   std::vector<VkPhysicalDevice>& devices = gContext.enumerateGpus();
 #if VK_NVX_raytracing
@@ -158,9 +158,9 @@ b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 #endif
   VkPhysicalDevice bestDevice = VK_NULL_HANDLE;
   {
-    b32 bestScore = 0;
+    B32 bestScore = 0;
     for (const auto& device : devices) {
-      b32 score = suitableDevice(device);
+      B32 score = suitableDevice(device);
       if (score > bestScore) {
         bestDevice = device;
       }
@@ -182,11 +182,11 @@ b32 VulkanRHI::findPhysicalDevice(u32 rhiBits)
 }
 
 
-b32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
+B32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
 {
   VkPhysicalDeviceFeatures features = {};
   VkPhysicalDeviceProperties props = {};
-  u32 score = 0;
+  U32 score = 0;
   std::vector<VkExtensionProperties> availableExtensions = PhysicalDevice::getExtensionProperties(device);
   std::set<std::string> requiredExtensions = getMissingExtensions(device);
 
@@ -223,7 +223,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   QueueFamily computeQueueFamily;
   QueueFamily transferQueueFamily;
 
-  b8 result = gPhysicalDevice.findQueueFamilies(mSurface, 
+  B8 result = gPhysicalDevice.findQueueFamilies(mSurface, 
     &presentationQueueFamily, &graphicsQueueFamily, &transferQueueFamily, &computeQueueFamily);
   
   if (!result) {
@@ -235,9 +235,9 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
     graphicsQueueFamily, computeQueueFamily, transferQueueFamily };
   std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
   // Expected 32 queues may be created.
-  std::array<r32, 32> priorities = { 1.0f };
-  r32 priority = 1.0f;
-  r32 priorityFalloff = 1.0f / (priorities.size() / 2);
+  std::array<R32, 32> priorities = { 1.0f };
+  R32 priority = 1.0f;
+  R32 priorityFalloff = 1.0f / (priorities.size() / 2);
   for (size_t i = 0; i < priorities.size(); ++i) {
     priorities[i] = priority;
     priority = priority - priorityFalloff;
@@ -262,9 +262,9 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   m_depthBoundsAllowed = features.depthBounds;
   VkDeviceCreateInfo deviceCreate = {};
   deviceCreate.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  deviceCreate.queueCreateInfoCount = static_cast<u32>(deviceQueueCreateInfos.size());
+  deviceCreate.queueCreateInfoCount = static_cast<U32>(deviceQueueCreateInfos.size());
   deviceCreate.pQueueCreateInfos = deviceQueueCreateInfos.data();
-  deviceCreate.enabledExtensionCount = static_cast<u32>(gExtensions.size());
+  deviceCreate.enabledExtensionCount = static_cast<U32>(gExtensions.size());
   deviceCreate.ppEnabledExtensionNames = gExtensions.data();
   deviceCreate.enabledLayerCount = 0;
   deviceCreate.ppEnabledLayerNames = nullptr;
@@ -280,7 +280,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getGraphicsQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getGraphicsQueueFamily()._idx);
   cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   
   for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
@@ -289,13 +289,13 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
     } 
   }
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getComputeQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getComputeQueueFamily()._idx);
 
   if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
   }
 
-  cmdPoolCI.queueFamilyIndex = static_cast<u32>(mLogicalDevice.getTransferQueueFamily()._idx);
+  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getTransferQueueFamily()._idx);
 
   if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create secondary command pool!\n");
@@ -399,7 +399,7 @@ void VulkanRHI::queryFromSwapchain()
     framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     framebufferCI. width = extent.width;
     framebufferCI.height = extent.height;
-    framebufferCI.attachmentCount = static_cast<u32>(attachments.size());
+    framebufferCI.attachmentCount = static_cast<U32>(attachments.size());
     framebufferCI.pAttachments = attachments.data();
     framebufferCI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
     framebufferCI.layers = 1;
@@ -408,7 +408,7 @@ void VulkanRHI::queryFromSwapchain()
     if (vkCreateFramebuffer(mLogicalDevice.getNative(), &framebufferCI, nullptr, 
       &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create framebuffer on swapchain image " 
-        + std::to_string(u32(i)) + "!\n");
+        + std::to_string(U32(i)) + "!\n");
     }
   }
 }
@@ -555,11 +555,11 @@ void VulkanRHI::setUpSwapchainRenderPass()
 
   VkRenderPassCreateInfo renderpassCI = { };
   renderpassCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderpassCI.attachmentCount = static_cast<u32>(aDs.size());
+  renderpassCI.attachmentCount = static_cast<U32>(aDs.size());
   renderpassCI.pAttachments = aDs.data();
   renderpassCI.subpassCount = 1;
   renderpassCI.pSubpasses = &subpass;
-  renderpassCI.dependencyCount = static_cast<u32>(dependencies.size());
+  renderpassCI.dependencyCount = static_cast<U32>(dependencies.size());
   renderpassCI.pDependencies = dependencies.data();
 
   if (vkCreateRenderPass(mLogicalDevice.getNative(), &renderpassCI, nullptr, &mSwapchainInfo.mSwapchainRenderPass) != VK_SUCCESS) {
@@ -568,7 +568,7 @@ void VulkanRHI::setUpSwapchainRenderPass()
 }
 
 
-void VulkanRHI::graphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::graphicsSubmit(size_t queueIdx, const U32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
   R_TIMED_PROFILE_RENDERER();
 
@@ -587,13 +587,13 @@ void VulkanRHI::graphicsSubmit(size_t queueIdx, const u32 count, const VkSubmitI
 }
 
 
-void VulkanRHI::waitForFences(const u32 fenceCount, const VkFence* pFences, b32 waitAll, const u64 timeout)
+void VulkanRHI::waitForFences(const U32 fenceCount, const VkFence* pFences, B32 waitAll, const U64 timeout)
 {
   vkWaitForFences(mLogicalDevice.getNative(), fenceCount, pFences, waitAll, timeout); 
 }
 
 
-void VulkanRHI::resetFences(const u32 fenceCount, const VkFence* pFences)
+void VulkanRHI::resetFences(const U32 fenceCount, const VkFence* pFences)
 {
   vkResetFences(mLogicalDevice.getNative(), fenceCount, pFences);
 }
@@ -634,8 +634,8 @@ void VulkanRHI::waitForFrameInFlightFence()
 }
 
 
-void VulkanRHI::submitCurrSwapchainCmdBuffer(u32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
-  u32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence)
+void VulkanRHI::submitCurrSwapchainCmdBuffer(U32 waitSemaphoreCount, VkSemaphore* waitSemaphores,
+  U32 signalSemaphoreCount, VkSemaphore* signalSemaphores, VkFence fence)
 {
   if (!signalSemaphores || !signalSemaphoreCount) {
     R_DEBUG(rError, "Fatal! You must specify at least one signal semaphore when calling SubmitCurrSwapchainCmdBuffer (GraphicsFinishedSemaphore() if rendering is complete!)");
@@ -698,7 +698,7 @@ void VulkanRHI::computeSubmit(size_t queueIdx, const VkSubmitInfo& submitInfo, c
 }
 
 
-void VulkanRHI::transferSubmit(size_t queueIdx, const u32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
+void VulkanRHI::transferSubmit(size_t queueIdx, const U32 count, const VkSubmitInfo* submitInfo, const VkFence fence)
 {
   VkResult result = vkQueueSubmit(mLogicalDevice.getTransferQueue(queueIdx), count, submitInfo, fence);
   if (result != VK_SUCCESS) {
@@ -744,7 +744,7 @@ void VulkanRHI::waitAllGraphicsQueues()
 }
 
 
-void VulkanRHI::createSwapchainCommandBuffers(u32 set)
+void VulkanRHI::createSwapchainCommandBuffers(U32 set)
 {
   auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
   cmdBufferSet.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
@@ -782,7 +782,7 @@ void VulkanRHI::createSwapchainCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::rebuildCommandBuffers(u32 set)
+void VulkanRHI::rebuildCommandBuffers(U32 set)
 {
   auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
   for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
@@ -794,7 +794,7 @@ void VulkanRHI::rebuildCommandBuffers(u32 set)
 }
 
 
-void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, i32 width, i32 height, u32 buffers, u32 desiredImageCount)
+void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, I32 width, I32 height, U32 buffers, U32 desiredImageCount)
 {
   if (width <= 0 || height <= 0) return;
   deviceWaitIdle();
@@ -1078,7 +1078,7 @@ void VulkanRHI::freeRenderPass(RenderPass* renderPass)
 }
 
 
-void VulkanRHI::buildDescriptorPool(u32 maxCount, u32 maxSets)
+void VulkanRHI::buildDescriptorPool(U32 maxCount, U32 maxSets)
 {
   if (mDescriptorPool) {
     vkDestroyDescriptorPool(mLogicalDevice.getNative(), mDescriptorPool, nullptr);
@@ -1100,7 +1100,7 @@ void VulkanRHI::buildDescriptorPool(u32 maxCount, u32 maxSets)
 
   VkDescriptorPoolCreateInfo descriptorPoolCI = { };
   descriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  descriptorPoolCI.poolSizeCount = static_cast<u32>(poolSizes.size());
+  descriptorPoolCI.poolSizeCount = static_cast<U32>(poolSizes.size());
   descriptorPoolCI.pPoolSizes = poolSizes.data();
   descriptorPoolCI.maxSets = maxSets;
   descriptorPoolCI.pNext = nullptr;
@@ -1112,7 +1112,7 @@ void VulkanRHI::buildDescriptorPool(u32 maxCount, u32 maxSets)
 }
 
 
-void VulkanRHI::createOcclusionQueryPool(u32 queries)
+void VulkanRHI::createOcclusionQueryPool(U32 queries)
 {
   VkQueryPoolCreateInfo queryCi = { };
   queryCi.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;

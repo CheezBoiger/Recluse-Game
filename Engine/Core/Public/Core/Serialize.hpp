@@ -13,7 +13,7 @@ class ISerializable {
 public:
   virtual ~ISerializable() { }
 
-  virtual b8 Serializable() { return true; }
+  virtual B8 Serializable() { return true; }
 
   virtual void serialize(IArchive& archive) { }
 

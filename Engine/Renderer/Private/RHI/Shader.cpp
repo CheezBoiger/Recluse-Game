@@ -8,7 +8,7 @@
 namespace Recluse {
 
 
-b32 Shader::initialize(const std::string& binaryPath)
+B32 Shader::initialize(const std::string& binaryPath)
 {
   if (binaryPath.empty()) return false;
   
@@ -28,7 +28,7 @@ b32 Shader::initialize(const std::string& binaryPath)
   VkShaderModuleCreateInfo info = { };
   info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   info.codeSize = buf.size();
-  info.pCode = reinterpret_cast<const u32*>(buf.data());
+  info.pCode = reinterpret_cast<const U32*>(buf.data());
   
   if (vkCreateShaderModule(mOwner, &info, nullptr, &mModule) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create our shader module!\n");

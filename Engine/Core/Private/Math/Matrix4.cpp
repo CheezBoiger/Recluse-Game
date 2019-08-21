@@ -21,7 +21,7 @@
 namespace Recluse {
 
 
-r32* Matrix4::operator[](const size_t i)
+R32* Matrix4::operator[](const size_t i)
 {
   return Data[i];
 }
@@ -30,38 +30,38 @@ r32* Matrix4::operator[](const size_t i)
 Matrix4 Matrix4::operator*(const Matrix4& other) const 
 {
 #if !defined FAST_INTRINSICS
-  r32 m00 = Data[0][0];
-  r32 m01 = Data[0][1];
-  r32 m02 = Data[0][2];
-  r32 m03 = Data[0][3];
-  r32 m10 = Data[1][0];
-  r32 m11 = Data[1][1];
-  r32 m12 = Data[1][2];
-  r32 m13 = Data[1][3];
-  r32 m20 = Data[2][0];
-  r32 m21 = Data[2][1];
-  r32 m22 = Data[2][2];
-  r32 m23 = Data[2][3];
-  r32 m30 = Data[3][0];
-  r32 m31 = Data[3][1];
-  r32 m32 = Data[3][2];
-  r32 m33 = Data[3][3];
-  r32 om00 = other.Data[0][0];
-  r32 om01 = other.Data[0][1];
-  r32 om02 = other.Data[0][2];
-  r32 om03 = other.Data[0][3];
-  r32 om10 = other.Data[1][0];
-  r32 om11 = other.Data[1][1];
-  r32 om12 = other.Data[1][2];
-  r32 om13 = other.Data[1][3];
-  r32 om20 = other.Data[2][0];
-  r32 om21 = other.Data[2][1];
-  r32 om22 = other.Data[2][2];
-  r32 om23 = other.Data[2][3];
-  r32 om30 = other.Data[3][0];
-  r32 om31 = other.Data[3][1];
-  r32 om32 = other.Data[3][2];
-  r32 om33 = other.Data[3][3]; 
+  R32 m00 = Data[0][0];
+  R32 m01 = Data[0][1];
+  R32 m02 = Data[0][2];
+  R32 m03 = Data[0][3];
+  R32 m10 = Data[1][0];
+  R32 m11 = Data[1][1];
+  R32 m12 = Data[1][2];
+  R32 m13 = Data[1][3];
+  R32 m20 = Data[2][0];
+  R32 m21 = Data[2][1];
+  R32 m22 = Data[2][2];
+  R32 m23 = Data[2][3];
+  R32 m30 = Data[3][0];
+  R32 m31 = Data[3][1];
+  R32 m32 = Data[3][2];
+  R32 m33 = Data[3][3];
+  R32 om00 = other.Data[0][0];
+  R32 om01 = other.Data[0][1];
+  R32 om02 = other.Data[0][2];
+  R32 om03 = other.Data[0][3];
+  R32 om10 = other.Data[1][0];
+  R32 om11 = other.Data[1][1];
+  R32 om12 = other.Data[1][2];
+  R32 om13 = other.Data[1][3];
+  R32 om20 = other.Data[2][0];
+  R32 om21 = other.Data[2][1];
+  R32 om22 = other.Data[2][2];
+  R32 om23 = other.Data[2][3];
+  R32 om30 = other.Data[3][0];
+  R32 om31 = other.Data[3][1];
+  R32 om32 = other.Data[3][2];
+  R32 om33 = other.Data[3][3]; 
   return Matrix4(
     m00 * om00 + m01 * om10 + m02 * om20 + m03 * om30,
     m00 * om01 + m01 * om11 + m02 * om21 + m03 * om31,
@@ -93,7 +93,7 @@ Matrix4 Matrix4::operator*(const Matrix4& other) const
   __m128 row2 = _mm_load_ps(&(*other.getData)[4]);
   __m128 row3 = _mm_load_ps(&(*other.getData)[8]);
   __m128 row4 = _mm_load_ps(&(*other.getData)[12]);
-  for (i32 i = 0; i < 4; ++i) {
+  for (I32 i = 0; i < 4; ++i) {
     __m128 brod1 = _mm_set1_ps((*getData)[4 * i + 0]);
     __m128 brod2 = _mm_set1_ps((*getData)[4 * i + 1]);
     __m128 brod3 = _mm_set1_ps((*getData)[4 * i + 2]);
@@ -134,7 +134,7 @@ Matrix4 Matrix4::operator-(const Matrix4& other) const
 }
 
 
-Matrix4 Matrix4::operator*(const r32 scaler) const
+Matrix4 Matrix4::operator*(const R32 scaler) const
 {
   return Matrix4(
     Data[0][0] * scaler, Data[0][1] * scaler, Data[0][2] * scaler, Data[0][3] * scaler,
@@ -188,10 +188,10 @@ void Matrix4::operator-=(const Matrix4& other)
 }
 
 
-b8 Matrix4::operator==(const Matrix4& other) const
+B8 Matrix4::operator==(const Matrix4& other) const
 {
-  for (u32 i = 0; i < 4; ++i) {
-    for (u32 j = 0; j < 4; ++j) {
+  for (U32 i = 0; i < 4; ++i) {
+    for (U32 j = 0; j < 4; ++j) {
       if (Data[i][j] != other.Data[i][j]) {
         return false;
       }
@@ -201,13 +201,13 @@ b8 Matrix4::operator==(const Matrix4& other) const
 }
 
 
-b8 Matrix4::operator!=(const Matrix4& other) const
+B8 Matrix4::operator!=(const Matrix4& other) const
 {
   return !(*this == other);
 }
 
 
-r32 Matrix4::determinant() const
+R32 Matrix4::determinant() const
 {
   return  Data[0][0] * (Data[1][1] * (Data[2][2] * Data[3][3] - Data[2][3] * Data[3][2]) -
                         Data[1][2] * (Data[2][1] * Data[3][3] - Data[2][3] * Data[3][1]) +
@@ -232,10 +232,10 @@ Matrix4 Matrix4::adjugate() const
   // Calculating our adjugate using the transpose of the cofactor of our
   // matrix.
   Matrix4 CofactorMatrix;
-  r32 sign = 1.0f;
-  for (u32 row = 0; row < 4; ++row) {
+  R32 sign = 1.0f;
+  for (U32 row = 0; row < 4; ++row) {
     sign = -sign;
-    for (u32 col = 0; col < 4; ++col) {
+    for (U32 col = 0; col < 4; ++col) {
       sign = -sign;
       CofactorMatrix[row][col] = minor(row, col).determinant() * sign;
     }
@@ -245,14 +245,14 @@ Matrix4 Matrix4::adjugate() const
 }
 
 
-Matrix3 Matrix4::minor(u32 row, u32 col) const
+Matrix3 Matrix4::minor(U32 row, U32 col) const
 {
   Matrix3 minor;
-  u32 r = 0, c;
-  for (u32 i = 0; i < 4; ++i) {
+  U32 r = 0, c;
+  for (U32 i = 0; i < 4; ++i) {
     if (i == row) continue;
     c = 0;
-    for (u32 j = 0; j < 4; ++j) {
+    for (U32 j = 0; j < 4; ++j) {
       if (j == col) continue;
       minor[r][c] = Data[i][j];
       c++;
@@ -276,7 +276,7 @@ Matrix4 Matrix4::transpose() const
 
 Matrix4 Matrix4::inverse() const
 {
-  r32 detA = determinant();
+  R32 detA = determinant();
   if (detA == 0.0f) {
     return Matrix4::identity();
   }
@@ -285,9 +285,9 @@ Matrix4 Matrix4::inverse() const
 }
 
 
-Matrix4 Matrix4::perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
+Matrix4 Matrix4::perspective(R32 fovy, R32 aspect, R32 zNear, R32 zFar)
 {
-  r32 tanHalfFov = tanf(fovy * 0.5f);
+  R32 tanHalfFov = tanf(fovy * 0.5f);
   Matrix4 perspective = Matrix4::identity();
   perspective[3][3] = 0.0f;
   perspective[0][0] = 1.0f / (aspect * tanHalfFov);
@@ -303,8 +303,8 @@ Matrix4 Matrix4::perspective(r32 fovy, r32 aspect, r32 zNear, r32 zFar)
 Matrix4 Matrix4::lookAt(const Vector3& eye, const Vector3& center, const Vector3& up)
 {
   Vector3 front((center - eye).normalize());
-  Vector3 right(up.Cross(front).normalize());
-  Vector3 u(front.Cross(right));
+  Vector3 right(up.cross(front).normalize());
+  Vector3 u(front.cross(right));
   return Matrix4(
     right.x,          u.x,          front.x,        0.0f,
     right.y,          u.y,          front.y,        0.0f,
@@ -314,7 +314,7 @@ Matrix4 Matrix4::lookAt(const Vector3& eye, const Vector3& center, const Vector3
 }
 
 
-Matrix4 Matrix4::ortho(r32 width, r32 height, r32 zNear, r32 zFar)
+Matrix4 Matrix4::ortho(R32 width, R32 height, R32 zNear, R32 zFar)
 {
   Matrix4 ortho = Matrix4::identity();
   ortho[0][0] =  2.0f / width;
@@ -335,11 +335,11 @@ Matrix4 Matrix4::translate(const Matrix4& mat, const Vector3& position)
 }
 
 
-Matrix4 Matrix4::rotate(const Matrix4& begin, const r32 radians, const Vector3& ax)
+Matrix4 Matrix4::rotate(const Matrix4& begin, const R32 radians, const Vector3& ax)
 {
-  r32 oneMinusCosine = 1.0f - cosf(radians);
-  r32 cosine = cosf(radians);
-  r32 sine = sinf(radians);
+  R32 oneMinusCosine = 1.0f - cosf(radians);
+  R32 cosine = cosf(radians);
+  R32 sine = sinf(radians);
 
   Vector3 axis = ax.normalize();
 

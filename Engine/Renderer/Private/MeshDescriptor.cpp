@@ -45,7 +45,7 @@ MeshDescriptor::MeshDescriptor()
 
 MeshDescriptor::~MeshDescriptor()
 {
-  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
     if (m_pGpuHandles[i]._pSet) {
       Log(rError) << "Mesh Descriptor Set were not cleaned up before destruction of this object!\n";
     }
@@ -69,7 +69,7 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
   m_pGpuHandles.resize(pRhi->bufferingCount());
 
   // Create the render buffer for the object.
-  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
     m_pGpuHandles[i]._pBuf = pRhi->createBuffer();
     m_pGpuHandles[i]._pBuf->initialize(objectCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pGpuHandles[i]._pBuf->map();
@@ -80,7 +80,7 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
 }
 
 
-void MeshDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
+void MeshDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
 {
   if (pRhi->bufferingCount() != m_pGpuHandles.size()) {
     cleanUp(pRhi);
@@ -90,7 +90,7 @@ void MeshDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
   // Mesh
   Buffer* pBuf = m_pGpuHandles[frameIndex]._pBuf;
   DescriptorSet* pSet = m_pGpuHandles[frameIndex]._pSet;
-  u32& updates = m_pGpuHandles[frameIndex]._updates;
+  U32& updates = m_pGpuHandles[frameIndex]._updates;
 
   if ((updates & MESH_DESCRIPTOR_UPDATE_BIT)) {
     VkDescriptorBufferInfo objBufferInfo = {};
@@ -129,7 +129,7 @@ void MeshDescriptor::cleanUp(VulkanRHI* pRhi)
 {
   // Need to wait before we can remove this object in cmd buffer.
   pRhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
-  for (u32 i = 0; i < m_pGpuHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
     if (m_pGpuHandles[i]._pSet) {
       pRhi->freeDescriptorSet(m_pGpuHandles[i]._pSet);
       m_pGpuHandles[i]._pSet = nullptr;
@@ -152,7 +152,7 @@ JointDescriptor::JointDescriptor()
 JointDescriptor::~JointDescriptor()
 {
   DEBUG_OP(
-  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     if (m_pJointHandles[i]._pBuf) {
       R_DEBUG(rWarning, "Skinned mesh bones buffer was not cleaned up before destroying!\n");
     }
@@ -171,7 +171,7 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
 
   m_pJointHandles.resize(pRhi->bufferingCount());
 
-  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     m_pJointHandles[i]._pBuf = pRhi->createBuffer();
     m_pJointHandles[i]._pBuf->initialize(jointCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pJointHandles[i]._pBuf->map();
@@ -185,7 +185,7 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
 }
 
 
-void JointDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
+void JointDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
 {
   if (pRhi->bufferingCount() != m_pJointHandles.size()) {
     cleanUp(pRhi);
@@ -193,7 +193,7 @@ void JointDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
   }
 
   UpdateManager& m = m_pJointHandles[frameIndex];
-  u32 updates = m._updates;
+  U32 updates = m._updates;
   Buffer* pBuf = m._pBuf;
 
   if ((updates & JOINT_DESCRIPTOR_UPDATE_BIT)) {
@@ -218,7 +218,7 @@ void JointDescriptor::update(VulkanRHI* pRhi, u32 frameIndex)
 
 void JointDescriptor::cleanUp(VulkanRHI* pRhi)
 {
-  for (u32 i = 0; i < m_pJointHandles.size(); ++i) {
+  for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     pRhi->freeDescriptorSet(m_pJointHandles[i]._pSet);
     m_pJointHandles[i]._pSet = nullptr;
 
@@ -230,7 +230,7 @@ void JointDescriptor::cleanUp(VulkanRHI* pRhi)
 }
 
 
-void JointDescriptor::updateJointSets(u32 frameIndex)
+void JointDescriptor::updateJointSets(U32 frameIndex)
 {
   // Bones
   R_DEBUG(rNotify, "Updating bone descriptor set.\n");

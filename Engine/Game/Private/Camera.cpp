@@ -29,7 +29,7 @@ void Camera::setMain(Camera* pCam)
 }
 
 
-Camera::Camera(Project type, r32 fov, r32 zNear, r32 zFar)
+Camera::Camera(Project type, R32 fov, R32 zNear, R32 zFar)
   : m_ProjType(type)
   , m_Fov(fov)
   , m_PixelWidth(1.0f)
@@ -101,8 +101,8 @@ void Camera::update()
     m_projectionMatrix = Matrix4::perspective(m_Fov, m_Aspect, m_ZNear, m_ZFar);
   }
 
-  r32 winPixWidth = r32(gRenderer().getRenderWidth());//r32(pWindow->getWidth());
-  r32 winPixHeight = r32(gRenderer().getRenderHeight());//r32(pWindow->getHeight());
+  R32 winPixWidth = R32(gRenderer().getRenderWidth());//R32(pWindow->getWidth());
+  R32 winPixHeight = R32(gRenderer().getRenderHeight());//R32(pWindow->getHeight());
   if (m_PixelHeight != winPixHeight || m_PixelWidth != winPixWidth) {
     m_PixelWidth = winPixWidth;
     m_PixelHeight = winPixHeight;
@@ -137,9 +137,9 @@ void Camera::flushToGpuBus()
   gGlobalBuffer->_BloomEnabled = getBloom();
   gGlobalBuffer->_Exposure = getExposure();
   gGlobalBuffer->_Gamma = getGamma();
-  gGlobalBuffer->_MousePos = Vector2((r32)Mouse::getX(), (r32)Mouse::getY());
-  gGlobalBuffer->_fEngineTime = static_cast<r32>(Time::currentTime());
-  gGlobalBuffer->_fDeltaTime = static_cast<r32>(Time::deltaTime);
+  gGlobalBuffer->_MousePos = Vector2((R32)Mouse::getX(), (R32)Mouse::getY());
+  gGlobalBuffer->_fEngineTime = static_cast<R32>(Time::currentTime());
+  gGlobalBuffer->_fDeltaTime = static_cast<R32>(Time::deltaTime);
 
   // TODO(): Move cam frustum to camera.
   m_viewFrustum.update(gGlobalBuffer->_ViewProj);
@@ -151,8 +151,8 @@ void Camera::flushToGpuBus()
   gGlobalBuffer->_FPlane = m_viewFrustum[ViewFrustum::PFAR];
 
   // HDR settings.
-  hdr->_bEnable.x = r32(getInterleavedVideo());
-  hdr->_bEnable.z = r32(getFilmGrain());
+  hdr->_bEnable.x = R32(getInterleavedVideo());
+  hdr->_bEnable.z = R32(getFilmGrain());
   hdr->_filmGrain = Vector4(m_filmGrainZoom, m_filmGrainSpeed, 0.0f, 0.0f);
 }
 
@@ -172,8 +172,8 @@ Vector3 Camera::getWorldToScreenProjection(const Vector3& position)
 }
 
 #if 0
-FlyViewCamera::FlyViewCamera(r32 fov, r32 pixelWidth, r32 pixelHeight, 
-  r32 zNear, r32 zFar, Vector3 pos, Vector3 dir)
+FlyViewCamera::FlyViewCamera(R32 fov, R32 pixelWidth, R32 pixelHeight, 
+  R32 zNear, R32 zFar, Vector3 pos, Vector3 dir)
   : m_X_Sensitivity(0.1f)
   , m_Y_Sensitivity(0.1f)
   , m_Yaw(90.0f)
@@ -196,7 +196,7 @@ Matrix4 FlyViewCamera::getView()
 }
 
 
-void FlyViewCamera::Move(Movement movement, r64 dt)
+void FlyViewCamera::Move(Movement movement, R64 dt)
 {
 }
 
@@ -206,18 +206,18 @@ void FlyViewCamera::update()
 }
 
 
-void FlyViewCamera::Look(r64 x, r64 y)
+void FlyViewCamera::Look(R64 x, R64 y)
 {
   if (m_FirstLook) {
-    m_LastX = (r32)x;
-    m_LastY = (r32)y;
+    m_LastX = (R32)x;
+    m_LastY = (R32)y;
     m_FirstLook = false;
   }
   
-  r32 xoffset = m_LastX - (r32)x;
-  r32 yoffset =  m_LastY - (r32)y;
-  m_LastX = (r32)x;
-  m_LastY = (r32)y;
+  R32 xoffset = m_LastX - (R32)x;
+  R32 yoffset =  m_LastY - (R32)y;
+  m_LastX = (R32)x;
+  m_LastY = (R32)y;
 
   xoffset *= m_X_Sensitivity;
   yoffset *= m_Y_Sensitivity;

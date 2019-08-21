@@ -19,42 +19,42 @@ std::vector<VkVertexInputAttributeDescription> SkinnedVertexDescription::GetVert
 {
   std::vector<VkVertexInputAttributeDescription> attribs(6);
 
-  u32 offset = 0;
+  U32 offset = 0;
   attribs[0].binding = 0;
   attribs[0].location = 0;
   attribs[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attribs[0].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attribs[1].binding = 0;
   attribs[1].location = 1;
   attribs[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attribs[1].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attribs[2].binding = 0;
   attribs[2].location = 2;
   attribs[2].format = VK_FORMAT_R32G32_SFLOAT;
   attribs[2].offset = offset;
-  offset += sizeof(r32) * 2;
+  offset += sizeof(R32) * 2;
 
   attribs[3].binding = 0;
   attribs[3].location = 3;
   attribs[3].format = VK_FORMAT_R32G32_SFLOAT;
   attribs[3].offset = offset;
-  offset += sizeof(r32) * 2;
+  offset += sizeof(R32) * 2;
 
   attribs[4].binding = 0;
   attribs[4].location = 4;
   attribs[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attribs[4].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attribs[5].binding = 0;
   attribs[5].location = 5;
   attribs[5].format = VK_FORMAT_R32G32B32A32_SINT;
   attribs[5].offset = offset;
-  offset += sizeof(i32) * 4;
+  offset += sizeof(I32) * 4;
 
   return attribs;
 }
@@ -82,7 +82,7 @@ std::vector<VkVertexInputAttributeDescription> QuadVertexDescription::GetVertexA
   attribs[1].binding = 0;
   attribs[1].format = VK_FORMAT_R32G32_SFLOAT;
   attribs[1].location = 1;
-  attribs[1].offset = sizeof(r32) * 2;
+  attribs[1].offset = sizeof(R32) * 2;
   return attribs;
 }
 
@@ -100,7 +100,7 @@ VkVertexInputBindingDescription StaticVertexDescription::GetBindingDescription()
 std::vector<VkVertexInputAttributeDescription> StaticVertexDescription::GetVertexAttributes()
 {
   std::vector<VkVertexInputAttributeDescription> attribs(4);
-  u32 offset = 0;
+  U32 offset = 0;
 
   attribs[0].binding = 0;
   attribs[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -143,7 +143,7 @@ VkVertexInputBindingDescription UIVertexDescription::GetBindingDescription()
 std::vector<VkVertexInputAttributeDescription> UIVertexDescription::GetVertexAttributes()
 {
   std::vector<VkVertexInputAttributeDescription> attribs(3);
-  u32 offset = 0;
+  U32 offset = 0;
 
   attribs[0].binding = 0;
   attribs[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -184,15 +184,15 @@ std::vector<VkVertexInputBindingDescription> MorphTargetVertexDescription::GetBi
 }
 
 
-u32 GetSize(VkFormat format)
+U32 GetSize(VkFormat format)
 {
   switch (format)
   {
-    case VK_FORMAT_R32G32B32A32_SFLOAT: return (u32)sizeof(r32) * 4;
-    case VK_FORMAT_R32G32B32_SFLOAT: return (u32)sizeof(r32) * 3;
-    case VK_FORMAT_R32G32_SFLOAT: return (u32)sizeof(r32) * 2;
+    case VK_FORMAT_R32G32B32A32_SFLOAT: return (U32)sizeof(R32) * 4;
+    case VK_FORMAT_R32G32B32_SFLOAT: return (U32)sizeof(R32) * 3;
+    case VK_FORMAT_R32G32_SFLOAT: return (U32)sizeof(R32) * 2;
     case VK_FORMAT_R32_SFLOAT:
-    default: return sizeof(r32);
+    default: return sizeof(R32);
   }
 }
 
@@ -201,9 +201,9 @@ std::vector<VkVertexInputAttributeDescription> MorphTargetVertexDescription::Get
 {
   std::vector<VkVertexInputAttributeDescription> attributes(attribs.size() + 8);
   size_t i = 0;
-  u32 offset = 0;
-  u32 binding = 0;
-  u32 location = 0;
+  U32 offset = 0;
+  U32 binding = 0;
+  U32 location = 0;
   for (; i < attribs.size(); ++i) {
     attributes[i].binding = attribs[i].binding;
     attributes[i].format = attribs[i].format;
@@ -221,44 +221,44 @@ std::vector<VkVertexInputAttributeDescription> MorphTargetVertexDescription::Get
   attributes[i + 0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 0].location = location + 1;
   attributes[i + 0].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attributes[i + 1].binding = binding + 1;
   attributes[i + 1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 1].location = location + 2;
   attributes[i + 1].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attributes[i + 2].binding = binding + 1;
   attributes[i + 2].format = VK_FORMAT_R32G32_SFLOAT;
   attributes[i + 2].location = location + 3;
   attributes[i + 2].offset = offset;
-  offset += sizeof(r32) * 2;
+  offset += sizeof(R32) * 2;
 
   attributes[i + 3].binding = binding + 1;
   attributes[i + 3].format = VK_FORMAT_R32G32_SFLOAT;
   attributes[i + 3].location = location + 4;
   attributes[i + 3].offset = offset;
-  offset += sizeof(r32) * 2;
+  offset += sizeof(R32) * 2;
 
   offset = 0;
   attributes[i + 4].binding = binding + 2;
   attributes[i + 4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 4].location = location + 5;
   attributes[i + 4].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attributes[i + 5].binding = binding + 2;
   attributes[i + 5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
   attributes[i + 5].location = location + 6;
   attributes[i + 5].offset = offset;
-  offset += sizeof(r32) * 4;
+  offset += sizeof(R32) * 4;
 
   attributes[i + 6].binding = binding + 2;
   attributes[i + 6].format = VK_FORMAT_R32G32_SFLOAT;
   attributes[i + 6].location = location + 7;
   attributes[i + 6].offset = offset;
-  offset += sizeof(r32) * 2;
+  offset += sizeof(R32) * 2;
 
   attributes[i + 7].binding = binding + 2;
   attributes[i + 7].format = VK_FORMAT_R32G32_SFLOAT;

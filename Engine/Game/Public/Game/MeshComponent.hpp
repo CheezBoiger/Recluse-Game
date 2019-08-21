@@ -28,19 +28,19 @@ public:
   // updates this mesh component instance frustum bit cull.
   void            update() override;
 
-  void            EnableCulling(b32 enable) { m_allowCulling = enable; }
+  void            EnableCulling(B32 enable) { m_allowCulling = enable; }
 
-  inline b32      AllowCulling() const { return m_allowCulling; }
+  inline B32      AllowCulling() const { return m_allowCulling; }
 
   // Cull bit set map. Each bit represents a frustum, and when flipped, means this mesh is culled
   // for that given frustum. maximum 32 frustums can be supported.
-  b32             GetFrustumCullMap() const { return m_frustumCull; }
+  B32             GetFrustumCullMap() const { return m_frustumCull; }
 
   // Set a frustum bit to 1.
-  void            SetFrustumCull(b32 mask) { m_frustumCull |= mask; }
+  void            SetFrustumCull(B32 mask) { m_frustumCull |= mask; }
 
   // Unset a frustum bit to 0.
-  void            UnsetFrustumCull(b32 mask) { m_frustumCull &= ~mask; }
+  void            UnsetFrustumCull(B32 mask) { m_frustumCull &= ~mask; }
 
   // Clear and reset all frustum bits to 0.
   void            ClearFrustumCullBits() { m_frustumCull &= 0; }
@@ -50,8 +50,8 @@ private:
   void            UpdateFrustumCullBits();
 
   Mesh*           m_pMeshRef;
-  b32             m_frustumCull;
-  b32             m_allowCulling;
+  B32             m_frustumCull;
+  B32             m_allowCulling;
 
 };
 } // Recluse

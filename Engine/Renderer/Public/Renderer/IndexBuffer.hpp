@@ -24,12 +24,12 @@ public:
   void        cleanUp(VulkanRHI* pRhi);
 
   Buffer*     getHandle() { return mBuffer; }
-  u32         IndexCount() { return mIndexCount; }
+  U32         IndexCount() { return mIndexCount; }
 
-  u32         GetSizeType() const { return m_sizeType; }
+  U32         GetSizeType() const { return m_sizeType; }
 private:
   Buffer*     mBuffer;
-  u32         mIndexCount;
-  u32         m_sizeType;
+  U32         mIndexCount;
+  U32         m_sizeType;
 };
 } // Recluse

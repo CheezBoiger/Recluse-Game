@@ -24,7 +24,7 @@ public:
     , mGraphicsFinishedSemaphore(VK_NULL_HANDLE) { }
 
 
-  b32 initialize(const VkPhysicalDevice physical, 
+  B32 initialize(const VkPhysicalDevice physical, 
                   const VkDeviceCreateInfo& info,
                   QueueFamily* graphics, 
                   QueueFamily* compute, 
@@ -34,7 +34,7 @@ public:
 
   // Performs a manual flush of mapped memory writes to make them visible to the host. This
   // should be used if memory written is not coherent between cpu and gpu.
-  VkResult FlushMappedMemoryRanges(u32 count, const VkMappedMemoryRange* ranges);
+  VkResult FlushMappedMemoryRanges(U32 count, const VkMappedMemoryRange* ranges);
 
   VkMemoryRequirements getImageMemoryRequirements(const VkImage& image);
   VkMemoryRequirements getBufferMemoryRequirements(const VkBuffer& buffer);
@@ -54,9 +54,9 @@ public:
 
   VkFence getDefaultComputeFence() { return mDefaultComputeFence; }
 
-  u32 getGraphicsQueueCount() const { return static_cast<u32>(mGraphicsQueues.size()); }
-  u32 getTransferQueueCount() const { return static_cast<u32>(mTransferQueues.size()); }
-  u32 getComputeQueueCount() const { return static_cast<u32>(mComputeQueues.size()); }
+  U32 getGraphicsQueueCount() const { return static_cast<U32>(mGraphicsQueues.size()); }
+  U32 getTransferQueueCount() const { return static_cast<U32>(mTransferQueues.size()); }
+  U32 getComputeQueueCount() const { return static_cast<U32>(mComputeQueues.size()); }
 
 private:
   VkDevice handle;

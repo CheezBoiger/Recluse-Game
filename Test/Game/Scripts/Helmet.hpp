@@ -93,7 +93,7 @@ public:
     m_pRendererComponent->forceForward(false);
     for (size_t i = 0; i < model->meshes.size(); ++i) {
       m_pRendererComponent->addMesh(model->meshes[i]);
-      for (u32 j = 0; j < model->meshes[i]->getPrimitiveCount(); ++j) {
+      for (U32 j = 0; j < model->meshes[i]->getPrimitiveCount(); ++j) {
         model->meshes[i]->getPrimitive(j)->_pMat->enableEmissive(false);
       }
     }
@@ -109,7 +109,7 @@ public:
    
     std::random_device r;
     std::mt19937 twist(r());
-    std::uniform_real_distribution<r32> dist(0.0f, 1.0f);
+    std::uniform_real_distribution<R32> dist(0.0f, 1.0f);
     Transform* trans = getTransform();
     trans->_scale = Vector3(2.0f, 2.0f, 2.0f);
     trans->_position = Vector3(dist(twist), dist(twist), dist(twist));
@@ -128,7 +128,7 @@ public:
   }
 
   // Updating game logic...
-  void update(r32 tick) override
+  void update(R32 tick) override
   {
 #define FOLLOW_CAMERA_FORWARD 0
     Transform* transform = getTransform();
@@ -168,7 +168,7 @@ public:
     }
 
     // Make emission glow.
-    m_factor = Absf(sinf(static_cast<r32>(Time::currentTime())));
+    m_factor = Absf(sinf(static_cast<R32>(Time::currentTime())));
   }
 
   void onCleanUp() override
@@ -189,7 +189,7 @@ public:
 
 private:
   Vector3             m_vRandDir;
-  r32                 m_factor;
+  R32                 m_factor;
   AnimationComponent*  m_pAnim;
   ParticleSystemComponent* m_pParticles;
 };
@@ -295,7 +295,7 @@ public:
     mat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
     m_rendererComponent.enableDebug(false);
     m_rendererComponent.setDebugBits(DEBUG_CONFIG_IBL_BIT);
-    for (i32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
+    for (I32 lod = 0; lod < Mesh::kMaxMeshLodWidth; ++lod) {
       mesh->getPrimitive(0)->_pMat = mat;
     }
     
@@ -305,7 +305,7 @@ public:
     ModelLoader::Model* model = nullptr;
     ModelCache::get("DamagedHelmet", &model);
     
-    for (u32 i = 0; i < model->meshes.size(); ++i) {
+    for (U32 i = 0; i < model->meshes.size(); ++i) {
       m_rendererComponent.addMesh(model->meshes[i]);
 #if 0        
       for (auto nn : model->nodeHierarchy) {
@@ -317,7 +317,7 @@ public:
       }
 #endif
       for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
-        Primitive* prim = model->meshes[i]->getPrimitive(p);
+        Primitive* prim = model->meshes[i]->getPrimitive(static_cast<U32>(p));
         prim->_pMat->setEmissiveFactor(0.5f);
         //prim->_pMat->disableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
         prim->_pMat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -346,7 +346,7 @@ public:
     m_pParticleSystem->EnableWorldSpace(true);
   }
 
-  void update(r32 tick) override
+  void update(R32 tick) override
   { 
     if (Keyboard::keyPressed(KEY_CODE_V)) {
       m_pParticleSystem->SetMaxParticleCount(100);

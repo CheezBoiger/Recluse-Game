@@ -13,7 +13,7 @@ class LightComponent : public Component {
   RCOMPONENT(LightComponent);
   friend class Engine;
 protected:
-  static std::queue<u32>  sAvailableDirectionalLightIds;
+  static std::queue<U32>  sAvailableDirectionalLightIds;
 
   // Global Clean up and initialization of light data, since this data structure keeps
   // track of light key references. Determines which light keys to assign.
@@ -41,23 +41,23 @@ protected:
   virtual void              update() override { }
 public:
 
-  virtual void              setIntensity(r32 intensity) { }
+  virtual void              setIntensity(R32 intensity) { }
   virtual void              setColor(const Vector4& color) { }
-  void                      enable(b32 e) { m_enable = e; }
+  void                      enable(B32 e) { m_enable = e; }
 
   virtual void              serialize(IArchive& archive) override { }
   virtual void              deserialize(IArchive& archive) override { }
 
-  b32                       isDebugging() { return m_debug; }
+  B32                       isDebugging() { return m_debug; }
   
-  void               enableDebug(b32 enable) { m_debug = enable; onDebug(); }
+  void               enableDebug(B32 enable) { m_debug = enable; onDebug(); }
 
 protected:
 
   virtual void onDebug() { }
 
   LightType                 m_type;
-  b32                       m_debug : 1,
+  B32                       m_debug : 1,
                             m_enable : 1;
 };
 } // Recluse

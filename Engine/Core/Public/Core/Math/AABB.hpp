@@ -17,12 +17,12 @@ struct AABB {
   // Compute the surface area of this box. Stored in sA.
   void      computeSurfaceArea();
 
-  b32       overlaps(const AABB& other) const;
+  B32       overlaps(const AABB& other) const;
 
-  b32       contains(const AABB& other) const;
+  B32       contains(const AABB& other) const;
   
   // Checks if a point is inside this bounding box.
-  b32       inside(const Vector3& p) const;
+  B32       inside(const Vector3& p) const;
 
   // Minimum lower bound of the bounding box.
   Vector3     min;
@@ -34,6 +34,6 @@ struct AABB {
   Vector3     centroid;
   
   // Surface area.
-  r32         sA;
+  R32         sA;
 };
 } // Recluse

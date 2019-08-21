@@ -30,25 +30,25 @@ void Animation::onShutDown()
 }
 
 
-void Animation::updateState(r64 dt)
+void Animation::updateState(R64 dt)
 {
-  r32 globalTime = static_cast<r32>(Time::currentTime());
+  R32 globalTime = static_cast<R32>(Time::currentTime());
   size_t H = (m_sampleJobs.size() >> 1);
   
   // animate jobs.
   for (auto& job : m_sampleJobs) {
-    doSampleJob(job, static_cast<r32>(dt));
+    doSampleJob(job, static_cast<R32>(dt));
   }
 
   for (auto& job : m_blendJobs) {
-    doBlendJob(job, static_cast<r32>(dt));
+    doBlendJob(job, static_cast<R32>(dt));
   }
 
   m_sampleJobs.clear();
 }
 
 
-AnimHandle* Animation::createAnimHandle(uuid64 id)
+AnimHandle* Animation::createAnimHandle(UUID64 id)
 {
   auto it = m_animObjects.find(id);
   if (it != m_animObjects.end()) return nullptr;
@@ -92,11 +92,11 @@ void Animation::submitJob(const AnimJobSubmitInfo& info)
 }
 
 
-Matrix4 Animation::linearInterpolate(JointPose* currPose, JointPose* nextPose, r32 currTime, r32 nextTime, r32 t)
+Matrix4 Animation::linearInterpolate(JointPose* currPose, JointPose* nextPose, R32 currTime, R32 nextTime, R32 t)
 {
   Matrix4 resultTransform = Matrix4::identity();
   
-  r32 dt = (t - currTime) /  (nextTime - currTime);
+  R32 dt = (t - currTime) /  (nextTime - currTime);
   if (isinf(dt)) return resultTransform;
 
   Vector3 translate = Vector3::lerp(currPose->_trans, nextPose->_trans, dt);
@@ -112,22 +112,22 @@ Matrix4 Animation::linearInterpolate(JointPose* currPose, JointPose* nextPose, r
 }
 
 
-void Animation::getCurrentAndNextPoseIdx(u32* outCurr, u32* outNext, AnimClip* pClip, r32 lt)
+void Animation::getCurrentAndNextPoseIdx(U32* outCurr, U32* outNext, AnimClip* pClip, R32 lt)
 {
   for (size_t i = 0; i < pClip->_aAnimPoseSamples.size(); ++i) {
     AnimPose& pose = pClip->_aAnimPoseSamples[i];
     if (pose._time > lt) {
-      *outCurr = static_cast<u32>(i) - 1u;
-      *outNext = static_cast<u32>(i);
+      *outCurr = static_cast<U32>(i) - 1u;
+      *outNext = static_cast<U32>(i);
       *outCurr = *outCurr > pClip->_aAnimPoseSamples.size() ?
-        pClip->_aAnimPoseSamples.size() - 1u : *outCurr;
+        static_cast<U32>(pClip->_aAnimPoseSamples.size()) - 1u : *outCurr;
       break;
     }
   }
 }
 
 
-b32 Animation::emptyPoseSamples(AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx)
+B32 Animation::emptyPoseSamples(AnimClip* pClip, I32 currPoseIdx, I32 nextPoseIdx)
 {
   if (pClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses.empty()
     || pClip->_aAnimPoseSamples[nextPoseIdx]._aLocalPoses.empty()) {
@@ -137,7 +137,7 @@ b32 Animation::emptyPoseSamples(AnimClip* pClip, i32 currPoseIdx, i32 nextPoseId
 }
 
 
-void Animation::applyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, i32 currPoseIdx, i32 nextPoseIdx, r32 lt)
+void Animation::applyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, I32 currPoseIdx, I32 nextPoseIdx, R32 lt)
 {
   if (!pClip->_aAnimPoseSamples[currPoseIdx]._morphs.empty() &&
     !pClip->_aAnimPoseSamples[nextPoseIdx]._morphs.empty()) {
@@ -151,12 +151,12 @@ void Animation::applyMorphTargets(AnimHandle* pOutput, AnimClip* pClip, i32 curr
 }
 
 
-void Animation::doSampleJob(AnimJobSubmitInfo& job, r32 gt)
+void Animation::doSampleJob(AnimJobSubmitInfo& job, R32 gt)
 {
   if (!job._output->_currState._bEnabled) { return; }
-  r32 tau = job._output->_currState._tau;
-  r32 rate = job._output->_currState._fPlaybackRate;
-  r32 lt = job._output->_currState._fCurrLocalTime + gt * rate;
+  R32 tau = job._output->_currState._tau;
+  R32 rate = job._output->_currState._fPlaybackRate;
+  R32 lt = job._output->_currState._fCurrLocalTime + gt * rate;
   if (lt > job._pBaseClip->_fDuration) {
     lt -= job._pBaseClip->_fDuration;
     job._output->_currState._tau = gt;
@@ -171,10 +171,10 @@ void Animation::doSampleJob(AnimJobSubmitInfo& job, r32 gt)
   job._output->_currState._fCurrLocalTime = lt;
   Skeleton* pSkeleton = Skeleton::getSkeleton(job._pBaseClip->_skeletonId);
   Matrix4* palette = job._output->_finalPalette;
-  u32 paletteSz = job._output->_paletteSz;
+  U32 paletteSz = job._output->_paletteSz;
 
-  u32 currPoseIdx = 0;
-  u32 nextPoseIdx = 0;
+  U32 currPoseIdx = 0;
+  U32 nextPoseIdx = 0;
 
   getCurrentAndNextPoseIdx(&currPoseIdx, &nextPoseIdx, job._pBaseClip, lt);
 
@@ -191,9 +191,9 @@ void Animation::doSampleJob(AnimJobSubmitInfo& job, r32 gt)
 
 
 void Animation::doMechanicalAnimation(AnimJobSubmitInfo& job,
-                                      r32 lt,
-                                      u32 currPoseIdx,
-                                      u32 nextPoseIdx)
+                                      R32 lt,
+                                      U32 currPoseIdx,
+                                      U32 nextPoseIdx)
 {
   AnimPose* currAnimPose = &job._pBaseClip->_aAnimPoseSamples[currPoseIdx];
   AnimPose* nextAnimPose = &job._pBaseClip->_aAnimPoseSamples[nextPoseIdx];
@@ -210,12 +210,12 @@ void Animation::doMechanicalAnimation(AnimJobSubmitInfo& job,
 
 void Animation::doSkeletalAnimation(AnimJobSubmitInfo& job, 
                                     Skeleton* pSkeleton, 
-                                    r32 lt,
-                                    u32 currPoseIdx, 
-                                    u32 nextPoseIdx)
+                                    R32 lt,
+                                    U32 currPoseIdx, 
+                                    U32 nextPoseIdx)
 {
   Matrix4 globalTransform;
-  b32 rootInJoints = pSkeleton ? pSkeleton->_rootInJoints : false;
+  B32 rootInJoints = pSkeleton ? pSkeleton->_rootInJoints : false;
   {
     Matrix4 localTransform = linearInterpolate(
       &job._pBaseClip->_aAnimPoseSamples[currPoseIdx]._aLocalPoses[0],
@@ -258,7 +258,7 @@ void Animation::applySkeletonPose(Matrix4* pOutput, Matrix4 globalMatrix, Skelet
 
   for (size_t i = 0; i < pSkeleton->_joints.size(); ++i) {
     Matrix4 parentTransform;
-    u8 parentId = pSkeleton->_joints[i]._iParent;
+    U8 parentId = pSkeleton->_joints[i]._iParent;
     if (parentId == Joint::kNoParentId) {
       parentTransform = globalMatrix;
     } else {
@@ -275,7 +275,7 @@ void Animation::applySkeletonPose(Matrix4* pOutput, Matrix4 globalMatrix, Skelet
 }
 
 
-void Animation::doBlendJob(AnimJobSubmitInfo& job, r32 gt)
+void Animation::doBlendJob(AnimJobSubmitInfo& job, R32 gt)
 {
   for (auto& layer : job._layers) {
     

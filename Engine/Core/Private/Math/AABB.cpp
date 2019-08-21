@@ -16,29 +16,29 @@ void AABB::computeCentroid()
 
 void AABB::computeSurfaceArea()
 {
-  r32 dx = max.x - min.x;
-  r32 dy = max.y - min.y;
-  r32 dz = max.z - min.z;
+  R32 dx = max.x - min.x;
+  R32 dy = max.y - min.y;
+  R32 dz = max.z - min.z;
   sA = 2.0f * (dx * dy + dx * dz + dy * dz);
 }
 
 
-b32 AABB::overlaps(const AABB& other) const
+B32 AABB::overlaps(const AABB& other) const
 {
-  b32 x = (max.x >= other.min.x) && (min.x <= other.max.x);
-  b32 y = (max.y >= other.min.y) && (min.y <= other.max.y);
-  b32 z = (max.z >= other.min.z) && (min.z <= other.max.z); 
+  B32 x = (max.x >= other.min.x) && (min.x <= other.max.x);
+  B32 y = (max.y >= other.min.y) && (min.y <= other.max.y);
+  B32 z = (max.z >= other.min.z) && (min.z <= other.max.z); 
   return (x && y && z);
 }
 
 
-b32 AABB::contains(const AABB& other) const
+B32 AABB::contains(const AABB& other) const
 {
   return false;
 }
 
 
-b32 AABB::inside(const Vector3& p) const
+B32 AABB::inside(const Vector3& p) const
 {
   return false;
 }

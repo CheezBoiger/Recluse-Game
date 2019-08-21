@@ -52,6 +52,6 @@ private:
   Sampler*        m_sampler;
   DescriptorSet*    m_pSet;
   UIDescriptorType  m_type;
-  b32               m_needsUpdate;
+  B32               m_needsUpdate;
 };
 } // Recluse

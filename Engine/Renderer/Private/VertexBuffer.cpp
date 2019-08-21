@@ -27,7 +27,7 @@ void VertexBuffer::initialize(VulkanRHI* rhi, size_t vertexCount, size_t sizeTyp
   }
 
   mBuffer = rhi->createBuffer();
-  mVertexCount = static_cast<u32>(vertexCount);
+  mVertexCount = static_cast<U32>(vertexCount);
   Buffer* stagingBuffer = rhi->createBuffer();
 
   {

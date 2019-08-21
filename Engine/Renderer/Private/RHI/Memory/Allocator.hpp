@@ -30,19 +30,19 @@ struct VulkanMemBlockNode {
   VulkanAllocationType _type;
   VulkanMemBlockNode* _pPrev;
   VulkanMemBlockNode* _pNext;
-  u64 _id       : 32,
+  U64 _id       : 32,
       _free     : 32;
 };
 
 
 struct VulkanAllocation {
-  u64 _memId         : 16,
+  U64 _memId         : 16,
       _poolId         : 16,
       _blockId        : 32;
   VkDeviceMemory _deviceMemory;
   VkDeviceSize _offset;
   VkDeviceSize _sz;
-  b8* _pData;
+  B8* _pData;
 };
 
 
@@ -52,34 +52,34 @@ public:
 
   ~VulkanMemoryPool();
 
-  b32 init(VkDevice device,
-           u32 id,
-           u32 memoryTypeBits, 
+  B32 init(VkDevice device,
+           U32 id,
+           U32 memoryTypeBits, 
            PhysicalDeviceMemoryUsage usage,
            const VkDeviceSize sz);
 
   void cleanUp(VkDevice device);
-  u32 getMemoryTypeIndex() const { return m_memTypeIndex; }
+  U32 getMemoryTypeIndex() const { return m_memTypeIndex; }
 
-  b32 allocate(u32 sz, 
-               u32 align, 
+  B32 allocate(U32 sz, 
+               U32 align, 
                VulkanAllocationType allocType, 
                VkDeviceSize granularity,
                VulkanAllocation* pOutput);
   void free(VulkanAllocation* pIn);
-  b32 isHostVisible() const;
+  B32 isHostVisible() const;
   VkDeviceSize getNumAllocated() const { return m_memAllocated; }
 
 private:
-  u32 m_id;
-  u32 m_nextBlockId;
-  u32 m_memTypeIndex;
+  U32 m_id;
+  U32 m_nextBlockId;
+  U32 m_memTypeIndex;
   PhysicalDeviceMemoryUsage m_usage;
   VkDeviceMemory m_rawMem;
   VkDeviceSize m_memSz;
   VkDeviceSize m_memAllocated;
   VulkanMemBlockNode* m_pHead;
-  b8* m_pRawDat;
+  B8* m_pRawDat;
 };
 
 
@@ -87,7 +87,7 @@ private:
 class VulkanMemoryAllocatorManager {
 public:
 
-  static u32 numberOfAllocations;
+  static U32 numberOfAllocations;
   VulkanMemoryAllocatorManager();
   ~VulkanMemoryAllocatorManager();
 
@@ -99,12 +99,12 @@ public:
   void update(VulkanRHI* pRhi);
 
   VulkanAllocation allocate(VkDevice device,
-                            u32 sz, 
-                            u32 align, 
-                            u32 memoryTypeBits,
+                            U32 sz, 
+                            U32 align, 
+                            U32 memoryTypeBits,
                             PhysicalDeviceMemoryUsage usage,
                             VulkanAllocationType allocType,
-                            u32 memoryBankIdx = 0);
+                            U32 memoryBankIdx = 0);
   void free(const VulkanAllocation& alloc);
 
   void emptyGarbage(VulkanRHI* pRhi);
@@ -112,9 +112,9 @@ public:
   VkDeviceSize getMaxDeviceLocalMemBytes() { return m_maxDeviceLocalMemBytes; }
   VkDeviceSize getDeviceLocalMemBytes() const { return m_deviceLocalMemoryBytes; }
 private:
-  u32 m_nextPoolId;
-  u32 m_garbageIndex;
-  u32 m_bufferCount;
+  U32 m_nextPoolId;
+  U32 m_garbageIndex;
+  U32 m_bufferCount;
   VkDeviceSize m_deviceLocalMemoryBytes;
   VkDeviceSize m_hostVisibleMemoryBytes;
   VkDeviceSize m_bufferImageGranularity;

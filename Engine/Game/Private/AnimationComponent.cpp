@@ -35,7 +35,7 @@ void AnimationComponent::addClip(AnimClip* clip, const std::string& name)
 }
 
 
-void AnimationComponent::playback(const std::string& name,  r32 rate, r32 atTime)
+void AnimationComponent::playback(const std::string& name,  R32 rate, R32 atTime)
 {
   auto it = m_clips.find(name);
   if (it == m_clips.end()) return;
@@ -60,19 +60,19 @@ void AnimationComponent::update()
 }
 
 
-void AnimationComponent::blendPlayback(const std::string& name, r32 targetWeight, r32 fadeLen)
+void AnimationComponent::blendPlayback(const std::string& name, R32 targetWeight, R32 fadeLen)
 {
   AnimJobSubmitInfo info{}; 
 }
 
 
-void AnimationComponent::setPlaybackRate(r32 rate)
+void AnimationComponent::setPlaybackRate(R32 rate)
 {
   m_handle->_currState._fPlaybackRate = rate;
 }
 
 
-r32 AnimationComponent::getPlaybackRate() const
+R32 AnimationComponent::getPlaybackRate() const
 {
   return m_handle->_currState._fPlaybackRate;
 }

@@ -12,7 +12,7 @@
 namespace Recluse {
 
 
-b32 isMemoryResourcesOnSeparatePages(VkDeviceSize rOffsetA, 
+B32 isMemoryResourcesOnSeparatePages(VkDeviceSize rOffsetA, 
                                      VkDeviceSize rSizeA,
                                      VkDeviceSize rOffsetB,
                                      VkDeviceSize bufferImageGranularity)
@@ -25,7 +25,7 @@ b32 isMemoryResourcesOnSeparatePages(VkDeviceSize rOffsetA,
 }
 
 
-b32 hasGranularityConflict(VulkanAllocationType type1, VulkanAllocationType type2)
+B32 hasGranularityConflict(VulkanAllocationType type1, VulkanAllocationType type2)
 {
   if (type1 > type2) {
     VulkanAllocationType t = type1;
@@ -71,9 +71,9 @@ VulkanMemoryPool::~VulkanMemoryPool()
 }
 
 
-b32 VulkanMemoryPool::init(VkDevice device,
-                           u32 id,
-                           u32 memoryTypeIndex,
+B32 VulkanMemoryPool::init(VkDevice device,
+                           U32 id,
+                           U32 memoryTypeIndex,
                            PhysicalDeviceMemoryUsage usage,
                            const VkDeviceSize sz)
 {
@@ -127,14 +127,14 @@ void VulkanMemoryPool::cleanUp(VkDevice device)
 }
 
 
-b32 VulkanMemoryPool::isHostVisible() const
+B32 VulkanMemoryPool::isHostVisible() const
 {
   return (m_usage != PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 }
 
 
-b32 VulkanMemoryPool::allocate(u32 sz, 
-                               u32 align, 
+B32 VulkanMemoryPool::allocate(U32 sz, 
+                               U32 align, 
                                VulkanAllocationType allocType, 
                                VkDeviceSize granularity,
                                VulkanAllocation* pOutput)
@@ -192,7 +192,7 @@ b32 VulkanMemoryPool::allocate(u32 sz,
   pOutput->_memId = m_memTypeIndex; 
   pOutput->_deviceMemory = m_rawMem;
   pOutput->_offset = node->_offset;
-  pOutput->_pData = reinterpret_cast<b8*>((VkDeviceSize)m_pRawDat + node->_offset);
+  pOutput->_pData = reinterpret_cast<B8*>((VkDeviceSize)m_pRawDat + node->_offset);
   pOutput->_poolId = m_id;
   pOutput->_sz = sz;
   m_memAllocated += sz;
@@ -205,7 +205,7 @@ void VulkanMemoryPool::free(VulkanAllocation* pIn)
 }
 
 
-u32 VulkanMemoryAllocatorManager::numberOfAllocations = 0;
+U32 VulkanMemoryAllocatorManager::numberOfAllocations = 0;
 
 
 VulkanMemoryAllocatorManager::VulkanMemoryAllocatorManager()
@@ -229,10 +229,9 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
                                         const VkPhysicalDeviceMemoryProperties* pMemProperties)
 {
   m_deviceLocalMemoryBytes = 128 * R_MEM_1_MB;
-  m_deviceLocalMemoryBytes = 64 * R_MEM_1_MB; 
   m_bufferImageGranularity = props->limits.bufferImageGranularity;
 
-  for (u32 i = 0; i < pMemProperties->memoryHeapCount; ++i) {
+  for (U32 i = 0; i < pMemProperties->memoryHeapCount; ++i) {
     VkMemoryHeap heap = pMemProperties->memoryHeaps[i];
     m_maxDeviceLocalMemBytes = heap.size;
     break;
@@ -244,25 +243,29 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
 
 void VulkanMemoryAllocatorManager::update(VulkanRHI* pRhi)
 {
-  emptyGarbage(pRhi);
-  m_bufferCount = pRhi->bufferingCount();
-  m_frameGarbage.resize(m_bufferCount);
+  m_bufferCount = pRhi->bufferingCount( );
+  m_garbageIndex = pRhi->currentFrame( );
+
+  emptyGarbage( pRhi );
+
+  if (m_frameGarbage.size() != m_bufferCount)
+    m_frameGarbage.resize( m_bufferCount );
 }
 
 
 VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
-                                                        u32 sz,
-                                                        u32 align,
-                                                        u32 memoryTypeBits,
+                                                        U32 sz,
+                                                        U32 align,
+                                                        U32 memoryTypeBits,
                                                         PhysicalDeviceMemoryUsage usage,
                                                         VulkanAllocationType allocType,
-                                                        u32 memoryBankIdx)
+                                                        U32 memoryBankIdx)
 {
   VulkanAllocation allocation;
-  u32 memoryIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryTypeBits, usage);
+  U32 memoryIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryTypeBits, usage);
   R_ASSERT(memoryIndex != 0xffffffff, "Unable to find memory index for allocation request.");
   auto& poolGroup = m_pools[memoryIndex];
-  for (u32 i = 0; i < poolGroup.size(); ++i) {
+  for (U32 i = 0; i < poolGroup.size(); ++i) {
     VulkanMemoryPool* pool = poolGroup[i];
     if (pool->getMemoryTypeIndex() != memoryIndex) {
       continue;
@@ -292,10 +295,11 @@ void VulkanMemoryAllocatorManager::free(const VulkanAllocation& alloc)
 void VulkanMemoryAllocatorManager::emptyGarbage(VulkanRHI* pRhi)
 {
   // TODO(): Need to fix this, take buffering count as a parameter instead!!
-  if (m_bufferCount == 0) return;
-  m_garbageIndex = (m_garbageIndex + 1) % m_bufferCount;
+  if ( m_bufferCount == 0 || 
+      ( m_garbageIndex <= m_frameGarbage.size() ) ) return;
+
   auto& garbage = m_frameGarbage[m_garbageIndex];
-  for (u32 i = 0; i < garbage.size(); ++i) {
+  for (U32 i = 0; i < garbage.size(); ++i) {
     VulkanAllocation& alloc = garbage[i];
     VulkanMemoryPool* pool = m_pools[alloc._memId][alloc._poolId];
     pool->free(&alloc);
@@ -310,9 +314,9 @@ void VulkanMemoryAllocatorManager::emptyGarbage(VulkanRHI* pRhi)
 void VulkanMemoryAllocatorManager::cleanUp(VulkanRHI* pRhi)
 {
   emptyGarbage(pRhi);
-  for (u32 i = 0; i < VK_MAX_MEMORY_TYPES; ++i) {
+  for (U32 i = 0; i < VK_MAX_MEMORY_TYPES; ++i) {
     auto& pool = m_pools[i];
-    for (i32 j = 0; j < pool.size(); ++j) {
+    for (I32 j = 0; j < pool.size(); ++j) {
       pool[j]->cleanUp(pRhi->logicDevice()->getNative());
       delete pool[j];
     }
