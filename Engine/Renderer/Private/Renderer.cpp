@@ -488,6 +488,7 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   m_renderHeight = (U32)m_pWindow->getHeight();
 
   updateRenderResolution(params->_Resolution);
+  updateRuntimeConfigs(params);
 
   m_pRhi->initialize(window->getHandle(), params);
   {
@@ -529,7 +530,8 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
     m_pLights->update(m_pRhi, m_pGlobal->getData(), i);
   }
 
-  updateRuntimeConfigs(params);
+  checkEnableLightShadows();
+
   m_pAntiAliasingFXAA = new AntiAliasingFXAA();
   m_pAntiAliasingFXAA->initialize(m_pRhi, m_pGlobal);
 
@@ -3904,6 +3906,8 @@ void Renderer::checkCmdUpdate()
       shadowBuf->end();
     }
 
+
+    if (m_pSky->NeedsRendering()) m_pSky->BuildCmdBuffer(m_pRhi, nullptr, frameIndex);
     m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
     m_workers[0].join();
   } else {
@@ -3933,6 +3937,8 @@ void Renderer::checkCmdUpdate()
       shadowBuf->end();
     }
     m_pUI->BuildCmdBuffers(m_pRhi, m_pGlobal, frameIndex);
+
+    if (m_pSky->NeedsRendering()) m_pSky->BuildCmdBuffer(m_pRhi, nullptr, frameIndex);
   }
 
 #if 0
@@ -4089,10 +4095,16 @@ void Renderer::updateRuntimeConfigs(const GraphicsConfigParams* params)
     default:
       m_AntiAliasing = true; break;
     }
+}
 
-    switch (params->_Shadows) {
-    case GRAPHICS_QUALITY_NONE:
-    {
+
+void Renderer::checkEnableLightShadows()
+{
+   R_ASSERT(m_pLights, "Lights not initialized first!");
+   R_ASSERT(m_pHDR, "HDR is not initialized first!");
+
+  switch (m_currentGraphicsConfigs._Shadows) {
+    case GRAPHICS_QUALITY_NONE: {
       m_pLights->enablePrimaryShadow(false);
       m_pGlobal->getData()->_EnableShadows = false;
     } break;
@@ -4101,19 +4113,18 @@ void Renderer::updateRuntimeConfigs(const GraphicsConfigParams* params)
     case GRAPHICS_QUALITY_MEDIUM:
     case GRAPHICS_QUALITY_HIGH:
     case GRAPHICS_QUALITY_ULTRA:
-    default:
-    {
+    default: {
       m_pLights->enablePrimaryShadow(true);
       m_pGlobal->getData()->_EnableShadows = true;
     } break;
   }
 
   ShadowMapSystem& sunShadow = m_pLights->getPrimaryShadowMapSystem();
-  sunShadow.enableDynamicMapSoftShadows(params->_enableSoftShadows);
-  sunShadow.enableStaticMapSoftShadows(params->_enableSoftShadows);
+  sunShadow.enableDynamicMapSoftShadows(m_currentGraphicsConfigs._enableSoftShadows);
+  sunShadow.enableStaticMapSoftShadows(m_currentGraphicsConfigs._enableSoftShadows);
 
-  m_pHDR->getRealtimeConfiguration()->_allowChromaticAberration = 
-    (params->_EnableChromaticAberration ? Vector4(1.0f) : Vector4(0.0f));
+  m_pHDR->getRealtimeConfiguration()->_allowChromaticAberration =
+      (m_currentGraphicsConfigs._EnableChromaticAberration ? Vector4(1.0f) : Vector4(0.0f));
 }
 
 
@@ -4152,8 +4163,9 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
       updateRenderResolution(params->_Resolution);
       reconstruct = true;
     }
-    updateRuntimeConfigs(params);
 
+    updateRuntimeConfigs(params);
+    checkEnableLightShadows();
   }
 
   VkExtent2D extent = { m_renderWidth, m_renderHeight };

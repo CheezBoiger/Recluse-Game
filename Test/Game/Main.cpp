@@ -226,7 +226,7 @@ int main(int c, char* argv[])
   // set to engine global.
   {
     U32 w = 800, h = 600;
-    GraphicsConfigParams params;
+    GraphicsConfigParams params = { };
     gEngine( ).readGraphicsConfig( params, w, h );
 
     UserConfigParams userParams;

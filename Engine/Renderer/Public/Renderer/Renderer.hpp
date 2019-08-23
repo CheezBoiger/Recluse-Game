@@ -309,6 +309,7 @@ private:
   void              generateFinalCmds(CommandBuffer* buf);
   void              generateForwardPBRCmds(CommandBuffer* buf, U32 frameIndex);
   void              updateRenderResolution(RenderResolution resolution);
+  void              checkEnableLightShadows();
 
   void              buildOffScreenCmdList();
   void              buildPbrCmdLists();

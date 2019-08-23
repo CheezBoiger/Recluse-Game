@@ -347,7 +347,7 @@ void GlobalIllumination::update(Renderer* pRenderer)
   globalIrrInfo.offset = 0;
   globalIrrInfo.range = VkDeviceSize(sizeof(DiffuseSH));
 
-  localIrrInfo.buffer = m_pLocalGIBuffer->getNativeBuffer();
+  localIrrInfo.buffer = m_localReflectionsEnabled ? m_pLocalGIBuffer->getNativeBuffer() : nullptr;
   localIrrInfo.offset = 0;
   localIrrInfo.range = VkDeviceSize(sizeof(LocalInfoGI));
 
