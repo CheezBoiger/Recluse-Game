@@ -93,8 +93,6 @@ extern Texture* gbuffer_DepthAttachKey;
 extern FrameBuffer* gbuffer_FrameBufferKey;
 extern RenderPass* gbuffer_renderPass;
 
-extern ComputePipeline*  pbr_computePipeline_NoLR;
-extern ComputePipeline*   pbr_computePipeline_LR;
 extern GraphicsPipeline* pbr_static_LR_Debug;
 extern GraphicsPipeline* pbr_static_NoLR_Debug;
 extern GraphicsPipeline* pbr_dynamic_LR_Debug;
@@ -174,15 +172,11 @@ extern DescriptorSet* DownscaleBlurDescriptorSet8x;
 extern DescriptorSet* DownscaleBlurDescriptorSet8xFinalKey;
 extern DescriptorSet* DownscaleBlurDescriptorSet16x;
 extern DescriptorSet* DownscaleBlurDescriptorSet16xFinalKey;
-extern GraphicsPipeline* GlowPipelineKey;
+
 extern Texture* RenderTargetGlowKey;
 extern FrameBuffer* FrameBufferGlowKey;
 extern DescriptorSetLayout* GlowDescriptorSetLayoutKey;
 extern DescriptorSet* GlowDescriptorSetKey;
-extern GraphicsPipeline* DownscaleBlurPipeline2xKey;
-extern GraphicsPipeline* DownscaleBlurPipeline4xKey;
-extern GraphicsPipeline* DownscaleBlurPipeline8xKey;
-extern GraphicsPipeline* DownscaleBlurPipeline16xKey;
 
 extern Texture* RenderTargetVelocityKey;
 
@@ -193,7 +187,6 @@ extern Sampler* hdr_gamma_samplerKey;
 extern DescriptorSet* hdr_gamma_descSetKey;
 extern DescriptorSetLayout* hdr_gamma_descSetLayoutKey;
 
-extern GraphicsPipeline* final_PipelineKey;
 extern DescriptorSet* final_DescSetKey;
 extern DescriptorSetLayout* final_DescSetLayoutKey;
 extern FrameBuffer* final_frameBufferKey;
@@ -201,38 +194,41 @@ extern RenderPass* final_renderPass;
 extern Texture* final_renderTargetKey;
 
 extern DescriptorSet* output_descSetKey;
-extern GraphicsPipeline* output_pipelineKey;
 
 
-enum GraphicsPipelineT {
-  GRAPHICS_PIPELINE_START = 0,
-  GRAPHICS_PIPELINE_PREZ_DYNAMIC = GRAPHICS_PIPELINE_START,
-  GRPAHICS_PIPELINE_PREZ_DYNAMIC_MORPH_TARGETS,
-  GRAPHICS_PIPELINE_PREZ_STATIC,
-  GRAPHICS_PIPELINE_PREZ_STATIC_MORPH_TARGETS,
-  GRAPHICS_PIPELINE_FINAL,
-  GRAPHICS_PIPELINE_CLUSTER,
-  GRAPHICS_PIPELINE_GBUFFER_STATIC,
-  GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS,
-  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC,
-  GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS,
-  GRAPHICS_PIPELINE_PBR_FORWARD_LR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_NOLR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_LR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_NOLR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_MORPH_LR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_MORPH_NOLR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_LR,
-  GRAPHICS_PIPELINE_PBR_FORWARD_STATIC_MORPH_NOLR,
-  GRAPHICS_PIPELINE_PBR_DEFERRED_LR,
-  GRAPHICS_PIPELINE_PBR_DEFERRED_NOLR,
-  GRAPHICS_PIPELINE_PBR_FORWARD,
-  GRAPHICS_PIPELINE_HDR_GAMMA,
-  GRAPHICS_PIPELINE_GLOW,
-  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_2X,
-  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_4X,
-  GRAPHICS_PIPELINE_DOWNSCALE_BLUR_8X,
-  GRAPHICS_PIPELINE_END,
+enum PipelineT {
+  PIPELINE_START = 0,
+  PIPELINE_GRAPHICS_PREZ_DYNAMIC = PIPELINE_START,
+  PIPELINE_GRAPHICS_PREZ_DYNAMIC_MORPH_TARGETS,
+  PIPELINE_GRAPHICS_PREZ_STATIC,
+  PIPELINE_GRAPHICS_PREZ_STATIC_MORPH_TARGETS,
+  PIPELINE_GRAPHICS_FINAL,
+  PIPELINE_GRAPHICS_CLUSTER,
+  PIPELINE_GRAPHICS_GBUFFER_STATIC,
+  PIPELINE_GRAPHICS_GBUFFER_STATIC_MORPH_TARGETS,
+  PIPELINE_GRAPHICS_GBUFFER_DYNAMIC,
+  PIPELINE_GRAPHICS_GBUFFER_DYNAMIC_MORPH_TARGETS,
+  PIPELINE_GRAPHICS_PBR_FORWARD_LR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_NOLR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_LR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_NOLR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_LR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_NOLR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_LR,
+  PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_NOLR,
+  PIPELINE_GRAPHICS_PBR_DEFERRED_LR,
+  PIPELINE_GRAPHICS_PBR_DEFERRED_NOLR,
+  PIPELINE_COMPUTE_PBR_DEFERRED_LR,
+  PIPELINE_COMPUTE_PBR_DEFERRED_NOLR,
+  PIPELINE_GRAPHICS_PBR_FORWARD,
+  PIPELINE_GRAPHICS_HDR_GAMMA,
+  PIPELINE_GRAPHICS_GLOW,
+  PIPELINE_GRAPHICS_DOWNSCALE_BLUR_2X,
+  PIPELINE_GRAPHICS_DOWNSCALE_BLUR_4X,
+  PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X,
+  PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X,
+  PIPELINE_GRAPHICS_OUTPUT,
+  PIPELINE_END,
 };
 
 
@@ -266,7 +262,8 @@ namespace RendererPass {
 
 void initialize(VulkanRHI* pRhi);
 void cleanUp(VulkanRHI* pRhi);
-GraphicsPipeline* getPipeline(GraphicsPipelineT pipeline);
+GraphicsPipeline* getGraphicsPipeline(PipelineT pipeline);
+ComputePipeline* getComputePipeline(PipelineT pipeline);
 
 void loadShader(const std::string& Filename, Shader* S);
 

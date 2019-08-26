@@ -573,7 +573,7 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
 
   m_pRhi->setSwapchainCmdBufferBuild([&] (CommandBuffer& cmdBuffer, VkRenderPassBeginInfo& defaultRenderpass) -> void {
     // Do stuff with the buffer.
-    VkExtent2D windowExtent = { m_pWindow->getWidth(), m_pWindow->getHeight() };
+    VkExtent2D windowExtent = { (U32)m_pWindow->getWidth(), (U32)m_pWindow->getHeight() };
     VkViewport viewport = { };
     viewport.height = (R32) windowExtent.height;
     viewport.width = (R32) windowExtent.width;
@@ -586,7 +586,7 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
     scissor.offset = { 0, 0 };
     scissor.extent = windowExtent;
 
-    GraphicsPipeline* finalPipeline = output_pipelineKey;
+    GraphicsPipeline* finalPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_OUTPUT );
     DescriptorSet* finalSet = output_descSetKey;
     
     cmdBuffer.beginRenderPass(defaultRenderpass, VK_SUBPASS_CONTENTS_INLINE);
@@ -1776,28 +1776,6 @@ void Renderer::cleanUpGraphicsPipelines()
   m_pRhi->freeGraphicsPipeline(pbr_dynamic_NoLR_Debug);
   m_pRhi->freeGraphicsPipeline(pbr_dynamic_NoLR_mt_Debug);
 
-  GraphicsPipeline* QuadPipeline = final_PipelineKey;
-  m_pRhi->freeGraphicsPipeline(QuadPipeline);
-
-  m_pRhi->freeGraphicsPipeline(output_pipelineKey);
-  m_pRhi->freeComputePipeline(pbr_computePipeline_NoLR);
-  m_pRhi->freeComputePipeline(pbr_computePipeline_LR);
-
-  GraphicsPipeline* DownscalePipeline2x = DownscaleBlurPipeline2xKey;
-  m_pRhi->freeGraphicsPipeline(DownscalePipeline2x);
-
-  GraphicsPipeline* DownscalePipeline4x = DownscaleBlurPipeline4xKey;
-  m_pRhi->freeGraphicsPipeline(DownscalePipeline4x);
-
-  GraphicsPipeline* DownscalePipeline8x = DownscaleBlurPipeline8xKey;
-  m_pRhi->freeGraphicsPipeline(DownscalePipeline8x);
-
-  GraphicsPipeline* DownscalePipeline16x = DownscaleBlurPipeline16xKey;
-  m_pRhi->freeGraphicsPipeline(DownscalePipeline16x);
-
-  GraphicsPipeline* GlowPipeline = GlowPipelineKey;
-  m_pRhi->freeGraphicsPipeline(GlowPipeline);
-
   GraphicsPipeline* SkyPipeline = skybox_pipelineKey;
   m_pRhi->freeGraphicsPipeline(SkyPipeline);
 
@@ -2183,12 +2161,12 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   GraphicsPipeline* pPipeline = nullptr;
   ComputePipeline* pCompPipeline = nullptr;
-  pPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_PBR_DEFERRED_NOLR );
-  pCompPipeline = pbr_computePipeline_NoLR;
+  pPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_PBR_DEFERRED_NOLR );
+  pCompPipeline = RendererPass::getComputePipeline( PIPELINE_COMPUTE_PBR_DEFERRED_NOLR );
 
   if (m_currentGraphicsConfigs._EnableLocalReflections) {
-    pPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_PBR_DEFERRED_LR );
-    pCompPipeline = pbr_computePipeline_LR;
+    pPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_PBR_DEFERRED_LR );
+    pCompPipeline = RendererPass::getComputePipeline( PIPELINE_COMPUTE_PBR_DEFERRED_LR );
   }
 
   FrameBuffer* pbr_FrameBuffer = pbr_FrameBufferKey;
@@ -2878,10 +2856,10 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   } 
 
   FrameBuffer* gbuffer_FrameBuffer = gbuffer_FrameBufferKey;
-  GraphicsPipeline* gbuffer_Pipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_DYNAMIC );
-  GraphicsPipeline* gbuffer_StaticPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC );
-  GraphicsPipeline* gbuffer_staticMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS );
-  GraphicsPipeline* gbuffer_dynamicMorph = RendererPass::getPipeline( GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS );
+  GraphicsPipeline* gbuffer_Pipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GBUFFER_DYNAMIC );
+  GraphicsPipeline* gbuffer_StaticPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GBUFFER_STATIC );
+  GraphicsPipeline* gbuffer_staticMorph = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GBUFFER_STATIC_MORPH_TARGETS );
+  GraphicsPipeline* gbuffer_dynamicMorph = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GBUFFER_DYNAMIC_MORPH_TARGETS );
   VkExtent2D windowExtent = { m_renderWidth, m_renderHeight };
   VkDescriptorSet DescriptorSets[6];
 
@@ -3012,7 +2990,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
   scissor.extent = { m_renderWidth, m_renderHeight };
   scissor.offset = { 0, 0 };
 
-  GraphicsPipeline* finalPipeline = final_PipelineKey;
+  GraphicsPipeline* finalPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_FINAL );
   DescriptorSet* finalSet = final_DescSetKey;
   FrameBuffer* finalFrameBuffer = final_frameBufferKey;
 
@@ -3056,12 +3034,11 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
 
-  GraphicsPipeline* hdrPipeline = RendererPass::getPipeline( GRAPHICS_PIPELINE_HDR_GAMMA );
-  GraphicsPipeline* Downscale2x = DownscaleBlurPipeline2xKey;
-  GraphicsPipeline* Downscale4x = DownscaleBlurPipeline4xKey;
-  GraphicsPipeline* Downscale8x = DownscaleBlurPipeline8xKey;
-  GraphicsPipeline* Downscale16x = DownscaleBlurPipeline16xKey;
-  GraphicsPipeline* GlowPipeline = GlowPipelineKey;
+  GraphicsPipeline* Downscale2x = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_DOWNSCALE_BLUR_2X );
+  GraphicsPipeline* Downscale4x = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_DOWNSCALE_BLUR_4X );
+  GraphicsPipeline* Downscale8x = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X );
+  GraphicsPipeline* Downscale16x = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X );
+
   FrameBuffer* hdrFrameBuffer = hdr_gamma_frameBufferKey;
   FrameBuffer* DownscaleFrameBuffer2x = FrameBuffer2xHorizKey;
   FrameBuffer* FB2xFinal = FrameBuffer2xFinalKey;
@@ -3081,7 +3058,6 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   DescriptorSet* DownscaleSet4xFinal = DownscaleBlurDescriptorSet4xFinalKey;
   DescriptorSet* DownscaleSet8xFinal = DownscaleBlurDescriptorSet8xFinalKey;
   DescriptorSet* DownscaleSet16xFinal = DownscaleBlurDescriptorSet16xFinalKey;
-  DescriptorSet* GlowSet = GlowDescriptorSetKey;
 
   VkClearValue clearVal = { };
   clearVal.color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -3101,7 +3077,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   DownscalePass2x.renderPass = DownscaleFrameBuffer2x->RenderPassRef()->getHandle();
   DownscalePass2x.clearValueCount = 1;
   DownscalePass2x.pClearValues = &clearVal;
-  DownscalePass2x.renderArea.extent = { DownscaleFrameBuffer2x->getWidth(), DownscaleFrameBuffer2x->getHeight() };
+  DownscalePass2x.renderArea.extent = { DownscaleFrameBuffer2x->getWidth(), 
+                                        DownscaleFrameBuffer2x->getHeight() };
   DownscalePass2x.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass4x = { };
@@ -3110,7 +3087,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   DownscalePass4x.renderPass = DownscaleFrameBuffer4x->RenderPassRef()->getHandle();
   DownscalePass4x.clearValueCount = 1;
   DownscalePass4x.pClearValues = &clearVal;
-  DownscalePass4x.renderArea.extent = { DownscaleFrameBuffer4x->getWidth(), DownscaleFrameBuffer4x->getHeight() };
+  DownscalePass4x.renderArea.extent = { DownscaleFrameBuffer4x->getWidth(), 
+                                        DownscaleFrameBuffer4x->getHeight() };
   DownscalePass4x.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass8x = {};
@@ -3119,7 +3097,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   DownscalePass8x.renderPass = DownscaleFrameBuffer8x->RenderPassRef()->getHandle();
   DownscalePass8x.clearValueCount = 1;
   DownscalePass8x.pClearValues = &clearVal;
-  DownscalePass8x.renderArea.extent = { DownscaleFrameBuffer8x->getWidth(), DownscaleFrameBuffer8x->getHeight() };
+  DownscalePass8x.renderArea.extent = { DownscaleFrameBuffer8x->getWidth(), 
+                                        DownscaleFrameBuffer8x->getHeight() };
   DownscalePass8x.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo DownscalePass16x = {};
@@ -3128,7 +3107,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
   DownscalePass16x.renderPass = DownscaleFrameBuffer16x->RenderPassRef()->getHandle();
   DownscalePass16x.clearValueCount = 1;
   DownscalePass16x.pClearValues = &clearVal;
-  DownscalePass16x.renderArea.extent = { DownscaleFrameBuffer16x->getWidth(), DownscaleFrameBuffer16x->getHeight() };
+  DownscalePass16x.renderArea.extent = { DownscaleFrameBuffer16x->getWidth(), 
+                                         DownscaleFrameBuffer16x->getHeight() };
   DownscalePass16x.renderArea.offset = { 0, 0 };
 
   VkRenderPassBeginInfo GlowPass = {};
@@ -3253,30 +3233,38 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 
   viewport.height = (R32)windowExtent.height;
   viewport.width = (R32)windowExtent.width;
-  VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
-  cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
-  if (!m_currentGraphicsConfigs._EnableBloom) {
-    VkClearAttachment clearAttachment = {};
-    clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    clearAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
-    clearAttachment.colorAttachment = 0;
-    VkClearRect rect = {};
-    rect.baseArrayLayer = 0;
-    rect.layerCount = 1;
-    VkExtent2D extent = { m_renderWidth, m_renderHeight };
-    rect.rect.extent = extent;
-    rect.rect = { 0, 0 };
-    cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
-  } else {
-    cmdBuffer->setViewPorts(0, 1, &viewport);
-    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->Pipeline());
-    cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, GlowPipeline->getLayout(), 0, 1, &GlowDescriptorNative, 0, nullptr);
-    cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
-    cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
-    cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-  }
-  cmdBuffer->endRenderPass();
 
+  {
+    DescriptorSet* GlowSet = GlowDescriptorSetKey;
+    VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
+    cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
+    if (!m_currentGraphicsConfigs._EnableBloom) {
+      VkClearAttachment clearAttachment = {};
+      clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      clearAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+      clearAttachment.colorAttachment = 0;
+      VkClearRect rect = {};
+      rect.baseArrayLayer = 0;
+      rect.layerCount = 1;
+      VkExtent2D extent = { m_renderWidth, m_renderHeight };
+      rect.rect.extent = extent;
+      rect.rect = { 0, 0 };
+      cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
+    } else {
+      GraphicsPipeline* pGlowPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GLOW );
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pGlowPipeline->Pipeline());
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                                    pGlowPipeline->getLayout(), 
+                                    0, 1, 
+                                    &GlowDescriptorNative, 
+                                    0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    }
+    cmdBuffer->endRenderPass();
+  }
   
 
   VkDescriptorSet dSets[3];
@@ -3290,6 +3278,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 
   cmdBuffer->beginRenderPass(renderpassInfo, VK_SUBPASS_CONTENTS_INLINE);
     cmdBuffer->setViewPorts(0, 1, &viewport);
+    GraphicsPipeline* hdrPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_HDR_GAMMA );
     cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->Pipeline());
     cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, hdrPipeline->getLayout(), 0, 3, dSets, 0, nullptr);
     cmdBuffer->pushConstants(hdrPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ParamsHDR), &m_HDR._pushCnst);

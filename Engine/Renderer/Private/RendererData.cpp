@@ -30,7 +30,8 @@ std::string ShadersPath             = "Shaders";
 std::array<Matrix4, 6> kViewMatrices;
 
 
-std::unordered_map<GraphicsPipelineT, GraphicsPipeline*> g_graphicsPipeline;
+std::unordered_map<PipelineT, GraphicsPipeline*> g_graphicsPipelines;
+std::unordered_map<PipelineT, ComputePipeline*> g_computePipelines;
 
 Texture* DefaultTextureKey          = nullptr;
 Sampler* DefaultSampler2DKey        = nullptr;
@@ -73,8 +74,7 @@ GraphicsPipeline* pbr_forwardPipelineMorphTargets_LR = nullptr;
 GraphicsPipeline* pbr_forwardPipelineMorphTargets_NoLR = nullptr;
 GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_LR = nullptr;
 GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_NoLR = nullptr;
-ComputePipeline* pbr_computePipeline_NoLR         = nullptr;
-ComputePipeline* pbr_computePipeline_LR           = nullptr;
+
 GraphicsPipeline* pbr_static_LR_Debug = nullptr;
 GraphicsPipeline* pbr_static_NoLR_Debug = nullptr;
 GraphicsPipeline* pbr_dynamic_LR_Debug = nullptr;
@@ -143,16 +143,12 @@ FrameBuffer* FrameBuffer8xKey            = nullptr;
 FrameBuffer* FrameBuffer8xFinalKey       = nullptr;
 FrameBuffer* FrameBuffer16xKey           = nullptr;
 FrameBuffer* FrameBuffer16xFinalKey      = nullptr;
-GraphicsPipeline* GlowPipelineKey             = nullptr;
+
 std::string GlowFragFileStr             = "GlowPass.frag.spv";
 Texture* RenderTargetGlowKey         = nullptr;
 FrameBuffer* FrameBufferGlowKey          = nullptr;
 DescriptorSetLayout* GlowDescriptorSetLayoutKey  = nullptr;
 DescriptorSet* GlowDescriptorSetKey        = nullptr;
-GraphicsPipeline* DownscaleBlurPipeline2xKey  = nullptr;
-GraphicsPipeline* DownscaleBlurPipeline4xKey  = nullptr;
-GraphicsPipeline* DownscaleBlurPipeline8xKey  = nullptr;
-GraphicsPipeline* DownscaleBlurPipeline16xKey = nullptr;
 DescriptorSetLayout* DownscaleBlurLayoutKey      = nullptr;
 DescriptorSet* DownscaleBlurDescriptorSet2x          = nullptr;
 DescriptorSet* DownscaleBlurDescriptorSet2xFinalKey  = nullptr;
@@ -167,7 +163,6 @@ std::string DownscaleBlurFragFileStr    = "DownscaleBlurPass.frag.spv";
 
 Texture* RenderTargetVelocityKey     = nullptr;
 
-GraphicsPipeline* hdr_gamma_pipelineKey         = nullptr;
 Texture* hdr_gamma_colorAttachKey      = nullptr;
 FrameBuffer* hdr_gamma_frameBufferKey      = nullptr;
 RenderPass* hdr_renderPass                = nullptr;
@@ -177,7 +172,6 @@ DescriptorSetLayout* hdr_gamma_descSetLayoutKey    = nullptr;
 std::string hdr_gamma_vertFileStr         = "HDR.vert.spv";
 std::string hdr_gamma_fragFileStr         = "HDR.frag.spv";
 
-GraphicsPipeline* final_PipelineKey            = nullptr;
 DescriptorSet* final_DescSetKey             = nullptr;
 DescriptorSetLayout* final_DescSetLayoutKey       = nullptr;
 std::string final_VertFileStr            = "FinalPass.vert.spv";
@@ -186,7 +180,6 @@ Texture* final_renderTargetKey       = nullptr;
 FrameBuffer* final_frameBufferKey = nullptr;
 RenderPass* final_renderPass = nullptr;
 DescriptorSet*  output_descSetKey = nullptr;
-GraphicsPipeline* output_pipelineKey = nullptr;
 
 GraphicsPipeline* envMap_pbrPipeline = nullptr;
 FrameBuffer*       envMap_frameBuffer = nullptr;
@@ -246,22 +239,28 @@ namespace RendererPass {
 
 void initialize(VulkanRHI* pRhi)
 { 
-  for (I32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i)
+  for (I32 i = PIPELINE_START; i < PIPELINE_END; ++i)
   {
-    g_graphicsPipeline[ (GraphicsPipelineT)i ] = pRhi->createGraphicsPipeline();
+    g_graphicsPipelines[ (PipelineT)i ] = pRhi->createGraphicsPipeline();
   }
 }
 
 
 void cleanUp(VulkanRHI* pRhi)
 {
-  for (I32 i = GRAPHICS_PIPELINE_START; i < GRAPHICS_PIPELINE_END; ++i) 
+  for ( I32 i = PIPELINE_START; i < PIPELINE_END; ++i) 
   {
-    pRhi->freeGraphicsPipeline(g_graphicsPipeline[ (GraphicsPipelineT) i ]);
-    g_graphicsPipeline[ (GraphicsPipelineT) i ] = nullptr;
+    pRhi->freeGraphicsPipeline(g_graphicsPipelines[ (PipelineT) i ]);
+    g_graphicsPipelines[ (PipelineT) i ] = nullptr;
   }
 
-  g_graphicsPipeline.clear();
+  for ( I32 i = PIPELINE_START; i < PIPELINE_END; ++i ) {
+    pRhi->freeComputePipeline(g_computePipelines[ (PipelineT) i ]);
+    g_computePipelines[ (PipelineT) i ] = nullptr;
+  }
+
+  g_graphicsPipelines.clear();
+  g_computePipelines.clear();
 
 }
 
@@ -352,7 +351,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   PipelineLayout.pushConstantRangeCount = 0;
 
   // Initialize pbr forward pipeline.
-  g_graphicsPipeline[ GRAPHICS_PIPELINE_GBUFFER_DYNAMIC ]->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_GBUFFER_DYNAMIC ]->initialize(GraphicsInfo, PipelineLayout);
 
   {
     VkGraphicsPipelineCreateInfo ginfo = GraphicsInfo;
@@ -371,7 +370,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     VertGBuffer = Rhi->createShader();
     loadShader("GBuffer_MorphTargets.vert.spv", VertGBuffer);
     PbrShaders[0].module = VertGBuffer->getHandle();
-    g_graphicsPipeline[ GRAPHICS_PIPELINE_GBUFFER_DYNAMIC_MORPH_TARGETS ]->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_GBUFFER_DYNAMIC_MORPH_TARGETS ]->initialize(ginfo, PipelineLayout);
     Rhi->freeShader(VertGBuffer);
     VertGBuffer = nullptr;
   }
@@ -394,7 +393,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
   
   PbrShaders[0].module = VertGBuffer->getHandle();
   PipelineLayout.setLayoutCount = static_cast<U32>(DLayouts.size() - 1); // We don't need bone buffer.
-  g_graphicsPipeline[ GRAPHICS_PIPELINE_GBUFFER_STATIC ]->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_GBUFFER_STATIC ]->initialize(GraphicsInfo, PipelineLayout);
   
   Rhi->freeShader(VertGBuffer);
   VertGBuffer = nullptr;
@@ -416,7 +415,7 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
     VertGBuffer = Rhi->createShader();
     loadShader("StaticGBuffer_MorphTargets.vert.spv", VertGBuffer);
     PbrShaders[0].module = VertGBuffer->getHandle();
-    g_graphicsPipeline[ GRAPHICS_PIPELINE_GBUFFER_STATIC_MORPH_TARGETS ]->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_GBUFFER_STATIC_MORPH_TARGETS ]->initialize(ginfo, PipelineLayout);
     Rhi->freeShader(VertGBuffer);
     VertGBuffer = nullptr;
   }
@@ -429,9 +428,15 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 }
 
 
-GraphicsPipeline* getPipeline(GraphicsPipelineT pipeline)
+GraphicsPipeline* getGraphicsPipeline(PipelineT pipeline)
 {
-  return g_graphicsPipeline[ pipeline ];
+  return g_graphicsPipelines[ pipeline ];
+}
+
+
+ComputePipeline* getComputePipeline(PipelineT pipeline)
+{
+  return g_computePipelines[ pipeline ];
 }
 
 
@@ -485,7 +490,7 @@ void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defau
   hdrLayout.pPushConstantRanges = &pushConstantRange;
   hdrLayout.pushConstantRangeCount = 1;
 
-  g_graphicsPipeline[ GRAPHICS_PIPELINE_HDR_GAMMA ]->initialize(GraphicsInfo, hdrLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_HDR_GAMMA ]->initialize(GraphicsInfo, hdrLayout);
 
   Rhi->freeShader(HdrFrag);
   Rhi->freeShader(HdrVert);
@@ -598,7 +603,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PipelineLayout.pPushConstantRanges = 0;
     PipelineLayout.pushConstantRangeCount = 0;
 
-    g_graphicsPipeline[ GRAPHICS_PIPELINE_PBR_DEFERRED_LR ]->initialize(GraphicsInfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_DEFERRED_LR ]->initialize(GraphicsInfo, PipelineLayout);
 
     Rhi->freeShader(FragPBR);
 
@@ -622,7 +627,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     PbrShaders[1].pSpecializationInfo = nullptr;
 
     layouts[4] = globalIllumination_DescNoLR->getLayout();
-    g_graphicsPipeline[ GRAPHICS_PIPELINE_PBR_DEFERRED_NOLR ]->initialize(GraphicsInfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_DEFERRED_NOLR ]->initialize(GraphicsInfo, PipelineLayout);
 
     Rhi->freeShader(VertPBR);
     Rhi->freeShader(FragPBR);
@@ -665,7 +670,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
       pbr_compDescLayout->getLayout()
     };    
 
-    pbr_computePipeline_NoLR = Rhi->createComputePipeline();
+    g_computePipelines[ PIPELINE_COMPUTE_PBR_DEFERRED_NOLR ] = Rhi->createComputePipeline();
     VkComputePipelineCreateInfo computeCi = { };
     VkPipelineLayoutCreateInfo compLayoutCi = { };
     compLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -682,9 +687,9 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     computeCi.basePipelineIndex = -1;
     computeCi.stage = shaderCi;
     
-    pbr_computePipeline_NoLR->initialize(computeCi, compLayoutCi);
+    g_computePipelines[ PIPELINE_COMPUTE_PBR_DEFERRED_NOLR ]->initialize(computeCi, compLayoutCi);
     Rhi->freeShader(compShader);
-    pbr_computePipeline_LR = Rhi->createComputePipeline();
+    g_computePipelines[ PIPELINE_COMPUTE_PBR_DEFERRED_LR ] = Rhi->createComputePipeline();
     compShader = Rhi->createShader();
     loadShader(lr, compShader);
 
@@ -699,7 +704,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     computeCi.basePipelineIndex = -1;
     computeCi.stage = shaderCi;
 
-    pbr_computePipeline_LR->initialize(computeCi, compLayoutCi);
+    g_computePipelines[ PIPELINE_COMPUTE_PBR_DEFERRED_LR ]->initialize(computeCi, compLayoutCi);
     Rhi->freeShader(compShader);
   }
 }
@@ -1035,11 +1040,11 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   n.primitiveRestartEnable = VK_FALSE;
   GraphicsInfo.pInputAssemblyState = &n;
 
-  GraphicsPipeline* Downscale2x = Rhi->createGraphicsPipeline();
-  GraphicsPipeline* Downscale4x = Rhi->createGraphicsPipeline();
-  GraphicsPipeline* Downscale8x = Rhi->createGraphicsPipeline();
-  GraphicsPipeline* Downscale16x = Rhi->createGraphicsPipeline();
-  GraphicsPipeline* GlowPipeline = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_2X ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_4X ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_GLOW ] = Rhi->createGraphicsPipeline();
   // Scaled and Final framebuffers have the same renderpass, so we can just use 
   // one of their renderpasses.
   FrameBuffer*      FrameBuffer2x = FrameBuffer2xHorizKey;
@@ -1047,11 +1052,7 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   FrameBuffer*      FrameBuffer8x = FrameBuffer8xKey;
   FrameBuffer*      FrameBuffer16x = FrameBuffer16xKey;
   FrameBuffer*      GlowFrameBuffer = FrameBufferGlowKey;
-  DownscaleBlurPipeline2xKey = Downscale2x;
-  DownscaleBlurPipeline4xKey = Downscale4x;
-  DownscaleBlurPipeline8xKey = Downscale8x;
-  DownscaleBlurPipeline16xKey = Downscale16x;
-  GlowPipelineKey = GlowPipeline;
+
   DescriptorSetLayout* DownscaleDescLayout = DownscaleBlurLayoutKey;
   DescriptorSetLayout* GlowDescLayout = GlowDescriptorSetLayoutKey;
 
@@ -1095,13 +1096,13 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GraphicsInfo.stageCount = 2;
 
   GraphicsInfo.renderPass = FrameBuffer2x->RenderPassRef()->getHandle();
-  Downscale2x->initialize(GraphicsInfo, DownscaleLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_2X ]->initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer4x->RenderPassRef()->getHandle();
-  Downscale4x->initialize(GraphicsInfo, DownscaleLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_4X ]->initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer8x->RenderPassRef()->getHandle();
-  Downscale8x->initialize(GraphicsInfo, DownscaleLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X ]->initialize(GraphicsInfo, DownscaleLayout);
   GraphicsInfo.renderPass = FrameBuffer16x->RenderPassRef()->getHandle();
-  Downscale16x->initialize(GraphicsInfo, DownscaleLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X ]->initialize(GraphicsInfo, DownscaleLayout);
 
   Rhi->freeShader(DbFrag);
   DbFrag = Rhi->createShader();
@@ -1118,7 +1119,7 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GlowPipelineLayout.pushConstantRangeCount = 0;
 
   GraphicsInfo.renderPass = GlowFrameBuffer->RenderPassRef()->getHandle();
-  GlowPipeline->initialize(GraphicsInfo, GlowPipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_GLOW ]->initialize(GraphicsInfo, GlowPipelineLayout);
 
   Rhi->freeShader(DbVert);
   Rhi->freeShader(DbFrag);
@@ -1134,8 +1135,7 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   //
   VkPipelineInputAssemblyStateCreateInfo n = { };
 
-  GraphicsPipeline* quadPipeline = Rhi->createGraphicsPipeline();
-  final_PipelineKey = quadPipeline;
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_FINAL ] = Rhi->createGraphicsPipeline();
 
   loadShader(final_VertFileStr, quadVert);
   loadShader(final_FragFileStr, quadFrag);
@@ -1177,12 +1177,12 @@ void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultI
   dd.pDynamicStates = ds;
   GraphicsInfo.pDynamicState = &dd;
 
-  quadPipeline->initialize(GraphicsInfo, finalLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_FINAL ]->initialize(GraphicsInfo, finalLayout);
 
   // Now create the output pipeline.
-  output_pipelineKey = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_OUTPUT ] = Rhi->createGraphicsPipeline();
   GraphicsInfo.renderPass = Rhi->swapchainRenderPass();
-  output_pipelineKey->initialize(GraphicsInfo, finalLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_OUTPUT ]->initialize(GraphicsInfo, finalLayout);
 
   Rhi->freeShader(quadVert);
   Rhi->freeShader(quadFrag);

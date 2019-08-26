@@ -401,7 +401,8 @@ public:
     f.y = 0.0f;
     f = f.normalize();
 
-    if (Keyboard::keyPressed(KEY_CODE_LSHIFT)) {
+    if (Keyboard::keyPressed( KEY_CODE_LSHIFT ) ||
+        Keyboard::keyHeldDown( KEY_CODE_LSHIFT )) {
       speed *= 5.0f;
     }
     if (Keyboard::keyPressed( KEY_CODE_A ) ||
