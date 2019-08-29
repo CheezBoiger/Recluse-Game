@@ -147,7 +147,7 @@ float textureProj(in sampler2D shadowMap, vec4 P, vec2 offset)
 }
 
 
-float FilterPCF(in sampler2D shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec3 fragPos)
+float FilterPCF(in sampler2D shadowMap, vec4 sc, vec3 fragPos)
 {
 #if 0
   ivec2 texDim = textureSize(shadowMap, 0);
@@ -175,9 +175,9 @@ float FilterPCF(in sampler2D shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec
   float range = 3.0;
   vec2 texelSz = (1.0 / textureSize(shadowMap, 0)) * 0.5;
   
-  normal = normalize(normal);
-  vec3 lightDir = -lightPos;
-  float bias = min(-0.000001 * dot(normal, lightDir), 0.0);
+  //normal = normalize(normal);
+  //vec3 lightDir = -lightPos;
+  float bias = 0.0; //min(-0.000001 * dot(normal, lightDir), 0.0);
   float count = 0.0;
   if (currDepth <= 1.0) {
     for (float x = -range; x <= range; x += 1.0) {
@@ -193,7 +193,7 @@ float FilterPCF(in sampler2D shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec
 }
 
 
-float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3 normal, vec3 fragPos, int layer)
+float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 fragPos, int layer)
 {
   vec3 projC = sc.xyz / sc.w;
   projC.st = projC.st * 0.5 + 0.5;
@@ -203,8 +203,6 @@ float FilterPCFCascade(in sampler2DArray shadowMap, vec4 sc, vec3 lightPos, vec3
   float range = 1.0;
   vec2 texelSz = (1.0 / textureSize(shadowMap, 0).xy) * 0.5;
   
-  normal = normalize(normal);
-  vec3 lightDir = -lightPos;
   float bias = 0.0; //min(-0.000001 * dot(normal, lightDir), 0.0);
   float count = 0.0;
   if (currDepth <= 1.0) {
@@ -369,14 +367,14 @@ float PCSSCascade(in sampler2DArray shadowMap,
 
 ////////////////////////////////////////////////////////////////////////////////
 float GetShadowFactor(int enableShadows, vec3 wp, in LightSpace staticLS, 
-  in sampler2D staticSM, in LightSpace dynamicLS, in sampler2D dynamicSM, vec3 lightPos, vec3 normal)
+  in sampler2D staticSM, in LightSpace dynamicLS, in sampler2D dynamicSM)
 {
     vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
-    float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
+    float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, wp) : PCSS(staticSM, staticLS, staticShadowClip));
     float shadowFactor = staticShadowFactor;
     if (enableShadows >= 1) {
       vec4 shadowClip = dynamicLS.viewProj * vec4(wp, 1.0);
-      float dynamicShadowFactor = ((dynamicLS.shadowTechnique.x < 1) ? FilterPCF(dynamicSM, shadowClip, lightPos, normal, wp) : PCSS(dynamicSM, dynamicLS, shadowClip));
+      float dynamicShadowFactor = ((dynamicLS.shadowTechnique.x < 1) ? FilterPCF(dynamicSM, shadowClip, wp) : PCSS(dynamicSM, dynamicLS, shadowClip));
       shadowFactor = min(dynamicShadowFactor, staticShadowFactor);
     }
 
@@ -398,13 +396,13 @@ int GetCascadeIndex(vec4 vpos, in vec4 split)
 
 
 float GetShadowFactorCascade(int enableShadows, vec3 wp, int cascadeIdx, 
-  in LightSpaceCascade dynamicLS, in sampler2DArray dynamicSM, vec3 lightPos, vec3 normal)
+  in LightSpaceCascade dynamicLS, in sampler2DArray dynamicSM)
 {   
     //vec4 staticShadowClip = staticLS.viewProj * vec4(wp, 1.0);
-    //float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, lightPos, normal, wp) : PCSS(staticSM, staticLS, staticShadowClip));
+    //float staticShadowFactor = ((staticLS.shadowTechnique.x < 1) ? FilterPCF(staticSM, staticShadowClip, wp) : PCSS(staticSM, staticLS, staticShadowClip));
     float shadowFactor = 1.0;//staticShadowFactor;
     vec4 shadowClip = dynamicLS.viewProj[cascadeIdx] * vec4(wp, 1.0);
-    float dynamicShadowFactor = (dynamicLS.shadowTechnique.x < 1) ? FilterPCFCascade(dynamicSM, shadowClip, lightPos, normal, wp, cascadeIdx) :
+    float dynamicShadowFactor = (dynamicLS.shadowTechnique.x < 1) ? FilterPCFCascade(dynamicSM, shadowClip, wp, cascadeIdx) :
                                 PCSSCascade(dynamicSM, dynamicLS, shadowClip, cascadeIdx);
     shadowFactor = dynamicShadowFactor;
     

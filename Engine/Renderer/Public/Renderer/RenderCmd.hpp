@@ -132,6 +132,13 @@ struct DecalRenderCmd {
 };
 
 
+struct DecalAtlasRenderCmd {
+  U32 _texId;
+  Matrix4 _obb;
+  Matrix4 _scale;
+};
+
+
 struct UiRenderCmd {
   UiType          _uiType;
   CmdConfigBits   _config;

@@ -129,7 +129,7 @@ void BakeIBL::renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Text
   if (!pCmd || !target) return;
 
   VkDescriptorSet sets[] = { pGlobal->getDescriptorSet(frameIndex)->getHandle(), m_pBRDFSet->getHandle() };
-  pCmd->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->Pipeline());
+  pCmd->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->getNative());
   pCmd->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->getLayout(),
     0, 2, sets, 0, nullptr);
   pCmd->dispatch((target->getWidth() / 16) + 1, (target->getHeight() / 16) + 1, 1);

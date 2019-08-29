@@ -26,7 +26,7 @@ public:
   // Clean up the pipeline object, as well as layout.
   void              cleanUp();
 
-  VkPipeline        Pipeline() { return mPipeline; }
+  VkPipeline        getNative() { return mPipeline; }
   VkPipelineLayout  getLayout() { return mLayout; }
 
 private:

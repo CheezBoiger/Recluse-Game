@@ -34,12 +34,15 @@ layout (set = 2, binding = 0) uniform Lights {
   LightBuffer lights;
 } gLightBuffer;
 
+
+layout (set = 3, binding = 0) uniform sampler2D shadowMask;
+/*
 layout (set = 3, binding = 0) uniform DynamicLightSpace {
   LightSpaceCascade lightSpace;
 } dynamicLightSpace;
 
 layout (set = 3, binding = 1) uniform sampler2DArray dynamicShadowMap;
-
+*/
 /*
 layout (set = 4, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
@@ -110,13 +113,13 @@ void main()
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo);
     float shadowFactor = 1.0;
     if (gWorldBuffer.global.enableShadows >= 1.0) {
-      vec4 vpos = (gWorldBuffer.global.view * vec4(pbrInfo.WP, 1.0)).zzzz;
-      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
-      shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, pbrInfo.WP, cascadeIdx,
-                                          dynamicLightSpace.lightSpace, dynamicShadowMap,
-                                          light.direction.xyz, pbrInfo.N);
+      //vec4 vpos = (gWorldBuffer.global.view * vec4(pbrInfo.WP, 1.0)).zzzz;
+      //int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
+      //shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, pbrInfo.WP, cascadeIdx,
+      //                                    dynamicLightSpace.lightSpace, dynamicShadowMap);
       //vec4 sc = GetCascadeColor(cascadeIdx);
       //outColor += sc.rgb;
+      shadowFactor = texture(shadowMask, texCoord.xy).r;
     }
     outColor += ambient;
     outColor += radiance * shadowFactor;

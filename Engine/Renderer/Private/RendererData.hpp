@@ -110,15 +110,6 @@ extern DescriptorSet* pbr_compSet;
 extern Texture* pbr_FinalTextureKey;
 extern Texture* pbr_BrightTextureKey;
 
-// Forward Pipelines
-extern GraphicsPipeline*  pbr_forwardPipeline_LR;
-extern GraphicsPipeline*  pbr_forwardPipeline_NoLR;
-extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_LR;
-extern GraphicsPipeline*  pbr_forwardPipelineMorphTargets_NoLR;
-extern GraphicsPipeline*  pbr_staticForwardPipeline_LR;
-extern GraphicsPipeline*  pbr_staticForwardPipeline_NoLR;
-extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_LR;
-extern GraphicsPipeline*  pbr_staticForwardPipelineMorphTargets_NoLR;
 extern RenderPass*        pbr_forwardRenderPass;
 extern FrameBuffer*       pbr_forwardFrameBuffer;
 
@@ -195,10 +186,9 @@ extern Texture* final_renderTargetKey;
 
 extern DescriptorSet* output_descSetKey;
 
-
-enum PipelineT {
-  PIPELINE_START = 0,
-  PIPELINE_GRAPHICS_PREZ_DYNAMIC = PIPELINE_START,
+enum PipelineGraphicsT {
+  PIPELINE_GRAPHICS_START = 0,
+  PIPELINE_GRAPHICS_PREZ_DYNAMIC = PIPELINE_GRAPHICS_START,
   PIPELINE_GRAPHICS_PREZ_DYNAMIC_MORPH_TARGETS,
   PIPELINE_GRAPHICS_PREZ_STATIC,
   PIPELINE_GRAPHICS_PREZ_STATIC_MORPH_TARGETS,
@@ -218,8 +208,6 @@ enum PipelineT {
   PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_NOLR,
   PIPELINE_GRAPHICS_PBR_DEFERRED_LR,
   PIPELINE_GRAPHICS_PBR_DEFERRED_NOLR,
-  PIPELINE_COMPUTE_PBR_DEFERRED_LR,
-  PIPELINE_COMPUTE_PBR_DEFERRED_NOLR,
   PIPELINE_GRAPHICS_PBR_FORWARD,
   PIPELINE_GRAPHICS_HDR_GAMMA,
   PIPELINE_GRAPHICS_GLOW,
@@ -228,27 +216,50 @@ enum PipelineT {
   PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X,
   PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X,
   PIPELINE_GRAPHICS_OUTPUT,
-  PIPELINE_END,
+  PIPELINE_GRAPHICS_END,
+};
+
+
+enum PipelineComputeT {
+  PIPELINE_COMPUTE_START = 0,
+  PIPELINE_COMPUTE_PBR_DEFERRED_NOLR = PIPELINE_COMPUTE_START,
+  PIPELINE_COMPUTE_PBR_DEFERRED_LR,
+  PIPELINE_COMPUTE_SHADOW_RESOLVE,
+  PIPELINE_COMPUTE_END
 };
 
 
 enum FrameBufferT {
-
+  FRAME_BUFFER_START = 0,
+  FRAME_BUFFER_END
 };
 
 
 enum RenderPassT {
-
+  RENDER_PASS_START = 0,
+  RENDER_PASS_END
 };
 
 
 enum DescriptorSetLayoutT {
-
+  DESCRIPTOR_SET_LAYOUT_START = 0,
+  DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE = DESCRIPTOR_SET_LAYOUT_START,
+  DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT,
+  DESCRIPTOR_SET_LAYOUT_END
 };
 
 
 enum DescriptorSetT {
+  DESCRIPTOR_SET_START = 0,
+  DESCRIPTOR_SET_SHADOW_RESOLVE = DESCRIPTOR_SET_START,
+  DESCRIPTOR_SET_SHADOW_RESOLVE_OUT,
+  DESCRIPTOR_SET_END
+};
 
+enum RenderTextureT {
+  RENDER_TEXTURE_START = 0,
+  RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT = RENDER_TEXTURE_START,
+  RENDER_TEXTURE_END
 };
 
 extern char const* kDefaultShaderEntryPointStr;
@@ -260,10 +271,24 @@ void CleanUpRenderData();
 namespace RendererPass {
 
 
-void initialize(VulkanRHI* pRhi);
-void cleanUp(VulkanRHI* pRhi);
-GraphicsPipeline* getGraphicsPipeline(PipelineT pipeline);
-ComputePipeline* getComputePipeline(PipelineT pipeline);
+void initializePipelines(VulkanRHI* pRhi);
+void cleanUpPipelines(VulkanRHI* pRhi);
+
+void initializeDescriptorSetLayouts(VulkanRHI* pRhi);
+void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
+
+void initializeRenderTextures(VulkanRHI* pRhi);
+void cleanUpRenderTextures(VulkanRHI* pRhi);
+
+void initializeDescriptorSets(VulkanRHI* pRhi);
+void cleanUpDescriptorSets(VulkanRHI* pRhi);
+
+GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline);
+ComputePipeline* getComputePipeline(PipelineComputeT pipeline);
+
+Texture* getRenderTexture(RenderTextureT rt);
+DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout);
+DescriptorSet* getDescriptorSet(DescriptorSetT set);
 
 void loadShader(const std::string& Filename, Shader* S);
 
@@ -289,6 +314,13 @@ void setUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultI
 
 void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
+void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes);
+
+void initShadowResolvePipeline(VulkanRHI* pRhi);
+
+void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi);
+
+void initShadowReolveDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
 
 enum AntiAliasingType {
   FXAA,

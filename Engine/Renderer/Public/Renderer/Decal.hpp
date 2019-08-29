@@ -46,7 +46,7 @@ public:
 
   // Decals are set as the next subpass within the offscreen cmdbuffer;
   void        buildDecals(CommandBuffer* offscreenCmdBuffer);
-  void        updateTextureAtlas(const Image& img, U32 idx);
+  void        updateTextureAtlas(const Image* pImgs, U32 imageCount, U32* ids);
   
   void        clearDecalBuffer() { m_decalCmds.clear(); }
   void        pushDecal(const DecalRenderCmd& cmd) { m_decalCmds.pushBack( cmd ); }
@@ -62,12 +62,14 @@ private:
   void freeBoundingBox(VulkanRHI* pRhi);
 
   CmdList<DecalRenderCmd>             m_decalCmds;
+  CmdList<DecalAtlasRenderCmd>        m_atlasDecalCmds;
   U32                                 m_decalCount;
   B32                                 m_visualizeBBoxes;
   GraphicsPipeline*                   m_pipeline;
   RenderPass*                         m_renderPass;
   VertexBuffer*                       m_gpuBBoxVertices;
   IndexBuffer*                        m_gpuBBoxIndices;
+  Texture*                            m_decalAtlas;
 };
 
 

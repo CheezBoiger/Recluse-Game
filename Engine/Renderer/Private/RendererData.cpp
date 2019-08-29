@@ -29,9 +29,11 @@ std::string ShadersPath             = "Shaders";
 
 std::array<Matrix4, 6> kViewMatrices;
 
-
-std::unordered_map<PipelineT, GraphicsPipeline*> g_graphicsPipelines;
-std::unordered_map<PipelineT, ComputePipeline*> g_computePipelines;
+std::unordered_map<PipelineGraphicsT, GraphicsPipeline*> g_graphicsPipelines;
+std::unordered_map<PipelineComputeT, ComputePipeline*> g_computePipelines;
+std::unordered_map<RenderTextureT, Texture*> g_renderTextures;
+std::unordered_map<DescriptorSetT, DescriptorSet*> g_descriptorSets;
+std::unordered_map<DescriptorSetLayoutT, DescriptorSetLayout*> g_descriptorSetLayouts;
 
 Texture* DefaultTextureKey          = nullptr;
 Sampler* DefaultSampler2DKey        = nullptr;
@@ -65,15 +67,6 @@ RenderPass* gbuffer_renderPass                = nullptr;
 std::string gbuffer_VertFileStr               = "GBuffer.vert.spv";
 std::string gbuffer_StaticVertFileStr         = "StaticGBuffer.vert.spv";
 std::string gbuffer_FragFileStr               = "GBuffer.frag.spv";
-
-GraphicsPipeline* pbr_forwardPipeline_LR      = nullptr;
-GraphicsPipeline* pbr_forwardPipeline_NoLR = nullptr;
-GraphicsPipeline* pbr_staticForwardPipeline_LR    = nullptr;
-GraphicsPipeline* pbr_staticForwardPipeline_NoLR  = nullptr;
-GraphicsPipeline* pbr_forwardPipelineMorphTargets_LR = nullptr;
-GraphicsPipeline* pbr_forwardPipelineMorphTargets_NoLR = nullptr;
-GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_LR = nullptr;
-GraphicsPipeline* pbr_staticForwardPipelineMorphTargets_NoLR = nullptr;
 
 GraphicsPipeline* pbr_static_LR_Debug = nullptr;
 GraphicsPipeline* pbr_static_NoLR_Debug = nullptr;
@@ -237,31 +230,110 @@ void CleanUpRenderData()
 namespace RendererPass {
 
 
-void initialize(VulkanRHI* pRhi)
+void initializePipelines(VulkanRHI* pRhi)
 { 
-  for (I32 i = PIPELINE_START; i < PIPELINE_END; ++i)
+  for (I32 i = PIPELINE_GRAPHICS_START; i < PIPELINE_GRAPHICS_END; ++i)
   {
-    g_graphicsPipelines[ (PipelineT)i ] = pRhi->createGraphicsPipeline();
+    g_graphicsPipelines[ (PipelineGraphicsT)i ] = pRhi->createGraphicsPipeline();
+  }
+
+  for (I32 i = PIPELINE_COMPUTE_START; i < PIPELINE_GRAPHICS_END; ++i)
+  {
+    g_computePipelines[ (PipelineComputeT) i ] = pRhi->createComputePipeline();
   }
 }
 
 
-void cleanUp(VulkanRHI* pRhi)
+void cleanUpPipelines(VulkanRHI* pRhi)
 {
-  for ( I32 i = PIPELINE_START; i < PIPELINE_END; ++i) 
+  for ( I32 i = PIPELINE_GRAPHICS_START; i < PIPELINE_GRAPHICS_END; ++i) 
   {
-    pRhi->freeGraphicsPipeline(g_graphicsPipelines[ (PipelineT) i ]);
-    g_graphicsPipelines[ (PipelineT) i ] = nullptr;
+    pRhi->freeGraphicsPipeline(g_graphicsPipelines[ (PipelineGraphicsT) i ]);
+    g_graphicsPipelines[ (PipelineGraphicsT) i ] = nullptr;
   }
 
-  for ( I32 i = PIPELINE_START; i < PIPELINE_END; ++i ) {
-    pRhi->freeComputePipeline(g_computePipelines[ (PipelineT) i ]);
-    g_computePipelines[ (PipelineT) i ] = nullptr;
+  for ( I32 i = PIPELINE_COMPUTE_START; i < PIPELINE_COMPUTE_END; ++i ) {
+    pRhi->freeComputePipeline(g_computePipelines[ (PipelineComputeT) i ]);
+    g_computePipelines[ (PipelineComputeT) i ] = nullptr;
   }
 
   g_graphicsPipelines.clear();
   g_computePipelines.clear();
+}
 
+
+void initializeRenderTextures(VulkanRHI* pRhi)
+{
+  for ( I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i ) 
+  {
+    g_renderTextures[ (RenderTextureT) i ] = pRhi->createTexture( );
+  }
+}
+
+
+void cleanUpRenderTextures(VulkanRHI* pRhi)
+{
+  for (I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i) 
+  {
+    pRhi->freeTexture(g_renderTextures[ (RenderTextureT) i ]);
+    g_renderTextures[ (RenderTextureT) i ] = nullptr;  
+  }
+}
+
+
+Texture* getRenderTexture(RenderTextureT rt)
+{
+  return g_renderTextures[ rt ];
+}
+
+
+void initializeDescriptorSetLayouts(VulkanRHI* pRhi)
+{
+  for (I32 i = DESCRIPTOR_SET_LAYOUT_START; i < DESCRIPTOR_SET_LAYOUT_END; ++i) 
+  {
+    g_descriptorSetLayouts[ (DescriptorSetLayoutT) i ] = pRhi->createDescriptorSetLayout( );
+  }
+}
+
+
+void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
+{
+  for (I32 i = DESCRIPTOR_SET_LAYOUT_START; i < DESCRIPTOR_SET_LAYOUT_END; ++i) 
+  {
+    pRhi->freeDescriptorSetLayout( g_descriptorSetLayouts[ (DescriptorSetLayoutT) i ]);
+    g_descriptorSetLayouts[ (DescriptorSetLayoutT) i ] = nullptr;
+  }
+}
+
+
+void initializeDescriptorSets(VulkanRHI* pRhi)
+{
+  for (I32 i = DESCRIPTOR_SET_START; i < DESCRIPTOR_SET_END; ++i) 
+  {
+    g_descriptorSets[ (DescriptorSetT) i ] = pRhi->createDescriptorSet();
+  }
+}
+
+
+void cleanUpDescriptorSets(VulkanRHI* pRhi)
+{
+  for (I32 i = DESCRIPTOR_SET_START; i < DESCRIPTOR_SET_END; ++i) 
+  {
+    pRhi->freeDescriptorSet(g_descriptorSets[ (DescriptorSetT) i ]);
+    g_descriptorSets[ (DescriptorSetT) i ] = nullptr;
+  }
+}
+
+
+DescriptorSet* getDescriptorSet(DescriptorSetT set)
+{
+  return g_descriptorSets[ set ];
+}
+
+
+DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout)
+{
+  return g_descriptorSetLayouts[ layout ];
 }
 
 
@@ -428,13 +500,13 @@ void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defaul
 }
 
 
-GraphicsPipeline* getGraphicsPipeline(PipelineT pipeline)
+GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline)
 {
   return g_graphicsPipelines[ pipeline ];
 }
 
 
-ComputePipeline* getComputePipeline(PipelineT pipeline)
+ComputePipeline* getComputePipeline(PipelineComputeT pipeline)
 {
   return g_computePipelines[ pipeline ];
 }
@@ -592,7 +664,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
     layouts[0] = GlobalSetLayoutKey->getLayout();
     layouts[1] = pbr_DescLayoutKey->getLayout();
     layouts[2] = LightSetLayoutKey->getLayout();
-    layouts[3] = LightViewDescriptorSetLayoutKey->getLayout();
+    layouts[3] = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT )->getLayout();
     //layouts[4] = LightViewDescriptorSetLayoutKey->getLayout();
     layouts[4] = globalIllumination_DescLR->getLayout();
 
@@ -664,7 +736,7 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
       GlobalSetLayoutKey->getLayout(),
       pbr_DescLayoutKey->getLayout(),
       LightSetLayoutKey->getLayout(),
-      LightViewDescriptorSetLayoutKey->getLayout(),
+      getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT )->getLayout(),
       //LightViewDescriptorSetLayoutKey->getLayout(),
       globalIllumination_DescNoLR->getLayout(),
       pbr_compDescLayout->getLayout()
@@ -713,15 +785,16 @@ void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCr
 void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo)
 {
   VkGraphicsPipelineCreateInfo GraphicsInfo = DefaultInfo;
-  GraphicsPipeline* pbr_Pipeline = Rhi->createGraphicsPipeline();
-  pbr_staticForwardPipeline_LR = Rhi->createGraphicsPipeline();
-  pbr_staticForwardPipeline_NoLR = Rhi->createGraphicsPipeline();
-  pbr_forwardPipeline_LR = pbr_Pipeline;
-  pbr_forwardPipeline_NoLR = Rhi->createGraphicsPipeline();
-  pbr_staticForwardPipelineMorphTargets_LR = Rhi->createGraphicsPipeline();
-  pbr_staticForwardPipelineMorphTargets_NoLR = Rhi->createGraphicsPipeline();
-  pbr_forwardPipelineMorphTargets_LR =  Rhi->createGraphicsPipeline();
-  pbr_forwardPipelineMorphTargets_NoLR = Rhi->createGraphicsPipeline();
+
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_LR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_NOLR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_LR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_NOLR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_LR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_NOLR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_LR ] = Rhi->createGraphicsPipeline();
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_NOLR ] = Rhi->createGraphicsPipeline();
+
   pbr_static_LR_Debug = Rhi->createGraphicsPipeline();
   pbr_static_NoLR_Debug = Rhi->createGraphicsPipeline();
   pbr_dynamic_LR_Debug = Rhi->createGraphicsPipeline();
@@ -853,7 +926,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   layouts[1] = MeshSetLayoutKey->getLayout();
   layouts[2] = MaterialSetLayoutKey->getLayout();
   layouts[3] = LightSetLayoutKey->getLayout();
-  layouts[4] = LightViewDescriptorSetLayoutKey->getLayout();
+  layouts[4] = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT )->getLayout();
   //layouts[5] = LightViewDescriptorSetLayoutKey->getLayout();
   layouts[5] = globalIllumination_DescLR->getLayout();
   layouts[6] = BonesSetLayoutKey->getLayout();
@@ -874,7 +947,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PipelineLayout.pPushConstantRanges = &range;
   PipelineLayout.pushConstantRangeCount = 0;
 
-  pbr_forwardPipeline_LR->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_LR ]->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
@@ -895,7 +968,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
     PbrShaders[0].module = VertMorphSkin->getHandle();
     PbrShaders[1].module = FragPBRLR->getHandle();
-    pbr_forwardPipelineMorphTargets_LR->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_LR ]->initialize(ginfo, PipelineLayout);
 
     PbrShaders[1].module = FragPBRLRDebug->getHandle();  
     PipelineLayout.pushConstantRangeCount = 1;
@@ -907,7 +980,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[1].module = FragPBRNoLR->getHandle();
   layouts[5] = globalIllumination_DescNoLR->getLayout();
   PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size());
-  pbr_forwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_NOLR ]->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
@@ -928,7 +1001,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
     PbrShaders[0].module = VertMorphSkin->getHandle();
     PbrShaders[1].module = FragPBRNoLR->getHandle();
-    pbr_forwardPipelineMorphTargets_NoLR->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_MORPH_NOLR ]->initialize(ginfo, PipelineLayout);
 
     PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
@@ -953,7 +1026,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   Input.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   Input.pNext = nullptr;
   layouts[5] = globalIllumination_DescLR->getLayout();
-  pbr_staticForwardPipeline_LR->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_LR ]->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
@@ -974,7 +1047,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
     PbrShaders[0].module = VertMorphStatic->getHandle();
     PbrShaders[1].module = FragPBRLR->getHandle();
-    pbr_staticForwardPipelineMorphTargets_LR->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_LR ]->initialize(ginfo, PipelineLayout);
 
     PbrShaders[1].module = FragPBRLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
@@ -988,7 +1061,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
   PbrShaders[1].module = FragPBRNoLR->getHandle();
   layouts[5] = globalIllumination_DescNoLR->getLayout();
   PipelineLayout.setLayoutCount = static_cast<U32>(layouts.size() - 1);
-  pbr_staticForwardPipeline_NoLR->initialize(GraphicsInfo, PipelineLayout);
+  g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_NOLR ]->initialize(GraphicsInfo, PipelineLayout);
 
   PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
   PipelineLayout.pushConstantRangeCount = 1;
@@ -1009,7 +1082,7 @@ void SetUpForwardPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCre
 
     PbrShaders[0].module = VertMorphStatic->getHandle();
     PbrShaders[1].module = FragPBRNoLR->getHandle();
-    pbr_staticForwardPipelineMorphTargets_NoLR->initialize(ginfo, PipelineLayout);
+    g_graphicsPipelines[ PIPELINE_GRAPHICS_PBR_FORWARD_STATIC_MORPH_NOLR ]->initialize(ginfo, PipelineLayout);
 
     PbrShaders[1].module = FragPBRNoLRDebug->getHandle();
     PipelineLayout.pushConstantRangeCount = 1;
@@ -1422,6 +1495,155 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
 void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa)
 {
 }
+
+
+void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes) 
+{
+  Texture* shadowMask = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT );
+  VkImageCreateInfo imgInfo = { };
+  VkImageViewCreateInfo viewInfo = { };
+
+  imgInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imgInfo.arrayLayers = 1;
+  imgInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  imgInfo.imageType = VK_IMAGE_TYPE_2D;
+  imgInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  imgInfo.mipLevels = 1;
+  imgInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+  imgInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imgInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+  imgInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  imgInfo.extent = { renderRes.width, renderRes.height, 1 };
+
+  viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+  viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  viewInfo.subresourceRange.baseArrayLayer = 0;
+  viewInfo.subresourceRange.baseMipLevel = 0;
+  viewInfo.subresourceRange.layerCount = 1;
+  viewInfo.subresourceRange.levelCount = 1;
+  viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+  shadowMask->initialize(imgInfo, viewInfo);
+}
+
+void initShadowResolvePipeline(VulkanRHI* pRhi)
+{
+  ComputePipeline* pipeline = getComputePipeline( PIPELINE_COMPUTE_SHADOW_RESOLVE );
+  Shader* pShader = pRhi->createShader();
+
+  VkDescriptorSetLayout dLayouts[] = {
+    GlobalSetLayoutKey->getLayout(),
+    LightViewDescriptorSetLayoutKey->getLayout(),
+    getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE )->getLayout()
+  };
+
+  loadShader("ShadowResolve.comp.spv", pShader);
+  VkComputePipelineCreateInfo info = { };
+  VkPipelineShaderStageCreateInfo stage = {};
+
+  stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stage.module = pShader->getHandle();
+  stage.pName = kDefaultShaderEntryPointStr;
+  stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  VkPipelineLayoutCreateInfo pipeCi = { };
+  pipeCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipeCi.setLayoutCount = 3;
+  pipeCi.pSetLayouts = dLayouts;
+
+  info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  info.stage = stage;
+
+  pipeline->initialize(info, pipeCi);
+  pRhi->freeShader(pShader);
+}
+
+
+void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi)
+{
+  DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );
+  VkDescriptorSetLayoutCreateInfo info = { };
+  info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+
+  std::array<VkDescriptorSetLayoutBinding, 2> binds;
+  
+  binds[0] = { };
+  binds[0].binding = 1;
+  binds[0].descriptorCount = 1;
+  binds[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  binds[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+  
+  binds[1].binding = 0;
+  binds[1].descriptorCount = 1;
+  binds[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  binds[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  info.bindingCount = binds.size();
+  info.pBindings = binds.data();
+
+  layout->initialize(info);
+
+  // For output to pbr lighting pass.
+  layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT );
+  
+  binds[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  binds[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+  binds[0].binding = 0;
+
+  info.bindingCount = 1;
+  info.pBindings = binds.data();
+  layout->initialize(info);
+}
+
+
+void initShadowReolveDescriptorSet(VulkanRHI* pRhi, 
+                                   GlobalDescriptor* pGlobal,
+                                   Texture* pSceneDepth)
+{
+  DescriptorSet* set = getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE );
+  DescriptorSet* outSet = getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT );
+  DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );
+  DescriptorSetLayout* outLayout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT );
+  Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT );
+  std::array<VkWriteDescriptorSet, 2> writeSets;
+
+  VkDescriptorImageInfo depthInfo = { };
+  depthInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  depthInfo.imageView = pSceneDepth->getView();
+  depthInfo.sampler = DefaultSampler2DKey->getHandle();
+
+  VkDescriptorImageInfo mask = { };
+  mask.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+  mask.imageView = shadowMaskTex->getView();
+  mask.sampler = DefaultSampler2DKey->getHandle();
+
+  writeSets[0] = { };
+  writeSets[0].descriptorCount = 1;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[0].dstArrayElement = 0;
+  writeSets[0].dstBinding = 1;
+  writeSets[0].pImageInfo = &depthInfo;
+  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+
+  writeSets[1] = { };
+  writeSets[1].descriptorCount = 1;
+  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  writeSets[1].dstArrayElement = 0;
+  writeSets[1].dstBinding = 0;
+  writeSets[1].pImageInfo = &mask;
+  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  
+  set->allocate(pRhi->descriptorPool(), layout);
+  set->update(writeSets.size(), writeSets.data());
+
+  // Output of shadow mask to be readable and sampled.
+  mask.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  writeSets[0].pImageInfo = &mask;
+  writeSets[0].dstBinding = 0;
+  outSet->allocate(pRhi->descriptorPool(), outLayout);
+  outSet->update(1, writeSets.data());
+}
 } // RendererPass
 
 
@@ -1645,7 +1867,7 @@ void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
 
   VkExtent2D extent = { (U32)pGlobal->getData()->_ScreenSize[0],
                         (U32)pGlobal->getData()->_ScreenSize[1] };
-  pOutput->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->Pipeline());
+  pOutput->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getNative());
   pOutput->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pipeline->getLayout(), 0, 2, sets, 0, nullptr);
   pOutput->dispatch((extent.width / m_groupSz) + 1, (extent.height / m_groupSz) + 1, 1);
 

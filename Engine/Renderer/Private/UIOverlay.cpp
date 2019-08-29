@@ -764,7 +764,7 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, U32 f
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
     cmdBuffer->beginRenderPass(renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
-      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->Pipeline());
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getNative());
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pGraphicsPipeline->getLayout(), 0, 2, sets, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vert, offsets);
       cmdBuffer->bindIndexBuffer(indx, 0, VK_INDEX_TYPE_UINT16);

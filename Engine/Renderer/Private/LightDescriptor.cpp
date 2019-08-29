@@ -1191,7 +1191,7 @@ void ShadowMapSystem::generateDynamicShadowCmds(CommandBuffer* pCmdBuffer, CmdLi
       pCmdBuffer->bindVertexBuffers(2, 1, &morph1, offset);
     }
 
-    pCmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+    pCmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getNative());
     pCmdBuffer->pushConstants(pipeline->getLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Matrix4), &lightVP);
     pCmdBuffer->setViewPorts(0, 1, &viewport);
     pCmdBuffer->setScissor(0, 1, &scissor);
@@ -1306,7 +1306,7 @@ void ShadowMapSystem::generateStaticShadowCmds(CommandBuffer* pCmdBuffer, CmdLis
       pCmdBuffer->bindVertexBuffers(2, 1, &morph1, offset);
     }
 
-    pCmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->Pipeline());
+    pCmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getNative());
     pCmdBuffer->pushConstants(pipeline->getLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Matrix4), &lightVP);
     pCmdBuffer->setViewPorts(0, 1, &viewport);
     pCmdBuffer->setScissor(0, 1, &scissor);

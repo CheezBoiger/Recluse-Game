@@ -883,7 +883,7 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
 {
   if (particleList.Size() == 0) return;
 
-  cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->Pipeline());
+  cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->getNative());
 
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
@@ -953,7 +953,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
       system->getSet()->getHandle()
     };
     VkBuffer nativeBuffer = system->getParticleBuffer()->getNativeBuffer();
-    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->Pipeline());
+    cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pRenderPipe->getNative());
     cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pParticleRender->getLayout(),
       0, 2, sets, 0, nullptr);
     cmdBuffer->bindVertexBuffers(0, 1, &nativeBuffer, offset);

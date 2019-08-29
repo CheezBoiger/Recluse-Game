@@ -223,6 +223,7 @@ public:
   // Push mesh to render.
   void pushMeshRender(MeshRenderCmd& cmd);
   void pushSimpleRender(SimpleRenderCmd& cmd);
+  void pushDecal(DecalRenderCmd& cmd);
   void pushParticleSystem(ParticleSystem* system);
   void pushPointLight(const PointLight& lightInfo);
   void pushSpotLight(const SpotLight& lightInfo);
@@ -300,6 +301,8 @@ private:
   void              cleanUpDebugPass();
   void              generateDebugCmds();
   void              setUpPBR();
+  void              setUpDescriptorSets();
+  void              cleanUpDescriptorSets();
   void              setUpSkybox(B32 justSemaphores);
   void              generateOffScreenCmds(CommandBuffer* buf, U32 frameIndex);
   void              generatePbrCmds(CommandBuffer* buf, U32 frameIndex);
@@ -308,6 +311,7 @@ private:
   void              generateSkyboxCmds(CommandBuffer* buf, U32 frameIndex);
   void              generateFinalCmds(CommandBuffer* buf);
   void              generateForwardPBRCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex);
   void              updateRenderResolution(RenderResolution resolution);
   void              checkEnableLightShadows();
 
@@ -375,8 +379,10 @@ private:
   struct {
     std::vector<CommandBuffer*>   _cmdBuffers;
     std::vector<CommandBuffer*>   _shadowCmdBuffers;
+    std::vector<CommandBuffer*>   _shadowResolveCmdBuffers;
     std::vector<Semaphore*>       _semaphores;
     std::vector<Semaphore*>       _shadowSemaphores;
+    std::vector<Semaphore*>       _resolveSemas;
   } m_Offscreen; 
 
   struct {

@@ -601,7 +601,7 @@ void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 fra
     //   Copy to cubemap face.
     for (size_t face = 0; face < 6; ++face) {
       cmdBuffer->beginRenderPass(renderpassBegin, VK_SUBPASS_CONTENTS_INLINE);
-        cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->Pipeline());
+        cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->getNative());
         viewerConsts._InvView = kViewMatrices[face].transpose();
         cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, m_pPipeline->getLayout(), 0, 1, &globalDesc, 0, nullptr);
         cmdBuffer->pushConstants(m_pPipeline->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(ViewerBlock), &viewerConsts);

@@ -27,11 +27,14 @@ layout (set = 2, binding = 0) uniform Lights {
   LightBuffer lights;
 } gLightBuffer;
 
+layout (set = 3, binding = 0) uniform sampler2D shadowMask;
+/*
 layout (set = 3, binding = 0) uniform DynamicLightSpace {
   LightSpaceCascade  lightSpace;
 } dynamicLightSpace;
 
 layout (set = 3, binding = 1) uniform sampler2DArray dynamicShadowMap;
+*/
 /*
 layout (set = 4, binding = 0) uniform StaticLightSpace {
   LightSpace lightSpace;
@@ -61,7 +64,7 @@ void main()
   GBuffer gbuffer = ReadGBuffer(ivec2(gl_FragCoord.xy), 
                                 gWorldBuffer.global, 
                                 rt0, rt1, rt2, rt3, rtDepth);
-
+  vec2 screen = (gl_FragCoord.xy / vec2(gWorldBuffer.global.screenSize.xy));
   vec3 N = normalize(gbuffer.normal);
   vec3 V = normalize(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos);
   vec3 F0 = vec3(0.04);
@@ -89,13 +92,13 @@ void main()
     vec3 radiance = CookTorrBRDFDirectional(light, pbrInfo);
     float shadowFactor = 1.0;
     if (gWorldBuffer.global.enableShadows >= 1.0) {
-      vec4 vpos = (gWorldBuffer.global.view * vec4(pbrInfo.WP, 1.0)).zzzz;
-      int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
-      shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, 
-                                            pbrInfo.WP, cascadeIdx,
-                                            dynamicLightSpace.lightSpace, 
-                                            dynamicShadowMap,
-                                            light.direction.xyz, pbrInfo.N);
+      //vec4 vpos = (gWorldBuffer.global.view * vec4(pbrInfo.WP, 1.0)).zzzz;
+      //int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
+      //shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, 
+      //                                      pbrInfo.WP, cascadeIdx,
+      //                                      dynamicLightSpace.lightSpace, 
+      //                                      dynamicShadowMap);
+      shadowFactor = texture(shadowMask, screen).r;
     }
     //vec4 sc = GetCascadeColor(cascadeIdx);
     outColor += ambient;//sc.rgb;

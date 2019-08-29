@@ -22,7 +22,7 @@ public:
                       const VkPipelineLayoutCreateInfo& layout);
   void              cleanUp();
 
-  VkPipeline        Pipeline() const { return mPipeline; }
+  VkPipeline        getNative() const { return mPipeline; }
   VkPipelineLayout  getLayout() const { return mLayout; }
 
 
