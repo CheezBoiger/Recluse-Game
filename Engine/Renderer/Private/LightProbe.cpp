@@ -221,8 +221,24 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 
 B32 LightProbe::saveToFile(const std::string& filename)
 {
-  // TODO(): 
-  return false;
+  U32 szBytes = (sizeof( Vector3 ) * 9) + sizeof(U32);
+  U8* bytes = (U8*)_shcoeff;
+  U8* buffer = new U8[ szBytes ];
+  B32 success = true;
+
+  for (U32 i = 0; i < (sizeof(Vector3) * 9); ++i) {
+    buffer[ i ] = bytes[ i ]; 
+  }
+  
+  FilesystemResult result = gFilesystem( ).WriteTo( filename.c_str(), (TChar*)buffer, szBytes );
+  if (result == FilesystemResult_Failed) {
+    Log(rError) << "Failed to save light probe data!";
+    success = false;
+  }
+
+  delete[] buffer;
+
+  return success;
 }
 
 
@@ -233,9 +249,20 @@ B32 LightProbe::loadFromFile(const std::string& filename)
   _bias = 1.0f;
 
   // Load up coefficients here.
+  FileHandle buf;
+  FilesystemResult r = gFilesystem().ReadFrom(filename.c_str(), &buf);
 
+  if (r == FilesystemResult_Failed) {
+    return false;
+  }
+
+  U8* bytes = (U8*)_shcoeff;
   // TODO():
-  return false;
+  for (U32 i = 0; i < (sizeof(Vector3) * 9); ++i) {
+    bytes[i] = buf.Buf[i];
+  }
+
+  return true;
 }
 
 

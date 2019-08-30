@@ -57,4 +57,22 @@ FilesystemResult Filesystem::ReadFrom(const TChar* filepath, FileHandle* buf)
   buf->Buf[sz] = '\0';
   return FilesystemResult_Success;
 }
+
+
+FilesystemResult Filesystem::WriteTo(const TChar* filepath, TChar* in, U32 sz)
+{
+  HANDLE fileH = CreateFile(filepath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (fileH == INVALID_HANDLE_VALUE) {
+    return FilesystemResult_Failed;
+  }
+
+  DWORD numBytesWritten = 0;
+  BOOL written = WriteFile(fileH, in, sz, &numBytesWritten, 0);
+
+  if (!written) {
+    return FilesystemResult_Failed;
+  }
+
+  return FilesystemResult_Success;
+}
 } // Recluse

@@ -2348,8 +2348,8 @@ void Renderer::generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex)
   memBarrier.subresourceRange.layerCount = 1;
   memBarrier.subresourceRange.levelCount = 1;
 
-  buf->pipelineBarrier(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 
-                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+  buf->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, 
+                        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
                         VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &memBarrier);
 
   if (m_pLights->isPrimaryShadowEnabled()) {
@@ -2381,7 +2381,7 @@ void Renderer::generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex)
   memBarrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
   memBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
 
-  buf->pipelineBarrier(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+  buf->pipelineBarrier(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
                       VK_DEPENDENCY_BY_REGION_BIT, 0 , nullptr, 0, nullptr, 1, &memBarrier);
 }
 
