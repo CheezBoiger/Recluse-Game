@@ -31,8 +31,8 @@ std::array<Matrix4, 6> kViewMatrices;
 
 std::unordered_map<PipelineGraphicsT, GraphicsPipeline*> g_graphicsPipelines;
 std::unordered_map<PipelineComputeT, ComputePipeline*> g_computePipelines;
-std::unordered_map<RenderTextureT, Texture*> g_renderTextures;
-std::unordered_map<DescriptorSetT, DescriptorSet*> g_descriptorSets;
+std::unordered_map<RenderTextureT, std::vector<Texture*>> g_renderTextures;
+std::unordered_map<DescriptorSetT, std::vector<DescriptorSet*>> g_descriptorSets;
 std::unordered_map<DescriptorSetLayoutT, DescriptorSetLayout*> g_descriptorSetLayouts;
 
 Texture* DefaultTextureKey          = nullptr;
@@ -60,7 +60,6 @@ Texture* gbuffer_AlbedoAttachKey           = nullptr;
 Texture* gbuffer_NormalAttachKey           = nullptr;
 Texture* gbuffer_PositionAttachKey         = nullptr;
 Texture* gbuffer_EmissionAttachKey         = nullptr;
-Texture* gbuffer_DepthAttachKey            = nullptr;
 Sampler* gbuffer_SamplerKey                = nullptr;
 FrameBuffer* gbuffer_FrameBufferKey            = nullptr;
 RenderPass* gbuffer_renderPass                = nullptr;
@@ -266,7 +265,11 @@ void initializeRenderTextures(VulkanRHI* pRhi)
 {
   for ( I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i ) 
   {
-    g_renderTextures[ (RenderTextureT) i ] = pRhi->createTexture( );
+    g_renderTextures[ (RenderTextureT) i ].resize(pRhi->bufferingCount());
+    for (U32 j = 0; j < pRhi->bufferingCount( ); ++j) 
+    {
+      g_renderTextures[ (RenderTextureT) i ][ j ] = pRhi->createTexture( );
+    }
   }
 }
 
@@ -275,15 +278,18 @@ void cleanUpRenderTextures(VulkanRHI* pRhi)
 {
   for (I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i) 
   {
-    pRhi->freeTexture(g_renderTextures[ (RenderTextureT) i ]);
-    g_renderTextures[ (RenderTextureT) i ] = nullptr;  
+    for (U32 j = 0; j < g_renderTextures[(RenderTextureT)i].size(); ++j) 
+    {
+      pRhi->freeTexture(g_renderTextures[ (RenderTextureT) i ][ j ]);
+      g_renderTextures[ (RenderTextureT) i ][ j ] = nullptr; 
+    } 
   }
 }
 
 
-Texture* getRenderTexture(RenderTextureT rt)
+Texture* getRenderTexture(RenderTextureT rt, U32 frameIndex)
 {
-  return g_renderTextures[ rt ];
+  return g_renderTextures[ rt ][ frameIndex ];
 }
 
 
@@ -310,7 +316,12 @@ void initializeDescriptorSets(VulkanRHI* pRhi)
 {
   for (I32 i = DESCRIPTOR_SET_START; i < DESCRIPTOR_SET_END; ++i) 
   {
-    g_descriptorSets[ (DescriptorSetT) i ] = pRhi->createDescriptorSet();
+    g_descriptorSets[ (DescriptorSetT) i ] = std::vector<DescriptorSet*>(pRhi->bufferingCount( ));
+    
+    for (U32 j = 0; j < g_descriptorSets[ (DescriptorSetT) i ].size(); ++j) 
+    {
+      g_descriptorSets[ (DescriptorSetT) i ][ j ] = pRhi->createDescriptorSet( );
+    }
   }
 }
 
@@ -319,15 +330,19 @@ void cleanUpDescriptorSets(VulkanRHI* pRhi)
 {
   for (I32 i = DESCRIPTOR_SET_START; i < DESCRIPTOR_SET_END; ++i) 
   {
-    pRhi->freeDescriptorSet(g_descriptorSets[ (DescriptorSetT) i ]);
-    g_descriptorSets[ (DescriptorSetT) i ] = nullptr;
+    for (U32 j = 0; j < g_descriptorSets[(DescriptorSetT)i].size(); ++j) 
+    {
+      pRhi->freeDescriptorSet(g_descriptorSets[(DescriptorSetT)i][j]);
+    
+      g_descriptorSets[ (DescriptorSetT) i ][ j ] = nullptr;
+    }
   }
 }
 
 
-DescriptorSet* getDescriptorSet(DescriptorSetT set)
+DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 frameIndex)
 {
-  return g_descriptorSets[ set ];
+  return g_descriptorSets[ set ][ frameIndex ];
 }
 
 
@@ -1499,7 +1514,6 @@ void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
 
 void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes) 
 {
-  Texture* shadowMask = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT );
   VkImageCreateInfo imgInfo = { };
   VkImageViewCreateInfo viewInfo = { };
 
@@ -1524,7 +1538,10 @@ void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes)
   viewInfo.subresourceRange.levelCount = 1;
   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-  shadowMask->initialize(imgInfo, viewInfo);
+  for (U32 i = 0; i < pRhi->bufferingCount(); ++i) {
+    Texture* shadowMask = getRenderTexture(RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i);
+    shadowMask->initialize(imgInfo, viewInfo);
+  }
 }
 
 void initShadowResolvePipeline(VulkanRHI* pRhi)
@@ -1601,11 +1618,8 @@ void initShadowReolveDescriptorSet(VulkanRHI* pRhi,
                                    GlobalDescriptor* pGlobal,
                                    Texture* pSceneDepth)
 {
-  DescriptorSet* set = getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE );
-  DescriptorSet* outSet = getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT );
   DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );
   DescriptorSetLayout* outLayout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT );
-  Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT );
   std::array<VkWriteDescriptorSet, 2> writeSets;
 
   VkDescriptorImageInfo depthInfo = { };
@@ -1615,7 +1629,6 @@ void initShadowReolveDescriptorSet(VulkanRHI* pRhi,
 
   VkDescriptorImageInfo mask = { };
   mask.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-  mask.imageView = shadowMaskTex->getView();
   mask.sampler = DefaultSampler2DKey->getHandle();
 
   writeSets[0] = { };
@@ -1634,15 +1647,56 @@ void initShadowReolveDescriptorSet(VulkanRHI* pRhi,
   writeSets[1].pImageInfo = &mask;
   writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   
-  set->allocate(pRhi->descriptorPool(), layout);
-  set->update(writeSets.size(), writeSets.data());
+  for (U32 i = 0; i < pRhi->bufferingCount( ); ++ i ) {
+    Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i );
+    DescriptorSet* set = getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE, i);
+    mask.imageView = shadowMaskTex->getView();
+    set->allocate(pRhi->descriptorPool(), layout);
+    set->update(writeSets.size(), writeSets.data());
+  }
 
   // Output of shadow mask to be readable and sampled.
   mask.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   writeSets[0].pImageInfo = &mask;
   writeSets[0].dstBinding = 0;
-  outSet->allocate(pRhi->descriptorPool(), outLayout);
-  outSet->update(1, writeSets.data());
+  
+  for (U32 i = 0; i < pRhi->bufferingCount( ); ++i) {
+    Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i );
+    DescriptorSet* outSet = getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE_OUT, i);
+    mask.imageView = shadowMaskTex->getView();
+    outSet->allocate(pRhi->descriptorPool(), outLayout);
+    outSet->update(1, writeSets.data());
+  }
+}
+
+
+void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info)
+{
+  Shader* pFragDepth = pRhi->createShader( );
+  loadShader("Depth.frag.spv", pFragDepth);
+
+  VkGraphicsPipelineCreateInfo graphics = info;
+
+  // ViewSpace push constant.
+  VkPushConstantRange pushconstant = { };
+  pushconstant.offset = 0;
+  pushconstant.size = sizeof(Matrix4);
+  pushconstant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; 
+
+  VkDescriptorSetLayout setLayouts[] = {
+    MeshSetLayoutKey->getLayout(),
+    MaterialSetLayoutKey->getLayout(),
+    BonesSetLayoutKey->getLayout()
+  };
+
+  VkPipelineLayoutCreateInfo layoutCi = { };
+  layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  layoutCi.pushConstantRangeCount = 1;
+  layoutCi.pPushConstantRanges = &pushconstant;
+  layoutCi.setLayoutCount = 2; // static, we will include joint buffer layout after.
+  layoutCi.pSetLayouts = setLayouts;
+
+  pRhi->freeShader(pFragDepth);
 }
 } // RendererPass
 
@@ -1908,7 +1962,7 @@ void AntiAliasingFXAA::createSampler(VulkanRHI* pRhi)
 void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 {
   Texture* pbrFinal = pbr_FinalTextureKey;
-  Texture* depthFinal = gbuffer_DepthAttachKey;
+  Texture* depthFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0);
   std::array<VkAttachmentDescription, 2> attachments;
   attachments[0] = { };
   attachments[0].format = pbrFinal->getFormat();

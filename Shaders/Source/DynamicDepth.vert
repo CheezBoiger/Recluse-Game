@@ -36,9 +36,9 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 
 // One directional light.
-layout (push_constant) uniform LightSpace {
+layout (push_constant) uniform ViewSpace {
   mat4  viewProj;
-} light_space;
+} viewSpace;
 
 
 layout (set = 2, binding = 0) uniform JointsBuffer {
@@ -86,7 +86,7 @@ void main()
   }
   
   worldPosition = obj_buffer.m.model * worldPosition;
-  gl_Position = light_space.viewProj * worldPosition;
+  gl_Position = viewSpace.viewProj * worldPosition;
   
   fragIn.uv0 = temp_uv0;
   fragIn.uv1 = temp_uv1;

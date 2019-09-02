@@ -188,11 +188,11 @@ public:
     // Testing renderer configurations during runtime.
     if (Keyboard::keyPressed(KEY_CODE_8)) {
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
-      params._Buffering = SINGLE_BUFFER;
+      params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
-      params._EnableBloom = false;
+      params._EnableBloom = true;
       params._AA = AA_None;
-      params._Shadows = GRAPHICS_QUALITY_NONE;
+      params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;
       params._Lod = 5.0f;
       params._EnableMultithreadedRendering = true;

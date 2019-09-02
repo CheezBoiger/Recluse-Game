@@ -103,6 +103,11 @@ public:
     cubemap1->initialize(512);
     brdfLUT->initialize(RFORMAT_R8G8B8A8_UNORM, 512, 512);
     {
+      //std::vector<LightProbe> probes = LightProbeManager::loadProbesFromFile(
+      //    "Assets/World/lightProbes.probe");
+      //lightprobe = probes[0];
+
+      //otherLightProbe = probes[1];
       Image img;
       img.load("Assets/World/testcubemap.png");
       cubemap0->update(img);
@@ -119,6 +124,12 @@ public:
       otherLightProbe.generateSHCoefficients(gRenderer().getRHI(), cubemap1);
       otherLightProbe._bias = 1.0f;
       otherLightProbe.saveToFile("Assets/World/secondTest.probe");
+
+      //lightprobe = probes[0];
+      //otherLightProbe = probes[1];
+      LightProbe probes[] = { lightprobe, otherLightProbe };
+      LightProbeManager::saveProbesToFile("Assets/World/lightProbes.probe", probes, 2);
+
       gRenderer().setGlobalLightProbe(&lightprobe);
       gRenderer().setSkyboxCubeMap(cubemap0);
       gRenderer().setGlobalBRDFLUT(brdfLUT);

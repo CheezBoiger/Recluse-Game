@@ -467,4 +467,50 @@ void GlobalIllumination::update(Renderer* pRenderer)
 
   m_pGlobalIllumination->update(count, writeSets.data());
 }
+
+
+B32 LightProbeManager::saveProbesToFile(const std::string& filename,
+                                        const LightProbe* pProbes,
+                                        U32 count)
+{
+  TChar* buffer = new TChar[ sizeof(LightProbe) * count];
+  
+  for (U32 i = 0; i < count; ++i) {
+    const LightProbe& probe = pProbes[ i ];
+    const TChar* bytes = (const TChar*)&probe;
+    for (U32 j = 0; j < sizeof(LightProbe); ++j) {
+      buffer[sizeof(LightProbe) * i + j] = bytes[ j ];
+    }
+  }
+
+  FilesystemResult result = gFilesystem().WriteTo(filename.c_str(), buffer, sizeof(LightProbe) * count);
+
+  if (result == FilesystemResult_Failed ||
+      result == FilesystemResult_NotFound) {
+    return false;
+  }
+  delete[] buffer;
+  return true;
+}
+
+
+std::vector<LightProbe> LightProbeManager::loadProbesFromFile(const std::string& filename)
+{
+  std::vector<LightProbe> probes;
+  FileHandle buf;
+  FilesystemResult result = gFilesystem().ReadFrom(filename.c_str(), &buf);
+  if (result == FilesystemResult_Failed ||
+      result == FilesystemResult_NotFound) {
+    return probes;
+  }
+
+  probes.resize(buf.Sz / sizeof(LightProbe));
+  TChar* bytes = (TChar*)probes.data();
+
+  for (U32 i = 0; i < buf.Sz; ++i) {
+    bytes[ i ] = buf.Buf[ i ];
+  }
+
+  return probes;
+}
 } // Recluse

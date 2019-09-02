@@ -33,9 +33,9 @@ layout (set = 0, binding = 0) uniform ObjectBuffer {
 
 
 // One directional light.
-layout (push_constant) uniform LightSpace {
+layout (push_constant) uniform ViewSpace {
   mat4  viewProj;
-} light_space;
+} viewSpace;
 
 out FragIn {
   vec2 uv0;
@@ -65,7 +65,7 @@ void main()
   temp_uv1 += morphUV11 * w1;
 #endif
 
-  mat4 mvp = light_space.viewProj * obj_buffer.m.model;
+  mat4 mvp = viewSpace.viewProj * obj_buffer.m.model;
   gl_Position = mvp * vec4(worldPosition.xyz, 1.0);
   
   fragIn.uv0 = temp_uv0;

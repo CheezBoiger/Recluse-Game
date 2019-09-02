@@ -750,7 +750,7 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[6] = {};
   attachmentDescriptions[6].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
   attachmentDescriptions[6].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-  attachmentDescriptions[6].format = gbuffer_DepthAttachKey->getFormat();
+  attachmentDescriptions[6].format = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0)->getFormat();
   attachmentDescriptions[6].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[6].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[6].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;

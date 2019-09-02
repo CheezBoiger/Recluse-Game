@@ -49,8 +49,9 @@ struct LightProbe {
 class LightProbeManager {
 public:
   static const U32 kMaxAllowedProbes = 128;
-
-  std::vector<LightProbe> generateProbes(U32 count = kMaxAllowedProbes);
+  static B32 saveProbesToFile(const std::string& filename,
+                              const LightProbe* pProbes, U32 count);
+  static std::vector<LightProbe> loadProbesFromFile(const std::string& filename);
 };
 
 

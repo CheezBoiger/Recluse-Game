@@ -312,6 +312,7 @@ private:
   void              generateFinalCmds(CommandBuffer* buf);
   void              generateForwardPBRCmds(CommandBuffer* buf, U32 frameIndex);
   void              generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generatePreZCmds(CommandBuffer* buf, U32 frameIndex);
   void              updateRenderResolution(RenderResolution resolution);
   void              checkEnableLightShadows();
 

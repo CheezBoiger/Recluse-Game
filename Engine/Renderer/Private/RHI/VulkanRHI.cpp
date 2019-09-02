@@ -144,8 +144,8 @@ std::set<std::string> VulkanRHI::getMissingExtensions(VkPhysicalDevice device)
 B32 VulkanRHI::findPhysicalDevice(U32 rhiBits)
 {
   std::vector<VkPhysicalDevice>& devices = gContext.enumerateGpus();
-#if VK_NVX_raytracing
-  if (rhiBits & R_RAYTRACING_BIT) gExtensions.push_back(VK_NVX_RAYTRACING_EXTENSION_NAME);
+#if VK_NV_ray_tracing
+  if (rhiBits & R_RAYTRACING_BIT) gExtensions.push_back(VK_NV_RAY_TRACING_EXTENSION_NAME);
   if (rhiBits & R_MESHSHADER_BIT) gExtensions.push_back(VK_NV_MESH_SHADER_EXTENSION_NAME);
 #else
   if (rhiBits & R_RAYTRACING_BIT) R_DEBUG(rWarning, "Raytracing is not available for this version of vulkan. Consider updating.\n");

@@ -1049,7 +1049,7 @@ void Renderer::setUpFrameBuffers()
   Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
   Texture* gbuffer_Position = gbuffer_PositionAttachKey;
   Texture* gbuffer_Emission = gbuffer_EmissionAttachKey;
-  Texture* gbuffer_Depth = gbuffer_DepthAttachKey;
+  Texture* gbuffer_Depth = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0);
 
   FrameBuffer* gbuffer_FrameBuffer = m_pRhi->createFrameBuffer();
   gbuffer_FrameBufferKey = gbuffer_FrameBuffer;
@@ -1723,7 +1723,7 @@ void Renderer::setUpGraphicsPipelines()
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     
   RendererPass::SetUpForwardPhysicallyBasedPass(getRHI(), GraphicsPipelineInfo);
-
+  RendererPass::initPreZPipelines(getRHI( ), GraphicsPipelineInfo);
   RendererPass::SetUpGBufferPass(getRHI(), GraphicsPipelineInfo);
   RendererPass::SetUpSkyboxPass(getRHI(), GraphicsPipelineInfo);
 
@@ -1859,13 +1859,11 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   Texture* gbuffer_Normal = m_pRhi->createTexture();
   Texture* gbuffer_roughMetalSpec = m_pRhi->createTexture();
   Texture* gbuffer_Emission = m_pRhi->createTexture();
-  Texture* gbuffer_Depth = m_pRhi->createTexture();
   Sampler* gbuffer_Sampler = m_pRhi->createSampler();
 
   RDEBUG_SET_VULKAN_NAME(gbuffer_Albedo, "Albedo");
   RDEBUG_SET_VULKAN_NAME(gbuffer_Normal, "Normal");
   RDEBUG_SET_VULKAN_NAME(gbuffer_roughMetalSpec, "RoughMetal");
-  RDEBUG_SET_VULKAN_NAME(gbuffer_Depth, "Depth");
   RDEBUG_SET_VULKAN_NAME(gbuffer_Emission, "Emissive");
 
   RDEBUG_SET_VULKAN_NAME(pbr_Final, "PBR Lighting");
@@ -1884,7 +1882,6 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   gbuffer_NormalAttachKey = gbuffer_Normal;
   gbuffer_PositionAttachKey = gbuffer_roughMetalSpec;
   gbuffer_EmissionAttachKey = gbuffer_Emission;
-  gbuffer_DepthAttachKey = gbuffer_Depth;
   pbr_FinalTextureKey = pbr_Final;
   pbr_BrightTextureKey = pbr_Bright;
   RenderTarget2xHorizKey = renderTarget2xScaled;
@@ -2017,7 +2014,10 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   cViewInfo.format = m_pRhi->depthFormat();
   cViewInfo.subresourceRange.aspectMask = m_pRhi->depthAspectFlags();
 
-  gbuffer_Depth->initialize(cImageInfo, cViewInfo);
+  for (U32 i = 0; i < m_pRhi->bufferingCount(); ++i) {
+    RDEBUG_SET_VULKAN_NAME(RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, i), "Depth");
+    RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, i)->initialize(cImageInfo, cViewInfo);
+  }
 
   VkSamplerCreateInfo samplerCI = { };
   samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -2126,7 +2126,6 @@ void Renderer::cleanUpRenderTextures(B32 fullCleanup)
     Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
     Texture* gbuffer_Position = gbuffer_PositionAttachKey;
     Texture* gbuffer_Emission = gbuffer_EmissionAttachKey;
-    Texture* gbuffer_Depth = gbuffer_DepthAttachKey;
     Sampler* gbuffer_Sampler = gbuffer_SamplerKey;
 
     Texture* pbr_Bright = pbr_BrightTextureKey;
@@ -2144,7 +2143,6 @@ void Renderer::cleanUpRenderTextures(B32 fullCleanup)
     m_pRhi->freeTexture(gbuffer_Normal);
     m_pRhi->freeTexture(gbuffer_Position);
     m_pRhi->freeTexture(gbuffer_Emission);
-    m_pRhi->freeTexture(gbuffer_Depth);
     m_pRhi->freeSampler(gbuffer_Sampler);
     m_pRhi->freeTexture(pbr_Bright);
     m_pRhi->freeTexture(pbr_Final);
@@ -2214,7 +2212,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
       m_pGlobal->getDescriptorSet(frameIndex)->getHandle(),
       pbr_DescSetKey->getHandle(),
       m_pLights->getDescriptorSet(frameIndex)->getHandle(),
-      RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT )->getHandle(),
+      RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT, frameIndex )->getHandle(),
       //shadow.StaticShadowMapViewDescriptor(frameIndex)->getHandle(),
       m_pGlobalIllumination->getDescriptorSet()->getHandle(),
     };
@@ -2262,7 +2260,7 @@ void Renderer::generatePbrCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
       m_pGlobal->getDescriptorSet(frameIndex)->getHandle(),
       pbr_DescSetKey->getHandle(),
       m_pLights->getDescriptorSet(frameIndex)->getHandle(),
-      RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT )->getHandle(),
+      RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE_OUT, frameIndex )->getHandle(),
       //shadow.StaticShadowMapViewDescriptor(frameIndex)->getHandle(),
       m_pGlobalIllumination->getDescriptorSet()->getHandle(),
       pbr_compSet->getHandle()
@@ -2333,7 +2331,7 @@ void Renderer::setUpOffscreen()
 void Renderer::generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex)
 {
   VkExtent2D windowExtent = { m_renderWidth, m_renderWidth };
-  Texture* resolveTex = RendererPass::getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT );
+  Texture* resolveTex = RendererPass::getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, frameIndex );
 
   VkImageMemoryBarrier memBarrier = { };
   memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -2354,7 +2352,7 @@ void Renderer::generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex)
 
   if (m_pLights->isPrimaryShadowEnabled()) {
     ComputePipeline* shadowResolvePipe = RendererPass::getComputePipeline( PIPELINE_COMPUTE_SHADOW_RESOLVE );
-    DescriptorSet* resolveSet = RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE );
+    DescriptorSet* resolveSet = RendererPass::getDescriptorSet( DESCRIPTOR_SET_SHADOW_RESOLVE, frameIndex );
 
     VkDescriptorSet sets[] = {
       m_pGlobal->getDescriptorSet(frameIndex)->getHandle(),
@@ -3038,7 +3036,6 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 
   // Build decals after.
   m_decalEngine->buildDecals(cmdBuffer);
-  generateShadowResolveCmds(cmdBuffer, frameIndex);
 }
 
 
@@ -3376,6 +3373,12 @@ void Renderer::adjustHDRSettings(const ParamsHDR& hdrSettings)
 }
 
 
+void Renderer::generatePreZCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
+{
+
+}
+
+
 void Renderer::generateShadowCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
 {
   R_TIMED_PROFILE_RENDERER();
@@ -3601,7 +3604,7 @@ void Renderer::generateForwardPBRCmds(CommandBuffer* cmdBuffer, U32 frameIndex)
       DescriptorSets[0] = m_pGlobal->getDescriptorSet(frameIndex)->getHandle();
       DescriptorSets[1] = pMeshDesc->getCurrMeshSet(frameIndex)->getHandle();
       DescriptorSets[3] = m_pLights->getDescriptorSet(frameIndex)->getHandle();
-      DescriptorSets[4] = RendererPass::getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE_OUT)->getHandle();
+      DescriptorSets[4] = RendererPass::getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE_OUT, frameIndex)->getHandle();
       //DescriptorSets[5] = shadow.StaticShadowMapViewDescriptor(frameIndex)->getHandle();
       DescriptorSets[5] = m_pGlobalIllumination->getDescriptorSet()->getHandle(); // Need global illumination data.
       DescriptorSets[6] = (Skinned ? renderCmd._pJointDesc->getCurrJointSet(frameIndex)->getHandle() : nullptr);
@@ -3695,7 +3698,7 @@ void Renderer::setUpPBR()
 
     VkDescriptorImageInfo depth = { };
     depth.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-    depth.imageView = gbuffer_DepthAttachKey->getView();
+    depth.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0)->getView();
     depth.sampler = pbr_Sampler->getHandle();
 
     std::array<VkWriteDescriptorSet, 5> writeInfo;
@@ -3942,6 +3945,7 @@ void Renderer::checkCmdUpdate()
       offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
       offscreenCmdList->begin(begin);
       generateOffScreenCmds(offscreenCmdList, frameIndex);
+      generateShadowResolveCmds(offscreenCmdList, frameIndex);
       // Should the shadow map be turned off (ex. in night time scenes), we still need to transition
       // it to readable format.
       if (!m_pLights->isPrimaryShadowEnabled()) {
@@ -3974,6 +3978,7 @@ void Renderer::checkCmdUpdate()
     offscreenCmdList->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     offscreenCmdList->begin(begin);
     generateOffScreenCmds(offscreenCmdList, frameIndex);
+    generateShadowResolveCmds(offscreenCmdList, frameIndex);
     // Should the shadow map be turned off (ex. in night time scenes), we still
     // need to transition it to readable format.
     if (!m_pLights->isPrimaryShadowEnabled()) {
@@ -4282,7 +4287,9 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
 void Renderer::setUpDescriptorSets()
 {
   RendererPass::initializeDescriptorSets(m_pRhi);
-  RendererPass::initShadowReolveDescriptorSet(m_pRhi, m_pGlobal, gbuffer_DepthAttachKey);
+  RendererPass::initShadowReolveDescriptorSet(m_pRhi, 
+                                              m_pGlobal, 
+                                              RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0));
 }
 
 

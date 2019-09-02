@@ -44,7 +44,13 @@ const TChar* Filesystem::CurrentAppDirectory()
 
 FilesystemResult Filesystem::ReadFrom(const TChar* filepath, FileHandle* buf)
 {
-  HANDLE fileH = CreateFile(filepath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE fileH = CreateFile(filepath, 
+                            GENERIC_READ, 
+                            0, 
+                            NULL, 
+                            OPEN_EXISTING, 
+                            FILE_ATTRIBUTE_NORMAL, 
+                            NULL);
   if (fileH == INVALID_HANDLE_VALUE) {
     return FilesystemResult_NotFound;
   }
@@ -61,7 +67,13 @@ FilesystemResult Filesystem::ReadFrom(const TChar* filepath, FileHandle* buf)
 
 FilesystemResult Filesystem::WriteTo(const TChar* filepath, TChar* in, U32 sz)
 {
-  HANDLE fileH = CreateFile(filepath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  HANDLE fileH = CreateFile(filepath, 
+                            GENERIC_WRITE, 
+                            0, 
+                            NULL, 
+                            OPEN_ALWAYS,  
+                            FILE_ATTRIBUTE_NORMAL, 
+                            NULL);
   if (fileH == INVALID_HANDLE_VALUE) {
     return FilesystemResult_Failed;
   }

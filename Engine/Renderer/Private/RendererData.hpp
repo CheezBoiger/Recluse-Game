@@ -89,7 +89,6 @@ extern Texture* gbuffer_NormalAttachKey;
 extern Texture* gbuffer_PositionAttachKey;
 extern Texture* gbuffer_EmissionAttachKey;
 extern Sampler* gbuffer_SamplerKey;
-extern Texture* gbuffer_DepthAttachKey;
 extern FrameBuffer* gbuffer_FrameBufferKey;
 extern RenderPass* gbuffer_renderPass;
 
@@ -231,12 +230,14 @@ enum PipelineComputeT {
 
 enum FrameBufferT {
   FRAME_BUFFER_START = 0,
+  FRAME_BUFFER_PREZ = FRAME_BUFFER_START,
   FRAME_BUFFER_END
 };
 
 
 enum RenderPassT {
   RENDER_PASS_START = 0,
+  RENDER_PASS_PREZ = RENDER_PASS_START,
   RENDER_PASS_END
 };
 
@@ -245,6 +246,10 @@ enum DescriptorSetLayoutT {
   DESCRIPTOR_SET_LAYOUT_START = 0,
   DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE = DESCRIPTOR_SET_LAYOUT_START,
   DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE_OUT,
+  DESCRIPTOR_SET_LAYOUT_MESH_DESCRIPTOR,
+  DESCRIPTOR_SET_LAYOUT_MATERIAL_DESCRIPTOR,
+  DESCRIPTOR_SET_LAYOUT_JOINT_DESCRIPTOR,
+  DESCRIPTOR_SET_LAYOUT_GLOBAL_DESCRIPTOR,
   DESCRIPTOR_SET_LAYOUT_END
 };
 
@@ -259,6 +264,7 @@ enum DescriptorSetT {
 enum RenderTextureT {
   RENDER_TEXTURE_START = 0,
   RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT = RENDER_TEXTURE_START,
+  RENDER_TEXTURE_SCENE_DEPTH,
   RENDER_TEXTURE_END
 };
 
@@ -286,9 +292,9 @@ void cleanUpDescriptorSets(VulkanRHI* pRhi);
 GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline);
 ComputePipeline* getComputePipeline(PipelineComputeT pipeline);
 
-Texture* getRenderTexture(RenderTextureT rt);
+Texture* getRenderTexture(RenderTextureT rt, U32 frameIndex);
 DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout);
-DescriptorSet* getDescriptorSet(DescriptorSetT set);
+DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 frameIndex = 0);
 
 void loadShader(const std::string& Filename, Shader* S);
 
@@ -321,6 +327,8 @@ void initShadowResolvePipeline(VulkanRHI* pRhi);
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi);
 
 void initShadowReolveDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
+
+void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info);
 
 enum AntiAliasingType {
   FXAA,
