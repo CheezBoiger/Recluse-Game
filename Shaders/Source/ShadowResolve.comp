@@ -3,7 +3,7 @@
 #extension GL_ARB_shading_language_420pack : enable
 #extension GL_GOOGLE_include_directive : enable
 
-
+#define NO_NORMAL_TANGENT
 #include "Common/Globals.glsl"
 #include "Common/Shadowing.glsl"
 
