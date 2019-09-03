@@ -233,10 +233,14 @@ void Renderer::render()
     nullptr
   };
 
+
+  // TODO: Gbuffer will no longer need to wait until shadow calcs are done, once
+  // prez pass is impl'ed.
   VkSemaphore offscreen_WaitSemas[] = { m_pRhi->currentImageAvailableSemaphore() };
   VkSemaphore offscreen_SignalSemas[] = { m_Offscreen._semaphores[frameIndex]->getHandle() };
   VkSemaphore shadow_Signals[] = { m_Offscreen._shadowSemaphores[frameIndex]->getHandle() };
-  VkSemaphore shadow_Waits[] = { m_Offscreen._shadowSemaphores[frameIndex]->getHandle(), m_Offscreen._semaphores[frameIndex]->getHandle() };
+  VkSemaphore shadow_Waits[] = { m_pRhi->currentImageAvailableSemaphore(), 
+                                 m_Offscreen._shadowSemaphores[frameIndex]->getHandle() };
 
   VkCommandBuffer pbr_CmdBuffers[] = { m_Pbr._CmdBuffers[frameIndex]->getHandle() };
   VkSemaphore pbr_SignalSemas[] = { m_Pbr._Semas[frameIndex]->getHandle() };
@@ -339,8 +343,8 @@ void Renderer::render()
       shadowSI.signalSemaphoreCount = 1;
       shadowSI.waitSemaphoreCount = 0;
         
-      pbrSi.waitSemaphoreCount = 2;
-      pbrSi.pWaitSemaphores = shadow_Waits;
+      offscreenSI.waitSemaphoreCount = 2;
+      offscreenSI.pWaitSemaphores = shadow_Waits;
       m_pRhi->graphicsSubmit(1, 1, &shadowSI);
     } else {
       offscreen_CmdBuffers[offscreenSI.commandBufferCount] = m_Offscreen._shadowCmdBuffers[frameIndex]->getHandle();
