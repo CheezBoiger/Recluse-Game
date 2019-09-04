@@ -58,6 +58,7 @@ enum RenderResolution {
 
 class GraphicsConfigParams {
 public:
+  U32 _desiredSwapImages;
   // Determine draw buffering, and number of back buffers the renderer will use for 
   // presenting onto the display.
   // This allows for smoother quality of frame transitions and input.
@@ -134,6 +135,7 @@ public:
 
 
 const GraphicsConfigParams kDefaultGpuConfigs = {
+  3,
   DOUBLE_BUFFER,
   AA_None,
   GRAPHICS_QUALITY_ULTRA,

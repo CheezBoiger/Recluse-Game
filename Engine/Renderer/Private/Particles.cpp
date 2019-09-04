@@ -540,7 +540,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   VkPipelineViewportStateCreateInfo viewportCi = { };
   viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO; 
   VkViewport viewport = { };
-  VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = pRhi->swapchainObject()->getSurfaceExtent();
   viewport.width = static_cast<R32>(extent.width);
   viewport.height = static_cast<R32>(extent.height);
   viewport.x = 0.0f;
@@ -879,7 +879,7 @@ ParticleEngine::~ParticleEngine()
 
 
 void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, GlobalDescriptor* global, 
-  CmdList<ParticleSystem*>& particleList, U32 frameIndex)
+  CmdList<ParticleSystem*>& particleList, U32 resourceIndex)
 {
   if (particleList.Size() == 0) return;
 
@@ -888,7 +888,7 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
   for (size_t i = 0; i < particleList.Size(); ++i) {
     ParticleSystem* system = particleList[i];
     VkDescriptorSet sets[] = {
-      global->getDescriptorSet(frameIndex)->getHandle(),
+      global->getDescriptorSet(resourceIndex)->getHandle(),
       system->getSet()->getHandle()
     };
     cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pParticleCompute->getLayout(),
@@ -899,7 +899,7 @@ void ParticleEngine::generateParticleComputeCommands(VulkanRHI* pRhi, CommandBuf
 
 
 void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuffer* cmdBuffer, 
-  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, U32 frameIndex)
+  GlobalDescriptor* global, CmdList<ParticleSystem*>& particleList, U32 resourceIndex)
 {
   if (particleList.Size() == 0) return;
   VkExtent2D extent = { pbr_forwardFrameBuffer->getWidth(), pbr_forwardFrameBuffer->getHeight() };
@@ -949,7 +949,7 @@ void ParticleEngine::generateParticleRenderCommands(VulkanRHI* pRhi, CommandBuff
     }
     VkDeviceSize offset[] = { 0 };
     VkDescriptorSet sets[] = { 
-      global->getDescriptorSet(frameIndex)->getHandle(),
+      global->getDescriptorSet(resourceIndex)->getHandle(),
       system->getSet()->getHandle()
     };
     VkBuffer nativeBuffer = system->getParticleBuffer()->getNativeBuffer();

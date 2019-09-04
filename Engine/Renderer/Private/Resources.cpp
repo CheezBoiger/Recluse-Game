@@ -162,7 +162,7 @@ Texture* Resources::GetRenderTexture(U64 id)
 }
 
 
-Sampler* Resources::GetSampler(U64 id)
+Sampler* Resources::getSampler(U64 id)
 {
   if (SamplerMap.find(id) != SamplerMap.end()) {
     return SamplerMap[id];

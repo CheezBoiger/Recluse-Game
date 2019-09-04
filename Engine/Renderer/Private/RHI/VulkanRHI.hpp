@@ -33,6 +33,14 @@ class DescriptorSetLayout;
 class GPUConfigParams;
 class Query;
 
+
+struct FrameResource {
+  CommandBuffer cmdBuffer;
+  VkSemaphore imageAvailableSemaphore;
+  VkSemaphore presentableSemaphore;
+  VkFence fenceInFlight;
+};
+
 // Set swapchain command buffer function. Assume that the commandbuffer automatically
 // calls Begin() before the this function and End() and the end of the function.
 // Also passes the default renderpass begin info to render onscreen.
@@ -95,7 +103,10 @@ public:
 
   // Initialize this RHI object. Must be done before calling any function
   // in this object.
-  void initialize(HWND windowHandle, const GraphicsConfigParams* params);
+  void initialize(HWND windowHandle, 
+                  VkPresentModeKHR presentMode,
+                  U32 frameResourceBuffers = 2,
+                  U32 desiredImageCount = 1);
 
   // Clean up this object. This must be called once done with this RHI
   // object. BE SURE TO FREE UP ANY OBJECTS CREATED FROM THIS RHI OBJECT BEFORE
@@ -132,19 +143,18 @@ public:
   void freeDescriptorSetLayout(DescriptorSetLayout* layout);
   void freeQuery(Query* query);
 
+  FrameResource& getFrameResource(U32 frameIndex) { return m_frameResources[frameIndex]; }
+  FrameResource& getCurrentFrameResource() { return getFrameResource(m_currentFrame); }
+
   // Set the default swapchain command buffers, which is defined by the programmer of the renderer.
   void setSwapchainCmdBufferBuild(SwapchainCmdBufferBuildFunc func) { mSwapchainCmdBufferBuild = func; }
 
-  // Rebuild the swapchain commandbuffers with using the function provided from SetSwapchainCmdBufferBuild.
-  // This will build the swapchain command buffers.
-  void rebuildCommandBuffers(U32 set);
-
-  size_t swapchainImageCount() const { return mSwapchain.ImageCount(); }
+  size_t swapchainImageCount() const { return m_swapchain.getImageCount(); }
 
   LogicalDevice* logicDevice() { return &mLogicalDevice; }
 
   // Get the Swapchain handle.
-  Swapchain* swapchainObject() { return &mSwapchain; }
+  Swapchain* swapchainObject() { return &m_swapchain; }
 
   // Get the window surface that is used to render onto.
   VkSurfaceKHR surface() { return mSurface; }
@@ -222,7 +232,7 @@ public:
 
   void waitForFrameInFlightFence();
 
-  VkFence currentInFlightFence() { return mSwapchain.InFlightFence(m_currentFrame); }
+  VkFence currentInFlightFence() { return getCurrentFrameResource().fenceInFlight; }
 
   // Submit the current swapchain command buffer to the gpu. This will essentially be the 
   // call to the default render pass, which specifies the swapchain surface to render onto.
@@ -240,26 +250,34 @@ public:
   // Updates the renderer pipeline as a result of window resizing. This will effectively
   // recreate the entire pipeline! If any objects were referenced and whatnot, be sure to 
   // requery their resources as they have been recreated!
-  void reConfigure(VkPresentModeKHR presentMode, I32 width, I32 height, U32 buffers, U32 desiredImageCount = 0);
+  void reConfigure(VkPresentModeKHR presentMode, 
+                   I32 width, 
+                   I32 height, 
+                   U32 frameResourceBuffers = 2, 
+                   U32 desiredImageCount = 1);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.
-  U32 currentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
+  //U32 currentImageIndex() { return mSwapchainInfo.mCurrentImageIndex; }
+
+  // Get the current frame index, this is usually the next frame in the swapchain. Use this value instead.
+  U32 getCurrentFrame() const { return m_currentFrame; }
 
   // Swap commandbuffer sets within this vulkan rhi. Be sure that the set is already built!
   void swapCommandBufferSets(U32 set) { mSwapchainInfo.mCmdBufferSet = set; }
 
   // Obtain the Graphics Finished Semaphore from swapchain.
-  VkSemaphore currentGraphicsFinishedSemaphore() { return mSwapchain.GraphicsFinishedSemaphore(m_currentFrame); }
-  VkSemaphore currentImageAvailableSemaphore() { return mSwapchain.ImageAvailableSemaphore(m_currentFrame); }
+  VkSemaphore currentGraphicsFinishedSemaphore() { return getCurrentFrameResource().presentableSemaphore; }
+  VkSemaphore currentImageAvailableSemaphore() { return getCurrentFrameResource().imageAvailableSemaphore; }
 
   // Current set of swapchain commandbuffers that are currently in use by the gpu. Use this to determine which
   // set we shouldn't rebuild, while the gpu is using them!
   U32 currentSwapchainCmdBufferSet() const { return mSwapchainInfo.mCmdBufferSet; }
-  VkFramebuffer swapchainFrameBuffer(size_t index) { return mSwapchainInfo.mSwapchainFramebuffers[index]; }
-  size_t numOfFramebuffers() { return mSwapchainInfo.mSwapchainFramebuffers.size(); }
+  VkFramebuffer swapchainFrameBuffer(size_t index) { return m_swapchainFrameBuffers[index]; }
+  size_t numOfFramebuffers() { return m_frameResources.size(); }
   VkRenderPass swapchainRenderPass() { return mSwapchainInfo.mSwapchainRenderPass; }
-  VkPhysicalDeviceLimits PhysicalDeviceLimits() { return mPhysicalDeviceProperties.limits; }
+  const VkPhysicalDeviceLimits& PhysicalDeviceLimits() const { return mPhysicalDeviceProperties.limits; }
+  const VkPhysicalDeviceMemoryProperties& getMemoryProperties() const { return m_memProps; }
   U32 vendorID() { return mPhysicalDeviceProperties.vendorID; }
   B32 depthBoundsAllowed() const { return m_depthBoundsAllowed; }
   B32 stencilTestAllowed() const { return m_bStencilTestAllowed; }
@@ -271,24 +289,32 @@ public:
   U32 graphicsQueueCount() const { return mLogicalDevice.getGraphicsQueueCount(); }
   U32 transferQueueCount() const { return mLogicalDevice.getTransferQueueCount(); }
   U32 computeQueueCount() const { return mLogicalDevice.getComputeQueueCount(); }
-  U32 currentFrame() const { return m_currentFrame; }
-  U32 bufferingCount() const { return mSwapchain.CurrentBufferCount(); }
+
   const char* deviceName() { return mPhysicalDeviceProperties.deviceName; }
+
+  void renderFrameCommandBuffer();
 
 private:
   void setUpSwapchainRenderPass();
   void queryFromSwapchain();
   void createDepthAttachment();
-  void createSwapchainCommandBuffers(U32 swapSet);  
+  void createSwapchainCommandBuffers();  
   void createOcclusionQueryPool(U32 queries);
+
+  // Rebuild the swapchain commandbuffers with using the function provided from
+  // SetSwapchainCmdBufferBuild. This will build the swapchain command buffers.
+  void rebuildCommandBuffers();
+
+  void createFrameResources(U32 frameResourceBufferCount);
+  void cleanUpFrameResources();
 
   // Builds the descriptor pool for materials. WARNING: Recalling this function will
   // destroy old descriptor pool and replace with a new one, be sure to destroy all
   // descriptor sets previously allocated from old pool before recalling!
   void buildDescriptorPool(U32 maxCount, U32 maxSets);
 
-  HWND mWindow;
-  Swapchain mSwapchain;
+  HWND m_windowHandle;
+  Swapchain m_swapchain;
   B32 m_depthBoundsAllowed;
   B32 m_bStencilTestAllowed;
   LogicalDevice mLogicalDevice;
@@ -299,13 +325,14 @@ private:
   VkDescriptorPool mDescriptorPool;
   VkQueryPool mOccQueryPool;
   VkPhysicalDeviceProperties mPhysicalDeviceProperties;
+  VkPhysicalDeviceMemoryProperties m_memProps;
   VkPhysicalDeviceMaintenance3Properties m_maintenanceProperties;
+  
+  std::vector<FrameResource> m_frameResources;
+
   // Framebuffers and Renderpass that is used by the swapchain. We must
   // first query the images from the swapchain.
   struct {
-    std::vector<VkFramebuffer> mSwapchainFramebuffers;
-    //std::vector<CommandBuffer>                mSwapchainCmdBuffers;
-    std::vector<std::vector<CommandBuffer> > mCmdBufferSets;
     B32 mComplete;
     VkRenderPass mSwapchainRenderPass;
     VkImage mDepthAttachment;
@@ -317,6 +344,8 @@ private:
     U32 mCurrentImageIndex;
     I32 mCmdBufferSet;
   } mSwapchainInfo;
+
+  std::vector<VkFramebuffer> m_swapchainFrameBuffers;
 
   SwapchainCmdBufferBuildFunc mSwapchainCmdBufferBuild;
   U32 mCurrDescSets;

@@ -56,8 +56,9 @@ MeshDescriptor::~MeshDescriptor()
 }
 
 
-void MeshDescriptor::initialize(VulkanRHI* pRhi)
+void MeshDescriptor::initialize(Renderer* pRenderer)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI();
   VkDeviceSize objectSize = sizeof(ObjectBuffer);
   VkBufferCreateInfo objectCI = {};
   objectCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -66,7 +67,7 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
   objectCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   DescriptorSetLayout* MeshLayout = MeshSetLayoutKey;
 
-  m_pGpuHandles.resize(pRhi->bufferingCount());
+  m_pGpuHandles.resize(pRenderer->getResourceBufferCount());
 
   // Create the render buffer for the object.
   for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
@@ -80,17 +81,18 @@ void MeshDescriptor::initialize(VulkanRHI* pRhi)
 }
 
 
-void MeshDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
+void MeshDescriptor::update(Renderer* pRenderer, U32 resourceIndex)
 {
-  if (pRhi->bufferingCount() != m_pGpuHandles.size()) {
-    cleanUp(pRhi);
-    initialize(pRhi);
+  if (pRenderer->getResourceBufferCount() != m_pGpuHandles.size()) {
+    cleanUp(pRenderer);
+    initialize(pRenderer);
   }
 
   // Mesh
-  Buffer* pBuf = m_pGpuHandles[frameIndex]._pBuf;
-  DescriptorSet* pSet = m_pGpuHandles[frameIndex]._pSet;
-  U32& updates = m_pGpuHandles[frameIndex]._updates;
+  Buffer* pBuf = m_pGpuHandles[resourceIndex]._pBuf;
+  DescriptorSet* pSet = m_pGpuHandles[resourceIndex]._pSet;
+  U32& updates = m_pGpuHandles[resourceIndex]._updates;
+  VulkanRHI* pRhi = pRenderer->getRHI();
 
   if ((updates & MESH_DESCRIPTOR_UPDATE_BIT)) {
     VkDescriptorBufferInfo objBufferInfo = {};
@@ -125,9 +127,10 @@ void MeshDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
 }
 
 
-void MeshDescriptor::cleanUp(VulkanRHI* pRhi)
+void MeshDescriptor::cleanUp(Renderer* pRenderer) 
 {
   // Need to wait before we can remove this object in cmd buffer.
+  VulkanRHI* pRhi = pRenderer->getRHI();
   pRhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
   for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
     if (m_pGpuHandles[i]._pSet) {
@@ -161,15 +164,16 @@ JointDescriptor::~JointDescriptor()
 }
 
 
-void JointDescriptor::initialize(VulkanRHI* pRhi)
+void JointDescriptor::initialize(Renderer* pRenderer)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI();
   VkBufferCreateInfo jointCI = {};
   VkDeviceSize jointsSize = sizeof(JointBuffer);
   jointCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   jointCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   jointCI.size = jointsSize;
 
-  m_pJointHandles.resize(pRhi->bufferingCount());
+  m_pJointHandles.resize(pRenderer->getResourceBufferCount());
 
   for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     m_pJointHandles[i]._pBuf = pRhi->createBuffer();
@@ -185,20 +189,21 @@ void JointDescriptor::initialize(VulkanRHI* pRhi)
 }
 
 
-void JointDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
+void JointDescriptor::update(Renderer* pRenderer, U32 resourceIndex)
 {
-  if (pRhi->bufferingCount() != m_pJointHandles.size()) {
-    cleanUp(pRhi);
-    initialize(pRhi);
+  if (pRenderer->getResourceBufferCount() != m_pJointHandles.size()) {
+    cleanUp(pRenderer);
+    initialize(pRenderer);
   }
 
-  UpdateManager& m = m_pJointHandles[frameIndex];
+  VulkanRHI* pRhi = pRenderer->getRHI();
+  UpdateManager& m = m_pJointHandles[resourceIndex];
   U32 updates = m._updates;
   Buffer* pBuf = m._pBuf;
 
   if ((updates & JOINT_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rDebug, "Updating Joint Sets.\n");
-    updateJointSets(frameIndex);
+    updateJointSets(resourceIndex);
   }
 
   if ((updates & JOINT_BUFFER_UPDATE_BIT)) {
@@ -216,8 +221,9 @@ void JointDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
 }
 
 
-void JointDescriptor::cleanUp(VulkanRHI* pRhi)
+void JointDescriptor::cleanUp(Renderer* pRenderer)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI();
   for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     pRhi->freeDescriptorSet(m_pJointHandles[i]._pSet);
     m_pJointHandles[i]._pSet = nullptr;
@@ -230,12 +236,12 @@ void JointDescriptor::cleanUp(VulkanRHI* pRhi)
 }
 
 
-void JointDescriptor::updateJointSets(U32 frameIndex)
+void JointDescriptor::updateJointSets(U32 resourceIndex)
 {
   // Bones
   R_DEBUG(rNotify, "Updating bone descriptor set.\n");
   VkDescriptorBufferInfo boneBufferInfo = {};
-  boneBufferInfo.buffer = m_pJointHandles[frameIndex]._pBuf->getNativeBuffer();
+  boneBufferInfo.buffer = m_pJointHandles[resourceIndex]._pBuf->getNativeBuffer();
   boneBufferInfo.offset = 0;
   boneBufferInfo.range = sizeof(JointBuffer);
   VkWriteDescriptorSet BoneWriteSet = {};
@@ -247,6 +253,6 @@ void JointDescriptor::updateJointSets(U32 frameIndex)
   BoneWriteSet.descriptorCount = 1;
   BoneWriteSet.pNext = nullptr;
 
-  m_pJointHandles[frameIndex]._pSet->update(1, &BoneWriteSet);
+  m_pJointHandles[resourceIndex]._pSet->update(1, &BoneWriteSet);
 }
 } // Recluse

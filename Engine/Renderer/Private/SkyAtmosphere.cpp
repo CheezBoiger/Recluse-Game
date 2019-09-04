@@ -92,12 +92,12 @@ void SkyRenderer::initialize()
 {
   VulkanRHI* pRhi = gRenderer().getRHI();
 
-  CreateRenderAttachment(pRhi);
-  CreateFrameBuffer(pRhi);
-  CreateCubeMap(pRhi);
-  CreateGraphicsPipeline(pRhi);
-  CreateCommandBuffer(pRhi);
-  BuildCmdBuffer(pRhi, nullptr);
+  createRenderAttachment(pRhi);
+  createFrameBuffer(pRhi);
+  createCubeMap(pRhi);
+  createGraphicsPipeline(pRhi);
+  createCommandBuffer(pRhi);
+  buildCmdBuffer(pRhi, nullptr);
 
   m_pAtmosphereSema = pRhi->createVkSemaphore();
   VkSemaphoreCreateInfo semaCi = { };
@@ -120,16 +120,16 @@ SkyRenderer::~SkyRenderer()
 }
 
 
-void SkyRenderer::CreateCommandBuffer(VulkanRHI* rhi)
+void SkyRenderer::createCommandBuffer(VulkanRHI* rhi)
 {
   m_pCmdBuffer = rhi->createCommandBuffer();
   m_pCmdBuffer->allocate(rhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 }
 
 
-void SkyRenderer::CreateRenderAttachment(VulkanRHI* rhi)
+void SkyRenderer::createRenderAttachment(VulkanRHI* rhi)
 {
-  VkExtent2D extent = rhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = rhi->swapchainObject()->getSurfaceExtent();
   VkImageCreateInfo imgCi = { };
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -160,9 +160,9 @@ void SkyRenderer::CreateRenderAttachment(VulkanRHI* rhi)
 } 
 
 
-void SkyRenderer::CreateCubeMap(VulkanRHI* rhi)
+void SkyRenderer::createCubeMap(VulkanRHI* rhi)
 {
-  VkExtent2D extent = rhi->swapchainObject()->SwapchainExtent();
+  VkExtent2D extent = rhi->swapchainObject()->getSurfaceExtent();
   VkImageCreateInfo imgCi = {};
   imgCi.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   imgCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -215,7 +215,7 @@ void SkyRenderer::CreateCubeMap(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
+void SkyRenderer::createFrameBuffer(VulkanRHI* rhi)
 {
   m_pFrameBuffer = rhi->createFrameBuffer();
   m_pRenderPass = rhi->createRenderPass();
@@ -369,7 +369,7 @@ void SkyRenderer::CreateFrameBuffer(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
+void SkyRenderer::createGraphicsPipeline(VulkanRHI* rhi)
 {
   VkGraphicsPipelineCreateInfo gpCi = { };
   gpCi.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -521,7 +521,7 @@ void SkyRenderer::CreateGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 frameIndex)
+void SkyRenderer::buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 frameIndex)
 {
   CommandBuffer* cmdBuffer = m_pCmdBuffer;
   if (pOutput) {

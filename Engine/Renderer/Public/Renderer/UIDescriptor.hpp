@@ -39,14 +39,14 @@ public:
   void            initialize(VulkanRHI* pRhi);  
   void            update(VulkanRHI* pRhi);
   void            cleanUp(VulkanRHI* pRhi);
-  void            SetImage(Texture2D* pTex) { m_image = pTex; MarkToUpdate(); }
+  void            SetImage(Texture2D* pTex) { m_image = pTex; markToUpdate(); }
   Texture2D*        GetImage() { return m_image; }
   
   DescriptorSet*    getDescriptorSet() { return m_pSet; }
 
 private:
 
-  void            MarkToUpdate() { m_needsUpdate = true; }
+  void            markToUpdate() { m_needsUpdate = true; }
 
   Texture2D*        m_image;
   Sampler*        m_sampler;

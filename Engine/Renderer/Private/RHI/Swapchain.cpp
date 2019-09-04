@@ -7,7 +7,7 @@ namespace Recluse {
 
 
 Swapchain::Swapchain()
-  : mSwapchain(VK_NULL_HANDLE)
+  : m_swapchain(VK_NULL_HANDLE)
 {
 }
 
@@ -18,7 +18,7 @@ Swapchain::~Swapchain()
 
 
 void Swapchain::initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, 
-      VkPresentModeKHR desiredPresent, U32 buffers, U32 desiredImages)
+      VkPresentModeKHR desiredPresent, U32 desiredImages)
 {
 
   std::vector<VkPresentModeKHR> presentModes = physical.querySwapchainPresentModes(surface);
@@ -34,14 +34,14 @@ void Swapchain::initialize(PhysicalDevice& physical, LogicalDevice& device, VkSu
   //  }
   //}
 
-  ReCreate(device, surface, surfaceFormats[0], desiredPresentMode, capabilities, buffers, desiredImages);
+  reCreate(device, surface, surfaceFormats[0], desiredPresentMode, capabilities, desiredImages);
 }
 
 
-void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, 
-  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities, U32 buffers, U32 desiredImages)
+void Swapchain::reCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, 
+  VkPresentModeKHR presentMode, VkSurfaceCapabilitiesKHR capabilities, U32 desiredImages)
 {
-  VkSwapchainKHR oldSwapChain = mSwapchain;
+  VkSwapchainKHR oldSwapChain = m_swapchain;
 
   U32 imageCount = capabilities.minImageCount;
   if (desiredImages > imageCount) {
@@ -68,66 +68,58 @@ void Swapchain::ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceF
   sInfo.clipped = VK_TRUE;
   sInfo.oldSwapchain = oldSwapChain;
   
-  if (vkCreateSwapchainKHR(device.getNative(), &sInfo, nullptr, &mSwapchain) != VK_SUCCESS) {
+  if (vkCreateSwapchainKHR(device.getNative(), &sInfo, nullptr, &m_swapchain) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create swapchain!\n");
   }
 
   R_DEBUG(rNotify, "Swapchain creation succeeded.\n");
 
   // Storing data of swapchains and querying images.
-  mSwapchainExtent = capabilities.currentExtent;
-  mCurrentSurfaceFormat = surfaceFormat;
-  mCurrentPresentMode = presentMode;
-  mCurrentBufferCount = buffers;
+  m_swapchainExtent = capabilities.currentExtent;
+  m_currentSurfaceFormat = surfaceFormat;
+  m_currentPresentMode = presentMode;
 
   if (oldSwapChain) {
     vkDestroySwapchainKHR(device.getNative(), oldSwapChain, nullptr);
   }
 
-  QuerySwapchainImages(device);
-  CreateSemaphores(device, buffers);
+  querySwapchainImages(device);
 }
 
 
 void Swapchain::cleanUp(LogicalDevice& device)
 {
-  for (size_t i = 0; i < SwapchainImages.size(); ++i) {
-    SwapchainImage& image = SwapchainImages[i];
-    vkDestroyImageView(device.getNative(), image.getView, nullptr);
+  for (size_t i = 0; i < m_swapchainImages.size(); ++i) {
+    SwapchainImage& image = m_swapchainImages[i];
+    vkDestroyImageView(device.getNative(), image.view, nullptr);
   }
 
-  for (U32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
-    vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
-    vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
-    vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
-  }
-
-  if (mSwapchain) {
-    vkDestroySwapchainKHR(device.getNative(), mSwapchain, nullptr);
-    mSwapchain = VK_NULL_HANDLE;
+  if (m_swapchain) {
+    vkDestroySwapchainKHR(device.getNative(), m_swapchain, nullptr);
+    m_swapchain = VK_NULL_HANDLE;
   }
 }
 
 
-void Swapchain::QuerySwapchainImages(LogicalDevice& device)
+void Swapchain::querySwapchainImages(LogicalDevice& device)
 {
   U32 imageCount;
-  vkGetSwapchainImagesKHR(device.getNative(), mSwapchain, &imageCount, nullptr);
+  vkGetSwapchainImagesKHR(device.getNative(), m_swapchain, &imageCount, nullptr);
 
   std::vector<VkImage> images(imageCount);
-  vkGetSwapchainImagesKHR(device.getNative(), mSwapchain, &imageCount, images.data());
+  vkGetSwapchainImagesKHR(device.getNative(), m_swapchain, &imageCount, images.data());
 
-  if (!SwapchainImages.empty()) {
-    for (size_t i = 0; i < SwapchainImages.size(); ++i) {
-      vkDestroyImageView(device.getNative(), SwapchainImages[i].getView, nullptr);  
+  if (!m_swapchainImages.empty()) {
+    for (size_t i = 0; i < m_swapchainImages.size(); ++i) {
+      vkDestroyImageView(device.getNative(), m_swapchainImages[i].view, nullptr);  
     }
   }
 
-  SwapchainImages.resize(images.size());
-  for (size_t i = 0; i < SwapchainImages.size(); ++i) {
+  m_swapchainImages.resize(images.size());
+  for (size_t i = 0; i < m_swapchainImages.size(); ++i) {
     VkImageViewCreateInfo ivInfo = { };
     ivInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    ivInfo.format = mCurrentSurfaceFormat.format;
+    ivInfo.format = m_currentSurfaceFormat.format;
     ivInfo.image = images[i];
     ivInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     ivInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -140,49 +132,12 @@ void Swapchain::QuerySwapchainImages(LogicalDevice& device)
     ivInfo.subresourceRange.layerCount = 1;
     ivInfo.subresourceRange.levelCount = 1;
     
-    if (vkCreateImageView(device.getNative(), &ivInfo, nullptr, &SwapchainImages[i].getView) != VK_SUCCESS) {
+    if (vkCreateImageView(device.getNative(), &ivInfo, nullptr, &m_swapchainImages[i].view) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create swapchain image!\n");
       return;
     }
-    SwapchainImages[i].Image = images[i];
+    m_swapchainImages[i].image = images[i];
   }
 
-}
-
-
-void Swapchain::CreateSemaphores(LogicalDevice& device, U32 count)
-{
-  VkSemaphoreCreateInfo semaphoreCI = {};
-  semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  VkFenceCreateInfo fenceCi = { };
-  fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fenceCi.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-/*
-  if (vkCreateSemaphore(handle, &semaphoreCI, nullptr, &mImageAvailableSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
-
-  if (vkCreateSemaphore(handle, &semaphoreCI, nullptr, &mGraphicsFinishedSemaphore) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create a semaphore!\n");
-  }
-*/
-  for (U32 i = 0; i < m_imageAvailableSemas.size(); ++i) {
-    vkDestroySemaphore(device.getNative(), m_imageAvailableSemas[i], nullptr);
-    vkDestroySemaphore(device.getNative(), m_graphicsFinishedSemas[i], nullptr);
-    vkDestroyFence(device.getNative(), m_inFlightFences[i], nullptr);
-  }
-
-  m_imageAvailableSemas.resize(count);
-  m_graphicsFinishedSemas.resize(count);
-  m_inFlightFences.resize(count);
-  for (U32 i = 0; i < count; ++i) {
-    VkResult result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_imageAvailableSemas[i]);
-    R_ASSERT(result == VK_SUCCESS, "");
-    result = vkCreateSemaphore(device.getNative(), &semaphoreCI, nullptr, &m_graphicsFinishedSemas[i]);
-    R_ASSERT(result == VK_SUCCESS, "");
-    result = vkCreateFence(device.getNative(), &fenceCi, nullptr, &m_inFlightFences[i]);
-    R_ASSERT(result == VK_SUCCESS, "");
-  }
 }
 } // Recluse

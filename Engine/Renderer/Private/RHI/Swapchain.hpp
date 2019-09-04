@@ -12,10 +12,10 @@ namespace Recluse {
 
 struct SwapchainImage {
   SwapchainImage() 
-    : Image(VK_NULL_HANDLE)
-    , getView(VK_NULL_HANDLE) { }
-  VkImage                       Image;
-  VkImageView                   getView;
+    : image(VK_NULL_HANDLE)
+    , view(VK_NULL_HANDLE) { }
+  VkImage                       image;
+  VkImageView                   view;
 };
 
 
@@ -26,49 +26,44 @@ public:
   Swapchain();
   ~Swapchain();
 
-  void                          initialize(PhysicalDevice& physical, LogicalDevice& device, VkSurfaceKHR surface, VkPresentModeKHR desiredPresent, 
-                                    U32 buffers = 1, U32 desiredImages = 2);
+  void                          initialize(PhysicalDevice& physical, 
+                                           LogicalDevice& device, 
+                                           VkSurfaceKHR surface, 
+                                           VkPresentModeKHR desiredPresent, 
+                                           U32 desiredImages = 2);
 
   void                          cleanUp(LogicalDevice& device);
 
-  VkSwapchainKHR                getHandle() { return mSwapchain; }
+  VkSwapchainKHR                getHandle() { return m_swapchain; }
 
   // Current number of images available in the swapchain.
-  U32                        ImageCount() const { return static_cast<U32>(SwapchainImages.size()); }
+  U32                        getImageCount() const { return static_cast<U32>(m_swapchainImages.size()); }
 
-  SwapchainImage&               get(const size_t index) { return SwapchainImages[index]; }
-  SwapchainImage&               operator[](const size_t index) { return SwapchainImages[index]; }
+  SwapchainImage&               get(const size_t index) { return m_swapchainImages[index]; }
+  SwapchainImage&               operator[](const size_t index) { return m_swapchainImages[index]; }
   
   // Recreate the swapchain. desiredBuffers specifies how many swapchain images to use for displaying.
   // default is minimum buffers from gpu query, using 0 to signal default swapchain image count.
-  void                          ReCreate(LogicalDevice& device, VkSurfaceKHR surface, VkSurfaceFormatKHR format, VkPresentModeKHR presentMode, 
-                                  VkSurfaceCapabilitiesKHR capabilities, U32 buffers, U32 desiredImageCount);
+  void                          reCreate(LogicalDevice& device, 
+                                         VkSurfaceKHR surface, 
+                                         VkSurfaceFormatKHR format, 
+                                         VkPresentModeKHR presentMode, 
+                                         VkSurfaceCapabilitiesKHR capabilities, 
+                                         U32 desiredImageCount);
 
-  VkSurfaceFormatKHR            SwapchainSurfaceFormat() const { return mCurrentSurfaceFormat; }
-  VkExtent2D                    SwapchainExtent() const { return mSwapchainExtent; }
-  VkPresentModeKHR              CurrentPresentMode() const { return mCurrentPresentMode; }
-  U32                           CurrentBufferCount() const { return mCurrentBufferCount; }
-
-  VkSemaphore                   ImageAvailableSemaphore(U32 idx = 0) { return m_imageAvailableSemas[idx]; }
-  VkSemaphore                   GraphicsFinishedSemaphore(U32 idx = 0) { return m_graphicsFinishedSemas[idx]; }
-  VkFence                       InFlightFence(U32 idx = 0) { return m_inFlightFences[idx]; }
+  VkSurfaceFormatKHR            getSurfaceFormat() const { return m_currentSurfaceFormat; }
+  VkExtent2D                    getSurfaceExtent() const { return m_swapchainExtent; }
+  VkPresentModeKHR              getPresentMode() const { return m_currentPresentMode; }
   
 private:
-  void                          QuerySwapchainImages(LogicalDevice& device);
-  void                          CreateSemaphores(LogicalDevice& device, U32 count);
+  void                          querySwapchainImages(LogicalDevice& device);
 
-  VkSwapchainKHR                mSwapchain;
+  VkSwapchainKHR                m_swapchain;
 
-  // Each semaphore corresponds to the number of swapchain images in the swapchain.
-  std::vector<VkSemaphore>      m_imageAvailableSemas;
-  std::vector<VkSemaphore>      m_graphicsFinishedSemas;
-  std::vector<VkFence>          m_inFlightFences;
-
-  VkExtent2D                    mSwapchainExtent;
-  U32                           mCurrentBufferCount;
-  VkSurfaceFormatKHR            mCurrentSurfaceFormat;
-  VkPresentModeKHR              mCurrentPresentMode;
-  std::vector<SwapchainImage>   SwapchainImages;
+  VkExtent2D                    m_swapchainExtent;
+  VkSurfaceFormatKHR            m_currentSurfaceFormat;
+  VkPresentModeKHR              m_currentPresentMode;
+  std::vector<SwapchainImage>   m_swapchainImages;
 
 };
 } // Recluse

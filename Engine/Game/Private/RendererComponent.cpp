@@ -101,7 +101,7 @@ void AbstractRendererComponent::enableStatic(B32 enable)
 void RendererComponent::onInitialize(GameObject* owner)
 { 
   m_meshDescriptor = gRenderer().createMeshDescriptor();
-  m_meshDescriptor->initialize(gRenderer().getRHI());
+  m_meshDescriptor->initialize(&gRenderer());
   m_meshDescriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
 
   REGISTER_COMPONENT(AbstractRendererComponent, this);
@@ -264,8 +264,8 @@ void SkinnedRendererComponent::onInitialize(GameObject* owner)
   m_meshDescriptor = gRenderer().createMeshDescriptor();
   m_pJointDescriptor = gRenderer().createJointDescriptor();
 
-  m_meshDescriptor->initialize(gRenderer().getRHI());
-  m_pJointDescriptor->initialize(gRenderer().getRHI());
+  m_meshDescriptor->initialize(&gRenderer());
+  m_pJointDescriptor->initialize(&gRenderer());
 
   m_meshDescriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
   m_pJointDescriptor->pushUpdate(JOINT_DESCRIPTOR_UPDATE_BIT);
@@ -335,7 +335,7 @@ void BatchRendererComponent::addMesh(Mesh* pMeshRef, U32 idx)
   AbstractRendererComponent::addMesh(pMeshRef, idx);
 
   MeshDescriptor* pMeshDescriptor = gRenderer().createMeshDescriptor();
-  pMeshDescriptor->initialize(gRenderer().getRHI());
+  pMeshDescriptor->initialize(&gRenderer());
   pMeshDescriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
   MeshNode node = { };
   node.parentId = Mesh::kMeshUnknownValue;
@@ -425,7 +425,7 @@ void BatchRendererComponent::update()
 void BatchRendererComponent::onCleanUp()
 {
   for (U32 i = 0; i < m_perMeshDescriptors.size(); ++i) {
-    m_perMeshDescriptors[i]._pMeshDescriptor->cleanUp(gRenderer().getRHI());
+    m_perMeshDescriptors[i]._pMeshDescriptor->cleanUp(&gRenderer());
     m_perMeshDescriptors[i]._pMeshDescriptor = nullptr;
     m_perMeshDescriptors[i].parentId = Skeleton::kNoSkeletonId;
   }

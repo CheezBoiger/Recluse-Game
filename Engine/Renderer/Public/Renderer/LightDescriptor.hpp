@@ -131,7 +131,7 @@ public:
                             ShadowMapSystem();
                             ~ShadowMapSystem();
 
-  void                      initialize(VulkanRHI* pRhi, const GraphicsConfigParams* pParams);
+  void                      initialize(Renderer* pRenderer, const GraphicsConfigParams* pParams);
   
   void                      cleanUp(VulkanRHI* pRhi);
 
@@ -142,17 +142,17 @@ public:
   LightViewSpace&           getStaticViewSpace() { return m_staticViewSpace; }
 
   // Update based on a particular light source in the buffer. -1 defaults to primary light source.
-  void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, I32 idx = -1, U32 frameIndex = 0);
+  void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, I32 idx = -1, U32 resourceIndex = 0);
 
   void                      setViewportDim(R32 dim) { m_rShadowViewportDim = dim; }
 
-  void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, U32 frameIndex);
-  void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, U32 frameIndex);
-  void                      transitionEmptyShadowMap(CommandBuffer* cmdBuffer, U32 frameIndex);
+  void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, U32 resourceIndex);
+  void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, U32 resourceIndex);
+  void                      transitionEmptyShadowMap(CommandBuffer* cmdBuffer, U32 resourceIndex);
   void                      signalStaticMapUpdate() { m_staticMapNeedsUpdate = true; }
 
-  DescriptorSet*            getShadowMapViewDescriptor(U32 frameIndex) { return m_pLightViewDescriptorSets[frameIndex]; }
-  DescriptorSet*            getStaticShadowMapViewDescriptor(U32 frameIndex) { return m_pStaticLightViewDescriptorSets[frameIndex]; }
+  DescriptorSet*            getShadowMapViewDescriptor(U32 resourceIndex) { return m_pLightViewDescriptorSets[resourceIndex]; }
+  DescriptorSet*            getStaticShadowMapViewDescriptor(U32 resourceIndex) { return m_pStaticLightViewDescriptorSets[resourceIndex]; }
 
   Sampler*                  _pSampler;
   B32                       staticMapNeedsUpdate() const { return m_staticMapNeedsUpdate; }
@@ -175,10 +175,12 @@ public:
 
 private:
 
-  void                      initializeShadowMapD(VulkanRHI* pRhi, U32 resolution = 1u);
-  void                      initializeShadowMapDescriptors(VulkanRHI* pRhi);
-  void                      initializeSpotLightShadowMapArray(VulkanRHI* pRhi, U32 layers = 4, U32 resolution = 512u);
-  void                      initializeCascadeShadowMap(VulkanRHI* pRhi, U32 resolution = 1u);
+  void initializeShadowMapD(Renderer* pRenderer, U32 resolution = 1u);
+  void initializeShadowMapDescriptors(Renderer* pRenderer);
+  void initializeSpotLightShadowMapArray(VulkanRHI* pRhi, 
+                                         U32 layers = 4,
+                                         U32 resolution = 512u);
+  void initializeCascadeShadowMap(Renderer* pRenderer, U32 resolution = 1u);
 
   void                      cleanUpSpotLightShadowMapArray(VulkanRHI* pRhi);
   void                      cleanUpShadowMapCascades(VulkanRHI* pRhi);
@@ -277,11 +279,11 @@ public:
   ~LightDescriptor();
 
   // Update the light information on the gpu, for use in our shaders.
-  void update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, U32 frameIndex);
+  void update(Renderer* pRenderer, GlobalBuffer* gBuffer, U32 resourceIndex);
 
   // Initialize. 
-  void initialize(VulkanRHI* pRhi, const GraphicsConfigParams* params);
-  void checkBuffering(VulkanRHI* pRhi, const GraphicsConfigParams* params);
+  void initialize(Renderer* pRenderer, const GraphicsConfigParams* params);
+  void checkBuffering(Renderer* pRenderer, const GraphicsConfigParams* params);
 
   // Cleanup.
   void cleanUp(VulkanRHI* pRhi);
@@ -306,7 +308,7 @@ public:
   ShadowMapSystem& getPrimaryShadowMapSystem() { return m_primaryMapSystem; }
 
 private:
-  void initializeNativeLights(VulkanRHI* pRhi);
+  void initializeNativeLights(Renderer* pRenderer);
 
 #if 0
   void                InitializePrimaryShadow(VulkanRHI* pRhi);

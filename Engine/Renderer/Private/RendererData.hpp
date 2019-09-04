@@ -283,18 +283,18 @@ void cleanUpPipelines(VulkanRHI* pRhi);
 void initializeDescriptorSetLayouts(VulkanRHI* pRhi);
 void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
 
-void initializeRenderTextures(VulkanRHI* pRhi);
+void initializeRenderTextures(Renderer* pRenderer);
 void cleanUpRenderTextures(VulkanRHI* pRhi);
 
-void initializeDescriptorSets(VulkanRHI* pRhi);
+void initializeDescriptorSets(Renderer* pRenderer);
 void cleanUpDescriptorSets(VulkanRHI* pRhi);
 
 GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline);
 ComputePipeline* getComputePipeline(PipelineComputeT pipeline);
 
-Texture* getRenderTexture(RenderTextureT rt, U32 frameIndex);
+Texture* getRenderTexture(RenderTextureT rt, U32 resourceIndex);
 DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout);
-DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 frameIndex = 0);
+DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 resourceIndex = 0);
 
 void loadShader(const std::string& Filename, Shader* S);
 
@@ -320,13 +320,13 @@ void setUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultI
 
 void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
 
-void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes);
+void initShadowMaskTexture(Renderer* pRenderer, const VkExtent2D& renderRes);
 
 void initShadowResolvePipeline(VulkanRHI* pRhi);
 
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi);
 
-void initShadowReolveDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
+void initShadowReolveDescriptorSet(Renderer* pRenderer, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
 
 void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info);
 
@@ -354,19 +354,19 @@ public:
     : m_output(nullptr)
     , m_outputSampler(nullptr)
     , m_pipeline(nullptr)
-    , m_descSet(nullptr)
+    , m_descSets(0)
     , m_layout(nullptr)
     , m_groupSz(16) { }
 
 
-  void    initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld);
+  void    initialize(Renderer* pRenderer, GlobalDescriptor* pWorld);
   void    cleanUp(VulkanRHI* pRhi);
 
   void    generateCommands(VulkanRHI* pRhi, 
                            CommandBuffer* pOut, 
                            GlobalDescriptor* pDescriptor, 
-                           U32 frameIndex);
-  void    updateSets(VulkanRHI* pRhi, 
+                           U32 resourceIndex);
+  void    updateSets(Renderer* pRenderer, 
                      GlobalDescriptor* pDescriptor);
   Texture*  GetOutput() { return m_output; }
   Sampler*  GetOutputSampler() { return m_outputSampler; }
@@ -375,7 +375,7 @@ private:
 
   void                    createTexture(VulkanRHI* pRhi, GlobalDescriptor* pGlobal);
   void                    createDescriptorSetLayout(VulkanRHI* pRhi);
-  void                    createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor);
+  void                    createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor, U32 resourceIndex);
   void                    createSampler(VulkanRHI* pRhi);
 
 
@@ -383,7 +383,7 @@ private:
   Texture*                m_output;
   Sampler*                m_outputSampler;
   DescriptorSetLayout*    m_layout;
-  DescriptorSet*          m_descSet;
+  std::vector<DescriptorSet*> m_descSets;
   U32                     m_groupSz;           
 };
 

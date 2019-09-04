@@ -1,3 +1,4 @@
+[DesiredSwapImages] = 3
 [Buffering] = double
 [VariableRateShadingEnable] = true
 [AntiAliasing] = none

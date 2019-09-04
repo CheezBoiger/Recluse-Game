@@ -17,6 +17,11 @@ public:
     , mPoolOwner(VK_NULL_HANDLE)
     , mRecording(VK_NULL_HANDLE) { }
 
+  CommandBuffer(VkDevice device, VkCommandPool pool, VkCommandBuffer cmdBuffer)
+    : mHandle(cmdBuffer)
+    , mPoolOwner(pool)
+   { SetOwner(device); }
+
   ~CommandBuffer() { }
   
   void            allocate(const VkCommandPool& pool, VkCommandBufferLevel level);

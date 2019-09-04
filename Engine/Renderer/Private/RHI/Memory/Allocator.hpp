@@ -93,10 +93,10 @@ public:
 
 
   void init(VulkanRHI* pRhi, 
-            const VkPhysicalDeviceProperties* props, 
-            const VkPhysicalDeviceMemoryProperties* memProperties);
+            U32 resourceIndex,
+            U32 resourceCount);
   void cleanUp(VulkanRHI* pRhi);
-  void update(VulkanRHI* pRhi);
+  void update(VulkanRHI* pRhi, U32 currentResourceIndex, U32 resourceCount);
 
   VulkanAllocation allocate(VkDevice device,
                             U32 sz, 

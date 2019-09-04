@@ -65,24 +65,24 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
                 VK_BUFFER_USAGE_TRANSFER_DST_BIT;
   mBuffer->initialize(bInfo, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
-  CommandBuffer* CmdBuffer = mRhi->createCommandBuffer();
-  CmdBuffer->allocate(mRhi->computeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  CommandBuffer* getCmdBuffer = mRhi->createCommandBuffer();
+  getCmdBuffer->allocate(mRhi->computeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   VkCommandBufferBeginInfo CmdBi = { };
   CmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   CmdBi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  CmdBuffer->begin(CmdBi);
+  getCmdBuffer->begin(CmdBi);
     VkBufferCopy region = { };
     region.size = MemSize;
     region.srcOffset = 0;
     region.dstOffset = 0;
-    CmdBuffer->copyBuffer(StagingBuffer->getNativeBuffer(),
+    getCmdBuffer->copyBuffer(StagingBuffer->getNativeBuffer(),
                           mBuffer->getNativeBuffer(),
                           1,
                           &region);
-  CmdBuffer->end();
+  getCmdBuffer->end();
 
-  VkCommandBuffer native = CmdBuffer->getHandle();
+  VkCommandBuffer native = getCmdBuffer->getHandle();
   VkSubmitInfo submit = { };
   submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit.commandBufferCount = 1;
@@ -92,7 +92,7 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   mRhi->computeWaitIdle(DEFAULT_QUEUE_IDX);
   
   mRhi->freeBuffer(StagingBuffer);
-  mRhi->freeCommandBuffer(CmdBuffer);
+  mRhi->freeCommandBuffer(getCmdBuffer);
 }
 
 

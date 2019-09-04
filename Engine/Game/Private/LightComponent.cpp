@@ -117,7 +117,7 @@ void PointLightComponent::onDebug()
 {
   if (m_debug && !m_descriptor) {
     m_descriptor = gRenderer().createMeshDescriptor();
-    m_descriptor->initialize(gRenderer().getRHI());
+    m_descriptor->initialize(&gRenderer());
     m_descriptor->pushUpdate(MESH_DESCRIPTOR_UPDATE_BIT);
   } else if (!m_debug && m_descriptor) {
     gRenderer().freeMeshDescriptor(m_descriptor);

@@ -22,6 +22,7 @@ class Texture1D;
 class Texture2DArray;
 class TextureCube;
 class FrameBuffer;
+class Renderer;
 
 
 // TODO(): Need to add more information like mouse input,
@@ -72,9 +73,9 @@ public:
   GlobalDescriptor();
   ~GlobalDescriptor();
 
-  void              update(VulkanRHI* pRhi, U32 frameIndex);
-  void              initialize(VulkanRHI* pRhi);
-  void              cleanUp(VulkanRHI* pRhi);
+  void              update(Renderer* pRenderer, U32 frameIndex);
+  void              initialize(Renderer* pRenderer);
+  void              cleanUp(Renderer* pRenderer);
 
   DescriptorSet*    getDescriptorSet(U32 idx) { return m_pDescriptorSets[idx]; }
 

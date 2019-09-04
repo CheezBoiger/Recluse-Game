@@ -27,24 +27,6 @@ VulkanMemoryAllocatorManager  VulkanRHI::gAllocator;
 std::vector<const TChar*>     gExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 
-VkPresentModeKHR GetPresentMode(const GraphicsConfigParams* params)
-{
-  VkPresentModeKHR mode;
-  switch (params->_Buffering) {
-    case SINGLE_BUFFER: mode = VK_PRESENT_MODE_IMMEDIATE_KHR; break;
-    case DOUBLE_BUFFER: mode = VK_PRESENT_MODE_FIFO_RELAXED_KHR; break; 
-    case TRIPLE_BUFFER: mode = VK_PRESENT_MODE_MAILBOX_KHR; break;
-    default: mode = VK_PRESENT_MODE_FIFO_KHR; break;
-  }
-
-  if (params->_EnableVsync >= 1) {
-   mode = VK_PRESENT_MODE_FIFO_KHR;
-  }
-
-  return mode;
-}
-
-
 Semaphore::~Semaphore()
 {
   R_ASSERT(!mSema, "Semaphore was not cleaned up prior to deletion!\n");
@@ -92,7 +74,7 @@ Fence::~Fence()
 
 
 VulkanRHI::VulkanRHI()
-  : mWindow(NULL)
+  : m_windowHandle(NULL)
   , mSurface(VK_NULL_HANDLE)
   , mComputeCmdPool(VK_NULL_HANDLE)
   , m_TransferCmdPool(VK_NULL_HANDLE)
@@ -107,7 +89,6 @@ VulkanRHI::VulkanRHI()
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
   mSwapchainInfo.mCurrentImageIndex = 0;
-  mSwapchainInfo.mCmdBufferSets.resize(2);
 
   mGraphicsCmdPools.resize(2);
 }
@@ -202,15 +183,17 @@ B32 VulkanRHI::suitableDevice(VkPhysicalDevice device)
 }
 
 
-void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params)
-{ 
+void VulkanRHI::initialize(HWND windowHandle,
+                           VkPresentModeKHR presentMode,
+                           U32 frameResourceBuffers,
+                           U32 desiredImageCount) { 
   if (!windowHandle) {
     R_DEBUG(rError, "Renderer can not initialize with a null window handle!\n");
     return;
   }
 
   // Keep track of the window handle.
-  mWindow = windowHandle;
+  m_windowHandle = windowHandle;
 
   mSurface = gContext.createSurface(windowHandle);
 
@@ -275,8 +258,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
     return;
   }
 
-  VkPresentModeKHR presentMode = GetPresentMode(params);
-  mSwapchain.initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, params->_Buffering, 3);
+  m_swapchain.initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, desiredImageCount);
 
   VkCommandPoolCreateInfo cmdPoolCI = { };
   cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -306,6 +288,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   mPhysicalDeviceProperties = props;
 
   VkPhysicalDeviceMemoryProperties memProps = gPhysicalDevice.getMemoryProperties();
+  m_memProps = memProps;
 
   // Descriptor pool maxes.
   buildDescriptorPool(UINT16_MAX << 1, UINT16_MAX << 1);
@@ -314,8 +297,7 @@ void VulkanRHI::initialize(HWND windowHandle, const GraphicsConfigParams* params
   createDepthAttachment();
   setUpSwapchainRenderPass();
   queryFromSwapchain();
-  
-  gAllocator.init(this, &props, &memProps);
+  createFrameResources(frameResourceBuffers);
 }
 
 
@@ -323,14 +305,8 @@ void VulkanRHI::cleanUp()
 {
   mLogicalDevice.waitOnQueues();
   gAllocator.cleanUp(this);
-  // Clean up all cmd buffers used for swapchain rendering.
-  for (size_t i = 0; i < mSwapchainInfo.mCmdBufferSets.size(); ++i) {
-    auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[i];
-    for (size_t j = 0; j < cmdBufferSet.size(); ++j) {
-      CommandBuffer& cmdBuffer = cmdBufferSet[i];
-      cmdBuffer.free();
-    }
-  }
+
+  cleanUpFrameResources();
 
   for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
     if (mGraphicsCmdPools[i]) {
@@ -359,7 +335,7 @@ void VulkanRHI::cleanUp()
     mOccQueryPool = VK_NULL_HANDLE;
   }
 
-  for (auto& framebuffer : mSwapchainInfo.mSwapchainFramebuffers) {
+  for (auto& framebuffer : m_swapchainFrameBuffers) {
     vkDestroyFramebuffer(mLogicalDevice.getNative(), framebuffer, nullptr);
     framebuffer = VK_NULL_HANDLE;
   } 
@@ -371,7 +347,7 @@ void VulkanRHI::cleanUp()
   vkFreeMemory(mLogicalDevice.getNative(), mSwapchainInfo.mDepthMemory, nullptr);
 
   // NOTE(): Clean up any vulkan modules before destroying the logical device!
-  mSwapchain.cleanUp(mLogicalDevice);
+  m_swapchain.cleanUp(mLogicalDevice);
 
   if (mSurface != VK_NULL_HANDLE) {
     gContext.destroySurface(mSurface);
@@ -384,17 +360,20 @@ void VulkanRHI::cleanUp()
 
 void VulkanRHI::queryFromSwapchain()
 {
-  if (!mSwapchain.getHandle()) {
+  if (!m_swapchain.getHandle()) {
     R_DEBUG(rError, "Swapchain failed to initialize! Cannot query images!\n");
     return;
   }
-  
-  mSwapchainInfo.mSwapchainFramebuffers.resize(mSwapchain.ImageCount());
 
-  for (size_t i = 0; i < mSwapchain.ImageCount(); ++i) {
+  for (size_t i = 0; i < m_swapchainFrameBuffers.size(); ++i) {
+    vkDestroyFramebuffer(mLogicalDevice.getNative(), m_swapchainFrameBuffers[i], nullptr);
+  }
+  
+  m_swapchainFrameBuffers.resize(m_swapchain.getImageCount());
+  for (size_t i = 0; i < m_swapchain.getImageCount(); ++i) {
     VkFramebufferCreateInfo framebufferCI = { };
-    std::array<VkImageView, 2> attachments = { mSwapchain[i].getView, mSwapchainInfo.mDepthView };
-    VkExtent2D& extent = mSwapchain.SwapchainExtent();
+    std::array<VkImageView, 2> attachments = { m_swapchain[i].view, mSwapchainInfo.mDepthView };
+    VkExtent2D& extent = m_swapchain.getSurfaceExtent();
 
     framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     framebufferCI. width = extent.width;
@@ -406,7 +385,7 @@ void VulkanRHI::queryFromSwapchain()
     framebufferCI.flags = 0;
     
     if (vkCreateFramebuffer(mLogicalDevice.getNative(), &framebufferCI, nullptr, 
-      &mSwapchainInfo.mSwapchainFramebuffers[i]) != VK_SUCCESS) {
+      &m_swapchainFrameBuffers[i]) != VK_SUCCESS) {
       R_DEBUG(rError, "Failed to create framebuffer on swapchain image " 
         + std::to_string(U32(i)) + "!\n");
     }
@@ -437,8 +416,8 @@ void VulkanRHI::createDepthAttachment()
 
   VkImageCreateInfo imageCI = { };
   imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  imageCI.extent.width = mSwapchain.SwapchainExtent().width;
-  imageCI.extent.height = mSwapchain.SwapchainExtent().height;
+  imageCI.extent.width = m_swapchain.getSurfaceExtent().width;
+  imageCI.extent.height = m_swapchain.getSurfaceExtent().height;
   imageCI.extent.depth = 1;
   imageCI.mipLevels = 1;
   imageCI.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -496,7 +475,7 @@ void VulkanRHI::setUpSwapchainRenderPass()
   
   // Color description. Our final layout is meant for presentation on a window,
   // if this were a separate framebuffer, we would go with VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL.
-  aDs[0].format = mSwapchain.SwapchainSurfaceFormat().format;
+  aDs[0].format = m_swapchain.getSurfaceFormat().format;
   aDs[0].samples = VK_SAMPLE_COUNT_1_BIT;
   aDs[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   aDs[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -619,8 +598,12 @@ void VulkanRHI::acquireNextImage()
 {
   R_TIMED_PROFILE_RENDERER();
 
-  VkResult result = vkAcquireNextImageKHR(mLogicalDevice.getNative(), mSwapchain.getHandle(), UINT64_MAX,
-    mSwapchain.ImageAvailableSemaphore(m_currentFrame), VK_NULL_HANDLE, &mSwapchainInfo.mCurrentImageIndex);
+  VkResult result = vkAcquireNextImageKHR(mLogicalDevice.getNative(), 
+                                          m_swapchain.getHandle(), 
+                                          UINT64_MAX,
+                                          m_frameResources[m_currentFrame].imageAvailableSemaphore, 
+                                          VK_NULL_HANDLE, 
+                                          &mSwapchainInfo.mCurrentImageIndex);
 }
 
 
@@ -645,7 +628,7 @@ void VulkanRHI::submitCurrSwapchainCmdBuffer(U32 waitSemaphoreCount, VkSemaphore
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
   
   VkCommandBuffer cmdBuffer[] = { 
-    mSwapchainInfo.mCmdBufferSets[currentSwapchainCmdBufferSet()][mSwapchainInfo.mCurrentImageIndex].getHandle() 
+    m_frameResources[getCurrentFrame()].cmdBuffer.getHandle() 
   };
 
   VkSubmitInfo submitInfo = {};
@@ -665,7 +648,7 @@ void VulkanRHI::submitCurrSwapchainCmdBuffer(U32 waitSemaphoreCount, VkSemaphore
 VkResult VulkanRHI::present()
 {
   VkSemaphore signalSemaphores[] = { currentGraphicsFinishedSemaphore() };
-  VkSwapchainKHR swapchains[] = { mSwapchain.getHandle() };
+  VkSwapchainKHR swapchains[] = { m_swapchain.getHandle() };
 
   VkPresentInfoKHR presentInfo = { };
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -678,14 +661,14 @@ VkResult VulkanRHI::present()
 
   VkResult result = vkQueuePresentKHR(mLogicalDevice.getPresentQueue(), &presentInfo);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-    VkExtent2D windowExtent = mSwapchain.SwapchainExtent();
-    reConfigure(mSwapchain.CurrentPresentMode(), windowExtent.width,
-      windowExtent.height, mSwapchain.CurrentBufferCount(), mSwapchain.ImageCount());
+    VkExtent2D windowExtent = m_swapchain.getSurfaceExtent();
+    reConfigure(m_swapchain.getPresentMode(), windowExtent.width,
+      windowExtent.height, m_swapchain.getImageCount());
   }
   //R_ASSERT(result == VK_SUCCESS, "Failed to present!\n");
 
   // Increment to next frame after every present of the current frame.
-  m_currentFrame = (m_currentFrame + 1) % mSwapchain.CurrentBufferCount();
+  m_currentFrame = (m_currentFrame + 1) % m_frameResources.size();
   return result;
 }
 
@@ -744,64 +727,72 @@ void VulkanRHI::waitAllGraphicsQueues()
 }
 
 
-void VulkanRHI::createSwapchainCommandBuffers(U32 set)
+void VulkanRHI::renderFrameCommandBuffer()
 {
-  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
-  cmdBufferSet.resize(mSwapchainInfo.mSwapchainFramebuffers.size());
+  CommandBuffer& cmdBuffer = m_frameResources[getCurrentFrame()].cmdBuffer;
 
-  for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
-    CommandBuffer& cmdBuffer = cmdBufferSet[i];
-    cmdBuffer.SetOwner(mLogicalDevice.getNative());
-    cmdBuffer.allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    
-    VkCommandBufferBeginInfo cmdBufferBI = { };
-    cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    cmdBufferBI.flags= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  VkCommandBufferBeginInfo cmdBufferBI = {};
+  cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  cmdBufferBI.flags =   VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    cmdBuffer.begin(cmdBufferBI);
-      VkRenderPassBeginInfo rpBI = {};
-      VkClearValue clearValues[2];
+  cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-      clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-      clearValues[1].depthStencil = { 1.0f, 0 };
+  cmdBuffer.begin(cmdBufferBI);
 
-      rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-      rpBI.framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
-      rpBI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
-      rpBI.renderArea.extent = mSwapchain.SwapchainExtent();
-      rpBI.renderArea.offset = { 0, 0 };
-      rpBI.clearValueCount = 2;
-      rpBI.pClearValues = clearValues;
+  VkRenderPassBeginInfo rpBI = {};
+  VkClearValue clearValues[2];
 
-      if (mSwapchainCmdBufferBuild) { 
-        mSwapchainCmdBufferBuild(cmdBuffer, rpBI);
-      }
-    cmdBuffer.end();
+  clearValues[0].color = {0.0f, 0.0f, 0.0f, 0.0f};
+  clearValues[1].depthStencil = {1.0f, 0};
+
+  rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  rpBI.framebuffer = m_swapchainFrameBuffers[mSwapchainInfo.mCurrentImageIndex];
+  rpBI.renderPass = mSwapchainInfo.mSwapchainRenderPass;
+  rpBI.renderArea.extent = m_swapchain.getSurfaceExtent();
+  rpBI.renderArea.offset = {0, 0};
+  rpBI.clearValueCount = 2;
+  rpBI.pClearValues = clearValues;
+
+  if (mSwapchainCmdBufferBuild) {
+    mSwapchainCmdBufferBuild(cmdBuffer, rpBI);
   }
+
+  cmdBuffer.end();
+
+}
+
+
+void VulkanRHI::createSwapchainCommandBuffers()
+{
+  for (size_t i = 0; i < m_frameResources.size(); ++i) {
+    CommandBuffer& cmdBuffer = m_frameResources[i].cmdBuffer;
+    cmdBuffer.SetOwner(mLogicalDevice.getNative());
+    cmdBuffer.allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);   
+  }
+
   mSwapchainInfo.mComplete = true;
 }
 
 
-void VulkanRHI::rebuildCommandBuffers(U32 set)
+void VulkanRHI::rebuildCommandBuffers()
 {
-  auto& cmdBufferSet = mSwapchainInfo.mCmdBufferSets[set];
-  for (size_t i = 0; i < cmdBufferSet.size(); ++i) {
-    CommandBuffer& cmdBuffer = cmdBufferSet[i];
+  for (size_t i = 0; i < m_frameResources.size(); ++i) {
+    CommandBuffer& cmdBuffer = m_frameResources[i].cmdBuffer;
     cmdBuffer.free();
   }
   mSwapchainInfo.mComplete = false;
-  createSwapchainCommandBuffers(set);
+  createSwapchainCommandBuffers();
 }
 
 
-void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, I32 width, I32 height, U32 buffers, U32 desiredImageCount)
+void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, 
+                            I32 width, 
+                            I32 height, 
+                            U32 frameResourceBuffers, 
+                            U32 desiredImageCount)
 {
   if (width <= 0 || height <= 0) return;
   deviceWaitIdle();
-  for (size_t i = 0; i < mSwapchainInfo.mSwapchainFramebuffers.size(); ++i) {
-    VkFramebuffer framebuffer = mSwapchainInfo.mSwapchainFramebuffers[i];
-    vkDestroyFramebuffer(mLogicalDevice.getNative(), framebuffer, nullptr);
-  }
 
   vkDestroyRenderPass(mLogicalDevice.getNative(), mSwapchainInfo.mSwapchainRenderPass, nullptr);
 
@@ -812,17 +803,15 @@ void VulkanRHI::reConfigure(VkPresentModeKHR presentMode, I32 width, I32 height,
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.querySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.querySwapchainSurfaceCapabilities(mSurface);
 
-  mSwapchain.ReCreate(mLogicalDevice, mSurface, surfaceFormats[0], presentMode, capabilities, buffers, desiredImageCount);
+  m_swapchain.reCreate(mLogicalDevice, mSurface, surfaceFormats[0], presentMode, capabilities, desiredImageCount);
   
   createDepthAttachment();
   setUpSwapchainRenderPass();
   queryFromSwapchain();
-
-  // Reupdate the allocator.
-  gAllocator.update(this);
+  createFrameResources(frameResourceBuffers);
   
   // Readjust frame count since we are now changing swapchain frame resource count.
-  m_currentFrame = m_currentFrame % mSwapchain.CurrentBufferCount();
+  m_currentFrame = m_currentFrame % m_frameResources.size();
 }
 
 
@@ -1122,5 +1111,64 @@ void VulkanRHI::createOcclusionQueryPool(U32 queries)
   if (vkCreateQueryPool(mLogicalDevice.getNative(), &queryCi, nullptr, &mOccQueryPool) != VK_SUCCESS) {
     R_DEBUG(rError, "Failed to create occlusion query pool!\n");
   } 
+}
+
+
+void VulkanRHI::createFrameResources(U32 frameResourceBufferCount) 
+{
+  VkSemaphoreCreateInfo semaphoreCI = {};
+  semaphoreCI.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+  VkFenceCreateInfo fenceCi = {};
+  fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceCi.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+  /*
+    if (vkCreateSemaphore(handle, &semaphoreCI, nullptr,
+    &mImageAvailableSemaphore) != VK_SUCCESS) { R_DEBUG(rError, "Failed to
+    create a semaphore!\n");
+    }
+
+    if (vkCreateSemaphore(handle, &semaphoreCI, nullptr,
+    &mGraphicsFinishedSemaphore) != VK_SUCCESS) { R_DEBUG(rError, "Failed to
+    create a semaphore!\n");
+    }
+  */
+  for (U32 i = 0; i < m_frameResources.size(); ++i) {
+    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].imageAvailableSemaphore, nullptr);
+    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].presentableSemaphore, nullptr);
+    vkDestroyFence(mLogicalDevice.getNative(), m_frameResources[i].fenceInFlight, nullptr);
+    m_frameResources[i].cmdBuffer.free();
+  }
+
+  m_frameResources.resize(frameResourceBufferCount);
+
+  for (U32 i = 0; i < m_frameResources.size(); ++i) {
+    VkResult result = vkCreateSemaphore(mLogicalDevice.getNative(), 
+                                        &semaphoreCI,
+                                        nullptr, 
+                                        &m_frameResources[i].imageAvailableSemaphore);
+    R_ASSERT(result == VK_SUCCESS, "");
+    result = vkCreateSemaphore(mLogicalDevice.getNative(), 
+                               &semaphoreCI, 
+                               nullptr,
+                               &m_frameResources[i].presentableSemaphore);
+    R_ASSERT(result == VK_SUCCESS, "");
+    result = vkCreateFence(mLogicalDevice.getNative(), &fenceCi, nullptr,
+                           &m_frameResources[i].fenceInFlight);
+    R_ASSERT(result == VK_SUCCESS, "");
+  }
+
+  rebuildCommandBuffers();
+}
+
+
+void VulkanRHI::cleanUpFrameResources()
+{
+  for (U32 i = 0; i < m_frameResources.size(); ++i) {
+    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].imageAvailableSemaphore, nullptr);
+    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].presentableSemaphore, nullptr);
+    vkDestroyFence(mLogicalDevice.getNative(), m_frameResources[i].fenceInFlight, nullptr);
+    m_frameResources[i].cmdBuffer.free();
+  }
 }
 } // Recluse

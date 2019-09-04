@@ -273,6 +273,9 @@ public:
   // Get backbuffer render height. This is different from window display height!
   U32 getRenderHeight() const { return m_renderHeight; }
 
+  U32 getResourceBufferCount() const { return m_resourceBufferCount; }
+  U32 getCurrentResourceBufferIndex() const { return m_currentResourceIndex; }
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.
@@ -304,15 +307,15 @@ private:
   void              setUpDescriptorSets();
   void              cleanUpDescriptorSets();
   void              setUpSkybox(B32 justSemaphores);
-  void              generateOffScreenCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generatePbrCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generateShadowCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generateHDRCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generateSkyboxCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateOffScreenCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generatePbrCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generateShadowCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generateHDRCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generateSkyboxCmds(CommandBuffer* buf, U32 resourceIndex);
   void              generateFinalCmds(CommandBuffer* buf);
-  void              generateForwardPBRCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generateShadowResolveCmds(CommandBuffer* buf, U32 frameIndex);
-  void              generatePreZCmds(CommandBuffer* buf, U32 frameIndex);
+  void              generateForwardPBRCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generateShadowResolveCmds(CommandBuffer* buf, U32 resourceIndex);
+  void              generatePreZCmds(CommandBuffer* buf, U32 resourceIndex);
   void              updateRenderResolution(RenderResolution resolution);
   void              checkEnableLightShadows();
 
@@ -324,7 +327,7 @@ private:
   void              buildForwardPBRCmdList();
   void              buildFinalCmdLists();
   void              updateGlobalIlluminationBuffer();
-  void updateLightBuffer(U32 frameIndex);
+  void updateLightBuffer(U32 resourceIndex);
 
   void              setUpDownscale(B32 FullSetUp);
   void              cleanUpDownscale(B32 FullCleanUp);
@@ -335,13 +338,13 @@ private:
   void              cleanUpPBR();
   void              updateSkyboxCubeMap();
   void              cleanUpSkybox(B32 justSemaphores);
-  void              updateSceneDescriptors(U32 frameIndex);
+  void              updateSceneDescriptors(U32 resourceIndex);
   void              renderOverlay();
   void              renderPrimaryShadows();
-  void              checkCmdUpdate();
+  void              checkCmdUpdate(U32 frameIndex, U32 resourceIndex);
   void              setUpGlobalIlluminationBuffer();
   void              cleanUpGlobalIlluminationBuffer();
-  
+  void setBuffering(const GraphicsConfigParams* params);
   // Signals that tell if renderer needs to update any static data. Is cleaned out every 
   // frame!
   B32               staticNeedsUpdate() { return m_staticUpdate; }
@@ -436,7 +439,8 @@ private:
   TextureCube*          m_preRenderSkybox;
   LightProbe*           m_globalLightProbe;
 
-
+  U32                   m_resourceBufferCount;
+  U32                   m_currentResourceIndex;
   U32                   m_renderWidth;
   U32                   m_renderHeight;
   U32                   m_workGroupSize;

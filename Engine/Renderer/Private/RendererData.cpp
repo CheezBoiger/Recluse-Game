@@ -261,12 +261,13 @@ void cleanUpPipelines(VulkanRHI* pRhi)
 }
 
 
-void initializeRenderTextures(VulkanRHI* pRhi)
+void initializeRenderTextures(Renderer* pRenderer)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI( );
   for ( I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i ) 
   {
-    g_renderTextures[ (RenderTextureT) i ].resize(pRhi->bufferingCount());
-    for (U32 j = 0; j < pRhi->bufferingCount( ); ++j) 
+    g_renderTextures[ (RenderTextureT) i ].resize(pRenderer->getResourceBufferCount());
+    for (U32 j = 0; j < pRenderer->getResourceBufferCount(); ++j) 
     {
       g_renderTextures[ (RenderTextureT) i ][ j ] = pRhi->createTexture( );
     }
@@ -287,9 +288,9 @@ void cleanUpRenderTextures(VulkanRHI* pRhi)
 }
 
 
-Texture* getRenderTexture(RenderTextureT rt, U32 frameIndex)
+Texture* getRenderTexture(RenderTextureT rt, U32 resourceIndex)
 {
-  return g_renderTextures[ rt ][ frameIndex ];
+  return g_renderTextures[ rt ][ resourceIndex ];
 }
 
 
@@ -312,11 +313,12 @@ void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi)
 }
 
 
-void initializeDescriptorSets(VulkanRHI* pRhi)
+void initializeDescriptorSets(Renderer* pRenderer)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI();
   for (I32 i = DESCRIPTOR_SET_START; i < DESCRIPTOR_SET_END; ++i) 
   {
-    g_descriptorSets[ (DescriptorSetT) i ] = std::vector<DescriptorSet*>(pRhi->bufferingCount( ));
+    g_descriptorSets[ (DescriptorSetT) i ] = std::vector<DescriptorSet*>(pRenderer->getResourceBufferCount());
     
     for (U32 j = 0; j < g_descriptorSets[ (DescriptorSetT) i ].size(); ++j) 
     {
@@ -340,9 +342,9 @@ void cleanUpDescriptorSets(VulkanRHI* pRhi)
 }
 
 
-DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 frameIndex)
+DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 resourceIndex)
 {
-  return g_descriptorSets[ set ][ frameIndex ];
+  return g_descriptorSets[ set ][ resourceIndex ];
 }
 
 
@@ -1499,7 +1501,7 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   GraphicsPipelineInfo.stageCount = 2;
   GraphicsPipelineInfo.pStages = shaders.data();
   
-  GraphicsPipelineInfo.renderPass = gRenderer().getSkyRendererNative()->GetSkyboxRenderPass()->getHandle();
+  GraphicsPipelineInfo.renderPass = gRenderer().getSkyRendererNative()->getSkyboxRenderPass()->getHandle();
   sky->initialize(GraphicsPipelineInfo, pipelineLayout);
 
   Rhi->freeShader(vert);
@@ -1512,7 +1514,7 @@ void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo
 }
 
 
-void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes) 
+void initShadowMaskTexture(Renderer* pRenderer, const VkExtent2D& renderRes) 
 {
   VkImageCreateInfo imgInfo = { };
   VkImageViewCreateInfo viewInfo = { };
@@ -1538,7 +1540,7 @@ void initShadowMaskTexture(VulkanRHI* pRhi, const VkExtent2D& renderRes)
   viewInfo.subresourceRange.levelCount = 1;
   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 
-  for (U32 i = 0; i < pRhi->bufferingCount(); ++i) {
+  for (U32 i = 0; i < pRenderer->getResourceBufferCount(); ++i) {
     Texture* shadowMask = getRenderTexture(RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i);
     shadowMask->initialize(imgInfo, viewInfo);
   }
@@ -1614,7 +1616,7 @@ void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void initShadowReolveDescriptorSet(VulkanRHI* pRhi, 
+void initShadowReolveDescriptorSet(Renderer* pRenderer, 
                                    GlobalDescriptor* pGlobal,
                                    Texture* pSceneDepth)
 {
@@ -1647,11 +1649,11 @@ void initShadowReolveDescriptorSet(VulkanRHI* pRhi,
   writeSets[1].pImageInfo = &mask;
   writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   
-  for (U32 i = 0; i < pRhi->bufferingCount( ); ++ i ) {
+  for (U32 i = 0; i < pRenderer->getResourceBufferCount(); ++ i ) {
     Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i );
     DescriptorSet* set = getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE, i);
     mask.imageView = shadowMaskTex->getView();
-    set->allocate(pRhi->descriptorPool(), layout);
+    set->allocate(pRenderer->getRHI()->descriptorPool(), layout);
     set->update(writeSets.size(), writeSets.data());
   }
 
@@ -1660,11 +1662,11 @@ void initShadowReolveDescriptorSet(VulkanRHI* pRhi,
   writeSets[0].pImageInfo = &mask;
   writeSets[0].dstBinding = 0;
   
-  for (U32 i = 0; i < pRhi->bufferingCount( ); ++i) {
+  for (U32 i = 0; i < pRenderer->getResourceBufferCount(); ++i) {
     Texture* shadowMaskTex = getRenderTexture( RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i );
     DescriptorSet* outSet = getDescriptorSet(DESCRIPTOR_SET_SHADOW_RESOLVE_OUT, i);
     mask.imageView = shadowMaskTex->getView();
-    outSet->allocate(pRhi->descriptorPool(), outLayout);
+    outSet->allocate(pRenderer->getRHI()->descriptorPool(), outLayout);
     outSet->update(1, writeSets.data());
   }
 }
@@ -1701,13 +1703,19 @@ void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info
 } // RendererPass
 
 
-void AntiAliasingFXAA::initialize(VulkanRHI* pRhi, GlobalDescriptor* pWorld)
+void AntiAliasingFXAA::initialize(Renderer* pRenderer, GlobalDescriptor* pWorld)
 {
-  
+  VulkanRHI* pRhi = pRenderer->getRHI();
   createTexture(pRhi, pWorld);
   createSampler(pRhi);
   createDescriptorSetLayout(pRhi);
-  createDescriptorSet(pRhi, pWorld);
+
+  m_descSets.resize(pRenderer->getResourceBufferCount());
+  for (U32 i = 0; i < m_descSets.size(); ++i) {
+    createDescriptorSet(pRhi, pWorld, i);
+  }
+
+  updateSets(pRenderer, pWorld);
 
   VkPipelineLayoutCreateInfo layoutCi{};
   layoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1769,9 +1777,11 @@ void AntiAliasingFXAA::cleanUp(VulkanRHI* pRhi)
     m_layout = nullptr;
   }
 
-  if ( m_descSet ) {
-    pRhi->freeDescriptorSet(m_descSet);
-    m_descSet = nullptr;
+  for (U32 i = 0; i < m_descSets.size(); ++i) {
+    if ( m_descSets[i] ) {
+      pRhi->freeDescriptorSet(m_descSets[i]);
+      m_descSets[i] = nullptr;
+    }
   }
 
   if ( m_pipeline ) {
@@ -1816,23 +1826,28 @@ void AntiAliasingFXAA::createTexture(VulkanRHI* pRhi, GlobalDescriptor* pGlobal)
 }
 
 
-void AntiAliasingFXAA::createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+void AntiAliasingFXAA::createDescriptorSet(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor, U32 resourceIndex)
 {
-  m_descSet = pRhi->createDescriptorSet();
-  m_descSet->allocate(pRhi->descriptorPool(), m_layout);
-
-  updateSets(pRhi, pDescriptor);
+  m_descSets[resourceIndex] = pRhi->createDescriptorSet();
+  m_descSets[resourceIndex]->allocate(pRhi->descriptorPool(), m_layout);
 }
 
 
-void AntiAliasingFXAA::updateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor)
+void AntiAliasingFXAA::updateSets(Renderer* pRenderer, GlobalDescriptor* pDescriptor)
 {
+  if (pRenderer->getResourceBufferCount() != m_descSets.size()) {
+    for (U32 i = 0; i < m_descSets.size(); ++i) pRenderer->getRHI()->freeDescriptorSet(m_descSets[i]);
+    m_descSets.resize(pRenderer->getResourceBufferCount());
+    for(U32 i = 0; i < m_descSets.size(); ++i) createDescriptorSet(pRenderer->getRHI(), pDescriptor, i);
+  }
+
+  VulkanRHI* pRhi = pRenderer->getRHI();
   pRhi->freeTexture(m_output);
 
   createTexture(pRhi, pDescriptor);
 
   VkDescriptorBufferInfo worldInfo = {};
-  worldInfo.buffer = pDescriptor->getHandle(pRhi->currentFrame())->getNativeBuffer();
+  worldInfo.buffer = nullptr; // to be updated at end.
   worldInfo.offset = 0;
   worldInfo.range = VkDeviceSize(sizeof(GlobalDescriptor));
 
@@ -1863,7 +1878,10 @@ void AntiAliasingFXAA::updateSets(VulkanRHI* pRhi, GlobalDescriptor* pDescriptor
   writes[1].dstBinding = 1;
   writes[1].pImageInfo = &outputInfo;
 
-  m_descSet->update(static_cast<U32>(writes.size()), writes.data());
+  for (U32 i = 0; i < m_descSets.size(); ++i) {
+    worldInfo.buffer = pDescriptor->getHandle(i)->getNativeBuffer();
+    m_descSets[i]->update(static_cast<U32>(writes.size()), writes.data());
+  }
 }
 
 
@@ -1893,7 +1911,7 @@ void AntiAliasingFXAA::createDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, U32 frameIndex)
+void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput, GlobalDescriptor* pGlobal, U32 resourceIndex)
 {
   VkImageSubresourceRange subrange = {};
   subrange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1915,8 +1933,8 @@ void AntiAliasingFXAA::generateCommands(VulkanRHI* pRhi, CommandBuffer* pOutput,
     0, 0, nullptr, 0, nullptr, 1u, &imageMemBarrier);
 
   VkDescriptorSet sets[] = {
-    pGlobal->getDescriptorSet(frameIndex)->getHandle(),
-    m_descSet->getHandle()
+    pGlobal->getDescriptorSet(resourceIndex)->getHandle(),
+    m_descSets[resourceIndex]->getHandle()
   };
 
   VkExtent2D extent = { (U32)pGlobal->getData()->_ScreenSize[0],

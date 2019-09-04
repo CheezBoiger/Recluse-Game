@@ -225,26 +225,26 @@ VulkanMemoryAllocatorManager::~VulkanMemoryAllocatorManager()
 
 
 void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
-                                        const VkPhysicalDeviceProperties* props,
-                                        const VkPhysicalDeviceMemoryProperties* pMemProperties)
+                                        U32 resourceIndex,
+                                        U32 resourceCount)
 {
   m_deviceLocalMemoryBytes = 128 * R_MEM_1_MB;
-  m_bufferImageGranularity = props->limits.bufferImageGranularity;
+  m_bufferImageGranularity = pRhi->PhysicalDeviceLimits().bufferImageGranularity;
 
-  for (U32 i = 0; i < pMemProperties->memoryHeapCount; ++i) {
-    VkMemoryHeap heap = pMemProperties->memoryHeaps[i];
+  for (U32 i = 0; i < pRhi->getMemoryProperties().memoryHeapCount; ++i) {
+    VkMemoryHeap heap = pRhi->getMemoryProperties().memoryHeaps[i];
     m_maxDeviceLocalMemBytes = heap.size;
     break;
   }
 
-  update(pRhi);
+  update(pRhi, resourceIndex, resourceCount);
 }
 
 
-void VulkanMemoryAllocatorManager::update(VulkanRHI* pRhi)
+void VulkanMemoryAllocatorManager::update(VulkanRHI* pRhi, U32 currentResourceIndex, U32 resourceCount)
 {
-  m_bufferCount = pRhi->bufferingCount( );
-  m_garbageIndex = pRhi->currentFrame( );
+  m_bufferCount = resourceCount;
+  m_garbageIndex = currentResourceIndex;
 
   emptyGarbage( pRhi );
 

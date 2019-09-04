@@ -60,21 +60,21 @@ public:
   MeshDescriptor();
   ~MeshDescriptor();
 
-  void  initialize(VulkanRHI* pRhi);
-  void  cleanUp(VulkanRHI* pRhi);
+  void  initialize(Renderer* pRenderer);
+  void  cleanUp(Renderer* pRenderer);
 
-  void  update(VulkanRHI* pRhi, U32 frameIndex);
+  void  update(Renderer* pRenderer, U32 resourceIndex);
 
   void          setVisible(B32 enable) { m_Visible = enable; }
   void          pushUpdate(B32 updateBits = MESH_BUFFER_UPDATE_BIT) 
    { for (U32 i = 0; i < m_pGpuHandles.size(); ++i) { m_pGpuHandles[i]._updates |= updateBits; } }
 
   ObjectBuffer* getObjectData() { return &m_ObjectData; }
-  DescriptorSet*          getCurrMeshSet(U32 frameIndex) { return m_pGpuHandles[frameIndex]._pSet; }
+  DescriptorSet*          getCurrMeshSet(U32 resourceIndex) { return m_pGpuHandles[resourceIndex]._pSet; }
 
   B32           isVisible() const { return m_Visible; }
   B32           isStatic() const { return m_Static; }
-  Buffer*       getNativeObjectBuffer(U32 frameIndex) { return m_pGpuHandles[frameIndex]._pBuf; }
+  Buffer*       getNativeObjectBuffer(U32 resourceIndex) { return m_pGpuHandles[resourceIndex]._pBuf; }
 
 protected:
 
@@ -97,17 +97,17 @@ public:
   JointDescriptor();
   ~JointDescriptor();
   
-  void  initialize(VulkanRHI* pRhi);
-  void  cleanUp(VulkanRHI* pRhi);
-  void  update(VulkanRHI* pRhi, U32 frameIndex);  
+  void  initialize(Renderer* pRenderer);
+  void cleanUp(Renderer* pRenderer);
+  void update(Renderer* pRenderer, U32 resourceIndex);  
 
   JointBuffer*  getJointData() { return &m_jointsData; }
-  Buffer*       getNativeJointBuffer(U32 frameIndex) { return m_pJointHandles[frameIndex]._pBuf; }
-  DescriptorSet*  getCurrJointSet(U32 frameIndex) { return m_pJointHandles[frameIndex]._pSet; }
+  Buffer*       getNativeJointBuffer(U32 resourceIndex) { return m_pJointHandles[resourceIndex]._pBuf; }
+  DescriptorSet*  getCurrJointSet(U32 resourceIndex) { return m_pJointHandles[resourceIndex]._pSet; }
   void          pushUpdate(B32 bits = JOINT_BUFFER_UPDATE_BIT) 
     { for(U32 i = 0; i < m_pJointHandles.size(); ++i)  m_pJointHandles[i]._updates |= bits; }
 
-  void          updateJointSets(U32 frameIndex);
+  void          updateJointSets(U32 resourceIndex);
 
   U32   numJoints() { return JointBuffer::kMaxNumberOfJointMatrices; }
 

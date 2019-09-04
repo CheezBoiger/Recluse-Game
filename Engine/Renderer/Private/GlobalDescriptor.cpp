@@ -4,6 +4,7 @@
 #include "RendererData.hpp"
 #include "TextureType.hpp"
 #include "SkyAtmosphere.hpp"
+#include "Renderer.hpp"
 
 #include "RHI/DescriptorSet.hpp"
 #include "RHI/Buffer.hpp"
@@ -62,10 +63,11 @@ GlobalDescriptor::~GlobalDescriptor()
 }
 
 
-void GlobalDescriptor::initialize(VulkanRHI* pRhi)
+void GlobalDescriptor::initialize(Renderer* pRenderer)
 {
-  R_ASSERT(pRhi, "No RHI owner set in this Global MaterialDescriptor upon initialization!\n");
+  R_ASSERT(pRenderer, "No Renderer owner set in this Global MaterialDescriptor upon initialization!\n");
 
+  VulkanRHI* pRhi = pRenderer->getRHI();
   VkDeviceSize dSize = sizeof(GlobalBuffer);
   VkBufferCreateInfo bufferCI = {};
   bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -74,8 +76,8 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   DescriptorSetLayout* pbrLayout = GlobalSetLayoutKey;
 
-  m_pGlobalBuffers.resize(pRhi->bufferingCount());
-  m_pDescriptorSets.resize(pRhi->bufferingCount());
+  m_pGlobalBuffers.resize(pRenderer->getResourceBufferCount());
+  m_pDescriptorSets.resize(pRenderer->getResourceBufferCount());
   for (U32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     m_pGlobalBuffers[i] = pRhi->createBuffer();
 
@@ -105,9 +107,10 @@ void GlobalDescriptor::initialize(VulkanRHI* pRhi)
 }
 
 
-void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
+void GlobalDescriptor::cleanUp(Renderer* pRenderer)
 {
   // TODO
+  VulkanRHI* pRhi = pRenderer->getRHI();
   for (U32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     if (m_pDescriptorSets[i]) {
 
@@ -124,18 +127,19 @@ void GlobalDescriptor::cleanUp(VulkanRHI* pRhi)
 }
 
 
-void GlobalDescriptor::update(VulkanRHI* pRhi, U32 frameIndex)
+void GlobalDescriptor::update(Renderer* pRenderer, U32 frameIndex)
 {
   U32 currFrame = frameIndex;
 
-  if (pRhi->bufferingCount() != m_pGlobalBuffers.size()) {
-    cleanUp(pRhi);
-    initialize(pRhi);
+  if (pRenderer->getResourceBufferCount() != m_pGlobalBuffers.size()) {
+    cleanUp(pRenderer);
+    initialize(pRenderer);
   }
 
   R_ASSERT(m_pGlobalBuffers[currFrame]->getMapped(), "Global data was not mapped!");
   memcpy(m_pGlobalBuffers[currFrame]->getMapped(), &m_Global, sizeof(GlobalBuffer));
-  
+
+  VulkanRHI* pRhi = pRenderer->getRHI();
   VkMappedMemoryRange range = { };
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   range.memory = m_pGlobalBuffers[currFrame]->getMemory();

@@ -52,36 +52,36 @@ public:
 
   void                    initialize();
   void                    cleanUp();
-  void                    MarkDirty() { m_bDirty = true; }
-  void                    MarkClean() { m_bDirty = false; }
+  void                    markDirty() { m_bDirty = true; }
+  void                    markClean() { m_bDirty = false; }
 
 
-  Semaphore*              SignalSemaphore() { return m_pAtmosphereSema; }
-  Texture*                GetCubeMap() { return m_pCubeMap; }
-  Sampler*                GetSampler() { return m_pSampler; }
+  Semaphore*              getSignalSemaphore() { return m_pAtmosphereSema; }
+  Texture*                getCubeMap() { return m_pCubeMap; }
+  Sampler*                getSampler() { return m_pSampler; }
 
-  B32                     NeedsRendering() { return m_bDirty; }
-  B32                     UsingPredefinedSkybox() const { return m_bUsingPredefined; }
-  CommandBuffer*          CmdBuffer() { return m_pCmdBuffer; }
+  B32                     needsRendering() { return m_bDirty; }
+  B32                     usingPredefinedSkybox() const { return m_bUsingPredefined; }
+  CommandBuffer*          getCmdBuffer() { return m_pCmdBuffer; }
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
   // This is the renderpass to say NO to clearing out the pbr pass.
-  RenderPass*             GetSkyboxRenderPass() { return m_SkyboxRenderPass; }
+  RenderPass*             getSkyboxRenderPass() { return m_SkyboxRenderPass; }
 
-  VertexBuffer*           GetSkyboxVertexBuffer() { return &m_SkyboxVertBuf; }
-  IndexBuffer*            GetSkyboxIndexBuffer() { return &m_SkyboxIndBuf; }
+  VertexBuffer*           getSkyboxVertexBuffer() { return &m_SkyboxVertBuf; }
+  IndexBuffer*            getSkyboxIndexBuffer() { return &m_SkyboxIndBuf; }
 
-  Vector3                 GetAirColor() const { return m_vAirColor; }
-  void                    SetAirColor(Vector3 color) { m_vAirColor = color; }
+  Vector3                 getAirColor() const { return m_vAirColor; }
+  void                    setAirColor(Vector3 color) { m_vAirColor = color; }
 
-  void                    BuildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr, U32 frameIndex = 0);
+  void                    buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr, U32 resourceIndex = 0);
 
 private:
-  void                    CreateRenderAttachment(VulkanRHI* rhi);
-  void                    CreateCubeMap(VulkanRHI* rhi);
-  void                    CreateCommandBuffer(VulkanRHI* rhi);
-  void                    CreateGraphicsPipeline(VulkanRHI* rhi);
-  void                    CreateFrameBuffer(VulkanRHI* rhi);
+  void                    createRenderAttachment(VulkanRHI* rhi);
+  void                    createCubeMap(VulkanRHI* rhi);
+  void                    createCommandBuffer(VulkanRHI* rhi);
+  void                    createGraphicsPipeline(VulkanRHI* rhi);
+  void                    createFrameBuffer(VulkanRHI* rhi);
   
   // RenderTextures that will be used as attachments,
   // and will be loaded onto a cubemap for the skybox.

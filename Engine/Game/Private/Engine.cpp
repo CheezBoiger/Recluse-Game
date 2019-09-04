@@ -450,6 +450,11 @@ void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
           graphics._Shadows = GRAPHICS_QUALITY_NONE;
         }
       }
+      if (availableOption(line, "DesiredSwapImages")) {
+        std::string option = getOption(line);
+        U32 images = std::atoi(option.c_str());
+        graphics._desiredSwapImages = images;
+      }
       if (availableOption(line, "LightingQuality")) {
         std::string option = getOption(line);
       }

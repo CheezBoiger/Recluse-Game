@@ -35,12 +35,15 @@ public:
     , m_indicesStagingBuffer(nullptr)
     , m_mainBuffer(0) { }
 
-  void                        initialize(VulkanRHI* rhi);
-  void                        cleanUp(VulkanRHI* pRhi);
-  void                        render(VulkanRHI* pRhi);
+  void initialize(Renderer* pRenderer);
+  void cleanUp(Renderer* pRenderer);
+  void render(Renderer* pRenderer);
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, U32 frameIndex);
+  void                        BuildCmdBuffers(Renderer* pRenderer, 
+                                              GlobalDescriptor* global, 
+                                              U32 frameIndex, 
+                                              U32 resourceIndex);
 
   Semaphore*                  Signal(U32 idx) { return m_pSemaphores[idx]; }
 
@@ -56,7 +59,7 @@ public:
 
 private:
   void                        initializeRenderPass(VulkanRHI* pRhi);
-  void                        CreateBuffers(VulkanRHI* pRhi);
+  void                        CreateBuffers(Renderer* pRenderer);
   void                        SetUpGraphicsPipeline(VulkanRHI* pRhi);
   void                        createDescriptorSetLayout(VulkanRHI* pRhi);
   void                        CleanUpDescriptorSetLayout(VulkanRHI* pRhi);

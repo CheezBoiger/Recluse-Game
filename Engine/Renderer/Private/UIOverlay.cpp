@@ -321,46 +321,48 @@ NkObject* gNkDevice()
 }
 
 
-void UIOverlay::render(VulkanRHI* pRhi)
+void UIOverlay::render(Renderer* pRenderer)
 {
   // Ignore if no reference to the rhi.
-  R_ASSERT(pRhi, "Null RHI for ui overlay!");
+  R_ASSERT(pRenderer, "Null RHI for ui overlay!");
 
   // render the overlay.
-  CommandBuffer* cmdBuffer = m_CmdBuffers[pRhi->currentImageIndex()];
+  CommandBuffer* cmdBuffer = m_CmdBuffers[pRenderer->getCurrentResourceBufferIndex()];
 
   
 }
 
 
-void UIOverlay::initialize(VulkanRHI* rhi)
+void UIOverlay::initialize(Renderer* pRenderer)
 {
-  m_pSemaphores.resize(rhi->bufferingCount());
-  m_CmdBuffers.resize(rhi->bufferingCount());
+  VulkanRHI* pRhi = pRenderer->getRHI();
+  m_pSemaphores.resize(pRhi->swapchainImageCount());
+  m_CmdBuffers.resize(pRhi->swapchainImageCount());
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   for (U32 i = 0; i < m_CmdBuffers.size(); ++i) {
-    m_CmdBuffers[i] = rhi->createCommandBuffer();
-    m_CmdBuffers[i]->allocate(rhi->graphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-    m_pSemaphores[i] = rhi->createVkSemaphore();
+    m_CmdBuffers[i] = pRhi->createCommandBuffer();
+    m_CmdBuffers[i]->allocate(pRhi->graphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_pSemaphores[i] = pRhi->createVkSemaphore();
     m_pSemaphores[i]->initialize(semaCi);
   }
 
-  initializeRenderPass(rhi);
-  createDescriptorSetLayout(rhi);
-  SetUpGraphicsPipeline(rhi);
-  CreateBuffers(rhi);
+  initializeRenderPass(pRhi);
+  createDescriptorSetLayout(pRhi);
+  SetUpGraphicsPipeline(pRhi);
+  CreateBuffers(pRenderer);
   // After initialization of our graphics gui pipeline, it's time to 
   // initialize nuklear.
-  InitializeNkObject(gNkDevice(), rhi, this);
+  InitializeNkObject(gNkDevice(), pRhi, this);
 
   // TODO: Fonts should be stashed and loaded on an atlas in gpu memory.
 }
 
 
-void UIOverlay::cleanUp(VulkanRHI* pRhi)
+void UIOverlay::cleanUp(Renderer* pRenderer)
 {
   // Allow us to clean up and release our nk context and object.
+  VulkanRHI* pRhi = pRenderer->getRHI();
   CleanUpNkObject(gNkDevice(), pRhi);  
   CleanUpDescriptorSetLayout(pRhi);
   CleanUpBuffers(pRhi);
@@ -510,7 +512,7 @@ void UIOverlay::SetUpGraphicsPipeline(VulkanRHI* pRhi)
     VkGraphicsPipelineCreateInfo pipeCI = {};
     VkPipelineLayoutCreateInfo layoutCI = {};
 
-    VkExtent2D extent = pRhi->swapchainObject()->SwapchainExtent();
+    VkExtent2D extent = pRhi->swapchainObject()->getSurfaceExtent();
   
     VkRect2D scissor;
     scissor.extent = extent;
@@ -676,8 +678,12 @@ void BufferUI::EndCanvas()
 }
 
 
-void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, U32 frameIndex)
+void UIOverlay::BuildCmdBuffers(Renderer* pRenderer, 
+                                GlobalDescriptor* global, 
+                                U32 frameIndex, 
+                                U32 resourceIndex)
 {
+  VulkanRHI* pRhi = pRenderer->getRHI();
   VkViewport viewport = {};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
@@ -752,13 +758,13 @@ void UIOverlay::BuildCmdBuffers(VulkanRHI* pRhi, GlobalDescriptor* global, U32 f
   }
 
   // Stream buffers.
-  StreamBuffers(pRhi, frameIndex);
+  StreamBuffers(pRhi, resourceIndex);
 #endif
 
-  VkBuffer vert = m_vertBuffers[frameIndex]->getNativeBuffer();
-  VkBuffer indx = m_indicesBuffers[frameIndex]->getNativeBuffer();
+  VkBuffer vert = m_vertBuffers[resourceIndex]->getNativeBuffer();
+  VkBuffer indx = m_indicesBuffers[resourceIndex]->getNativeBuffer();
   VkDeviceSize offsets[] = { 0 };
-  VkDescriptorSet sets[] = { global->getDescriptorSet(frameIndex)->getHandle(), nk->_font_set->getHandle() };
+  VkDescriptorSet sets[] = { global->getDescriptorSet(resourceIndex)->getHandle(), nk->_font_set->getHandle() };
   // Unmap vertices and index buffers, then perform drawing here.
   cmdBuffer->begin(beginInfo);  
     // When we render with secondary command buffers, we use VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS.
@@ -820,10 +826,11 @@ void UIOverlay::CleanUpDescriptorSetLayout(VulkanRHI* pRhi)
 }
 
 
-void UIOverlay::CreateBuffers(VulkanRHI* pRhi)
+void UIOverlay::CreateBuffers(Renderer* pRenderer)
 {
-  m_vertBuffers.resize(pRhi->bufferingCount());
-  m_indicesBuffers.resize(pRhi->bufferingCount());
+  VulkanRHI* pRhi = pRenderer->getRHI();
+  m_vertBuffers.resize(pRenderer->getResourceBufferCount());
+  m_indicesBuffers.resize(pRenderer->getResourceBufferCount());
 
   for (U32 i = 0; i < m_vertBuffers.size(); ++i) {
     m_vertBuffers[i] = pRhi->createBuffer();

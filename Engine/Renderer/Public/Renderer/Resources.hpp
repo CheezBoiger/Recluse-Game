@@ -31,7 +31,7 @@ public:
   ComputePipeline*      GetComputePipeline(U64 id);
   FrameBuffer*          GetFrameBuffer(U64 id);
   Texture*              GetRenderTexture(U64 id);
-  Sampler*              GetSampler(U64 id);
+  Sampler*              getSampler(U64 id);
   DescriptorSetLayout*  GetDescriptorSetLayout(U64 id);
   DescriptorSet*        getDescriptorSet(U64 id);
 
