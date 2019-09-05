@@ -345,6 +345,8 @@ private:
   void              setUpGlobalIlluminationBuffer();
   void              cleanUpGlobalIlluminationBuffer();
   void setBuffering(const GraphicsConfigParams* params);
+  void shouldDelayFrame();
+
   // Signals that tell if renderer needs to update any static data. Is cleaned out every 
   // frame!
   B32               staticNeedsUpdate() { return m_staticUpdate; }

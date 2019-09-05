@@ -123,7 +123,7 @@ SkyRenderer::~SkyRenderer()
 void SkyRenderer::createCommandBuffer(VulkanRHI* rhi)
 {
   m_pCmdBuffer = rhi->createCommandBuffer();
-  m_pCmdBuffer->allocate(rhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  m_pCmdBuffer->allocate(rhi->graphicsCmdPool(3), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 }
 
 

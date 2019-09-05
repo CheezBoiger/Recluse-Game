@@ -90,7 +90,7 @@ VulkanRHI::VulkanRHI()
   mSwapchainInfo.mCmdBufferSet = 0;
   mSwapchainInfo.mCurrentImageIndex = 0;
 
-  mGraphicsCmdPools.resize(2);
+  mGraphicsCmdPools.resize(4);
 }
 
 
@@ -604,6 +604,7 @@ void VulkanRHI::acquireNextImage()
                                           m_frameResources[m_currentFrame].imageAvailableSemaphore, 
                                           VK_NULL_HANDLE, 
                                           &mSwapchainInfo.mCurrentImageIndex);
+  R_ASSERT(result == VK_SUCCESS, "Failed to acquire next swapchain image.");
 }
 
 

@@ -200,6 +200,11 @@ void Renderer::onShutDown()
 
 void Renderer::beginFrame()
 {
+  // Wait for fences before starting next frame.
+  // WaitForCpuFence();
+  m_pRhi->waitForFrameInFlightFence();
+
+
   m_Rendering = true;
   //m_pRhi->PresentWaitIdle();
   m_pRhi->acquireNextImage();
@@ -230,6 +235,20 @@ void Renderer::waitForCpuFence()
 }
 
 
+void Renderer::shouldDelayFrame()
+{
+  // Bad impl, will need a better solution.
+  if (m_currentGraphicsConfigs._enableFrameLimit) {
+    R32 fl = (1.0f / R32(m_currentGraphicsConfigs._frameLimit + 1));
+    if (Time::deltaTime < fl) {
+      R32 dt = fl - Time::deltaTime - 1.f;
+      std::this_thread::sleep_for(
+          std::chrono::nanoseconds(U32(fl * 1000000000.0f)));
+    }
+  }
+}
+
+
 void Renderer::render()
 {
   R_TIMED_PROFILE_RENDERER();
@@ -243,14 +262,12 @@ void Renderer::render()
     return;
   }
 
+  shouldDelayFrame();
+
   // TODO(): Signal a beginning and end callback or so, when performing 
   // any rendering.
   // Update the scene descriptors before rendering the frame.
   sortCmdLists();
-
-  // Wait for fences before starting next frame.
-  //WaitForCpuFence();
-  m_pRhi->waitForFrameInFlightFence();
 
   // begin frame. This is where we start our render process per frame.
   beginFrame();

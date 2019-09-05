@@ -390,7 +390,7 @@ std::string getOption(const std::string& line)
 B32 availableOption(const std::string& line, const TChar* option) 
 {
   size_t pos = line.find(option);
-  if (pos != std::string::npos) return true;
+  if (pos != std::string::npos && pos == 1) return true;
   return false;
 }
 
@@ -411,7 +411,7 @@ void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
   for (size_t i = 0; i < Buf.Sz; ++i) {
     TChar ch = Buf.Buf[i];
     line.push_back(ch);
-    if (ch == '\n') {
+    if (ch == '\n' || i == (Buf.Sz - 1)) {
       Log(rDebug) << line;
       if (availableOption(line, "Buffering")) {
         std::string option = getOption(line);
@@ -529,6 +529,19 @@ void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
         std::string option = getOption(line);
         U32 res = atoi(option.c_str());
         graphics._shadowMapArrayRes = res;
+      }
+      if (availableOption(line, "EnableFrameLimit")) {
+        std::string option = getOption(line);
+        if (option.compare("true") == 0) {
+          graphics._enableFrameLimit = true;
+        } else {
+          graphics._enableFrameLimit = false;
+        }
+      }
+      if (availableOption(line, "FrameLimit")) {
+        std::string option = getOption(line);
+        U32 frameLimit = std::atoi(option.c_str());
+        graphics._frameLimit = frameLimit;
       }
       if (availableOption(line, "RenderResolution")) {
         std::string option = getOption(line);

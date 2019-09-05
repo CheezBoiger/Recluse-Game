@@ -34,3 +34,5 @@
 [RTXCaustics] = false
 [AmbientOcclusion] = static
 [AnimationQuality] = high
+[EnableFrameLimit] = false
+[FrameLimit] = 120

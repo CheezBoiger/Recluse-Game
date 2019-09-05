@@ -129,6 +129,9 @@ public:
   // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
   B32             _enableSoftShadows;
 
+  B32             _enableFrameLimit;
+  U32             _frameLimit;
+
   RenderResolution _Resolution;
   WindowType       _WindowType;
 };
@@ -154,6 +157,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   true,
   true,
   true,
+  false,
+  120,
   Resolution_800x600,
   WindowType_Border
 };
