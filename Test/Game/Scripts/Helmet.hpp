@@ -319,7 +319,7 @@ public:
       for (size_t p = 0; p < model->meshes[i]->getPrimitiveCount(); ++p) {
         Primitive* prim = model->meshes[i]->getPrimitive(static_cast<U32>(p));
         prim->_pMat->setEmissiveFactor(0.5f);
-        prim->_pMat->disableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
+        //prim->_pMat->disableMaps(MAT_ROUGH_BIT | MAT_METAL_BIT | MAT_ALBEDO_BIT | MAT_EMIT_BIT | MAT_AO_BIT | MAT_NORMAL_BIT);
         prim->_pMat->setBaseColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
         //prim->_pMat->setRoughnessFactor(1.0f);
         //prim->_pMat->setMetallicFactor(0.04f);

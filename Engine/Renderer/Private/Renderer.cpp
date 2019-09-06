@@ -257,14 +257,14 @@ void Renderer::render()
     // Window was minimized, ignore any cpu draw requests and prevent frame rendering
     // until window is back up.
     clearCmdLists();
-    m_pUI->ClearUiBuffers();
+    m_pUI->clearUiBuffers();
     //WaitForCpuFence();
     return;
   }
 
   shouldDelayFrame();
 
-  // TODO(): Signal a beginning and end callback or so, when performing 
+  // TODO(): getSignal a beginning and end callback or so, when performing 
   // any rendering.
   // Update the scene descriptors before rendering the frame.
   sortCmdLists();
@@ -365,8 +365,8 @@ void Renderer::render()
 
   VkSubmitInfo uiSi = { };
   uiSi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  VkCommandBuffer uiCmdBuffer = { m_pUI->GetCommandBuffer(frameIndex)->getHandle() };
-  VkSemaphore uiSignalSema = { m_pUI->Signal(frameIndex)->getHandle() };
+  VkCommandBuffer uiCmdBuffer = { m_pUI->gtCommandBuffer(frameIndex)->getHandle() };
+  VkSemaphore uiSignalSema = { m_pUI->getSignal(frameIndex)->getHandle() };
   uiSi.commandBufferCount = 1;
   uiSi.pCommandBuffers = &uiCmdBuffer;
   uiSi.waitSemaphoreCount = 1;
@@ -432,7 +432,7 @@ void Renderer::render()
   // render the getOverlay.
   m_pRhi->graphicsSubmit(DEFAULT_QUEUE_IDX, 1, &uiSi);
 
-  // Signal graphics finished on the final output.
+  // getSignal graphics finished on the final output.
   VkSemaphore signal = m_pRhi->currentGraphicsFinishedSemaphore();
   VkFence inflight = m_pRhi->currentInFlightFence();
   m_pRhi->submitCurrSwapchainCmdBuffer(1, &uiSignalSema, 1, &signal, inflight); // cpuFence will need to wait until overlay is finished.
@@ -1628,8 +1628,8 @@ void Renderer::setUpFrameBuffers()
   attachments[0] = GlowTarget->getView();
   attachmentDescriptions[0].format = GlowTarget->getFormat();
   attachmentDescriptions[0].samples = GlowTarget->getSamples();
-  framebufferCI.width = m_renderWidth;
-  framebufferCI.height = m_renderHeight;
+  framebufferCI.width = GlowTarget->getWidth();
+  framebufferCI.height = GlowTarget->getHeight();
   GlowFB->Finalize(framebufferCI, hdr_renderPass);
 }
 
@@ -2034,28 +2034,33 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   pbr_Bright->initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
+  // Initialize downscaled render textures.
+  U32 blurWidth = 1024;//windowExtent.width;
+  U32 blurHeight = 1024;//windowExtent.height;
+
+  cImageInfo.extent.height = blurHeight;
+  cImageInfo.extent.width = blurWidth;
   GlowTarget->initialize(cImageInfo, cViewInfo);
 
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
-  // Initialize downscaled render textures.
-  cImageInfo.extent.width = windowExtent.width    >> 1;
-  cImageInfo.extent.height = windowExtent.height  >> 1;
+  cImageInfo.extent.width = blurWidth >> 1;
+  cImageInfo.extent.height = blurHeight >> 1;
   renderTarget2xScaled->initialize(cImageInfo, cViewInfo);
   RenderTarget2xFinal->initialize(cImageInfo, cViewInfo);
-
-  cImageInfo.extent.width = windowExtent.width    >> 2;
-  cImageInfo.extent.height = windowExtent.height  >> 2;
+  
+  cImageInfo.extent.width = blurWidth    >> 2;
+  cImageInfo.extent.height = blurHeight  >> 2;
   renderTarget4xScaled->initialize(cImageInfo, cViewInfo);
   RenderTarget4xFinal->initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = windowExtent.width    >> 3;
-  cImageInfo.extent.height = windowExtent.height  >> 3;
+  cImageInfo.extent.width = blurWidth    >> 3;
+  cImageInfo.extent.height = blurHeight  >> 3;
   renderTarget8xScaled->initialize(cImageInfo, cViewInfo);
   RenderTarget8xFinal->initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.extent.width = windowExtent.width    >> 4;
-  cImageInfo.extent.height = windowExtent.height  >> 4;
+  cImageInfo.extent.width = blurWidth    >> 4;
+  cImageInfo.extent.height = blurHeight  >> 4;
   RenderTarget16xScaled->initialize(cImageInfo, cViewInfo);
   RenderTarget16xFinal->initialize(cImageInfo, cViewInfo);
 
@@ -3263,8 +3268,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     m_Downscale._Scale = 3.3f;
     m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet2x->getHandle();
-    viewport.height = (R32)(windowExtent.height >> 1);
-    viewport.width =  (R32)(windowExtent.width  >> 1);
+    viewport.height = (R32)DownscaleFrameBuffer2x->getHeight();
+    viewport.width =  (R32)DownscaleFrameBuffer2x->getWidth();
     cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getNative());
@@ -3286,8 +3291,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (R32)(windowExtent.height >> 2);
-    viewport.width = (R32)(windowExtent.width   >> 2);
+    viewport.height = (R32)DownscaleFrameBuffer4x->getHeight();
+    viewport.width = (R32)DownscaleFrameBuffer4x->getWidth();
     DownscaleSetNative = DownscaleSet4x->getHandle();
     I32 _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
@@ -3310,8 +3315,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (R32)(windowExtent.height >> 3);
-    viewport.width = (R32)(windowExtent.width   >> 3);
+    viewport.height = (R32)DownscaleFrameBuffer8x->getHeight();
+    viewport.width = (R32)DownscaleFrameBuffer8x->getWidth();
     DownscaleSetNative = DownscaleSet8x->getHandle();
     _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
@@ -3334,8 +3339,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (R32)(windowExtent.height >> 4);
-    viewport.width = (R32)(windowExtent.width   >> 4);
+    viewport.height = (R32)DownscaleFrameBuffer16x->getHeight();
+    viewport.width = (R32)DownscaleFrameBuffer16x->getWidth();
     DownscaleSetNative = DownscaleSet16x->getHandle();
     _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
@@ -3359,12 +3364,11 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     cmdBuffer->endRenderPass();
   }
 
-  viewport.height = (R32)windowExtent.height;
-  viewport.width = (R32)windowExtent.width;
-
   {
     DescriptorSet* GlowSet = GlowDescriptorSetKey;
     VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
+    viewport.height = (R32)RenderTargetGlowKey->getHeight();
+    viewport.width = (R32)RenderTargetGlowKey->getWidth();
     cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
     if (!m_currentGraphicsConfigs._EnableBloom) {
       VkClearAttachment clearAttachment = {};
@@ -3374,7 +3378,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       VkClearRect rect = {};
       rect.baseArrayLayer = 0;
       rect.layerCount = 1;
-      VkExtent2D extent = { m_renderWidth, m_renderHeight };
+      VkExtent2D extent = { RenderTargetGlowKey->getWidth(), RenderTargetGlowKey->getHeight() };
       rect.rect.extent = extent;
       rect.rect = { 0, 0 };
       cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
@@ -3399,6 +3403,9 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
   dSets[0] = m_pGlobal->getDescriptorSet(resourceIndex)->getHandle();
   dSets[1] = hdrSet->getHandle();
   dSets[2] = m_pHDR->getSet()->getHandle();
+
+  viewport.height = (R32)windowExtent.height;
+  viewport.width = (R32)windowExtent.width;
   
   if (m_currentGraphicsConfigs._AA == AA_FXAA_2x) {
     m_pAntiAliasingFXAA->generateCommands(m_pRhi, cmdBuffer, m_pGlobal, resourceIndex);
@@ -4031,7 +4038,7 @@ void Renderer::checkCmdUpdate(U32 frameIndex, U32 resourceIndex)
 
 
     if (m_pSky->needsRendering()) m_pSky->buildCmdBuffer(m_pRhi, nullptr, resourceIndex);
-    m_pUI->BuildCmdBuffers(this, m_pGlobal, frameIndex, resourceIndex);
+    m_pUI->buildCmdBuffers(this, m_pGlobal, frameIndex, resourceIndex);
     m_pRhi->renderFrameCommandBuffer();
 
     m_workers[0].join();
@@ -4062,7 +4069,7 @@ void Renderer::checkCmdUpdate(U32 frameIndex, U32 resourceIndex)
       generateShadowCmds(shadowBuf, resourceIndex);
       shadowBuf->end();
     }
-    m_pUI->BuildCmdBuffers(this, m_pGlobal, frameIndex, resourceIndex);
+    m_pUI->buildCmdBuffers(this, m_pGlobal, frameIndex, resourceIndex);
 
     m_pRhi->renderFrameCommandBuffer();
 
@@ -4650,7 +4657,7 @@ void Renderer::pushMeshRender(MeshRenderCmd& cmd)
 
 BufferUI* Renderer::getUiBuffer() const
 {
-  return m_pUI->GetUIBuffer();
+  return m_pUI->getUIBuffer();
 }
 
 
@@ -4720,7 +4727,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
     cmdBuffer.SetOwner(m_pRhi->logicDevice()->getNative());
     cmdBuffer.allocate(m_pRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-    // TODO(): Signal a beginning and end callback or so, when performing 
+    // TODO(): getSignal a beginning and end callback or so, when performing 
     // any rendering.
     // Update the scene descriptors before rendering the frame.
     sortCmdLists();

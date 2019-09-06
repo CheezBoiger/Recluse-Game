@@ -17,7 +17,7 @@ namespace Recluse {
 
 void UIDescriptor::initialize(VulkanRHI* pRhi)
 {
-  DescriptorSetLayout* layout = gRenderer().getOverlay()->GetMaterialLayout();
+  DescriptorSetLayout* layout = gRenderer().getOverlay()->getMaterialLayout();
   
   m_pSet = pRhi->createDescriptorSet();
   m_pSet->allocate(pRhi->descriptorPool(), layout);

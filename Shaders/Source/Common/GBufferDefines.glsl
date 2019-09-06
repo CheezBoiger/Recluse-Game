@@ -76,5 +76,4 @@ float linearizeDepth(in sampler2D depthTex, vec2 vTexCoord, float zNear, float z
   float zE = 2.0 * zNear * zFar / (zFar + zNear - zN * (zFar - zNear));
   return zE;
 }
-
 #endif // GBUFFERDEFINES_H

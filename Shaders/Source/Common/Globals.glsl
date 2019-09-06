@@ -72,4 +72,13 @@ struct Model {
   float w1;
 };
 
+
+vec3 getPosition(vec2 uv, float depth, in mat4 invViewProj)
+{
+
+  vec4 clipPos = vec4(uv.xy, depth, 1.0);
+  vec4 worldPos = invViewProj * clipPos;
+  worldPos /= worldPos.w;
+  return worldPos.xyz;
+}
 #endif // GLOBALS_H

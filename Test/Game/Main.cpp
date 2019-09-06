@@ -94,7 +94,6 @@ public:
     // You are also allowed to configure hdr settings of the scene. This doesn't affect user parameters of
     // setting bloom on or off, or anything else...
     m_hdrSettings._bloomStrength = 1.0f;
-
 #if 1
     cubemap0 = gRenderer().createTextureCube();
     cubemap1 = gRenderer().createTextureCube();

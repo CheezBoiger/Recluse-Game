@@ -296,7 +296,11 @@ float PCF_Filter(in sampler2D shadowMap, vec2 uv, float zReceiver, float filterR
 }
 
 
-float PCF_FilterCascade(in sampler2DArray shadowMap, int cascadeIdx, vec2 uv, float zReceiver, float filterRadiusUV)
+float PCF_FilterCascade(in sampler2DArray shadowMap, 
+                        int cascadeIdx, 
+                        vec2 uv, 
+                        float zReceiver, 
+                        float filterRadiusUV)
 {
   float sum = 0.0;
   for (int i = 0; i < PCF_NUM_SAMPLES; ++i) {

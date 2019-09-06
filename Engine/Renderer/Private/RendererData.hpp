@@ -404,7 +404,7 @@ public:
                            SimpleRenderCmd* renderCmds, 
                            U32 count);
 
-  RenderPass*         GetRenderPass() { return m_renderPass; }
+  RenderPass*         getRenderPass() { return m_renderPass; }
   GraphicsPipeline*   GetWireFrameStaticPipeline() { }
   GraphicsPipeline*   GetWireFrameDynamicPipeline() { }
 

@@ -17,47 +17,37 @@ layout (set = 0, binding = 0) uniform Globals {
 
 // Scene depth to reconstruct the world position.
 layout (set = 1, binding = 0) uniform sampler2D depth;
+layout (set = 2, binding = 0) uniform sampler2D shadowMap;
 
 // Output texture.
-layout (set = 2, binding = 0, rgba8) uniform image2D outputTex;
+layout (set = 3, binding = 0, rgba8) uniform image2D outAccumVolume;
 
-layout (set = 3, binding = 0) uniform Lights {
-  LightBuffer lights;
-} gLightBuffer;
-
-
-vec4 getPosition(vec2 uv, float depth)
-{
-
-  vec4 clipPos = vec4(uv.xy, depth, 1.0);
-  vec4 worldPos = gWorldBuffer.global.invViewProj * clipPos;
-  worldPos /= worldPos.w;
-  return vec4(worldPos.xyz, 1.0);
-}
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 void main()
 {
   ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
-  vec4 color = imageLoad(outputTex, iPixCoord);
+
   vec2 texCoord = vec2(  float(iPixCoord.x) / float(gWorldBuffer.global.screenSize.x), 
                          float(iPixCoord.y) / float(gWorldBuffer.global.screenSize.y)) * 2 - 1;
   float sceneDepth = texture(depth, texCoord).r;
   
   // reconstruct the world position
-  vec4 positionWs = getPosition(texCoord, sceneDepth);
+  vec3 positionWs = getPosition(texCoord, 
+                                sceneDepth, 
+                                gWorldBuffer.global.invViewProj);
   
   vec4 resultColor = vec4(0.0);
   // perform comparing.
-  vec4 lightDir = -gLightBuffer.lights.primaryLight.direction;
+  vec3 viewDir = gWorldBuffer.global.cameraPos.xyz - positionWs;
   float extent = 0;
   for (int i = 0; i < MAX_MARCHING_SAMPLES; ++i) {
-	vec4 p = positionWs + lightDir * extent;
+    vec3 p = positionWs + viewDir * extent;
 	
   }
   
   // Store the final resulting color.
-  imageStore(outputTex, iPixCoord, resultColor);
+  imageStore(outAccumVolume, iPixCoord, resultColor);
 }
 
 

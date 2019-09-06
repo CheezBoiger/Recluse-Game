@@ -145,6 +145,7 @@ public:
   void                      update(VulkanRHI* pRhi, GlobalBuffer* gBuffer, LightBuffer* buffer, I32 idx = -1, U32 resourceIndex = 0);
 
   void                      setViewportDim(R32 dim) { m_rShadowViewportDim = dim; }
+  void                      adjustSoftShadowLightSz(R32 sz) { m_rShadowLightSz = sz; }
 
   void                      generateDynamicShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& dynamicCmds, U32 resourceIndex);
   void                      generateStaticShadowCmds(CommandBuffer* cmdBuffer, CmdList<PrimitiveRenderCmd>& staticCmds, U32 resourceIndex);
@@ -258,6 +259,8 @@ private:
   LightViewCascadeSpace         m_cascadeViewSpace;
   R32                           m_rShadowViewportDim;
   B32                           m_staticMapNeedsUpdate;
+  R32 m_rShadowLightSz;
+  R32 m_rSoftShadowNear;
   U32                           m_numPointLights;
   U32                           m_numCascadeShadowMaps;
   GraphicsQuality               m_shadowQuality;

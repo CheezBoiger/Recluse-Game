@@ -32,7 +32,7 @@ public:
   // Blend an animation to target weight over time in seconds.
   void blendPlayback(const std::string& name, R32 targetWeight = 1.0f, R32 fadeLen = 0.3f);
   
-  // Signal to play back an animation clip with given name.
+  // getSignal to play back an animation clip with given name.
   // May also optionally specify at what time to play the animation [0,1] as the normalized time.
   void playback(const std::string& name, R32 rate = 1.0f, R32 atTime = 0.0f);
   

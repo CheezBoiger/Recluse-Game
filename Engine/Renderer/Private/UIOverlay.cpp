@@ -244,7 +244,7 @@ void InitImageBuffers(NkObject* obj, I32 w, I32 h, VulkanRHI* rhi, UIOverlay* ov
   obj->_cache->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   obj->_cache->map();
 
-  obj->_font_set->allocate(rhi->descriptorPool(), overlay->GetMaterialLayout());
+  obj->_font_set->allocate(rhi->descriptorPool(), overlay->getMaterialLayout());
   VkDescriptorImageInfo img = { };
   img.sampler = obj->_sampler->getHandle();
   img.imageView = obj->_texture->getView();
@@ -678,7 +678,7 @@ void BufferUI::EndCanvas()
 }
 
 
-void UIOverlay::BuildCmdBuffers(Renderer* pRenderer, 
+void UIOverlay::buildCmdBuffers(Renderer* pRenderer, 
                                 GlobalDescriptor* global, 
                                 U32 frameIndex, 
                                 U32 resourceIndex)
@@ -947,7 +947,7 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, U32 frameIndex)
 }
 
 
-void UIOverlay::ClearUiBuffers()
+void UIOverlay::clearUiBuffers()
 {
   NkObject* nk = gNkDevice();
   nk_clear(&nk->_ctx);

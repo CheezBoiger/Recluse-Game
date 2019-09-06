@@ -230,7 +230,7 @@ public:
     m_pRendererComponent->initialize(this);
     m_pRendererComponent->addMesh(mesh);
     m_pRendererComponent->enableAutoLod(false);
-    material->setEmissiveFactor(0.2f);
+    material->setEmissiveFactor(1.0f);
 
     std::random_device r;
     std::mt19937 twist(r());

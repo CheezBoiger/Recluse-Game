@@ -40,22 +40,22 @@ public:
   void render(Renderer* pRenderer);
 
   // Build the cmd buffers. Cmdlist must be a list of UI compatible objects.
-  void                        BuildCmdBuffers(Renderer* pRenderer, 
+  void                        buildCmdBuffers(Renderer* pRenderer, 
                                               GlobalDescriptor* global, 
                                               U32 frameIndex, 
                                               U32 resourceIndex);
 
-  Semaphore*                  Signal(U32 idx) { return m_pSemaphores[idx]; }
+  Semaphore*                  getSignal(U32 idx) { return m_pSemaphores[idx]; }
 
-  DescriptorSetLayout*        GetMaterialLayout() { return m_pDescLayout; }
+  DescriptorSetLayout*        getMaterialLayout() { return m_pDescLayout; }
 
-  CommandBuffer*              GetCommandBuffer(U32 idx) { return m_CmdBuffers[idx]; }
+  CommandBuffer*              gtCommandBuffer(U32 idx) { return m_CmdBuffers[idx]; }
 
-  RenderPass*                 GetRenderPass() { return m_renderPass; }
+  RenderPass*                 getRenderPass() { return m_renderPass; }
 
-  BufferUI*                   GetUIBuffer() { return &m_mainBuffer; }
+  BufferUI*                   getUIBuffer() { return &m_mainBuffer; }
 
-  void                        ClearUiBuffers();
+  void                        clearUiBuffers();
 
 private:
   void                        initializeRenderPass(VulkanRHI* pRhi);

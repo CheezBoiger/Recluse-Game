@@ -211,7 +211,7 @@ void Engine::cleanUp()
 void Engine::run()
 {
   if (m_running) return;
-  // TODO(): Signal to continue thread works.
+  // TODO(): getSignal to continue thread works.
 
   // Start up the time as the engine begins running.
   Time::start();
@@ -226,7 +226,7 @@ void Engine::run()
 void Engine::stop()
 {
   if (!m_running) return;
-  // TODO(): Signal to stop thread works.
+  // TODO(): getSignal to stop thread works.
 
   gRenderer().waitIdle();
   m_running = false;

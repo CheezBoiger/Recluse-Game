@@ -24,9 +24,6 @@ void main()
   vec3 t8x = texture(Target8x, frag_in.uv).rgb;
   vec3 t16x = texture(Target16x, frag_in.uv).rgb;
   
-  vec3 Combined = t2x + t4x;
-  Combined = Combined + t8x;
-  Combined = Combined + t16x;
-  
-  GlowColor = vec4(Combined, 1.0);
+  vec3 result = t2x + t4x + t8x + t16x;
+  GlowColor = vec4(result, 1.0);
 }

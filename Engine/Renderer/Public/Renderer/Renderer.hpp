@@ -143,6 +143,7 @@ public:
 
   GlobalBuffer*     getGlobalData() { return m_pGlobal->getData(); }
   LightBuffer*      getLightData() { return m_pLights->getData(); }
+  ShadowMapSystem* getShadowMapSystem() { return &m_pLights->getPrimaryShadowMapSystem(); }
 
   void              freeParticleSystem(ParticleSystem* system);
 

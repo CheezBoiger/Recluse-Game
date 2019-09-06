@@ -115,6 +115,8 @@ ShadowMapSystem::ShadowMapSystem()
 #endif 
   , m_staticMapNeedsUpdate(true)
   , m_rShadowViewportDim(15.0f)
+  , m_rShadowLightSz(1.0f)
+  , m_rSoftShadowNear(0.135f)
   , m_staticShadowViewportDim(100.0f)
   , m_numCascadeShadowMaps(kTotalCascades)
 { 
@@ -1390,10 +1392,10 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
     8000.0f
   );
   m_viewSpace._ViewProj = view * proj;
-  R32 lightSz = 5.0f / m_rShadowViewportDim;
-  m_cascadeViewSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
-  m_cascadeViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
-  
+  R32 lightSz = m_rShadowLightSz / m_rShadowViewportDim;
+
+  //m_cascadeViewSpace._lightSz = Vector4(lightSz, lightSz, lightSz, lightSz);
+  //m_cascadeViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
   R32 cShadowDim = m_rShadowViewportDim;
   R32 rr = 5.0f;
   R32 e = 2.0f;
@@ -1406,10 +1408,13 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
     );
     Eye *= 1024.0f;
     Eye -= extent;
+
     Matrix4& mat = m_cascadeViewSpace._ViewProj[i];
     Matrix4 p = Matrix4::ortho(cShadowDim, cShadowDim, 1.0f, 8000.0f);
     Matrix4 v = Matrix4::lookAt(-Eye, extent, Vector3::UP);
     m_cascadeViewSpace._split[i] = rr;
+    m_cascadeViewSpace._lightSz[i] = m_rShadowLightSz;
+    m_cascadeViewSpace._near[i] = m_rSoftShadowNear;
     rr *= 4.5f;
     e += 1.0f;
     mat = v * p;
@@ -1447,7 +1452,7 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
     view = Matrix4::lookAt(-Eye, viewerPos, Vector3::UP);
     m_staticViewSpace._ViewProj = view * proj;
     m_staticViewSpace._near = Vector4(0.135f, 0.0f, 0.1f, 0.1f);
-    m_staticViewSpace._lightSz.x = 5.0f / m_staticShadowViewportDim;//15.0f / m_staticShadowViewportHeight;
+    m_staticViewSpace._lightSz.x = 15.0f / m_staticShadowViewportDim;//15.0f / m_staticShadowViewportHeight;
     R_ASSERT(m_pStaticLightViewBuffers[resourceIndex]->getMapped(), "Light view buffer was not mapped!");
     memcpy(m_pStaticLightViewBuffers[resourceIndex]->getMapped(), &m_staticViewSpace, sizeof(LightViewSpace));
 
