@@ -109,7 +109,8 @@ recluse_shaders = [
   Shader('Simple', 'Simple.vert'),
   Shader('Simple_anim', 'Simple.vert', params='-DSKIN_ANIMATION=1'),
   Shader('Decal', 'Decal.vert'),
-  Shader('Decal', 'Decal.frag')
+  Shader('Decal', 'Decal.frag'),
+  Shader('LightVolume', 'LightVolumes.comp')
 ]
   
 def get_shader_ext(filename):
