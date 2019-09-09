@@ -46,7 +46,7 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().createBoxCollider(Vector3(15.0f, 1.0f, 15.0f));
+    m_pCollider = gPhysics().createBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
 #if 1
     m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
 #endif
@@ -70,11 +70,11 @@ public:
       , &material);
     Transform* trans = getTransform();
     m_pRendererComponent->initialize(this);
-#if 0
+#if 1
     m_pRendererComponent->enableStatic(false);
     m_pRendererComponent->forceForward(false);
     m_pRendererComponent->addMesh(mesh);
-    m_pRendererComponent->enableLod(false);
+    m_pRendererComponent->enableAutoLod(false);
     mesh->getPrimitive(0)->_pMat = material;
     trans->_scale = Vector3(15.0f, 15.0f, 15.0f);
 #else
@@ -98,10 +98,11 @@ public:
 
     m_particleSystem = new ParticleSystemComponent();
     m_particleSystem->initialize(this);
-    m_particleSystem->SetMaxParticleCount(3000);
-    m_particleSystem->SetMaxLife(200.0f);
-    m_particleSystem->SetAcceleration(Vector3(1.0f, -0.8f, 0.8f));
-    m_particleSystem->SetAngleRate(1.0f);
+    m_particleSystem->setMaxParticleCount(3000);
+    m_particleSystem->setMaxLife(200.0f);
+    m_particleSystem->setBrightnessFactor(2.0f);
+    m_particleSystem->setAcceleration(Vector3(1.0f, -0.8f, 0.8f));
+    m_particleSystem->setAngleRate(1.0f);
     m_particleSystem->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 
     gUI().SetEventHandle( "Resolution change.", 

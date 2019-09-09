@@ -191,7 +191,7 @@ private:
   ControlInputCallback          m_pControlInputFunc;
   R64                           m_gameMouseX;
   R64                           m_gameMouseY;
-  R64                           m_dLag;
+  R64                           m_physicsAccum;
 
   Window                        m_window;
   U32                           m_sceneObjectCount;

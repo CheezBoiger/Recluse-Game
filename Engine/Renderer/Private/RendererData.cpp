@@ -1185,12 +1185,41 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GraphicsInfo.pStages = ShaderModules;
   GraphicsInfo.stageCount = 2;
 
+  VkViewport viewport;
+  VkRect2D scissor;
+
+  viewport = { 0.0f, 0.0f, 
+              (R32)FrameBuffer2x->getWidth(), (R32)FrameBuffer2x->getHeight(),
+              0.0f, 1.0f };
+
+  VkPipelineViewportStateCreateInfo viewportCi = { };
+  viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+  viewportCi.scissorCount = 1;
+  viewportCi.viewportCount = 1;
+  viewportCi.pViewports = &viewport;
+  viewportCi.pScissors = &scissor;
+    
+
+  scissor = { { 0, 0 }, { FrameBuffer2x->getWidth(), FrameBuffer2x->getHeight() } };
+  GraphicsInfo.pViewportState = &viewportCi;
   GraphicsInfo.renderPass = FrameBuffer2x->RenderPassRef()->getHandle();
   g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_2X ]->initialize(GraphicsInfo, DownscaleLayout);
+
+  viewport.width = (R32)FrameBuffer4x->getWidth();
+  viewport.height = (R32)FrameBuffer4x->getHeight();
+  scissor.extent = { FrameBuffer4x->getWidth(), FrameBuffer4x->getHeight() };
   GraphicsInfo.renderPass = FrameBuffer4x->RenderPassRef()->getHandle();
   g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_4X ]->initialize(GraphicsInfo, DownscaleLayout);
+
+  viewport.width = (R32)FrameBuffer8x->getWidth();
+  viewport.height = (R32)FrameBuffer8x->getHeight();
+  scissor.extent = {FrameBuffer8x->getWidth(), FrameBuffer8x->getHeight()};
   GraphicsInfo.renderPass = FrameBuffer8x->RenderPassRef()->getHandle();
   g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_8X ]->initialize(GraphicsInfo, DownscaleLayout);
+
+  viewport.width = (R32)FrameBuffer16x->getWidth();
+  viewport.height = (R32)FrameBuffer16x->getHeight();
+  scissor.extent = {FrameBuffer16x->getWidth(), FrameBuffer16x->getHeight()};
   GraphicsInfo.renderPass = FrameBuffer16x->RenderPassRef()->getHandle();
   g_graphicsPipelines[ PIPELINE_GRAPHICS_DOWNSCALE_BLUR_16X ]->initialize(GraphicsInfo, DownscaleLayout);
 
@@ -1208,6 +1237,9 @@ void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Defa
   GlowPipelineLayout.pPushConstantRanges = nullptr;
   GlowPipelineLayout.pushConstantRangeCount = 0;
 
+  viewport.width = (R32)GlowFrameBuffer->getWidth();
+  viewport.height = (R32)GlowFrameBuffer->getHeight();
+  scissor.extent = { GlowFrameBuffer->getWidth(), GlowFrameBuffer->getHeight() };
   GraphicsInfo.renderPass = GlowFrameBuffer->RenderPassRef()->getHandle();
   g_graphicsPipelines[ PIPELINE_GRAPHICS_GLOW ]->initialize(GraphicsInfo, GlowPipelineLayout);
 

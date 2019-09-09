@@ -283,7 +283,7 @@ void BulletPhysics::updateState(R64 dt, R64 tick)
 {
   // TODO(): Needs assert.
   R_ASSERT(bt_manager._pWorld, "No world to run physics sim.");
-  bt_manager._pWorld->stepSimulation(btScalar(dt), 1, btScalar(tick));
+  bt_manager._pWorld->stepSimulation(btScalar(dt), 100, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
   U32 numManifolds = pDispatcher->getNumManifolds();
 

@@ -68,7 +68,7 @@ void main()
       particleBuffer.animScale.y) + particleBuffer.animScale.z;
       
     vec4 t0 = texture(particleAtlas, uvw);
-    color.xyz += t0.rgb * particleBuffer.lightFactor.r;
+    color.xyz += t0.rgb;
     color.w = t0.a;
     
     if (particleBuffer.fadeIn.x != 0 && frag_in.life >= particleBuffer.fadeIn.x) {
@@ -83,6 +83,8 @@ void main()
     }
   }
   
+  color.xyz =  color.rgb * particleBuffer.lightFactor.r;
+  
   if (color.a < 0.015) {
     discard;
   }
@@ -91,6 +93,6 @@ void main()
   vec3 glow = color.rgb - length(V) * 0.2;
   glow = max(glow, vec3(0.0));
   glow = glow * 0.02;
-  glow = clamp(glow, vec3(0.0), vec3(1.0));
+  //glow = clamp(glow, vec3(0.0), vec3(1.0));
   brightColor = vec4(glow, 1.0);
 }

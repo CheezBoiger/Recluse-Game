@@ -21,34 +21,36 @@ protected:
 public:
   ParticleSystemComponent()
     : m_pParticleSystem(nullptr)
-    , m_shouldSort(false) { }
+    , m_shouldSort(false)
+    , m_shouldGPUSort(false) { }
 
   void update() override;  
   
-  void EnableWorldSpace(B32 enable);
-  void SetMaxParticleCount(U32 maxCount);
-  void SetMaxLife(R32 maxLife);
-  void SetLifetimeScale(R32 scale);
-  void SetTextureArray(Texture2DArray* texture);
-  void SetGlobalScale(R32 globalScale);
-  void SetBrightnessFactor(R32 scale);
-  void SetFadeIn(R32 fadeIn);
-  void SetFadeOut(R32 fadeOut);
-  void SetRate(R32 rate);
-  void EnableSorting(B32 enable) { m_shouldSort = enable; } 
-  void SetAngleRate(R32 rate);
-  void SetAnimationScale(R32 scale, R32 max = 16.0f, R32 offset = 0.0f);
-  void SetAcceleration(const Vector3& acc) { m_acceleration = acc; }
+  void enableWorldSpace(B32 enable);
+  void setMaxParticleCount(U32 maxCount);
+  void setMaxLife(R32 maxLife);
+  void setLifetimeScale(R32 scale);
+  void setTextureArray(Texture2DArray* texture);
+  void setGlobalScale(R32 globalScale);
+  void setBrightnessFactor(R32 scale);
+  void setFadeIn(R32 fadeIn);
+  void setFadeOut(R32 fadeOut);
+  void setRate(R32 rate);
+  void enableSorting(B32 enable) { m_shouldSort = enable; } 
+  void setAngleRate(R32 rate);
+  void setAnimationScale(R32 scale, R32 max = 16.0f, R32 offset = 0.0f);
+  void setAcceleration(const Vector3& acc) { m_acceleration = acc; }
   void setColor(const Vector4& color) { m_color = color; }
 
-  void UseAtlas(B32 enable);
+  void useAtlas(B32 enable);
 
-  B32 Sorting() const { return m_shouldSort; }
+  B32 sorting() const { return m_shouldSort; }
 
 private:
   ParticleSystem* m_pParticleSystem;
   Vector3     m_acceleration;
   Vector4     m_color;
+  B32 m_shouldGPUSort;
   B32 m_shouldSort;
 };
 } // Recluse

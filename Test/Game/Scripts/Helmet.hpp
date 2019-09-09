@@ -52,7 +52,7 @@ public:
     m_pAnim = new AnimationComponent();
     m_pParticles = new ParticleSystemComponent();
     //m_pParticles->initialize(this);
-    m_pParticles->EnableWorldSpace(true);
+    m_pParticles->enableWorldSpace(true);
 
     m_pCollider = gPhysics().createBoxCollider(Vector3(0.4f, 0.5f, 0.4f));
     // m_pPhysicsComponent->SetRelativeOffset(Vector3(0.0f, 0.0f, 0.0f));
@@ -252,17 +252,17 @@ public:
       img.load("Assets/World/ParticleAtlas.png");
       m_particleTexture->update(img, 8, 8);
       img.cleanUp();
-      m_pParticleSystem->SetMaxParticleCount(50);
-      m_pParticleSystem->SetTextureArray(m_particleTexture);
-      m_pParticleSystem->SetGlobalScale(1.0f);
-      m_pParticleSystem->SetBrightnessFactor(1.5f);
-      m_pParticleSystem->SetFadeOut(0.0f);
-      m_pParticleSystem->SetAngleRate(0.0f);
-      m_pParticleSystem->SetFadeIn(0.0f);
-      m_pParticleSystem->SetMaxLife(2.55f);
-      m_pParticleSystem->SetAnimationScale(25.0f, 64.0f, 0.0f);
-      m_pParticleSystem->UseAtlas(true);
-      m_pParticleSystem->EnableSorting(false);
+      m_pParticleSystem->setMaxParticleCount(50);
+      m_pParticleSystem->setTextureArray(m_particleTexture);
+      m_pParticleSystem->setGlobalScale(1.0f);
+      m_pParticleSystem->setBrightnessFactor(1.5f);
+      m_pParticleSystem->setFadeOut(0.0f);
+      m_pParticleSystem->setAngleRate(0.0f);
+      m_pParticleSystem->setFadeIn(0.0f);
+      m_pParticleSystem->setMaxLife(2.55f);
+      m_pParticleSystem->setAnimationScale(25.0f, 64.0f, 0.0f);
+      m_pParticleSystem->useAtlas(true);
+      m_pParticleSystem->enableSorting(false);
       m_pParticleSystem->setEnable(true);
     }
 #endif
@@ -343,13 +343,15 @@ public:
  #endif
 
     transform->_position = Vector3(2.0f, 10.0f, 0.0f);
-    m_pParticleSystem->EnableWorldSpace(true);
+    //m_pParticleSystem->setColor({ 1.0f, 1.0f ,1.0f, 1.0f });
+    m_pParticleSystem->setBrightnessFactor(2.0f);
+    m_pParticleSystem->enableWorldSpace(true);
   }
 
   void update(R32 tick) override
   { 
     if (Keyboard::keyPressed(KEY_CODE_V)) {
-      m_pParticleSystem->SetMaxParticleCount(100);
+      m_pParticleSystem->setMaxParticleCount(100);
     }
   }
 

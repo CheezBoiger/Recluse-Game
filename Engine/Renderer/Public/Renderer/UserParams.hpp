@@ -58,6 +58,11 @@ enum RenderResolution {
 
 class GraphicsConfigParams {
 public:
+  // Number of desired frame buffer images to use. This is the number of images 
+  // available for your GPU to render with, as they will help unblock gpu rendering while
+  // the OS is busy trying to present the rendered frame. Your GPU can then use the finished
+  // resources from the currently displaying image to render. Complicated, I know... This is 
+  // hardware dependent, so you can not always gaurantee your desired image count will be exact...
   U32 _desiredSwapImages;
   // Determine draw buffering, and number of back buffers the renderer will use for 
   // presenting onto the display.
@@ -94,8 +99,18 @@ public:
   // render scale determines the viewport surface to render onto.
   R32             _renderScale;
 
+  // Determines the resolution quality of sunlight shadow, which comprises of multiple maps rendering
+  // objects in the scene, for close to far distances from the viewer. Increasing this will improve
+  // quality of shadows, but have a small impact to performance.
   U32             _cascadeShadowMapRes;
+
+  // Number of sunlight shadow maps to use corresponding near and far distances from the viewer.
+  // You generally only need 4 maps, but can reduce this for performance, at the cost of quality for 
+  // far away objects (objects far away will not have shadows.)
   U32             _numberCascadeShadowMaps;
+
+  // Resolution of shadows for point lights (lamps, torches, spotlights etc...) Increasing this will 
+  // give out better quality shadows for these lights, at the cost of performance.
   U32             _shadowMapArrayRes;
 
   // Allow vertical sync to reduce tearing of frames. This is useful if the display can only 
@@ -129,10 +144,21 @@ public:
   // an object who is being casted a shadow, improving its depth perception. Performance may slightly degrade.
   B32             _enableSoftShadows;
 
+  // Option to enable a limit to the frame rate of your GPU (if rendering to quickly, engine will attempt to 
+  // slow down the rate.)
   B32             _enableFrameLimit;
+
+  // Frame rate limit, should the GPU be rendering too quickly, engine will attempt to slow it down to the 
+  // desired frame limit range.
   U32             _frameLimit;
 
+  // Resolution of the scene rendered in the GPU. The better the quality of the the rendering resolution, the 
+  // overall better the image will look, at the cost of performance, since the GPU will have to work harder
+  // to produce the frame. This is difference from your window resolution, as the OS adapter is meant to map the
+  // GPU frame image to the window of your screen.
   RenderResolution _Resolution;
+
+  // Type of window that your GPU is rendering for.
   WindowType       _WindowType;
 };
 

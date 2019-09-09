@@ -112,7 +112,7 @@ Engine::Engine()
   , m_running(false)
   , m_stopping(false)
   , m_bSignalLoadScene(false)
-  , m_dLag(0.0)
+  , m_physicsAccum(0.0)
   , m_engineMode(EngineMode_Game)
 {
   m_workers.resize(4);
@@ -244,7 +244,7 @@ void Engine::update()
   // render out the scene.
   R64 dt = Time::deltaTime;
   R64 tick = Time::fixTime;
-  m_dLag += Time::deltaTime;
+  //m_physicsAccum += Time::deltaTime;
 
 
   // Update using next frame input.
@@ -258,7 +258,11 @@ void Engine::update()
   updateSunLight();
 
   m_workers[0] = std::thread([&] () -> void {
+    //while (m_physicsAccum >= tick) {
     gPhysics().updateState(dt, tick);
+      //m_physicsAccum -= tick;
+    //}
+
     PhysicsComponent::updateComponents();
 
 #if !defined FORCE_AUDIO_OFF

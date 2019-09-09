@@ -219,6 +219,8 @@ void Renderer::endFrame()
 {
   m_Rendering = false;
   cleanStaticUpdate();
+  shouldDelayFrame();
+
   if (m_pRhi->present() != VK_SUCCESS) {
     updateRendererConfigs(nullptr);
   }
@@ -241,7 +243,7 @@ void Renderer::shouldDelayFrame()
   if (m_currentGraphicsConfigs._enableFrameLimit) {
     R32 fl = (1.0f / R32(m_currentGraphicsConfigs._frameLimit + 1));
     if (Time::deltaTime < fl) {
-      R32 dt = fl - Time::deltaTime - 1.f;
+      R32 dt = (fl - Time::deltaTime) * 0.000005f;
       std::this_thread::sleep_for(
           std::chrono::nanoseconds(U32(fl * 1000000000.0f)));
     }
@@ -261,8 +263,6 @@ void Renderer::render()
     //WaitForCpuFence();
     return;
   }
-
-  shouldDelayFrame();
 
   // TODO(): getSignal a beginning and end callback or so, when performing 
   // any rendering.
