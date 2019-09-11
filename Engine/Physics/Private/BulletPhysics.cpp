@@ -283,9 +283,26 @@ void BulletPhysics::updateState(R64 dt, R64 tick)
 {
   // TODO(): Needs assert.
   R_ASSERT(bt_manager._pWorld, "No world to run physics sim.");
-  bt_manager._pWorld->stepSimulation(btScalar(dt), 100, btScalar(tick));
+  bt_manager._pWorld->stepSimulation(btScalar(dt), 1, btScalar(tick));
   btDispatcher* pDispatcher = bt_manager._pWorld->getDispatcher();
   U32 numManifolds = pDispatcher->getNumManifolds();
+
+  // Copy data from physics sim.
+  for (auto& it : kRigidBodyMap) {
+    R_ASSERT(it.second.native, "Bullet RigidBody was null");
+    R_ASSERT(it.second.rigidBody, "Engine RigidBody was null.");
+    RigidBundle& bundle = it.second;
+    btTransform transform = bundle.native->getWorldTransform();
+    btQuaternion q = transform.getRotation();
+    btVector3 p = transform.getOrigin();
+    btVector3 velocity = bundle.native->getLinearVelocity();
+    btVector3 angularVelocity = bundle.native->getAngularVelocity();
+
+    bundle.rigidBody->_rotation = Quaternion(q.x(), q.y(), q.z(), q.w());
+    bundle.rigidBody->_position = Vector3(p.x(), p.y(), p.z());
+    bundle.rigidBody->_velocity =
+        Vector3(velocity.x(), velocity.y(), velocity.z());
+  }
 
   for (U32 i = 0; i < numManifolds; ++i) {
     btPersistentManifold* contactManifold = pDispatcher->getManifoldByIndexInternal(i);
@@ -335,22 +352,6 @@ void BulletPhysics::updateState(R64 dt, R64 tick)
 
   // Update collisions that are no longer colliding with eachother.
   updateCollisions();
-
-  // Copy data from physics sim.
-  for (auto& it : kRigidBodyMap) {
-    R_ASSERT(it.second.native, "Bullet RigidBody was null");
-    R_ASSERT(it.second.rigidBody, "Engine RigidBody was null.");
-    RigidBundle& bundle = it.second;
-    btTransform transform = bundle.native->getWorldTransform();
-    btQuaternion q = transform.getRotation();
-    btVector3 p = transform.getOrigin();
-    btVector3 velocity = bundle.native->getLinearVelocity();
-    btVector3 angularVelocity = bundle.native->getAngularVelocity();
-
-    bundle.rigidBody->_rotation = Quaternion(q.x(), q.y(), q.z(), q.w());
-    bundle.rigidBody->_position = Vector3(p.x(), p.y(), p.z());
-    bundle.rigidBody->_velocity = Vector3(velocity.x(), velocity.y(), velocity.z());    
-  }
 }
 
 

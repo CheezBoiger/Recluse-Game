@@ -119,7 +119,7 @@ public:
     pCam->enableBloom(true);
     Camera::setMain(pCam);
 
-    transform->_position = Vector3(10.0f, 10.0f, 10.0f);
+    transform->_position = Vector3(10.0f, 25.0f, 20.0f);
     Vector3 dir = Vector3(0.0f, 0.0f, 0.0f) - transform->_position;
     transform->_rotation = Quaternion::lookRotation(dir, Vector3::UP);
     Vector3 euler = transform->_rotation.toEulerAngles();
@@ -372,6 +372,7 @@ public:
 
     bFollow = false;
     m_pPhysicsComponent->setMass(1.0f);
+    getTransform()->_position = Vector3(10.0f, 25.0f, 10.0f);
   }
 
   void update(R32 tick) override {
@@ -401,35 +402,69 @@ public:
     f.y = 0.0f;
     f = f.normalize();
 
+    Vector3 movementImpulse;
+
     if (Keyboard::keyPressed( KEY_CODE_LSHIFT ) ||
         Keyboard::keyHeldDown( KEY_CODE_LSHIFT )) {
-      speed *= 5.0f;
+      if (!m_jumping)
+        speed *= 5.0f;
     }
     if (Keyboard::keyPressed( KEY_CODE_A ) ||
         Keyboard::keyHeldDown( KEY_CODE_A ) ) {
-      transform->_position -= r * speed * tick;
+      if (!m_jumping) {
+        Vector3 move = r * speed;
+        movementImpulse += -move;
+        transform->_position -= move * tick;
+      } else {
+        m_pPhysicsComponent->setLinearVelocity(
+          m_pPhysicsComponent->getRigidBody()->_velocity - r * 10.0f * tick);
+      }
     }
 
     if ( Keyboard::keyPressed( KEY_CODE_D ) ||
          Keyboard::keyHeldDown( KEY_CODE_D ) ) {
-      transform->_position += r * speed * tick;
+      if (!m_jumping) {
+        Vector3 move = r * speed;
+        movementImpulse += move;
+        transform->_position += move * tick;
+      } else {
+        m_pPhysicsComponent->setLinearVelocity(
+            m_pPhysicsComponent->getRigidBody()->_velocity + r * 10.0f * tick);
+      }
     }
 
     if ( Keyboard::keyPressed( KEY_CODE_W ) ||
          Keyboard::keyHeldDown( KEY_CODE_W ) ) {
-      transform->_position += f * speed * tick;
+      if (!m_jumping) {
+        Vector3 move = f * speed;
+        movementImpulse += move;
+        transform->_position += move * tick;
+      } else {
+        f.y = 0.0f;
+        m_pPhysicsComponent->setLinearVelocity(
+            m_pPhysicsComponent->getRigidBody()->_velocity + f * 10.0f * tick);
+      }
     }
 
     if ( Keyboard::keyPressed( KEY_CODE_S ) ||
          Keyboard::keyHeldDown( KEY_CODE_S ) ) {
-      transform->_position -= f * speed * tick;
+      if (!m_jumping) {
+        Vector3 move = f * speed;
+        movementImpulse -= move;
+        transform->_position -= move * tick;        
+      } else {
+        f.y = 0.0f;
+        m_pPhysicsComponent->setLinearVelocity(
+            m_pPhysicsComponent->getRigidBody()->_velocity - f * 10.0f * tick);
+      }
     }
 
     if (Keyboard::keyPressed(KEY_CODE_SPACE)) {
       if (!m_jumping) {
         m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
-        m_pPhysicsComponent->applyImpulse(Vector3(0.0f, 10.0f, 0.0f),
+        m_pPhysicsComponent->applyImpulse(Vector3(movementImpulse.x, 8.0f, movementImpulse.z),
                                           Vector3());
+        Log() << "jump with impulse: " << movementImpulse << "\n";
         m_jumping = true;
       }
     }
@@ -445,12 +480,17 @@ public:
 
   void onCollisionEnter(Collision* other) override {
     CubeObject* cube = other->_gameObject->castTo<CubeObject>();
-    if (cube) {
-      m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
-      m_pPhysicsComponent->setLinearVelocity(Vector3());
-      m_pPhysicsComponent->clearForces();
-      m_jumping = false;
-      Log() << "enter CubeObject\n";
+    Log() << "Enter: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
+    if (cube && m_jumping) {
+      if (m_pPhysicsComponent->getRigidBody()->_velocity.y > 0.1f) {
+        Log() << "jumping out.\n"; 
+      } else {
+        m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
+        m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, 0.0f, 0.0f));
+        m_pPhysicsComponent->clearForces();
+        m_jumping = false;
+        Log() << "enter CubeObject\n";
+      }
     }
   }
 
@@ -462,8 +502,9 @@ public:
       // m_pPhysicsComponent->clearForces();
       Log() << "exit CubeObject\n";
     } else {
+      //m_jumping = true;
        //m_pPhysicsComponent->clearForces();
-       m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, m_pPhysicsComponent->getRigidBody()->_velocity.y, 0.0f));
+       //m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, m_pPhysicsComponent->getRigidBody()->_velocity.y, 0.0f));
       // Log() << "Stop.\n";
     }
   }
@@ -474,7 +515,19 @@ public:
     //    Vector3(0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.x*/, 
     //            0.0f,
     //            0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.z*/));
-    if (other->_gameObject->castTo<CubeObject>()) return;
+    Log() << "Stay: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
+    if (other->_gameObject->castTo<CubeObject>()) {
+      if (m_jumping && m_pPhysicsComponent->getRigidBody()->_velocity.y > 0.1f) {
+        m_jumping = true;
+        return;
+      }
+      m_pPhysicsComponent->setLinearFactor({1.0f, 0.0f, 1.0f});
+      m_pPhysicsComponent->setLinearVelocity({0.0f, 0.0f, 0.0f}); 
+      m_pPhysicsComponent->clearForces();
+      m_jumping = false;
+      Log() << "OnStay\n";
+      return;
+    }
 
     if (m_jumping) {
       for (U32 i = 0; i < other->_contactPoints.size(); ++i) {

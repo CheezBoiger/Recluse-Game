@@ -253,17 +253,16 @@ void Engine::update()
   AnimationComponent::updateComponents();
   gAnimation().updateState(dt);
   
-  PhysicsComponent::UpdateFromPreviousGameLogic();
   traverseScene(UpdateTransform);
   updateSunLight();
 
   m_workers[0] = std::thread([&] () -> void {
     //while (m_physicsAccum >= tick) {
+    PhysicsComponent::UpdateFromPreviousGameLogic();
     gPhysics().updateState(dt, tick);
+    PhysicsComponent::updateComponents();
       //m_physicsAccum -= tick;
     //}
-
-    PhysicsComponent::updateComponents();
 
 #if !defined FORCE_AUDIO_OFF
     AudioComponent::updateComponents();
