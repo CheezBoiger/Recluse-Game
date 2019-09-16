@@ -43,6 +43,11 @@ struct VulkanAllocation {
   VkDeviceSize _offset;
   VkDeviceSize _sz;
   B8* _pData;
+  VulkanAllocation()
+    : _deviceMemory(VK_NULL_HANDLE)
+    , _offset(0)
+    , _sz(0)
+    , _pData(nullptr) { }
 };
 
 

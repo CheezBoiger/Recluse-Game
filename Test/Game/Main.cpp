@@ -81,6 +81,7 @@ public:
     // Set primary light.
     {
       Sky* pSky = getSky();
+      //pSky->setSkyColor({ 0.0f, 0.0f, 0.0f });
       DirectionalLight* pPrimary = pSky->getSunLight();
       pPrimary->_Ambient = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);

@@ -307,7 +307,7 @@ void ParticleSystem::updateDescriptor()
   storage.range = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
 
   VkImageView textureView = DefaultTexture2DArrayView;
-  Sampler* sampler = DefaultSampler2DKey;
+  Sampler* sampler = RendererPass::getSampler( SAMPLER_DEFAULT );
   if (_texture) textureView = _texture->getHandle()->getView();
   if (_sampler) sampler = _sampler->getHandle();
   VkDescriptorImageInfo imgInfo = {};
@@ -690,7 +690,7 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-  attachmentDescriptions[0].format = pbr_FinalTextureKey->getFormat();
+  attachmentDescriptions[0].format = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getFormat();
   attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -699,7 +699,7 @@ void ParticleEngine::initializeRenderPass(VulkanRHI* pRhi)
   attachmentDescriptions[1] = {};
   attachmentDescriptions[1].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   attachmentDescriptions[1].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  attachmentDescriptions[1].format = pbr_BrightTextureKey->getFormat();
+  attachmentDescriptions[1].format = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getFormat();
   attachmentDescriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
   attachmentDescriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   attachmentDescriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;

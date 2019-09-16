@@ -46,7 +46,7 @@ public:
     m_pMeshComponent = new MeshComponent();
     m_pRendererComponent = new RendererComponent();
     m_pPhysicsComponent = new PhysicsComponent();
-    m_pCollider = gPhysics().createBoxCollider(Vector3(15.0f, 15.0f, 15.0f));
+    m_pCollider = gPhysics().createBoxCollider(Vector3(15.0f, 1.0f, 15.0f));
 #if 1
     m_pCollider->SetCenter(Vector3(0.0f, -1.0f, 0.0f));
 #endif
@@ -70,7 +70,7 @@ public:
       , &material);
     Transform* trans = getTransform();
     m_pRendererComponent->initialize(this);
-#if 1
+#if 0
     m_pRendererComponent->enableStatic(false);
     m_pRendererComponent->forceForward(false);
     m_pRendererComponent->addMesh(mesh);

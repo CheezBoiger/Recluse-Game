@@ -693,6 +693,8 @@ void Renderer::setUpDescriptorSetLayouts()
   RendererPass::initializeDescriptorSetLayouts(m_pRhi);
 
   RendererPass::initShadowResolveDescriptorSetLayout(m_pRhi);
+  RendererPass::initBloomAccumulationDescriptorSetLayouts(m_pRhi);
+
   // Light space.
   {
     std::array<VkDescriptorSetLayoutBinding, 2> LightViewBindings;
@@ -1129,14 +1131,14 @@ void Renderer::setUpFrameBuffers()
     std::array<VkAttachmentDescription, 1> attachmentDescriptions;
     VkSubpassDependency dependencies[2];
     attachmentDescriptions[0] = CreateAttachmentDescription(
-      final_renderTargetKey->getFormat(),
+      RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      final_renderTargetKey->getSamples()
+      RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getSamples()
     );
 
     dependencies[0] = CreateSubPassDependency(
@@ -1179,7 +1181,7 @@ void Renderer::setUpFrameBuffers()
     );
 
     std::array<VkImageView, 1> attachments;
-    attachments[0] = final_renderTargetKey->getView();
+    attachments[0] = RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getView();
     VkFramebufferCreateInfo framebufferCI = CreateFrameBufferInfo(
       windowExtent.width,
       windowExtent.height,
@@ -1328,29 +1330,27 @@ void Renderer::setUpFrameBuffers()
 
   // pbr framebuffer.
   {
-    Texture* pbr_Bright = pbr_BrightTextureKey;
-    Texture* pbr_Final = pbr_FinalTextureKey;
     std::array<VkAttachmentDescription, 7> pbrAttachmentDescriptions;
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
-      pbr_Final->getFormat(),
+      RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-     pbr_Final->getSamples()
+     RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getSamples()
     );
 
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
-      pbr_Bright->getFormat(),
+      RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getFormat(),
       VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_CLEAR,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Bright->getSamples()
+      RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getSamples()
     );
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
@@ -1382,8 +1382,8 @@ void Renderer::setUpFrameBuffers()
     );
 
     std::array<VkImageView, 7> pbrAttachments;
-    pbrAttachments[0] = pbr_Final->getView();
-    pbrAttachments[1] = pbr_Bright->getView();
+    pbrAttachments[0] = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getView();
+    pbrAttachments[1] = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getView();
     pbrAttachments[2] = gbuffer_Depth->getView();
 
     VkFramebufferCreateInfo pbrFramebufferCI = CreateFrameBufferInfo(
@@ -1401,25 +1401,25 @@ void Renderer::setUpFrameBuffers()
 
     // Forward renderpass portion.
     pbrAttachmentDescriptions[0] = CreateAttachmentDescription(
-      pbr_Final->getFormat(),
+      RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Final->getSamples()
+      RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getSamples()
     );
 
     pbrAttachmentDescriptions[1] = CreateAttachmentDescription(
-      pbr_Bright->getFormat(),
+      RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getFormat(),
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       VK_ATTACHMENT_LOAD_OP_LOAD,
       VK_ATTACHMENT_STORE_OP_STORE,
       VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       VK_ATTACHMENT_STORE_OP_DONT_CARE,
-      pbr_Bright->getSamples()
+      RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getSamples()
     );
 
     pbrAttachmentDescriptions[2] = CreateAttachmentDescription(
@@ -1477,8 +1477,8 @@ void Renderer::setUpFrameBuffers()
       gbuffer_Depth->getSamples()
     );
 
-    pbrAttachments[0] = pbr_Final->getView();
-    pbrAttachments[1] = pbr_Bright->getView();
+    pbrAttachments[0] = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getView();
+    pbrAttachments[1] = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getView();
     pbrAttachments[2] = gbuffer_Albedo->getView();
     pbrAttachments[3] = gbuffer_Normal->getView();
     pbrAttachments[4] = gbuffer_Position->getView();
@@ -1535,16 +1535,6 @@ void Renderer::setUpFrameBuffers()
   hdrFrameBuffer->Finalize(framebufferCI, hdr_renderPass);
 
   // Downscale render textures.
-  Texture* rtDownScale2x = RenderTarget2xHorizKey;
-  Texture* RenderTarget2xFinal = RenderTarget2xFinalKey;
-  Texture* rtDownScale4x = RenderTarget4xScaledKey;
-  Texture* RenderTarget4xFinal = RenderTarget4xFinalKey;
-  Texture* rtDownScale8x = RenderTarget8xScaledKey;
-  Texture* RenderTarget8xFinal = RenderTarget8xFinalKey;
-  Texture* rtDownScale16x = RenderTarget16xScaledKey;
-  Texture* RenderTarget16xFinal = RenderTarget16xFinalKey;
-  Texture* GlowTarget = RenderTargetGlowKey;
-
   FrameBuffer* DownScaleFB2x = m_pRhi->createFrameBuffer();
   FrameBuffer* FB2xFinal = m_pRhi->createFrameBuffer();
   FrameBuffer* DownScaleFB4x = m_pRhi->createFrameBuffer();
@@ -1565,72 +1555,92 @@ void Renderer::setUpFrameBuffers()
   FrameBufferGlowKey = GlowFB;
 
   // 2x
-  attachments[0] = RenderTarget2xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget2xFinal->getFormat();
-  attachmentDescriptions[0].samples = RenderTarget2xFinal->getSamples();
-  framebufferCI.width = RenderTarget2xFinal->getWidth();
-  framebufferCI.height = RenderTarget2xFinal->getHeight();
-  FB2xFinal->Finalize(framebufferCI, hdr_renderPass);
+  {
+    Texture* RenderTarget2xFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_FINAL, 0);
+    attachments[0] = RenderTarget2xFinal->getView();
+    attachmentDescriptions[0].format = RenderTarget2xFinal->getFormat();
+    attachmentDescriptions[0].samples = RenderTarget2xFinal->getSamples();
+    framebufferCI.width = RenderTarget2xFinal->getWidth();
+    framebufferCI.height = RenderTarget2xFinal->getHeight();
+    FB2xFinal->Finalize(framebufferCI, hdr_renderPass);
+  }
 
-  attachments[0] = rtDownScale2x->getView();
-  attachmentDescriptions[0].format = rtDownScale2x->getFormat();
-  attachmentDescriptions[0].samples = rtDownScale2x->getSamples();
-  framebufferCI.width = rtDownScale2x->getWidth();
-  framebufferCI.height = rtDownScale2x->getHeight();
-  DownScaleFB2x->Finalize(framebufferCI, hdr_renderPass);
-
+  {
+    Texture* rtDownScale2x = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_SCALED, 0);
+    attachments[0] = rtDownScale2x->getView();
+    attachmentDescriptions[0].format = rtDownScale2x->getFormat();
+    attachmentDescriptions[0].samples = rtDownScale2x->getSamples();
+    framebufferCI.width = rtDownScale2x->getWidth();
+    framebufferCI.height = rtDownScale2x->getHeight();
+    DownScaleFB2x->Finalize(framebufferCI, hdr_renderPass);
+  }
   // 4x
-  attachments[0] = RenderTarget4xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget4xFinal->getFormat();
-  attachmentDescriptions[0].samples = RenderTarget4xFinal->getSamples();
-  framebufferCI.width = RenderTarget4xFinal->getWidth();
-  framebufferCI.height = RenderTarget4xFinal->getHeight();
-  FB4xFinal->Finalize(framebufferCI, hdr_renderPass);
-
-  attachments[0] = rtDownScale4x->getView();
-  attachmentDescriptions[0].format = rtDownScale4x->getFormat();
-  attachmentDescriptions[0].samples = rtDownScale4x->getSamples();
-  framebufferCI.width = rtDownScale4x->getWidth();
-  framebufferCI.height = rtDownScale4x->getHeight();
-  DownScaleFB4x->Finalize(framebufferCI, hdr_renderPass);
-
+  {
+    Texture* RenderTarget4xFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_FINAL, 0);
+    attachments[0] = RenderTarget4xFinal->getView();
+    attachmentDescriptions[0].format = RenderTarget4xFinal->getFormat();
+    attachmentDescriptions[0].samples = RenderTarget4xFinal->getSamples();
+    framebufferCI.width = RenderTarget4xFinal->getWidth();
+    framebufferCI.height = RenderTarget4xFinal->getHeight();
+    FB4xFinal->Finalize(framebufferCI, hdr_renderPass);
+  }
+  {
+    Texture* rtDownScale4x = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_SCALED, 0);
+    attachments[0] = rtDownScale4x->getView();
+    attachmentDescriptions[0].format = rtDownScale4x->getFormat();
+    attachmentDescriptions[0].samples = rtDownScale4x->getSamples();
+    framebufferCI.width = rtDownScale4x->getWidth();
+    framebufferCI.height = rtDownScale4x->getHeight();
+    DownScaleFB4x->Finalize(framebufferCI, hdr_renderPass);
+  }
   // 8x
-  attachments[0] = RenderTarget8xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget8xFinal->getFormat();
-  attachmentDescriptions[0].samples = RenderTarget8xFinal->getSamples();
-  framebufferCI.width = RenderTarget8xFinal->getWidth();
-  framebufferCI.height = RenderTarget8xFinal->getHeight();
-  FB8xFinal->Finalize(framebufferCI, hdr_renderPass);
-
-  attachments[0] = rtDownScale8x->getView();
-  attachmentDescriptions[0].format = rtDownScale8x->getFormat();
-  attachmentDescriptions[0].samples = rtDownScale8x->getSamples();
-  framebufferCI.width = rtDownScale8x->getWidth();
-  framebufferCI.height = rtDownScale8x->getHeight();
-  DownScaleFB8x->Finalize(framebufferCI, hdr_renderPass);
-
-  // 16x
-  attachments[0] = RenderTarget16xFinal->getView();
-  attachmentDescriptions[0].format = RenderTarget16xFinal->getFormat();
-  attachmentDescriptions[0].samples = RenderTarget16xFinal->getSamples();
-  framebufferCI.width = RenderTarget16xFinal->getWidth();
-  framebufferCI.height = RenderTarget16xFinal->getHeight();
-  FB16xFinal->Finalize(framebufferCI, hdr_renderPass);
-
-  attachments[0] = rtDownScale16x->getView();
-  attachmentDescriptions[0].format = rtDownScale16x->getFormat();
-  attachmentDescriptions[0].samples = rtDownScale16x->getSamples();
-  framebufferCI.width = rtDownScale16x->getWidth();
-  framebufferCI.height = rtDownScale16x->getHeight();
-  DownScaleFB16x->Finalize(framebufferCI, hdr_renderPass);
-
+  {
+    Texture* RenderTarget8xFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0);
+    attachments[0] = RenderTarget8xFinal->getView();
+    attachmentDescriptions[0].format = RenderTarget8xFinal->getFormat();
+    attachmentDescriptions[0].samples = RenderTarget8xFinal->getSamples();
+    framebufferCI.width = RenderTarget8xFinal->getWidth();
+    framebufferCI.height = RenderTarget8xFinal->getHeight();
+    FB8xFinal->Finalize(framebufferCI, hdr_renderPass);
+  }
+  {
+    Texture* rtDownScale8x = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_SCALED, 0);
+    attachments[0] = rtDownScale8x->getView();
+    attachmentDescriptions[0].format = rtDownScale8x->getFormat();
+    attachmentDescriptions[0].samples = rtDownScale8x->getSamples();
+    framebufferCI.width = rtDownScale8x->getWidth();
+    framebufferCI.height = rtDownScale8x->getHeight();
+    DownScaleFB8x->Finalize(framebufferCI, hdr_renderPass);
+  } 
+  {
+    // 16x
+    Texture* RenderTarget16xFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_FINAL, 0);
+    attachments[0] = RenderTarget16xFinal->getView();
+    attachmentDescriptions[0].format = RenderTarget16xFinal->getFormat();
+    attachmentDescriptions[0].samples = RenderTarget16xFinal->getSamples();
+    framebufferCI.width = RenderTarget16xFinal->getWidth();
+    framebufferCI.height = RenderTarget16xFinal->getHeight();
+    FB16xFinal->Finalize(framebufferCI, hdr_renderPass);
+  }
+  {
+    Texture* rtDownScale16x = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_SCALED, 0);
+    attachments[0] = rtDownScale16x->getView();
+    attachmentDescriptions[0].format = rtDownScale16x->getFormat();
+    attachmentDescriptions[0].samples = rtDownScale16x->getSamples();
+    framebufferCI.width = rtDownScale16x->getWidth();
+    framebufferCI.height = rtDownScale16x->getHeight();
+    DownScaleFB16x->Finalize(framebufferCI, hdr_renderPass);
+  }
   // Glow
-  attachments[0] = GlowTarget->getView();
-  attachmentDescriptions[0].format = GlowTarget->getFormat();
-  attachmentDescriptions[0].samples = GlowTarget->getSamples();
-  framebufferCI.width = GlowTarget->getWidth();
-  framebufferCI.height = GlowTarget->getHeight();
-  GlowFB->Finalize(framebufferCI, hdr_renderPass);
+  {
+    Texture* GlowTarget = RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0);
+    attachments[0] = GlowTarget->getView();
+    attachmentDescriptions[0].format = GlowTarget->getFormat();
+    attachmentDescriptions[0].samples = GlowTarget->getSamples();
+    framebufferCI.width = GlowTarget->getWidth();
+    framebufferCI.height = GlowTarget->getHeight();
+    GlowFB->Finalize(framebufferCI, hdr_renderPass);
+  }
 }
 
 
@@ -1639,6 +1649,7 @@ void Renderer::setUpGraphicsPipelines()
   RendererPass::initializePipelines(m_pRhi);
 
   RendererPass::initShadowResolvePipeline(m_pRhi);
+  RendererPass::initBloomAccumulationPipeline(m_pRhi);
 
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -1901,21 +1912,7 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
 {
   VkExtent2D windowExtent = {m_renderWidth, m_renderHeight};
   RendererPass::initializeRenderTextures(this);
-
   RendererPass::initShadowMaskTexture(this, windowExtent);
-
-  Texture* renderTarget2xScaled = m_pRhi->createTexture();
-  Texture* RenderTarget2xFinal = m_pRhi->createTexture();
-  Texture* renderTarget4xScaled = m_pRhi->createTexture();
-  Texture* RenderTarget4xFinal = m_pRhi->createTexture();
-  Texture* renderTarget8xScaled = m_pRhi->createTexture();
-  Texture* RenderTarget8xFinal = m_pRhi->createTexture();
-  Texture* RenderTarget16xScaled = m_pRhi->createTexture();
-  Texture* RenderTarget16xFinal = m_pRhi->createTexture();
-
-  Texture* pbr_Final = m_pRhi->createTexture();
-  Texture* pbr_Bright = m_pRhi->createTexture();
-  Texture* GlowTarget = m_pRhi->createTexture();
 
   Texture* gbuffer_Albedo = m_pRhi->createTexture();
   Texture* gbuffer_Normal = m_pRhi->createTexture();
@@ -1928,15 +1925,13 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   RDEBUG_SET_VULKAN_NAME(gbuffer_roughMetalSpec, "RoughMetal");
   RDEBUG_SET_VULKAN_NAME(gbuffer_Emission, "Emissive");
 
-  RDEBUG_SET_VULKAN_NAME(pbr_Final, "PBR Lighting");
-  RDEBUG_SET_VULKAN_NAME(pbr_Bright, "Bright");
-  RDEBUG_SET_VULKAN_NAME(GlowTarget, "Glow");
+  RDEBUG_SET_VULKAN_NAME(RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0), "PBR Lighting");
+  RDEBUG_SET_VULKAN_NAME(RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0), "Bright");
+  RDEBUG_SET_VULKAN_NAME(RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0), "Glow");
 
   Texture* hdr_Texture = m_pRhi->createTexture();
   Sampler* hdr_Sampler = m_pRhi->createSampler();
   RDEBUG_SET_VULKAN_NAME(hdr_Texture, "HDR");
-  
-  Texture* final_renderTexture = m_pRhi->createTexture();
 
   hdr_gamma_samplerKey = hdr_Sampler;
   hdr_gamma_colorAttachKey = hdr_Texture;
@@ -1944,18 +1939,6 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   gbuffer_NormalAttachKey = gbuffer_Normal;
   gbuffer_PositionAttachKey = gbuffer_roughMetalSpec;
   gbuffer_EmissionAttachKey = gbuffer_Emission;
-  pbr_FinalTextureKey = pbr_Final;
-  pbr_BrightTextureKey = pbr_Bright;
-  RenderTarget2xHorizKey = renderTarget2xScaled;
-  RenderTarget2xFinalKey = RenderTarget2xFinal;
-  RenderTarget4xScaledKey = renderTarget4xScaled;
-  RenderTarget4xFinalKey = RenderTarget4xFinal;
-  RenderTarget8xScaledKey = renderTarget8xScaled;
-  RenderTarget8xFinalKey = RenderTarget8xFinal;
-  RenderTarget16xScaledKey = RenderTarget16xScaled;
-  RenderTarget16xFinalKey = RenderTarget16xFinal;
-  RenderTargetGlowKey = GlowTarget;
-  final_renderTargetKey = final_renderTexture;
   gbuffer_SamplerKey = gbuffer_Sampler;
   
   VkImageCreateInfo cImageInfo = { };
@@ -1996,10 +1979,13 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   cImageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cViewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
-    | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-  pbr_Final->initialize(cImageInfo, cViewInfo);
-  final_renderTexture->initialize(cImageInfo, cViewInfo);
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+                     VK_IMAGE_USAGE_SAMPLED_BIT | 
+                     VK_IMAGE_USAGE_STORAGE_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->initialize(cImageInfo, cViewInfo);
   cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
   cImageInfo.format = GBUFFER_ROUGH_METAL_FORMAT;
@@ -2010,8 +1996,12 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   // If this is not supported properly, we can go with less precision.
   VkImageFormatProperties imgFmtProps;
   VkResult result = VulkanRHI::gPhysicalDevice.getImageFormatProperties(VK_FORMAT_R16G16_UNORM, 
-    VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 
-    0, &imgFmtProps);
+                                                                        VK_IMAGE_TYPE_2D,   
+                                                                        VK_IMAGE_TILING_OPTIMAL, 
+                                                                        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+                                                                        VK_IMAGE_USAGE_SAMPLED_BIT, 
+                                                                        0, 
+                                                                        &imgFmtProps);
   cViewInfo.format = GBUFFER_NORMAL_FORMAT;
   cImageInfo.format = GBUFFER_NORMAL_FORMAT;
   if (result == VK_ERROR_FORMAT_NOT_SUPPORTED) { 
@@ -2029,40 +2019,55 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   cViewInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
   cImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT
-    | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-  pbr_Bright->initialize(cImageInfo, cViewInfo);
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+                     VK_IMAGE_USAGE_SAMPLED_BIT | 
+                     VK_IMAGE_USAGE_STORAGE_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->initialize(cImageInfo, cViewInfo);
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+                     VK_IMAGE_USAGE_SAMPLED_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                     VK_IMAGE_USAGE_STORAGE_BIT;
 
   // Initialize downscaled render textures.
-  U32 blurWidth = 1024;//windowExtent.width;
-  U32 blurHeight = 1024;//windowExtent.height;
+  U32 blurWidth = windowExtent.width;
+  U32 blurHeight = windowExtent.height;
 
   cImageInfo.extent.height = blurHeight;
   cImageInfo.extent.width = blurWidth;
-  GlowTarget->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0)->initialize(cImageInfo, cViewInfo);
 
-  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  // Transfers are used for image blit.
+  cImageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | 
+                     VK_IMAGE_USAGE_SAMPLED_BIT | 
+                     VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                     VK_IMAGE_USAGE_STORAGE_BIT |
+                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
   cImageInfo.extent.width = blurWidth >> 1;
   cImageInfo.extent.height = blurHeight >> 1;
-  renderTarget2xScaled->initialize(cImageInfo, cViewInfo);
-  RenderTarget2xFinal->initialize(cImageInfo, cViewInfo);
+  //RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_START, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_SCALED, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_FINAL, 0)->initialize(cImageInfo, cViewInfo);
   
   cImageInfo.extent.width = blurWidth    >> 2;
   cImageInfo.extent.height = blurHeight  >> 2;
-  renderTarget4xScaled->initialize(cImageInfo, cViewInfo);
-  RenderTarget4xFinal->initialize(cImageInfo, cViewInfo);
+  //RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_START, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_SCALED, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_FINAL, 0)->initialize(cImageInfo, cViewInfo);
 
   cImageInfo.extent.width = blurWidth    >> 3;
   cImageInfo.extent.height = blurHeight  >> 3;
-  renderTarget8xScaled->initialize(cImageInfo, cViewInfo);
-  RenderTarget8xFinal->initialize(cImageInfo, cViewInfo);
+  //RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_START, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_SCALED, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0)->initialize(cImageInfo, cViewInfo);
 
   cImageInfo.extent.width = blurWidth    >> 4;
   cImageInfo.extent.height = blurHeight  >> 4;
-  RenderTarget16xScaled->initialize(cImageInfo, cViewInfo);
-  RenderTarget16xFinal->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_START, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_SCALED, 0)->initialize(cImageInfo, cViewInfo);
+  RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_FINAL, 0)->initialize(cImageInfo, cViewInfo);
 
   // Depth attachment texture.
   cImageInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -2107,9 +2112,8 @@ void Renderer::setUpRenderTextures(B32 fullSetup)
   hdr_Sampler->initialize(samplerCI);
 
   if (fullSetup) {
-    Sampler* defaultSampler = m_pRhi->createSampler();
-    defaultSampler->initialize(samplerCI);
-    DefaultSampler2DKey = defaultSampler;
+    RendererPass::initializeSamplers(m_pRhi);
+    RendererPass::getSampler(SAMPLER_DEFAULT)->initialize(samplerCI);
 
     VkImageCreateInfo dImageInfo = {};
     VkImageViewCreateInfo dViewInfo = {};
@@ -2168,37 +2172,11 @@ void Renderer::cleanUpRenderTextures(B32 fullCleanup)
   RendererPass::cleanUpRenderTextures(m_pRhi);
 
   {
-    Texture* renderTarget2xScaled = RenderTarget2xHorizKey;
-    Texture* RenderTarget2xFinal = RenderTarget2xFinalKey;
-    Texture* renderTarget4xScaled = RenderTarget4xScaledKey;
-    Texture* RenderTarget4xFinal = RenderTarget4xFinalKey;
-    Texture* renderTarget8xScaled = RenderTarget8xScaledKey;
-    Texture* RenderTarget8xFinal = RenderTarget8xFinalKey;
-    Texture* RenderTarget16xScaled = RenderTarget16xScaledKey;
-    Texture* RenderTarget16xFinal = RenderTarget16xFinalKey;
-    Texture* GlowTarget = RenderTargetGlowKey;
-
-    m_pRhi->freeTexture(renderTarget2xScaled);
-    m_pRhi->freeTexture(RenderTarget2xFinal);
-    m_pRhi->freeTexture(renderTarget4xScaled);
-    m_pRhi->freeTexture(RenderTarget4xFinal);
-    m_pRhi->freeTexture(RenderTarget8xFinal);
-    m_pRhi->freeTexture(renderTarget8xScaled);
-    m_pRhi->freeTexture(RenderTarget16xScaled);
-    m_pRhi->freeTexture(RenderTarget16xFinal);
-    m_pRhi->freeTexture(GlowTarget);
-  }
-  {
     Texture* gbuffer_Albedo = gbuffer_AlbedoAttachKey;
     Texture* gbuffer_Normal = gbuffer_NormalAttachKey;
     Texture* gbuffer_Position = gbuffer_PositionAttachKey;
     Texture* gbuffer_Emission = gbuffer_EmissionAttachKey;
-    Sampler* gbuffer_Sampler = gbuffer_SamplerKey;
-
-    Texture* pbr_Bright = pbr_BrightTextureKey;
-    Texture* pbr_Final = pbr_FinalTextureKey;
-  
-    Texture* final_renderTarget = final_renderTargetKey;    
+    Sampler* gbuffer_Sampler = gbuffer_SamplerKey;   
 
     Texture* hdr_Texture = hdr_gamma_colorAttachKey;
     Sampler* hdr_Sampler = hdr_gamma_samplerKey;
@@ -2211,16 +2189,13 @@ void Renderer::cleanUpRenderTextures(B32 fullCleanup)
     m_pRhi->freeTexture(gbuffer_Position);
     m_pRhi->freeTexture(gbuffer_Emission);
     m_pRhi->freeSampler(gbuffer_Sampler);
-    m_pRhi->freeTexture(pbr_Bright);
-    m_pRhi->freeTexture(pbr_Final);
-    m_pRhi->freeTexture(final_renderTarget);
   }
+
   if (fullCleanup) {
+    RendererPass::cleanUpSamplers(m_pRhi);
     Texture* defaultTexture = DefaultTextureKey;
-    Sampler* defaultSampler = DefaultSampler2DKey;
 
     m_pRhi->freeTexture(defaultTexture);
-    m_pRhi->freeSampler(defaultSampler);
 
     if (DefaultTexture2DArrayView) {
       vkDestroyImageView(m_pRhi->logicDevice()->getNative(), DefaultTexture2DArrayView, nullptr);
@@ -2497,21 +2472,13 @@ void Renderer::setUpDownscale(B32 FullSetUp)
   DBDS16xFinal->allocate(m_pRhi->descriptorPool(), getLayout);
   GlowDS->allocate(m_pRhi->descriptorPool(), GlowLayout);
 
-  Texture* RTBright = pbr_BrightTextureKey;
-  Texture* Color2x = RenderTarget2xHorizKey;
-  Texture* Color2xFinal = RenderTarget2xFinalKey;
-  Texture* Color4x = RenderTarget4xScaledKey;
-  Texture* Color4xFinal = RenderTarget4xFinalKey;
-  Texture* Color8x = RenderTarget8xScaledKey;
-  Texture* Color8xFinal = RenderTarget8xFinalKey;
-  Texture* Color16x = RenderTarget16xScaledKey;
-  Texture* Color16xFinal = RenderTarget16xFinalKey;
+  Texture* RTBright = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0);
   Sampler* gbuffer_Sampler = gbuffer_SamplerKey;
   Sampler* DownscaleSampler = ScaledSamplerKey;
 
   VkDescriptorImageInfo Img = { };
   Img.sampler = gbuffer_Sampler->getHandle();
-  Img.imageView = RTBright->getView();
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_START, 0)->getView();
   Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   Log(rNotify) << Img.imageLayout << "\n";
   
@@ -2527,38 +2494,37 @@ void Renderer::setUpDownscale(B32 FullSetUp)
   WriteSet.pTexelBufferView = nullptr;
   Log(rNotify) << WriteSet.descriptorType << "\n";
   
-  DBDS2x->update(1, &WriteSet);
-  Img.imageView = Color2x->getView();
-  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  DBDS2xFinal->update(1, &WriteSet);
-  Img.imageView = Color2xFinal->getView();
-  DBDS4x->update(1, &WriteSet);
-  Img.imageView = Color4x->getView();
-  DBDS4xFinal->update(1, &WriteSet);
-  Img.imageView = Color4xFinal->getView();
-  DBDS8x->update(1, &WriteSet);
-  Img.imageView = Color8x->getView();
-  DBDS8xFinal->update(1, &WriteSet);
-  Img.imageView = Color8xFinal->getView();
   DBDS16x->update(1, &WriteSet);
-  Img.imageView = Color16x->getView();
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_SCALED, 0)->getView();
+  Img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
   DBDS16xFinal->update(1, &WriteSet);
-
-  Img.imageView = Color2xFinal->getView();
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0)->getView();
+  DBDS8x->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_SCALED, 0)->getView();
+  DBDS8xFinal->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_FINAL, 0)->getView();
+  DBDS4x->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_SCALED, 0)->getView();
+  DBDS4xFinal->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_FINAL, 0)->getView();
+  DBDS2x->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_SCALED, 0)->getView();
+  DBDS2xFinal->update(1, &WriteSet);
+  Img.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_FINAL, 0)->getView();
 
   VkDescriptorImageInfo Img1 = { };
   Img1.sampler = gbuffer_Sampler->getHandle();
-  Img1.imageView = Color4xFinal->getView();
+  Img1.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_FINAL, 0)->getView();
   Img1.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkDescriptorImageInfo Img2 = { };
   Img2.sampler = gbuffer_Sampler->getHandle();
-  Img2.imageView = Color8xFinal->getView();
+  Img2.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0)->getView();
   Img2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   VkDescriptorImageInfo Img3 = { };
   Img3.sampler = gbuffer_Sampler->getHandle();
-  Img3.imageView = Color16xFinal->getView();
+  Img3.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_FINAL, 0)->getView();
   Img3.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   // Glow buffer.
@@ -2672,14 +2638,14 @@ void Renderer::setUpHDR(B32 fullSetUp)
     default:  
     {
       pbrImageInfo.sampler = gbuffer_SamplerKey->getHandle();
-      pbrImageInfo.imageView = pbr_FinalTextureKey->getView();
+      pbrImageInfo.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getView();
       pbrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
   }
   // TODO(): We don't have our bloom pipeline and texture yet, we will sub it with this instead!
   VkDescriptorImageInfo bloomImageInfo = { };
   bloomImageInfo.sampler = gbuffer_SamplerKey->getHandle();
-  bloomImageInfo.imageView = RenderTargetGlowKey->getView();
+  bloomImageInfo.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0)->getView();
   bloomImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   hdrWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -3160,8 +3126,6 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 
 void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
 {
-
-
   VkIndexType indexType = getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType());
   VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
   VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
@@ -3261,40 +3225,239 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
   viewport.maxDepth = 1.0f;
   viewport.y = 0.0f;
   viewport.x = 0.0f;
-
   if (m_currentGraphicsConfigs._EnableBloom) {
     // TODO(): Need to allow switching on/off bloom passing.
-    m_Downscale._Strength = 1.35f;
-    m_Downscale._Scale = 3.3f;
+#if 1
+    {
+      Texture* texs[] = {
+        RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0),
+        RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_2X_FINAL, 0),
+        RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_4X_FINAL, 0),
+        RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0),
+        RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_START, 0)
+      };
+      std::array<VkImageMemoryBarrier, 5> barriers;
+      barriers[0] = { };
+      barriers[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barriers[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+      barriers[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+      barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      barriers[0].image = texs[0]->getImage();
+      barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      barriers[0].subresourceRange.baseArrayLayer = 0;
+      barriers[0].subresourceRange.baseMipLevel = 0;
+      barriers[0].subresourceRange.layerCount = 1;
+      barriers[0].subresourceRange.levelCount = 1;
+      barriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      for (U32 i = 1; i < barriers.size(); ++i) {
+        barriers[i] = { };
+        barriers[i].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        barriers[i].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        barriers[i].image = texs[i]->getImage();
+        barriers[i].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barriers[i].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barriers[i].subresourceRange.baseArrayLayer = 0;
+        barriers[i].subresourceRange.baseMipLevel = 0;
+        barriers[i].subresourceRange.layerCount = 1;
+        barriers[i].subresourceRange.levelCount = 1;
+        barriers[i].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;  
+      }
+
+      cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+                                 VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 
+                                 barriers.size(), barriers.data());
+
+      VkImageBlit blit = { };
+      blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT; 
+      blit.srcSubresource.baseArrayLayer = 0;
+      blit.srcSubresource.layerCount = 1;
+      blit.srcSubresource.mipLevel = 0;
+      blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      blit.dstSubresource.baseArrayLayer = 0;
+      blit.dstSubresource.layerCount = 1;
+      blit.dstSubresource.mipLevel = 0;
+      blit.srcOffsets[0] = { 0, 0, 0 };
+      blit.dstOffsets[0] = { 0, 0, 0 };
+
+      for (U32 i = 1; i < 5; ++i) {
+        barriers[i].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barriers[i].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barriers[i].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        barriers[i].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                   VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barriers[i - 1]);
+        blit.srcOffsets[1] = {(I32)texs[i - 1]->getWidth(),
+                              (I32)texs[i - 1]->getHeight(), 1 };
+        blit.dstOffsets[1] = {(I32)texs[i]->getWidth(),
+                              (I32)texs[i]->getHeight(), 1 };
+        cmdBuffer->imageBlit(texs[i - 1]->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
+                             texs[i]->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                             1, &blit, VK_FILTER_LINEAR);
+      }
+
+      barriers[0].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+      barriers[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      barriers[0].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+      for (U32 i = 1; i < barriers.size() - 1; ++i) {
+        barriers[i].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barriers[i].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barriers[i].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        barriers[i].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+      }
+
+      barriers[barriers.size() - 1].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      barriers[barriers.size() - 1].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+
+      cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                              VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                              VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0,
+                              nullptr, barriers.size(), barriers.data());
+    }
+#endif
+    m_Downscale._Strength = 1.5f;
+    m_Downscale._Scale = 3.1f;
     m_Downscale._Horizontal = true;
-    VkDescriptorSet DownscaleSetNative = DownscaleSet2x->getHandle();
-    viewport.height = (R32)DownscaleFrameBuffer2x->getHeight();
-    viewport.width =  (R32)DownscaleFrameBuffer2x->getWidth();
-    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+    VkDescriptorSet DownscaleSetNative = DownscaleSet16x->getHandle();
+    viewport.height = (R32)DownscaleFrameBuffer16x->getHeight();
+    viewport.width =  (R32)DownscaleFrameBuffer16x->getWidth();
+
+    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
-      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getNative());
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getNative());
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(R32), &m_Downscale._Horizontal);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 4, sizeof(R32), &m_Downscale._Strength);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 8, sizeof(R32), &m_Downscale._Scale);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
-    DownscalePass2x.framebuffer = FB2xFinal->getHandle();
-    DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
+    DownscalePass16x.framebuffer = FB16xFinal->getHandle();
+    DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->getHandle();
+    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
       m_Downscale._Horizontal = false;
-      DownscaleSetNative = DownscaleSet2xFinal->getHandle();
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &m_Downscale._Horizontal);
+      DownscaleSetNative = DownscaleSet16xFinal->getHandle();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &m_Downscale._Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
+
+    auto fn = [] (CommandBuffer* cmdBuffer, 
+                  U32 width, 
+                  U32 height, 
+                  U32 workSz, 
+                  DescriptorSetT setT, 
+                  PipelineComputeT compute, 
+                  RenderTextureT hiTex) -> void {
+      VkImageMemoryBarrier imageMemoryBarrier = { };
+      imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+      imageMemoryBarrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+      imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+      imageMemoryBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+      imageMemoryBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
+      imageMemoryBarrier.subresourceRange.baseMipLevel = 0;
+      imageMemoryBarrier.subresourceRange.layerCount = 1;
+      imageMemoryBarrier.subresourceRange.levelCount = 1;
+
+      VkImageMemoryBarrier imageAfter = {};
+      imageAfter.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      imageAfter.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+      imageAfter.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+      imageAfter.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+      imageAfter.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      imageAfter.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      imageAfter.subresourceRange.baseArrayLayer = 0;
+      imageAfter.subresourceRange.baseMipLevel = 0;
+      imageAfter.subresourceRange.layerCount = 1;
+      imageAfter.subresourceRange.levelCount = 1;
+
+      imageMemoryBarrier.image = RendererPass::getRenderTexture(hiTex, 0)->getImage();
+      imageAfter.image = RendererPass::getRenderTexture(hiTex, 0)->getImage();
+
+      VkDescriptorSet accumulationSets[] = {
+        RendererPass::getDescriptorSet(setT, 0)->getHandle()
+      };
+
+      cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, 
+                                 VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+                                 VK_DEPENDENCY_BY_REGION_BIT,
+                                 0, nullptr,
+                                 0, nullptr,
+                                 1, &imageMemoryBarrier);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, 
+                              RendererPass::getComputePipeline(compute)->getNative());
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE,
+                                    RendererPass::getComputePipeline(compute)->getLayout(),
+                                    0, 1, accumulationSets, 0, nullptr);
+      struct {
+        U32 screen[4];
+      } texSize;
+      texSize.screen[0] = width;
+      texSize.screen[1] = height;
+      texSize.screen[2] = 1;
+      texSize.screen[3] = 1;
+      cmdBuffer->pushConstants(RendererPass::getComputePipeline(compute)->getLayout(),
+                               VK_SHADER_STAGE_COMPUTE_BIT,
+                               0,
+                               sizeof(Vector4),
+                               &texSize); 
+      cmdBuffer->dispatch((width / workSz) + 1, 
+                          (height / workSz) + 1, 
+                          1);
+      cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+                                 VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+                                 VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0,
+                                 nullptr, 1, &imageAfter); 
+    };
+
+    fn(cmdBuffer, 
+       DownscaleFrameBuffer8x->getWidth(), 
+       DownscaleFrameBuffer8x->getHeight(), 
+       m_workGroupSize, 
+       DESCRIPTOR_SET_BLOOM_ACCUMULATION_16X_8X, 
+       PIPELINE_COMPUTE_BLOOM_ACCUMULATION, 
+       RENDER_TEXTURE_DOWNSCALE_8X_FINAL);
+
+    viewport.height = (R32)DownscaleFrameBuffer8x->getHeight();
+    viewport.width = (R32)DownscaleFrameBuffer8x->getWidth();
+    DownscaleSetNative = DownscaleSet8x->getHandle();
+    I32 _Horizontal = true;
+    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      cmdBuffer->setViewPorts(0, 1, &viewport);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getNative());
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
+      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
+
+    DownscalePass8x.framebuffer = FB8xFinal->getHandle();
+    DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->getHandle();
+    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+      _Horizontal = false;
+      DownscaleSetNative = DownscaleSet8xFinal->getHandle();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
+    cmdBuffer->endRenderPass();
+
+    fn(cmdBuffer, 
+       DownscaleFrameBuffer4x->getWidth(), 
+       DownscaleFrameBuffer4x->getHeight(), 
+       m_workGroupSize, 
+       DESCRIPTOR_SET_BLOOM_ACCUMULATION_8X_4X, 
+       PIPELINE_COMPUTE_BLOOM_ACCUMULATION, 
+       RENDER_TEXTURE_DOWNSCALE_4X_FINAL);
 
     viewport.height = (R32)DownscaleFrameBuffer4x->getHeight();
     viewport.width = (R32)DownscaleFrameBuffer4x->getWidth();
     DownscaleSetNative = DownscaleSet4x->getHandle();
-    I32 _Horizontal = true;
+    _Horizontal = true;
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getNative());
@@ -3315,90 +3478,78 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (R32)DownscaleFrameBuffer8x->getHeight();
-    viewport.width = (R32)DownscaleFrameBuffer8x->getWidth();
-    DownscaleSetNative = DownscaleSet8x->getHandle();
+    fn(cmdBuffer, 
+       DownscaleFrameBuffer2x->getWidth(), 
+       DownscaleFrameBuffer2x->getHeight(), 
+       m_workGroupSize, 
+       DESCRIPTOR_SET_BLOOM_ACCUMULATION_4X_2X, 
+       PIPELINE_COMPUTE_BLOOM_ACCUMULATION, 
+       RENDER_TEXTURE_DOWNSCALE_2X_FINAL);
+
+    viewport.height = (R32)DownscaleFrameBuffer2x->getHeight();
+    viewport.width = (R32)DownscaleFrameBuffer2x->getWidth();
+    DownscaleSetNative = DownscaleSet2x->getHandle();
     _Horizontal = true;
-    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
-      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getNative());
-      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getNative());
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    DownscalePass8x.framebuffer = FB8xFinal->getHandle();
-    DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
+    DownscalePass2x.framebuffer = FB2xFinal->getHandle();
+    DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->getHandle();
+    cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       _Horizontal = false;
-      DownscaleSetNative = DownscaleSet8xFinal->getHandle();
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      DownscaleSetNative = DownscaleSet2xFinal->getHandle();
+      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
-    viewport.height = (R32)DownscaleFrameBuffer16x->getHeight();
-    viewport.width = (R32)DownscaleFrameBuffer16x->getWidth();
-    DownscaleSetNative = DownscaleSet16x->getHandle();
-    _Horizontal = true;
-    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
-      cmdBuffer->setViewPorts(0, 1, &viewport);
-      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getNative());
-      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->endRenderPass();
-
-    DownscalePass16x.framebuffer = FB16xFinal->getHandle();
-    DownscalePass16x.renderPass = FB16xFinal->RenderPassRef()->getHandle();
-    cmdBuffer->beginRenderPass(DownscalePass16x, VK_SUBPASS_CONTENTS_INLINE);
-      _Horizontal = false;
-      DownscaleSetNative = DownscaleSet16xFinal->getHandle();
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
-      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    cmdBuffer->endRenderPass();
-  }
-
-  {
     DescriptorSet* GlowSet = GlowDescriptorSetKey;
     VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
+    Texture* RenderTargetGlowKey =
+        RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0);
     viewport.height = (R32)RenderTargetGlowKey->getHeight();
     viewport.width = (R32)RenderTargetGlowKey->getWidth();
     cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
-    if (!m_currentGraphicsConfigs._EnableBloom) {
-      VkClearAttachment clearAttachment = {};
-      clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      clearAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
-      clearAttachment.colorAttachment = 0;
-      VkClearRect rect = {};
-      rect.baseArrayLayer = 0;
-      rect.layerCount = 1;
-      VkExtent2D extent = { RenderTargetGlowKey->getWidth(), RenderTargetGlowKey->getHeight() };
-      rect.rect.extent = extent;
-      rect.rect = { 0, 0 };
-      cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
-    } else {
-      GraphicsPipeline* pGlowPipeline = RendererPass::getGraphicsPipeline( PIPELINE_GRAPHICS_GLOW );
-      cmdBuffer->setViewPorts(0, 1, &viewport);
-      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, pGlowPipeline->getNative());
-      cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, 
-                                    pGlowPipeline->getLayout(), 
-                                    0, 1, 
-                                    &GlowDescriptorNative, 
-                                    0, nullptr);
-      cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
-      cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
-      cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
-    }
+    cmdBuffer->endRenderPass();
+
+    fn(cmdBuffer,
+       GlowFrameBuffer->getWidth(),
+       GlowFrameBuffer->getHeight(),
+       m_workGroupSize,
+       DESCRIPTOR_SET_BLOOM_ACCUMULATION_2X_FULL,
+       PIPELINE_COMPUTE_BLOOM_ACCUMULATION,
+       RENDER_TEXTURE_GLOW);
+  }
+
+  if (!m_currentGraphicsConfigs._EnableBloom) {
+    DescriptorSet* GlowSet = GlowDescriptorSetKey;
+    VkDescriptorSet GlowDescriptorNative = GlowSet->getHandle();
+    Texture* RenderTargetGlowKey =
+        RendererPass::getRenderTexture(RENDER_TEXTURE_GLOW, 0);
+    viewport.height = (R32)RenderTargetGlowKey->getHeight();
+    viewport.width = (R32)RenderTargetGlowKey->getWidth();
+    cmdBuffer->beginRenderPass(GlowPass, VK_SUBPASS_CONTENTS_INLINE);
+    VkClearAttachment clearAttachment = {};
+    clearAttachment.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    clearAttachment.clearValue = { 0.0f, 0.0f, 0.0f, 0.0f };
+    clearAttachment.colorAttachment = 0;
+    VkClearRect rect = {};
+    rect.baseArrayLayer = 0;
+    rect.layerCount = 1;
+    VkExtent2D extent = { RenderTargetGlowKey->getWidth(), RenderTargetGlowKey->getHeight() };
+    rect.rect.extent = extent;
+    rect.rect = { 0, 0 };
+    cmdBuffer->clearAttachments(1, &clearAttachment, 1, &rect);
     cmdBuffer->endRenderPass();
   }
   
-
   VkDescriptorSet dSets[3];
   dSets[0] = m_pGlobal->getDescriptorSet(resourceIndex)->getHandle();
   dSets[1] = hdrSet->getHandle();
@@ -3835,12 +3986,12 @@ void Renderer::setUpPBR()
   {
     VkDescriptorImageInfo outResult = { };
     outResult.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    outResult.imageView = pbr_FinalTextureKey->getView();
+    outResult.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getView();
     outResult.sampler = nullptr;    
 
     VkDescriptorImageInfo outBright = { };
     outBright.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    outBright.imageView = pbr_BrightTextureKey->getView();
+    outBright.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0)->getView();
     outBright.sampler = nullptr;
 
     std::array<VkWriteDescriptorSet, 2> writes;
@@ -3908,7 +4059,7 @@ void Renderer::cleanUpPBR()
 
 void Renderer::setUpFinalOutputs()
 {
-  Texture* pbr_Final = pbr_FinalTextureKey;
+  Texture* pbr_Final = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0);
   Texture* hdr_Color = hdr_gamma_colorAttachKey;
 
   Sampler* hdr_Sampler = hdr_gamma_samplerKey;
@@ -3957,7 +4108,7 @@ void Renderer::setUpFinalOutputs()
     // TODO(): usingAntialiasing will need to be compensated here, similar to final texture, above.
     VkDescriptorImageInfo renderTextureOut = {};
     renderTextureOut.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    renderTextureOut.imageView = final_renderTargetKey->getView();
+    renderTextureOut.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getView();
     renderTextureOut.sampler = hdr_gamma_samplerKey->getHandle();
 
     std::array<VkWriteDescriptorSet, 1> writeInfo;
@@ -4398,6 +4549,7 @@ void Renderer::setUpDescriptorSets()
   RendererPass::initShadowReolveDescriptorSet(this, 
                                               m_pGlobal, 
                                               RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0));
+  RendererPass::initBloomAccumulationDescriptorSets(m_pRhi);
 }
 
 
@@ -4823,7 +4975,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       subRange.layerCount = 1;
       subRange.levelCount = 1;
 
-      imgMemBarrier.image = pbr_FinalTextureKey->getImage();
+      imgMemBarrier.image = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getImage();
       imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
@@ -4858,7 +5010,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       imgCopy.extent.depth = 1;
 
       cmdBuffer.copyImage(
-        pbr_FinalTextureKey->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         cubeTexture->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
         1, &imgCopy
       );
@@ -4925,7 +5077,7 @@ void Renderer::takeSnapshot(const std::string name)
   m_pRhi->waitAllGraphicsQueues();
   Texture2D tex2d;
   tex2d.mRhi = m_pRhi;
-  tex2d.texture = final_renderTargetKey;
+  tex2d.texture = RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0);
   tex2d.save(name);
 }
 

@@ -393,14 +393,14 @@ void UIOverlay::initializeRenderPass(VulkanRHI* pRhi)
   std::array<VkAttachmentDescription, 1> attachmentDescriptions;
   VkSubpassDependency dependencies[2];
   attachmentDescriptions[0] = CreateAttachmentDescription(
-    final_renderTargetKey->getFormat(),
+    RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getFormat(),
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
     VK_ATTACHMENT_LOAD_OP_LOAD,
     VK_ATTACHMENT_STORE_OP_STORE,
     VK_ATTACHMENT_LOAD_OP_DONT_CARE,
     VK_ATTACHMENT_STORE_OP_DONT_CARE,
-    final_renderTargetKey->getSamples()
+    RendererPass::getRenderTexture(RENDER_TEXTURE_FINAL_COMPOSITE, 0)->getSamples()
   );
 
   dependencies[0] = CreateSubPassDependency(

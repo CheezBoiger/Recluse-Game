@@ -190,7 +190,7 @@ public:
       GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
       params._Buffering = DOUBLE_BUFFER;
       params._EnableVsync = true;
-      params._EnableBloom = true;
+      params._EnableBloom = false;
       params._AA = AA_None;
       params._Shadows = GRAPHICS_QUALITY_HIGH;
       params._TextureQuality = GRAPHICS_QUALITY_ULTRA;

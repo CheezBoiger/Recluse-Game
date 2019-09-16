@@ -13,6 +13,8 @@
 
 #include <array>
 
+#define CHECK_SAMPLER(pSampler) (pSampler) ? pSampler->getHandle()->getHandle()  \
+  : RendererPass::getSampler( SAMPLER_DEFAULT )->getHandle()
 
 namespace Recluse {
 
@@ -81,7 +83,6 @@ void MaterialDescriptor::initialize(VulkanRHI* pRhi)
 
 void MaterialDescriptor::update(VulkanRHI* pRhi)
 {
-#define CHECK_SAMPLER(pSampler) (pSampler) ? pSampler->getHandle()->getHandle() : DefaultSampler2DKey->getHandle()
   if ((m_bNeedsUpdate & MATERIAL_DESCRIPTOR_UPDATE_BIT)) {
     R_DEBUG(rNotify, "Updating material Descriptor.\n");
 

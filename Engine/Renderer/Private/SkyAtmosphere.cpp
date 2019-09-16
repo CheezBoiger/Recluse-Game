@@ -281,8 +281,8 @@ void SkyRenderer::createFrameBuffer(VulkanRHI* rhi)
   m_pFrameBuffer->Finalize(framebufferCi, m_pRenderPass);
 
   // Create a renderpass for the pbr overlay.
-  Texture* pbr_Color = pbr_FinalTextureKey;
-  Texture* pbr_Bright = pbr_BrightTextureKey;
+  Texture* pbr_Color = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0);
+  Texture* pbr_Bright = RendererPass::getRenderTexture(RENDER_TEXTURE_BRIGHTNESS, 0);
   Texture* pbr_Depth = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0);
 
   std::array<VkAttachmentDescription, 3> attachmentDescriptions;

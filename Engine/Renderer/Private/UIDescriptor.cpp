@@ -29,7 +29,7 @@ void UIDescriptor::update(VulkanRHI* pRhi)
 {
   VkDescriptorImageInfo imgInfo = { };
   Texture* pT = DefaultTextureKey;
-  Sampler* pS = DefaultSampler2DKey;
+  Sampler* pS = RendererPass::getSampler( SAMPLER_DEFAULT );
   if (m_image) {
     pT = m_image->getHandle();
   }

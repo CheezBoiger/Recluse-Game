@@ -378,6 +378,7 @@ void GlobalIllumination::update(Renderer* pRenderer)
   localIrrInfo.offset = 0;
   localIrrInfo.range = VkDeviceSize(sizeof(LocalInfoGI));
 
+  Sampler* DefaultSampler2DKey = RendererPass::getSampler( SAMPLER_DEFAULT );
   globalEnvMap.sampler = DefaultSampler2DKey->getHandle();
   globalBrdfLut.sampler = DefaultSampler2DKey->getHandle();
   localEnvMaps.sampler = DefaultSampler2DKey->getHandle();

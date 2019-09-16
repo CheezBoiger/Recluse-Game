@@ -52,7 +52,6 @@ extern std::array<Matrix4, 6> kViewMatrices;
 extern std::string ShadersPath;
 
 extern Texture* DefaultTextureKey;
-extern Sampler* DefaultSampler2DKey;
 extern VkImageView DefaultTexture2DArrayView;
 
 // enableDebug pipeline, for debugging purposes.
@@ -106,8 +105,6 @@ extern DescriptorSetLayout* pbr_DescLayoutKey;
 extern DescriptorSetLayout* pbr_compDescLayout;
 extern DescriptorSet* pbr_DescSetKey;
 extern DescriptorSet* pbr_compSet;
-extern Texture* pbr_FinalTextureKey;
-extern Texture* pbr_BrightTextureKey;
 
 extern RenderPass*        pbr_forwardRenderPass;
 extern FrameBuffer*       pbr_forwardFrameBuffer;
@@ -137,14 +134,6 @@ extern DescriptorSetLayout* GlobalSetLayoutKey;
 extern DescriptorSetLayout* LightSetLayoutKey;
 
 extern Sampler* ScaledSamplerKey;
-extern Texture* RenderTarget2xHorizKey;
-extern Texture* RenderTarget2xFinalKey;
-extern Texture* RenderTarget4xScaledKey;
-extern Texture* RenderTarget4xFinalKey;
-extern Texture* RenderTarget8xScaledKey;
-extern Texture* RenderTarget8xFinalKey;
-extern Texture* RenderTarget16xScaledKey;
-extern Texture* RenderTarget16xFinalKey;
 extern FrameBuffer* FrameBuffer2xHorizKey;
 extern FrameBuffer* FrameBuffer2xFinalKey;
 extern FrameBuffer* FrameBuffer4xKey;
@@ -163,7 +152,6 @@ extern DescriptorSet* DownscaleBlurDescriptorSet8xFinalKey;
 extern DescriptorSet* DownscaleBlurDescriptorSet16x;
 extern DescriptorSet* DownscaleBlurDescriptorSet16xFinalKey;
 
-extern Texture* RenderTargetGlowKey;
 extern FrameBuffer* FrameBufferGlowKey;
 extern DescriptorSetLayout* GlowDescriptorSetLayoutKey;
 extern DescriptorSet* GlowDescriptorSetKey;
@@ -181,7 +169,6 @@ extern DescriptorSet* final_DescSetKey;
 extern DescriptorSetLayout* final_DescSetLayoutKey;
 extern FrameBuffer* final_frameBufferKey;
 extern RenderPass* final_renderPass;
-extern Texture* final_renderTargetKey;
 
 extern DescriptorSet* output_descSetKey;
 
@@ -224,6 +211,7 @@ enum PipelineComputeT {
   PIPELINE_COMPUTE_PBR_DEFERRED_NOLR = PIPELINE_COMPUTE_START,
   PIPELINE_COMPUTE_PBR_DEFERRED_LR,
   PIPELINE_COMPUTE_SHADOW_RESOLVE,
+  PIPELINE_COMPUTE_BLOOM_ACCUMULATION,
   PIPELINE_COMPUTE_END
 };
 
@@ -242,6 +230,13 @@ enum RenderPassT {
 };
 
 
+enum SamplerT {
+  SAMPLER_START = 0,
+  SAMPLER_DEFAULT = SAMPLER_START,
+  SAMPLER_END
+};
+
+
 enum DescriptorSetLayoutT {
   DESCRIPTOR_SET_LAYOUT_START = 0,
   DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE = DESCRIPTOR_SET_LAYOUT_START,
@@ -249,7 +244,8 @@ enum DescriptorSetLayoutT {
   DESCRIPTOR_SET_LAYOUT_MESH_DESCRIPTOR,
   DESCRIPTOR_SET_LAYOUT_MATERIAL_DESCRIPTOR,
   DESCRIPTOR_SET_LAYOUT_JOINT_DESCRIPTOR,
-  DESCRIPTOR_SET_LAYOUT_GLOBAL_DESCRIPTOR,
+  DESCRIPTOR_SET_LAYOUT_GLOBAL_DESCRIPTOR,  
+  DESCRIPTOR_SET_LAYOUT_BLOOM_ACCUMULATION,
   DESCRIPTOR_SET_LAYOUT_END
 };
 
@@ -258,6 +254,10 @@ enum DescriptorSetT {
   DESCRIPTOR_SET_START = 0,
   DESCRIPTOR_SET_SHADOW_RESOLVE = DESCRIPTOR_SET_START,
   DESCRIPTOR_SET_SHADOW_RESOLVE_OUT,
+  DESCRIPTOR_SET_BLOOM_ACCUMULATION_16X_8X,
+  DESCRIPTOR_SET_BLOOM_ACCUMULATION_8X_4X,
+  DESCRIPTOR_SET_BLOOM_ACCUMULATION_4X_2X,
+  DESCRIPTOR_SET_BLOOM_ACCUMULATION_2X_FULL,
   DESCRIPTOR_SET_END
 };
 
@@ -265,6 +265,22 @@ enum RenderTextureT {
   RENDER_TEXTURE_START = 0,
   RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT = RENDER_TEXTURE_START,
   RENDER_TEXTURE_SCENE_DEPTH,
+  //RENDER_TEXTURE_DOWNSCALE_2X_START,
+  RENDER_TEXTURE_DOWNSCALE_2X_SCALED,
+  RENDER_TEXTURE_DOWNSCALE_2X_FINAL,
+  //RENDER_TEXTURE_DOWNSCALE_4X_START,
+  RENDER_TEXTURE_DOWNSCALE_4X_SCALED,
+  RENDER_TEXTURE_DOWNSCALE_4X_FINAL,
+  //RENDER_TEXTURE_DOWNSCALE_8X_START,
+  RENDER_TEXTURE_DOWNSCALE_8X_SCALED,
+  RENDER_TEXTURE_DOWNSCALE_8X_FINAL,
+  RENDER_TEXTURE_DOWNSCALE_16X_START,
+  RENDER_TEXTURE_DOWNSCALE_16X_SCALED,
+  RENDER_TEXTURE_DOWNSCALE_16X_FINAL,
+  RENDER_TEXTURE_GLOW,
+  RENDER_TEXTURE_FINAL_COMPOSITE,
+  RENDER_TEXTURE_BRIGHTNESS,
+  RENDER_TEXTURE_LIGHTING,
   RENDER_TEXTURE_END
 };
 
@@ -284,7 +300,9 @@ void initializeDescriptorSetLayouts(VulkanRHI* pRhi);
 void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi);
 
 void initializeRenderTextures(Renderer* pRenderer);
+void initializeSamplers(VulkanRHI* pRhi);
 void cleanUpRenderTextures(VulkanRHI* pRhi);
+void cleanUpSamplers(VulkanRHI* pRhi);
 
 void initializeDescriptorSets(Renderer* pRenderer);
 void cleanUpDescriptorSets(VulkanRHI* pRhi);
@@ -293,6 +311,7 @@ GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline);
 ComputePipeline* getComputePipeline(PipelineComputeT pipeline);
 
 Texture* getRenderTexture(RenderTextureT rt, U32 resourceIndex);
+Sampler* getSampler(SamplerT samp);
 DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout);
 DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 resourceIndex = 0);
 
@@ -300,35 +319,24 @@ void loadShader(const std::string& Filename, Shader* S);
 
 // Set up the downscale pass.
 void setUpDownScalePass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 // Set up the HDR getGamma pass.
 void SetUpHDRGammaPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, HDR* pHDR);
-
 void SetUpGBufferPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void SetUpDeferredPhysicallyBasedPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void SetUpForwardPhysicallyBasedPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void SetUpFinalPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void SetUpDirectionalShadowPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo);
-
 void setUpDebugPass(VulkanRHI* rhi, const VkGraphicsPipelineCreateInfo& defaultInfo);
-
 void setUpAAPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& DefaultInfo, AntiAliasing aa);
-
 void initShadowMaskTexture(Renderer* pRenderer, const VkExtent2D& renderRes);
-
 void initShadowResolvePipeline(VulkanRHI* pRhi);
-
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi);
-
 void initShadowReolveDescriptorSet(Renderer* pRenderer, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
-
 void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info);
+void initBloomAccumulationDescriptorSetLayouts(VulkanRHI* pRhi);
+void initBloomAccumulationDescriptorSets(VulkanRHI* pRhi);
+void initBloomAccumulationPipeline(VulkanRHI* pRhi);
 
 enum AntiAliasingType {
   FXAA,

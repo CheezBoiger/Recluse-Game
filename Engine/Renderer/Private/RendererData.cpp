@@ -32,11 +32,11 @@ std::array<Matrix4, 6> kViewMatrices;
 std::unordered_map<PipelineGraphicsT, GraphicsPipeline*> g_graphicsPipelines;
 std::unordered_map<PipelineComputeT, ComputePipeline*> g_computePipelines;
 std::unordered_map<RenderTextureT, std::vector<Texture*>> g_renderTextures;
+std::unordered_map<SamplerT, Sampler*> g_samplers;
 std::unordered_map<DescriptorSetT, std::vector<DescriptorSet*>> g_descriptorSets;
 std::unordered_map<DescriptorSetLayoutT, DescriptorSetLayout*> g_descriptorSetLayouts;
 
 Texture* DefaultTextureKey          = nullptr;
-Sampler* DefaultSampler2DKey        = nullptr;
 VkImageView DefaultTexture2DArrayView = VK_NULL_HANDLE;
 
 GraphicsPipeline* ShadowMapPipelineKey              = nullptr;
@@ -83,15 +83,13 @@ DescriptorSetLayout* pbr_DescLayoutKey            = nullptr;
 DescriptorSetLayout* pbr_compDescLayout           = nullptr;
 DescriptorSet* pbr_DescSetKey                     = nullptr;
 DescriptorSet* pbr_compSet                        = nullptr;
-Texture* pbr_FinalTextureKey                      = nullptr;
-Texture* pbr_BrightTextureKey                     = nullptr;
+
 std::string pbr_VertStr                           = "PBR.vert.spv";
 std::string pbr_FragStrLR                         = "PBR_LR.frag.spv";
 std::string pbr_FragStrNoLR                       = "PBR_NoLR.frag.spv";
 std::string pbr_forwardFragStrLR                  = "ForwardPBR_LR.frag.spv";
 std::string pbr_forwardFragStrNoLR                = "ForwardPBR_NoLR.frag.spv";
 
-Texture* RenderTargetBlurHoriz4xKey  = nullptr;
 FrameBuffer* FrameBuffer4xHorizKey       = nullptr;
 DescriptorSetLayout* MeshSetLayoutKey            = nullptr;
 DescriptorSetLayout* MaterialSetLayoutKey        = nullptr;
@@ -119,14 +117,6 @@ std::string fxaaNV_fragStr                = "FXAA_Nvidia.comp.spv";
 std::string smaa_fragStr                  = "SMAA.frag.spv";
 
 Sampler* ScaledSamplerKey            = nullptr;
-Texture* RenderTarget2xHorizKey      = nullptr;
-Texture* RenderTarget2xFinalKey      = nullptr;
-Texture* RenderTarget4xScaledKey     = nullptr;
-Texture* RenderTarget4xFinalKey      = nullptr;
-Texture* RenderTarget8xScaledKey     = nullptr;
-Texture* RenderTarget8xFinalKey      = nullptr;
-Texture* RenderTarget16xScaledKey    = nullptr;
-Texture* RenderTarget16xFinalKey     = nullptr;
 FrameBuffer* FrameBuffer2xHorizKey       = nullptr;
 FrameBuffer* FrameBuffer2xFinalKey       = nullptr;
 FrameBuffer* FrameBuffer4xFinalKey       = nullptr;
@@ -137,7 +127,6 @@ FrameBuffer* FrameBuffer16xKey           = nullptr;
 FrameBuffer* FrameBuffer16xFinalKey      = nullptr;
 
 std::string GlowFragFileStr             = "GlowPass.frag.spv";
-Texture* RenderTargetGlowKey         = nullptr;
 FrameBuffer* FrameBufferGlowKey          = nullptr;
 DescriptorSetLayout* GlowDescriptorSetLayoutKey  = nullptr;
 DescriptorSet* GlowDescriptorSetKey        = nullptr;
@@ -168,7 +157,6 @@ DescriptorSet* final_DescSetKey             = nullptr;
 DescriptorSetLayout* final_DescSetLayoutKey       = nullptr;
 std::string final_VertFileStr            = "FinalPass.vert.spv";
 std::string final_FragFileStr            = "FinalPass.frag.spv";
-Texture* final_renderTargetKey       = nullptr;
 FrameBuffer* final_frameBufferKey = nullptr;
 RenderPass* final_renderPass = nullptr;
 DescriptorSet*  output_descSetKey = nullptr;
@@ -275,6 +263,15 @@ void initializeRenderTextures(Renderer* pRenderer)
 }
 
 
+void initializeSamplers(VulkanRHI* pRhi)
+{
+  for (I32 i = SAMPLER_START; i < SAMPLER_END; ++i)
+  {
+    g_samplers[ (SamplerT) i ] = pRhi->createSampler();
+  }
+}
+
+
 void cleanUpRenderTextures(VulkanRHI* pRhi)
 {
   for (I32 i = RENDER_TEXTURE_START; i < RENDER_TEXTURE_END; ++i) 
@@ -288,9 +285,25 @@ void cleanUpRenderTextures(VulkanRHI* pRhi)
 }
 
 
+void cleanUpSamplers(VulkanRHI* pRhi)
+{
+  for (I32 i = SAMPLER_START; i < SAMPLER_END; ++i)
+  {
+    pRhi->freeSampler(g_samplers[ (SamplerT) i ]);
+    g_samplers[ (SamplerT) i ] = nullptr;
+  }
+}
+
+
 Texture* getRenderTexture(RenderTextureT rt, U32 resourceIndex)
 {
   return g_renderTextures[ rt ][ resourceIndex ];
+}
+
+
+Sampler* getSampler(SamplerT samp)
+{
+  return g_samplers[ samp ];
 }
 
 
@@ -526,6 +539,131 @@ GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline)
 ComputePipeline* getComputePipeline(PipelineComputeT pipeline)
 {
   return g_computePipelines[ pipeline ];
+}
+
+
+void initBloomAccumulationDescriptorSetLayouts(VulkanRHI* pRhi)
+{
+  std::array<VkDescriptorSetLayoutBinding, 2> bindings;
+  VkDescriptorSetLayoutCreateInfo dl = {};
+  dl.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO; 
+  dl.bindingCount = bindings.size();
+  dl.pBindings = bindings.data();
+
+  bindings[0] = { };
+  bindings[0].binding = 0;
+  bindings[0].descriptorCount = 1;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[0].pImmutableSamplers = nullptr;
+  bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+ 
+  bindings[1] = { };  
+  bindings[1].binding = 1;
+  bindings[1].descriptorCount = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  bindings[1].pImmutableSamplers = nullptr;
+  bindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+  
+  g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_BLOOM_ACCUMULATION ]->initialize(dl);
+}
+
+
+void initBloomAccumulationDescriptorSets(VulkanRHI* pRhi)
+{
+  DescriptorSetLayout* pLayout = g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_BLOOM_ACCUMULATION ];
+  VkDescriptorPool pool = pRhi->descriptorPool();
+  
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_16X_8X ][0]->allocate(pool, pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_4X_2X ][0]->allocate(pool, pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_8X_4X ][0]->allocate(pool, pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_2X_FULL ][0]->allocate(pool, pLayout);
+
+  Texture* pTex = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_16X_FINAL ][0];
+  Texture* pResultTex = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_8X_FINAL ][0];
+  Sampler* pSamp = g_samplers[ SAMPLER_DEFAULT ];
+
+  VkDescriptorImageInfo lo = { };
+  lo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  lo.imageView = pTex->getView();
+  lo.sampler = pSamp->getHandle();
+
+  VkDescriptorImageInfo hi = { };
+  hi.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+  hi.imageView = pResultTex->getView();
+  hi.sampler = pSamp->getHandle();
+
+  std::array<VkWriteDescriptorSet, 2> writes;
+  writes[0] = { };
+  writes[0].descriptorCount = 1;
+  writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writes[0].dstArrayElement = 0;
+  writes[0].dstBinding = 0;
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].pImageInfo = &lo;
+
+  writes[1] = { };
+  writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[1].descriptorCount = 1;
+  writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  writes[1].dstArrayElement = 0;
+  writes[1].dstBinding = 1;
+  writes[1].pImageInfo = &hi;
+
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_16X_8X ][0]->update(writes.size(), writes.data());
+  
+  lo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_8X_FINAL ][0]->getView();
+  hi.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_4X_FINAL ][0]->getView();
+
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_8X_4X ][0]->update(writes.size(), writes.data());
+
+  lo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_4X_FINAL ][0]->getView();
+  hi.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_2X_FINAL ][0]->getView();
+
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_4X_2X ][0]->update(writes.size(), writes.data());
+
+  lo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_2X_FINAL ][0]->getView();
+  hi.imageView = g_renderTextures[ RENDER_TEXTURE_GLOW ][0]->getView();
+
+  g_descriptorSets[ DESCRIPTOR_SET_BLOOM_ACCUMULATION_2X_FULL ][0]->update(writes.size(), writes.data());
+}
+
+
+void initBloomAccumulationPipeline(VulkanRHI* pRhi)
+{
+  Shader* pShader = pRhi->createShader();
+  loadShader("Accumulation.comp.spv", pShader);
+
+  VkComputePipelineCreateInfo pCi = { };
+  VkPipelineLayoutCreateInfo pipeLayoutCi = { };
+  VkPipelineShaderStageCreateInfo st = { };
+  st.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  st.pName = kDefaultShaderEntryPointStr;
+  st.pSpecializationInfo = nullptr;
+  st.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+  st.module = pShader->getHandle();
+
+
+  VkDescriptorSetLayout layouts[] = { 
+    RendererPass::getDescriptorSetLayout(DESCRIPTOR_SET_LAYOUT_BLOOM_ACCUMULATION)->getLayout()
+  };
+  
+  VkPushConstantRange range = { };
+  range.offset = 0u;
+  range.size = sizeof(Vector4);
+  range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  pipeLayoutCi.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipeLayoutCi.setLayoutCount = 1;
+  pipeLayoutCi.pushConstantRangeCount = 1;
+  pipeLayoutCi.pSetLayouts = layouts;
+  pipeLayoutCi.pPushConstantRanges = &range;
+
+  pCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  pCi.stage = st;
+  
+  g_computePipelines[ PIPELINE_COMPUTE_BLOOM_ACCUMULATION ]->initialize( pCi, pipeLayoutCi );
+
+  pRhi->freeShader(pShader);
 }
 
 
@@ -1659,11 +1797,11 @@ void initShadowReolveDescriptorSet(Renderer* pRenderer,
   VkDescriptorImageInfo depthInfo = { };
   depthInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
   depthInfo.imageView = pSceneDepth->getView();
-  depthInfo.sampler = DefaultSampler2DKey->getHandle();
+  depthInfo.sampler = g_samplers[ SAMPLER_DEFAULT ]->getHandle();
 
   VkDescriptorImageInfo mask = { };
   mask.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-  mask.sampler = DefaultSampler2DKey->getHandle();
+  mask.sampler = g_samplers[ SAMPLER_DEFAULT ]->getHandle();
 
   writeSets[0] = { };
   writeSets[0].descriptorCount = 1;
@@ -1885,7 +2023,7 @@ void AntiAliasingFXAA::updateSets(Renderer* pRenderer, GlobalDescriptor* pDescri
 
   VkDescriptorImageInfo inputInfo = {};
   inputInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  inputInfo.imageView = pbr_FinalTextureKey->getView();
+  inputInfo.imageView = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getView();
   inputInfo.sampler = gbuffer_SamplerKey->getHandle();
 
   VkDescriptorImageInfo outputInfo = {};
@@ -2011,7 +2149,7 @@ void AntiAliasingFXAA::createSampler(VulkanRHI* pRhi)
 
 void DebugManager::initializeRenderPass(VulkanRHI* pRhi)
 {
-  Texture* pbrFinal = pbr_FinalTextureKey;
+  Texture* pbrFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0);
   Texture* depthFinal = RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0);
   std::array<VkAttachmentDescription, 2> attachments;
   attachments[0] = { };

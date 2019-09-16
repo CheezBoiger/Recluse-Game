@@ -18,6 +18,7 @@ add_subdirectory(Game)
 add_subdirectory(Filesystem)
 add_subdirectory(Core)
 add_subdirectory(Animation)
+add_subdirectory(AI)
 
 if (PHYSICS)
   add_subdirectory(Physics)
