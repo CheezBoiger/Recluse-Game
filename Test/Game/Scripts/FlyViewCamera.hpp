@@ -464,7 +464,7 @@ public:
         m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
         m_pPhysicsComponent->applyImpulse(Vector3(movementImpulse.x, 8.0f, movementImpulse.z),
                                           Vector3());
-        Log() << "jump with impulse: " << movementImpulse << "\n";
+        //Log() << "jump with impulse: " << movementImpulse << "\n";
         m_jumping = true;
       }
     }
@@ -480,16 +480,16 @@ public:
 
   void onCollisionEnter(Collision* other) override {
     CubeObject* cube = other->_gameObject->castTo<CubeObject>();
-    Log() << "Enter: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
+    //Log() << "Enter: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
     if (cube && m_jumping) {
       if (m_pPhysicsComponent->getRigidBody()->_velocity.y > 0.1f) {
-        Log() << "jumping out.\n"; 
+        //Log() << "jumping out.\n"; 
       } else {
         m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 0.0f, 1.0f));
         m_pPhysicsComponent->setLinearVelocity(Vector3(0.0f, 0.0f, 0.0f));
         m_pPhysicsComponent->clearForces();
         m_jumping = false;
-        Log() << "enter CubeObject\n";
+        //Log() << "enter CubeObject\n";
       }
     }
   }
@@ -500,7 +500,7 @@ public:
       m_pPhysicsComponent->setLinearFactor(Vector3(1.0, 1.0f, 1.0f));
       // m_pPhysicsComponent->setLinearVelocity(Vector3());
       // m_pPhysicsComponent->clearForces();
-      Log() << "exit CubeObject\n";
+      //Log() << "exit CubeObject\n";
     } else {
       //m_jumping = true;
        //m_pPhysicsComponent->clearForces();
@@ -515,7 +515,7 @@ public:
     //    Vector3(0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.x*/, 
     //            0.0f,
     //            0.0f /*m_pPhysicsComponent->getRigidBody()->_velocity.z*/));
-    Log() << "Stay: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
+    //Log() << "Stay: " << m_pPhysicsComponent->getRigidBody()->_velocity << "\n";
     if (other->_gameObject->castTo<CubeObject>()) {
       if (m_jumping && m_pPhysicsComponent->getRigidBody()->_velocity.y > 0.1f) {
         m_jumping = true;
@@ -525,7 +525,7 @@ public:
       m_pPhysicsComponent->setLinearVelocity({0.0f, 0.0f, 0.0f}); 
       m_pPhysicsComponent->clearForces();
       m_jumping = false;
-      Log() << "OnStay\n";
+      //Log() << "OnStay\n";
       return;
     }
 
@@ -535,8 +535,8 @@ public:
              1.0f - 0.3f) &&
             (Vector3::UP.dot(other->_contactPoints[i]._normal) <=
              1.0f + 0.3f)) {
-          Log() << "enter stop jumping.\n";
-          Log() << other->_contactPoints[i]._normal << "\n";
+          //Log() << "enter stop jumping.\n";
+          //Log() << other->_contactPoints[i]._normal << "\n";
           m_pPhysicsComponent->setLinearFactor(Vector3(1.0f, 1.0f, 1.0f));
           m_jumping = false;
           break;
