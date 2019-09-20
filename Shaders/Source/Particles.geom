@@ -49,6 +49,17 @@ out FragIn {
   float life;
 } frag_in;
 
+
+in gl_PerVertex {
+  vec4 gl_Position;
+  float gl_PointSize;
+} gl_in[];
+
+out gl_PerVertex {
+  vec4 gl_Position;
+  float gl_PointSize;
+};
+
 #define CONST_PI                3.141592653589793238462643383279502884197169399375
 #define DEG_TO_RAD(deg)         ((deg) * (CONST_PI / 180.0))
 #define ROTATE_VEC2(a, xrot, yrot)    vec2(a.x * xrot - a.y * yrot, a.x * yrot + a.y * xrot)
@@ -69,6 +80,7 @@ void main()
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     frag_in.clipPos = gl_Position.xyzw;
+	gl_PointSize = 1.0;
     EmitVertex();
     
     vec2 vb = vec2(-0.5, 0.5);
@@ -78,7 +90,8 @@ void main()
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     frag_in.clipPos = gl_Position.xyzw;
-    EmitVertex();
+    gl_PointSize = 1.0;
+	EmitVertex();
     
     vec2 vd = vec2(0.5, -0.5);
     vd = P.xy + ROTATE_VEC2(vd, xrot, yrot) * size;
@@ -87,7 +100,8 @@ void main()
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     frag_in.clipPos = gl_Position.xyzw;
-    EmitVertex();
+    gl_PointSize = 1.0;
+	EmitVertex();
     
     vec2 vc = vec2(0.5, 0.5);
     vc = P.xy + ROTATE_VEC2(vc, xrot, yrot) * size;
@@ -96,7 +110,8 @@ void main()
     frag_in.color = vert_out[i].color;
     frag_in.life = vert_out[i].life;
     frag_in.clipPos = gl_Position.xyzw;
-    EmitVertex();
+    gl_PointSize = 1.0;
+	EmitVertex();
     
     EndPrimitive();
   }

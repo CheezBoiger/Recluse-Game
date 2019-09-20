@@ -48,6 +48,7 @@ out VertOut {
 
 out gl_PerVertex {
   vec4 gl_Position;
+  float gl_PointSize;
 };
 
 void main()
@@ -64,4 +65,5 @@ void main()
   vert_out.weight = particleInfo.z;
   vert_out.life = particleInfo.w;
   gl_Position = gWorldBuffer.global.view * worldPos;
+  gl_PointSize = 1.0;
 }

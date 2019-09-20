@@ -520,7 +520,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   rasterCi.depthClampEnable = VK_FALSE;
   rasterCi.lineWidth = 1.0f;
   rasterCi.frontFace = VK_FRONT_FACE_CLOCKWISE;
-
+  
   VkPipelineDynamicStateCreateInfo dynamicCi = { };
   dynamicCi.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
   VkDynamicState states[] = { VK_DYNAMIC_STATE_VIEWPORT };

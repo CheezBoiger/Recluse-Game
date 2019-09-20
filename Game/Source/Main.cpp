@@ -7,173 +7,6 @@
 using namespace Recluse;
 
 
-std::string GetOption(const std::string& line)
-{
-  size_t pos = line.find('=');
-  if (pos == std::string::npos) return "";
-  std::string option = line.substr(pos + 1);
-  option.erase(std::remove_if(option.begin(), option.end(), [](U8 x) -> I32 { return std::isspace(x); }), option.end());
-  std::transform(option.begin(), option.end(), option.begin(), std::tolower);
-  return option;
-}
-
-
-B32 AvailableOption(const std::string& line, const TChar* option)
-{
-  size_t pos = line.find(option);
-  if (pos != std::string::npos) return true;
-  return false;
-}
-
-
-GraphicsConfigParams ReadGraphicsConfig(U32& w, U32& h)
-{
-  GraphicsConfigParams graphics = kDefaultGpuConfigs;
-  FileHandle Buf;
-  FilesystemResult result = gFilesystem().ReadFrom("Configs/RendererConfigs.recluse", &Buf);
-  if (result == FilesystemResult_NotFound) {
-    Log(rWarning) << "RendererConfigs not found! Setting default rendering configuration.\n";
-    return graphics;
-  }
-
-  std::string line = "";
-  for (size_t i = 0; i < Buf.Sz; ++i) {
-    TChar ch = Buf.Buf[i];
-    line.push_back(ch);
-    if (ch == '\n') {
-      std::cout << line;
-      if (AvailableOption(line, "Buffering")) {
-        std::string option = GetOption(line);
-        if (option.compare("triple") == 0) {
-          graphics._Buffering = TRIPLE_BUFFER;
-        }
-        else if (option.compare("single") == 0) {
-          graphics._Buffering = SINGLE_BUFFER;
-        }
-        else {
-          graphics._Buffering = DOUBLE_BUFFER;
-        }
-      }
-      if (AvailableOption(line, "AntiAliasing")) {
-        std::string option = GetOption(line);
-        if (option.compare("fxaa") == 0) {
-          graphics._AA = AA_FXAA_2x;
-        }
-        else if (option.compare("smaa2x") == 0) {
-          graphics._AA = AA_SMAA_2x;
-        }
-        else {
-          graphics._AA = AA_None;
-        }
-      }
-      if (AvailableOption(line, "TextureQuality")) {
-        std::string option = GetOption(line);
-      }
-      if (AvailableOption(line, "ShadowQuality")) {
-        std::string option = GetOption(line);
-        if (option.compare("ultra") == 0) {
-          graphics._Shadows = GRAPHICS_QUALITY_ULTRA;
-        }
-        else if (option.compare("high") == 0) {
-          graphics._Shadows = GRAPHICS_QUALITY_HIGH;
-        }
-        else if (option.compare("medium") == 0) {
-          graphics._Shadows = GRAPHICS_QUALITY_MEDIUM;
-        }
-        else if (option.compare("low") == 0) {
-          graphics._Shadows = GRAPHICS_QUALITY_LOW;
-        }
-        else {
-          graphics._Shadows = GRAPHICS_QUALITY_NONE;
-        }
-      }
-      if (AvailableOption(line, "LightingQuality")) {
-        std::string option = GetOption(line);
-      }
-      if (AvailableOption(line, "ModelQuality")) {
-        std::string option = GetOption(line);
-      }
-      if (AvailableOption(line, "LevelOfDetail")) {
-        std::string option = GetOption(line);
-      }
-      if (AvailableOption(line, "RenderScale")) {
-        std::string option = GetOption(line);
-      }
-      if (AvailableOption(line, "VSync")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._EnableVsync = true;
-        }
-        else {
-          graphics._EnableVsync = false;
-        }
-      }
-      if (AvailableOption(line, "ChromaticAberration")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._EnableChromaticAberration = true;
-        }
-        else {
-          graphics._EnableChromaticAberration = false;
-        }
-      }
-      if (AvailableOption(line, "Bloom")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._EnableBloom = true;
-        }
-        else {
-          graphics._EnableBloom = false;
-        }
-      }
-      if (AvailableOption(line, "PostProcessing")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._EnablePostProcessing = true;
-        }
-        else {
-          graphics._EnablePostProcessing = false;
-        }
-      }
-      if (AvailableOption(line, "SoftShadows")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._enableSoftShadows = true;
-        }
-        else {
-          graphics._enableSoftShadows = false;
-        }
-      }
-      if (AvailableOption(line, "Multithreading")) {
-        std::string option = GetOption(line);
-        if (option.compare("true") == 0) {
-          graphics._EnableMultithreadedRendering = true;
-        }
-        else {
-          graphics._EnableMultithreadedRendering = false;
-        }
-      }
-      if (AvailableOption(line, "Resolution")) {
-        std::string option = GetOption(line);
-        if (option.compare("800x600") == 0) { graphics._Resolution = Resolution_800x600; w = 800; h = 600; }
-        else if (option.compare("1200x800") == 0) { graphics._Resolution = Resolution_1200x800; w = 1200; h = 800; }
-        else if (option.compare("1280x720") == 0) { graphics._Resolution = Resolution_1280x720; w = 1280; h = 720; }
-        else if (option.compare("1440x900") == 0) { graphics._Resolution = Resolution_1440x900; w = 1400; h = 900; }
-        else if (option.compare("1920x1080") == 0) { graphics._Resolution = Resolution_1920x1080; w = 1920; h = 1080; }
-        else if (option.compare("1920x1200") == 0) { graphics._Resolution = Resolution_1920x1200; w = 1920; h = 1200; }
-      }
-      if (AvailableOption(line, "Window")) {
-        std::string option = GetOption(line);
-        if (option.compare("borderless") == 0) { graphics._WindowType = WindowType_Borderless; }
-        else if (option.compare("fullscreen") == 0) { graphics._WindowType = WindowType_Fullscreen; }
-        else if (option.compare("border") == 0) { graphics._WindowType = WindowType_Border; }
-      }
-      line.clear();
-    }
-  }
-  return graphics;
-}
-
 int main(int c, char* argv[])
 {
   // TODO():
@@ -182,11 +15,15 @@ int main(int c, char* argv[])
   {
     U32 width = 800;
     U32 height = 600;
-    GraphicsConfigParams params = ReadGraphicsConfig(width, height);
-    gEngine().startUp("Recluse", false, width, height, &params);
+    GraphicsConfigParams params = { };
+    UserConfigParams userParams = { };
+    gEngine().readGraphicsConfig(params);
+    gEngine().readUserConfigs(userParams);
+
+    gEngine().startUp("Recluse", &userParams, &params);
     gEngine().run();
     Window* pWindow = gEngine().getWindow();
-    switch (params._WindowType) {
+    switch (userParams._windowType) {
     case WindowType_Borderless:
     {
       pWindow->setToWindowed(width, height, true);

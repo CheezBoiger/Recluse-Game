@@ -53,7 +53,10 @@ int main(int c, char* argv[])
   Log::displayToConsole(true);
   Mouse::show(false);
 
-  gEngine().startUp(RTEXT("Recluse"), false, 1200, 800);
+    UserConfigParams userParams = { };
+    userParams._windowWidth = 1200;
+    userParams._windowHeight = 800;
+  gEngine().startUp(RTEXT("Recluse"), &userParams);
   // Optional: You may add an input callback to override the engine update.
   gEngine().setControlInput(processInput);
 

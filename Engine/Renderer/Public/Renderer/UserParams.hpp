@@ -36,26 +36,6 @@ enum GraphicsQuality {
 };
 
 
-enum WindowType {
-  WindowType_Fullscreen,
-  WindowType_Borderless,
-  WindowType_Border
-};
-
-
-enum RenderResolution {
-  Resolution_800x600,
-  Resolution_1200x800,
-  Resolution_1280x720,
-  Resolution_1440x900,
-  Resolution_1920x1080,
-  Resolution_1920x1200,
-  Resolution_2048x1440, // 2k
-  Resolution_3840x2160, // 4k
-  Resolution_7680x4320 // 8k
-};
-
-
 class GraphicsConfigParams {
 public:
   // Number of desired frame buffer images to use. This is the number of images 
@@ -156,10 +136,8 @@ public:
   // overall better the image will look, at the cost of performance, since the GPU will have to work harder
   // to produce the frame. This is difference from your window resolution, as the OS adapter is meant to map the
   // GPU frame image to the window of your screen.
-  RenderResolution _Resolution;
-
-  // Type of window that your GPU is rendering for.
-  WindowType       _WindowType;
+  U32 _renderResolutionWidth;
+  U32 _renderResolutionHeight;
 };
 
 
@@ -185,8 +163,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   true,
   false,
   120,
-  Resolution_800x600,
-  WindowType_Border
+  800,
+  600
 };
 
 } // Recluse

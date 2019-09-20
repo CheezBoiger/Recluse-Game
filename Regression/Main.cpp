@@ -26,7 +26,11 @@ int main()
   Log::displayToConsole(true);
   Log() << "Initial testing of Recluse Engine Software Libraries.\n"
               << "Initializing testing data cache...\n";
-  gEngine().startUp("Test Engine.", false);
+  UserConfigParams params = { };
+  params._windowWidth = 800;
+  params._windowHeight = 600;
+  params._windowType = WindowType_Border;
+  gEngine().startUp("Test Engine.", &params);
 
   // TODO(): Add more regressions.
   Tester::RunAllTests(test);

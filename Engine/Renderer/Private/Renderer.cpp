@@ -546,7 +546,7 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   m_renderWidth = (U32)m_pWindow->getWidth(); 
   m_renderHeight = (U32)m_pWindow->getHeight();
 
-  updateRenderResolution(params->_Resolution);
+  updateRenderResolution(params->_renderResolutionWidth, params->_renderResolutionHeight);
   updateRuntimeConfigs(params);
 
   m_pRhi->initialize(window->getHandle(), 
@@ -3002,7 +3002,7 @@ void Renderer::generateOffScreenCmds(CommandBuffer* cmdBuffer, U32 resourceIndex
     VkClearRect clearRects[4] = { };
     for (U32 i = 0; i < 4; ++i) {
       clearRects[i].baseArrayLayer = 0;
-      clearRects[i].layerCount = 0;
+      clearRects[i].layerCount = 1;
       clearRects[i].rect.extent = { m_renderWidth, m_renderHeight };
       clearRects[i].rect.offset = { 0, 0 };
     }
@@ -4480,8 +4480,9 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
       reconstruct = true;
     }
     
-    if (params->_Resolution != m_currentGraphicsConfigs._Resolution) {
-      updateRenderResolution(params->_Resolution);
+    if (params->_renderResolutionWidth != m_renderWidth ||
+        params->_renderResolutionHeight != m_renderHeight) {
+      updateRenderResolution(params->_renderResolutionWidth, params->_renderResolutionHeight);
       reconstruct = true;
     }
 
@@ -5232,53 +5233,17 @@ void Renderer::pushSimpleRender(SimpleRenderCmd& cmd)
 }
 
 
-void Renderer::updateRenderResolution(RenderResolution resolution)
+void Renderer::updateRenderResolution(U32 rW, U32 rH)
 {
-  U32 w, h;
-  switch ( resolution ) {
-    case Resolution_800x600: {
-      w = 800;
-      h = 600;
-    } break;
-    case Resolution_1200x800: {
-      w = 1200;
-      h = 800;
-    } break;
-    case Resolution_1280x720: {
-      w = 1280;
-      h = 720;
-    } break;
-    case Resolution_1440x900: {
-      w = 1440;
-      h = 900;
-    } break;
-    case Resolution_1920x1080: {
-      w = 1920;
-      h = 1080;
-    } break;
-    case Resolution_1920x1200: {
-      w = 1920;
-      h = 1200;
-    } break;
-    case Resolution_2048x1440: {
-      w = 2048;
-      h = 1440;
-    } break;
-    case Resolution_3840x2160: {
-      w = 3840;
-      h = 2160;
-    } break;
-    case Resolution_7680x4320: {
-      w = 7680;
-      h = 4320;
-    } break;
-    default: {
-      w = m_pWindow->getWidth();
-      h = m_pWindow->getHeight();
-    } break;
+  if (rW == 0) {
+    rW = m_pWindow->getWidth();
   }
 
-  m_renderWidth = w;
-  m_renderHeight = h;
+  if (rH == 0) {
+    rH = m_pWindow->getHeight();
+  }
+
+  m_renderWidth = rW;
+  m_renderHeight = rH;
 }
 } // Recluse

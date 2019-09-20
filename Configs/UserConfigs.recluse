@@ -11,3 +11,6 @@
 [CharacterVolume] = 100.0
 [WeaponVolume] = 100.0
 [EnvironmentVolume] = 100.0
+[WindowResolutionWidth] = 1920
+[WindowResolutionHeight] =  1080 
+[Window] = borderless

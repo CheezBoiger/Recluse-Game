@@ -238,27 +238,26 @@ int main(int c, char* argv[])
   // User parameters is useful for global parameters such as cameras, be sure to read and
   // set to engine global.
   {
-    U32 w = 800, h = 600;
     GraphicsConfigParams params = { };
-    gEngine( ).readGraphicsConfig( params, w, h );
+    gEngine( ).readGraphicsConfig( params );
 
     UserConfigParams userParams;
     gEngine( ).readUserConfigs( userParams );
     gEngine( ).setGlobalUserConfigs( userParams );
 
     // Start up the engine and set the input controller.
-    gEngine().startUp(RTEXT("Recluse Test Game"), false, w, h, &params);
+    gEngine().startUp(RTEXT("Recluse Test Game"), &userParams, &params);
     gEngine().run();
     Window* pWindow = gEngine().getWindow();
-    switch (params._WindowType) {
+    switch (userParams._windowType) {
     case WindowType_Borderless:
     {
-      pWindow->setToWindowed(w, h, true);
+      pWindow->setToWindowed(userParams._windowWidth, userParams._windowHeight, true);
       pWindow->setToCenter();
     } break;
     case WindowType_Border:
     {
-      pWindow->setToWindowed(w, h);
+      pWindow->setToWindowed(userParams._windowWidth, userParams._windowHeight);
       pWindow->setToCenter();
     } break;
     case WindowType_Fullscreen:

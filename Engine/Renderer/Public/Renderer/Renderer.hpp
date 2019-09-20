@@ -317,7 +317,7 @@ private:
   void              generateForwardPBRCmds(CommandBuffer* buf, U32 resourceIndex);
   void              generateShadowResolveCmds(CommandBuffer* buf, U32 resourceIndex);
   void              generatePreZCmds(CommandBuffer* buf, U32 resourceIndex);
-  void              updateRenderResolution(RenderResolution resolution);
+  void              updateRenderResolution(U32 rW, U32 rH);
   void              checkEnableLightShadows();
 
   void              buildOffScreenCmdList();

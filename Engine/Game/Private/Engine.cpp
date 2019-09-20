@@ -135,7 +135,7 @@ void Engine::processInput()
 
 
 
-void Engine::startUp(std::string appName, B32 fullscreen, I32 width, I32 height, const GraphicsConfigParams* params)
+void Engine::startUp(std::string appName, const UserConfigParams* userParams, const GraphicsConfigParams* params)
 {
   if (m_running) return;
 
@@ -148,9 +148,9 @@ void Engine::startUp(std::string appName, B32 fullscreen, I32 width, I32 height,
   Window::setWindowResizeCallback(WindowResized);
   Window::setMouseButtonCallback(MouseButtonClick);
 
-  m_window.create(appName, width, height);
+  m_window.create(appName, userParams->_windowWidth, userParams->_windowHeight);
 
-  if (fullscreen) {
+  if (userParams->_windowType == WindowType_Fullscreen) {
     m_window.setToFullScreen();
   }
   else {
@@ -393,12 +393,17 @@ std::string getOption(const std::string& line)
 B32 availableOption(const std::string& line, const TChar* option) 
 {
   size_t pos = line.find(option);
-  if (pos != std::string::npos && pos == 1) return true;
+  if (pos != std::string::npos && pos == 1) {
+    size_t b = line.find("]");
+    std::string key = line.substr(pos, b - pos);
+    if (key.compare(option) == 0)
+        return true;
+    }
   return false;
 }
 
 
-void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
+void Engine::readGraphicsConfig( GraphicsConfigParams& graphics )
 {
   FileHandle Buf;
   FilesystemResult result =
@@ -546,57 +551,18 @@ void Engine::readGraphicsConfig( GraphicsConfigParams& graphics, U32& w, U32&h )
         U32 frameLimit = std::atoi(option.c_str());
         graphics._frameLimit = frameLimit;
       }
-      if (availableOption(line, "RenderResolution")) {
+      if (availableOption(line, "RenderResolutionWidth")) {
         std::string option = getOption(line);
-        if (option.compare("800x600") == 0) {
-          graphics._Resolution = Resolution_800x600;
-        } else if (option.compare("1200x800") == 0) {
-          graphics._Resolution = Resolution_1200x800;
-        } else if (option.compare("1280x720") == 0) {
-          graphics._Resolution = Resolution_1280x720;
-        } else if (option.compare("1440x900") == 0) {
-          graphics._Resolution = Resolution_1440x900;
-        } else if (option.compare("1920x1080") == 0) {
-          graphics._Resolution = Resolution_1920x1080;
-        } else if (option.compare("1920x1200") == 0) {
-          graphics._Resolution = Resolution_1920x1200;
-        } else if (option.compare("2048x1440") == 0) {
-          graphics._Resolution = Resolution_2048x1440;
-        } else if (option.compare("3840x2160") == 0) {
-          graphics._Resolution = Resolution_3840x2160;
-        } else if (option.compare("7680x4320") == 0) {
-          graphics._Resolution = Resolution_7680x4320;
-        } else if (option.compare("unknown") == 0) {
-        }
+        U32 rW = std::atoi(option.c_str());
+        graphics._renderResolutionWidth = rW;
       }
-      if (availableOption(line, "WindowResolutionX")) {
-        std::string option = getOption(line);
-        w = atoi(option.c_str());
-      }
-      if (availableOption(line, "WindowResolutionY")) {
-        std::string option = getOption(line);
-        h = atoi(option.c_str());
-      }
-      if (availableOption(line, "Window")) {
-        std::string option = getOption(line);
-        if (option.compare("borderless") == 0) {
-          graphics._WindowType = WindowType_Borderless;
-        } else if (option.compare("fullscreen") == 0) {
-          graphics._WindowType = WindowType_Fullscreen;
-        } else if (option.compare("border") == 0) {
-          graphics._WindowType = WindowType_Border;
-        }
+      if (availableOption(line, "RenderResolutionHeight")) {
+          std::string option = getOption(line);
+          U32 rH = std::atoi(option.c_str());
+          graphics._renderResolutionHeight = rH;
       }
       line.clear();
     }
-  }
-
-  if (w == 0) {
-    w = 800;
-  }
-
-  if (h == 0) {
-    h = 600;
   }
 }
 
@@ -653,9 +619,37 @@ void Engine::readUserConfigs( UserConfigParams& params )
           params._cameraShakeQuality = USER_QUALITY_NONE;
         }
       }
+      if (availableOption(line, "WindowResolutionWidth")) {
+          std::string option = getOption(line);
+          params._windowWidth = atoi(option.c_str());
+      }
+      if (availableOption(line, "WindowResolutionHeight")) {
+          std::string option = getOption(line);
+          params._windowHeight = atoi(option.c_str());
+      }
+      if (availableOption(line, "Window")) {
+          std::string option = getOption(line);
+          if (option.compare("borderless") == 0) {
+              params._windowType = WindowType_Borderless;
+          }
+          else if (option.compare("fullscreen") == 0) {
+              params._windowType = WindowType_Fullscreen;
+          }
+          else if (option.compare("border") == 0) {
+              params._windowType = WindowType_Border;
+          }
+      }
 
       line.clear();
     }
+  }
+
+  if (params._windowWidth == 0) {
+      params._windowWidth = 800;
+  }
+
+  if (params._windowHeight == 0) {
+      params._windowHeight = 600;
   }
 }
 } // Recluse

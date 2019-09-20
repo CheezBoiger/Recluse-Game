@@ -64,7 +64,17 @@ enum UserParamQuality {
 typedef U32 UserParamQualityType;
 
 
-struct UserConfigParams {
+enum WindowType {
+    WindowType_Fullscreen,
+    WindowType_Borderless,
+    WindowType_Border
+};
+
+
+struct UserConfigParams {   
+  U32 _windowWidth;
+  U32 _windowHeight;
+  WindowType _windowType;
   R32 _mouseSensitivityX;
   R32 _mouseSensitivityY;
   I32 _cameraShakeQuality;
@@ -110,7 +120,9 @@ public:
   // along with the start up, be sure to manually call the show() function from the 
   // window in order to see something!
   // GpuConfigParams is an optional setting for initial start up of the renderer, you may pass nullptr for default settings.
-  void                          startUp(std::string appName, B32 fullscreen, I32 width = 800, I32 height = 600, const GraphicsConfigParams* params = nullptr);
+  void                          startUp(std::string appName, 
+                                        const UserConfigParams* userParams, 
+                                        const GraphicsConfigParams* params = nullptr);
   void                          cleanUp();
   
   // TODO(): Engine will no longer need a Control Input, instead, it will have InputAxises.
@@ -176,7 +188,7 @@ public:
   const UserConfigParams& getGlobalUserConfigs() const { return m_globalUserConfigParams; }
   void setGlobalUserConfigs(const UserConfigParams& params) { m_globalUserConfigParams = params; }
 
-  void readGraphicsConfig( GraphicsConfigParams& params, U32& w, U32& h );
+  void readGraphicsConfig( GraphicsConfigParams& params );
   void readUserConfigs( UserConfigParams& config );
   void saveEngineConfig( GraphicsConfigParams& config );
   void saveUserConfig( UserConfigParams& config );

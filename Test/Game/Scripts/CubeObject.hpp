@@ -109,7 +109,7 @@ public:
                           0, 0, 200, 200, 
                           []() -> B32 {
                             GraphicsConfigParams params = gRenderer().getCurrentGraphicsConfigs();
-                            params._Resolution = Resolution_1200x800;
+                            params._renderResolutionWidth = 1200; params._renderResolutionHeight = 800;
                             gRenderer().updateRendererConfigs(&params);
                             gEngine().getWindow()->setToWindowed(1200, 800);
                             gEngine().getWindow()->setToCenter();
