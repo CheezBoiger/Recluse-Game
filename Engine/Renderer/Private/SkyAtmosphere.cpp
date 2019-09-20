@@ -96,13 +96,8 @@ void SkyRenderer::initialize()
   createFrameBuffer(pRhi);
   createCubeMap(pRhi);
   createGraphicsPipeline(pRhi);
-  createCommandBuffer(pRhi);
-  buildCmdBuffer(pRhi, nullptr);
-
-  m_pAtmosphereSema = pRhi->createVkSemaphore();
-  VkSemaphoreCreateInfo semaCi = { };
-  semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  m_pAtmosphereSema->initialize(semaCi);
+  createFrameResources(pRhi);
+  buildCmdBuffer(pRhi, 0, nullptr);
 
   m_SkyboxVertBuf.initialize(pRhi, static_cast<U32>(kSkyBoxVertices.size()), 
     sizeof(Vector4), kSkyBoxVertices.data());
@@ -110,20 +105,50 @@ void SkyRenderer::initialize()
 }
 
 
+void SkyRenderer::freeFrameResources(VulkanRHI* pRhi)
+{
+  for (U32 idx = 0; idx < m_pAtmosphereSema.size(); ++idx) {
+    pRhi->freeVkSemaphore(m_pAtmosphereSema[idx]);
+  }
+  for (U32 idx = 0; idx < m_pCmdBuffer.size(); ++idx) {
+    pRhi->freeCommandBuffer(m_pCmdBuffer[idx]);
+  }
+}
+
+
+void SkyRenderer::createFrameResources(VulkanRHI* pRhi)
+{
+  m_pCmdBuffer.resize(pRhi->getFrameCount());
+  m_pAtmosphereSema.resize(pRhi->getFrameCount());
+
+  for (U32 idx = 0; idx < m_pAtmosphereSema.size(); ++idx) {
+    m_pAtmosphereSema[idx] = pRhi->createVkSemaphore();
+    VkSemaphoreCreateInfo semaCi = {};
+    semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    m_pAtmosphereSema[idx]->initialize(semaCi);
+  }
+
+  for (U32 idx = 0; idx < m_pCmdBuffer.size(); ++idx) {
+    m_pCmdBuffer[idx] = pRhi->createCommandBuffer();
+    m_pCmdBuffer[idx]->allocate(pRhi->getGraphicsCmdPool(idx, 3),
+                                VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  }
+}
+
+
+void SkyRenderer::recreatePerFrameResources(VulkanRHI* pRhi)
+{
+  freeFrameResources(pRhi);
+  createFrameResources(pRhi);
+}
+
+
 SkyRenderer::~SkyRenderer()
 {
   R_ASSERT(!m_pCubeMap, "Skybox cube map was not properly cleaned up prior to class descruction!\n");
   R_ASSERT(!m_RenderTexture, "Sky texture was not cleaned up prior to class destruction!\n");
-  R_ASSERT(!m_pFrameBuffer, "Sky frame buffer not cleaned up prior to class descruction!\n");
   R_ASSERT(!m_pRenderPass, "Sky Renderer renderpass was not destroyed!");
   R_ASSERT(!m_SkyboxRenderPass, "Skybox renderpass was not destroyed!");
-}
-
-
-void SkyRenderer::createCommandBuffer(VulkanRHI* rhi)
-{
-  m_pCmdBuffer = rhi->createCommandBuffer();
-  m_pCmdBuffer->allocate(rhi->graphicsCmdPool(3), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 }
 
 
@@ -521,16 +546,18 @@ void SkyRenderer::createGraphicsPipeline(VulkanRHI* rhi)
 }
 
 
-void SkyRenderer::buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 frameIndex)
-{
-  CommandBuffer* cmdBuffer = m_pCmdBuffer;
+void SkyRenderer::buildCmdBuffer(VulkanRHI* rhi, 
+                                 U32 frameIndex,
+                                 CommandBuffer* pOutput, 
+                                 U32 resourceIndex) {
+  CommandBuffer* cmdBuffer = m_pCmdBuffer[frameIndex];
   if (pOutput) {
     cmdBuffer = pOutput;
 
   } else {
-    if (m_pCmdBuffer) {
+    if (m_pCmdBuffer[frameIndex]) {
       rhi->waitAllGraphicsQueues();
-      m_pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+      m_pCmdBuffer[frameIndex]->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
     }
 
     VkCommandBufferBeginInfo begin = { };
@@ -562,7 +589,7 @@ void SkyRenderer::buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 fra
     GlobalDescriptor* global = gRenderer().getGlobalNative();
     RenderQuad*       quad = gRenderer().getRenderQuad();
 
-    VkDescriptorSet globalDesc = global->getDescriptorSet(frameIndex)->getHandle();
+    VkDescriptorSet globalDesc = global->getDescriptorSet(resourceIndex)->getHandle();
     VkBuffer vertexbuf = quad->getQuad()->getHandle()->getNativeBuffer();
     VkBuffer indexbuf = quad->getIndices()->getHandle()->getNativeBuffer();
     VkIndexType indexType = getNativeIndexType(quad->getIndices()->GetSizeType());
@@ -704,21 +731,14 @@ void SkyRenderer::buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOutput, U32 fra
 void SkyRenderer::cleanUp()
 {
   VulkanRHI* rhi = gRenderer().getRHI();
+
+  freeFrameResources(rhi);
+
   if (m_pCubeMap) {
     rhi->freeTexture(m_pCubeMap);
     m_pCubeMap = nullptr;
     rhi->freeSampler(m_pSampler);
     m_pSampler = nullptr;
-  }
-
-  if (m_pAtmosphereSema) {
-    rhi->freeVkSemaphore(m_pAtmosphereSema);
-    m_pAtmosphereSema = nullptr;
-  }
-
-  if (m_pCmdBuffer) {
-    rhi->freeCommandBuffer(m_pCmdBuffer);
-    m_pCmdBuffer = nullptr;
   }
 
   if (m_pRenderPass) {

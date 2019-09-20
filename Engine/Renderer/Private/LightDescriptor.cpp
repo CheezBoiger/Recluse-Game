@@ -570,7 +570,7 @@ void ShadowMapSystem::initializeCascadeShadowMap(Renderer* pRenderer, U32 resolu
     for (U32 i = 0; i < m_pCascadeShadowMapD.size(); ++i) {
       CommandBuffer cmd;
       cmd.SetOwner(pRhi->logicDevice()->getNative());
-      cmd.allocate(pRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+      cmd.allocate(pRhi->getGraphicsCmdPool(i, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
       VkCommandBufferBeginInfo b = {};
       b.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
       b.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;

@@ -8,9 +8,10 @@
 #define NO_NORMAL_TANGENT
 #include "Common/Globals.glsl"
 
-layout (set = 0, binding = 0) uniform sampler2D loRes;
-layout (set = 0, binding = 1, rgba16) uniform image2D hiRes;
+layout (set = 0, binding = 0) uniform sampler2D hiRes;
+layout (set = 0, binding = 1, rgba16) uniform image2D loRes;
 
+// Size of lo res texture
 layout (push_constant) uniform PushConst {
   ivec4 sz;
 } screen;
@@ -21,8 +22,7 @@ void main()
 {
   ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
   vec2 tx = (vec2(iPixCoord) / vec2(screen.sz.xy));
-  vec3 lo = texture(loRes, tx).rgb;
-  vec3 hi = imageLoad(hiRes, iPixCoord).rgb;
-  vec4 res = vec4(hi + lo, 1);
-  imageStore(hiRes, iPixCoord, res);
+  vec3 hi = texture(hiRes, tx).rgb;
+  vec4 res = vec4(hi, 1);
+  imageStore(loRes, iPixCoord, res);
 }

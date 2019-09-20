@@ -37,11 +37,8 @@ public:
 
   SkyRenderer() 
     : m_pCubeMap(nullptr)
-    , m_pAtmosphereSema(nullptr)
     , m_pPipeline(nullptr)
-    , m_pCmdBuffer(nullptr)
     , m_pSampler(nullptr)
-    , m_pFrameBuffer(nullptr)
     , m_pRenderPass(nullptr)
     , m_RenderTexture(nullptr)
     , m_bDirty(false)
@@ -55,14 +52,15 @@ public:
   void                    markDirty() { m_bDirty = true; }
   void                    markClean() { m_bDirty = false; }
 
+  void recreatePerFrameResources(VulkanRHI* pRhi);
 
-  Semaphore*              getSignalSemaphore() { return m_pAtmosphereSema; }
+  Semaphore*              getSignalSemaphore(U32 resourceIndex) { return m_pAtmosphereSema[resourceIndex]; }
   Texture*                getCubeMap() { return m_pCubeMap; }
   Sampler*                getSampler() { return m_pSampler; }
 
   B32                     needsRendering() { return m_bDirty; }
   B32                     usingPredefinedSkybox() const { return m_bUsingPredefined; }
-  CommandBuffer*          getCmdBuffer() { return m_pCmdBuffer; }
+  CommandBuffer*          getCmdBuffer(U32 frameIndex) { return m_pCmdBuffer[frameIndex]; }
 
   // Somewhat of a hack... We can't clear out our attachments when rendering the skybox.
   // This is the renderpass to say NO to clearing out the pbr pass.
@@ -74,12 +72,17 @@ public:
   Vector3                 getAirColor() const { return m_vAirColor; }
   void                    setAirColor(Vector3 color) { m_vAirColor = color; }
 
-  void                    buildCmdBuffer(VulkanRHI* rhi, CommandBuffer* pOut = nullptr, U32 resourceIndex = 0);
+  void buildCmdBuffer(VulkanRHI* rhi,
+                      U32 frameIndex, 
+                      CommandBuffer* pOut = nullptr,
+                      U32 resourceIndex = 0);
+
+  void freeFrameResources(VulkanRHI* pRhi);
+  void createFrameResources(VulkanRHI* pRhi);
 
 private:
   void                    createRenderAttachment(VulkanRHI* rhi);
   void                    createCubeMap(VulkanRHI* rhi);
-  void                    createCommandBuffer(VulkanRHI* rhi);
   void                    createGraphicsPipeline(VulkanRHI* rhi);
   void                    createFrameBuffer(VulkanRHI* rhi);
   
@@ -89,9 +92,9 @@ private:
   GraphicsPipeline*       m_pPipeline;
   Texture*                m_pCubeMap;
   Sampler*                m_pSampler;
-  Semaphore*              m_pAtmosphereSema;
-  CommandBuffer*          m_pCmdBuffer;
-  FrameBuffer*            m_pFrameBuffer;
+  std::vector<Semaphore*>  m_pAtmosphereSema;
+  std::vector<CommandBuffer*> m_pCmdBuffer;
+  FrameBuffer* m_pFrameBuffer;
   RenderPass*             m_pRenderPass;
   RenderPass*             m_SkyboxRenderPass;
   VertexBuffer            m_SkyboxVertBuf;

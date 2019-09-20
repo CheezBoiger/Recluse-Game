@@ -76,8 +76,6 @@ Fence::~Fence()
 VulkanRHI::VulkanRHI()
   : m_windowHandle(NULL)
   , mSurface(VK_NULL_HANDLE)
-  , mComputeCmdPool(VK_NULL_HANDLE)
-  , m_TransferCmdPool(VK_NULL_HANDLE)
   , mDescriptorPool(VK_NULL_HANDLE)
   , mOccQueryPool(VK_NULL_HANDLE)
   , mSwapchainCmdBufferBuild(nullptr)
@@ -89,8 +87,6 @@ VulkanRHI::VulkanRHI()
   mSwapchainInfo.mComplete = false;
   mSwapchainInfo.mCmdBufferSet = 0;
   mSwapchainInfo.mCurrentImageIndex = 0;
-
-  mGraphicsCmdPools.resize(4);
 }
 
 
@@ -260,29 +256,6 @@ void VulkanRHI::initialize(HWND windowHandle,
 
   m_swapchain.initialize(gPhysicalDevice, mLogicalDevice, mSurface, presentMode, desiredImageCount);
 
-  VkCommandPoolCreateInfo cmdPoolCI = { };
-  cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getGraphicsQueueFamily()._idx);
-  cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-  
-  for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
-    if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &mGraphicsCmdPools[i]) != VK_SUCCESS) {
-      R_DEBUG(rError, "Failed to create primary command pool!\n");
-    } 
-  }
-
-  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getComputeQueueFamily()._idx);
-
-  if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &mComputeCmdPool) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create secondary command pool!\n");
-  }
-
-  cmdPoolCI.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getTransferQueueFamily()._idx);
-
-  if (vkCreateCommandPool(mLogicalDevice.getNative(), &cmdPoolCI, nullptr, &m_TransferCmdPool) != VK_SUCCESS) {
-    R_DEBUG(rError, "Failed to create secondary command pool!\n");
-  }
-
   VkPhysicalDeviceProperties props = gPhysicalDevice.getDeviceProperties();
   VkPhysicalDeviceMaintenance3Properties mp = gPhysicalDevice.getMaintenanceProperties();
   mPhysicalDeviceProperties = props;
@@ -307,23 +280,6 @@ void VulkanRHI::cleanUp()
   gAllocator.cleanUp(this);
 
   cleanUpFrameResources();
-
-  for (size_t i = 0; i < mGraphicsCmdPools.size(); ++i) {
-    if (mGraphicsCmdPools[i]) {
-      vkDestroyCommandPool(mLogicalDevice.getNative(), mGraphicsCmdPools[i], nullptr);
-      mGraphicsCmdPools[i] = VK_NULL_HANDLE;
-    }
-  }
-
-  if (mComputeCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.getNative(), mComputeCmdPool, nullptr);
-    mComputeCmdPool = VK_NULL_HANDLE;
-  }
-
-  if (m_TransferCmdPool) {
-    vkDestroyCommandPool(mLogicalDevice.getNative(), m_TransferCmdPool, nullptr);
-    m_TransferCmdPool = VK_NULL_HANDLE;
-  }
 
   if (mDescriptorPool) {
     vkDestroyDescriptorPool(mLogicalDevice.getNative(), mDescriptorPool, nullptr);
@@ -663,8 +619,11 @@ VkResult VulkanRHI::present()
   VkResult result = vkQueuePresentKHR(mLogicalDevice.getPresentQueue(), &presentInfo);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
     VkExtent2D windowExtent = m_swapchain.getSurfaceExtent();
-    reConfigure(m_swapchain.getPresentMode(), windowExtent.width,
-      windowExtent.height, m_swapchain.getImageCount());
+    reConfigure(m_swapchain.getPresentMode(), 
+                windowExtent.width,
+                windowExtent.height, 
+                m_swapchain.getImageCount(), 
+                true);
   }
   //R_ASSERT(result == VK_SUCCESS, "Failed to present!\n");
 
@@ -734,7 +693,7 @@ void VulkanRHI::renderFrameCommandBuffer()
 
   VkCommandBufferBeginInfo cmdBufferBI = {};
   cmdBufferBI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  cmdBufferBI.flags =   VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  cmdBufferBI.flags =   VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
   cmdBuffer.reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
@@ -768,14 +727,15 @@ void VulkanRHI::createSwapchainCommandBuffers()
   for (size_t i = 0; i < m_frameResources.size(); ++i) {
     CommandBuffer& cmdBuffer = m_frameResources[i].cmdBuffer;
     cmdBuffer.SetOwner(mLogicalDevice.getNative());
-    cmdBuffer.allocate(mGraphicsCmdPools[0], VK_COMMAND_BUFFER_LEVEL_PRIMARY);   
+    cmdBuffer.allocate(m_frameResources[i].graphicsCmdPools[0], 
+                       VK_COMMAND_BUFFER_LEVEL_PRIMARY);   
   }
 
   mSwapchainInfo.mComplete = true;
 }
 
 
-void VulkanRHI::rebuildCommandBuffers()
+void VulkanRHI::recreateCommandBuffers()
 {
   for (size_t i = 0; i < m_frameResources.size(); ++i) {
     CommandBuffer& cmdBuffer = m_frameResources[i].cmdBuffer;
@@ -790,7 +750,8 @@ void VulkanRHI::reConfigure(VkPresentModeKHR presentMode,
                             I32 width, 
                             I32 height, 
                             U32 frameResourceBuffers, 
-                            U32 desiredImageCount)
+                            U32 desiredImageCount,
+                            B32 preserveFrameResources)
 {
   if (width <= 0 || height <= 0) return;
   deviceWaitIdle();
@@ -803,13 +764,14 @@ void VulkanRHI::reConfigure(VkPresentModeKHR presentMode,
 
   std::vector<VkSurfaceFormatKHR> surfaceFormats = gPhysicalDevice.querySwapchainSurfaceFormats(mSurface);
   VkSurfaceCapabilitiesKHR capabilities = gPhysicalDevice.querySwapchainSurfaceCapabilities(mSurface);
-
   m_swapchain.reCreate(mLogicalDevice, mSurface, surfaceFormats[0], presentMode, capabilities, desiredImageCount);
   
   createDepthAttachment();
   setUpSwapchainRenderPass();
   queryFromSwapchain();
-  createFrameResources(frameResourceBuffers);
+
+  if (!preserveFrameResources)
+    createFrameResources(frameResourceBuffers);
   
   // Readjust frame count since we are now changing swapchain frame resource count.
   m_currentFrame = m_currentFrame % m_frameResources.size();
@@ -1123,23 +1085,8 @@ void VulkanRHI::createFrameResources(U32 frameResourceBufferCount)
   VkFenceCreateInfo fenceCi = {};
   fenceCi.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceCi.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-  /*
-    if (vkCreateSemaphore(handle, &semaphoreCI, nullptr,
-    &mImageAvailableSemaphore) != VK_SUCCESS) { R_DEBUG(rError, "Failed to
-    create a semaphore!\n");
-    }
 
-    if (vkCreateSemaphore(handle, &semaphoreCI, nullptr,
-    &mGraphicsFinishedSemaphore) != VK_SUCCESS) { R_DEBUG(rError, "Failed to
-    create a semaphore!\n");
-    }
-  */
-  for (U32 i = 0; i < m_frameResources.size(); ++i) {
-    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].imageAvailableSemaphore, nullptr);
-    vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].presentableSemaphore, nullptr);
-    vkDestroyFence(mLogicalDevice.getNative(), m_frameResources[i].fenceInFlight, nullptr);
-    m_frameResources[i].cmdBuffer.free();
-  }
+  cleanUpFrameResources();
 
   m_frameResources.resize(frameResourceBufferCount);
 
@@ -1157,19 +1104,72 @@ void VulkanRHI::createFrameResources(U32 frameResourceBufferCount)
     result = vkCreateFence(mLogicalDevice.getNative(), &fenceCi, nullptr,
                            &m_frameResources[i].fenceInFlight);
     R_ASSERT(result == VK_SUCCESS, "");
+
+    m_frameResources[i].graphicsCmdPools.resize(4);
+    m_frameResources[i].computeCmdPools.resize(1);
+    m_frameResources[i].transferCmdPools.resize(1);
+
+    for (U32 idx = 0; idx < m_frameResources[i].graphicsCmdPools.size(); ++idx) {
+      VkCommandPoolCreateInfo ci = { };
+      ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+      ci.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getGraphicsQueueFamily()._idx);
+      ci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+      vkCreateCommandPool(mLogicalDevice.getNative(), 
+                          &ci, 
+                          nullptr, 
+                          &m_frameResources[i].graphicsCmdPools[idx]);
+    }
+
+    for (U32 idx = 0; idx < m_frameResources[i].computeCmdPools.size(); ++idx) {
+      VkCommandPoolCreateInfo ci = { };
+      ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+      ci.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getComputeQueueFamily()._idx);
+      ci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+      vkCreateCommandPool(mLogicalDevice.getNative(), 
+                          &ci,
+                          nullptr, 
+                          &m_frameResources[i].computeCmdPools[idx]);
+    }
+
+    for (U32 idx = 0; idx < m_frameResources[i].transferCmdPools.size(); ++idx) {
+      VkCommandPoolCreateInfo ci = { };
+      ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+      ci.queueFamilyIndex = static_cast<U32>(mLogicalDevice.getTransferQueueFamily()._idx);
+      ci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+      vkCreateCommandPool(mLogicalDevice.getNative(), 
+                          &ci, 
+                          nullptr, 
+                          &m_frameResources[i].transferCmdPools[idx]);
+    }
   }
 
-  rebuildCommandBuffers();
+  recreateCommandBuffers();
 }
 
 
 void VulkanRHI::cleanUpFrameResources()
 {
+  VkDevice device = mLogicalDevice.getNative();
   for (U32 i = 0; i < m_frameResources.size(); ++i) {
     vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].imageAvailableSemaphore, nullptr);
     vkDestroySemaphore(mLogicalDevice.getNative(), m_frameResources[i].presentableSemaphore, nullptr);
     vkDestroyFence(mLogicalDevice.getNative(), m_frameResources[i].fenceInFlight, nullptr);
     m_frameResources[i].cmdBuffer.free();
+
+    for (U32 cmdPoolIdx = 0; cmdPoolIdx < m_frameResources[i].graphicsCmdPools.size(); ++cmdPoolIdx) {
+      vkDestroyCommandPool(device, m_frameResources[i].graphicsCmdPools[cmdPoolIdx], nullptr);
+    }
+
+    for (U32 cmdPoolIdx = 0; cmdPoolIdx < m_frameResources[i].computeCmdPools.size(); ++cmdPoolIdx) {
+      vkDestroyCommandPool(device, m_frameResources[i].computeCmdPools[cmdPoolIdx], nullptr);
+    }
+
+    for (U32 cmdPoolIdx = 0; cmdPoolIdx < m_frameResources[i].transferCmdPools.size(); ++cmdPoolIdx) {
+      vkDestroyCommandPool(device, m_frameResources[i].transferCmdPools[cmdPoolIdx], nullptr);
+    }
   }
 }
 } // Recluse

@@ -92,7 +92,7 @@ void UploadAtlas(NkObject* obj, const void* image, I32 w, I32 h, VulkanRHI* rhi)
   // Submit command buffer to stream over the cache data to gpu texture.
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(rhi->logicDevice()->getNative());
-  cmdBuffer.allocate(rhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(rhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   VkCommandBufferBeginInfo begin = { };
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -336,13 +336,13 @@ void UIOverlay::render(Renderer* pRenderer)
 void UIOverlay::initialize(Renderer* pRenderer)
 {
   VulkanRHI* pRhi = pRenderer->getRHI();
-  m_pSemaphores.resize(pRhi->swapchainImageCount());
-  m_CmdBuffers.resize(pRhi->swapchainImageCount());
+  m_pSemaphores.resize(pRhi->getFrameCount());
+  m_CmdBuffers.resize(pRhi->getFrameCount());
   VkSemaphoreCreateInfo semaCi = {};
   semaCi.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
   for (U32 i = 0; i < m_CmdBuffers.size(); ++i) {
     m_CmdBuffers[i] = pRhi->createCommandBuffer();
-    m_CmdBuffers[i]->allocate(pRhi->graphicsCmdPool(1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    m_CmdBuffers[i]->allocate(pRhi->getGraphicsCmdPool(i, 1), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     m_pSemaphores[i] = pRhi->createVkSemaphore();
     m_pSemaphores[i]->initialize(semaCi);
   }
@@ -909,7 +909,7 @@ void UIOverlay::StreamBuffers(VulkanRHI* pRhi, U32 frameIndex)
 {
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(pRhi->getTransferCmdPool(frameIndex, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

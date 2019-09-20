@@ -44,7 +44,8 @@ enum CmdConfig {
   CMD_WIREFRAME_BIT     = (1 << 14),  // Wireframe mode.
   CMD_BASIC_RENDER_BIT  = (1 << 15),  // Basic render bit, redirects rendering to simple pipeline, with no material.
   CMD_REFRACTION_BIT    = (1 << 16),  // Refraction bit. Mesh refracts.
-  CMD_CUSTOM_SHADE_BIT  = (1 << 17)   // Mesh uses custom shader.
+  CMD_CUSTOM_SHADE_BIT  = (1 << 17),  // Mesh uses custom shader.
+  CMD_BILLBOARD_BIT     = (1 << 18)
 };
 
 

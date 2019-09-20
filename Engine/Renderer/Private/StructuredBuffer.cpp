@@ -66,7 +66,7 @@ void StructuredBuffer::initialize(VulkanRHI* Rhi, size_t ElementCount, size_t Si
   mBuffer->initialize(bInfo, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
   CommandBuffer* getCmdBuffer = mRhi->createCommandBuffer();
-  getCmdBuffer->allocate(mRhi->computeCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  getCmdBuffer->allocate(mRhi->getComputeCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   VkCommandBufferBeginInfo CmdBi = { };
   CmdBi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   CmdBi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;

@@ -53,7 +53,7 @@ void IndexBuffer::initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   mBuffer->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
   CommandBuffer* cmdBuffer = rhi->createCommandBuffer();
-  cmdBuffer->allocate(rhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer->allocate(rhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

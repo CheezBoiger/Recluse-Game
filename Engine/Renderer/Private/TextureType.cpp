@@ -96,7 +96,7 @@ void GenerateMipMaps(VkImage image, VkFormat format, U32 width, U32 height, U32 
 
   CommandBuffer cmdBuffer; 
   cmdBuffer.SetOwner(gRenderer().getRHI()->logicDevice()->getNative());
-  cmdBuffer.allocate(gRenderer().getRHI()->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(gRenderer().getRHI()->getGraphicsCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
   
   {
     VkCommandBufferBeginInfo begin = { };
@@ -209,7 +209,7 @@ void Texture2D::update(Image const& Image)
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
-  buffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.allocate(mRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -327,7 +327,7 @@ void Texture2D::save(const std::string filename)
 {
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(mRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   Buffer stagingBuffer;
   stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -504,7 +504,7 @@ void TextureCube::save(const std::string filename)
 {
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(mRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(mRhi->getGraphicsCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   // 6 textures.
   std::vector<VkBufferImageCopy> imageCopyRegions;
@@ -715,7 +715,7 @@ void TextureCube::update(Image const& image)
 
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(mRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(mRhi->graphicsCmdPool(0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(mRhi->getGraphicsCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   // 6 textures.
   std::vector<VkBufferImageCopy> imageCopyRegions;
@@ -936,7 +936,7 @@ void Texture2DArray::update(const Image& img, U32 x, U32 y)
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
-  buffer.allocate(mRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  buffer.allocate(mRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

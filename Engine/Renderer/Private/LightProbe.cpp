@@ -60,7 +60,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     VkCommandBufferAllocateInfo allocInfo = {};
     Texture* texture = envMap->getHandle();
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = rhi->graphicsCmdPool(0);
+    allocInfo.commandPool = rhi->getGraphicsCmdPool(0, 0);
     allocInfo.commandBufferCount = 1;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     vkAllocateCommandBuffers(rhi->logicDevice()->getNative(), &allocInfo, &cmdBuf);
@@ -178,7 +178,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
 
     memcpy(data, stagingBuffer.getMapped(), sizeInBytes);
 
-    vkFreeCommandBuffers(rhi->logicDevice()->getNative(), rhi->graphicsCmdPool(0), 1, &cmdBuf);
+    vkFreeCommandBuffers(rhi->logicDevice()->getNative(), rhi->getGraphicsCmdPool(0, 0), 1, &cmdBuf);
     stagingBuffer.cleanUp();
   }
   // Reference by Jian Ru's Laugh Engine implementation: https://github.com/jian-ru/laugh_engine

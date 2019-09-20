@@ -196,7 +196,7 @@ void ParticleSystem::getParticleState(Particle* output)
 
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(pRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -264,7 +264,7 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
 
   CommandBuffer cmdBuffer;
   cmdBuffer.SetOwner(pRhi->logicDevice()->getNative());
-  cmdBuffer.allocate(pRhi->transferCmdPool(), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+  cmdBuffer.allocate(pRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

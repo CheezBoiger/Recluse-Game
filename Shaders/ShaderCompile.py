@@ -111,7 +111,8 @@ recluse_shaders = [
   Shader('Decal', 'Decal.vert'),
   Shader('Decal', 'Decal.frag'),
   Shader('LightVolume', 'LightVolumes.comp'),
-  Shader('Accumulation', 'Accumulation.comp')
+  Shader('Accumulation', 'Accumulation.comp'),
+  Shader('DownscaleFilter', 'DownscaleFilter.comp')
 ]
   
 def get_shader_ext(filename):

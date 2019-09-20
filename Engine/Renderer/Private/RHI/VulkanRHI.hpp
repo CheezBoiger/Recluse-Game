@@ -35,6 +35,9 @@ class Query;
 
 
 struct FrameResource {
+  std::vector<VkCommandPool> graphicsCmdPools;
+  std::vector<VkCommandPool> computeCmdPools;
+  std::vector<VkCommandPool> transferCmdPools; 
   CommandBuffer cmdBuffer;
   VkSemaphore imageAvailableSemaphore;
   VkSemaphore presentableSemaphore;
@@ -160,15 +163,23 @@ public:
   VkSurfaceKHR surface() { return mSurface; }
 
   // Get the command pool on the graphics side.
-  VkCommandPool graphicsCmdPool(size_t i) { return mGraphicsCmdPools[i]; }
+  VkCommandPool getGraphicsCmdPool(size_t frameIdx, size_t i) { 
+    return m_frameResources[frameIdx].graphicsCmdPools[i]; 
+  }
 
   // Get the number of graphics command pools this RHI is using.
-  size_t numGraphicsCmdPools() { return mGraphicsCmdPools.size(); }
+  size_t numGraphicsCmdPools(size_t frameIdx = 0) { 
+    return m_frameResources[frameIdx].graphicsCmdPools.size(); 
+  }
 
   // Get the command pool on the compute side.
-  VkCommandPool computeCmdPool() { return mComputeCmdPool; }
+  VkCommandPool getComputeCmdPool(size_t frameIdx, size_t i) { 
+    return m_frameResources[frameIdx].computeCmdPools[i]; 
+  }
 
-  VkCommandPool transferCmdPool() { return m_TransferCmdPool; }
+  VkCommandPool getTransferCmdPool(size_t frameIdx, size_t i) { 
+    return m_frameResources[frameIdx].transferCmdPools[i]; 
+  }
 
   // Get the descriptor pool that is used to create our descriptor sets.
   VkDescriptorPool descriptorPool() { return mDescriptorPool; }
@@ -254,7 +265,8 @@ public:
                    I32 width, 
                    I32 height, 
                    U32 frameResourceBuffers = 2, 
-                   U32 desiredImageCount = 1);
+                   U32 desiredImageCount = 1,
+                   B32 preserveFrameResources = false);
 
   // Get the current image index that is used during rendering, the current image from the 
   // swapchain that we are rendering onto.
@@ -262,6 +274,8 @@ public:
 
   // Get the current frame index, this is usually the next frame in the swapchain. Use this value instead.
   U32 getCurrentFrame() const { return m_currentFrame; }
+
+  U32 getFrameCount() const { return static_cast<U32>(m_frameResources.size()); }
 
   // Swap commandbuffer sets within this vulkan rhi. Be sure that the set is already built!
   void swapCommandBufferSets(U32 set) { mSwapchainInfo.mCmdBufferSet = set; }
@@ -303,7 +317,7 @@ private:
 
   // Rebuild the swapchain commandbuffers with using the function provided from
   // SetSwapchainCmdBufferBuild. This will build the swapchain command buffers.
-  void rebuildCommandBuffers();
+  void recreateCommandBuffers();
 
   void createFrameResources(U32 frameResourceBufferCount);
   void cleanUpFrameResources();
@@ -319,9 +333,6 @@ private:
   B32 m_bStencilTestAllowed;
   LogicalDevice mLogicalDevice;
   VkSurfaceKHR mSurface;
-  std::vector<VkCommandPool> mGraphicsCmdPools;
-  VkCommandPool mComputeCmdPool;
-  VkCommandPool m_TransferCmdPool;
   VkDescriptorPool mDescriptorPool;
   VkQueryPool mOccQueryPool;
   VkPhysicalDeviceProperties mPhysicalDeviceProperties;
