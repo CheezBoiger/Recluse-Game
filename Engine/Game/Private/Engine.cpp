@@ -582,7 +582,7 @@ void Engine::readUserConfigs( UserConfigParams& params )
   for (size_t i = 0; i < Buf.Sz; ++i) {
     TChar ch = Buf.Buf[i];
     line.push_back(ch);
-    if (ch == '\n') {
+    if (ch == '\n' || i == (Buf.Sz - 1)) {
       Log(rDebug) << line;
       if (availableOption(line, "MouseSensitivityX")) {
         std::string option = getOption( line );
