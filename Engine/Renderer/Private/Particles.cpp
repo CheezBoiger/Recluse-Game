@@ -540,7 +540,7 @@ GraphicsPipeline* GenerateParticleRendererPipeline(VulkanRHI* pRhi,
   VkPipelineViewportStateCreateInfo viewportCi = { };
   viewportCi.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO; 
   VkViewport viewport = { };
-  VkExtent2D extent = pRhi->swapchainObject()->getSurfaceExtent();
+  VkExtent2D extent = { gRenderer().getRenderWidth(), gRenderer().getRenderHeight() };
   viewport.width = static_cast<R32>(extent.width);
   viewport.height = static_cast<R32>(extent.height);
   viewport.x = 0.0f;
