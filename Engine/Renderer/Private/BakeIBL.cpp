@@ -128,11 +128,32 @@ void BakeIBL::renderGenBRDF(CommandBuffer* pCmd, GlobalDescriptor* pGlobal, Text
 {
   if (!pCmd || !target) return;
 
+  VkImageMemoryBarrier barrier = { };
+  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+  barrier.dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+  barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+  barrier.image = target->getImage();
+  barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+  barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  barrier.subresourceRange.baseArrayLayer = 0;
+  barrier.subresourceRange.baseMipLevel = 0;
+  barrier.subresourceRange.layerCount = 1;
+  barrier.subresourceRange.levelCount = 1;
+
+  pCmd->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                        VK_DEPENDENCY_BY_REGION_BIT,
+                        0, nullptr,
+                        0, nullptr,
+                        1, &barrier);
+
   VkDescriptorSet sets[] = { pGlobal->getDescriptorSet(frameIndex)->getHandle(), m_pBRDFSet->getHandle() };
   pCmd->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->getNative());
   pCmd->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, m_pPipeGenBRDF->getLayout(),
     0, 2, sets, 0, nullptr);
   pCmd->dispatch((target->getWidth() / 16) + 1, (target->getHeight() / 16) + 1, 1);
+
 }
 
 

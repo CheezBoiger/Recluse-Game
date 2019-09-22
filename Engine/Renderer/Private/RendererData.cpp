@@ -1712,6 +1712,7 @@ void initShadowMaskTexture(Renderer* pRenderer, const VkExtent2D& renderRes)
 
   for (U32 i = 0; i < pRenderer->getResourceBufferCount(); ++i) {
     Texture* shadowMask = getRenderTexture(RENDER_TEXTURE_SHADOW_RESOLVE_OUTPUT, i);
+    RDEBUG_SET_VULKAN_NAME(shadowMask, "ShadowMask");
     shadowMask->initialize(imgInfo, viewInfo);
   }
 }

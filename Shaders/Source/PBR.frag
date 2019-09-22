@@ -61,10 +61,11 @@ layout (set = 4, binding = 5) uniform sampler2DArray brdfLuts;    // BRDF lookup
 
 void main()
 {
-  GBuffer gbuffer = ReadGBuffer(ivec2(gl_FragCoord.xy), 
+  ivec2 uv = ivec2(gl_FragCoord.xy);
+  GBuffer gbuffer = ReadGBuffer(uv, 
                                 gWorldBuffer.global, 
                                 rt0, rt1, rt2, rt3, rtDepth);
-  vec2 screen = (gl_FragCoord.xy / vec2(gWorldBuffer.global.screenSize.xy));
+  //vec2 screen = (gl_FragCoord.xy / vec2(gWorldBuffer.global.screenSize.xy));
   vec3 N = normalize(gbuffer.normal);
   vec3 V = normalize(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos);
   vec3 F0 = vec3(0.04);
@@ -98,7 +99,7 @@ void main()
       //                                      pbrInfo.WP, cascadeIdx,
       //                                      dynamicLightSpace.lightSpace, 
       //                                      dynamicShadowMap);
-      shadowFactor = texture(shadowMask, screen).r;
+      shadowFactor = texelFetch(shadowMask, uv, 0).r;
     }
     //vec4 sc = GetCascadeColor(cascadeIdx);
     outColor += ambient;//sc.rgb;

@@ -307,6 +307,7 @@ void Engine::update()
         Log() << " Done!\n";
         gRenderer().freeTextureCube(cube);
       }
+      gRenderer().render();
       break;
     }
     case EngineMode_Game:

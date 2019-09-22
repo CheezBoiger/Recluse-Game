@@ -4877,6 +4877,8 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
     GlobalBuffer* pGlobal = m_pGlobal->getData();
     I32 orx = pGlobal->_ScreenSize[0];
     I32 ory = pGlobal->_ScreenSize[1];
+    U32 orw = m_renderWidth;
+    U32 orh = m_renderHeight;
     Matrix4 prevView = pGlobal->_View;
     Matrix4 prevProj = pGlobal->_Proj;
     Matrix4 prevViewProj = pGlobal->_ViewProj;
@@ -4886,7 +4888,9 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
     Vector4 prevCameraPos = pGlobal->_CameraPos;
     pGlobal->_ScreenSize[0] = texSize;
     pGlobal->_ScreenSize[1] = texSize;
-
+    m_renderWidth = texSize;
+    m_renderHeight = texSize;
+    
     pGlobal->_Proj = proj;
     pGlobal->_InvProj = proj.inverse();
     CommandBuffer cmdBuffer;
@@ -4897,8 +4901,6 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
     // any rendering.
     // Update the scene descriptors before rendering the frame.
     sortCmdLists();
-
-    updateSceneDescriptors(0);
 
     std::array<Matrix4, 6> viewMatrices = {
       Quaternion::angleAxis(Radians(-90.0f), Vector3(0.0f, 1.0f, 0.0f)).toMatrix4(),
@@ -4912,8 +4914,6 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
     };
 
     // For each cube face.
-
-    // TODO(): Fix view matrix issue, rendering skybox incorrectly!
     for (size_t i = 0; i < 6; ++i) {
       view = Matrix4::translate(Matrix4(), -position) * viewMatrices[i];
       pGlobal->_CameraPos = Vector4(position, 1.0f);
@@ -4921,7 +4921,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       pGlobal->_ViewProj = view * proj;
       pGlobal->_InvView = view.inverse();
       pGlobal->_InvViewProj = pGlobal->_ViewProj.inverse();
-      m_pGlobal->update(this, 0);
+      updateSceneDescriptors(0);
       
       VkCommandBufferBeginInfo begin = { };
       begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -4931,8 +4931,15 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       cmdBuffer.begin(begin);
 
       // render to frame first.
-      generateOffScreenCmds(&cmdBuffer, 0);
       generateShadowCmds(&cmdBuffer, 0);
+      generateOffScreenCmds(&cmdBuffer, 0);
+      // Should the shadow map be turned off (ex. in night time scenes), we
+      // still need to transition it to readable format.
+      if (!m_pLights->isPrimaryShadowEnabled()) {
+        m_pLights->getPrimaryShadowMapSystem().transitionEmptyShadowMap(&cmdBuffer, 0);
+      } else {
+        generateShadowResolveCmds(&cmdBuffer, 0);
+      }
       generatePbrCmds(&cmdBuffer, 0);
       if (m_pSky->needsRendering()) {
         m_pSky->buildCmdBuffer(m_pRhi, 0, &cmdBuffer);
@@ -4982,7 +4989,6 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
         1, &imgMemBarrier
       );
 
- 
       subRange.baseArrayLayer = 0;
       subRange.baseMipLevel = 0;
       subRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -4990,7 +4996,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       subRange.levelCount = 1;
 
       imgMemBarrier.image = RendererPass::getRenderTexture(RENDER_TEXTURE_LIGHTING, 0)->getImage();
-      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       imgMemBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
@@ -5030,7 +5036,7 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
       );
 
       imgMemBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      imgMemBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imgMemBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
       imgMemBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
@@ -5077,6 +5083,8 @@ TextureCube* Renderer::bakeEnvironmentMap(const Vector3& position, U32 texSize)
 
   pGlobal->_ScreenSize[0] = orx;
   pGlobal->_ScreenSize[1] = ory;
+  m_renderHeight = orh;
+  m_renderWidth = orw;
   pGlobal->_CameraPos = prevCameraPos;
   pGlobal->_View = prevView;
   pGlobal->_ViewProj = prevViewProj;

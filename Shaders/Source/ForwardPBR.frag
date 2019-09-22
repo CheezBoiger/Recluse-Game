@@ -116,6 +116,7 @@ layout (push_constant) uniform Debug {
 
 void main()
 {
+  ivec2 uv = ivec2(gl_FragCoord.xy);
   vec2 offsetUV0 = matBuffer.material.offsetUV.xy;
   vec2 uv0 = frag_in.texcoord0 + offsetUV0;
   vec2 screen = gl_FragCoord.xy / vec2(gWorldBuffer.global.screenSize.xy);
@@ -194,7 +195,7 @@ void main()
       //int cascadeIdx = GetCascadeIndex(vpos, dynamicLightSpace.lightSpace.split);
       //shadowFactor = GetShadowFactorCascade(gWorldBuffer.global.enableShadows, pbrInfo.WP, cascadeIdx,
       //                                      dynamicLightSpace.lightSpace, dynamicShadowMap);
-      shadowFactor = texture(shadowMask, screen).r;
+      shadowFactor = texelFetch(shadowMask, uv, 0).r;
     }
     radiance *= shadowFactor;
     outColor += radiance;

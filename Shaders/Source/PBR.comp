@@ -119,7 +119,7 @@ void main()
       //                                    dynamicLightSpace.lightSpace, dynamicShadowMap);
       //vec4 sc = GetCascadeColor(cascadeIdx);
       //outColor += sc.rgb;
-      shadowFactor = texture(shadowMask, texCoord.xy).r;
+      shadowFactor = texelFetch(shadowMask, uv, 0).r;
     }
     outColor += ambient;
     outColor += radiance * shadowFactor;
