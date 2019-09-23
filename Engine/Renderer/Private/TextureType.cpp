@@ -193,7 +193,6 @@ void Texture2D::update(Image const& Image)
 {
   VkDeviceSize imageSize = Image.MemorySize();
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner( mRhi->logicDevice()->getNative() );
 
   VkBufferCreateInfo stagingCI = {};
   stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -201,11 +200,11 @@ void Texture2D::update(Image const& Image)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
+  stagingBuffer.initialize(mRhi->logicDevice()->getNative(),
+                           stagingCI,
+                           PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-  VkResult result = stagingBuffer.map();
   memcpy(stagingBuffer.getMapped(), Image.getData(), imageSize);
-  stagingBuffer.unmap();
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -297,7 +296,7 @@ void Texture2D::update(Image const& Image)
   mRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
   buffer.free();
-  stagingBuffer.cleanUp();
+  stagingBuffer.cleanUp(mRhi->logicDevice()->getNative());
 
   if (m_bGenMips) {
     GenerateMipMaps(texture->getImage(), 
@@ -330,7 +329,6 @@ void Texture2D::save(const std::string filename)
   cmdBuffer.allocate(mRhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -340,8 +338,9 @@ void Texture2D::save(const std::string filename)
   U8* data = new U8[bufferci.size];
 
 
-  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.map();
+  stagingBuffer.initialize(mRhi->logicDevice()->getNative(),
+                           bufferci,
+                           PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
   // Stream out the image info.
   VkCommandBufferBeginInfo beginInfo = {};
@@ -436,8 +435,7 @@ void Texture2D::save(const std::string filename)
   img._memorySize = texture->getWidth() * texture->getHeight() * 4;
   img.SavePNG(filename.c_str());
 
-  stagingBuffer.unmap();
-  stagingBuffer.cleanUp();
+  stagingBuffer.cleanUp(mRhi->logicDevice()->getNative());
   delete[] data;
 }
 
@@ -529,7 +527,6 @@ void TextureCube::save(const std::string filename)
   VkDeviceSize sizeInBytes = offset;
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -538,8 +535,9 @@ void TextureCube::save(const std::string filename)
   bufferci.size = sizeInBytes;
   U8* data = new U8[bufferci.size];
 
-  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.map();
+  stagingBuffer.initialize(mRhi->logicDevice()->getNative(), 
+                           bufferci,
+                           PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
   VkCommandBufferBeginInfo begin = {};
   begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -623,8 +621,7 @@ void TextureCube::save(const std::string filename)
   img._memorySize = U32(sizeInBytes);
   img.SavePNG(filename.c_str());
 
-  stagingBuffer.unmap();
-  stagingBuffer.cleanUp();
+  stagingBuffer.cleanUp(mRhi->logicDevice()->getNative());
   delete[] data;
 }
 
@@ -740,7 +737,6 @@ void TextureCube::update(Image const& image)
   VkDeviceSize sizeInBytes = offset;
 
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
 
   VkBufferCreateInfo bufferci = {};
   bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -748,8 +744,9 @@ void TextureCube::update(Image const& image)
   bufferci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   bufferci.size = sizeInBytes;
 
-  stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-  stagingBuffer.map();
+  stagingBuffer.initialize(mRhi->logicDevice()->getNative(),
+                           bufferci,
+                           PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   memcpy(stagingBuffer.getMapped(), image.getData(), sizeInBytes);
 
   VkCommandBufferBeginInfo begin = {};
@@ -824,8 +821,7 @@ void TextureCube::update(Image const& image)
   mRhi->graphicsSubmit(0, 1, &submit);
   mRhi->graphicsWaitIdle(0);
 
-  stagingBuffer.unmap();
-  stagingBuffer.cleanUp();
+  stagingBuffer.cleanUp(mRhi->logicDevice()->getNative());
 }
 
 
@@ -917,8 +913,7 @@ void Texture2DArray::update(const Image& img, U32 x, U32 y)
   // Only reading the first 4 slices and repeating!
   VkDeviceSize imageSize = img.MemorySize();
   Buffer stagingBuffer;
-  stagingBuffer.SetOwner(mRhi->logicDevice()->getNative());
-  
+
   U32 widthOffset = img.getWidth() / x;
   U32 heightOffset = img.getHeight() / y;
 
@@ -928,11 +923,11 @@ void Texture2DArray::update(const Image& img, U32 x, U32 y)
   stagingCI.size = imageSize;
   stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  stagingBuffer.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
+  stagingBuffer.initialize(mRhi->logicDevice()->getNative(),
+                           stagingCI,
+                           PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-  VkResult result = stagingBuffer.map();
   memcpy(stagingBuffer.getMapped(), img.getData(), imageSize);
-  stagingBuffer.unmap();
 
   CommandBuffer buffer;
   buffer.SetOwner(mRhi->logicDevice()->getNative());
@@ -1028,7 +1023,7 @@ void Texture2DArray::update(const Image& img, U32 x, U32 y)
   mRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
   buffer.free();
-  stagingBuffer.cleanUp();
+  stagingBuffer.cleanUp(mRhi->logicDevice()->getNative());
 }
 
 

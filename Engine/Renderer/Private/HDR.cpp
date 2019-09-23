@@ -61,8 +61,9 @@ void HDR::initialize(VulkanRHI* pRhi)
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bufferCi.size = VkDeviceSize(sizeof(ConfigHDR));
     m_pBuffer = pRhi->createBuffer();
-    m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pBuffer->map();
+    m_pBuffer->initialize(pRhi->logicDevice()->getNative(), 
+                          bufferCi, 
+                          PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 
 
@@ -113,8 +114,8 @@ void HDR::UpdateToGPU(VulkanRHI* pRhi)
 
   VkMappedMemoryRange memRange = { };
   memRange.memory = m_pBuffer->getMemory();
-  memRange.offset = 0;
-  memRange.size = VK_WHOLE_SIZE;
+  memRange.offset = m_pBuffer->getMemoryOffset();
+  memRange.size = m_pBuffer->getMemorySize();
   memRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &memRange);
 }

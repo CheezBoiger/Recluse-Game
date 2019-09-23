@@ -125,7 +125,9 @@ void ParticleSystem::setUpGpuBuffer(VulkanRHI* pRhi)
     | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
     | VK_BUFFER_USAGE_TRANSFER_DST_BIT
     | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-  m_particleBuffer->initialize(gpuBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
+  m_particleBuffer->initialize(pRhi->logicDevice()->getNative(),
+                               gpuBufferCi,
+                               PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 }
 
 
@@ -167,8 +169,9 @@ void ParticleSystem::initialize(VulkanRHI* pRhi,
     bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCi.size = VkDeviceSize(sizeof(ParticleSystemConfig));
     bufferCi.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    m_particleConfigBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_particleConfigBuffer->map();
+    m_particleConfigBuffer->initialize(pRhi->logicDevice()->getNative(), 
+                                       bufferCi,
+                                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 
   m_pDescriptorSet = pRhi->createDescriptorSet();
@@ -181,7 +184,6 @@ void ParticleSystem::getParticleState(Particle* output)
   if (!output) return;
   VulkanRHI* pRhi = gRenderer().getRHI();
   Buffer staging;
-  staging.SetOwner(pRhi->logicDevice()->getNative());
 
   {
     VkBufferCreateInfo stagingCI = {};
@@ -189,9 +191,9 @@ void ParticleSystem::getParticleState(Particle* output)
     stagingCI.size = VkDeviceSize(sizeof(Particle) * _particleConfig._maxParticles);
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-
-    staging.map();
+    staging.initialize(pRhi->logicDevice()->getNative(),
+                       stagingCI,
+                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
   }
 
   CommandBuffer cmdBuffer;
@@ -228,15 +230,13 @@ void ParticleSystem::getParticleState(Particle* output)
     output[i] = particles[i];
   }
 
-  staging.unmap();
-  staging.cleanUp();
+  staging.cleanUp(pRhi->logicDevice()->getNative());
 }
 
 
 void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
 {
   Buffer staging;
-  staging.SetOwner(pRhi->logicDevice()->getNative());
 
   // TODO(): Randomizing stuff, so we need to figure out how to check when a particle is dead,
   // and reupdate after.
@@ -255,11 +255,11 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
     stagingCI.size = sizeof(Particle) * particles.size();
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    staging.initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
+    staging.initialize(pRhi->logicDevice()->getNative(), 
+                       stagingCI,
+                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-    staging.map();
     memcpy(staging.getMapped(), particles.data(), (size_t)stagingCI.size);
-    staging.unmap();
   }
 
   CommandBuffer cmdBuffer;
@@ -290,7 +290,7 @@ void ParticleSystem::updateGpuParticles(VulkanRHI* pRhi)
   pRhi->transferSubmit(DEFAULT_QUEUE_IDX, 1, &submitInfo);
   pRhi->transferWaitIdle(DEFAULT_QUEUE_IDX);
 
-  staging.cleanUp();
+  staging.cleanUp(pRhi->logicDevice()->getNative());
 }
 
 
@@ -373,7 +373,7 @@ void ParticleSystem::update(VulkanRHI* pRhi)
     memcpy(m_particleConfigBuffer->getMapped(), &_particleConfig, sizeof(ParticleSystemConfig));
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    range.offset = 0;
+    range.offset = m_particleConfigBuffer->getMemoryOffset();
     range.memory = m_particleConfigBuffer->getMemory();
     range.size = m_particleConfigBuffer->getMemorySize();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);

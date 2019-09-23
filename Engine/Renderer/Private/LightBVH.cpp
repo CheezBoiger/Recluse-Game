@@ -32,7 +32,9 @@ void LightHierarchy::initialize(VulkanRHI* pRhi, U32 width, U32 height)
     bCI.size = VkDeviceSize(sizeof(LightBVH));
     bCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     bCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_gpuBvh->initialize(bCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
+    m_gpuBvh->initialize(pRhi->logicDevice()->getNative(), 
+                         bCI, 
+                         PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
   {
     VkBufferCreateInfo ci = {};
@@ -40,7 +42,9 @@ void LightHierarchy::initialize(VulkanRHI* pRhi, U32 width, U32 height)
     ci.size = VkDeviceSize(0);
     ci.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_gpuClusterGrid->initialize(ci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
+    m_gpuClusterGrid->initialize(pRhi->logicDevice()->getNative(),
+                                 ci, 
+                                 PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
   {
     VkBufferCreateInfo ci = {};
@@ -48,7 +52,9 @@ void LightHierarchy::initialize(VulkanRHI* pRhi, U32 width, U32 height)
     ci.size = VkDeviceSize(0);
     ci.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_gpuLightIndexList->initialize(ci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
+    m_gpuLightIndexList->initialize(pRhi->logicDevice()->getNative(),
+                                    ci, 
+                                    PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 }
 

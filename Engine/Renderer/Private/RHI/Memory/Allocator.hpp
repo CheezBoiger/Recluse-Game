@@ -103,13 +103,14 @@ public:
   void cleanUp(VulkanRHI* pRhi);
   void update(VulkanRHI* pRhi, U32 currentResourceIndex, U32 resourceCount);
 
-  VulkanAllocation allocate(VkDevice device,
-                            U32 sz, 
-                            U32 align, 
-                            U32 memoryTypeBits,
-                            PhysicalDeviceMemoryUsage usage,
-                            VulkanAllocationType allocType,
-                            U32 memoryBankIdx = 0);
+  B32 allocate(VkDevice device,
+               U32 sz, 
+               U32 align, 
+               U32 memoryTypeBits,
+               PhysicalDeviceMemoryUsage usage,
+               VulkanAllocationType allocType,
+               VulkanAllocation* out,
+               U32 memoryBankIdx = 0);
   void free(const VulkanAllocation& alloc);
 
   void emptyGarbage(VulkanRHI* pRhi);

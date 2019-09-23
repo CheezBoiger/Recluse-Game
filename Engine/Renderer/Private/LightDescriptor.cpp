@@ -655,10 +655,12 @@ void ShadowMapSystem::initializeShadowMapD(Renderer* pRenderer, U32 resolution)
   for (U32 i = 0; i < m_pLightViewBuffers.size(); ++i) {
     m_pLightViewBuffers[i] = pRhi->createBuffer();
     m_pStaticLightViewBuffers[i] = pRhi->createBuffer();
-    m_pLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pStaticLightViewBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pLightViewBuffers[i]->map();
-    m_pStaticLightViewBuffers[i]->map();
+    m_pLightViewBuffers[i]->initialize(pRhi->logicDevice()->getNative(),
+                                       bufferCI, 
+                                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
+    m_pStaticLightViewBuffers[i]->initialize(pRhi->logicDevice()->getNative(),
+                                             bufferCI, 
+                                             PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 /*
   if (!m_pDynamicMap) {
@@ -1428,7 +1430,8 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pLightViewBuffers[resourceIndex]->getMemory();
-    range.size = VK_WHOLE_SIZE;
+    range.size =   m_pLightViewBuffers[resourceIndex]->getMemorySize();
+    range.offset = m_pLightViewBuffers[resourceIndex]->getMemoryOffset();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
@@ -1459,7 +1462,8 @@ void ShadowMapSystem::update(VulkanRHI* pRhi,
     VkMappedMemoryRange range = {};
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pStaticLightViewBuffers[resourceIndex]->getMemory();
-    range.size = VK_WHOLE_SIZE;
+    range.size =   m_pStaticLightViewBuffers[resourceIndex]->getMemorySize();
+    range.offset = m_pStaticLightViewBuffers[resourceIndex]->getMemoryOffset();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 }
@@ -1664,8 +1668,9 @@ void LightDescriptor::initialize(Renderer* pRenderer, const GraphicsConfigParams
     bufferCI.size = dSize;
     bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-    m_pLightBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pLightBuffers[i]->map();
+    m_pLightBuffers[i]->initialize(pRhi->logicDevice()->getNative(),
+                                   bufferCI, 
+                                   PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 #if 0
   // Light view buffer creation.
@@ -1793,7 +1798,6 @@ void LightDescriptor::cleanUp(VulkanRHI* pRhi)
     }
 
     if (m_pLightBuffers[i]) {
-      m_pLightBuffers[i]->unmap();
       pRhi->freeBuffer(m_pLightBuffers[i]);
       m_pLightBuffers[i] = nullptr;
     }
@@ -1855,7 +1859,8 @@ void LightDescriptor::update(Renderer* pRenderer, GlobalBuffer* gBuffer, U32 res
   VkMappedMemoryRange lightRange = { };
   lightRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   lightRange.memory = m_pLightBuffers[resourceIndex]->getMemory();
-  lightRange.size = VK_WHOLE_SIZE;
+  lightRange.size =   m_pLightBuffers[resourceIndex]->getMemorySize();
+  lightRange.offset = m_pLightBuffers[resourceIndex]->getMemoryOffset();
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &lightRange);
 }
 

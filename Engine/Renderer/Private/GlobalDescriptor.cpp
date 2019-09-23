@@ -81,9 +81,9 @@ void GlobalDescriptor::initialize(Renderer* pRenderer)
   for (U32 i = 0; i < m_pGlobalBuffers.size(); ++i) {
     m_pGlobalBuffers[i] = pRhi->createBuffer();
 
-    m_pGlobalBuffers[i]->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pGlobalBuffers[i]->map();
-
+    m_pGlobalBuffers[i]->initialize(pRhi->logicDevice()->getNative(),
+                                    bufferCI, 
+                                    PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
 
     m_pDescriptorSets[i] = pRhi->createDescriptorSet();
     m_pDescriptorSets[i]->allocate(pRhi->descriptorPool(), pbrLayout);
@@ -119,7 +119,6 @@ void GlobalDescriptor::cleanUp(Renderer* pRenderer)
     }
 
     if (m_pGlobalBuffers[i]) {
-      m_pGlobalBuffers[i]->unmap();
       pRhi->freeBuffer(m_pGlobalBuffers[i]);
       m_pGlobalBuffers[i] = nullptr;
     }
@@ -144,6 +143,7 @@ void GlobalDescriptor::update(Renderer* pRenderer, U32 frameIndex)
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   range.memory = m_pGlobalBuffers[currFrame]->getMemory();
   range.size = m_pGlobalBuffers[currFrame]->getMemorySize();
+  range.offset = m_pGlobalBuffers[currFrame]->getMemoryOffset();
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 } // Recluse

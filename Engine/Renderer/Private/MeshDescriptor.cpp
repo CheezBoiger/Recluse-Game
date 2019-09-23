@@ -72,8 +72,9 @@ void MeshDescriptor::initialize(Renderer* pRenderer)
   // Create the render buffer for the object.
   for (U32 i = 0; i < m_pGpuHandles.size(); ++i) {
     m_pGpuHandles[i]._pBuf = pRhi->createBuffer();
-    m_pGpuHandles[i]._pBuf->initialize(objectCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pGpuHandles[i]._pBuf->map();
+    m_pGpuHandles[i]._pBuf->initialize(pRhi->logicDevice()->getNative(), 
+                                       objectCI,
+                                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     m_pGpuHandles[i]._pSet = pRhi->createDescriptorSet();
     m_pGpuHandles[i]._pSet->allocate(pRhi->descriptorPool(), MeshLayout);
     m_pGpuHandles[i]._updates = MESH_BUFFER_UPDATE_BIT | MESH_DESCRIPTOR_UPDATE_BIT;
@@ -118,7 +119,8 @@ void MeshDescriptor::update(Renderer* pRenderer, U32 resourceIndex)
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = pBuf->getMemory();
-    range.size = VK_WHOLE_SIZE;
+    range.size = pBuf->getMemorySize();
+    range.offset = pBuf->getMemoryOffset();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
@@ -139,7 +141,6 @@ void MeshDescriptor::cleanUp(Renderer* pRenderer)
     }
 
     if (m_pGpuHandles[i]._pBuf) {
-      m_pGpuHandles[i]._pBuf->unmap();
       pRhi->freeBuffer(m_pGpuHandles[i]._pBuf);
       m_pGpuHandles[i]._pBuf = nullptr;
     }
@@ -177,9 +178,9 @@ void JointDescriptor::initialize(Renderer* pRenderer)
 
   for (U32 i = 0; i < m_pJointHandles.size(); ++i) {
     m_pJointHandles[i]._pBuf = pRhi->createBuffer();
-    m_pJointHandles[i]._pBuf->initialize(jointCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_pJointHandles[i]._pBuf->map();
-
+    m_pJointHandles[i]._pBuf->initialize(pRhi->logicDevice()->getNative(), 
+                                         jointCI,
+                                         PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
     DescriptorSetLayout* jointLayout = BonesSetLayoutKey;
 
     m_pJointHandles[i]._pSet = pRhi->createDescriptorSet();
@@ -213,7 +214,8 @@ void JointDescriptor::update(Renderer* pRenderer, U32 resourceIndex)
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = pBuf->getMemory();
-    range.size = VK_WHOLE_SIZE;
+    range.size = pBuf->getMemorySize();
+    range.offset = pBuf->getMemoryOffset();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 

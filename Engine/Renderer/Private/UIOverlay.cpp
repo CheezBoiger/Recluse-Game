@@ -241,8 +241,9 @@ void InitImageBuffers(NkObject* obj, I32 w, I32 h, VulkanRHI* rhi, UIOverlay* ov
 
   obj->_texture->initialize(imgCi, viewCi);
   obj->_sampler->initialize(samplerCi);
-  obj->_cache->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-  obj->_cache->map();
+  obj->_cache->initialize(rhi->logicDevice()->getNative(),
+                          bufferCi,
+                          PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
 
   obj->_font_set->allocate(rhi->descriptorPool(), overlay->getMaterialLayout());
   VkDescriptorImageInfo img = { };
@@ -268,7 +269,6 @@ void DestroyImageBuffers(NkObject* obj, VulkanRHI* rhi)
   rhi->graphicsWaitIdle(DEFAULT_QUEUE_IDX);
   rhi->freeTexture(obj->_texture);
   rhi->freeDescriptorSet(obj->_font_set);
-  obj->_cache->unmap();
   rhi->freeBuffer(obj->_cache);
   rhi->freeSampler(obj->_sampler);
 }
@@ -744,13 +744,13 @@ void UIOverlay::buildCmdBuffers(Renderer* pRenderer,
     memRanges[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     memRanges[0].memory = m_vertStagingBuffer->getMemory();
     memRanges[0].size = m_vertStagingBuffer->getMemorySize();
-    memRanges[0].offset = 0;
+    memRanges[0].offset = m_vertStagingBuffer->getMemoryOffset();
     memRanges[0].pNext = nullptr;
 
     memRanges[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     memRanges[1].memory = m_indicesStagingBuffer->getMemory();
     memRanges[1].size = m_indicesStagingBuffer->getMemorySize();
-    memRanges[1].offset = 0;
+    memRanges[1].offset = m_indicesStagingBuffer->getMemoryOffset();
     memRanges[1].pNext = nullptr;
 
     LogicalDevice* dev = pRhi->logicDevice();
@@ -842,7 +842,9 @@ void UIOverlay::CreateBuffers(Renderer* pRenderer)
       vertBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       vertBufferCi.size = MAX_VERTEX_MEMORY;
       vertBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-      m_vertBuffers[i]->initialize(vertBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
+      m_vertBuffers[i]->initialize(pRhi->logicDevice()->getNative(), 
+                                   vertBufferCi,
+                                   PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
     }
 
     {
@@ -851,7 +853,9 @@ void UIOverlay::CreateBuffers(Renderer* pRenderer)
       indicesBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
       indicesBufferCi.size = MAX_ELEMENT_MEMORY;
       indicesBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-      m_indicesBuffers[i]->initialize(indicesBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
+      m_indicesBuffers[i]->initialize(pRhi->logicDevice()->getNative(), 
+                                      indicesBufferCi,
+                                      PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
     }
   }
 
@@ -864,8 +868,9 @@ void UIOverlay::CreateBuffers(Renderer* pRenderer)
     stagingBufferCi.size = MAX_VERTEX_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_vertStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_vertStagingBuffer->map();
+    m_vertStagingBuffer->initialize(pRhi->logicDevice()->getNative(),
+                                    stagingBufferCi,
+                                    PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 
   {
@@ -874,16 +879,15 @@ void UIOverlay::CreateBuffers(Renderer* pRenderer)
     stagingBufferCi.size = MAX_ELEMENT_MEMORY;
     stagingBufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     stagingBufferCi.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    m_indicesStagingBuffer->initialize(stagingBufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-    m_indicesStagingBuffer->map();
+    m_indicesStagingBuffer->initialize(pRhi->logicDevice()->getNative(),
+                                       stagingBufferCi,
+                                       PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
   }
 }
 
 
 void UIOverlay::CleanUpBuffers(VulkanRHI* pRhi)
 {
-  m_vertStagingBuffer->unmap();
-  m_indicesStagingBuffer->unmap();
   pRhi->freeBuffer(m_vertStagingBuffer);
   pRhi->freeBuffer(m_indicesStagingBuffer);
   m_indicesStagingBuffer = nullptr;

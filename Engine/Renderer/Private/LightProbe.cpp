@@ -90,8 +90,6 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     VkDeviceSize sizeInBytes = offset;
 
     Buffer stagingBuffer;
-    stagingBuffer.SetOwner(rhi->logicDevice()->getNative());
-
     VkBufferCreateInfo bufferci = {};
     bufferci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -99,8 +97,9 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     bufferci.size = sizeInBytes;
     data = new U8[bufferci.size];
 
-    stagingBuffer.initialize(bufferci, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
-    stagingBuffer.map();
+    stagingBuffer.initialize(rhi->logicDevice()->getNative(),
+                             bufferci,
+                             PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
     VkCommandBufferBeginInfo begin = {};
     begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -179,7 +178,7 @@ void LightProbe::generateSHCoefficients(VulkanRHI* rhi, TextureCube* envMap)
     memcpy(data, stagingBuffer.getMapped(), sizeInBytes);
 
     vkFreeCommandBuffers(rhi->logicDevice()->getNative(), rhi->getGraphicsCmdPool(0, 0), 1, &cmdBuf);
-    stagingBuffer.cleanUp();
+    stagingBuffer.cleanUp(rhi->logicDevice()->getNative());
   }
   // Reference by Jian Ru's Laugh Engine implementation: https://github.com/jian-ru/laugh_engine
   // Research information though https://cseweb.ucsd.edu/~ravir/papers/envmap/envmap.pdf
@@ -297,8 +296,9 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, B32 enableLocalReflections)
       buffCi.size = VkDeviceSize(sizeof(LocalInfoGI));
       buffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
       buffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-      m_pLocalGIBuffer->initialize(buffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
-      m_pLocalGIBuffer->map();
+      m_pLocalGIBuffer->initialize(pRhi->logicDevice()->getNative(),
+                                   buffCi, 
+                                   PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
     }
   }
   else {
@@ -312,8 +312,9 @@ void GlobalIllumination::initialize(VulkanRHI* pRhi, B32 enableLocalReflections)
     gBuffCi.size = VkDeviceSize(sizeof(DiffuseSH));
     gBuffCi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
     gBuffCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    m_pGlobalGIBuffer->initialize(gBuffCi, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
-    m_pGlobalGIBuffer->map();
+    m_pGlobalGIBuffer->initialize(pRhi->logicDevice()->getNative(),
+                                  gBuffCi,
+                                  PHYSICAL_DEVICE_MEMORY_USAGE_GPU_TO_CPU);
   }
 
   m_pGlobalIllumination->allocate(pRhi->descriptorPool(), layout);
@@ -346,8 +347,8 @@ void GlobalIllumination::updateGlobalGI(VulkanRHI* pRhi)
   VkMappedMemoryRange range = { };
   range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
   range.memory = m_pGlobalGIBuffer->getMemory();
-  range.offset = 0;
-  range.size = VK_WHOLE_SIZE;
+  range.offset = m_pGlobalGIBuffer->getMemoryOffset();
+  range.size = m_pGlobalGIBuffer->getMemorySize();
   pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
 }
 

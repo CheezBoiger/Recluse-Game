@@ -5,9 +5,10 @@
 
 #include "Core/Exception.hpp"
 
-#define R_MEM_ALIGN(p, alignment) (( p ) + (( alignment ) - 1) + sizeof(size_t)) & (~(( alignment ) - 1))
+#define R_MEM_ALIGN(p, alignment) (( p ) + (( alignment ) - 1)) & (~(( alignment ) - 1))
 #define R_MEM_1_KB (1024)
 #define R_MEM_1_MB (1024 * 1024) 
+#define R_MEM_1_GB (1024 * 1024 * 1024)
 
 namespace Recluse {
 
@@ -67,7 +68,7 @@ VulkanMemoryPool::VulkanMemoryPool()
 
 VulkanMemoryPool::~VulkanMemoryPool()
 {
-  R_ASSERT(m_memAllocated == 0, "Vulkan Memory Pool leak prior to destruction!");
+  //R_ASSERT(m_memAllocated == 0, "Vulkan Memory Pool leak prior to destruction!");
 }
 
 
@@ -80,6 +81,7 @@ B32 VulkanMemoryPool::init(VkDevice device,
   m_id = id;
   m_memSz = sz;
   m_usage = usage;
+  m_memTypeIndex = memoryTypeIndex;
 
   VkMemoryAllocateInfo allocInfo = { };
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -96,7 +98,7 @@ B32 VulkanMemoryPool::init(VkDevice device,
   m_pHead->_free = true;
   m_pHead->_offset = 0;
   m_pHead->_pNext = nullptr;
-  m_pHead->_sz = m_memSz;
+  m_pHead->_sz = 0;
   m_pHead->_id = m_nextBlockId++;
 
   return true;
@@ -159,10 +161,14 @@ B32 VulkanMemoryPool::allocate(U32 sz,
   VkDeviceSize offset = 0;
   VkDeviceSize padding = 0;
   VkDeviceSize alignedSize = 0;
+  VkDeviceSize offsetting = 0;
 
   VulkanMemBlockNode* pPrev = nullptr;
-  for (pCurrent = m_pHead; pCurrent != nullptr; pPrev = pCurrent, pCurrent = pCurrent->_pNext) {
+  for (pCurrent = m_pHead; 
+       pCurrent != nullptr; 
+       pPrev = pCurrent, pCurrent = pCurrent->_pNext) {
     offset = R_MEM_ALIGN(pCurrent->_offset, align);
+    offsetting += pCurrent->_sz == 0 ? 0 : R_MEM_ALIGN(pCurrent->_sz, align);
     if (pPrev && granularity > 1 && !isMemoryResourcesOnSeparatePages(pPrev->_offset, 
                                                                       pPrev->_sz, 
                                                                       offset, 
@@ -184,15 +190,15 @@ B32 VulkanMemoryPool::allocate(U32 sz,
   
   }
 
-  pCurrent->_pNext = node;
-  node->_pPrev = pCurrent;
+  pPrev->_pNext = node;
+  node->_pPrev = pPrev;
 
   pOutput->_blockId = node->_id;
   pOutput->_poolId = m_id;
   pOutput->_memId = m_memTypeIndex; 
   pOutput->_deviceMemory = m_rawMem;
-  pOutput->_offset = node->_offset;
-  pOutput->_pData = reinterpret_cast<B8*>((VkDeviceSize)m_pRawDat + node->_offset);
+  pOutput->_offset = offsetting;
+  pOutput->_pData = reinterpret_cast<B8*>((uintptr_t)m_pRawDat + offsetting);
   pOutput->_poolId = m_id;
   pOutput->_sz = sz;
   m_memAllocated += sz;
@@ -228,7 +234,8 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
                                         U32 resourceIndex,
                                         U32 resourceCount)
 {
-  m_deviceLocalMemoryBytes = 128 * R_MEM_1_MB;
+  m_deviceLocalMemoryBytes = 1 * R_MEM_1_GB;
+  m_hostVisibleMemoryBytes = 1 * R_MEM_1_GB;
   m_bufferImageGranularity = pRhi->PhysicalDeviceLimits().bufferImageGranularity;
 
   for (U32 i = 0; i < pRhi->getMemoryProperties().memoryHeapCount; ++i) {
@@ -253,36 +260,42 @@ void VulkanMemoryAllocatorManager::update(VulkanRHI* pRhi, U32 currentResourceIn
 }
 
 
-VulkanAllocation VulkanMemoryAllocatorManager::allocate(VkDevice device,
-                                                        U32 sz,
-                                                        U32 align,
-                                                        U32 memoryTypeBits,
-                                                        PhysicalDeviceMemoryUsage usage,
-                                                        VulkanAllocationType allocType,
-                                                        U32 memoryBankIdx)
+B32 VulkanMemoryAllocatorManager::allocate(VkDevice device,
+                                           U32 sz,
+                                           U32 align,
+                                           U32 memoryTypeBits,
+                                           PhysicalDeviceMemoryUsage usage,
+                                           VulkanAllocationType allocType,
+                                           VulkanAllocation* out,
+                                           U32 memoryBankIdx)
 {
-  VulkanAllocation allocation;
   U32 memoryIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryTypeBits, usage);
   R_ASSERT(memoryIndex != 0xffffffff, "Unable to find memory index for allocation request.");
+
   auto& poolGroup = m_pools[memoryIndex];
   for (U32 i = 0; i < poolGroup.size(); ++i) {
     VulkanMemoryPool* pool = poolGroup[i];
     if (pool->getMemoryTypeIndex() != memoryIndex) {
       continue;
     }
-    if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, &allocation)) {
-      return allocation;      
+    if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, out)) {
+      return true;      
     }
   }
   // If no pool exists for the wanted memory type, create one!
-  VkDeviceSize poolSz = ((usage == PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY) ? m_deviceLocalMemoryBytes : m_hostVisibleMemoryBytes);
+  VkDeviceSize poolSz = ((usage == PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY) ? 
+                          m_deviceLocalMemoryBytes : m_hostVisibleMemoryBytes);
   VulkanMemoryPool* newPool = new VulkanMemoryPool();
   VkPhysicalDeviceMemoryProperties memProps = VulkanRHI::gPhysicalDevice.getMemoryProperties();
-  if (newPool->init(device, (poolGroup.size() + 1),  memoryIndex, usage, sz)) {
+  if (newPool->init(device, 
+                    (poolGroup.size() + 1),  
+                    memoryIndex, 
+                    usage, 
+                    poolSz)) {
     poolGroup.push_back(newPool);
   }
-  newPool->allocate(sz, align, allocType, m_bufferImageGranularity, &allocation);
-  return allocation;
+
+  return newPool->allocate(sz, align, allocType, m_bufferImageGranularity, out);;
 }
 
 

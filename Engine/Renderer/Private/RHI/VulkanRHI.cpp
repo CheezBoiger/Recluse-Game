@@ -781,8 +781,6 @@ void VulkanRHI::reConfigure(VkPresentModeKHR presentMode,
 Buffer* VulkanRHI::createBuffer()
 { 
   Buffer* buffer = new Buffer();
-  buffer->SetOwner(mLogicalDevice.getNative());
-
   return buffer;
 }
 
@@ -791,12 +789,7 @@ void VulkanRHI::freeBuffer(Buffer* buffer)
 {
   if (!buffer) return;
 
-  if (buffer->Owner() != mLogicalDevice.getNative()) {
-    R_DEBUG(rNotify, "Unable to free buffer. Device is not same as this vulkan rhi!\n");
-    return;
-  }
-
-  buffer->cleanUp();
+  buffer->cleanUp(logicDevice()->getNative());
 
   delete buffer;
 }

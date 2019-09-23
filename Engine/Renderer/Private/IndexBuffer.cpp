@@ -38,11 +38,11 @@ void IndexBuffer::initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
     stagingCI.size = sizeType * indexCount;
     stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     stagingCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    stagingBuffer->initialize(stagingCI, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
+    stagingBuffer->initialize(rhi->logicDevice()->getNative(), 
+                              stagingCI, 
+                              PHYSICAL_DEVICE_MEMORY_USAGE_CPU_TO_GPU);
 
-    stagingBuffer->map();
     memcpy(stagingBuffer->getMapped(), data, (size_t)stagingCI.size);
-    stagingBuffer->unmap();
   }
 
   VkBufferCreateInfo bufferCI = {};
@@ -50,7 +50,9 @@ void IndexBuffer::initialize(VulkanRHI* rhi, size_t indexCount, size_t sizeType,
   bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCI.size = sizeType * indexCount;
   bufferCI.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-  mBuffer->initialize(bufferCI, PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
+  mBuffer->initialize(rhi->logicDevice()->getNative(),
+                      bufferCI, 
+                      PHYSICAL_DEVICE_MEMORY_USAGE_GPU_ONLY);
 
   CommandBuffer* cmdBuffer = rhi->createCommandBuffer();
   cmdBuffer->allocate(rhi->getTransferCmdPool(0, 0), VK_COMMAND_BUFFER_LEVEL_PRIMARY);

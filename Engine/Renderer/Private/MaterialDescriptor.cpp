@@ -70,8 +70,9 @@ void MaterialDescriptor::initialize(VulkanRHI* pRhi)
   bufferCi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   bufferCi.size = memSize;
   
-  m_pBuffer->initialize(bufferCi, PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
-  m_pBuffer->map();
+  m_pBuffer->initialize(pRhi->logicDevice()->getNative(),
+                        bufferCi,
+                        PHYSICAL_DEVICE_MEMORY_USAGE_CPU_ONLY);
 
   m_materialSet = pRhi->createDescriptorSet();
 
@@ -202,7 +203,8 @@ void MaterialDescriptor::update(VulkanRHI* pRhi)
     VkMappedMemoryRange range = { };
     range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
     range.memory = m_pBuffer->getMemory();
-    range.size = VK_WHOLE_SIZE;
+    range.offset = m_pBuffer->getMemoryOffset();
+    range.size = m_pBuffer->getMemorySize();
     pRhi->logicDevice()->FlushMappedMemoryRanges(1, &range);
   }
 
@@ -218,7 +220,6 @@ void MaterialDescriptor::cleanUp(VulkanRHI* pRhi)
     m_materialSet = nullptr;
   }
   if (m_pBuffer)  {
-    m_pBuffer->unmap();
     pRhi->freeBuffer(m_pBuffer);
     m_pBuffer  = nullptr;
   }

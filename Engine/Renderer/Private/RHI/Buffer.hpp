@@ -10,19 +10,15 @@ namespace Recluse {
 class PhysicalDevice;
 
 // Buffer handle to a vulkan opaque object.
-class Buffer : public VulkanHandle {
+class Buffer {
 public:
   Buffer()
     : mBuffer(nullptr) { }
 
-  void              cleanUp();
-  void              initialize(const VkBufferCreateInfo& info, 
+  void              cleanUp(VkDevice device);
+  void              initialize(VkDevice device,
+                               const VkBufferCreateInfo& info, 
                                PhysicalDeviceMemoryUsage usage);
-
-  // Map call which will map out the buffer in memory. Returns the pointer of the mapped
-  // object. To get the mapped pointer, call Mapped().
-  VkResult          map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-  void              unmap();
 
   VkBuffer          getNativeBuffer() const { return mBuffer; }
   VkDeviceMemory    getMemory() const { return m_allocation._deviceMemory; }
@@ -32,6 +28,8 @@ public:
 
   // Mapped pointer to this buffer.
   void*             getMapped() const { return m_allocation._pData; }
+
+  VkDeviceSize getMemoryOffset() const { return m_allocation._offset; }
 
 private:
 
