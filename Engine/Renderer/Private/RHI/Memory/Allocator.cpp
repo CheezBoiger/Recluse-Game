@@ -3,6 +3,7 @@
 #include "../VulkanConfigs.hpp"
 #include "../VulkanRHI.hpp"
 
+#include "Core/Utility/Profile.hpp"
 #include "Core/Exception.hpp"
 
 #define R_MEM_ALIGN(p, alignment) (( p ) + (( alignment ) - 1)) & (~(( alignment ) - 1))
@@ -68,7 +69,7 @@ VulkanMemoryPool::VulkanMemoryPool()
 
 VulkanMemoryPool::~VulkanMemoryPool()
 {
-  //R_ASSERT(m_memAllocated == 0, "Vulkan Memory Pool leak prior to destruction!");
+  R_ASSERT(m_memAllocated == 0, "Vulkan Memory Pool leak prior to destruction!");
 }
 
 
@@ -149,14 +150,6 @@ B32 VulkanMemoryPool::allocate(U32 sz,
     return false;
   }
 
-  VulkanMemBlockNode* node = new VulkanMemBlockNode();
-  node->_free = true;
-  node->_id = m_nextBlockId++;
-  node->_offset = 0;
-  node->_sz = sz;
-  node->_pNext = nullptr;
-  node->_pPrev  = nullptr;
-
   VulkanMemBlockNode* pCurrent = m_pHead;
   VkDeviceSize offset = 0;
   VkDeviceSize padding = 0;
@@ -166,29 +159,68 @@ B32 VulkanMemoryPool::allocate(U32 sz,
   VulkanMemBlockNode* pPrev = nullptr;
   for (pCurrent = m_pHead; 
        pCurrent != nullptr; 
-       pPrev = pCurrent, pCurrent = pCurrent->_pNext) {
-    offset = R_MEM_ALIGN(pCurrent->_offset, align);
-    offsetting += pCurrent->_sz == 0 ? 0 : R_MEM_ALIGN(pCurrent->_sz, align);
-    if (pPrev && granularity > 1 && !isMemoryResourcesOnSeparatePages(pPrev->_offset, 
-                                                                      pPrev->_sz, 
-                                                                      offset, 
-                                                                      granularity)) {
-      if (hasGranularityConflict(pPrev->_type, allocType)) {
-        offset = R_MEM_ALIGN(offset, granularity);
+       pPrev = pCurrent, pCurrent = pCurrent->_pNext) 
+  {
+    if ((pCurrent->_type == VULKAN_ALLOCATION_TYPE_FREE) &&
+        (pCurrent->_sz >= sz))
+      break;
+
+    VkDeviceSize offsetTemp = pCurrent->_sz == 0 ? 0 : 
+                                                   R_MEM_ALIGN(pCurrent->_sz, align);
+
+    if (pPrev && 
+        granularity > 1 && 
+        !isMemoryResourcesOnSeparatePages(pPrev->_offset, 
+                                          pPrev->_sz, 
+                                          offsetTemp, 
+                                          granularity)) 
+    {
+      if (hasGranularityConflict(pPrev->_type, allocType)) 
+      {
+        offsetTemp = R_MEM_ALIGN(offsetTemp, granularity);
       }
     }
 
-    padding = offset - pCurrent->_offset;
-    alignedSize = padding + sz;
+    //padding = offset - pCurrent->_offset;
+    //alignedSize = padding + sz;
 
+    offset += offsetTemp;
+#if 0
     if (alignedSize > pCurrent->_sz) {
       continue;
     }  
     if (alignedSize + m_memAllocated >= m_memSz) {
       continue;
     }
-  
+#endif
   }
+
+  VulkanMemBlockNode* node = nullptr; 
+
+  if (pCurrent && pCurrent->_type == VULKAN_ALLOCATION_TYPE_FREE) {
+    // free block, we can use!
+    //R_DEBUG(Verbosity::rNotify, "Freed block!\n");
+    if (pCurrent->_sz >= sz) {
+      VkDeviceSize szDiff = pCurrent->_sz - sz;
+      if (szDiff == 0) {
+        node = pCurrent;
+      } else {
+        node = new VulkanMemBlockNode();
+        pCurrent->_offset = offset + R_MEM_ALIGN(sz, align);
+        pCurrent->_sz = szDiff;
+        node->_pNext = pCurrent;
+        pCurrent->_pPrev = node;
+      }
+    }
+  } else {
+    node = new VulkanMemBlockNode();
+  }
+
+  node->_free = false;
+  node->_id = m_nextBlockId++;
+  node->_sz = sz;
+  node->_type = allocType;
+  node->_offset = offset;
 
   pPrev->_pNext = node;
   node->_pPrev = pPrev;
@@ -197,8 +229,8 @@ B32 VulkanMemoryPool::allocate(U32 sz,
   pOutput->_poolId = m_id;
   pOutput->_memId = m_memTypeIndex; 
   pOutput->_deviceMemory = m_rawMem;
-  pOutput->_offset = offsetting;
-  pOutput->_pData = reinterpret_cast<B8*>((uintptr_t)m_pRawDat + offsetting);
+  pOutput->_offset = offset;
+  pOutput->_pData = reinterpret_cast<B8*>((uintptr_t)m_pRawDat + offset);
   pOutput->_poolId = m_id;
   pOutput->_sz = sz;
   m_memAllocated += sz;
@@ -207,7 +239,20 @@ B32 VulkanMemoryPool::allocate(U32 sz,
 
 void VulkanMemoryPool::free(VulkanAllocation* pIn)
 {
-  
+  VulkanMemBlockNode* pPrev = nullptr;
+  for (VulkanMemBlockNode* pNode = m_pHead;
+       pNode != nullptr;
+       pNode = pNode->_pNext,
+       pPrev = pNode->_pPrev) 
+  {
+    // Block id matches, need to mark as free.
+    if (pNode->_id == pIn->_blockId) 
+    {
+      pNode->_type = VULKAN_ALLOCATION_TYPE_FREE;
+      m_memAllocated -= pNode->_sz;
+      break;
+    }
+  }
 }
 
 
@@ -269,6 +314,8 @@ B32 VulkanMemoryAllocatorManager::allocate(VkDevice device,
                                            VulkanAllocation* out,
                                            U32 memoryBankIdx)
 {
+  R_TIMED_PROFILE_RENDERER();
+
   U32 memoryIndex = VulkanRHI::gPhysicalDevice.findMemoryType(memoryTypeBits, usage);
   R_ASSERT(memoryIndex != 0xffffffff, "Unable to find memory index for allocation request.");
 
@@ -279,6 +326,7 @@ B32 VulkanMemoryAllocatorManager::allocate(VkDevice device,
       continue;
     }
     if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, out)) {
+      numberOfAllocations++;
       return true;      
     }
   }
@@ -288,19 +336,28 @@ B32 VulkanMemoryAllocatorManager::allocate(VkDevice device,
   VulkanMemoryPool* newPool = new VulkanMemoryPool();
   VkPhysicalDeviceMemoryProperties memProps = VulkanRHI::gPhysicalDevice.getMemoryProperties();
   if (newPool->init(device, 
-                    (poolGroup.size() + 1),  
+                    poolGroup.size(),  
                     memoryIndex, 
                     usage, 
                     poolSz)) {
     poolGroup.push_back(newPool);
   }
 
-  return newPool->allocate(sz, align, allocType, m_bufferImageGranularity, out);;
+  B32 result = newPool->allocate(sz, 
+                                 align, 
+                                 allocType, 
+                                 m_bufferImageGranularity,
+                                 out); 
+  if (result) 
+    numberOfAllocations++;
+
+  return result;
 }
 
 
 void VulkanMemoryAllocatorManager::free(const VulkanAllocation& alloc)
 {
+  numberOfAllocations--;
   m_frameGarbage[m_garbageIndex].push_back(alloc);
 }
 
@@ -309,7 +366,7 @@ void VulkanMemoryAllocatorManager::emptyGarbage(VulkanRHI* pRhi)
 {
   // TODO(): Need to fix this, take buffering count as a parameter instead!!
   if ( m_bufferCount == 0 || 
-      ( m_garbageIndex <= m_frameGarbage.size() ) ) return;
+      ( m_garbageIndex >= m_frameGarbage.size() ) ) return;
 
   auto& garbage = m_frameGarbage[m_garbageIndex];
   for (U32 i = 0; i < garbage.size(); ++i) {

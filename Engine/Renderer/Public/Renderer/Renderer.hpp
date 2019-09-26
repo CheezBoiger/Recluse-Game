@@ -277,6 +277,9 @@ public:
   U32 getResourceBufferCount() const { return m_resourceBufferCount; }
   U32 getCurrentResourceBufferIndex() const { return m_currentResourceIndex; }
 
+  // Get current memory allocated, in bytes.
+  U32 getCurrentMemoryAllocatedBytes() const;
+
 protected:
   // Start rendering onto a frame. This effectively querys for an available frame
   // to render onto.

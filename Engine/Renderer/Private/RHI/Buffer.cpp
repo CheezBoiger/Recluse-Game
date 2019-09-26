@@ -37,8 +37,6 @@ void Buffer::initialize(VkDevice device,
     return;
   }
 
-  VulkanMemoryAllocatorManager::numberOfAllocations++;
-
   vkBindBufferMemory(device, mBuffer, m_allocation._deviceMemory, m_allocation._offset);
 }
 
@@ -50,7 +48,6 @@ void Buffer::cleanUp(VkDevice device)
 
     VulkanRHI::gAllocator.free(m_allocation);
 
-    VulkanMemoryAllocatorManager::numberOfAllocations--;
     mBuffer = VK_NULL_HANDLE;
     m_allocation._deviceMemory = VK_NULL_HANDLE;
     m_allocation._sz = 0;

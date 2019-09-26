@@ -360,7 +360,7 @@ int main(int c, char* argv[])
   ///////////////////////////////////////////////////////////////////////////////////
 
   // Game loop.
-#if 1
+#if 0
   while (gEngine().isRunning()) {
     Time::update();
     gEngine().processInput();
