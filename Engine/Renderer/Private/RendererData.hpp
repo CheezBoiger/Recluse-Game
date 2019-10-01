@@ -343,6 +343,9 @@ void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info
 void initBloomAccumulationDescriptorSetLayouts(VulkanRHI* pRhi);
 void initBloomAccumulationDescriptorSets(VulkanRHI* pRhi);
 void initBloomAccumulationPipeline(VulkanRHI* pRhi);
+void initDownscaleBrightnessPipeline(VulkanRHI* pRhi);
+void initDownscaleBrightnessDescriptorSets(VulkanRHI* pRhi);
+void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi);
 
 enum AntiAliasingType {
   FXAA,

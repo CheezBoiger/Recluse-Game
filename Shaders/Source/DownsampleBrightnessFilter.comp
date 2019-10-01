@@ -34,10 +34,10 @@ void main()
   ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
   vec2 tx = (vec2(iPixCoord) / vec2(screen.sz.xy));
   
-  vec3 c0 = texture(hiRes, tx + vec2(-offset.x, -offset.y), 0).rgb;
-  vec3 c1 = texture(hiRes, tx + vec2( offset.x, -offset.y), 0).rgb;
-  vec3 c2 = texture(hiRes, tx + vec2(-offset.x,  offset.y), 0).rgb;
-  vec3 c3 = texture(hiRes, tx + vec2( offset.x,  offset.y), 0).rgb;
+  vec3 c0 = texture(hiRes, tx + vec2(-offset.x, -offset.y)).rgb;
+  vec3 c1 = texture(hiRes, tx + vec2( offset.x, -offset.y)).rgb;
+  vec3 c2 = texture(hiRes, tx + vec2(-offset.x,  offset.y)).rgb;
+  vec3 c3 = texture(hiRes, tx + vec2( offset.x,  offset.y)).rgb;
   
   const float kEpsilon = 0.0001;
   float threshold = screen.bloomThreshold.x;

@@ -1750,6 +1750,33 @@ void initShadowResolvePipeline(VulkanRHI* pRhi)
 }
 
 
+void initDownscaleBrightnessDescriptorSets(VulkanRHI* pRhi)
+{
+}
+
+void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi)
+{
+}
+
+
+void initDownscaleBrightnessPipeline(VulkanRHI* pRhi)
+{
+  Shader* pShader = pRhi->createShader();
+  loadShader("DownsampleBrightnessFilter.comp.spv", pShader);
+
+  VkComputePipelineCreateInfo pipeCi = { };
+  pipeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+  
+  pipeCi.stage.module = pShader->getHandle();
+  pipeCi.stage.pName = kDefaultShaderEntryPointStr;
+  pipeCi.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  g_computePipelines[PIPELINE_COMPUTE_DOWNSCALE_BRIGHT_FILTER];
+
+  pRhi->freeShader(pShader);
+}
+
+
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi)
 {
   DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );

@@ -695,6 +695,7 @@ void Renderer::setUpDescriptorSetLayouts()
 
   RendererPass::initShadowResolveDescriptorSetLayout(m_pRhi);
   RendererPass::initBloomAccumulationDescriptorSetLayouts(m_pRhi);
+  RendererPass::initDownscaleBrightnessDescriptorSetLayouts(m_pRhi);
 
   // Light space.
   {
@@ -1651,6 +1652,7 @@ void Renderer::setUpGraphicsPipelines()
 
   RendererPass::initShadowResolvePipeline(m_pRhi);
   RendererPass::initBloomAccumulationPipeline(m_pRhi);
+  RendererPass::initDownscaleBrightnessPipeline(m_pRhi);
 
   VkPipelineInputAssemblyStateCreateInfo assemblyCI = { };
   assemblyCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -4564,6 +4566,7 @@ void Renderer::setUpDescriptorSets()
                                               m_pGlobal, 
                                               RendererPass::getRenderTexture(RENDER_TEXTURE_SCENE_DEPTH, 0));
   RendererPass::initBloomAccumulationDescriptorSets(m_pRhi);
+  RendererPass::initDownscaleBrightnessDescriptorSets(m_pRhi);
 }
 
 
