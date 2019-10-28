@@ -368,7 +368,7 @@ public:
     m_physicsComponent.cleanUp();
     m_pParticleSystem->cleanUp();
     m_spotLightComponent.cleanUp();
-    m_audioComponent.cleanUp();
+    //m_audioComponent.cleanUp();
 
     gPhysics().freeCollider(m_sphereCollider);
 

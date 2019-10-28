@@ -1809,6 +1809,7 @@ void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi)
   bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
+  bindings[1] = { };
   bindings[1].binding = 1;
   bindings[1].descriptorCount = 1;
   bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
