@@ -1752,10 +1752,73 @@ void initShadowResolvePipeline(VulkanRHI* pRhi)
 
 void initDownscaleBrightnessDescriptorSets(VulkanRHI* pRhi)
 {
+  DescriptorSetLayout* pLayout = g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_DOWNSCALE_BRIGHT_FILTER ];
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_2X_4X ][0]->allocate(pRhi->descriptorPool(), pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_4X_8X ][0]->allocate(pRhi->descriptorPool(), pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_8X_16X ][0]->allocate(pRhi->descriptorPool(), pLayout);
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_FULL_2X ][0]->allocate(pRhi->descriptorPool(), pLayout);
+
+  VkDescriptorImageInfo loResInfo = { };
+  VkDescriptorImageInfo hiResInfo = { };
+
+  hiResInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  hiResInfo.sampler = g_samplers[ SAMPLER_DEFAULT ]->getHandle();
+
+  loResInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;  
+
+  std::array<VkWriteDescriptorSet, 2> writeSets;
+  writeSets[0] = { };
+  writeSets[1] = { };
+  
+  writeSets[0].descriptorCount = 1;
+  writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writeSets[0].dstBinding = 0;
+  writeSets[0].pImageInfo = &hiResInfo;
+  writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  
+  writeSets[1].descriptorCount = 1;
+  writeSets[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  writeSets[1].dstBinding = 1;
+  writeSets[1].pImageInfo = &loResInfo;
+  writeSets[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+
+  hiResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_BRIGHTNESS ][0]->getView();
+  loResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_2X_FINAL ][0]->getView();
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_FULL_2X ][0]->update(writeSets.size(), writeSets.data());
+
+  hiResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_2X_FINAL ][0]->getView();
+  loResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_4X_FINAL ][0]->getView();
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_2X_4X ][0]->update(writeSets.size(), writeSets.data());
+  
+  hiResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_4X_FINAL ][0]->getView();
+  loResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_8X_FINAL ][0]->getView();
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_4X_8X ][0]->update(writeSets.size(), writeSets.data());
+
+  hiResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_8X_FINAL ][0]->getView();
+  loResInfo.imageView = g_renderTextures[ RENDER_TEXTURE_DOWNSCALE_16X_START ][0]->getView();
+  g_descriptorSets[ DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_8X_16X ][0]->update(writeSets.size(), writeSets.data());
 }
 
 void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi)
 {
+  VkDescriptorSetLayoutCreateInfo layoutCi = { };
+  std::array<VkDescriptorSetLayoutBinding, 2> bindings;
+  bindings[0] = { };
+  bindings[0].binding = 0;
+  bindings[0].descriptorCount = 1;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  bindings[1].binding = 1;
+  bindings[1].descriptorCount = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+  bindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+  layoutCi.bindingCount = bindings.size();
+  layoutCi.pBindings = bindings.data();   
+  layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+
+  g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_DOWNSCALE_BRIGHT_FILTER ]->initialize(layoutCi);
 }
 
 
@@ -1764,14 +1827,32 @@ void initDownscaleBrightnessPipeline(VulkanRHI* pRhi)
   Shader* pShader = pRhi->createShader();
   loadShader("DownsampleBrightnessFilter.comp.spv", pShader);
 
+  VkPushConstantRange pushConstRange = {};
+  pushConstRange.offset = 0;
+  pushConstRange.size = sizeof(BloomConfig);
+  pushConstRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
   VkComputePipelineCreateInfo pipeCi = { };
+  VkPipelineLayoutCreateInfo pipeLayout = { };
+
   pipeCi.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-  
   pipeCi.stage.module = pShader->getHandle();
   pipeCi.stage.pName = kDefaultShaderEntryPointStr;
   pipeCi.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+  pipeCi.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 
-  g_computePipelines[PIPELINE_COMPUTE_DOWNSCALE_BRIGHT_FILTER];
+  pipeLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  pipeLayout.pushConstantRangeCount = 1;
+  pipeLayout.pPushConstantRanges = &pushConstRange;
+
+  VkDescriptorSetLayout setLayouts[] = {
+    g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_DOWNSCALE_BRIGHT_FILTER ]->getLayout()
+  };
+
+  pipeLayout.setLayoutCount = 1;
+  pipeLayout.pSetLayouts = setLayouts;
+
+  g_computePipelines[ PIPELINE_COMPUTE_DOWNSCALE_BRIGHT_FILTER ]->initialize(pipeCi, pipeLayout);
 
   pRhi->freeShader(pShader);
 }

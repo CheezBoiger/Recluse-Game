@@ -93,7 +93,7 @@ public:
   static VulkanMemoryAllocatorManager gAllocator;
 
   // Context and physical device set up.
-  static B32 createContext(const char* appName);
+  static B32 createContext(const char* appName, B32 enableValidationLayer = false);
   static B32 findPhysicalDevice(U32 rhiConfigBits = 0);
   static std::set<std::string> getMissingExtensions(VkPhysicalDevice device);
 

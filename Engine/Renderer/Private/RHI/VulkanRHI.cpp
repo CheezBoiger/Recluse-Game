@@ -95,12 +95,11 @@ VulkanRHI::~VulkanRHI()
 }
 
 
-B32 VulkanRHI::createContext(const char* appName)
+B32 VulkanRHI::createContext(const char* appName, B32 enableValidationLayer)
 {
 // setEnable debug mode, should we decide to enable validation layers.
-#if defined(_DEBUG) || defined(_NDEBUG)
-  gContext.enableDebugMode();
-#endif
+  if (enableValidationLayer) 
+    gContext.enableDebugMode();
   return gContext.createInstance(appName);
 }
 

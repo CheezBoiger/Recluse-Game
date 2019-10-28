@@ -34,3 +34,4 @@
 [AnimationQuality] = high
 [EnableFrameLimit] = false
 [FrameLimit] = 120
+[EnableGraphicsAPIValidation] = false

@@ -160,6 +160,7 @@ void Engine::startUp(std::string appName, const UserConfigParams* userParams, co
   // For renderer, you want to send the name to the device that will be used for debugging and
   // information for vendors.
   gRenderer().setAppName(appName.c_str());
+  gRenderer().updateRendererConfigs(params);
   //gRenderer().setHardwareHints(R_RAYTRACING_BIT | R_MESHSHADER_BIT);
   gRenderer().startUp();
   gRenderer().initialize(&m_window, params);
@@ -561,6 +562,14 @@ void Engine::readGraphicsConfig( GraphicsConfigParams& graphics )
           std::string option = getOption(line);
           U32 rH = std::atoi(option.c_str());
           graphics._renderResolutionHeight = rH;
+      }
+      if (availableOption(line, "EnableGraphicsAPIValidation")) {
+        std::string option = getOption(line);
+        if (option.compare("true") == 0) {
+          graphics._enableAPIValidation = true;
+        } else {
+          graphics._enableAPIValidation = false;
+        }
       }
       line.clear();
     }

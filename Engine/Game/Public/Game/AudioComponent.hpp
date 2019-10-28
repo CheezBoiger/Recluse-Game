@@ -8,6 +8,7 @@
 namespace Recluse {
 
 
+// Audio emitter object. Used to emit sounds in the game world.
 class AudioComponent : public Component {
   RCOMPONENT(AudioComponent)
 public:
@@ -28,5 +29,21 @@ private:
   RigidBody* m_pRigidBodyRef;
   U32 m_audioChannelId;
   U32 m_audioChannelGroupId;
+};
+
+
+// Listener component, used to listen to sounds in the game world.
+class AudioListenerComponent : public Component {
+  RCOMPONENT(AudioListenerComponent);
+public:
+  void onInitialize(GameObject* owner) override { }
+  void onCleanUp() override { }
+  void onEnable() override { }
+  void update() override { }
+
+
+private:
+  U32 m_audioListenerId;
+  U32 m_audioListenGroupId;
 };
 } // Recluse 

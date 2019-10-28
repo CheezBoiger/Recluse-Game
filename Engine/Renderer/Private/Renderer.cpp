@@ -179,7 +179,7 @@ void Renderer::onStartUp()
     return;
   }
 
-  VulkanRHI::createContext(Renderer::appName);
+  VulkanRHI::createContext(Renderer::appName,  m_currentGraphicsConfigs._enableAPIValidation);
   VulkanRHI::findPhysicalDevice(m_rhiBits);
   if (!m_pRhi) m_pRhi = new VulkanRHI();
   SetUpRenderData();
@@ -3237,12 +3237,22 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
         RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_8X_FINAL, 0),
         RendererPass::getRenderTexture(RENDER_TEXTURE_DOWNSCALE_16X_START, 0)
       };
+
+      VkDescriptorSet dSets[] = {
+        RendererPass::getDescriptorSet(DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_FULL_2X)->getHandle(),
+        RendererPass::getDescriptorSet(DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_2X_4X)->getHandle(),
+        RendererPass::getDescriptorSet(DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_4X_8X)->getHandle(),
+        RendererPass::getDescriptorSet(DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_8X_16X)->getHandle() 
+      };
+
+      ComputePipeline* pDwnPipe = RendererPass::getComputePipeline(PIPELINE_COMPUTE_DOWNSCALE_BRIGHT_FILTER);
+
       std::array<VkImageMemoryBarrier, 5> barriers;
       barriers[0] = { };
-      barriers[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      barriers[0].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
       barriers[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
       barriers[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-      barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      barriers[0].newLayout = VK_IMAGE_LAYOUT_GENERAL;
       barriers[0].image = texs[0]->getImage();
       barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       barriers[0].subresourceRange.baseArrayLayer = 0;
@@ -3256,7 +3266,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
         barriers[i].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
         barriers[i].image = texs[i]->getImage();
         barriers[i].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barriers[i].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barriers[i].newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barriers[i].subresourceRange.baseArrayLayer = 0;
         barriers[i].subresourceRange.baseMipLevel = 0;
@@ -3282,13 +3292,25 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       blit.srcOffsets[0] = { 0, 0, 0 };
       blit.dstOffsets[0] = { 0, 0, 0 };
 
+      cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, pDwnPipe->getNative());
+
       for (U32 i = 1; i < 5; ++i) {
-        barriers[i].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barriers[i].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barriers[i].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-        barriers[i].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+        barriers[i - 1].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        barriers[i - 1].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barriers[i - 1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        barriers[i - 1].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
         cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                                    VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barriers[i - 1]);
+        BloomConfig threshold;
+        threshold._threshold = 0.0f;
+        threshold._sz[0] = texs[i]->getWidth();
+        threshold._sz[1] = texs[i]->getHeight();
+        threshold._invOutputSz[0] = 1.0f / R32(threshold._sz[0]);
+        threshold._invOutputSz[1] = 1.0f / R32(threshold._sz[1]);
+        
+        cmdBuffer->pushConstants(pDwnPipe->getLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomConfig), &threshold);
+
+        /*
         blit.srcOffsets[1] = {(I32)texs[i - 1]->getWidth(),
                               (I32)texs[i - 1]->getHeight(), 1 };
         blit.dstOffsets[1] = {(I32)texs[i]->getWidth(),
@@ -3296,27 +3318,31 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
         cmdBuffer->imageBlit(texs[i - 1]->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 
                              texs[i]->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                              1, &blit, VK_FILTER_LINEAR);
-      }
+      */
 
+        cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pDwnPipe->getLayout(), 0, 1, dSets + (i - 1), 0, nullptr);
+        cmdBuffer->dispatch((threshold._sz[0] / 8) + 1, (threshold._sz[1] / 8) + 1, 1);
+      }
+#if 0
       barriers[0].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-      barriers[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-      barriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+      barriers[0].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
+      barriers[0].oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       barriers[0].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
       for (U32 i = 1; i < barriers.size() - 1; ++i) {
         barriers[i].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barriers[i].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barriers[i].oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barriers[i].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
         barriers[i].srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
       }
-
+#endif
       barriers[barriers.size() - 1].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      barriers[barriers.size() - 1].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+      barriers[barriers.size() - 1].oldLayout = VK_IMAGE_LAYOUT_GENERAL;
 
       cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                               VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0,
-                              nullptr, barriers.size(), barriers.data());
+                              nullptr, 1, barriers.data() + barriers.size() - 1);
     }
 #endif
     m_Downscale._Strength = 1.5f;
@@ -4446,6 +4472,11 @@ void Renderer::setBuffering(const GraphicsConfigParams* params)
 
 void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
 {
+  if (!m_Initialized) {
+    updateRuntimeConfigs(params);
+    return;
+  }
+
   m_pRhi->deviceWaitIdle();
 
   if (m_pWindow->getWidth() <= 0 || m_pWindow->getHeight() <= 0) { 

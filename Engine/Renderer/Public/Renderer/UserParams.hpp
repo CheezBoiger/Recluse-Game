@@ -138,6 +138,8 @@ public:
   // GPU frame image to the window of your screen.
   U32 _renderResolutionWidth;
   U32 _renderResolutionHeight;
+  // Enable graphics api validation.
+  B32 _enableAPIValidation;
 };
 
 
@@ -164,7 +166,8 @@ const GraphicsConfigParams kDefaultGpuConfigs = {
   false,
   120,
   800,
-  600
+  600,
+  false
 };
 
 } // Recluse

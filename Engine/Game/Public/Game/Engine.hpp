@@ -18,6 +18,7 @@
 #include "Component.hpp"
 #include "LightComponent.hpp"
 #include "PointLightComponent.hpp"
+#include "AIComponent.hpp"
 #include "AnimationComponent.hpp"
 #include "PhysicsComponent.hpp"
 #include "MeshComponent.hpp"

@@ -239,9 +239,9 @@ public:
 
 #if !defined FORCE_AUDIO_OFF
     // Testing audio.
-    //m_audioComponent.initialize(this);
-    //m_audioComponent.playSound("wave.mp3", 0.1f);
-    //m_audioComponent.setRigidBodyReference(m_physicsComponent.getRigidBody());
+    m_audioComponent.initialize(this);
+    //m_audioComponent.playSound("E:/Users/Magarcia/Music/Bishop of Battle - Sunset Drive.mp3", 0.1f);
+    m_audioComponent.setRigidBodyReference(m_physicsComponent.getRigidBody());
 #endif
 
 #if ENABLE_PARTICLE_TEXTURE_TEST
@@ -368,6 +368,7 @@ public:
     m_physicsComponent.cleanUp();
     m_pParticleSystem->cleanUp();
     m_spotLightComponent.cleanUp();
+    m_audioComponent.cleanUp();
 
     gPhysics().freeCollider(m_sphereCollider);
 

@@ -13,4 +13,5 @@
 [EnvironmentVolume] = 100.0
 [WindowResolutionWidth] = 1920
 [WindowResolutionHeight] =  1080 
+// fullscreen/borderless/border
 [Window] = borderless

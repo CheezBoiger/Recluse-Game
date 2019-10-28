@@ -40,6 +40,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PUBLIC_DIR}/MeshComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/PhysicsComponent.hpp
   ${RECLUSE_GAME_PUBLIC_DIR}/ParticleSystemComponent.hpp
+  ${RECLUSE_GAME_PUBLIC_DIR}/AIComponent.hpp
   
   ${RECLUSE_GAME_PRIVATE_DIR}/GameObject.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/Camera.cpp
@@ -55,6 +56,7 @@ set(GAME_FILES
   ${RECLUSE_GAME_PRIVATE_DIR}/AudioComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/AnimationComponent.cpp
   ${RECLUSE_GAME_PRIVATE_DIR}/ParticleSystemComponent.cpp
+  ${RECLUSE_GAME_PRIVATE_DIR}/AIComponent.cpp
 
   ${GEOMETRY_PUBLIC_DIR}/Cube.hpp
   ${GEOMETRY_PUBLIC_DIR}/UVSphere.hpp

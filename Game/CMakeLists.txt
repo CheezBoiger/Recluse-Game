@@ -35,6 +35,7 @@ set(RS_TARGET_FIILES
   
   ${RS_PLAYABLE_DIR}/IActor.hpp
   ${RS_PLAYABLE_DIR}/Player.hpp
+  ${RS_PLAYABLE_DIR}/Enemy.hpp
   ${RS_PLAYABLE_DIR}/Player.cpp
   
   ${RS_SCENES_DIR}/TestScene.hpp
