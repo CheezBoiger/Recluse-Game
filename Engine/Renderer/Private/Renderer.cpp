@@ -3303,10 +3303,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
                                    VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barriers[i - 1]);
         BloomConfig threshold;
         threshold._threshold = 0.0f;
-        threshold._sz[0] = texs[i]->getWidth();
-        threshold._sz[1] = texs[i]->getHeight();
-        threshold._invOutputSz[0] = 1.0f / R32(threshold._sz[0]);
-        threshold._invOutputSz[1] = 1.0f / R32(threshold._sz[1]);
+        threshold._invOutputSz[0] = 1.0f / R32(texs[i]->getWidth());
+        threshold._invOutputSz[1] = 1.0f / R32(texs[i]->getHeight());
         
         cmdBuffer->pushConstants(pDwnPipe->getLayout(), VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(BloomConfig), &threshold);
 
@@ -3321,7 +3319,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       */
 
         cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_COMPUTE, pDwnPipe->getLayout(), 0, 1, dSets + (i - 1), 0, nullptr);
-        cmdBuffer->dispatch((threshold._sz[0] / 8) + 1, (threshold._sz[1] / 8) + 1, 1);
+        cmdBuffer->dispatch((texs[i]->getWidth() / 8) + 1, (texs[i]->getHeight() / 8) + 1, 1);
       }
 #if 0
       barriers[0].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
@@ -3367,7 +3365,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet16xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale16x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &m_Downscale._Horizontal);
+      cmdBuffer->pushConstants(Downscale16x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
@@ -3452,11 +3450,12 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.height = (R32)DownscaleFrameBuffer8x->getHeight();
     viewport.width = (R32)DownscaleFrameBuffer8x->getWidth();
     DownscaleSetNative = DownscaleSet8x->getHandle();
-    I32 _Horizontal = true;
+    m_Downscale._Horizontal = true;
+    m_Downscale._Scale = 3.1f;
     cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getNative());
-      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3466,10 +3465,10 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     DownscalePass8x.framebuffer = FB8xFinal->getHandle();
     DownscalePass8x.renderPass = FB8xFinal->RenderPassRef()->getHandle();
     cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
-      _Horizontal = false;
+      m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet8xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale8x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
@@ -3484,11 +3483,12 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.height = (R32)DownscaleFrameBuffer4x->getHeight();
     viewport.width = (R32)DownscaleFrameBuffer4x->getWidth();
     DownscaleSetNative = DownscaleSet4x->getHandle();
-    _Horizontal = true;
+    m_Downscale._Horizontal = true;
+    m_Downscale._Scale = 3.1f;
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getNative());
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3498,10 +3498,10 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     DownscalePass4x.framebuffer = FB4xFinal->getHandle();
     DownscalePass4x.renderPass = FB4xFinal->RenderPassRef()->getHandle();
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
-      _Horizontal = false;
+      m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet4xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale4x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 
@@ -3516,11 +3516,12 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.height = (R32)DownscaleFrameBuffer2x->getHeight();
     viewport.width = (R32)DownscaleFrameBuffer2x->getWidth();
     DownscaleSetNative = DownscaleSet2x->getHandle();
-    _Horizontal = true;
+    m_Downscale._Horizontal = true;
+    m_Downscale._Scale = 3.1;
     cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getNative());
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
       cmdBuffer->bindVertexBuffers(0, 1, &vertexBuffer, offsets);
       cmdBuffer->bindIndexBuffer(indexBuffer, 0, indexType);
@@ -3530,10 +3531,10 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     DownscalePass2x.framebuffer = FB2xFinal->getHandle();
     DownscalePass2x.renderPass = FB2xFinal->RenderPassRef()->getHandle();
     cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
-      _Horizontal = false;
+      m_Downscale._Horizontal = false;
       DownscaleSetNative = DownscaleSet2xFinal->getHandle();
       cmdBuffer->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getLayout(), 0, 1, &DownscaleSetNative, 0, nullptr);
-      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(I32), &_Horizontal);
+      cmdBuffer->pushConstants(Downscale2x->getLayout(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(m_Downscale), &m_Downscale);
       cmdBuffer->drawIndexed(m_RenderQuad.getIndices()->IndexCount(), 1, 0, 0, 0);
     cmdBuffer->endRenderPass();
 

@@ -34,7 +34,7 @@ void main()
   vec2 offset = 1.0 / textureSize(sceneSurface, 0) * Blur.scale;
   vec3 blurColor = texture(sceneSurface, frag_in.uv).rgb * weight[0];
   
-  // TODO(): Perform blur. May want to do a liner sample instead?
+  // TODO(): Perform blur. May want to do a linear sample instead?
   // <-------- coefficients --------->  for horizontal.
   if (Blur.horizontal == 1) {
     for (int i = 1; i < 5; ++i) {

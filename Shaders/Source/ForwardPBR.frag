@@ -253,10 +253,10 @@ void main()
   vFragColor = vec4(outColor, transparency);
   
 #if !defined(ENABLE_WATER_RENDERING)
-  vec3 glow = outColor.rgb - length(V) * 0.2;
+  vec3 glow = outColor.rgb - length(gWorldBuffer.global.cameraPos.xyz - frag_in.position);// * 0.2;
   glow = max(glow, vec3(0.0));
-  glow = glow * 0.02;
-  glow = clamp(glow, vec3(0.0), vec3(50.0));
+  //glow = glow * 0.02;
+  //glow = clamp(glow, vec3(0.0), vec3(50.0));
   vBrightColor = vec4(glow, 1.0);
   
   GBuffer gbuffer;

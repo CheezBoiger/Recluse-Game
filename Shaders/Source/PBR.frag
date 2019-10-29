@@ -125,10 +125,10 @@ void main()
   
   outColor = gbuffer.emissionStrength * 20.0 * gbuffer.emission + (outColor * gbuffer.ao);
   
-  vec3 glow = outColor.rgb - length(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos) * 0.2;
+  vec3 glow = outColor.rgb - length(gWorldBuffer.global.cameraPos.xyz - gbuffer.pos);// * 0.2;
   glow = max(glow, vec3(0.0));
-  glow = glow * 0.02;
-  glow = clamp(glow, vec3(0.0), vec3(50.0));
+  //glow = glow * 0.02;
+  //glow = clamp(glow, vec3(0.0), vec3(50.0));
   vBrightColor = vec4(glow, 1.0);
   vFragColor = vec4(outColor, 1.0);
 }

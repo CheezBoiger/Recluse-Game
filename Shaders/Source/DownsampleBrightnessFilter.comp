@@ -13,7 +13,6 @@ layout (set = 0, binding = 1, rgba16) uniform image2D loRes;
 
 // Size of lo res texture
 layout (push_constant) uniform PushConst {
-  ivec4 sz;
   vec4 invOutputSz;
   vec4 bloomThreshold;
 } screen;
@@ -30,9 +29,10 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 void main()
 {
-  vec2 offset = screen.invOutputSz.xy; 
+  vec2 offset = screen.invOutputSz.xy * 0.25; 
   ivec2 iPixCoord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y);
-  vec2 tx = (vec2(iPixCoord) / vec2(screen.sz.xy));
+  // Inverting to get one pixel sz.
+  vec2 tx = (vec2(iPixCoord) + 0.5) * screen.invOutputSz.xy;
   
   vec3 c0 = texture(hiRes, tx + vec2(-offset.x, -offset.y)).rgb;
   vec3 c1 = texture(hiRes, tx + vec2( offset.x, -offset.y)).rgb;

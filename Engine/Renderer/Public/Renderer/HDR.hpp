@@ -25,7 +25,6 @@ struct ParamsHDR {
 // Configuration for the downscale blurring pass.
 struct BloomConfig
 {
-  I32 _sz[4];
   Vector4 _invOutputSz;
   Vector4 _threshold;
 };
