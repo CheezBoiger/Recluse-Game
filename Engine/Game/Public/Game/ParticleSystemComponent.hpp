@@ -37,6 +37,7 @@ public:
   void setFadeOut(R32 fadeOut);
   void setRate(R32 rate);
   void enableSorting(B32 enable) { m_shouldSort = enable; } 
+  void enableTimeScaling(B32 enable);
   void setAngleRate(R32 rate);
   void setAnimationScale(R32 scale, R32 max = 16.0f, R32 offset = 0.0f);
   void setAcceleration(const Vector3& acc) { m_acceleration = acc; }

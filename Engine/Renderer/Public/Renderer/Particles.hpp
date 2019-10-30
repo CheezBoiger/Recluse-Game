@@ -69,6 +69,8 @@ struct ParticleSystemConfig {
   R32             _particleMaxAlive;     // Maximum particles that can be alive during the simulation.
   R32             _maxParticles;          // Maximum number of particles within this buffer.
   R32             _isWorldSpace;            // 0.0 if particles follow the model space, or 1.0, if particles are within world space.
+  I32             _bIsTimeScaled;   // is the particle system time scaled?
+  Vector3         _pad0;
 };
 
 

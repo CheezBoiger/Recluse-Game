@@ -87,7 +87,7 @@ public:
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).normalize();
       pPrimary->_Enable = true;
-      pPrimary->_Intensity = 10.0f;
+      pPrimary->_Intensity = 5.0f;
       //pSky->SetSkyColor(Vector3(0.0f, 0.0f, 0.0f));
       //pSky->SetSkyIntensity(50.0f);
     }
@@ -96,19 +96,19 @@ public:
     // setting bloom on or off, or anything else...
     ParamsHDR hdrSettings = {};
     BrightFilterParameters parameters = { };
-    hdrSettings._bloomStrength = 3.0f;
-    parameters.brightnessThreshold16x = 1.0f;
-    parameters.brightnessThreshold8x = 2.0f;
-    parameters.brightnessThreshold4x = 3.0f;
-    parameters.brightnessThreshold2x = 4.0f;
-    parameters.bloomScale16x = 3.0f;
-    parameters.bloomScale8x = 3.0f;
-    parameters.bloomScale4x = 3.0f;
-    parameters.bloomScale2x = 3.0f;
+    hdrSettings._bloomStrength = 1.5f;
+    parameters.brightnessThreshold16x = 0.0f;
+    parameters.brightnessThreshold8x = 1.0f;
+    parameters.brightnessThreshold4x = 2.0f;
+    parameters.brightnessThreshold2x = 3.0f;
+    parameters.bloomScale16x = 4.1f;
+    parameters.bloomScale8x = 3.1f;
+    parameters.bloomScale4x = 2.1f;
+    parameters.bloomScale2x = 1.2f;
     parameters.bloomStrength16x = 1.5f;
     parameters.bloomStrength8x = 1.5f;
     parameters.bloomStrength4x = 1.5f;
-    parameters.bloomStrength2x = 1.5f;
+    parameters.bloomStrength2x = 1.0f;
     gRenderer().adjustHDRSettings(&hdrSettings, &parameters);
 
 #if 1
@@ -186,6 +186,14 @@ public:
       //gRenderer().setGlobalLightProbe(&otherLightProbe);
       gRenderer().setGlobalLightProbe(&otherLightProbe);
       gRenderer().usePreRenderSkyboxMap(false);
+    }
+
+    if (Keyboard::keyHeldDown(KEY_CODE_4)) {
+      Time::scaleTime -= 1.0f * Time::deltaTime;
+    }
+
+    if (Keyboard::keyHeldDown(KEY_CODE_5)) {
+      Time::scaleTime += 1.0f * Time::deltaTime;
     }
   }
 

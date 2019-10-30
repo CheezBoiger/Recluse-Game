@@ -158,6 +158,7 @@ void ParticleSystem::initialize(VulkanRHI* pRhi,
   _particleConfig._fadeIn = 13.0f;
   _particleConfig._hasAtlas = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
   _particleConfig._lightFactor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+  _particleConfig._bIsTimeScaled = false;
 
   m_particleConfigBuffer = pRhi->createBuffer();
 

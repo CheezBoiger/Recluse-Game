@@ -27,6 +27,7 @@ struct GlobalBuffer {
   vec4  fov;
   float fEngineTime; // total current time of the engine. 
   float fDeltaTime; // elapsed time between frames.
+  float fScaleTime; // time scale.
   float gamma;
   float exposure;
   float fRayleigh;
@@ -41,6 +42,7 @@ struct GlobalBuffer {
   int   bloomEnabled;
   int   enableShadows;
   int   enableAA;
+  ivec3 pad0;
 };
 
 

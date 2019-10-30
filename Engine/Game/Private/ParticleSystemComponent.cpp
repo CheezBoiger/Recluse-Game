@@ -180,4 +180,12 @@ void ParticleSystemComponent::setRate(R32 rate)
   m_pParticleSystem->_particleConfig._rate = rate;
   m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
 }
+
+
+void ParticleSystemComponent::enableTimeScaling(B32 enable)
+{
+  if (!m_pParticleSystem) return;
+  m_pParticleSystem->_particleConfig._bIsTimeScaled = enable;
+  m_pParticleSystem->pushUpdate(PARTICLE_CONFIG_BUFFER_UPDATE_BIT);
+}
 } // Recluse
