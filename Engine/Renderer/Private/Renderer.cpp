@@ -3127,6 +3127,7 @@ void Renderer::generateFinalCmds(CommandBuffer* cmdBuffer)
 
 void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
 {
+  BrightFilterParameters* pParams = m_pHDR->getBrightFilterParams();
   VkIndexType indexType = getNativeIndexType(m_RenderQuad.getIndices()->GetSizeType());
   VkBuffer vertexBuffer = m_RenderQuad.getQuad()->getHandle()->getNativeBuffer();
   VkBuffer indexBuffer = m_RenderQuad.getIndices()->getHandle()->getNativeBuffer();
@@ -3302,7 +3303,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
         cmdBuffer->pipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                                    VK_DEPENDENCY_BY_REGION_BIT, 0, nullptr, 0, nullptr, 1, &barriers[i - 1]);
         BloomConfig threshold;
-        threshold._threshold = 0.0f;
+        threshold._threshold = *(R32*)((U8*)pParams + 4 * (i -1));
         threshold._invOutputSz[0] = 1.0f / R32(texs[i]->getWidth());
         threshold._invOutputSz[1] = 1.0f / R32(texs[i]->getHeight());
         
@@ -3343,7 +3344,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
                               nullptr, 1, barriers.data() + barriers.size() - 1);
     }
 #endif
-    BrightFilterParameters* pParams = m_pHDR->getBrightFilterParams();
+
     m_Downscale._Strength = pParams->bloomStrength16x;
     m_Downscale._Scale = pParams->bloomScale16x;
     m_Downscale._Horizontal = true;

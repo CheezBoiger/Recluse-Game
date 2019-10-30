@@ -31,6 +31,13 @@ struct BloomConfig
 
 struct BrightFilterParameters
 {
+    // IMPORTANT: Must have this layout, otherwise hdr pass may pass undefined data.
+    R32 brightnessThreshold2x;
+    R32 brightnessThreshold4x;
+    R32 brightnessThreshold8x;
+    R32 brightnessThreshold16x;
+
+    // Rest is fine.
     R32 bloomStrength16x;
     R32 bloomScale16x;
     R32 bloomStrength8x;

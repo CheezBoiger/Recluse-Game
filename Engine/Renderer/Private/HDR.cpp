@@ -33,6 +33,10 @@ HDR::HDR()
   m_brightFilterParams.bloomScale4x = 1.0f;
   m_brightFilterParams.bloomScale2x = 1.0f;
     
+  m_brightFilterParams.brightnessThreshold16x = 1.0f;
+  m_brightFilterParams.brightnessThreshold8x = 1.0f;
+  m_brightFilterParams.brightnessThreshold4x = 1.0f;
+  m_brightFilterParams.brightnessThreshold2x = 1.0f;
   m_brightFilterParams.bloomStrength16x = 1.0f; 
   m_brightFilterParams.bloomStrength8x = 1.0f;
   m_brightFilterParams.bloomStrength4x = 1.0f;

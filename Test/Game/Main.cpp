@@ -87,7 +87,7 @@ public:
       pPrimary->_Color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
       pPrimary->_Direction = Vector3(0.08f, -0.5f, 0.08f).normalize();
       pPrimary->_Enable = true;
-      pPrimary->_Intensity = 5.0f;
+      pPrimary->_Intensity = 10.0f;
       //pSky->SetSkyColor(Vector3(0.0f, 0.0f, 0.0f));
       //pSky->SetSkyIntensity(50.0f);
     }
@@ -97,6 +97,10 @@ public:
     ParamsHDR hdrSettings = {};
     BrightFilterParameters parameters = { };
     hdrSettings._bloomStrength = 3.0f;
+    parameters.brightnessThreshold16x = 1.0f;
+    parameters.brightnessThreshold8x = 2.0f;
+    parameters.brightnessThreshold4x = 3.0f;
+    parameters.brightnessThreshold2x = 4.0f;
     parameters.bloomScale16x = 3.0f;
     parameters.bloomScale8x = 3.0f;
     parameters.bloomScale4x = 3.0f;
