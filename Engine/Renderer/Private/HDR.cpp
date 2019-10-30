@@ -27,6 +27,16 @@ HDR::HDR()
   m_config._bEnable.z = 0.0f;
   m_config._bEnable.w = 0.0f;
   m_config._interleavedVideoShakeInterval = 0.0f; // Every x seconds by default. This disables shaking.
+
+  m_brightFilterParams.bloomScale16x = 1.0f;
+  m_brightFilterParams.bloomScale8x = 1.0f;
+  m_brightFilterParams.bloomScale4x = 1.0f;
+  m_brightFilterParams.bloomScale2x = 1.0f;
+    
+  m_brightFilterParams.bloomStrength16x = 1.0f; 
+  m_brightFilterParams.bloomStrength8x = 1.0f;
+  m_brightFilterParams.bloomStrength4x = 1.0f;
+  m_brightFilterParams.bloomStrength2x = 1.0f;
 }
 
 

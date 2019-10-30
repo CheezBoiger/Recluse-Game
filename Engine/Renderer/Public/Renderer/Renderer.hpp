@@ -237,7 +237,8 @@ public:
   const char* getDeviceName();
 
   // Adjusts bloom strength of the renderer.
-  void adjustHDRSettings(const ParamsHDR& hdrSettings);
+  void adjustHDRSettings(const ParamsHDR* hdrSettings, 
+                         const BrightFilterParameters* filterParams);
 
   void updateSky();
 

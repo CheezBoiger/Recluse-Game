@@ -3343,8 +3343,9 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
                               nullptr, 1, barriers.data() + barriers.size() - 1);
     }
 #endif
-    m_Downscale._Strength = 1.5f;
-    m_Downscale._Scale = 3.1f;
+    BrightFilterParameters* pParams = m_pHDR->getBrightFilterParams();
+    m_Downscale._Strength = pParams->bloomStrength16x;
+    m_Downscale._Scale = pParams->bloomScale16x;
     m_Downscale._Horizontal = true;
     VkDescriptorSet DownscaleSetNative = DownscaleSet16x->getHandle();
     viewport.height = (R32)DownscaleFrameBuffer16x->getHeight();
@@ -3451,7 +3452,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.width = (R32)DownscaleFrameBuffer8x->getWidth();
     DownscaleSetNative = DownscaleSet8x->getHandle();
     m_Downscale._Horizontal = true;
-    m_Downscale._Scale = 3.1f;
+    m_Downscale._Strength = pParams->bloomStrength8x;
+    m_Downscale._Scale = pParams->bloomScale8x;
     cmdBuffer->beginRenderPass(DownscalePass8x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale8x->getNative());
@@ -3484,7 +3486,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.width = (R32)DownscaleFrameBuffer4x->getWidth();
     DownscaleSetNative = DownscaleSet4x->getHandle();
     m_Downscale._Horizontal = true;
-    m_Downscale._Scale = 3.1f;
+    m_Downscale._Strength = pParams->bloomStrength4x;
+    m_Downscale._Scale = pParams->bloomScale4x;
     cmdBuffer->beginRenderPass(DownscalePass4x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale4x->getNative());
@@ -3517,7 +3520,8 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     viewport.width = (R32)DownscaleFrameBuffer2x->getWidth();
     DownscaleSetNative = DownscaleSet2x->getHandle();
     m_Downscale._Horizontal = true;
-    m_Downscale._Scale = 3.1;
+    m_Downscale._Strength = pParams->bloomStrength2x;
+    m_Downscale._Scale = pParams->bloomScale2x;
     cmdBuffer->beginRenderPass(DownscalePass2x, VK_SUBPASS_CONTENTS_INLINE);
       cmdBuffer->setViewPorts(0, 1, &viewport);
       cmdBuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Downscale2x->getNative());
@@ -3603,9 +3607,16 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
 }
 
 
-void Renderer::adjustHDRSettings(const ParamsHDR& hdrSettings)
+void Renderer::adjustHDRSettings(const ParamsHDR* hdrSettings, const BrightFilterParameters* filterParams)
 {
-  m_HDR._pushCnst = hdrSettings;
+  if (hdrSettings) m_HDR._pushCnst = *hdrSettings;
+  if (filterParams) m_pHDR->setBrightFilterParams(*filterParams);
+
+  if (!hdrSettings && !filterParams) {
+    return;
+  }
+
+  // Recreate the command buffer.
   for (U32 i = 0; i < m_HDR._CmdBuffers.size(); ++i) {
     CommandBuffer* pCmdBuffer = m_HDR._CmdBuffers[i];
     R_ASSERT(pCmdBuffer, "HDR buffer is null");

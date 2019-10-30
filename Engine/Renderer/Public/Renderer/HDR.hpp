@@ -29,6 +29,18 @@ struct BloomConfig
   Vector4 _threshold;
 };
 
+struct BrightFilterParameters
+{
+    R32 bloomStrength16x;
+    R32 bloomScale16x;
+    R32 bloomStrength8x;
+    R32 bloomScale8x;
+    R32 bloomStrength4x;
+    R32 bloomScale4x;
+    R32 bloomStrength2x;
+    R32 bloomScale2x;
+};
+
 // Realtime configurations of hdr settings.
 struct ConfigHDR {
   Vector4 _allowChromaticAberration;
@@ -55,9 +67,11 @@ public:
   ConfigHDR*              getRealtimeConfiguration() { return &m_config; }
   DescriptorSet*          getSet() const { return m_pSet; };
   DescriptorSetLayout*    getSetLayout() const { return m_pLayout; }
+  BrightFilterParameters*        getBrightFilterParams() { return &m_brightFilterParams; }
+  void setBrightFilterParams(const BrightFilterParameters& params) { m_brightFilterParams = params; }
 
 private:
-
+  BrightFilterParameters  m_brightFilterParams;
   ConfigHDR               m_config;
   DescriptorSet*          m_pSet;
   DescriptorSetLayout*    m_pLayout;

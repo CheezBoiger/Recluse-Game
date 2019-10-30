@@ -374,7 +374,6 @@ void Engine::pushScene(Scene* scene)
 {
   R_ASSERT(scene, "Attempting to push a null scene!");
   m_pPushedScene = scene;
-  gRenderer().adjustHDRSettings(scene->getHDRSettings());
 }
 
 

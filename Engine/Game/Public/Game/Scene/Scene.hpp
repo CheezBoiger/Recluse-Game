@@ -83,13 +83,8 @@ public:
   void                      deserialize(IArchive& archive) override  { }
 
   Sky*                      getSky() { return &m_sky; }
-  const ParamsHDR&          getHDRSettings() const { return m_hdrSettings; }
 
   void                      setGlobalEnvMap(TextureCube* pCube) { m_globalEnvMap = pCube; }
-
-protected:
-  // hdr settings allowed to be adjusted for this scene.
-  ParamsHDR                 m_hdrSettings;
 
 private:
   Sky                       m_sky;
