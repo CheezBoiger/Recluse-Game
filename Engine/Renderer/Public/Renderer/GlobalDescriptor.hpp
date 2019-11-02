@@ -50,6 +50,7 @@ struct GlobalBuffer {
   Vector4         _fov;
   R32             _fEngineTime; // Current time passed within the engine.
   R32             _fDeltaTime;  // Elapsed time between frames.
+  R32             _fScaleTime; // Scaled Time.
   R32             _Gamma;
   R32             _Exposure;
   R32             _Rayleigh;
@@ -64,6 +65,7 @@ struct GlobalBuffer {
   I32             _BloomEnabled;
   I32             _EnableShadows;
   I32             _EnableAA;
+  Vector3         _pad0;
 };
 
 

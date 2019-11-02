@@ -24,12 +24,14 @@ layout (push_constant) uniform Consts {
 void main()
 {
   // Gaussian weights
-  float weight[5];
-  weight[0] = 70.0 / 256.0;
-  weight[1] = 56.0 / 256.0;
-  weight[2] = 28.0 / 256.0;
-  weight[3] =  8.0 / 256.0;
-  weight[4] =  1.0 / 256.0;
+  float weight[7];
+  weight[0] = 0.197641;
+  weight[1] = 0.174868;
+  weight[2] = 0.121117;
+  weight[3] = 0.065666;
+  weight[4] = 0.027867;
+  weight[5] = 0.009255;
+  weight[6] = 0.002406;
   
   vec2 offset = 1.0 / textureSize(sceneSurface, 0) * Blur.scale;
   vec3 blurColor = texture(sceneSurface, frag_in.uv).rgb * weight[0];
@@ -37,12 +39,12 @@ void main()
   // TODO(): Perform blur. May want to do a linear sample instead?
   // <-------- coefficients --------->  for horizontal.
   if (Blur.horizontal == 1) {
-    for (int i = 1; i < 5; ++i) {
+    for (int i = 1; i < 7; ++i) {
       blurColor += texture(sceneSurface, frag_in.uv + vec2(offset.x * i, 0.0)).rgb * weight[i] * Blur.strength;
       blurColor += texture(sceneSurface, frag_in.uv - vec2(offset.x * i, 0.0)).rgb * weight[i] * Blur.strength;
     }
   } else {
-    for (int i = 1; i < 5; ++i) {
+    for (int i = 1; i < 7; ++i) {
       blurColor += texture(sceneSurface, frag_in.uv + vec2(0.0, offset.y * i)).rgb * weight[i] * Blur.strength;
       blurColor += texture(sceneSurface, frag_in.uv - vec2(0.0, offset.y * i)).rgb * weight[i] * Blur.strength;
     }

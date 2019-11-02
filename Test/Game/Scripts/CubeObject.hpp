@@ -100,7 +100,8 @@ public:
     m_particleSystem->initialize(this);
     m_particleSystem->setMaxParticleCount(3000);
     m_particleSystem->setMaxLife(200.0f);
-    m_particleSystem->setBrightnessFactor(500.0f);
+    m_particleSystem->setBrightnessFactor(280.0f);
+    m_particleSystem->enableTimeScaling(true);
     m_particleSystem->setAcceleration(Vector3(1.0f, -0.8f, 0.8f));
     m_particleSystem->setAngleRate(1.0f);
     m_particleSystem->setColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));

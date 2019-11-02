@@ -34,6 +34,8 @@ layout (set = 1, binding = 0) uniform ParticleBuffer {
   float particleMaxAlive;
   float maxParticles;
   float isWorldSpace;
+  int bIsTimeScaled;
+  ivec3 pad0;
 } particleBuffer;
 
 layout (set = 1, binding = 1) uniform sampler2DArray particleAtlas;

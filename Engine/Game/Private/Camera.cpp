@@ -140,6 +140,7 @@ void Camera::flushToGpuBus()
   gGlobalBuffer->_MousePos = Vector2((R32)Mouse::getX(), (R32)Mouse::getY());
   gGlobalBuffer->_fEngineTime = static_cast<R32>(Time::currentTime());
   gGlobalBuffer->_fDeltaTime = static_cast<R32>(Time::deltaTime);
+  gGlobalBuffer->_fScaleTime = static_cast<R32>(Time::scaleTime);
 
   // TODO(): Move cam frustum to camera.
   m_viewFrustum.update(gGlobalBuffer->_ViewProj);
