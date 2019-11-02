@@ -98,7 +98,7 @@ recluse_shaders = [
   Shader('StaticGBuffer_MorphTargets', 'StaticGBuffer.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
   Shader('Depth_MorphTargets', 'Depth.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1'),
   #Shader('Depth_OpaqueMorphTargets', 'Depth.vert', params='-DINCLUDE_MORPH_TARGET_ANIMATION=1 -DDEPTH_OPAQUE=1'),
-  Shader('LightClusterAssignment', 'LightClusterAssignment.comp'),
+  Shader('LightAssignment', 'LightAssignment.comp'),
   Shader('ShadowResolve', 'ShadowResolve.comp'),
   Shader('PrefilterSpecular', 'PrefilterSpecular.comp'),
   Shader('GenerateBRDFLUT', 'GenerateBRDFLUT.comp'),
