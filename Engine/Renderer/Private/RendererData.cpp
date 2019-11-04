@@ -1964,9 +1964,55 @@ void initShadowReolveDescriptorSet(Renderer* pRenderer,
 void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info)
 {
   Shader* pFragDepth = pRhi->createShader( );
+  Shader* pVertDepth = nullptr;
   loadShader("Depth.frag.spv", pFragDepth);
 
-  VkGraphicsPipelineCreateInfo graphics = info;
+  VkGraphicsPipelineCreateInfo graphics = { };
+  graphics.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+
+  VkPipelineInputAssemblyStateCreateInfo assembly = { };
+  assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  assembly.primitiveRestartEnable = VK_FALSE;
+  assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  
+  VkPipelineDepthStencilStateCreateInfo depth = { };
+  depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depth.depthWriteEnable = VK_TRUE;
+  depth.depthTestEnable = VK_TRUE;
+  depth.depthBoundsTestEnable = VK_TRUE;
+  depth.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+  depth.minDepthBounds = 0.0f;
+  depth.maxDepthBounds = 1.0f;
+  depth.stencilTestEnable = VK_TRUE;
+  depth.back.compareMask = 0x1;
+  depth.back.compareOp = VK_COMPARE_OP_EQUAL;
+  depth.back.depthFailOp = VK_STENCIL_OP_REPLACE;
+  depth.back.failOp = VK_STENCIL_OP_ZERO;
+  depth.back.passOp = VK_STENCIL_OP_REPLACE;
+  depth.back.reference = 0x1;
+  depth.back.writeMask = 0x1;
+  depth.front = depth.back;
+  
+  VkPipelineRasterizationStateCreateInfo raster = { };
+  raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+  raster.cullMode = VK_CULL_MODE_BACK_BIT;
+  raster.lineWidth = 1.0f;
+  raster.frontFace = VK_FRONT_FACE_CLOCKWISE;
+  raster.rasterizerDiscardEnable = VK_FALSE;
+  raster.polygonMode = VK_POLYGON_MODE_FILL;
+  raster.depthBiasEnable = VK_FALSE;
+  
+  VkPipelineViewportStateCreateInfo viewportState = { };
+  viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+
+  VkPipelineVertexInputStateCreateInfo vertexState = { };
+  vertexState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+  // TODO: 
+  // One for static
+  // One for static morph.
+  // One for dynamic
+  // One for dynamic morph.
 
   // ViewSpace push constant.
   VkPushConstantRange pushconstant = { };
