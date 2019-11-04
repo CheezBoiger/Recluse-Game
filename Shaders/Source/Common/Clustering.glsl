@@ -7,7 +7,6 @@
 
 #define NAN 0./0.
 
-
 struct LightBVH {
   uint  numLevels;
   uint  numNodes;
@@ -20,14 +19,33 @@ struct LightBVH {
 };
 
 
-struct GridData {
+struct Cluster
+{
+  AABB extent;
+};
+
+
+struct ClusterInfo
+{
+  // Cell size that is used for subdivision of the view frustum.
+  // Cell resolution represents a chunk of the view frustum in 3D.
+  // Size of the cell tile in x and y must be square.
+  // x = gridSzX, y = gridSzY, z = gridSzZ, w = tileSz
+  ivec4 cellResolution;
+  // cellResolution.x * cellResolution.y * cellResolution.z
+  int   numCells;
+};
+
+
+struct LightGridData
+{
   // Offset points to the first light source in the tile, followed by other counts for decals and probes.
   //
-  //               |-----32------|--------------------------32--------------------------|    
-  //               |             |                                                      |    
-  //               |             |                                                      |    
-  //               |             |                                                      |
-  ivec2  param; // [ offset (32) | light count (16) | decal count (8) | probe count (8) ]
+  //               |-----32-------|--------------------------32--------------------------------------------------------|    
+  //               |              |                                                                                    |    
+  //               |              |                                                                                    |    
+  //               |              |                                                                                    |
+  ivec2  param; // [ offset (32b) | pointlight count (8b) | spotlight count (8b) | decal count (8b) | probe count (8b) ]
 };
 
 
@@ -137,6 +155,21 @@ PointLight GetLightRange(in LightBuffer lights, uint idx)
   }
   return lights.pointLights[idx];
 }
+
+
+// Ray plane intersection algorithm for raycasting:
+// https://www.cs.princeton.edu/courses/archive/fall00/cs426/lectures/raycast/sld017.htm
+// vp = View space point, must be located on same line as o.
+// o = origin point.
+// d = distance of point on actual z plane boundary.
+// returns point on the z plane relative to the vp position.
+vec3 linePlaneIntersection(vec3 o, vec3 vp, float d)
+{
+  vec3 N = vec3(0.0, 0.0, 1.0);
+  vec3 V = (vp - o);
+  float t = -(dot(o, N) + d) / dot(V, N);
+  return o + V * t;
+} 
 
 
 void lightHierarchyMakeKeys(in LightBuffer lights)

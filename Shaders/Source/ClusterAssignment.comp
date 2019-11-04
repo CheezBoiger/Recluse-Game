@@ -1,0 +1,73 @@
+// Copyright (c) 2019 Recluse Project. All rights reserved
+// Amazing implementation from
+// A Primer On Efficient Rendering Algorithms & Clustered Shading
+// by Ángel Ortiz
+// http://www.aortiz.me/2018/12/21/CG.html
+#version 430
+#extension GL_ARB_separate_shader_objects : enable
+#extension GL_ARB_shading_language_420pack : require
+#extension GL_ARB_compute_shader : require
+#extension GL_GOOGLE_include_directive : require
+
+#define NO_NORMAL_TANGENT 1
+#include "Common/Globals.glsl"
+#include "Common/LightingPBR.glsl"
+#include "Common/Clustering.glsl"
+
+// Grid size on work group dispatch will determine our cluster grid size to execute.
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+  
+layout (set = 0, binding = 0) uniform Global 
+{
+  GlobalBuffer data;
+} globals;
+
+
+layout (set = 1, binding = 0) uniform GridResolution 
+{
+  ClusterInfo clusterInfo;
+} gridData;
+
+
+layout (set = 1, binding = 1) writeonly buffer Clusters 
+{
+  // Must be sizeof(AABB) * gridSzX * gridSzY * gridSzZ
+  Cluster grid[ ];
+} clusterBuffers;
+
+void main()
+{
+  vec3 camPos = vec3(0.0);
+  
+  int tileSz = gridData.clusterInfo.cellResolution.w;
+  uint clusterIdx = gl_LocalInvocationIndex;
+  
+  float zNear = globals.data.zNear;
+  float zFar = globals.data.zFar;
+  
+  vec2 mMax = vec2(gl_WorkGroupID.x + 1, gl_WorkGroupID.y + 1) * tileSz;
+  vec2 mMin = vec2(gl_WorkGroupID.xy) * tileSz;
+  vec2 targetSz = vec2(globals.data.screenSize.xy);
+  
+  vec4 ssMaxPoint = vec4(mMax, -1.0, 1.0);
+  vec4 ssMinPoint = vec4(mMin, -1.0, 1.0);
+  
+  vec3 vsMaxPoint = getScreenToViewCoordinates(ssMaxPoint, targetSz, globals.data.invProj);
+  vec3 vsMinPoint = getScreenToViewCoordinates(ssMinPoint, targetSz, globals.data.invProj);
+  
+  float clusterFar = -zNear * pow(zFar / zNear, gl_WorkGroupID.z / gl_NumWorkGroups.z);
+  float clusterNear = -zNear * pow(zFar / zNear, (gl_WorkGroupID.z + 1) / gl_NumWorkGroups.z);
+  
+  vec3 minPointNear = linePlaneIntersection(camPos, vsMinPoint, clusterNear);
+  vec3 minPointFar = linePlaneIntersection(camPos, vsMinPoint, clusterFar);
+  vec3 maxPointNear = linePlaneIntersection(camPos, vsMaxPoint, clusterNear);
+  vec3 maxPointFar = linePlaneIntersection(camPos, vsMaxPoint, clusterFar);
+  
+  vec3 minPointAABB = min(min(minPointNear, minPointFar), min(maxPointNear, maxPointFar));
+  vec3 maxPointAABB = max(max(minPointNear, maxPointFar), max(maxPointNear, maxPointFar));
+  
+  // Store cluster info to the grid.
+  clusterBuffers.grid[clusterIdx].extent.pmin = vec4(minPointAABB, 0.0);
+  clusterBuffers.grid[clusterIdx].extent.pmax = vec4(maxPointAABB, 0.0);
+}

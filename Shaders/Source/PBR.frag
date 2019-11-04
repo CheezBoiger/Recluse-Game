@@ -23,7 +23,7 @@ layout (set = 1, binding = 3) uniform sampler2D rt3;
 layout (set = 1, binding = 4) uniform sampler2D rtDepth;
 
 
-layout (set = 2, binding = 0) uniform Lights {
+layout (set = 2, binding = 0) buffer Lights {
   LightBuffer lights;
 } gLightBuffer;
 

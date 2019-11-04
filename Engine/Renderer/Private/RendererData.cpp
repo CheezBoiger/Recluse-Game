@@ -1859,6 +1859,15 @@ void initDownscaleBrightnessPipeline(VulkanRHI* pRhi)
 }
 
 
+void initClusterComputePipeline(VulkanRHI* pRhi, U32 cellSzX, U32 cellSzY, U32 cellSzZ, U32 cellSz)
+{
+  VkComputePipelineCreateInfo clusterAssignmentCI = { };
+  clusterAssignmentCI.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+
+  VkPipelineLayoutCreateInfo layout = { };
+}
+
+
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi)
 {
   DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );

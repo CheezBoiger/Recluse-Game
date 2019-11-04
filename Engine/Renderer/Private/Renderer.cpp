@@ -973,7 +973,7 @@ void Renderer::setUpDescriptorSetLayouts()
     std::array<VkDescriptorSetLayoutBinding, 1> LightBindings;
     LightBindings[0].binding = 0;
     LightBindings[0].descriptorCount = 1;
-    LightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    LightBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     LightBindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
     LightBindings[0].pImmutableSamplers = nullptr;
 

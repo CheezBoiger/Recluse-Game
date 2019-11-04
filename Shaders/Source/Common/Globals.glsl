@@ -75,6 +75,13 @@ struct Model {
 };
 
 
+// Axis-Aligned Bound
+struct AABB {
+  vec4 pmin;
+  vec4 pmax;
+};
+
+
 vec3 getPosition(vec2 uv, float depth, in mat4 invViewProj)
 {
 
@@ -82,5 +89,15 @@ vec3 getPosition(vec2 uv, float depth, in mat4 invViewProj)
   vec4 worldPos = invViewProj * clipPos;
   worldPos /= worldPos.w;
   return worldPos.xyz;
+}
+
+vec3 getScreenToViewCoordinates(vec4 sc, vec2 targetDimension, mat4 invProj)
+{
+  vec2 texCoord = sc.xy / targetDimension;
+  texCoord.y = 1.0 - texCoord.y;
+  vec4 clip = vec4(texCoord.xy * 2.0 - 1.0, sc.zw);
+  vec4 view = invProj * clip;
+  view = view / view.w;
+  return view.xyz;
 }
 #endif // GLOBALS_H

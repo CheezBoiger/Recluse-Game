@@ -1666,7 +1666,7 @@ void LightDescriptor::initialize(Renderer* pRenderer, const GraphicsConfigParams
     bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     bufferCI.size = dSize;
-    bufferCI.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferCI.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
     m_pLightBuffers[i]->initialize(pRhi->logicDevice()->getNative(),
                                    bufferCI, 
@@ -1883,7 +1883,7 @@ void LightDescriptor::initializeNativeLights(Renderer* pRenderer)
     std::array<VkWriteDescriptorSet, 1> writeSets;
     writeSets[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeSets[0].descriptorCount = 1;
-    writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    writeSets[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     writeSets[0].dstArrayElement = 0;
     writeSets[0].pBufferInfo = &lightBufferInfo;
     writeSets[0].pNext = nullptr;

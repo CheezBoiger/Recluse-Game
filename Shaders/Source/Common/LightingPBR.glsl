@@ -9,6 +9,8 @@
 #ifndef LIGHTING_PBR_H
 #define LIGHTING_PBR_H
 
+#include "Globals.glsl"
+
 const float PI = 3.14159265359;
 
 // NOTE(): Keep this in sync with cpu code. LightDescriptor.
@@ -33,13 +35,6 @@ struct Sphere {
   vec3 center;
   float radius;
 };
-
-
-struct AABB {
-  vec4 pmin;
-  vec4 pmax;
-};
-
 
 struct DirectionLight {
   vec4  direction;

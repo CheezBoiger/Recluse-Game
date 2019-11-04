@@ -24,49 +24,46 @@ layout (set = 0, binding = 0) uniform Globals {
 } gWorldBuffer;
 
 // Depth and render target information.
-layout (set = 1, binding = 0) uniform sampler2D inRt0;
-layout (set = 1, binding = 1) uniform sampler2D inRt1;
-layout (set = 1, binding = 2) uniform sampler2D inRt2;
-layout (set = 1, binding = 3) uniform sampler2D inRt3;
-layout (set = 1, binding = 4) uniform sampler2D inDepth;
+layout (set = 1, binding = 0) uniform sampler2D inDepth;
+
+layout (set = 2, binding = 0) buffer ClusterList {
+  ivec2            data[];
+} clusterList;
 
 
+layout (set = 2, binding = 0) buffer ClusterAABBs {
+  Cluster grid[];
+} clusterAABB;
+
+// indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
+// to that source.
 // buffer containing the light index offset, and a list of light data indices that correspond to that cluster (3D array).
+layout (set = 2, binding = 1) buffer LightList {
+  uint     count;
+  uint     globalIndex;
+  ivec2    pad0;
+  ivec4    keys[];
+} lightList;
+
+
 // clusters contain [ offset (32b) | light count (8b) | decal count (8b) | probe count (8b) ].
 // offset determines the offset when reading the indices buffer, where as the counts determine the overall size of the 
 // sublist after offsetting the indices list, to read off of.
 // Computing the size of the this data must be a size of (GRID_X * GRID_Y * GRID_Z) * 64bits, with count = (GRID_X * GRID_Y * GRID_Z).
 // TODO(): Would this make sense to make it a texture?
-layout (set = 2, binding = 0) buffer Cluster {
-  uint            ids[];
-} clusterId;
-
-
-layout (set = 2, binding = 1) buffer ClusterAABB {
-  AABB aabbs[];
-} clusterAABB;
-
-// indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
-// to that source.
-layout (set = 2, binding = 2) buffer indices {
-  ivec4     count;
-  uint      indices[];
-} lightIndices;
-
-
-layout (set = 2, binding = 3) buffer LightGrid {
-  vec4            count;
-  GridData     grid[];
+layout (set = 2, binding = 2) buffer LightGrid {
+  vec4 count;
+  LightGridData grid[];
 } lightGrid;
 
 
-layout (set = 2, binding = 4) buffer LightBVHInfo {
+layout (set = 2, binding = 3) buffer LightBVHInfo {
   LightBVH bvh;
 } lightBVH;
 
 
 // Light data.
-layout (set = 3, binding = 0) uniform Lights {
+layout (set = 3, binding = 0) buffer Lights {
   LightBuffer lights;
 } gLightBuffer;
 
@@ -78,50 +75,20 @@ layout (set = 3, binding = 0) uniform DecalBuffer {
 shared uint gs_clusterIndex1D;
 shared AABB gs_clusterAABB; 
 
-shared uint gs_pointLightCount;
-shared uint gs_spotLightCount;
 shared uint gs_pointLightOffset;
 shared uint gs_spotLightOffset;
 shared uint gs_pointLightIndices[MAX_POINT_LIGHTS];
 shared uint gs_spotLightIndices[MAX_SPOT_LIGHTS];
 
 
-layout (local_size_x = WORKGROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 16, local_size_y = 8, local_size_z = 24) in;
 void main()
 {
-  if (gl_LocalInvocationIndex == 0) 
-  {
-    gs_pointLightCount = 0;
-    gs_spotLightCount = 0;
-    
-    gs_clusterIndex1D = clusterId.ids[gl_WorkGroupID.x];
-    gs_clusterAABB = clusterAABB.aabbs[gs_clusterIndex1D];
-  }
+  uint threadCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+  uint spotLightCount = MAX_SPOT_LIGHTS;
+  uint pointLightCount = MAX_POINT_LIGHTS;
   
-  memoryBarrier();
+  uint currClusterIdx = gl_LocalInvocationIndex + threadCount * gl_WorkGroupID.z;
+
   
-  // Clear buffers if no lights exist.
-  uint cc = uint(lightGrid.count.x);
-  
-  for (uint i = 0; (gl_GlobalInvocationID.x + i) < cc; i+=WORKGROUP_SIZE) 
-  {
-    uint idx = gl_GlobalInvocationID.x + i;
-    PointLight pointlight = gLightBuffer.lights.pointLights[i];
-    Sphere sphere = { pointlight.position.xyz, pointlight.range };
-    if (sphereInAABB(sphere, gs_clusterAABB) == 1) 
-    {
-     
-      lightGrid.grid[idx].param = ivec2(0);
-    }
-  }
-  
-  memoryBarrier();
-  
-  cc = uint(lightIndices.count.x);
-  
-  for (uint i = 0; (gl_GlobalInvocationID.x + i) < cc; i+=WORKGROUP_SIZE) 
-  {
-    uint idx = gl_GlobalInvocationID.x + i;
-    lightIndices.indices[idx];
-  }
 }

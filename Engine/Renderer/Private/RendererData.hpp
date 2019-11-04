@@ -213,6 +213,8 @@ enum PipelineComputeT {
   PIPELINE_COMPUTE_SHADOW_RESOLVE,
   PIPELINE_COMPUTE_BLOOM_ACCUMULATION,
   PIPELINE_COMPUTE_DOWNSCALE_BRIGHT_FILTER,
+  PIPELINE_COMPUTE_CLUSTER_ASSIGNMENT,
+  PIPELINE_COMPUTE_LIGHT_ASSIGNMENT,
   PIPELINE_COMPUTE_END
 };
 
@@ -346,6 +348,7 @@ void initBloomAccumulationPipeline(VulkanRHI* pRhi);
 void initDownscaleBrightnessPipeline(VulkanRHI* pRhi);
 void initDownscaleBrightnessDescriptorSets(VulkanRHI* pRhi);
 void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi);
+void initClusterComputePipeline(VulkanRHI* pRhi, U32 cellSzX, U32 cellSzY, U32 cellSzZ, U32 cellSz);
 
 enum AntiAliasingType {
   FXAA,
