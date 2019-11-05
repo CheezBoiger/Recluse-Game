@@ -1664,11 +1664,19 @@ void SetUpSkyboxPass(VulkanRHI* Rhi, const VkGraphicsPipelineCreateInfo& Default
   
   GraphicsPipelineInfo.pRasterizationState = &raster;
   GraphicsPipelineInfo.pDepthStencilState = &depthStencilCI;
+  
+  // Skybox transform.
+  VkPushConstantRange range = { };
+  range.offset = 0;
+  range.size = sizeof(Matrix4);
+  range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
   VkPipelineLayoutCreateInfo pipelineLayout = { };
   pipelineLayout.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO; 
   pipelineLayout.setLayoutCount = 2;
   pipelineLayout.pSetLayouts = layouts;
+  pipelineLayout.pushConstantRangeCount = 1;
+  pipelineLayout.pPushConstantRanges = &range;
   
   loadShader(SkyRenderer::kSkyVertStr, vert);
   loadShader(SkyRenderer::kSkyFragStr, frag);

@@ -2770,19 +2770,19 @@ void Renderer::buildPbrCmdLists()
 }
 
 
-void Renderer::buildSkyboxCmdLists()
+void Renderer::buildSkyboxCmdList()
 {
-  for (U32 i = 0; i < m_pSkyboxCmdBuffers.size(); ++i) {
-    CommandBuffer* pCmdBuffer = m_pSkyboxCmdBuffers[i];
-    R_ASSERT(pCmdBuffer, "Skybox buffer is null");
-    pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-    VkCommandBufferBeginInfo beginInfo = {};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    pCmdBuffer->begin(beginInfo);
-    generateSkyboxCmds(pCmdBuffer, i % getResourceBufferCount());
-    pCmdBuffer->end();
-  }
+  U32 frameIndex = m_pRhi->getCurrentFrame();
+  U32 resourceIndex = getCurrentResourceBufferIndex();
+  CommandBuffer* pCmdBuffer = m_pSkyboxCmdBuffers[frameIndex];
+  R_ASSERT(pCmdBuffer, "Skybox buffer is null");
+  pCmdBuffer->reset(VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+  pCmdBuffer->begin(beginInfo);
+  generateSkyboxCmds(pCmdBuffer, resourceIndex);
+  pCmdBuffer->end();
 }
 
 
@@ -2810,7 +2810,6 @@ void Renderer::build()
   buildHDRCmdList();
   buildShadowCmdList();
   buildPbrCmdLists();
-  buildSkyboxCmdLists();
   buildFinalCmdLists();
 }
 
@@ -2875,7 +2874,6 @@ void Renderer::usePreRenderSkyboxMap(B32 enable)
   updateSkyboxCubeMap();
   updateGlobalIlluminationBuffer();
 
-  buildSkyboxCmdLists();
   buildPbrCmdLists();
 }
 
@@ -2942,6 +2940,8 @@ void Renderer::generateSkyboxCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
     buf->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->getNative());
     buf->setViewPorts(0, 1, &viewport);
     buf->bindDescriptorSets(VK_PIPELINE_BIND_POINT_GRAPHICS, skyPipeline->getLayout(), 0, 2, descriptorSets, 0, nullptr);
+    Matrix4 skyTransform = m_pGlobal->getSkyboxModelToWorld();
+    buf->pushConstants(skyPipeline->getLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(Matrix4), &skyTransform);
     VertexBuffer* vertexbuffer = m_pSky->getSkyboxVertexBuffer();
     IndexBuffer* idxBuffer = m_pSky->getSkyboxIndexBuffer();
 
@@ -4282,6 +4282,8 @@ void Renderer::checkCmdUpdate(U32 frameIndex, U32 resourceIndex)
                                                          nullptr, 
                                                          resourceIndex);
   }
+
+  buildSkyboxCmdList();
 
 #if 0
   if (m_NeedsUpdate) {

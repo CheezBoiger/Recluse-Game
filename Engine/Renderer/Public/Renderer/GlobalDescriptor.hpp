@@ -78,6 +78,12 @@ public:
   void              update(Renderer* pRenderer, U32 frameIndex);
   void              initialize(Renderer* pRenderer);
   void              cleanUp(Renderer* pRenderer);
+  
+  void setSkyboxTransform(const Matrix4& transform) { 
+    m_skyboxModelToWorld = transform; 
+  }
+
+  Matrix4           getSkyboxModelToWorld() const { return m_skyboxModelToWorld; }
 
   DescriptorSet*    getDescriptorSet(U32 idx) { return m_pDescriptorSets[idx]; }
 
@@ -88,6 +94,7 @@ private:
   std::vector<DescriptorSet*>    m_pDescriptorSets;
   std::vector<Buffer*>           m_pGlobalBuffers;
   GlobalBuffer      m_Global;
+  Matrix4           m_skyboxModelToWorld;
 
   friend class Renderer;
 };

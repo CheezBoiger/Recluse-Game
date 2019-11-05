@@ -328,7 +328,7 @@ private:
   void              buildPbrCmdLists();
   void              buildShadowCmdList();
   void              buildHDRCmdList();
-  void              buildSkyboxCmdLists();
+  void              buildSkyboxCmdList();
   void              buildForwardPBRCmdList();
   void              buildFinalCmdLists();
   void              updateGlobalIlluminationBuffer();

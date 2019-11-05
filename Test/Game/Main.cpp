@@ -188,6 +188,10 @@ public:
       gRenderer().usePreRenderSkyboxMap(false);
     }
 
+    //getSky()->setSkyboxTransform(Matrix4::rotate(
+    //  getSky()->getSkyboxTransform(), Radians(5.0f), Vector3::UP)
+    //);
+
     if (Keyboard::keyHeldDown(KEY_CODE_4)) {
       Time::scaleTime -= 1.0f * Time::deltaTime;
     }

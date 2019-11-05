@@ -4,6 +4,7 @@
 
 #include "Core/Types.hpp"
 
+#include "Renderer/Renderer.hpp"
 #include "Renderer/TextureType.hpp"
 #include "Renderer/LightDescriptor.hpp"
 
@@ -43,6 +44,14 @@ public:
   void              setScatterStrength(R32 s);
 
   void              setSkyIntensity(R32 i);
+
+  void setSkyboxTransform(const Matrix4& transform) { 
+    gRenderer().getGlobalNative()->setSkyboxTransform(transform); 
+  }
+
+  Matrix4 getSkyboxTransform() const {
+    return gRenderer().getGlobalNative()->getSkyboxModelToWorld();
+  }
 
 private:
   DirectionalLight  m_PrimaryLight;
