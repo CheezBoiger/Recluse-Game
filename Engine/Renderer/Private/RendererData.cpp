@@ -35,6 +35,8 @@ std::unordered_map<RenderTextureT, std::vector<Texture*>> g_renderTextures;
 std::unordered_map<SamplerT, Sampler*> g_samplers;
 std::unordered_map<DescriptorSetT, std::vector<DescriptorSet*>> g_descriptorSets;
 std::unordered_map<DescriptorSetLayoutT, DescriptorSetLayout*> g_descriptorSetLayouts;
+std::unordered_map<RenderPassT, RenderPass*> g_renderPasses;
+std::unordered_map<FrameBufferT, FrameBuffer*> g_frameBuffers;
 
 Texture* DefaultTextureKey          = nullptr;
 VkImageView DefaultTexture2DArrayView = VK_NULL_HANDLE;
@@ -307,6 +309,46 @@ Sampler* getSampler(SamplerT samp)
 }
 
 
+void initializeFrameBuffers(Renderer* pRenderer)
+{
+  VulkanRHI* pRhi = pRenderer->getRHI();
+  for (I32 i = FRAME_BUFFER_START; i < FRAME_BUFFER_END; ++i)
+  {
+    g_frameBuffers[ (FrameBufferT) i ] = pRhi->createFrameBuffer();
+  }
+}
+
+
+void cleanUpFrameBuffers(VulkanRHI* pRhi)
+{
+  for (I32 i = FRAME_BUFFER_START; i < FRAME_BUFFER_END; ++i)
+  {
+    pRhi->freeFrameBuffer( g_frameBuffers[ (FrameBufferT) i ] );
+    g_frameBuffers[ (FrameBufferT) i ] = nullptr;
+  }
+}
+
+
+void initializeRenderPasses(Renderer* pRenderer)
+{
+  VulkanRHI* pRhi = pRenderer->getRHI();
+  for (I32 i = RENDER_PASS_START; i < RENDER_PASS_END; ++i)
+  {
+    g_renderPasses[ (RenderPassT) i ] = pRhi->createRenderPass();
+  }
+}
+
+
+void cleanUpRenderPasses(VulkanRHI* pRhi)
+{
+  for (I32 i = FRAME_BUFFER_START; i < FRAME_BUFFER_END; ++i)
+  {
+    pRhi->freeRenderPass( g_renderPasses[ (RenderPassT) i ] );
+    g_renderPasses[ (RenderPassT) i ] = nullptr;
+  }
+}
+
+
 void initializeDescriptorSetLayouts(VulkanRHI* pRhi)
 {
   for (I32 i = DESCRIPTOR_SET_LAYOUT_START; i < DESCRIPTOR_SET_LAYOUT_END; ++i) 
@@ -364,6 +406,18 @@ DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 resourceIndex)
 DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout)
 {
   return g_descriptorSetLayouts[ layout ];
+}
+
+
+FrameBuffer* getFrameBuffer(FrameBufferT fb)
+{
+  return g_frameBuffers[ fb ];
+}
+
+
+RenderPass* getRenderPass(RenderPassT rp)
+{
+  return g_renderPasses[ rp ];
 }
 
 
@@ -1961,7 +2015,73 @@ void initShadowReolveDescriptorSet(Renderer* pRenderer,
 }
 
 
-void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info)
+void initPreZRenderPass(VulkanRHI* pRhi)
+{
+  Texture* pDepth = g_renderTextures[ RENDER_TEXTURE_SCENE_DEPTH ][0];
+  RenderPass* renderPass = g_renderPasses[ RENDER_PASS_PREZ ];
+  VkRenderPassCreateInfo info = { };
+  info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+  
+  VkAttachmentDescription attachment = { };
+  attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+  attachment.format = pDepth->getFormat();
+  attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+  attachment.samples = pDepth->getSamples();
+
+  info.attachmentCount = 1;
+  info.pAttachments = &attachment;
+
+  std::array<VkSubpassDependency, 2> dependencies;
+  dependencies[0] = CreateSubPassDependency(
+    VK_SUBPASS_EXTERNAL, 
+    VK_ACCESS_MEMORY_WRITE_BIT, 
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    0, 
+    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, 
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  dependencies[1] = CreateSubPassDependency(
+    0,
+    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+    VK_SUBPASS_EXTERNAL,
+    VK_ACCESS_MEMORY_WRITE_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    VK_DEPENDENCY_BY_REGION_BIT
+  );
+
+  info.dependencyCount = 2;
+  info.pDependencies = dependencies.data();
+
+  VkAttachmentReference depthRef = { };
+  depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+  depthRef.attachment = 0;
+
+  VkSubpassDescription subpass = { };
+  subpass.colorAttachmentCount = 0;
+  subpass.pColorAttachments = nullptr;
+  subpass.inputAttachmentCount = 0;
+  subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+  subpass.pPreserveAttachments = nullptr;
+  subpass.preserveAttachmentCount = 0;
+  subpass.pResolveAttachments = nullptr;
+  subpass.pDepthStencilAttachment = &depthRef;
+
+  info.subpassCount = 1;
+  info.pSubpasses = &subpass;
+
+  renderPass->initialize(info);
+}
+
+
+void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info, VkExtent2D targetExtent)
 {
   Shader* pFragDepth = pRhi->createShader( );
   Shader* pVertDepth = nullptr;
@@ -1975,23 +2095,29 @@ void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info
   assembly.primitiveRestartEnable = VK_FALSE;
   assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
   
-  VkPipelineDepthStencilStateCreateInfo depth = { };
-  depth.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  depth.depthWriteEnable = VK_TRUE;
-  depth.depthTestEnable = VK_TRUE;
-  depth.depthBoundsTestEnable = VK_TRUE;
-  depth.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-  depth.minDepthBounds = 0.0f;
-  depth.maxDepthBounds = 1.0f;
-  depth.stencilTestEnable = VK_TRUE;
-  depth.back.compareMask = 0x1;
-  depth.back.compareOp = VK_COMPARE_OP_EQUAL;
-  depth.back.depthFailOp = VK_STENCIL_OP_REPLACE;
-  depth.back.failOp = VK_STENCIL_OP_ZERO;
-  depth.back.passOp = VK_STENCIL_OP_REPLACE;
-  depth.back.reference = 0x1;
-  depth.back.writeMask = 0x1;
-  depth.front = depth.back;
+  VkPipelineDepthStencilStateCreateInfo depthStencilCI = {};
+  depthStencilCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  depthStencilCI.depthTestEnable = VK_TRUE;
+  depthStencilCI.depthWriteEnable = VK_TRUE;
+  depthStencilCI.depthCompareOp = VK_COMPARE_OP_LESS;
+  depthStencilCI.depthBoundsTestEnable = pRhi->depthBoundsAllowed();
+  depthStencilCI.minDepthBounds = 0.0f;
+  depthStencilCI.maxDepthBounds = 1.0f;
+  depthStencilCI.stencilTestEnable = VK_FALSE;
+  depthStencilCI.back = {};
+  depthStencilCI.front = {};
+
+  if (pRhi->stencilTestAllowed()) {
+    depthStencilCI.stencilTestEnable = VK_TRUE;
+    depthStencilCI.back.compareMask = 0xff;
+    depthStencilCI.back.compareOp = VK_COMPARE_OP_ALWAYS;
+    depthStencilCI.back.depthFailOp = VK_STENCIL_OP_REPLACE;
+    depthStencilCI.back.passOp = VK_STENCIL_OP_REPLACE;
+    depthStencilCI.back.failOp = VK_STENCIL_OP_ZERO;
+    depthStencilCI.back.writeMask = 0xff;
+    depthStencilCI.back.reference = 1;
+    depthStencilCI.front = depthStencilCI.back;
+  }
   
   VkPipelineRasterizationStateCreateInfo raster = { };
   raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -2004,15 +2130,69 @@ void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info
   
   VkPipelineViewportStateCreateInfo viewportState = { };
   viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+  VkViewport viewport = { };
+  VkRect2D scissor = { };
+  scissor.extent = targetExtent;
+  scissor.offset = { 0, 0 };
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = (R32)targetExtent.width;
+  viewport.height = (R32)targetExtent.height;
+  viewportState.viewportCount = 1;
+  viewportState.scissorCount = 1;
+  viewportState.pViewports = &viewport;
+  viewportState.pScissors = &scissor; 
 
   VkPipelineVertexInputStateCreateInfo vertexState = { };
   vertexState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-  // TODO: 
-  // One for static
-  // One for static morph.
-  // One for dynamic
-  // One for dynamic morph.
+  VkDynamicState dynamicStates[1] = { };
+  VkPipelineDynamicStateCreateInfo dynamicCI = { };
+  dynamicCI.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    
+  VkPipelineTessellationStateCreateInfo tessellationCI = { };
+  tessellationCI.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+  tessellationCI.patchControlPoints = 3;  
+
+  VkPipelineColorBlendStateCreateInfo colorBlendCI = { };
+  colorBlendCI.attachmentCount = 0;
+  colorBlendCI.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+
+  VkPipelineMultisampleStateCreateInfo multisampleCI = { };
+  multisampleCI.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+  multisampleCI.sampleShadingEnable = VK_FALSE;
+  multisampleCI.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  multisampleCI.minSampleShading = 1.0f;
+  multisampleCI.pSampleMask = nullptr;
+  multisampleCI.alphaToOneEnable = VK_FALSE;
+
+  std::array<VkPipelineShaderStageCreateInfo, 2> stages;
+  stages[0] = { };
+  stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[0].module = nullptr;
+  stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  stages[0].pName = kDefaultShaderEntryPointStr;
+  
+  stages[1] = { };
+  stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  stages[1].module = pFragDepth->getHandle();
+  stages[1].pName = kDefaultShaderEntryPointStr;
+
+  graphics.pDepthStencilState = &depthStencilCI;
+  graphics.pInputAssemblyState = &assembly;
+  graphics.pDynamicState = &dynamicCI;
+  graphics.pRasterizationState = &raster;
+  graphics.pViewportState = &viewportState;
+  graphics.pTessellationState = nullptr;
+  graphics.pColorBlendState = &colorBlendCI;
+  graphics.pMultisampleState = &multisampleCI;
+  graphics.pVertexInputState = &vertexState;
+  graphics.stageCount = (U32)stages.size();
+  graphics.pStages = stages.data();
+  graphics.renderPass = getRenderPass( RENDER_PASS_PREZ )->getHandle();
 
   // ViewSpace push constant.
   VkPushConstantRange pushconstant = { };
@@ -2033,6 +2213,26 @@ void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info
   layoutCi.setLayoutCount = 2; // static, we will include joint buffer layout after.
   layoutCi.pSetLayouts = setLayouts;
 
+  // TODO: 
+  // One for static
+  {
+    pVertDepth = pRhi->createShader( );
+    loadShader("Depth.vert.spv", pVertDepth);
+    VkVertexInputBindingDescription binding = StaticVertexDescription::GetBindingDescription();
+    std::vector<VkVertexInputAttributeDescription> attributes = StaticVertexDescription::GetVertexAttributes();
+    vertexState.vertexAttributeDescriptionCount = (U32)attributes.size();
+    vertexState.vertexBindingDescriptionCount = 1;
+    vertexState.pVertexAttributeDescriptions = attributes.data();
+    vertexState.pVertexBindingDescriptions = &binding;
+    stages[0].module = pVertDepth->getHandle();
+    
+    GraphicsPipeline* pPipeline = getGraphicsPipeline( PIPELINE_GRAPHICS_PREZ_STATIC );
+    pPipeline->initialize(graphics, layoutCi);
+    pRhi->freeShader(pVertDepth);
+  }
+  // One for static morph.
+  // One for dynamic
+  // One for dynamic morph.
   pRhi->freeShader(pFragDepth);
 }
 } // RendererPass

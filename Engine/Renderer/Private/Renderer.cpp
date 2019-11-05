@@ -1643,6 +1643,11 @@ void Renderer::setUpFrameBuffers()
     framebufferCI.height = GlowTarget->getHeight();
     GlowFB->Finalize(framebufferCI, hdr_renderPass);
   }
+
+  RendererPass::initializeRenderPasses(this);
+  RendererPass::initializeFrameBuffers(this);
+
+  RendererPass::initPreZRenderPass(m_pRhi);
 }
 
 
@@ -1799,7 +1804,7 @@ void Renderer::setUpGraphicsPipelines()
   GraphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
     
   RendererPass::SetUpForwardPhysicallyBasedPass(getRHI(), GraphicsPipelineInfo);
-  RendererPass::initPreZPipelines(getRHI( ), GraphicsPipelineInfo);
+  RendererPass::initPreZPipelines(getRHI( ), GraphicsPipelineInfo, windowExtent);
   RendererPass::SetUpGBufferPass(getRHI(), GraphicsPipelineInfo);
   RendererPass::SetUpSkyboxPass(getRHI(), GraphicsPipelineInfo);
 
@@ -1871,6 +1876,9 @@ void Renderer::cleanUpGraphicsPipelines()
 
 void Renderer::cleanUpFrameBuffers()
 {
+  RendererPass::cleanUpFrameBuffers(m_pRhi);
+  RendererPass::cleanUpRenderPasses(m_pRhi);
+
   FrameBuffer* gbuffer_FrameBuffer = gbuffer_FrameBufferKey;
   m_pRhi->freeRenderPass(gbuffer_renderPass);
   m_pRhi->freeFrameBuffer(gbuffer_FrameBuffer);

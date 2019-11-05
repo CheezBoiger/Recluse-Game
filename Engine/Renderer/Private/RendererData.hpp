@@ -315,11 +315,19 @@ void cleanUpSamplers(VulkanRHI* pRhi);
 void initializeDescriptorSets(Renderer* pRenderer);
 void cleanUpDescriptorSets(VulkanRHI* pRhi);
 
+void initializeFrameBuffers(Renderer* pRenderer);
+void cleanUpFrameBuffers(VulkanRHI* pRhi);
+
+void initializeRenderPasses(Renderer* pRenderer);
+void cleanUpRenderPasses(VulkanRHI* pRhi);
+
 GraphicsPipeline* getGraphicsPipeline(PipelineGraphicsT pipeline);
 ComputePipeline* getComputePipeline(PipelineComputeT pipeline);
 
 Texture* getRenderTexture(RenderTextureT rt, U32 resourceIndex);
 Sampler* getSampler(SamplerT samp);
+FrameBuffer* getFrameBuffer(FrameBufferT fb);
+RenderPass* getRenderPass(RenderPassT rp);
 DescriptorSetLayout* getDescriptorSetLayout(DescriptorSetLayoutT layout);
 DescriptorSet* getDescriptorSet(DescriptorSetT set, U32 resourceIndex = 0);
 
@@ -341,7 +349,8 @@ void initShadowMaskTexture(Renderer* pRenderer, const VkExtent2D& renderRes);
 void initShadowResolvePipeline(VulkanRHI* pRhi);
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi);
 void initShadowReolveDescriptorSet(Renderer* pRenderer, GlobalDescriptor* pGlobal, Texture* pSceneDepth);
-void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info);
+void initPreZRenderPass(VulkanRHI* pRhi);
+void initPreZPipelines(VulkanRHI* pRhi, const VkGraphicsPipelineCreateInfo& info, VkExtent2D targetExtent);
 void initBloomAccumulationDescriptorSetLayouts(VulkanRHI* pRhi);
 void initBloomAccumulationDescriptorSets(VulkanRHI* pRhi);
 void initBloomAccumulationPipeline(VulkanRHI* pRhi);
