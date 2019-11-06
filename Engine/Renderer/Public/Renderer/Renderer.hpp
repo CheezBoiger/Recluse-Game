@@ -63,6 +63,30 @@ struct LightProbe;
 
 typedef U32 renderer_key_t;
 
+// Rendering Module.
+class IRendererModule {
+ public:
+  virtual ~IRendererModule() { }
+  virtual void initializeGraphicsPipelines(VulkanRHI* pRhi) { }
+  virtual void initializeComputePipelines(VulkanRHI* pRhi) { }
+  virtual void initializeRenderPasses(VulkanRHI* pRhi) { }
+  virtual void initializeFrameBuffers(VulkanRHI* pRhi) { }
+  virtual void initializeDescriptorSetLayouts(VulkanRHI* pRhi) { }
+  virtual void initializeDescriptorSets(VulkanRHI* pRhi) { }
+  virtual void initializeBuffers(VulkanRHI* pRhi) { }
+  virtual void initializeRenderTextures(VulkanRHI* pRhi) { }
+
+  virtual void cleanUpGraphicsPipelines(VulkanRHI* pRhi) { }
+  virtual void cleanUpComputePipelines(VulkanRHI* pRhi) { }
+  virtual void cleanUpRenderPasses(VulkanRHI* pRhi) { }
+  virtual void cleanUpFrameBuffers(VulkanRHI* pRhi) { }
+  virtual void cleanUpDescriptorSetLayouts(VulkanRHI* pRhi) { }
+  virtual void cleanUpDescriptorSets(VulkanRHI* pRhi) { }
+  virtual void cleanUpBuffers(VulkanRHI* pRhi) { }
+  virtual void cleanUpRenderTextures(VulkanRHI* pRhi) { }
+};
+
+
 // Renderer, which will be responsible for rendering out the scene from a
 // camera's perspective. Renderer is a module in charge of drawing and displaying
 // onto a window surface. This module is important as it is the only way to see 

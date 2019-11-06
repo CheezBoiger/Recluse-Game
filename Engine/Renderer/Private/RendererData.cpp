@@ -1930,6 +1930,47 @@ void initClusterComputePipeline(VulkanRHI* pRhi, U32 cellSzX, U32 cellSzY, U32 c
 }
 
 
+void initClusterDescriptorSetLayout(VulkanRHI* pRhi)
+{
+  VkDescriptorSetLayoutCreateInfo layoutCi = { };
+  layoutCi.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  std::array<VkDescriptorSetLayoutBinding,  4> bindings;
+  bindings[0] = { };
+  bindings[0].binding = 0;
+  bindings[0].descriptorCount = 1;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+  
+  bindings[1] = { };
+  bindings[1].binding = 1;
+  bindings[1].descriptorCount = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+
+  bindings[2] = { };
+  bindings[2].binding = 2;
+  bindings[2].descriptorCount = 1;
+  bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+
+  bindings[3] = { };
+  bindings[3].binding = 3;
+  bindings[3].descriptorCount = 1;
+  bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  bindings[3].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT;
+  
+  layoutCi.bindingCount = (U32)bindings.size();
+  layoutCi.pBindings = bindings.data();
+
+  g_descriptorSetLayouts[ DESCRIPTOR_SET_LAYOUT_CLUSTERS ]->initialize(layoutCi);
+}
+
+
+void initClusterDescriptorSets(VulkanRHI* pRhi)
+{
+}
+
+
 void initShadowResolveDescriptorSetLayout(VulkanRHI* pRhi)
 {
   DescriptorSetLayout* layout = getDescriptorSetLayout( DESCRIPTOR_SET_LAYOUT_SHADOW_RESOLVE );

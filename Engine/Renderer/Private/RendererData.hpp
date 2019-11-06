@@ -250,6 +250,7 @@ enum DescriptorSetLayoutT {
   DESCRIPTOR_SET_LAYOUT_GLOBAL_DESCRIPTOR,  
   DESCRIPTOR_SET_LAYOUT_BLOOM_ACCUMULATION,
   DESCRIPTOR_SET_LAYOUT_DOWNSCALE_BRIGHT_FILTER,
+  DESCRIPTOR_SET_LAYOUT_CLUSTERS,
   DESCRIPTOR_SET_LAYOUT_END
 };
 
@@ -266,6 +267,7 @@ enum DescriptorSetT {
   DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_2X_4X,
   DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_4X_8X,
   DESCRIPTOR_SET_DOWNSCALE_BRIGHT_FILTER_8X_16X,
+  DESCRIPTOR_SET_CLUSTERS,
   DESCRIPTOR_SET_END
 };
 
@@ -358,6 +360,8 @@ void initDownscaleBrightnessPipeline(VulkanRHI* pRhi);
 void initDownscaleBrightnessDescriptorSets(VulkanRHI* pRhi);
 void initDownscaleBrightnessDescriptorSetLayouts(VulkanRHI* pRhi);
 void initClusterComputePipeline(VulkanRHI* pRhi, U32 cellSzX, U32 cellSzY, U32 cellSzZ, U32 cellSz);
+void initClusterDescriptorSetLayout(VulkanRHI* pRhi);
+void initClusterDescriptorSets(VulkanRHI* pRhi);
 
 enum AntiAliasingType {
   FXAA,

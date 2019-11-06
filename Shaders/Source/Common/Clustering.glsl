@@ -36,6 +36,11 @@ struct ClusterInfo
   int   numCells;
 };
 
+#define SHARED_POINT_LIGHT_COUNT  (1 << 8)
+#define SHARED_SPOT_LIGHT_COUNT   (1 << 8)
+#define SHARED_CUBE_MAP_COUNT     (1 << 8)
+#define SHARED_DECAL_COUNT        (1 << 8)
+
 
 struct LightGridData
 {

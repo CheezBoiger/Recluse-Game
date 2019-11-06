@@ -10,6 +10,10 @@
 #include "Common/LightingPBR.glsl"
 #include "Common/Clustering.glsl"
 
+// Based by grid.
+layout (local_size_x = 16, local_size_y = 8, local_size_z = 24) in;
+
+
 struct DecalInfo {
   vec4  min;      // 3d min bounds size.
   vec4  max;      // 3d max bounds size.
@@ -31,14 +35,14 @@ layout (set = 2, binding = 0) buffer ClusterList {
 } clusterList;
 
 
-layout (set = 2, binding = 0) buffer ClusterAABBs {
+layout (set = 2, binding = 1) buffer ClusterAABBs {
   Cluster grid[];
 } clusterAABB;
 
 // indices contain key sources [ light idx | decal idx | probe idx ]. These indices correspond to buffers containing the idx key
 // to that source.
 // buffer containing the light index offset, and a list of light data indices that correspond to that cluster (3D array).
-layout (set = 2, binding = 1) buffer LightList {
+layout (set = 2, binding = 2) buffer LightList {
   uint     count;
   uint     globalIndex;
   ivec2    pad0;
@@ -51,15 +55,10 @@ layout (set = 2, binding = 1) buffer LightList {
 // sublist after offsetting the indices list, to read off of.
 // Computing the size of the this data must be a size of (GRID_X * GRID_Y * GRID_Z) * 64bits, with count = (GRID_X * GRID_Y * GRID_Z).
 // TODO(): Would this make sense to make it a texture?
-layout (set = 2, binding = 2) buffer LightGrid {
+layout (set = 2, binding = 3) buffer LightGrid {
   vec4 count;
   LightGridData grid[];
 } lightGrid;
-
-
-layout (set = 2, binding = 3) buffer LightBVHInfo {
-  LightBVH bvh;
-} lightBVH;
 
 
 // Light data.
@@ -67,28 +66,29 @@ layout (set = 3, binding = 0) buffer Lights {
   LightBuffer lights;
 } gLightBuffer;
 
-layout (set = 3, binding = 0) uniform DecalBuffer {
+layout (set = 4, binding = 0) uniform DecalBuffer {
   DecalInfo       decals[MAX_DECALS_SIZE];
 } gDecalBuffer;
 
-
-shared uint gs_clusterIndex1D;
-shared AABB gs_clusterAABB; 
-
 shared uint gs_pointLightOffset;
 shared uint gs_spotLightOffset;
-shared uint gs_pointLightIndices[MAX_POINT_LIGHTS];
-shared uint gs_spotLightIndices[MAX_SPOT_LIGHTS];
+shared uint gs_cubemapOffset;
+shared uint gs_decalOffset;
+shared uint gs_pointLightIndices[SHARED_POINT_LIGHT_COUNT];
+shared uint gs_spotLightIndices[SHARED_SPOT_LIGHT_COUNT];
+shared uint gs_cubemapIndices[SHARED_CUBE_MAP_COUNT];
+shared uint gs_decalIndices[SHARED_DECAL_COUNT];
 
-
-layout (local_size_x = 16, local_size_y = 8, local_size_z = 24) in;
 void main()
 {
   uint threadCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
   uint spotLightCount = MAX_SPOT_LIGHTS;
   uint pointLightCount = MAX_POINT_LIGHTS;
   
-  uint currClusterIdx = gl_LocalInvocationIndex + threadCount * gl_WorkGroupID.z;
-
-  
+  uint currClusterIdx = gl_LocalInvocationIndex;
+  uint data = (SHARED_POINT_LIGHT_COUNT << 24) 
+            | (SHARED_SPOT_LIGHT_COUNT << 16) 
+            | (SHARED_DECAL_COUNT << 8) 
+            | (SHARED_CUBE_MAP_COUNT << 0);
+  lightGrid.grid[currClusterIdx].param = ivec2(gl_LocalInvocationIndex, data);
 }

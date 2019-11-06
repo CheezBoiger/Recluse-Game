@@ -15,29 +15,31 @@ class CommandBuffer;
 
 struct LightBVH;
 
+
+struct Cluster {
+  Vector4 pmin;
+  Vector4 pmax;
+};
+
 // Clusterer deals with computing clusters and assigning light indices to each cluster
 // in the scene.
 class Clusterer {
 public:
   void                  initialize(VulkanRHI* pRhi);
   void                  cleanUp(VulkanRHI* pRhi);
-  void                  GenerateComputeBuildBVHCommands(CommandBuffer* pCmdBuffer, LightBVH* pBvH);
-  Buffer*               GetClusterIds() { return m_clusterIds; }
-  Buffer*               GetClusterIndices() { return m_clusterIndices; }
-
-  DescriptorSetLayout*  GetDescriptorSetLayout() { return m_pSetLayout; }
+  void                  generateComputeBuildBVHCommands(CommandBuffer* pCmdBuffer, LightBVH* pBvH);
+  Buffer*               getClusterBuffer() { return m_clusters; }
+  Buffer*               getLightList() { return m_lightList; }
 
 private:
-  // Light assignment builds the bvh hierarchy tree from cpu to gpu, which then is 
-  // used by the lighting stage.
-  ComputePipeline*      m_lightAssignmentPipe;
-  ComputePipeline*      m_clusterGenPipe;
 
-  DescriptorSetLayout*  m_pSetLayout;
-  // 3D texture containing cluster ids.
-  Buffer*               m_clusterIds;
+  // 3D texture containing clusters.
+  Buffer*               m_clusters;
 
-  // 1D texture containing cluster indices.
-  Buffer*               m_clusterIndices;
+  // 1D Buffer containing light list.
+  Buffer*               m_lightList;
+
+  // Light grid.
+  Buffer*               m_lightGrid;
 };
 } // Recluse

@@ -484,6 +484,10 @@ void Renderer::cleanUp()
   m_pLights->cleanUp(m_pRhi);
   delete m_pLights;
   m_pLights = nullptr;
+
+  m_pClusterer->cleanUp(m_pRhi);
+  delete m_pClusterer;
+  m_pClusterer = nullptr;
   
   cleanUpSkybox(false);
   m_pSky->cleanUp();
@@ -582,6 +586,9 @@ B32 Renderer::initialize(Window* window, const GraphicsConfigParams* params)
   m_pHDR = new HDR();
   m_pHDR->initialize(m_pRhi);
   m_pHDR->UpdateToGPU(m_pRhi);
+
+  m_pClusterer = new Clusterer();
+  m_pClusterer->initialize(m_pRhi);
 
   setUpSkybox(false);
   setUpGraphicsPipelines();
@@ -4570,6 +4577,7 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
     cleanUpGraphicsPipelines();
     cleanUpFrameBuffers();
     cleanUpRenderTextures(false);
+    m_pClusterer->cleanUp(m_pRhi);
     m_particleEngine->cleanUpPipeline(m_pRhi);
     m_pSky->freeFrameResources(m_pRhi);
 
@@ -4590,6 +4598,7 @@ void Renderer::updateRendererConfigs(const GraphicsConfigParams* params)
     setUpDescriptorSets();
     setUpGraphicsPipelines();
     setUpForwardPBR();
+    m_pClusterer->initialize(m_pRhi);
     m_particleEngine->initializePipeline(m_pRhi);
     m_pUI->initialize(this);
     m_pSky->createFrameResources(m_pRhi);
