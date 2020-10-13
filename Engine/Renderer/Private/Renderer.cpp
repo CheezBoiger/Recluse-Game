@@ -3267,7 +3267,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
       barriers[0] = { };
       barriers[0].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
       barriers[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-      barriers[0].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+      barriers[0].oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       barriers[0].newLayout = VK_IMAGE_LAYOUT_GENERAL;
       barriers[0].image = texs[0]->getImage();
       barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -3281,7 +3281,7 @@ void Renderer::generateHDRCmds(CommandBuffer* cmdBuffer, U32 resourceIndex)
         barriers[i].dstAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
         barriers[i].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
         barriers[i].image = texs[i]->getImage();
-        barriers[i].oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barriers[i].oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barriers[i].newLayout = VK_IMAGE_LAYOUT_GENERAL;
         barriers[i].subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barriers[i].subresourceRange.baseArrayLayer = 0;

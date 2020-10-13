@@ -96,12 +96,12 @@ public:
     // setting bloom on or off, or anything else...
     ParamsHDR hdrSettings = {};
     BrightFilterParameters parameters = { };
-    hdrSettings._bloomStrength = 1.5f;
+    hdrSettings._bloomStrength = 5.0f;
     parameters.brightnessThreshold16x = 0.0f;
     parameters.brightnessThreshold8x = 1.0f;
     parameters.brightnessThreshold4x = 2.0f;
     parameters.brightnessThreshold2x = 3.0f;
-    parameters.bloomScale16x = 4.1f;
+    parameters.bloomScale16x = 3.1f;
     parameters.bloomScale8x = 3.1f;
     parameters.bloomScale4x = 2.1f;
     parameters.bloomScale2x = 1.2f;

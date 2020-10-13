@@ -89,7 +89,10 @@ B32 VulkanMemoryPool::init(VkDevice device,
   allocInfo.allocationSize = sz;
   allocInfo.memoryTypeIndex = memoryTypeIndex;
 
-  vkAllocateMemory(device, &allocInfo, nullptr, &m_rawMem);
+  VkResult Result = vkAllocateMemory(device, &allocInfo, nullptr, &m_rawMem);
+  if (Result != VK_SUCCESS) {
+    R_DEBUG(rError, "Failed to create memory pool for given memory type!");
+  }
   if (isHostVisible()) {
     vkMapMemory(device, m_rawMem, 0, sz, 0, (void**)&m_pRawDat);
   }
@@ -146,7 +149,6 @@ B32 VulkanMemoryPool::allocate(U32 sz,
 
   VkDeviceSize freeSz = m_memSz - m_memAllocated;
   if (freeSz < sz) {
-    R_DEBUG(rWarning, "OUT OF MEMORY.\n");
     return false;
   }
 
@@ -196,6 +198,11 @@ B32 VulkanMemoryPool::allocate(U32 sz,
   }
 
   VulkanMemBlockNode* node = nullptr; 
+
+    // Check if the chosen offset and sz is out of bounds.
+    if ((offset + R_MEM_ALIGN(sz, align)) >= m_memSz) {
+        return false;
+    }
 
   if (pCurrent && pCurrent->_type == VULKAN_ALLOCATION_TYPE_FREE) {
     // free block, we can use!
@@ -280,7 +287,7 @@ void VulkanMemoryAllocatorManager::init(VulkanRHI* pRhi,
                                         U32 resourceCount)
 {
   m_deviceLocalMemoryBytes = 1 * R_MEM_1_GB;
-  m_hostVisibleMemoryBytes = 1 * R_MEM_1_GB;
+  m_hostVisibleMemoryBytes = 140 * R_MEM_1_MB;
   m_bufferImageGranularity = pRhi->PhysicalDeviceLimits().bufferImageGranularity;
 
   for (U32 i = 0; i < pRhi->getMemoryProperties().memoryHeapCount; ++i) {
@@ -328,6 +335,14 @@ B32 VulkanMemoryAllocatorManager::allocate(VkDevice device,
     if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, out)) {
       numberOfAllocations++;
       return true;      
+    } else {
+        // Possible out of memory?
+        emptyGarbage(nullptr);
+        if (pool->allocate(sz, align, allocType, m_bufferImageGranularity, out)) {
+            numberOfAllocations++;
+            return true;
+        }
+        R_DEBUG(rWarning, "OUT OF MEMORY, attempting to create new heap.\n")
     }
   }
   // If no pool exists for the wanted memory type, create one!
@@ -374,7 +389,8 @@ void VulkanMemoryAllocatorManager::emptyGarbage(VulkanRHI* pRhi)
     VulkanMemoryPool* pool = m_pools[alloc._memId][alloc._poolId];
     pool->free(&alloc);
     if (pool->getNumAllocated() == 0) {
-      // TODO(): 
+      // TODO():
+      
     }
   }
   garbage.clear();
